@@ -453,7 +453,8 @@ test('the retry loop AWAITS an async guard (judgeProse is async) — a rejected 
 test('no script calls writeProse without await', async () => {
   const { readdirSync, readFileSync: read } = await import('node:fs');
   const { join } = await import('node:path');
-  const root = new URL('../', import.meta.url).pathname;
+  const { fileURLToPath } = await import('node:url');
+  const root = fileURLToPath(new URL('../', import.meta.url));
   const bare = [];
   const files = ['', 'lib/'].flatMap((d) =>
     readdirSync(join(root, d))

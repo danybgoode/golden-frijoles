@@ -1413,7 +1413,7 @@ export function runClaudeCode(prompt, stdin, opts = {}, deps = {}) {
 export function devinErrorLine(stderr) {
   const lines = String(stderr || '').trim().split('\n').map((l) => l.trim()).filter(Boolean);
   const error = lines.find((l) => /^error\b/i.test(l));
-  if (error) return error.replace(/:\s*\{$/, '');
+  if (error) return error.replace(/:?\s*\{\s*$/, '');
   return lines.filter((l) => !/^[{}\[\],]+$/.test(l)).pop() || 'unknown error';
 }
 
