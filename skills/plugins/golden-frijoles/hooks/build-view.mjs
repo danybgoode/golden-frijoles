@@ -240,11 +240,14 @@ export function worktreeKeyOf(porcelain) {
   return keep.length ? keep.join('|') : null;
 }
 
-/** The whole key: the worktrees' part plus the newest Roadmap mtime. null when git gave nothing to key on. */
-export function keyFrom(porcelain, newestMtime) {
+/**
+ * The whole key: WHICH checkout (the porcelain lists every worktree identically from any of them, so the root is what
+ * tells two sessions apart), the worktrees' part, and the newest Roadmap mtime. null when git gave nothing to key on.
+ */
+export function keyFrom(porcelain, newestMtime, root = '') {
   const wt = worktreeKeyOf(porcelain);
   if (!wt) return null;
-  return `${wt}#roadmap@${Number.isFinite(newestMtime) ? newestMtime : 'none'}`;
+  return `${root}::${wt}#roadmap@${Number.isFinite(newestMtime) ? newestMtime : 'none'}`;
 }
 
 /**
@@ -277,7 +280,10 @@ export async function newestUnder(dir, list, cap = WALK_CAP) {
 
 /** A Bash command that changes what GitHub knows about this work → one online refresh, off the turn (D3). */
 export function isOnlineTrigger(command) {
-  return /\bgit\s+push\b|\bgh\s+pr\s+(?:create|ready|merge|close|reopen)\b/.test(String(command || ''));
+  // `git -C <dir> push`, `git -c k=v push`: global options may sit between `git` and the subcommand.
+  return /\bgit(?:\s+-[Cc]\s+\S+|\s+--?[\w-]+(?:=\S+)?)*\s+push\b|\bgh\s+pr\s+(?:create|ready|merge|close|reopen)\b/.test(
+    String(command || '')
+  );
 }
 
 // ── The drift row (D5) ───────────────────────────────────────────────────────────────────────────────────
@@ -341,24 +347,79 @@ export function composeView(text, plugin = null) {
  * The live view's engine. `io`:
  *   run(argv, { timeoutMs }) → { exitCode, stdout }   — $.process.run
  *   list(path) → entries                                — $.fs.list
- *   getCached() / setCached(entry)                      — $.store under the view's key
+ *   getCached(root) / setCached(root, entry)            — $.store, ONE SLOT PER CHECKOUT ROOT (the store is shared by
+ *                                                         every session of the plugin; a slot per root keeps two
+ *                                                         sessions in two worktrees from serving each other's view)
  *   show(text | null)                                   — $.state.set of the band
  *   log(msg)                                            — $.ui.log
  *   now() → ms
- * `check(reason)` returns what it did: 'busy' (another check is running — D1, none overlap), 'no-repo', 'cached',
- * 'resolved'. `refreshOnline()` runs the resolver online, then a check (D3); 'busy' while one is in flight.
+ * `check(reason)` returns what it did: 'busy' (another check is running — D1, none overlap — and it will run ONE more
+ * pass when it finishes, so the trigger is deferred, never dropped), 'no-repo', 'cached', 'resolved', 'failed'.
+ * `invalidate()` makes the next pass resolve whatever the key says (a new snapshot or usage figure moves no key).
+ * `refreshOnline()` runs the resolver online — which rewrites the facts snapshot — then a forced check (D3).
  */
+export const MAX_RERUNS = 2; // a burst of triggers during one check collapses into at most this many extra passes
+
 export function createViewer(io, { buildState = VENDOR_BUILD_STATE } = {}) {
   let checking = false;
+  let rerun = false; // a trigger arrived while a check ran
+  let forceNext = false; // invalidate(): the next pass resolves even on an unchanged key
   let onlineBusy = false;
   let warnedOffline = false;
   let shown; // undefined until the first show, so the first check always draws
   let plugin = null;
+
+  async function pass(reason) {
+    const started = io.now();
+    let did = 'cached';
+    let entries = 0;
+    try {
+      const root = await viewer.locate();
+      if (!root) {
+        did = 'no-repo';
+        await viewer.show(null);
+        return did;
+      }
+      const wt = await io.run(['git', '-C', root, 'worktree', 'list', '--porcelain'], { timeoutMs: GIT_TIMEOUT_MS });
+      const walk = await newestUnder(`${root}/Roadmap`, io.list);
+      entries = walk.entries;
+      const key = keyFrom(wt.exitCode === 0 ? wt.stdout : '', walk.mtime, root);
+      const force = forceNext;
+      forceNext = false;
+      const cached = force ? null : await io.getCached(root);
+      if (!force && !shouldRefresh(cached, key, io.now())) {
+        await viewer.show(cached.text || null);
+        return did;
+      }
+      const run = await io.run(buildStateArgv(root, buildState), { timeoutMs: RESOLVE_TIMEOUT_MS });
+      const text = statusTextFrom(run.stdout, run.exitCode);
+      did = 'resolved';
+      await io.setCached(root, { key, at: io.now(), text });
+      await viewer.show(text);
+      return did;
+    } catch (err) {
+      did = 'failed';
+      io.log(`build view: ${String(err)}`);
+      try {
+        await viewer.show(null);
+      } catch {
+        /* an engine without $.state — logged by the band itself */
+      }
+      return did;
+    } finally {
+      viewer.lastCheck = { reason, did, ms: io.now() - started, entries };
+      io.log(`build view: ${reason} check ${did} in ${viewer.lastCheck.ms} ms (${entries} Roadmap entries)`);
+    }
+  }
+
   const viewer = {
     root: null,
     lastCheck: null, // { reason, did, ms, entries } — logged, and what the PR's cost figure is read from
     setPluginRow(row) {
       plugin = row;
+    },
+    invalidate() {
+      forceNext = true;
     },
     async show(text) {
       const next = composeView(text, plugin);
@@ -375,45 +436,21 @@ export function createViewer(io, { buildState = VENDOR_BUILD_STATE } = {}) {
       return viewer.root;
     },
     async check(reason = 'turn') {
-      if (checking) return 'busy';
+      if (checking) {
+        rerun = true;
+        return 'busy';
+      }
       checking = true;
-      const started = io.now();
-      let did = 'cached';
-      let entries = 0;
       try {
-        const root = await viewer.locate();
-        if (!root) {
-          did = 'no-repo';
-          await viewer.show(null);
-          return did;
+        let did = await pass(reason);
+        for (let n = 0; rerun && n < MAX_RERUNS; n++) {
+          rerun = false;
+          const again = await pass(`${reason}+deferred`);
+          if (did !== 'resolved') did = again; // a resolve in any pass is what the caller wants to know
         }
-        const wt = await io.run(['git', '-C', root, 'worktree', 'list', '--porcelain'], { timeoutMs: GIT_TIMEOUT_MS });
-        const walk = await newestUnder(`${root}/Roadmap`, io.list);
-        entries = walk.entries;
-        const key = keyFrom(wt.exitCode === 0 ? wt.stdout : '', walk.mtime);
-        const cached = await io.getCached();
-        if (!shouldRefresh(cached, key, io.now())) {
-          await viewer.show(cached.text || null);
-          return did;
-        }
-        const run = await io.run(buildStateArgv(root, buildState), { timeoutMs: RESOLVE_TIMEOUT_MS });
-        const text = statusTextFrom(run.stdout, run.exitCode);
-        did = 'resolved';
-        await io.setCached({ key, at: io.now(), text });
-        await viewer.show(text);
-        return did;
-      } catch (err) {
-        did = 'failed';
-        io.log(`build view: ${String(err)}`);
-        try {
-          await viewer.show(null);
-        } catch {
-          /* an engine without $.state — logged by the band itself */
-        }
+        rerun = false;
         return did;
       } finally {
-        viewer.lastCheck = { reason, did, ms: io.now() - started, entries };
-        io.log(`build view: ${reason} check ${did} in ${viewer.lastCheck.ms} ms (${entries} Roadmap entries)`);
         checking = false;
       }
     },
@@ -423,6 +460,8 @@ export function createViewer(io, { buildState = VENDOR_BUILD_STATE } = {}) {
       try {
         const root = await viewer.locate();
         if (!root) return 'no-repo';
+        // The run's own lines are not drawn: the forced offline pass below reads the snapshot this run just wrote,
+        // through the same path as every other check — one way a view reaches the band (amended D3).
         const run = await io.run(buildStateArgv(root, buildState, { offline: false }), { timeoutMs: ONLINE_TIMEOUT_MS });
         let mode = null;
         try {
@@ -434,7 +473,7 @@ export function createViewer(io, { buildState = VENDOR_BUILD_STATE } = {}) {
           warnedOffline = true;
           io.log(`build view: online refresh (${reason}) got no live facts (${mode ?? `exit ${run.exitCode}`}) — no gh, or gh failed; keeping the last snapshot`);
         }
-        await io.setCached(null);
+        viewer.invalidate();
         await viewer.check(`online:${reason}`);
         return mode === 'live' ? 'live' : 'offline';
       } catch (err) {

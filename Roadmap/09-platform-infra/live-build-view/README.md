@@ -82,7 +82,11 @@ module reload. It also has `$.command.register` (in `session.start`) answered by
   current key. A Bash call whose command runs `git push` or `gh pr (create|ready|merge|close)` also schedules ONE such run
   with `$.clock.after(0)`: queued, never awaited, so the tool call returns first. **(Deviation, named:** the story asked
   only for the timer. Without the push trigger a freshly pushed branch reads Ready to build for up to 5 min.) A run
-  whose JSON says `facts_mode !== 'live'` logs once per load and keeps the last snapshot.
+  whose JSON says `facts_mode !== 'live'` logs once per load and keeps the last snapshot. *(Amended at review, #240: the
+  online run's own lines are not drawn. It invalidates the view, and a FORCED offline pass reads the snapshot the run
+  just wrote, so a view reaches the band one way only. A check that finds another running defers ONE more pass instead
+  of dropping the trigger. The `$.store` cache is one slot per checkout root, and the root is in the key, because the
+  store is shared by every session.)*
 - **D4 — "In review" is the stage resolver's `QA` (corrected, C1).** The Status row has come from `lib/stage.mjs` since
   board-sinks-and-scrumban, and its vocabulary has no "In review". An open, non-draft PR is **QA**, and a draft PR is
   **Building** (`github: PR #N draft`). S1.2 delivers QA from a ready PR. `stage.mjs` is not changed (platform-first
@@ -98,8 +102,9 @@ module reload. It also has `$.command.register` (in `session.start`) answered by
 - **D6 — autoUpdate and the flag.** `"autoUpdate": true` goes on the `golden-frijoles` entry of
   `extraKnownMarketplaces` in `.claude/settings.json` and `skills/template/.claude/settings.json`.
   `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS` comes out of this repo's settings (the template never had it, C2), `hooks.json`'s
-  comment, `skills/README.md` and the CI step. **CI's pin moves 2.1.278 → 2.1.288** (C3) in `scripts/render-skills-ci.mjs`
-  (both pins), and the workflows are regenerated, never hand-edited. A `claude plugin test` step joins validate.
+  comment, `skills/README.md` and the CI step. **CI's pin moves 2.1.278 → 2.1.288** (C3) in the workflow SOURCE,
+  `skills/.github/workflows/ci.yml` (both pins); `scripts/render-skills-ci.mjs` copies it to the root workflow (no pin of
+  its own), never hand-edited. *(Corrected at review, #240: the lock first named the generator as the pin's home.)* A `claude plugin test` step joins validate.
   The mod gains `hooks/build-view.mod.test.ts`, which runs under the engine.
 - **D7 — The story check is one function in the resolver's file.** `storyCheck({ root, branch, subject })` is exported
   from `build-state.mjs` (template copy, so root + vendor stay byte-identical). It uses `resolveTarget` and
