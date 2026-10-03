@@ -19,12 +19,10 @@ export function repoFactsFrom(stdout, exitCode = 0) {
   return { key: sha && branch ? `${branch}@${sha}` : null, root: root || null };
 }
 
-// A Roadmap/ write changes no git ref, so a key alone would serve a stale view until the next commit.
-// Stat-ing the whole tree every turn is the cost the cache exists to avoid (860+ docs in the largest
-// consumer), so a refresh also happens when the cached view is older than this. A doc edit therefore
-// shows up within 15s; a branch change or a commit shows up immediately.
-export const MAX_AGE_MS = 15_000;
-
+// The key (live-build-view D2) covers what moves a view: every worktree's HEAD + branch and the newest Roadmap/ mtime.
+// MAX_AGE_MS is now only a backstop for what the key cannot see (the session journal's refs) — it used to be 15 s,
+// when a doc edit was invisible to the key; with a 30 s tick that age would re-resolve on every tick for nothing.
+export const MAX_AGE_MS = 300_000;
 /**
  * Refresh when there is no usable entry, the branch/HEAD moved, or the view aged out.
  *
@@ -72,8 +70,8 @@ export const VENDOR_BUILD_STATE = decodeURIComponent(
  * or not the open repo has one (D5). The hook is automatic: it runs on every turn in whatever repo the user
  * opens, so it must never execute a file that repo supplies. The repo is only ever READ, via `--repo-root`.
  */
-export function buildStateArgv(root, script = VENDOR_BUILD_STATE) {
-  return ['node', script, '--json', '--offline', '--repo-root', root || '.'];
+export function buildStateArgv(root, script = VENDOR_BUILD_STATE, { offline = true } = {}) {
+  return ['node', script, '--json', ...(offline ? ['--offline'] : []), '--repo-root', root || '.'];
 }
 
 // ── The usage refresh (finops S1.3, D24) ─────────────────────────────────────────────────────────────────
@@ -118,6 +116,7 @@ const LABEL_GLYPHS = {
   Open: '○',
   Also: '↳',
   Board: '▦',
+  Plugin: '⬆', // live-build-view D5 — the installed plugin is older than the published one
 };
 
 /** A tone for a status/phase word — a colour hint only; the word itself is always shown as written. */
@@ -213,4 +212,238 @@ export async function attempt(fn, onFail = () => {}, fallback = null) {
     }
     return fallback;
   }
+}
+
+// ── The live view (live-build-view S1, D1–D5) ────────────────────────────────────────────────────────────
+// Three triggers — turn.start, every Bash call, a 30 s tick — run ONE check, and the check resolves only when the key
+// moved. Everything here takes its I/O as functions (`io`), built by index.tsx where each spells `$` at its own call
+// site, so the whole orchestration — overlap guard included — is reachable from `node --test`.
+
+export const TICK_MS = 30_000;
+export const ONLINE_FIRST_MS = 60_000;
+export const ONLINE_EVERY_MS = 300_000;
+export const ONLINE_TIMEOUT_MS = 60_000; // gatherFacts' own budgets are 20 s (ls-remote) + 30 s (gh pr list)
+export const GIT_TIMEOUT_MS = 2_000;
+export const RESOLVE_TIMEOUT_MS = 5_000;
+export const WALK_CAP = 2_000;
+
+/**
+ * `git worktree list --porcelain` → the part of the key it owns: every worktree's path, HEAD and branch (or
+ * `detached`), so this checkout's HEAD + branch and every other worktree's are one string. `prunable`/`locked` notes are
+ * dropped — they say nothing about what is being built. null when there is nothing (git failed).
+ */
+export function worktreeKeyOf(porcelain) {
+  const keep = String(porcelain || '')
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => /^(worktree|HEAD|branch) /.test(l) || l === 'detached' || l === 'bare');
+  return keep.length ? keep.join('|') : null;
+}
+
+/** The whole key: the worktrees' part plus the newest Roadmap mtime. null when git gave nothing to key on. */
+export function keyFrom(porcelain, newestMtime) {
+  const wt = worktreeKeyOf(porcelain);
+  if (!wt) return null;
+  return `${wt}#roadmap@${Number.isFinite(newestMtime) ? newestMtime : 'none'}`;
+}
+
+/**
+ * The newest FILE mtime under `dir`, by a breadth-first walk over `list(path)` → `[{ name, kind, mtimeMs, isLink }]`
+ * — `$.fs.list`'s shape, whose kinds are `file | dir | other` and whose `mtimeMs` is 0 for anything but a regular file.
+ * So an edit (or a save-by-rename, which writes a new file) moves it; a DELETED doc does not, and waits for MAX_AGE_MS.
+ * Stops at `cap` entries; a directory that cannot be listed (or no Roadmap/ at all) is skipped.
+ */
+export async function newestUnder(dir, list, cap = WALK_CAP) {
+  let mtime = null;
+  let entries = 0;
+  const queue = [dir];
+  while (queue.length) {
+    const at = queue.shift();
+    let items;
+    try {
+      items = await list(at);
+    } catch {
+      continue;
+    }
+    for (const it of items || []) {
+      entries += 1;
+      if (Number.isFinite(it.mtimeMs) && it.mtimeMs > 0 && (mtime === null || it.mtimeMs > mtime)) mtime = it.mtimeMs;
+      if (it.kind === 'dir' && !it.isLink) queue.push(`${at}/${it.name}`);
+      if (entries >= cap) return { mtime, entries, capped: true };
+    }
+  }
+  return { mtime, entries, capped: false };
+}
+
+/** A Bash command that changes what GitHub knows about this work → one online refresh, off the turn (D3). */
+export function isOnlineTrigger(command) {
+  return /\bgit\s+push\b|\bgh\s+pr\s+(?:create|ready|merge|close|reopen)\b/.test(String(command || ''));
+}
+
+// ── The drift row (D5) ───────────────────────────────────────────────────────────────────────────────────
+
+/** `0.24.1` → [0, 24, 1]; anything that is not three dot-separated whole numbers (a pre-release tag too) → null. */
+export function semverOf(v) {
+  const m = /^(\d+)\.(\d+)\.(\d+)$/.exec(String(v || '').trim());
+  return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : null;
+}
+
+/** True only when `a` is a HIGHER release than `b`; unparseable either way → false (no row beats a wrong row). */
+export function semverGt(a, b) {
+  const x = semverOf(a);
+  const y = semverOf(b);
+  if (!x || !y) return false;
+  for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return x[i] > y[i];
+  return false;
+}
+
+/** The band's Plugin row, or null when the installed copy is not older than the published one. */
+export function versionRow(installed, published) {
+  if (!semverGt(published, installed)) return null;
+  return `  ${'Plugin'.padEnd(9)}${installed} installed · ${published} published — /plugin to update`;
+}
+
+/**
+ * Where the marketplace clone keeps this plugin's manifest, from where the plugin is INSTALLED: Claude Code installs
+ * into `…/plugins/cache/<marketplace>/<plugin>/<version>/` and clones the marketplace into
+ * `…/plugins/marketplaces/<marketplace>/`, where this marketplace keeps the plugin under `plugins/<plugin>/` (its own
+ * marketplace.json `source`). A `--plugin-dir` or dev load matches neither → null, and no row is drawn.
+ */
+export function publishedManifestPath(pluginDir) {
+  const m = /^(.*\/plugins)\/cache\/([^/]+)\/([^/]+)\/[^/]+\/?$/.exec(String(pluginDir || ''));
+  if (!m) return null;
+  const [, base, market, plugin] = m;
+  return `${base}/marketplaces/${market}/plugins/${plugin}/.claude-plugin/plugin.json`;
+}
+
+/** This plugin's own directory — the parent of hooks/ — decoded from the module URL like VENDOR_BUILD_STATE. */
+export const PLUGIN_DIR = decodeURIComponent(new URL('..', import.meta.url).pathname)
+  .replace(/^\/([A-Za-z]:\/)/, '$1')
+  .replace(/\/$/, '');
+
+/** `plugin.json` text → its version, or null. */
+export function versionOf(text) {
+  try {
+    const v = JSON.parse(String(text)).version;
+    return typeof v === 'string' ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The view as drawn: the resolver's text, plus the mod's own Plugin row when there is a view to put it under. */
+export function composeView(text, plugin = null) {
+  if (typeof text !== 'string' || !text) return null;
+  return plugin ? `${text}\n${plugin}` : text;
+}
+
+/**
+ * The live view's engine. `io`:
+ *   run(argv, { timeoutMs }) → { exitCode, stdout }   — $.process.run
+ *   list(path) → entries                                — $.fs.list
+ *   getCached() / setCached(entry)                      — $.store under the view's key
+ *   show(text | null)                                   — $.state.set of the band
+ *   log(msg)                                            — $.ui.log
+ *   now() → ms
+ * `check(reason)` returns what it did: 'busy' (another check is running — D1, none overlap), 'no-repo', 'cached',
+ * 'resolved'. `refreshOnline()` runs the resolver online, then a check (D3); 'busy' while one is in flight.
+ */
+export function createViewer(io, { buildState = VENDOR_BUILD_STATE } = {}) {
+  let checking = false;
+  let onlineBusy = false;
+  let warnedOffline = false;
+  let shown; // undefined until the first show, so the first check always draws
+  let plugin = null;
+  const viewer = {
+    root: null,
+    lastCheck: null, // { reason, did, ms, entries } — logged, and what the PR's cost figure is read from
+    setPluginRow(row) {
+      plugin = row;
+    },
+    async show(text) {
+      const next = composeView(text, plugin);
+      if (next === shown) return;
+      shown = next;
+      await io.show(next);
+    },
+    async locate() {
+      if (viewer.root) return viewer.root;
+      const head = await io.run(['git', 'rev-parse', 'HEAD', '--abbrev-ref', 'HEAD', '--show-toplevel'], {
+        timeoutMs: GIT_TIMEOUT_MS,
+      });
+      viewer.root = repoFactsFrom(head.stdout, head.exitCode).root;
+      return viewer.root;
+    },
+    async check(reason = 'turn') {
+      if (checking) return 'busy';
+      checking = true;
+      const started = io.now();
+      let did = 'cached';
+      let entries = 0;
+      try {
+        const root = await viewer.locate();
+        if (!root) {
+          did = 'no-repo';
+          await viewer.show(null);
+          return did;
+        }
+        const wt = await io.run(['git', '-C', root, 'worktree', 'list', '--porcelain'], { timeoutMs: GIT_TIMEOUT_MS });
+        const walk = await newestUnder(`${root}/Roadmap`, io.list);
+        entries = walk.entries;
+        const key = keyFrom(wt.exitCode === 0 ? wt.stdout : '', walk.mtime);
+        const cached = await io.getCached();
+        if (!shouldRefresh(cached, key, io.now())) {
+          await viewer.show(cached.text || null);
+          return did;
+        }
+        const run = await io.run(buildStateArgv(root, buildState), { timeoutMs: RESOLVE_TIMEOUT_MS });
+        const text = statusTextFrom(run.stdout, run.exitCode);
+        did = 'resolved';
+        await io.setCached({ key, at: io.now(), text });
+        await viewer.show(text);
+        return did;
+      } catch (err) {
+        did = 'failed';
+        io.log(`build view: ${String(err)}`);
+        try {
+          await viewer.show(null);
+        } catch {
+          /* an engine without $.state — logged by the band itself */
+        }
+        return did;
+      } finally {
+        viewer.lastCheck = { reason, did, ms: io.now() - started, entries };
+        io.log(`build view: ${reason} check ${did} in ${viewer.lastCheck.ms} ms (${entries} Roadmap entries)`);
+        checking = false;
+      }
+    },
+    async refreshOnline(reason = 'timer') {
+      if (onlineBusy) return 'busy';
+      onlineBusy = true;
+      try {
+        const root = await viewer.locate();
+        if (!root) return 'no-repo';
+        const run = await io.run(buildStateArgv(root, buildState, { offline: false }), { timeoutMs: ONLINE_TIMEOUT_MS });
+        let mode = null;
+        try {
+          mode = JSON.parse(String(run.stdout)).facts_mode ?? null;
+        } catch {
+          /* a failed run says nothing — the snapshot stays as it was */
+        }
+        if (mode !== 'live' && !warnedOffline) {
+          warnedOffline = true;
+          io.log(`build view: online refresh (${reason}) got no live facts (${mode ?? `exit ${run.exitCode}`}) — no gh, or gh failed; keeping the last snapshot`);
+        }
+        await io.setCached(null);
+        await viewer.check(`online:${reason}`);
+        return mode === 'live' ? 'live' : 'offline';
+      } catch (err) {
+        io.log(`build view: online refresh: ${String(err)}`);
+        return 'failed';
+      } finally {
+        onlineBusy = false;
+      }
+    },
+  };
+  return viewer;
 }
