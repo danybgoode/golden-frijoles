@@ -534,4 +534,13 @@ test('the bundled generator --list names startable epics, slug first (this repo)
   assert.match(out, /^live-build-view {2}Live build view/m);
   assert.doesNotMatch(out, /\(shipped/);
   assert.match(view.buildListText('/build: which epic?', out), /^\/build: which epic\?\nUsage: \/build <epic-slug>/);
+test('#240 review r2: a cache write that fails still draws the view (the store file is capped)', async () => {
+  const io = fakeIo();
+  io.setCached = async () => {
+    throw new Error('store over its cap');
+  };
+  const v = view.createViewer(io);
+  assert.equal(await v.check('turn'), 'resolved');
+  assert.deepEqual(io.shown, ['Currently building']);
+  assert.ok(io.logs.some((l) => /could not cache the view/.test(l)));
 });
