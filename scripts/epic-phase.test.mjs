@@ -57,11 +57,18 @@ test('lock: phase Building + a quoted locked_at after the phase block; sprint 1 
   const parsed = parseDocFrontmatter(res.readme);
   assert.equal(parsed.data.locked_at, NOW);
   assert.equal(parsed.data.phase, 'Building');
-  assert.deepEqual(validateEpicFrontmatter(parsed).filter((o) => /locked-at|phase/.test(o.rule)), []);
+  assert.deepEqual(
+    validateEpicFrontmatter(parsed).filter((o) => /locked-at|phase/.test(o.rule)),
+    []
+  );
 });
 
 test('lock refuses a README with nothing locked, and a second lock', () => {
-  const none = lockEpic({ readme: README('## Why\nno decisions yet (a D10 alone does not count)\n'), sprint1: SPRINT1, now: NOW });
+  const none = lockEpic({
+    readme: README('## Why\nno decisions yet (a D10 alone does not count)\n'),
+    sprint1: SPRINT1,
+    now: NOW,
+  });
   assert.equal(none.ok, false);
   assert.match(none.why, /names no D1/);
   const once = lockEpic({ readme: README(), sprint1: SPRINT1, now: NOW });
@@ -72,13 +79,21 @@ test('lock refuses a README with nothing locked, and a second lock', () => {
 
 test('the contract rejects a locked_at that is not an ISO date-time', () => {
   const bad = parseDocFrontmatter(README().replace('slug: demo', 'slug: demo\nlocked_at: "last tuesday"'));
-  assert.deepEqual(validateEpicFrontmatter(bad).map((o) => o.rule).filter((r) => r.includes('locked')), ['contract-locked-at-invalid']);
+  assert.deepEqual(
+    validateEpicFrontmatter(bad)
+      .map((o) => o.rule)
+      .filter((r) => r.includes('locked')),
+    ['contract-locked-at-invalid']
+  );
 });
 
 test('setField / getField: a value without a comment, an absent key appended', () => {
   assert.equal(setField('a: 1\nb: 2', 'b', '3'), 'a: 1\nb: 3');
   assert.equal(setField('a: 1', 'c', '"x"'), 'a: 1\nc: "x"');
-  assert.equal(getField('locked_at: "2026-10-03T20:34:34Z"   # stamped', 'locked_at'), '2026-10-03T20:34:34Z');
+  assert.equal(
+    getField('locked_at: "2026-10-03T20:34:34Z"   # stamped', 'locked_at'),
+    '2026-10-03T20:34:34Z'
+  );
   assert.equal(getField('x: 1', 'locked_at'), null);
 });
 
@@ -96,6 +111,11 @@ test('the CLI: locks the epic in a repo, refuses the second time, says usage on 
   assert.equal(run('lock', '--epic', 'demo', '--repo-root', root).status, 1);
   assert.equal(run('lock', '--epic', 'nope', '--repo-root', root).status, 2);
   assert.equal(run('unlock', '--epic', 'demo').status, 2);
+  assert.equal(
+    run('lock', '--epic', 'demo', '--repo-root', root, '--now', 'yesterday').status,
+    2,
+    '--now is validated'
+  );
   // A path is not a slug: nothing outside Roadmap/ is read or written (vibe security lens, #241).
   mkdirSync(join(root, 'apps', 'web'), { recursive: true });
   writeFileSync(join(root, 'apps', 'web', 'README.md'), README().replace('slug: demo', 'slug: web'));

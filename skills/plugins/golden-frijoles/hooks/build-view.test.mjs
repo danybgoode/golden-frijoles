@@ -5,7 +5,8 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import * as view from './build-view.mjs';
 
 const { repoFactsFrom, shouldRefresh, statusTextFrom, MAX_AGE_MS } = view;
@@ -529,10 +530,24 @@ test('isEpicSlug: a slug, never a flag or a path', () => {
   for (const no of ['', '--list', '../etc', 'Foo', 'a b', '-x', undefined]) assert.equal(view.isEpicSlug(no), false, String(no));
 });
 
-test('the bundled generator --list names startable epics, slug first (this repo)', () => {
-  const out = execFileSync('node', [view.VENDOR_EMIT_KICKOFF, '--list', '--repo-root', join(HERE, '..', '..', '..', '..')], { encoding: 'utf8' });
-  assert.match(out, /^live-build-view {2}Live build view/m);
-  assert.doesNotMatch(out, /\(shipped/);
+test('the bundled generator --list names startable epics, slug first, build order first', () => {
+  // A fixture, never this repo's Roadmap: CI runs this file in the skills mirror, which has none of our epics (#241).
+  const root = mkdtempSync(join(tmpdir(), 'build-list-'));
+  const epic = (slug, status, order) => {
+    mkdirSync(join(root, 'Roadmap', '09-platform-infra', slug), { recursive: true });
+    writeFileSync(
+      join(root, 'Roadmap', '09-platform-infra', slug, 'README.md'),
+      `---\nstatus: ${status}\nslug: ${slug}\ntitle: "Title ${slug}"\nbuild_order: ${order}\n---\n# Epic: ${slug}\n`
+    );
+  };
+  epic('later-one', 'scaffolded', 9);
+  epic('first-one', 'in-progress', 2);
+  epic('done-one', 'shipped', 1);
+  const out = execFileSync('node', [view.VENDOR_EMIT_KICKOFF, '--list', '--repo-root', root], { encoding: 'utf8' });
+  assert.deepEqual(out.trim().split('\n'), [
+    'first-one  Title first-one  (in-progress, #2)',
+    'later-one  Title later-one  (scaffolded, #9)',
+  ]);
   assert.match(view.buildListText('/build: which epic?', out), /^\/build: which epic\?\nUsage: \/build <epic-slug>/);
 });
 

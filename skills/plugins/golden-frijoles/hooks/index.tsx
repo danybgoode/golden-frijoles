@@ -164,7 +164,10 @@ export const register: Register = (on) => {
     };
     if (!isEpicSlug(slug)) return list(slug ? `/build: "${slug}" is not an epic slug.` : '/build: which epic?');
     const run = await $.process.run(kickoffArgv(root, slug), { timeoutMs: KICKOFF_TIMEOUT_MS });
-    if (run.exitCode !== 0 || !run.stdout.trim()) return list(`/build: no epic "${slug}" under Roadmap/.`);
+    // The generator exits 1 for an epic it cannot find; anything else (a timeout, a crash) is not "no such epic".
+    if (run.exitCode === 1) return list(`/build: no epic "${slug}" under Roadmap/.`);
+    if (run.exitCode !== 0 || !run.stdout.trim())
+      return { text: `/build: the kickoff generator failed (exit ${run.exitCode}). Run it by hand: node ${kickoffArgv(root, slug).slice(1).join(' ')}` };
     // Under a dialog, headless, or on a failed fill: the kickoff is the command's output instead, to copy by hand.
     const filled = await attempt(() => $.prompt.fill({ text: run.stdout.trimEnd() }));
     if (!filled?.isFilled) return { text: run.stdout };

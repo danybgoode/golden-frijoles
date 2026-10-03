@@ -80,15 +80,22 @@ export function storyIdsIn(text) {
 // A LIST or RANGE of ids in one subject — `S1.1/1.2`, `S2.2-2.4`, `S1.1, 1.3 and 1.4` — names every id in it, but
 // storyIdsIn reads only the ones with their own `S` (so `S1.1/1.2` is one id to it). The view's story-in-flight rule
 // (D2) is unchanged and keeps storyIdsIn; the commit-msg check and the progress count read this (live-build-view D8).
+// Each id ends where a number ends (`(?![.\d])`): `S1.3, 2.1.288` must not read `2.1` out of a version number (#241).
 const STORY_LIST_RE =
-  /\b(?:S|Story\s+)(\d+)\.(\d+)((?:\s*(?:[/,+&\u2013-]|\band\b)\s*(?:S|Story\s+)?\d+\.\d+\b)*)/g;
+  /\b(?:S|Story\s+)(\d+)\.(\d+)\b(?![.\d])((?:\s*(?:[/,+&\u2013-]|\band\b)\s*(?:S|Story\s+)?\d+\.\d+\b(?![.\d]))*)/g;
 
 /** Every story id a piece of text names, continuations included ("S1.1/1.2" → ['S1.1', 'S1.2']), in order. */
 export function storyIdsInWithContinuations(text) {
+  return storyIdsWithKind(text).map((x) => x.id);
+}
+
+/** Like storyIdsInWithContinuations, but says which ids were bare continuations (`1.2` after `S1.1/`) — weaker evidence. */
+function storyIdsWithKind(text) {
   const out = [];
   for (const m of String(text).matchAll(STORY_LIST_RE)) {
-    out.push(`S${Number(m[1])}.${Number(m[2])}`);
-    for (const c of (m[3] || '').matchAll(/(\d+)\.(\d+)/g)) out.push(`S${Number(c[1])}.${Number(c[2])}`);
+    out.push({ id: `S${Number(m[1])}.${Number(m[2])}`, bare: false });
+    for (const c of (m[3] || '').matchAll(/(S|Story\s+)?(\d+)\.(\d+)/g))
+      out.push({ id: `S${Number(c[2])}.${Number(c[3])}`, bare: !c[1] });
   }
   return out;
 }
@@ -97,8 +104,8 @@ export function storyIdsInWithContinuations(text) {
 // On a branch that resolves to an epic, a commit that changes behaviour names exactly ONE story that epic (or that
 // sprint, on `-s<N>`) lists — so "which story is in flight" is a fact git guarantees, not a phrasing habit.
 export const STORY_GATED_TYPES = Object.freeze(['feat', 'fix', 'perf', 'refactor']);
-const CONVENTIONAL_RE = /^([A-Za-z]+)(?:\([^)]*\))?!?:\s/;
-const EXEMPT_SUBJECT_RE = /^(?:Merge |Revert "|fixup! |squash! |amend! )/;
+const CONVENTIONAL_RE = /^([A-Za-z]+)(?:\([^)]*\))?!?:/;
+const EXEMPT_SUBJECT_RE = /^(?:Merge |Revert "|fixup! |squash! |amend! |Squashed commit of the following)/;
 export const STORY_CHECK_BYPASS = 'GF_SKIP_STORY_CHECK';
 
 /**
@@ -128,7 +135,10 @@ export function storyCheck({ root, branch, subject, env = {} }) {
   const scope = sprint === null ? `epic ${epic.slug}` : `epic ${epic.slug}, sprint ${sprint}`;
   const refuse = (why) => ({ ok: false, why, valid: valid.map((st) => ({ id: st.id, title: st.title ?? '' })), scope, epic: epic.slug });
   if (!valid.length) return { ok: true, why: `${scope} lists no stories` };
-  const ids = [...new Set(storyIdsInWithContinuations(s))];
+  // A bare continuation (`1.2` after `S1.1/`) counts only when this epic lists it: `S2.1, 3.4 GB` is one story. An id
+  // spelled with its own `S` always counts, listed or not — naming a stranger is the mistake this check exists for.
+  const listed = new Set(stories.map((st) => st.id));
+  const ids = [...new Set(storyIdsWithKind(s).filter((x) => !x.bare || listed.has(x.id)).map((x) => x.id))];
   if (ids.length === 0) return refuse('it names no story');
   if (ids.length > 1) return refuse(`it names ${ids.length} stories (${ids.join(', ')}) — one commit, one story`);
   if (!valid.some((st) => st.id === ids[0]))
@@ -861,10 +871,13 @@ export function statusValue(state) {
   // live-build-view D11 — the band's refinement of Building, not a new stage (the Hub and the board keep Building): an
   // epic whose branch is live but whose README carries no `locked_at` is still Locking architecture. The lock is a
   // command (scripts/epic-phase.mjs lock), so from here on every rung is set by a trigger.
+  // Only while the WRITTEN phase is still before the lock: an epic built before the command existed (phase Building or
+  // later, no stamp) keeps reading Building, never "Locking architecture · phase Verifying" (#241 review).
   const locking =
     state.kind === 'epic' &&
     state.stage === 'Building' &&
     !state.epic?.locked_at &&
+    [null, 'Shaping', 'Locking architecture'].includes(state.phase_written ?? null) &&
     /^(?:git: |github: PR #\d+ draft)/.test(source);
   const stage = locking ? 'Locking architecture' : state.stage;
   const age =

@@ -66,7 +66,9 @@ async function main() {
   try {
     mod = await import('./build-state.mjs');
   } catch (err) {
-    process.stderr.write(`commit-msg: story check skipped — scripts/build-state.mjs could not load (${String(err?.message ?? err).split('\n')[0]})\n`);
+    process.stderr.write(
+      `commit-msg: story check skipped — scripts/build-state.mjs could not load (${String(err?.message ?? err).split('\n')[0]})\n`
+    );
     process.exit(0);
   }
   const { storyCheck, storyCheckMessage } = mod;
@@ -78,7 +80,9 @@ async function main() {
 
 const isMain = (() => {
   try {
-    return !!process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
+    return (
+      !!process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))
+    );
   } catch {
     return false;
   }

@@ -14,6 +14,7 @@ import {
   branchCandidates,
   parseWorktrees,
   storyIdsIn,
+  storyIdsInWithContinuations,
   namesSlug,
 } from './build-state.mjs';
 import { PHASES } from './lib/roadmap-contract.mjs';
@@ -828,7 +829,7 @@ test('S3.1: offline, the stage is read from the snapshot and says how old it is;
 });
 
 test('S2.3: a live epic branch with no locked_at reads Locking architecture; the stamp makes it Building', () => {
-  const f = fixture();
+  const f = fixture({ sprint2: 'Shaping', epicPhase: 'Shaping' });
   try {
     f.git('checkout', '-qb', 'feat/arranged-only-s2');
     const readme = join(f.root, 'Roadmap', '04-shipping', 'arranged-only', 'README.md');
@@ -851,6 +852,44 @@ test('S2.3: a live epic branch with no locked_at reads Locking architecture; the
     snapshot([]);
     writeFileSync(readme, EPIC_README('Building'));
     assert.match(status(), /^ {2}Status {3}Building · from git: feat\/arranged-only-s2/);
+  } finally {
+    f.done();
+  }
+});
+
+test('S2.3 (#241 review): an epic built before the lock command — no stamp, phase already Building or later — reads Building', () => {
+  for (const phase of ['Building', 'Verifying']) {
+    const f = fixture({ sprint2: phase, epicPhase: phase });
+    try {
+      f.git('checkout', '-qb', 'feat/arranged-only-s2');
+      writeFileSync(join(f.root, 'Roadmap', '04-shipping', 'arranged-only', 'README.md'), EPIC_README(phase, null));
+      mkdirSync(join(f.root, '.golden-frijoles'), { recursive: true });
+      writeFileSync(
+        join(f.root, '.golden-frijoles', 'board.json'),
+        JSON.stringify({ generated_at: '2026-10-02T09:00:00.000Z', branches: ['feat/arranged-only-s2'], prs: [] })
+      );
+      const line = renderLines(resolveBuildState({ root: f.root, offline: true, elsewhere: false })).find((l) =>
+        l.startsWith('  Status')
+      );
+      assert.match(line, /^ {2}Status {3}Building · from git: /, phase);
+      assert.doesNotMatch(line, /Locking architecture/, phase);
+    } finally {
+      f.done();
+    }
+  }
+});
+
+test('S2.1/S2.2 (#241 review): version numbers and prose are not stories', () => {
+  assert.deepEqual(storyIdsInWithContinuations('feat(x): S1.3, 2.1.288 bump'), ['S1.3']);
+  assert.deepEqual(storyIdsInWithContinuations('feat(x): S2.4 + 0.26.0 release'), ['S2.4']);
+  assert.deepEqual(storyIdsInWithContinuations('S2.1a and 2.2'), []);
+  const f = fixture();
+  try {
+    f.git('switch', '-qc', 'feat/arranged-only-s2');
+    f.commit('S2.1, 2.1.288 pin');
+    f.commit('S2.1 + 0.26.0 release');
+    const s = resolveBuildState({ board: false, root: f.root, offline: true, gh: noGh });
+    assert.equal(s.progress.stories_with_commits, 1, 'no S2.1-out-of-2.1.288, no S0.26');
   } finally {
     f.done();
   }

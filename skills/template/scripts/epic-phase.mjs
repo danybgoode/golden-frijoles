@@ -11,11 +11,12 @@
 // It rewrites only the lines it owns: each value keeps its trailing `# comment`, every other byte stays as it was.
 // Exit codes: 0 locked, 1 refused, 2 usage / could not look.
 //
-// Zero deps — Node 18+.
+// Node 18+; reads the contract's own LOCKED_AT_RE, so the stamp it writes is the one doc-format accepts.
 
 import { existsSync, readFileSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { LOCKED_AT_RE } from './lib/roadmap-contract.mjs';
 
 const FRONTMATTER_RE = /^---\n([\s\S]*?)\n---\n?/;
 
@@ -54,7 +55,11 @@ export function setField(fm, key, value, { after = null } = {}) {
 export function getField(fm, key) {
   const line = fm.split('\n').find((l) => new RegExp(`^${key}:`).test(l));
   if (!line) return null;
-  const v = line.replace(/^[^:]+:\s*/, '').replace(/\s+#.*$/, '').trim().replace(/^"(.*)"$/, '$1');
+  const v = line
+    .replace(/^[^:]+:\s*/, '')
+    .replace(/\s+#.*$/, '')
+    .trim()
+    .replace(/^"(.*)"$/, '$1');
   return v === '' || v === 'null' ? null : v;
 }
 
@@ -71,9 +76,16 @@ export function lockEpic({ readme, sprint1, now }) {
   const r = split(readme);
   if (r.fm === null) return { ok: false, why: 'the epic README has no frontmatter' };
   const already = getField(r.fm, 'locked_at');
-  if (already) return { ok: false, why: `already locked at ${already} — the stamp is a fact; edit it by hand only to correct it` };
+  if (already)
+    return {
+      ok: false,
+      why: `already locked at ${already} — the stamp is a fact; edit it by hand only to correct it`,
+    };
   if (!namesDecisions(r.body))
-    return { ok: false, why: 'the README names no D1 — write the architecture lock (D1…Dn) before stamping it' };
+    return {
+      ok: false,
+      why: 'the README names no D1 — write the architecture lock (D1…Dn) before stamping it',
+    };
   let fm = setField(r.fm, 'phase', 'Building');
   fm = setField(fm, 'locked_at', `"${now}"`, { after: 'phase' });
   const out = { ok: true, readme: `---\n${fm}\n---\n${r.body}`, sprint1: null, why: `locked at ${now}` };
@@ -97,12 +109,14 @@ function main(argv) {
   const [cmd, ...rest] = argv;
   const flag = (name) => {
     const i = rest.indexOf(`--${name}`);
-    return i === -1 ? null : rest[i + 1] ?? null;
+    return i === -1 ? null : (rest[i + 1] ?? null);
   };
   const slug = flag('epic');
   // A slug, never a path: `--epic ../../apps/web` would otherwise resolve outside Roadmap/ (vibe, #241).
   if (cmd !== 'lock' || !slug || !/^[a-z0-9][a-z0-9-]*$/.test(slug)) {
-    process.stderr.write('usage: node scripts/epic-phase.mjs lock --epic <slug> [--repo-root <dir>] [--now <iso>]\n');
+    process.stderr.write(
+      'usage: node scripts/epic-phase.mjs lock --epic <slug> [--repo-root <dir>] [--now <iso>]\n'
+    );
     return 2;
   }
   const here = fileURLToPath(new URL('..', import.meta.url));
@@ -117,6 +131,10 @@ function main(argv) {
     return 2;
   }
   const now = flag('now') ?? new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
+  if (!LOCKED_AT_RE.test(now)) {
+    process.stderr.write(`epic-phase: --now "${now}" is not an ISO date-time (e.g. 2026-10-03T20:34:34Z)\n`);
+    return 2;
+  }
   const sprintPath = join(dir, 'sprint-1.md');
   const res = lockEpic({
     readme: readFileSync(join(dir, 'README.md'), 'utf8'),
@@ -137,7 +155,9 @@ function main(argv) {
 
 const isMain = (() => {
   try {
-    return !!process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
+    return (
+      !!process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))
+    );
   } catch {
     return false;
   }
