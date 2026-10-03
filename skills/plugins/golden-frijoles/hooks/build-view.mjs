@@ -486,3 +486,30 @@ export function createViewer(io, { buildState = VENDOR_BUILD_STATE } = {}) {
   };
   return viewer;
 }
+
+// ── /build <slug> — the kickoff's one home (live-build-view S2.4, D12) ───────────────────────────────────────────────
+// The mod runs the BUNDLED kickoff generator (the groom skill's own copy, never one the open repo supplies — the same
+// rule as the resolver) and puts its output in the prompt box; the person presses enter. Nothing is saved anywhere:
+// the epic docs are the state, and the kickoff is regenerated from them every time.
+export const VENDOR_EMIT_KICKOFF = decodeURIComponent(
+  new URL('../skills/groom/emit-epic-kickoff.mjs', import.meta.url).pathname
+).replace(/^\/([A-Za-z]:\/)/, '$1');
+export const KICKOFF_TIMEOUT_MS = 10_000;
+
+/** An epic slug as the Roadmap writes them. Anything else (empty, a flag, a path) gets the list instead. */
+export function isEpicSlug(arg) {
+  return /^[a-z0-9][a-z0-9-]*$/.test(String(arg || '').trim());
+}
+
+/** The generator's argv: the kickoff for `slug`, or the list of startable epics when `slug` is null. */
+export function kickoffArgv(root, slug, script = VENDOR_EMIT_KICKOFF) {
+  return slug
+    ? ['node', script, '--epic', slug, '--repo-root', root || '.']
+    : ['node', script, '--list', '--repo-root', root || '.'];
+}
+
+/** What `/build` prints when it fills nothing: the list, headed by why. */
+export function buildListText(reason, listStdout) {
+  const list = String(listStdout || '').trim() || '(could not list the epics)';
+  return `${reason}\nUsage: /build <epic-slug> — the epics a kickoff can start:\n${list}`;
+}

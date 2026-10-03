@@ -515,3 +515,23 @@ test('#240 review: invalidate() re-resolves on an unchanged key — the online r
   assert.ok(json.slice(onlineAt + 1).some((c) => c.includes('--offline')), 'a resolve after the online run, not before only');
   assert.equal(json.filter((c) => c.includes('--offline')).length, 4, 'turn, invalidated tick, in-flight, forced deferred');
 });
+
+// ── live-build-view S2.4: /build ──────────────────────────────────────────────────────────────────────────────
+test('/build runs the BUNDLED kickoff generator, never a file the open repo owns', () => {
+  const argv = view.kickoffArgv('/stranger', 'live-build-view');
+  assert.deepEqual(argv, ['node', join(HERE, '..', 'skills', 'groom', 'emit-epic-kickoff.mjs'), '--epic', 'live-build-view', '--repo-root', '/stranger']);
+  assert.ok(existsSync(argv[1]), 'the generator ships inside the plugin');
+  assert.deepEqual(view.kickoffArgv('/r', null).slice(2), ['--list', '--repo-root', '/r']);
+});
+
+test('isEpicSlug: a slug, never a flag or a path', () => {
+  for (const ok of ['live-build-view', 'a1', 'x']) assert.equal(view.isEpicSlug(ok), true, ok);
+  for (const no of ['', '--list', '../etc', 'Foo', 'a b', '-x', undefined]) assert.equal(view.isEpicSlug(no), false, String(no));
+});
+
+test('the bundled generator --list names startable epics, slug first (this repo)', () => {
+  const out = execFileSync('node', [view.VENDOR_EMIT_KICKOFF, '--list', '--repo-root', join(HERE, '..', '..', '..', '..')], { encoding: 'utf8' });
+  assert.match(out, /^live-build-view {2}Live build view/m);
+  assert.doesNotMatch(out, /\(shipped/);
+  assert.match(view.buildListText('/build: which epic?', out), /^\/build: which epic\?\nUsage: \/build <epic-slug>/);
+});
