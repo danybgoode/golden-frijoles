@@ -129,7 +129,7 @@ export function buildTask({ kind, since, activity }) {
   return lines.join('\n');
 }
 
-function main() {
+async function main() {
   const args = process.argv.slice(2);
   let kind = 'standup';
   let since;
@@ -179,7 +179,8 @@ function main() {
     minWords: 15,
   };
 
-  const result = writeProse({ prompt, evidence });
+  // Awaited — writeProse is async since #159; see the same note in commit-report.mjs.
+  const result = await writeProse({ prompt, evidence });
   if (!result.text) die(result.error || 'no prose writer produced a draft.');
 
   writeSync(1, `${result.text}\n`);
@@ -251,4 +252,4 @@ function telegramCreds() {
 }
 
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
-if (isMain) main();
+if (isMain) main().catch((e) => die(e?.stack || String(e)));

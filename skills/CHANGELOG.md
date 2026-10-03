@@ -7,6 +7,14 @@ newest heading are always the same number — `scripts/check-release.mjs` enforc
 
 ## [Unreleased]
 
+## [0.24.1] - 2026-10-03
+
+### Fixed
+
+- **A failed Devin run now says why.** `runDevin` logged only the last line of Devin's stderr, which is the closing `}`
+  of its JSON detail block, so a quota cap, an auth lapse and a capacity refusal all read as `devin -p failed: }`. It now
+  keeps the `Error:` line (`devinErrorLine`), e.g. "Your weekly usage quota has been exhausted".
+
 ## [0.24.0] - 2026-10-02
 
 ### Added

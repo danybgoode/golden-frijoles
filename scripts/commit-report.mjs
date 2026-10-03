@@ -407,7 +407,7 @@ function writeDeliveryCheckpoint(checkpoint) {
   renameSync(temporary, path);
 }
 
-function main() {
+async function main() {
   const args = process.argv.slice(2);
   let sha, range, text, writer;
   let post = false;
@@ -478,7 +478,10 @@ function main() {
   if (!prose) {
     // Devin writes, agy falls back, and every draft passes the mechanical guard before a human sees
     // it — see scripts/lib/prose-writer.mjs for why the router is that way round.
-    const result = writeProse({
+    // AWAITED: writeProse has been async since #159 (its guard may ask Jev). Called bare, `result` was a pending
+    // Promise, `result.text` was undefined, and every report died as "no prose writer produced a draft" — even
+    // when Devin had written a good one. The 📝 rail was dark from 2026-09-23 to 2026-10-03 because of it.
+    const result = await writeProse({
       prompt: buildWriterPrompt({
         style: loadPromptBody(join(__dirname, 'commit-report.prompt.md')),
         lessons: loadLessons(),
@@ -582,4 +585,4 @@ function main() {
 }
 
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
-if (isMain) main();
+if (isMain) main().catch((e) => die(e?.stack || String(e)));

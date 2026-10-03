@@ -1405,6 +1405,18 @@ export function runClaudeCode(prompt, stdin, opts = {}, deps = {}) {
 // over agy's argv path for large diffs. Empty stdout is a failure (a quota-capped devin, like agy, exits 0
 // with nothing). Uses the account default model. `deps` is injectable so a node:test drives it without a
 // real devin binary or touching the real filesystem.
+/**
+ * The line of devin's stderr that says what went wrong. Devin ends its errors with a JSON detail block, so the LAST
+ * line is a bare `}` — which is all the 📝 rail logged for ten days while the real line read "Your weekly usage quota
+ * has been exhausted". Prefer the first `Error:` line, else the last line that is not JSON punctuation.
+ */
+export function devinErrorLine(stderr) {
+  const lines = String(stderr || '').trim().split('\n').map((l) => l.trim()).filter(Boolean);
+  const error = lines.find((l) => /^error\b/i.test(l));
+  if (error) return error.replace(/:\s*\{$/, '');
+  return lines.filter((l) => !/^[{}\[\],]+$/.test(l)).pop() || 'unknown error';
+}
+
 export function runDevin(prompt, opts = {}, deps = {}) {
   const { spawn = spawnSync, writeFile = writeFileSync, mkdtemp = mkdtempSync, rm = rmSync } = deps;
   let dir;
@@ -1425,10 +1437,7 @@ export function runDevin(prompt, opts = {}, deps = {}) {
         opts.soft,
         `devin not found or failed to spawn (${r.error.message}) — install the Devin CLI or use --agent codex/antigravity.`
       );
-    if (r.status !== 0) {
-      const last = (r.stderr || '').trim().split('\n').filter(Boolean).pop() || 'unknown error';
-      return fail(opts.soft, `devin -p failed: ${last}`);
-    }
+    if (r.status !== 0) return fail(opts.soft, `devin -p failed: ${devinErrorLine(r.stderr)}`);
     const out = (r.stdout || '').trim();
     if (!out) {
       return fail(

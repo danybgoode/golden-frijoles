@@ -444,3 +444,22 @@ test('the retry loop AWAITS an async guard (judgeProse is async) — a rejected 
   assert.equal(r.text, 'second draft.');
   assert.deepEqual(seen, ['first draft.', 'second draft.']);
 });
+
+// ── Every caller AWAITS writeProse (2026-10-03) ──────────────────────────────────────────────────────
+// writeProse went async in #159; commit-report and standup-report kept calling it bare, so `result.text` was
+// undefined and the 📝 rail died silently for ten days. Pinned for the whole class, not the two instances.
+test('no script calls writeProse without await', async () => {
+  const { readdirSync, readFileSync: read } = await import('node:fs');
+  const { join } = await import('node:path');
+  const root = new URL('../', import.meta.url).pathname;
+  const bare = [];
+  for (const f of readdirSync(root).filter((n) => n.endsWith('.mjs') && !n.endsWith('.test.mjs'))) {
+    read(join(root, f), 'utf8')
+      .split('\n')
+      .forEach((line, i) => {
+        if (/\bwriteProse\(/.test(line) && !/\bawait\s+writeProse\(/.test(line) && !/^\s*(\/\/|\*)/.test(line))
+          bare.push(`${f}:${i + 1}`);
+      });
+  }
+  assert.deepEqual(bare, [], `writeProse is async — await it: ${bare.join(', ')}`);
+});
