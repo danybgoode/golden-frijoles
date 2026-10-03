@@ -857,6 +857,25 @@ test('S2.3: a live epic branch with no locked_at reads Locking architecture; the
   }
 });
 
+test('S2.3 (#241 review r2): the gate reads the README phase, not a sprint file born Shaping', () => {
+  const f = fixture({ sprint2: 'Shaping', epicPhase: 'Building' });
+  try {
+    f.git('checkout', '-qb', 'feat/arranged-only-s2');
+    writeFileSync(join(f.root, 'Roadmap', '04-shipping', 'arranged-only', 'README.md'), EPIC_README('Building', null));
+    mkdirSync(join(f.root, '.golden-frijoles'), { recursive: true });
+    writeFileSync(
+      join(f.root, '.golden-frijoles', 'board.json'),
+      JSON.stringify({ generated_at: '2026-10-02T09:00:00.000Z', branches: ['feat/arranged-only-s2'], prs: [] })
+    );
+    const line = renderLines(resolveBuildState({ root: f.root, offline: true, elsewhere: false })).find((l) =>
+      l.startsWith('  Status')
+    );
+    assert.doesNotMatch(line, /Locking architecture/);
+  } finally {
+    f.done();
+  }
+});
+
 test('S2.3 (#241 review): an epic built before the lock command — no stamp, phase already Building or later — reads Building', () => {
   for (const phase of ['Building', 'Verifying']) {
     const f = fixture({ sprint2: phase, epicPhase: phase });

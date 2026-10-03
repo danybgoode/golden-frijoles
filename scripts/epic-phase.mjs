@@ -11,12 +11,12 @@
 // It rewrites only the lines it owns: each value keeps its trailing `# comment`, every other byte stays as it was.
 // Exit codes: 0 locked, 1 refused, 2 usage / could not look.
 //
-// Node 18+; reads the contract's own LOCKED_AT_RE, so the stamp it writes is the one doc-format accepts.
+// Node 18+; validates `--now` with the contract's own validateLockedAt, so the stamp it writes is the one doc-format accepts.
 
 import { existsSync, readFileSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { LOCKED_AT_RE } from './lib/roadmap-contract.mjs';
+import { validateLockedAt } from './lib/roadmap-contract.mjs';
 
 const FRONTMATTER_RE = /^---\n([\s\S]*?)\n---\n?/;
 
@@ -131,7 +131,7 @@ function main(argv) {
     return 2;
   }
   const now = flag('now') ?? new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
-  if (!LOCKED_AT_RE.test(now)) {
+  if (validateLockedAt({ locked_at: now }).length) {
     process.stderr.write(`epic-phase: --now "${now}" is not an ISO date-time (e.g. 2026-10-03T20:34:34Z)\n`);
     return 2;
   }

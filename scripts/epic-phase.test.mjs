@@ -116,6 +116,11 @@ test('the CLI: locks the epic in a repo, refuses the second time, says usage on 
     2,
     '--now is validated'
   );
+  assert.equal(
+    run('lock', '--epic', 'demo', '--repo-root', root, '--now', '2026-13-45T25:00Z').status,
+    2,
+    'by the contract (a real date), not a regex'
+  );
   // A path is not a slug: nothing outside Roadmap/ is read or written (vibe security lens, #241).
   mkdirSync(join(root, 'apps', 'web'), { recursive: true });
   writeFileSync(join(root, 'apps', 'web', 'README.md'), README().replace('slug: demo', 'slug: web'));

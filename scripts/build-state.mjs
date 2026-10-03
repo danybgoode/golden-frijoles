@@ -872,13 +872,13 @@ export function statusValue(state) {
   // live-build-view D11 — the band's refinement of Building, not a new stage (the Hub and the board keep Building): an
   // epic whose branch is live but whose README carries no `locked_at` is still Locking architecture. The lock is a
   // command (scripts/epic-phase.mjs lock), so from here on every rung is set by a trigger.
-  // Only while the WRITTEN phase is still before the lock: an epic built before the command existed (phase Building or
-  // later, no stamp) keeps reading Building, never "Locking architecture · phase Verifying" (#241 review).
+  // Only while the EPIC's written phase is still before the lock (the README's, not the sprint's — sprint files are born
+  // Shaping): an epic built before the command existed (README Building or later, no stamp) keeps reading Building (#241).
   const locking =
     state.kind === 'epic' &&
     state.stage === 'Building' &&
     !state.epic?.locked_at &&
-    [null, 'Shaping', 'Locking architecture'].includes(state.phase_written ?? null) &&
+    [null, 'Shaping', 'Locking architecture'].includes(state.epic?.phase ?? null) &&
     /^(?:git: |github: PR #\d+ draft)/.test(source);
   const stage = locking ? 'Locking architecture' : state.stage;
   const age =

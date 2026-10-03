@@ -164,7 +164,8 @@ export const register: Register = (on) => {
     };
     if (!isEpicSlug(slug)) return list(slug ? `/build: "${slug}" is not an epic slug.` : '/build: which epic?');
     const run = await $.process.run(kickoffArgv(root, slug), { timeoutMs: KICKOFF_TIMEOUT_MS });
-    // The generator exits 1 for an epic it cannot find; anything else (a timeout, a crash) is not "no such epic".
+    // Exit 1 is the generator's own refusal (its die(): no such epic, no Roadmap/ — an uncaught throw exits 1 too), so the
+    // list follows; a timeout or a signal is something else and says so.
     if (run.exitCode === 1) return list(`/build: no epic "${slug}" under Roadmap/.`);
     if (run.exitCode !== 0 || !run.stdout.trim())
       return { text: `/build: the kickoff generator failed (exit ${run.exitCode}). Run it by hand: node ${kickoffArgv(root, slug).slice(1).join(' ')}` };

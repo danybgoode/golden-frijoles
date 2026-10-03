@@ -112,6 +112,12 @@ test('refused: no story, two stories, another sprint, an id the epic does not li
     true,
     "a sentence's full stop ends the id"
   );
+  assert.equal(
+    check('feat/arranged-only-s2', 'feat(x): S2.1, S2.2.').ok,
+    false,
+    'a full stop never hides the second id'
+  );
+  assert.equal(check('feat/arranged-only-s2', 'feat(x): S2.1/2.2.').ok, false);
   assert.equal(check('feat/arranged-only-s2', 'feat(x): S2.1: the hook').ok, true);
   assert.equal(
     check('feat/arranged-only-s2', 'feat(x): S2.1 and S9.9').ok,
