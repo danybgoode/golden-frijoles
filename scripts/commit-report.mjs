@@ -480,7 +480,7 @@ async function main() {
     // it — see scripts/lib/prose-writer.mjs for why the router is that way round.
     // AWAITED: writeProse has been async since #159 (its guard may ask Jev). Called bare, `result` was a pending
     // Promise, `result.text` was undefined, and every report died as "no prose writer produced a draft" — even
-    // when Devin had written a good one. The 📝 rail was dark from 2026-09-23 to 2026-10-03 because of it.
+    // when Devin had written a good one — the 📝 rail went dark for ten days (#237).
     const result = await writeProse({
       prompt: buildWriterPrompt({
         style: loadPromptBody(join(__dirname, 'commit-report.prompt.md')),
