@@ -1,5 +1,6 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Locator } from '@playwright/test'
 import { randomBytes } from 'node:crypto'
+import { CELL_TIMEOUT_MS } from '@/lib/portfolio-model'
 import { disposableSession, type DisposableSession } from './helpers/disposable-session'
 
 // portfolio-view · Sprint 2 (Roadmap/02-commercial/portfolio-view — the Architecture lock, D1, D2, D5, D11, D12, C2).
@@ -13,6 +14,26 @@ import { disposableSession, type DisposableSession } from './helpers/disposable-
 // board-sinks S4: mutate the one legal read itself).
 
 type Extra = { projects: string[]; users: string[] }
+
+// ── Two races this spec used to run, and lost on CI (2026-10-03) ──────────────────────────────────────────────────────
+// It was flaky from the day it shipped: CI's first attempt failed even on the "green" runs (#236), and only the retry
+// passed, until both attempts failed on every PR. Measured locally: the first click landed 200–350 ms BEFORE React
+// hydrated the loop form. On this Mac the race was usually won; on a slower runner the click, or the forged hidden
+// value, landed mid-hydration and was lost. So:
+//   1. HYDRATED — never touch a loop form until React owns it (`__reactFiber$` on the node). Not a product defect: the
+//      form works without JS, but a value rewritten before hydration is restored by React, and that is what lost.
+//   2. AFTER_SUBMIT — a submit re-renders the page, and the page is ALLOWED up to CELL_TIMEOUT_MS per render (each cell
+//      read is bounded by it — portfolio-view D7). An assertion stricter than the product's own budget tests the runner's
+//      load, not the product; Playwright's default 5 s equals that budget exactly, which was a coin flip on CI.
+const AFTER_SUBMIT = { timeout: CELL_TIMEOUT_MS + 10_000 }
+
+async function hydrated(form: Locator) {
+  await expect
+    .poll(() => form.evaluate((el) => Object.keys(el).some((key) => key.startsWith('__reactFiber$'))), {
+      timeout: 15_000,
+    })
+    .toBe(true)
+}
 
 async function seedTwoProductWorkspace(session: DisposableSession, extra: Extra) {
   const { db, userId } = session
@@ -155,10 +176,14 @@ test('the loop: an owner places a product from its row; a member sees the stage 
     await expect(theirs.locator('form')).toHaveCount(0)
     await expect(theirs.getByText('Place it')).toHaveCount(0)
 
+    await hydrated(mine.locator('form'))
     await mine.getByText('Place it').click()
     await expect(mine.locator('details')).toHaveAttribute('open', '')
     await mine.getByRole('menuitem', { name: 'Operate' }).click()
-    await expect(rowOf(owned.slug).locator('[data-loop-stage="operate"]')).toContainText('Operate')
+    await expect(rowOf(owned.slug).locator('[data-loop-stage="operate"]')).toContainText(
+      'Operate',
+      AFTER_SUBMIT
+    )
     // It was WRITTEN — the database holds the owner's choice, nothing inferred it.
     await expect
       .poll(
@@ -174,8 +199,10 @@ test('the loop: an owner places a product from its row; a member sees the stage 
     const forge = async (projectId: string) => {
       await page.goto('/app/portfolio')
       const row = rowOf(owned.slug)
-      // Open the menu FIRST, then rewrite the hidden id and prove it took: set before hydration, React restores the
-      // rendered value and the forged submit silently becomes the owner's own (seen in CI on PR #235).
+      // Wait for React to own the form, THEN rewrite the hidden id and prove it took: set before hydration, React
+      // restores the rendered value and the forged submit silently becomes the owner's own (seen in CI on #235 and on
+      // every PR on 2026-10-03 — opening the menu first was not enough; see the note at the top).
+      await hydrated(row.locator('form'))
       await row.getByText('Change').click()
       const input = row.locator('form input[name="projectId"]')
       await input.evaluate((el, id) => ((el as HTMLInputElement).value = id), projectId)
@@ -187,12 +214,15 @@ test('the loop: an owner places a product from its row; a member sees the stage 
 
     await forge(memberOf.id)
     // Refused with a named outcome on the page — not the "couldn't load your workspace" error boundary.
-    await expect(page).toHaveURL(/[?&]loop=forbidden/, { timeout: 15_000 })
-    await expect(page.locator('main')).toContainText('Only a project owner can place it on the loop.')
+    await expect(page).toHaveURL(/[?&]loop=forbidden/, AFTER_SUBMIT)
+    await expect(page.locator('main')).toContainText(
+      'Only a project owner can place it on the loop.',
+      AFTER_SUBMIT
+    )
     expect(await stageOf(memberOf.id)).toBeNull()
 
     await forge(sibling.id)
-    await expect(page.locator('main [data-portfolio-state]')).toHaveCount(0) // the not-found page, not the portfolio
+    await expect(page.locator('main [data-portfolio-state]')).toHaveCount(0, AFTER_SUBMIT) // the not-found page, not the portfolio
     expect(await stageOf(sibling.id)).toBeNull()
     // CONTROL: the owner's own row was not touched by either forged submit.
     expect(await stageOf(owned.id)).toBe('operate')
