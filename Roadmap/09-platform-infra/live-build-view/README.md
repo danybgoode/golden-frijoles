@@ -70,8 +70,9 @@ module reload. It also has `$.command.register` (in `session.start`) answered by
   `session.start` starts one new timer.
 - **D2 — The key (restores build-visualization-claude-mods D4).** One `git worktree list --porcelain` covers this
   checkout's HEAD + branch AND every other worktree's, so there is no second git call. On top of that, the newest
-  `mtimeMs` under `<root>/Roadmap` from a `$.fs.list` walk (files and directories, capped at 2 000 entries, beyond which
-  the cap is the answer and `MAX_AGE_MS` covers the rest). The root comes from `turn.start`'s existing `rev-parse`,
+  FILE `mtimeMs` under `<root>/Roadmap` from a `$.fs.list` walk, capped at 2 000 entries. **(Amended at build:**
+  `$.fs.list` reports `kind: 'dir'` with `mtimeMs` 0 for directories, so a deleted doc is not seen until
+  `MAX_AGE_MS`, which moves from 15 s to 5 min as a backstop: at 15 s every 30 s tick would re-resolve.) The root comes from `turn.start`'s existing `rev-parse`,
   held in the module variable it already sets (`repoRoot`). The tick and the Bash hook do nothing until a turn has set
   it. Pure `keyFrom(porcelain, newestMtime)` and `newestMtimeOf(entries)` live in `build-view.mjs`. The cost of
   one check is measured inside `claude plugin test` on this repo and written in the PR (target ≤ 50 ms).
