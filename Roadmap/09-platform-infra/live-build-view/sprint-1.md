@@ -12,25 +12,25 @@ stories:
     i_want: "the band to change when the branch, a commit, a worktree or an epic doc changes"
     so_that: "I see what is being built while the one long agent turn runs"
     risk: low
-    status: planned
+    status: done
   - id: S1.2
     title: "In review without a network call in the turn"
     as_a: "the product owner"
     i_want: "the band to say In review once a PR is open"
     so_that: "the last rung before ship shows without slowing any turn"
     risk: low
-    status: planned
+    status: done
   - id: S1.3
     title: "The fixes we ship reach the session"
     as_a: "anyone running the plugin"
     i_want: "the band to say when the installed plugin is older than the published one, and the marketplace to auto-update"
     so_that: "a fixed band actually reaches the people looking at it"
     risk: low
-    status: planned
+    status: done
 ---
 # Live build view — Sprint 1: The band goes live
 
-**Status:** ⬜ not started
+**Status:** 🟦 In review — S1.1 S1.2 `84a2948`, S1.3 `0c54406`
 
 ## Build contract (locked by the architect before the builder started — README § Architecture lock)
 Cite, don't restate: D1–D6, D14, D15, C1–C3.
