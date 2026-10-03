@@ -20,8 +20,12 @@ type Extra = { projects: string[]; users: string[] }
 // passed, until both attempts failed on every PR. Measured locally: the first click landed 200–350 ms BEFORE React
 // hydrated the loop form. On this Mac the race was usually won; on a slower runner the click, or the forged hidden
 // value, landed mid-hydration and was lost. So:
-//   1. HYDRATED — never touch a loop form until React owns it (`__reactFiber$` on the node). Not a product defect: the
-//      form works without JS, but a value rewritten before hydration is restored by React, and that is what lost.
+//   1. HYDRATED — never touch a loop form until React owns it (`__reactFiber$`, a React internal, on the FORM: children
+//      hydrate first, so both hidden inputs are settled by then). During hydration React rewrites a hidden input's
+//      default value, so a forged value set earlier can be undone. ⚠️ Not proven: CI's failures look like a submit that
+//      never completed (the URL stayed on bare /app/portfolio), not a restored value. Clicking BEFORE hydration under 6×
+//      and 20× CPU throttling still wrote locally, so a person clicking early is probably replayed, not dropped — an
+//      open question for a probe, not something this spec now exercises.
 //   2. AFTER_SUBMIT — a submit re-renders the page, and the page is ALLOWED up to CELL_TIMEOUT_MS per render (each cell
 //      read is bounded by it — portfolio-view D7). An assertion stricter than the product's own budget tests the runner's
 //      load, not the product; Playwright's default 5 s equals that budget exactly, which was a coin flip on CI.
@@ -157,6 +161,9 @@ test('2+ products: bare /app opens on the portfolio — one row per product of m
 test('the loop: an owner places a product from its row; a member sees the stage read-only', async ({
   browser,
 }) => {
+  // Three hydration waits and five post-submit budgets do not fit Playwright's default 30 s: on a slow runner the test
+  // would die at "test timeout" instead of at the step that was slow (fresh reviewer, #239).
+  test.setTimeout(90_000)
   const session = await disposableSession(browser, 'owner')
   const extra: Extra = { projects: [], users: [] }
   try {
