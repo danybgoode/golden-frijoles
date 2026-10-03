@@ -39,6 +39,18 @@ stories:
 
 **Status:** ⬜ not started
 
+## Build contract (locked by the architect before the builder started — README § Architecture lock)
+Cite, don't restate: D7–D14, C4–C6.
+- **Files:** `skills/template/scripts/build-state.mjs` (+ root copy + `render-hook-vendor` bundle), new
+  `skills/template/scripts/{story-check,epic-phase}.mjs` (+ specs, + root copies), `.githooks/commit-msg`,
+  `skills/template/.githooks/commit-msg`, `lib/roadmap-contract.mjs` (all copies), `lib/epic-kickoff.mjs` (all copies)
+  + `emit-epic-kickoff.mjs --list`, the mod's `/build`, groom `SKILL.md` Stage 8, `SESSION-KICKOFFS.md` §2 (root +
+  template), 0.26.0 release.
+- **Measured inputs:** 15/179 historical feat/fix subjects name a story; 2 name two in the continuation form.
+- **Teeth:** the story-check spec covers zero ids, `S1.1/1.2`, `S2.2-2.4`, another sprint's id on `-sN`, an id the epic
+  does not list, every exempt type, merges/reverts/fixups, a non-epic branch and the bypass — and is mutation-checked
+  by dropping the continuation form. The hook's < 2 s budget is measured on a real commit in this repo.
+
 ## Stories
 
 ### Story 2.1 — A feat/fix commit on an epic branch names exactly one story

@@ -39,7 +39,7 @@ _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 - [CMS-neutral experiment integration + Payload go/no-go](../01-growth-engine/cms-integration-spike/README.md) — #18 · 01 Growth Engine · 0/6 stories · risk: Low · _docs: status scaffolded_
 - [One plugin, one install — Golden Frijoles ships as a public plugin whose skills run in anyone's repo](../09-platform-infra/golden-frijoles-plugin/README.md) — #34 · 09 Platform Infra · 14/23 stories · risk: High · appetite L · _docs: status in-progress_
 - [One public monorepo — skills/ subtree, a lean install mirror, licences, a private docs repo](../09-platform-infra/public-monorepo/README.md) — #45 · 09 Platform Infra · 13/15 stories · risk: High · appetite M · _docs: status in-progress_
-- [Live build view: the band moves while the agent works, from facts no agent writes](../09-platform-infra/live-build-view/README.md) — #55 · 09 Platform Infra · 0/7 stories · risk: High · appetite M · _docs: status scaffolded_
+- [Live build view: the band moves while the agent works, from facts no agent writes](../09-platform-infra/live-build-view/README.md) — #55 · 09 Platform Infra · 0/7 stories · risk: High · appetite M · _docs: status in-progress_
 - [Board renders priority where it should render build_order](seeds/build-order-render-fix.md) — 09 Platform Infra · seed · Chore · risk: Low · appetite S · _docs: status queued_
 
 ## Building — live only
