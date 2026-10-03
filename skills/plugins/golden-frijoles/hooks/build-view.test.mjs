@@ -255,6 +255,7 @@ test('keyFrom: every worktree HEAD + branch and the newest Roadmap mtime; prunab
   assert.notEqual(view.keyFrom(PORCELAIN, 101), k, 'a doc edit moves it');
   assert.equal(view.keyFrom('', 100), null, 'no git, nothing to key on');
   assert.match(view.keyFrom(PORCELAIN, null), /roadmap@none$/);
+  assert.notEqual(view.keyFrom(PORCELAIN, 100, '/repo'), view.keyFrom(PORCELAIN, 100, '/repo-wt'), 'WHICH checkout is in the key');
 });
 
 test('newestUnder: walks `dir` entries breadth-first (never through a link), newest file mtime, stops at the cap', async () => {
@@ -310,11 +311,10 @@ test('bandRowsFrom: the Plugin row is a field with its own glyph', () => {
 });
 
 /** A fake world for createViewer: a scripted `run`, a Roadmap tree, a store, and what was shown. */
-function fakeIo({ porcelain = PORCELAIN, mtime = 1, resolveStdout = JSON.stringify({ lines: ['Currently building'] }) } = {}) {
+function fakeIo({ porcelain = PORCELAIN, mtime = 1, resolveStdout = JSON.stringify({ lines: ['Currently building'] }), root = '/repo', store = new Map() } = {}) {
   const calls = [];
   const shown = [];
   const logs = [];
-  let store = null;
   let t = 1_000;
   const world = { porcelain, mtime, resolveStdout, onlineStdout: JSON.stringify({ facts_mode: 'live', lines: [] }) };
   const gate = { hold: null };
@@ -326,16 +326,17 @@ function fakeIo({ porcelain = PORCELAIN, mtime = 1, resolveStdout = JSON.stringi
     gate,
     run: async (argv) => {
       calls.push(argv.join(' '));
-      if (argv[1] === 'rev-parse') return { exitCode: 0, stdout: 'sha\nmain\n/repo\n' };
+      if (argv[1] === 'rev-parse') return { exitCode: 0, stdout: `sha\nmain\n${root}\n` };
       if (argv.includes('worktree')) return { exitCode: 0, stdout: world.porcelain };
       if (gate.hold) await gate.hold;
       if (argv.includes('--offline')) return { exitCode: 0, stdout: world.resolveStdout };
       return { exitCode: 0, stdout: world.onlineStdout };
     },
-    list: async (p) => (p === '/repo/Roadmap' ? [{ name: 'x.md', kind: 'file', mtimeMs: world.mtime }] : []),
-    getCached: async () => store,
-    setCached: async (v) => {
-      store = v;
+    list: async (p) => (p === `${root}/Roadmap` ? [{ name: 'x.md', kind: 'file', mtimeMs: world.mtime }] : []),
+    store,
+    getCached: async (r) => store.get(r) ?? null,
+    setCached: async (r, v) => {
+      store.set(r, v);
     },
     show: async (v) => {
       shown.push(v);
@@ -449,4 +450,66 @@ test('createViewer.refreshOnline: a second one while the first runs returns busy
   release();
   assert.equal(second, 'busy');
   assert.equal(await first, 'live');
+});
+
+test('#240 review: two sessions in two worktrees share one store and never serve each other a view', async () => {
+  const store = new Map();
+  const a = fakeIo({ root: '/r', store, resolveStdout: JSON.stringify({ lines: ['A on main'] }) });
+  const b = fakeIo({ root: '/r-wt', store, resolveStdout: JSON.stringify({ lines: ['B on feat/x'] }) });
+  const va = view.createViewer(a);
+  const vb = view.createViewer(b);
+  for (let i = 0; i < 3; i++) {
+    await va.check('tick');
+    await vb.check('tick');
+  }
+  assert.equal(resolves(a), 1, 'A resolves once, then its own slot holds');
+  assert.equal(resolves(b), 1, 'B too — no thrash between the two');
+  assert.deepEqual(a.shown, ['A on main']);
+  assert.deepEqual(b.shown, ['B on feat/x'], "B never draws A's view");
+});
+
+test('#240 review: a trigger that lands on a running check is deferred to one more pass, never dropped', async () => {
+  const io = fakeIo();
+  const v = view.createViewer(io);
+  let release;
+  io.gate.hold = new Promise((r) => (release = r));
+  const first = v.check('tick');
+  await new Promise((r) => setImmediate(r));
+  io.world.porcelain = PORCELAIN.replace('HEAD aaa', 'HEAD moved'); // the agent's `git switch` lands mid-check
+  assert.equal(await v.check('bash'), 'busy');
+  assert.equal(await v.check('bash'), 'busy', 'a burst collapses into one deferred pass');
+  io.gate.hold = null;
+  release();
+  assert.equal(await first, 'resolved');
+  assert.equal(resolves(io), 2, 'the deferred pass saw the moved HEAD');
+  assert.ok(io.logs.some((l) => /tick\+deferred check resolved/.test(l)));
+});
+
+test('#240 review: invalidate() re-resolves on an unchanged key — the online refresh mid-check is not lost', async () => {
+  const io = fakeIo();
+  const v = view.createViewer(io);
+  await v.check('turn');
+  assert.equal(await v.check('tick'), 'cached');
+  v.invalidate();
+  assert.equal(await v.check('tick'), 'resolved', 'a new snapshot or usage figure moves no key');
+  assert.equal(await v.check('tick'), 'cached', 'once');
+  // The race: the online refresh finishes while a check is resolving against the OLD snapshot.
+  let release;
+  io.gate.hold = new Promise((r) => (release = r));
+  io.world.mtime = 9;
+  const inflight = v.check('tick');
+  await new Promise((r) => setImmediate(r));
+  const online = v.refreshOnline('timer');
+  await new Promise((r) => setImmediate(r));
+  io.gate.hold = null;
+  release();
+  await inflight;
+  await online;
+  // The online run's re-check lands on the in-flight check (busy), so it is that check's deferred pass — FORCED, so it
+  // resolves although the key did not move, and it runs after the online run rewrote the snapshot.
+  const json = io.calls.filter((c) => c.includes('--json'));
+  const onlineAt = json.findIndex((c) => !c.includes('--offline'));
+  assert.ok(onlineAt !== -1);
+  assert.ok(json.slice(onlineAt + 1).some((c) => c.includes('--offline')), 'a resolve after the online run, not before only');
+  assert.equal(json.filter((c) => c.includes('--offline')).length, 4, 'turn, invalidated tick, in-flight, forced deferred');
 });

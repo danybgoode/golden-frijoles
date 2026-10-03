@@ -26,7 +26,7 @@
 // only keeps that file fresh, by running the bundled `epic-actuals.mjs --refresh` from `session.measure`.
 //
 // It never throws into the turn: any failure logs (visible with `claude --debug`) and clears the view.
-import type { Register } from 'claude-code';
+import type { EngineInterface, Register } from 'claude-code';
 import {
   ONLINE_EVERY_MS,
   ONLINE_FIRST_MS,
@@ -78,17 +78,23 @@ const lineNow = () => {
   return sessionLine(figures, sessionVerdict(figures)) ?? undefined;
 };
 
+// The view's I/O, spelled at its own call sites. The cache is one `$.store` slot PER CHECKOUT ROOT: the store is shared
+// by every session of the plugin, and one slot let two sessions in two worktrees serve each other's view (#240 review).
+function ioFor($: EngineInterface) {
+  return {
+    run: (argv: string[], opts: { timeoutMs: number }) => $.process.run(argv, opts),
+    list: (path: string) => $.fs.list(path),
+    getCached: (root: string) => $.store.get(`${STORE_KEY}@${root}`),
+    setCached: (root: string, entry: unknown) => $.store.set(`${STORE_KEY}@${root}`, entry),
+    show: (text: string | null) => $.state.set(VIEW, text),
+    log: (msg: string) => $.ui.log(msg),
+    now: () => Date.now(),
+  };
+}
+
 export const register: Register = (on) => {
   on('session.start', async ($, e, next) => {
-    viewer = createViewer({
-      run: (argv: string[], opts: { timeoutMs: number }) => $.process.run(argv, opts),
-      list: (path: string) => $.fs.list(path),
-      getCached: () => $.store.get(STORE_KEY),
-      setCached: (entry: unknown) => $.store.set(STORE_KEY, entry),
-      show: (text: string | null) => $.state.set(VIEW, text),
-      log: (msg: string) => $.ui.log(msg),
-      now: () => Date.now(),
-    });
+    viewer = createViewer(ioFor($));
     const live = viewer;
     // D5 — the Plugin row: this module's own manifest vs the marketplace clone's (no network). Once per load.
     try {
@@ -112,8 +118,10 @@ export const register: Register = (on) => {
   });
 
   on('turn.start', async ($, e, next) => {
-    // Awaited here (unlike the tick): the band should be right when the turn begins. Never throws (createViewer).
-    if (viewer) await viewer.check('turn');
+    // Awaited here (unlike the tick): the band should be right when the turn begins. Never throws (createViewer). A load
+    // whose session.start never ran (its hook failed, or a chain stopped short) still gets a view — just no timers.
+    if (!viewer) viewer = createViewer(ioFor($));
+    await viewer.check('turn');
     return next(e);
   });
 
@@ -154,14 +162,14 @@ export const register: Register = (on) => {
       $.ui.log(`session line: ${String(err)}`);
     }
     // finops S1.3 (D24) — keep the Spend row's summary fresh, off the hot path: the BUNDLED epic-actuals.mjs, at most
-    // once a minute, timeout-bound. A slow or failed run logs and leaves the last row; a good one drops the cached view
-    // so the next turn.start re-resolves with the new figure.
+    // once a minute, timeout-bound. A slow or failed run logs and leaves the last row; a good one makes the next check
+    // re-resolve with the new figure (a new figure moves no key).
     if (shouldRefreshUsage(usageRefreshedAt, repoRoot)) {
       usageRefreshedAt = Date.now();
       try {
         const run = await $.process.run(epicActualsArgv(repoRoot as string), { timeoutMs: USAGE_TIMEOUT_MS });
         $.ui.log(`usage: refreshed (${run.exitCode === 0 ? 'ok' : `exit ${run.exitCode}`})`);
-        if (run.exitCode === 0) await $.store.set(STORE_KEY, null);
+        if (run.exitCode === 0) viewer?.invalidate();
       } catch (err) {
         $.ui.log(`usage: ${String(err)}`);
       }

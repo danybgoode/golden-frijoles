@@ -2,8 +2,8 @@
 //
 // build-view.test.mjs pins the decisions (the key, the overlap guard, the drift row) with node:test. This file pins the
 // WIRING those specs cannot see: that session.start starts the 30 s tick, that a tick with an unchanged key does no
-// work and a doc edit does, that a Bash call re-checks without holding up its result, and that every check stays
-// offline. The test's `on` stands in for the host beneath the plugin: it answers `$.process.run` and `$.fs.*`.
+// work and a doc edit does, that a Bash call re-checks without holding up its result, that a push queues one online run,
+// and that every check stays offline. The test's `on` stands in for the host beneath the plugin: it answers `$.process.run` and `$.fs.*`.
 import type { On } from 'claude-code';
 import { test, expect, mock } from 'claude-code/testing';
 
