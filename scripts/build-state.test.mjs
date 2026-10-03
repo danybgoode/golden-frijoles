@@ -18,9 +18,11 @@ import {
 } from './build-state.mjs';
 import { PHASES } from './lib/roadmap-contract.mjs';
 
-const EPIC_README = (phase = 'Building') => `---
+const LOCKED = '2026-10-01T00:00:00Z';
+// `lockedAt: null` leaves the stamp out — an epic whose architecture lock has not been run (live-build-view D11).
+const EPIC_README = (phase = 'Building', lockedAt = LOCKED) => `---
 status: in-progress
-slug: arranged-only
+slug: arranged-only${lockedAt ? `\nlocked_at: "${lockedAt}"` : ''}
 title: Arranged-only delivery
 area: 04-shipping
 risk: high
@@ -136,6 +138,7 @@ test('a clean feature branch mid-sprint: epic, story + user story, progress, sta
       area: '04-shipping',
       risk: 'high',
       phase: 'Building',
+      locked_at: LOCKED,
       path: 'Roadmap/04-shipping/arranged-only/README.md',
     });
     assert.equal(s.story.id, 'S2.1');
@@ -819,6 +822,35 @@ test('S3.1: offline, the stage is read from the snapshot and says how old it is;
       renderLines(none).find((l) => l.startsWith('  Status')),
       /\(docs only, no snapshot yet\)/
     );
+  } finally {
+    f.done();
+  }
+});
+
+test('S2.3: a live epic branch with no locked_at reads Locking architecture; the stamp makes it Building', () => {
+  const f = fixture();
+  try {
+    f.git('checkout', '-qb', 'feat/arranged-only-s2');
+    const readme = join(f.root, 'Roadmap', '04-shipping', 'arranged-only', 'README.md');
+    writeFileSync(readme, EPIC_README('Shaping', null));
+    mkdirSync(join(f.root, '.golden-frijoles'), { recursive: true });
+    const snapshot = (prs) =>
+      writeFileSync(
+        join(f.root, '.golden-frijoles', 'board.json'),
+        JSON.stringify({ generated_at: '2026-10-02T09:00:00.000Z', branches: ['feat/arranged-only-s2'], prs })
+      );
+    snapshot([]);
+    const status = () =>
+      renderLines(resolveBuildState({ root: f.root, offline: true, elsewhere: false })).find((l) => l.startsWith('  Status'));
+    assert.match(status(), /^ {2}Status {3}Locking architecture · from git: feat\/arranged-only-s2 \(snapshot, /);
+    // A draft PR is still the lock in progress; a READY one is QA whatever the docs say (the stage resolver decides).
+    snapshot([{ number: 9, head: 'feat/arranged-only-s2', state: 'OPEN', draft: true, url: 'u' }]);
+    assert.match(status(), /Locking architecture · from github: PR #9 draft/);
+    snapshot([{ number: 9, head: 'feat/arranged-only-s2', state: 'OPEN', draft: false, url: 'u' }]);
+    assert.match(status(), /QA · from github: PR #9 ready/);
+    snapshot([]);
+    writeFileSync(readme, EPIC_README('Building'));
+    assert.match(status(), /^ {2}Status {3}Building · from git: feat\/arranged-only-s2/);
   } finally {
     f.done();
   }

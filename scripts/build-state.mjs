@@ -208,6 +208,7 @@ function readEpic(root, slug) {
     area: readme.data.area ?? found.macro,
     risk: readme.data.risk ?? null,
     phase: readme.data.phase ?? null,
+    locked_at: readme.data.locked_at ?? null, // live-build-view D10 — stamped by scripts/epic-phase.mjs lock
     lifecycle: readme.data.status ?? null,
     quote: quoteOf(readme.data),
     contract: readme.hasFrontmatter && !readme.error && 'phase' in readme.data,
@@ -782,6 +783,7 @@ function resolve_({ root, offline = false, git = makeGit(root), facts = null, gh
       area: epic.area,
       risk: epic.risk,
       phase: epic.phase,
+      locked_at: epic.locked_at,
       path: epic.path,
     },
     sprint: sprint ? { n: sprint.n, title: sprint.title, phase: sprint.phase } : null,
@@ -856,6 +858,15 @@ function elsewhereLines(state, pad) {
 export function statusValue(state) {
   if (!state.stage) return state.status || `unknown${state.warning ? ` — ${state.warning}` : ''}`;
   const source = String(state.stage_source || '').replace(/ · snapshot@\S+$/, '');
+  // live-build-view D11 — the band's refinement of Building, not a new stage (the Hub and the board keep Building): an
+  // epic whose branch is live but whose README carries no `locked_at` is still Locking architecture. The lock is a
+  // command (scripts/epic-phase.mjs lock), so from here on every rung is set by a trigger.
+  const locking =
+    state.kind === 'epic' &&
+    state.stage === 'Building' &&
+    !state.epic?.locked_at &&
+    /^(?:git: |github: PR #\d+ draft)/.test(source);
+  const stage = locking ? 'Locking architecture' : state.stage;
   const age =
     state.facts_mode === 'live'
       ? 'live'
@@ -863,8 +874,8 @@ export function statusValue(state) {
         ? `snapshot, ${state.stage_age ?? 'age unknown'}`
         : 'docs only, no snapshot yet';
   const phase =
-    state.phase_written && state.phase_written !== state.stage ? ` · phase ${state.phase_written}` : '';
-  return `${state.stage} · from ${source} (${age})${phase}`;
+    state.phase_written && state.phase_written !== stage ? ` · phase ${state.phase_written}` : '';
+  return `${stage} · from ${source} (${age})${phase}`;
 }
 
 /** The board around this work in one line, and the link to it when `board.hubUrl` is set (S3.1). */
