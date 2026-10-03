@@ -4,14 +4,12 @@
       "source": {
         "source": "github",
         "repo": "golden-frijoles/skills"
-      }
+      },
+      "autoUpdate": true
     }
   },
   "enabledPlugins": {
     "golden-frijoles@golden-frijoles": true
-  },
-  "env": {
-    "CLAUDE_CODE_ENABLE_FUNCTION_HOOKS": "1"
   },
   "permissions": {
     "allow": [

@@ -3,7 +3,7 @@ epic: live-build-view
 sprint: 1
 title: "The band goes live"
 risk: low
-phase: Shaping
+phase: Building
 stories_total: 3
 stories:
   - id: S1.1
@@ -12,25 +12,36 @@ stories:
     i_want: "the band to change when the branch, a commit, a worktree or an epic doc changes"
     so_that: "I see what is being built while the one long agent turn runs"
     risk: low
-    status: planned
+    status: done
   - id: S1.2
     title: "In review without a network call in the turn"
     as_a: "the product owner"
     i_want: "the band to say In review once a PR is open"
     so_that: "the last rung before ship shows without slowing any turn"
     risk: low
-    status: planned
+    status: done
   - id: S1.3
     title: "The fixes we ship reach the session"
     as_a: "anyone running the plugin"
     i_want: "the band to say when the installed plugin is older than the published one, and the marketplace to auto-update"
     so_that: "a fixed band actually reaches the people looking at it"
     risk: low
-    status: planned
+    status: done
 ---
 # Live build view — Sprint 1: The band goes live
 
-**Status:** ⬜ not started
+**Status:** 🟦 In review — S1.1 S1.2 `84a2948`, S1.3 `0c54406`
+
+## Build contract (locked by the architect before the builder started — README § Architecture lock)
+Cite, don't restate: D1–D6, D14, D15, C1–C3.
+- **Files:** `skills/plugins/golden-frijoles/hooks/{index.tsx,build-view.mjs,build-view.test.mjs,hooks.json}`, new
+  `hooks/build-view.mod.test.ts`; `.claude/settings.json`, `skills/template/.claude/settings.json`; `skills/README.md`;
+  `scripts/render-skills-ci.mjs` → regenerated `.github/workflows/skills-ci.yml` + `skills/.github/workflows/ci.yml`;
+  `plugin.json` / `kit/package.json` 0.25.0 + `skills/CHANGELOG.md`.
+- **Measured inputs:** 446 files / 90 dirs under Roadmap/ (the walk's size here); 14 ms for the two git calls;
+  installed 0.24.0 vs published 0.24.1 right now.
+- **Teeth:** each new pure function's spec is observed failing once by a mutation (the overlap guard, the key's
+  worktree part, the semver direction of the drift row).
 
 ## Stories
 
@@ -48,7 +59,7 @@ epic doc changes, **so that** I see what is being built while the one long agent
 **Risk:** low
 
 ### Story 1.2 — In review without a network call in the turn
-**As** the product owner, **I want** the band to say In review once a PR is open, **so that** the last rung before
+**As** the product owner, **I want** the band to say In review once a PR is open (the band's word is **QA** for a ready PR — README C1), **so that** the last rung before
 ship shows without slowing any turn.
 **Acceptance:**
 - A second timer (every 5 min, first run 60 s after `session.start`) runs the bundled resolver ONLINE once to refresh
@@ -84,8 +95,9 @@ Env: your machine, Claude Code ≥ 2.1.287, this repo, plugin updated to the rel
 3. In another terminal, edit any `Roadmap/01-growth-engine/scenarios-pm-operable/sprint-1.md` line while step 2's
    turn is still running.
    → Within 30 s the band redraws (the doc edit is in the key).
-4. Open a draft PR from any epic branch, wait 5 minutes in a session on that branch.
-   → The Status row says In review without you typing.
+4. In a session on an epic branch, open a ready (non-draft) PR for it with `gh pr create` (or wait ≤ 5 min after
+   opening it elsewhere).
+   → The Status row says `QA · from github: PR #N ready …` without you typing (C1: a draft PR stays Building).
 5. If your installed plugin is older than published: the band shows the `Plugin` row naming both versions.
 
 If any step fails, note the step number + what you saw — that's the bug report.
