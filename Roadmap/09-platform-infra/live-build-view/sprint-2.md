@@ -3,7 +3,7 @@ epic: live-build-view
 sprint: 2
 title: "Statuses from facts no agent writes"
 risk: high
-phase: Shaping
+phase: Building
 stories_total: 4
 stories:
   - id: S2.1
@@ -12,32 +12,32 @@ stories:
     i_want: "the story in flight to be a fact git guarantees"
     so_that: "the band never depends on how an agent worded a commit"
     risk: high
-    status: planned
+    status: done
   - id: S2.2
     title: "Progress counts stories done, not position"
     as_a: "the product owner"
     i_want: "the band's progress to say how many stories have commits"
     so_that: "Story 1 of 7 at the end of a sprint can never happen again"
     risk: low
-    status: planned
+    status: done
   - id: S2.3
     title: "The architecture lock is a command"
     as_a: "the product owner"
     i_want: "Locking → Building to flip when a script stamps it"
     so_that: "from the lock on, every status comes from a trigger, not a judgment"
     risk: low
-    status: planned
+    status: done
   - id: S2.4
     title: "/build <slug> — the kickoff's one home"
     as_a: "the product owner"
     i_want: "to start a build with one command that loads the generated kickoff"
     so_that: "no kickoff is ever saved to references/ or Claude outputs/ again"
     risk: low
-    status: planned
+    status: done
 ---
 # Live build view — Sprint 2: Statuses from facts no agent writes
 
-**Status:** ⬜ not started
+**Status:** 🟦 In review — S2.1 `360b52f`, S2.2 `d24aa2c`, S2.3 `2b53c30`, S2.4 `87e6769`
 
 ## Build contract (locked by the architect before the builder started — README § Architecture lock)
 Cite, don't restate: D7–D14, C4–C6.
