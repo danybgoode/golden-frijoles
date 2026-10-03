@@ -77,6 +77,78 @@ export function storyIdsIn(text) {
   return [...String(text).matchAll(STORY_IN_TEXT_RE)].map((m) => `S${Number(m[1])}.${Number(m[2])}`);
 }
 
+// A LIST or RANGE of ids in one subject — `S1.1/1.2`, `S2.2-2.4`, `S1.1, 1.3 and 1.4` — names every id in it, but
+// storyIdsIn reads only the ones with their own `S` (so `S1.1/1.2` is one id to it). The view's story-in-flight rule
+// (D2) is unchanged and keeps storyIdsIn; the commit-msg check and the progress count read this (live-build-view D8).
+const STORY_LIST_RE =
+  /\b(?:S|Story\s+)(\d+)\.(\d+)((?:\s*(?:[/,+&\u2013-]|\band\b)\s*(?:S|Story\s+)?\d+\.\d+\b)*)/g;
+
+/** Every story id a piece of text names, continuations included ("S1.1/1.2" → ['S1.1', 'S1.2']), in order. */
+export function storyIdsInWithContinuations(text) {
+  const out = [];
+  for (const m of String(text).matchAll(STORY_LIST_RE)) {
+    out.push(`S${Number(m[1])}.${Number(m[2])}`);
+    for (const c of (m[3] || '').matchAll(/(\d+)\.(\d+)/g)) out.push(`S${Number(c[1])}.${Number(c[2])}`);
+  }
+  return out;
+}
+
+// ── The commit-msg story check (live-build-view S2.1, D7/D8) ─────────────────────────────────────────────
+// On a branch that resolves to an epic, a commit that changes behaviour names exactly ONE story that epic (or that
+// sprint, on `-s<N>`) lists — so "which story is in flight" is a fact git guarantees, not a phrasing habit.
+export const STORY_GATED_TYPES = Object.freeze(['feat', 'fix', 'perf', 'refactor']);
+const CONVENTIONAL_RE = /^([A-Za-z]+)(?:\([^)]*\))?!?:\s/;
+const EXEMPT_SUBJECT_RE = /^(?:Merge |Revert "|fixup! |squash! |amend! )/;
+export const STORY_CHECK_BYPASS = 'GF_SKIP_STORY_CHECK';
+
+/**
+ * The verdict for one commit subject on one branch: `{ ok: true, why }` or `{ ok: false, why, valid, scope, epic }`.
+ * Pure over the files under `root` (it reads the epic's docs through resolveTarget — no second branch parser). It never
+ * throws: a checkout this cannot read lets the commit through, and says so — a broken check must not block work.
+ */
+export function storyCheck({ root, branch, subject, env = {} }) {
+  if (env[STORY_CHECK_BYPASS] === '1') return { ok: true, why: `${STORY_CHECK_BYPASS}=1` };
+  const s = String(subject || '').trim();
+  if (EXEMPT_SUBJECT_RE.test(s)) return { ok: true, why: 'merge, revert or fixup' };
+  const type = CONVENTIONAL_RE.exec(s)?.[1]?.toLowerCase() ?? null;
+  // An untyped subject is gated: an untyped commit must not be a silent way around the check (D8).
+  if (type !== null && !STORY_GATED_TYPES.includes(type)) return { ok: true, why: `type ${type} is not gated` };
+  if (!branch) return { ok: true, why: 'detached HEAD' };
+  let target;
+  try {
+    target = resolveTarget(root, branch);
+  } catch (err) {
+    return { ok: true, why: `could not read the roadmap (${err && err.message ? err.message : err})` };
+  }
+  if (!target || target.kind !== 'epic') return { ok: true, why: `${branch} is not an epic branch` };
+  const { epic, sprint } = target;
+  if (!epic.contract) return { ok: true, why: `${epic.path} predates the frontmatter contract` };
+  const stories = epic.sprints.flatMap((sp) => sp.stories.map((st) => ({ ...st, sprint: sp.n })));
+  const valid = stories.filter((st) => sprint === null || st.sprint === sprint);
+  const scope = sprint === null ? `epic ${epic.slug}` : `epic ${epic.slug}, sprint ${sprint}`;
+  const refuse = (why) => ({ ok: false, why, valid: valid.map((st) => ({ id: st.id, title: st.title ?? '' })), scope, epic: epic.slug });
+  if (!valid.length) return { ok: true, why: `${scope} lists no stories` };
+  const ids = [...new Set(storyIdsInWithContinuations(s))];
+  if (ids.length === 0) return refuse('it names no story');
+  if (ids.length > 1) return refuse(`it names ${ids.length} stories (${ids.join(', ')}) — one commit, one story`);
+  if (!valid.some((st) => st.id === ids[0]))
+    return refuse(`${ids[0]} is not a story of ${scope}`);
+  return { ok: true, why: `names ${ids[0]}` };
+}
+
+/** The refusal, as the commit-msg hook prints it: what was wrong, the ids that would pass, and the way around. */
+export function storyCheckMessage(verdict, branch) {
+  const list = verdict.valid.map((st) => `    ${st.id}${st.title ? `  ${st.title}` : ''}`).join('\n');
+  const example = verdict.valid[0]?.id ?? 'S1.1';
+  return [
+    `commit-msg: refused — a feat/fix/perf/refactor commit on ${branch} (${verdict.scope}) names exactly one story; ${verdict.why}.`,
+    `  The stories it can name:`,
+    list,
+    `  e.g.  feat(scope): ${example} <what changed>`,
+    `  docs/chore/test/ci/build/style commits are not checked. Bypass once: ${STORY_CHECK_BYPASS}=1 git commit …`,
+  ].join('\n');
+}
+
 // The branch parser lives in lib/work-branch.mjs now (board-sinks-and-scrumban D13), so the stage resolver reads a
 // branch exactly as this view does. Re-exported: callers and the spec import them from here.
 export { branchCandidates, parseBranch };
