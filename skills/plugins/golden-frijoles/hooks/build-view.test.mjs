@@ -127,7 +127,7 @@ test('bandRowsFrom: one row per resolver line, every fact kept', () => {
     '  Epic     Semantic lint — Jev judges    09-platform-infra · risk LOW',
     '  Story    S1.2 — the rule',
     '           As a PM, I want X, so that Y.',
-    '  Progress Story 2 of 5 · Sprint 1 of 2',
+    '  Progress 1 of 5 stories have commits · in flight S1.2 · Sprint 1 of 2',
     '  Status   Building',
     '  Also     1 more in other worktrees: feat/y',
   ];
@@ -153,8 +153,10 @@ test('bandRowsFrom: the idle view, and nothing for no text', () => {
 });
 
 test('progressOf / toneOf: colour and bar hints only', () => {
-  assert.deepEqual(progressOf('Story 2 of 5 · Sprint 1 of 2'), { done: 1, total: 5 });
-  assert.equal(progressOf('Story ? of 5'), null);
+  assert.deepEqual(progressOf('3 of 7 stories have commits · in flight S1.4 · Sprint 1 of 2'), { done: 3, total: 7 });
+  assert.deepEqual(progressOf('0 of 3 stories have commits · Sprint ? of 2'), { done: 0, total: 3 });
+  assert.equal(progressOf('Story 2 of 5 · Sprint 1 of 2'), null, 'the old ordinal is not progress');
+  assert.equal(progressOf('0 of 0 stories have commits'), null);
   assert.equal(toneOf('unknown — no README'), 'bad');
   assert.equal(toneOf('Shipped'), 'good');
   assert.equal(toneOf('Something else'), 'plain');

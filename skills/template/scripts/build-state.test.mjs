@@ -141,7 +141,7 @@ test('a clean feature branch mid-sprint: epic, story + user story, progress, sta
     assert.equal(s.story.id, 'S2.1');
     assert.equal(s.story.as_a, "a buyer's agent");
     assert.equal(s.story_source, 'commit');
-    assert.deepEqual(s.progress, { story: 2, stories: 3, sprint: 2, sprints: 2 });
+    assert.deepEqual(s.progress, { stories_with_commits: 1, story: 2, stories: 3, sprint: 2, sprints: 2 });
     assert.equal(s.status, 'Building');
     assert.equal(s.evidence.gh, 'skipped (--offline)');
 
@@ -151,6 +151,24 @@ test('a clean feature branch mid-sprint: epic, story + user story, progress, sta
       3,
       'X advances by one'
     );
+    // S2.2 — a repeat counts once; an id the epic does not list (S1.2) never counts; sprint 1's id on a -s2 branch does.
+    f.commit('S1.1/1.2 — from before the commit-msg check');
+    f.commit('S2.2 — a second commit on the same story');
+    const p = resolveBuildState({ root: f.root, offline: true, gh: noGh });
+    assert.equal(p.progress.stories_with_commits, 3, 'S1.1 + S2.1 + S2.2; S1.2 is not a story of this epic');
+    assert.match(renderLines(p).find((l) => l.startsWith('  Progress')), /^ {2}Progress 3 of 3 stories have commits · in flight S2\.2 · Sprint 2 of 2$/);
+  } finally {
+    f.done();
+  }
+});
+
+test('S2.2: a pre-S2.1 bundle naming two stories in one subject counts both', () => {
+  const f = fixture();
+  try {
+    f.git('switch', '-qc', 'feat/arranged-only-s2');
+    f.commit('S2.1/2.2 — both stories in one commit');
+    const s = resolveBuildState({ board: false, root: f.root, offline: true, gh: noGh });
+    assert.equal(s.progress.stories_with_commits, 2);
   } finally {
     f.done();
   }
@@ -191,7 +209,7 @@ test('commits with no story convention and no journal → story unknown, never a
     assert.equal(s.sprint, null, 'no -s<N> and no story → no sprint either, not "the first unshipped one"');
     assert.equal(s.progress.story, null);
     assert.equal(renderLines(s)[2], '  Story    unknown');
-    assert.match(renderLines(s)[4], /Story \? of 3 · Sprint \? of 2/);
+    assert.match(renderLines(s)[4], /^ {2}Progress 0 of 3 stories have commits · Sprint \? of 2$/, 'no story → no "in flight"');
   } finally {
     f.done();
   }
@@ -294,7 +312,7 @@ test('renderLines is a pure function of the state: the exact five lines, no box'
       i_want: 'checkout options to reflect arranged-only listings',
       so_that: "I'm never offered a carrier rail the seller can't fulfil",
     },
-    progress: { story: 4, stories: 7, sprint: 2, sprints: 2 },
+    progress: { stories_with_commits: 3, story: 4, stories: 7, sprint: 2, sprints: 2 },
     status: 'Building',
   };
   assert.deepEqual(renderLines(state), [
@@ -302,7 +320,7 @@ test('renderLines is a pure function of the state: the exact five lines, no box'
     '  Epic     Arranged-only delivery    04-shipping · risk HIGH',
     '  Story    S2.1 — Agent surface parity',
     "           As a buyer's agent, I want checkout options to reflect arranged-only listings, so that I'm never offered a carrier rail the seller can't fulfil.",
-    '  Progress Story 4 of 7 · Sprint 2 of 2',
+    '  Progress 3 of 7 stories have commits · in flight S2.1 · Sprint 2 of 2',
     '  Status   Building',
   ]);
 });

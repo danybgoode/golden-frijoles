@@ -680,6 +680,10 @@ function resolve_({ root, offline = false, git = makeGit(root), facts = null, gh
     ? (tryGit(git, ['log', '--format=%s', range]) || '').split('\n').filter(Boolean)
     : [];
   const storyCommits = subjects.filter((s) => storyIdsIn(s).some(accepts)).length;
+  // live-build-view S2.2 (D9): how many of this EPIC's stories have a commit — distinct ids the epic lists, from every id
+  // a subject names (continuations too, so a pre-S2.1 `S1.1/1.2` bundle counts both). Not sprint-filtered: a stacked
+  // `-s2` branch carries sprint 1's commits, and those are done stories.
+  const withCommits = new Set(subjects.flatMap(storyIdsInWithContinuations).filter((id) => byId.has(id)));
   const foreign = [...new Set(subjects.flatMap(storyIdsIn).filter((id) => !accepts(id)))];
   let story = null;
   let storySource = 'unknown';
@@ -795,6 +799,7 @@ function resolve_({ root, offline = false, git = makeGit(root), facts = null, gh
     story_note: unreadableSprint ? `${unreadableSprint}${storyNote ? ` — ${storyNote}` : ''}` : storyNote,
     warning: unreadableSprint,
     progress: {
+      stories_with_commits: withCommits.size,
       story: story ? story.ordinal : null,
       stories: allStories.length,
       sprint: sprint ? epic.sprints.indexOf(sprint) + 1 : null,
@@ -916,9 +921,12 @@ export function renderLines(state) {
     lines.push(`${pad('Story')}unknown`);
     lines.push(`${cont}${state.story_note}`);
   }
-  const storyPart = `Story ${progress.story ?? '?'} of ${progress.stories}`;
+  // S2.2 — stories DONE (with commits), not the in-flight story's position: "Story 1 of 7" at the end of a sprint
+  // was a position, and read as progress.
+  const done = `${progress.stories_with_commits ?? 0} of ${progress.stories} stories have commits`;
+  const inFlight = story ? ` · in flight ${story.id}` : '';
   const sprintPart = `Sprint ${progress.sprint ?? '?'} of ${progress.sprints}`;
-  lines.push(`${pad('Progress')}${storyPart} · ${sprintPart}`);
+  lines.push(`${pad('Progress')}${done}${inFlight} · ${sprintPart}`);
   if (state.spend) lines.push(`${pad('Spend')}${spendValue(state.spend, state.quote ?? null)}`);
   lines.push(`${pad('Status')}${statusValue(state)}`);
   return [...lines, ...also, ...boardLines(state, pad)];

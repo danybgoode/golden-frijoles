@@ -129,12 +129,12 @@ export function toneOf(value) {
   return 'plain';
 }
 
-/** `Story 2 of 5` → `{ done: 1, total: 5 }` (the current story is not done yet); anything else → null. */
+/** `3 of 7 stories have commits · …` → `{ done: 3, total: 7 }` (live-build-view S2.2); anything else → null. */
 export function progressOf(value) {
-  const m = /Story (\d+) of (\d+)/.exec(String(value || ''));
+  const m = /(\d+) of (\d+) stories have commits/.exec(String(value || ''));
   if (!m) return null;
   const total = Number(m[2]);
-  const done = Math.max(0, Math.min(total, Number(m[1]) - 1));
+  const done = Math.max(0, Math.min(total, Number(m[1])));
   return total > 0 ? { done, total } : null;
 }
 
