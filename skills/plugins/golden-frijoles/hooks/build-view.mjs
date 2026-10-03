@@ -394,8 +394,14 @@ export function createViewer(io, { buildState = VENDOR_BUILD_STATE } = {}) {
       const run = await io.run(buildStateArgv(root, buildState), { timeoutMs: RESOLVE_TIMEOUT_MS });
       const text = statusTextFrom(run.stdout, run.exitCode);
       did = 'resolved';
-      await io.setCached(root, { key, at: io.now(), text });
       await viewer.show(text);
+      // Drawn first: a cache write that fails (the plugin's one $.store file is capped, and every checkout root keeps a
+      // slot) must cost a re-resolve next time, never the view itself (#240 review, round 2).
+      try {
+        await io.setCached(root, { key, at: io.now(), text });
+      } catch (err) {
+        io.log(`build view: could not cache the view (${String(err)})`);
+      }
       return did;
     } catch (err) {
       did = 'failed';
@@ -448,6 +454,8 @@ export function createViewer(io, { buildState = VENDOR_BUILD_STATE } = {}) {
           const again = await pass(`${reason}+deferred`);
           if (did !== 'resolved') did = again; // a resolve in any pass is what the caller wants to know
         }
+        // A trigger landing during the LAST deferred pass is dropped here; the next tick (≤ 30 s) picks it up, and an
+        // invalidate() survives in forceNext either way.
         rerun = false;
         return did;
       } finally {

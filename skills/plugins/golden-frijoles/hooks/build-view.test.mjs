@@ -513,3 +513,14 @@ test('#240 review: invalidate() re-resolves on an unchanged key — the online r
   assert.ok(json.slice(onlineAt + 1).some((c) => c.includes('--offline')), 'a resolve after the online run, not before only');
   assert.equal(json.filter((c) => c.includes('--offline')).length, 4, 'turn, invalidated tick, in-flight, forced deferred');
 });
+
+test('#240 review r2: a cache write that fails still draws the view (the store file is capped)', async () => {
+  const io = fakeIo();
+  io.setCached = async () => {
+    throw new Error('store over its cap');
+  };
+  const v = view.createViewer(io);
+  assert.equal(await v.check('turn'), 'resolved');
+  assert.deepEqual(io.shown, ['Currently building']);
+  assert.ok(io.logs.some((l) => /could not cache the view/.test(l)));
+});
