@@ -80,9 +80,10 @@ export function storyIdsIn(text) {
 // A LIST or RANGE of ids in one subject — `S1.1/1.2`, `S2.2-2.4`, `S1.1, 1.3 and 1.4` — names every id in it, but
 // storyIdsIn reads only the ones with their own `S` (so `S1.1/1.2` is one id to it). The view's story-in-flight rule
 // (D2) is unchanged and keeps storyIdsIn; the commit-msg check and the progress count read this (live-build-view D8).
-// Each id ends where a number ends (`(?![.\d])`): `S1.3, 2.1.288` must not read `2.1` out of a version number (#241).
+// Each id ends where a number ends (`(?!\.?\d)` — a sentence's full stop is fine, `.288` is not): `S1.3, 2.1.288` must
+// not read `2.1` out of a version number (#241).
 const STORY_LIST_RE =
-  /\b(?:S|Story\s+)(\d+)\.(\d+)\b(?![.\d])((?:\s*(?:[/,+&\u2013-]|\band\b)\s*(?:S|Story\s+)?\d+\.\d+\b(?![.\d]))*)/g;
+  /\b(?:S|Story\s+)(\d+)\.(\d+)\b(?!\.?\d)((?:\s*(?:[/,+&\u2013-]|\band\b)\s*(?:S|Story\s+)?\d+\.\d+\b(?!\.?\d))*)/g;
 
 /** Every story id a piece of text names, continuations included ("S1.1/1.2" → ['S1.1', 'S1.2']), in order. */
 export function storyIdsInWithContinuations(text) {

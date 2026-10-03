@@ -108,6 +108,12 @@ test('refused: no story, two stories, another sprint, an id the epic does not li
     'a listed bare id still counts'
   );
   assert.equal(
+    check('feat/arranged-only-s2', 'feat(x): finish S2.1.').ok,
+    true,
+    "a sentence's full stop ends the id"
+  );
+  assert.equal(check('feat/arranged-only-s2', 'feat(x): S2.1: the hook').ok, true);
+  assert.equal(
     check('feat/arranged-only-s2', 'feat(x): S2.1 and S9.9').ok,
     false,
     'an S-spelled stranger still counts'
