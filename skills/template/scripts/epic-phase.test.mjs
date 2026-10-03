@@ -96,4 +96,9 @@ test('the CLI: locks the epic in a repo, refuses the second time, says usage on 
   assert.equal(run('lock', '--epic', 'demo', '--repo-root', root).status, 1);
   assert.equal(run('lock', '--epic', 'nope', '--repo-root', root).status, 2);
   assert.equal(run('unlock', '--epic', 'demo').status, 2);
+  // A path is not a slug: nothing outside Roadmap/ is read or written (vibe security lens, #241).
+  mkdirSync(join(root, 'apps', 'web'), { recursive: true });
+  writeFileSync(join(root, 'apps', 'web', 'README.md'), README().replace('slug: demo', 'slug: web'));
+  assert.equal(run('lock', '--epic', '../../apps/web', '--repo-root', root, '--now', NOW).status, 2);
+  assert.doesNotMatch(readFileSync(join(root, 'apps', 'web', 'README.md'), 'utf8'), /locked_at/);
 });

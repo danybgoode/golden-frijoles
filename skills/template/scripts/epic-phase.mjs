@@ -100,7 +100,8 @@ function main(argv) {
     return i === -1 ? null : rest[i + 1] ?? null;
   };
   const slug = flag('epic');
-  if (cmd !== 'lock' || !slug) {
+  // A slug, never a path: `--epic ../../apps/web` would otherwise resolve outside Roadmap/ (vibe, #241).
+  if (cmd !== 'lock' || !slug || !/^[a-z0-9][a-z0-9-]*$/.test(slug)) {
     process.stderr.write('usage: node scripts/epic-phase.mjs lock --epic <slug> [--repo-root <dir>] [--now <iso>]\n');
     return 2;
   }
