@@ -45,3 +45,4 @@ export function getSiteUrl(): string {
 export function isSiteUrlMisconfiguredInProduction(): boolean {
   return isSiteUrlMisconfiguredInProductionEnv(siteUrlEnv())
 }
+// ci-diet S2.3 mutation (b): this run gets cancelled mid-flight. Scratch PR, closed after.
