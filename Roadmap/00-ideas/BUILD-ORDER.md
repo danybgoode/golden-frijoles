@@ -10,18 +10,15 @@
 > This committed file reads the docs alone, so **Building and QA are not here** — they are facts git
 > and GitHub hold. For the live board run `node scripts/build-order.mjs --live`, or open the Hub board.
 
-## To groom (9)
+## To groom (6)
 
 _seeds with no pitch yet._
 
 - [Scenarios freeze: archive the epic, correct the landing's SecOps claim, deprecate the SDK scenario API](seeds/scenarios-freeze.md) — #36 · 01 Growth Engine · seed · Chore · risk: Low · appetite S · _docs: status raw_
 - [Verify module: the verification depth ladder as a product (after the spike)](seeds/verify-module.md) — #54 · 09 Platform Infra · seed · Feature · risk: High · appetite L · _docs: status raw_
 - [A delivery whose settle keeps failing is re-sent every 5 minutes, uncounted and unlogged](seeds/delivery-stale-reclaim-uncounted.md) — 01 Growth Engine · seed · Bug · risk: High · appetite S · _docs: status raw_
-- [gf north-star set --json: say whether --yes would be accepted](seeds/north-star-dry-run-sendable.md) — 09 Platform Infra · seed · Feature · risk: Low · appetite S · _docs: status raw_
 - [perf-probe only requests the hosts a project names](seeds/perf-probe-target-allowlist.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
 - [Template scripts run when invoked through a symlinked path](seeds/script-ismain-realpath.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
-- [The CLI body-order guard misses req.clone().json()](seeds/cli-body-order-guard-clone.md) — 09 Platform Infra · seed · Chore · risk: Low · appetite S · _docs: status raw_
-- [The docs name a kickoff-generator path that does not exist in an installed repo](seeds/kickoff-generator-path.md) — 09 Platform Infra · seed · Bug · risk: Low · appetite S · _docs: status raw_
 - [This repo lints its template scripts the way its consumers do](seeds/foundation-lint-gate.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
 
 ## Grooming (2)
@@ -31,7 +28,7 @@ _a pitch is waiting at the approval gate._
 - [Analytics visualization — the charting-dependency decision (spike), then the layer](seeds/analytics-visualization-layer.md) — #14 · 01 Growth Engine · seed · Spike · risk: Low · appetite S · _docs: status ready_
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
 
-## Ready to build (5)
+## Ready to build (7)
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
@@ -39,6 +36,8 @@ _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 - [CMS-neutral experiment integration + Payload go/no-go](../01-growth-engine/cms-integration-spike/README.md) — #18 · 01 Growth Engine · 0/6 stories · risk: Low · _docs: status scaffolded_
 - [One plugin, one install — Golden Frijoles ships as a public plugin whose skills run in anyone's repo](../09-platform-infra/golden-frijoles-plugin/README.md) — #34 · 09 Platform Infra · 14/23 stories · risk: High · appetite L · _docs: status in-progress_
 - [One public monorepo — skills/ subtree, a lean install mirror, licences, a private docs repo](../09-platform-infra/public-monorepo/README.md) — #45 · 09 Platform Infra · 13/15 stories · risk: High · appetite M · _docs: status in-progress_
+- [Kickoff generators run from anywhere](../09-platform-infra/kickoff-generator-path/README.md) — #56 · 09 Platform Infra · 0/5 stories · risk: Low · appetite M · _docs: status scaffolded_
+- [CLI follow-ups from think-skills](../09-platform-infra/cli-think-skills-followups/README.md) — #57 · 09 Platform Infra · 0/2 stories · risk: Low · appetite S · _docs: status scaffolded_
 - [Board renders priority where it should render build_order](seeds/build-order-render-fix.md) — 09 Platform Infra · seed · Chore · risk: Low · appetite S · _docs: status queued_
 
 ## Building — live only
@@ -105,4 +104,4 @@ _merged, deployed and closed._
 - [The flag console a human can operate — Flagsmith-grade IA, terminology and list ergonomics](../01-growth-engine/flags-console-parity/README.md) — 01 Growth Engine · 11/11 stories · risk: High · appetite M · _docs: status shipped_
 
 ---
-_66 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._
+_65 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._

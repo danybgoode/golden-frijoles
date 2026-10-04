@@ -1,19 +1,24 @@
 ---
 title: "The CLI body-order guard misses req.clone().json()"
 slug: cli-body-order-guard-clone
-status: raw
+status: scaffolded
 area: "09"
 type: chore
 priority: unranked
 appetite: S
 underwritten_by: null
 risk: low
-epic: null
-build_order: null
-updated: 2026-10-01
+epic: "09-platform-infra/cli-think-skills-followups"
+build_order: 57
+consolidated_into: north-star-dry-run-sendable   # groomed together 2026-10-03; one epic (CLI surface)
+updated: 2026-10-03
 ---
 
 # Seed: the CLI body-order guard misses req.clone().json()
+
+> **Consolidated 2026-10-03 into [`north-star-dry-run-sendable`](north-star-dry-run-sendable.md).** Daniel's call at
+> grooming ("two tiny epics by surface"): this and the dry-run verdict both came from #216's review round 2 and both
+> are about the CLI surface. That pitch carries the scope and acceptance; this seed is kept for the record.
 
 Found by `think-skills` (#216, fresh pr-reviewer round 2).
 
