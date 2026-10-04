@@ -1,10 +1,9 @@
 # CodeQL — static security analysis for the JS/TS surface.
 #
 # ── Why WEEKLY-SCHEDULED and not per-PR (decided 2026-07-24) ──────────────────────────────────
-# The default CodeQL template runs on every push AND every pull_request. On this repo that would
-# roughly double the Actions minutes spent per PR — and Actions minutes are a recurring,
-# account-wide, cyclical constraint here, not a one-time incident (Roadmap/LEARNINGS.md →
-# Working efficiently: seen exhausted twice already).
+# The default CodeQL template runs on every push AND every pull_request. This was decided weekly to save Actions
+# minutes, a premise that ended when the repo went public (free hosted runners; ci-diet D9). Weekly stands on the
+# pre-launch tradeoff below alone; moving it per-PR is its own decision, not taken here.
 #
 # The tradeoff is honest: a weekly scan finds an introduced vulnerability days later than a
 # per-PR scan would. That is acceptable *pre-launch* — zero tenants, zero campaigns, zero
@@ -41,10 +40,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: javascript-typescript
           # security-extended over the default query pack: this codebase handles API keys,
@@ -53,9 +52,9 @@ jobs:
           queries: security-extended
 
       - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
+        uses: github/codeql-action/autobuild@v4
 
       - name: Perform CodeQL analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
         with:
           category: '/language:javascript-typescript'

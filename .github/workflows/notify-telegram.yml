@@ -48,9 +48,8 @@
 #      `Production`, terminal `state: success`). That is the same fact the poll would go fetch,
 #      delivered as a push instead of a pull. AGENTS rule #4 already treats it as the source of
 #      truth for "which SHA is actually live".
-#   2. GitHub Actions minutes are a recurring account-wide constraint here
-#      (Roadmap/LEARNINGS.md → Working efficiently). A poll job holds a runner for the WHOLE
-#      build (2-5 min every merge); this job runs for ~5 seconds, once, on the terminal event.
+#   2. A poll job holds a runner for the WHOLE build (2-5 min every merge); this job runs for ~5 seconds, once,
+#      on the terminal event. (Minutes are free on this public repo; the event is still the simpler design.)
 #
 # It also needs no `VERCEL_API_TOKEN` / `VERCEL_PROJECT_ID` / `VERCEL_TEAM_ID` at all — one fewer
 # production credential minted, stored and rotated for an observability-only feature.
@@ -82,8 +81,8 @@ jobs:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: Send Telegram push notification
@@ -136,8 +135,8 @@ jobs:
       contains(fromJSON('["success", "failure", "error"]'), github.event.deployment_status.state)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       # Resolve once, before either delivery. Putting this inside the Telegram step made the Slack

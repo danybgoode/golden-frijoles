@@ -64,11 +64,11 @@ jobs:
       run:
         working-directory: \${{ github.workspace }}/../skills-mirror
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # the split needs full history
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '20'
 
@@ -99,7 +99,7 @@ jobs:
 
 /** The skills job's steps AFTER its own checkout + setup-node (which the header replaces). Pure. */
 export function stepsBody(source) {
-  const marker = /\n {6}- uses: actions\/setup-node@v4\n {8}with:\n {10}node-version: '20'\n/;
+  const marker = /\n {6}- uses: actions\/setup-node@v7\n {8}with:\n {10}node-version: '20'\n/;
   const m = source.match(marker);
   if (!m) throw new Error(`${SOURCE}: could not find its setup-node step — the render needs updating`);
   return source.slice(m.index + m[0].length).replace(/^\n+/, '');

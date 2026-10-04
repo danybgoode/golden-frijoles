@@ -1,10 +1,8 @@
-# Dependency updates. Dependabot runs on GitHub's own infrastructure — it does NOT consume this
-# account's Actions minutes (a recurring constraint here: Roadmap/LEARNINGS.md → Working
-# efficiently). The PRs it opens DO trigger ci.yml, which is why the limits below are deliberately
-# low and the cadence is weekly, not daily.
+# Dependency updates. The PRs Dependabot opens run ci.yml in full. The repo is public, so GitHub-hosted runners
+# cost no minutes; the weekly cadence and low limits are about review load, not quota. (If the repo goes private
+# again, minutes become a constraint: see Roadmap/LEARNINGS.md -> Working efficiently.)
 #
-# Grouping matters more than it looks: without it, a React or Next patch bump arrives as four
-# separate PRs, each spending a full typecheck-build + Playwright run.
+# Grouping matters more than it looks: without it, a React or Next patch bump arrives as four separate PRs to review.
 version: 2
 
 updates:
