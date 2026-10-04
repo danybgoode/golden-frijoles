@@ -22,12 +22,11 @@ slug: example-feature-idea          # kebab; matches the filename
 status: raw                          # raw | ready | queued | scaffolded | in-progress | shipped | archived
 area: "01"                           # macro-section number, matching Roadmap/README.md's table
 type: feature                        # feature | spike | chore | epic
-priority: null                       # the wave this is SLATED for (intent), or null — see Ordering
 appetite: null                       # S | M | L — the budget, set at shaping; REQUIRED before `queued`
-underwritten_by: null                # wave that PAID for it (a Roadmap/bets/<wave>.md), or null
+underwritten_by: null                # the cycle that PAID for it (Roadmap/bets/<cycle>.md, bare name) — fund.mjs
 risk: low                            # low | high
 epic: null                           # path to the scaffolded epic, or null until scaffolded
-build_order: null                    # integer position in the one global sequence — see Ordering
+build_order: null                    # integer position in the one global sequence — fund.mjs places it
 updated: <date>
 ---
 ```
@@ -60,48 +59,34 @@ One field is authoritative at each stage — they never both drive the board:
   no longer read for the board, so it can't drift it. **`BUILD-ORDER.md` is a generated view — never
   hand-edit it; change the README `status:` and run `node scripts/build-order.mjs`.**
 
-### Ordering — `build_order` sequences, `priority` labels the wave (adopted 2026-08-08)
-
-Two fields had been carrying overlapping halves of "what comes next", and the board rendered the
-*wrong one*. Corrected — each now has exactly one job:
+### Ordering — `build_order` is the sequence (adopted 2026-08-08; `priority` retired 2026-10-04)
 
 | Field | Job | Values | Who owns it |
 |---|---|---|---|
-| `build_order` | **Position in the one global sequence.** The answer to *"what is next?"* | a **plain integer**, monotonic, never reused | **the epic README frontmatter** once `epic:` is set; the seed until then |
-| `priority` | The wave this is **slated for** — intent, set before a bet exists | a wave label (`wave-2026-08-08`), or null | the seed, always |
+| `build_order` | **Position in the one global sequence.** The answer to *"what is next?"* | a **plain integer**, never reused | **the epic README frontmatter** once `epic:` is set; the seed until then |
+| `underwritten_by` | **The cycle that paid for it** — the funding record | a bare cycle name (`wave-2026-10`) | the seed (or a seedless epic's README) |
 
-`priority` is *intent* and `underwritten_by` is the *record*: the first says which wave we mean to
-spend this in, the second names the `Roadmap/bets/<wave>.md` that actually paid. They agree once a
-bet is placed; before that only `priority` is set. Neither is the sequence — that is `build_order`
-alone.
+`priority` used to carry the *intended* wave beside `underwritten_by`'s *record* — two fields for one decision, and
+the board once rendered the wrong one. fund-at-approval retired it: the approval gate writes the cycle row, and the
+row is both the intent and the record.
 
-**Plain integers, no letter suffixes.** The old scheme used `#1`, `#2a`, `#2b`. Three problems, all
-of them live when this was corrected: `#1` was held by *two* epics (`commercial-shell` and
-`app-shell-and-agent-rail`); `buildOrderNum()` in `roadmap-to-notion.mjs` reduces `#2` and `#2a` to
-the same `2`, so the Notion numeric sort tied; and the `#`-prefixed string sorts `#10` before `#2`,
-which is the bug the numeric property was added to fix in the first place. An integer has none of
-these failure modes. To insert between 14 and 15, renumber — the sequence is cheap to rewrite and
-expensive to read wrong.
+**Plain integers, no letter suffixes.** The old scheme used `#1`, `#2a`, `#2b`: `#1` was held by two epics, `#2`
+and `#2a` reduced to the same Notion number, and `#10` sorted before `#2`. An integer has none of these failure modes.
 
-**`build_order` is a sequence, not a priority score.** Shipped epics keep their number: `1…12` is
-the ship history, in the order it actually happened, and the queue continues from there. That makes
-the board readable as one list from "the first thing we built" to "the last thing we plan to" —
-which is the whole point of having the field.
-
-> **Known gap (owed to Claude Code, 2026-08-08):** `scripts/build-order.mjs` renders `r.priority`
-> in its meta line, not `r.build_order` — which is why the board has been showing `#1`, `#2a` from
-> the seed's `priority` while every epic README's `build_order` sat empty. The exact patch is in
-> `Roadmap/00-ideas/seeds/build-order-render-fix.md`. Until it lands, the board's `·` badges show
-> the wave label rather than the sequence.
+**`build_order` is a sequence, not a priority score.** Shipped epics keep their number: the low numbers are the ship
+history, in the order it happened, and the queue continues from there. **Only the queue renumbers** — `fund.mjs
+--next` / `--after <slug>` places a bet and rewrites the numbers of live, funded work in order, skipping every number
+a shipped or archived item holds, so history never moves.
 
 ### appetite & underwriting — the economics fields
 
 `appetite` (S | M | L) is the **budget the idea is worth**, fixed at shaping *before* the solution
 is designed — sessions + an implied token band, never a time estimate (see WAYS-OF-WORKING →
-*Betting & appetite*). `underwritten_by` names the **wave that pays for it** (a
-`Roadmap/bets/<wave>.md` file), set at the betting table. `null` means nobody has paid for it yet —
-fine in the funnel, impossible on the board: `build-order.mjs` **hard-fails** a `queued` seed with
-no `appetite`, and flags a missing `underwritten_by` as drift. Like `status`, `appetite` is an
+*Betting & appetite*). `underwritten_by` names the **cycle that paid for it** — the bare name of a
+`Roadmap/bets/<cycle>.md` file (`wave-2026-10`), written by `groom`'s `fund.mjs` at the approval gate.
+`null` means nobody has paid for it yet — fine in the funnel, impossible on the board: `build-order.mjs`
+**hard-fails** a `queued` seed with no `appetite`, and a live bet (`queued`, or an epic scaffolded or in
+progress) whose `underwritten_by` is missing or names no cycle file. Like `status`, `appetite` is an
 enforced enum — a present-but-unrecognized value fails the board, it never falls back silently.
 
 ## How seeds flow (no file moves)
@@ -110,10 +95,13 @@ enforced enum — a present-but-unrecognized value fails the board, it never fal
    from a brain-dump).
 2. **Scope** — `groom` fills out the Definition-of-Ready (appetite included) and flips
    `status: ready`.
-3. **Queue** — bet on it at a wave boundary (`appetite:` + `underwritten_by:` set, the wave's
-   `Roadmap/bets/` file records what it displaced); `status: queued`.
-4. **Scaffold** — on approval, `groom` runs its own `scaffold-epic.mjs` (ships inside the `groom`
-   skill, `ways-of-work` plugin) to create the epic/sprint docs, then sets the seed's `epic:` +
-   `status: scaffolded`. **No file ever moves between folders** — the frontmatter carries the state.
+3. **Fund + scaffold, in one answer** — the approval gate is the betting table. On "approve", `groom`
+   runs its own `fund.mjs` (a row in the month's `Roadmap/bets/wave-YYYY-MM.md`, created on first use,
+   recording what the bet displaced; `underwritten_by:`; a `build_order` placed with `--next` or
+   `--after <slug>`, renumbering only the queue) and then `scaffold-epic.mjs` (the epic/sprint docs; the
+   seed gets `epic:` + `status: scaffolded`), committed together. Both ship inside the `groom` skill,
+   `golden-frijoles` plugin. A fixed-scope seed scaffolds from its slug alone, its acceptance criteria
+   becoming sprint 1's stories. "Approve, don't fund" leaves the seed `ready` and scaffolds nothing.
+   **No file ever moves between folders** — the frontmatter carries the state.
 
 Filenames are kebab-case and match `slug`. Audits live in `audits/`, never in `seeds/`.
