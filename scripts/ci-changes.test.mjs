@@ -6,6 +6,21 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { changedFiles, isDocsOnly } from './ci-changes.mjs';
 
+// A hook exports GIT_DIR and friends, which override cwd: an unsealed fixture would rewrite the real repo
+// (git-fixtures-sealed.test.mjs).
+const GIT_ENV_TO_CLEAR = [
+  'GIT_DIR',
+  'GIT_WORK_TREE',
+  'GIT_INDEX_FILE',
+  'GIT_OBJECT_DIRECTORY',
+  'GIT_COMMON_DIR',
+];
+function sealedEnv() {
+  const env = { ...process.env };
+  for (const k of GIT_ENV_TO_CLEAR) delete env[k];
+  return env;
+}
+
 test('the sprint-2 cases: docs, mixed, root md, a workflow, an empty diff', () => {
   assert.equal(isDocsOnly(['Roadmap/x.md']), true);
   assert.equal(isDocsOnly(['Roadmap/x.md', 'apps/web/a.ts']), false);
@@ -34,7 +49,8 @@ test('lookalikes are not docs', () => {
 test('a code file renamed into Roadmap/ still lists its old path', () => {
   const dir = mkdtempSync(join(tmpdir(), 'ci-changes-'));
   try {
-    const git = (...a) => execFileSync('git', a, { cwd: dir, encoding: 'utf8' }).trim();
+    const env = sealedEnv();
+    const git = (...a) => execFileSync('git', a, { cwd: dir, env, encoding: 'utf8' }).trim();
     git('init', '-q', '-b', 'main');
     git('config', 'user.email', 't@t');
     git('config', 'user.name', 't');
@@ -46,7 +62,7 @@ test('a code file renamed into Roadmap/ still lists its old path', () => {
     mkdirSync(join(dir, 'Roadmap'));
     git('mv', 'apps/a.ts', 'Roadmap/a.md');
     git('commit', '-qm', 'move');
-    const files = changedFiles(base, 'HEAD', dir);
+    const files = changedFiles(base, 'HEAD', dir, env);
     assert.deepEqual(files.sort(), ['Roadmap/a.md', 'apps/a.ts']);
     assert.equal(isDocsOnly(files), false);
   } finally {

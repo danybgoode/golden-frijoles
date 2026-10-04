@@ -27,9 +27,10 @@ export function isDocsOnly(files) {
  * The changed paths between base and head. `--no-renames` lists both sides of a rename, so a code file moved into
  * Roadmap/ still shows its old path. `-z` keeps unusual filenames intact.
  */
-export function changedFiles(base, head, cwd = process.cwd()) {
+export function changedFiles(base, head, cwd = process.cwd(), env = process.env) {
   const out = execFileSync('git', ['diff', '--name-only', '--no-renames', '-z', `${base}...${head}`], {
     cwd,
+    env,
     encoding: 'utf8',
   });
   return out.split('\0').filter(Boolean);
