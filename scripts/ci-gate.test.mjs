@@ -60,6 +60,8 @@ test('red: changes failed, was skipped, or gave no answer', () => {
 
 test('red: no needs at all, or a skippable job missing from needs', () => {
   assert.equal(decideGate(null, SKIPPABLE).ok, false);
+  assert.equal(decideGate([], SKIPPABLE).ok, false);
+  assert.equal(decideGate(needs('false', 'success', { 'e2e-api': null }), SKIPPABLE).ok, false);
   assert.equal(decideGate({}, SKIPPABLE).ok, false);
   const n = needs('true', 'skipped');
   delete n['design-contract'];
@@ -68,8 +70,13 @@ test('red: no needs at all, or a skippable job missing from needs', () => {
 
 test('ci.yml: gate needs every other job, and --skippable names exactly the e2e jobs', () => {
   const yml = readFileSync(join(fileURLToPath(import.meta.url), '../../.github/workflows/ci.yml'), 'utf8');
-  const jobs = [...yml.slice(yml.indexOf('\njobs:')).matchAll(/^ {2}([a-z0-9-]+):\s*$/gm)].map((m) => m[1]);
+  // Any job id GitHub accepts (letters, digits, _ and -), quoted or not, with or without a trailing comment.
+  const jobs = [
+    ...yml.slice(yml.indexOf('\njobs:')).matchAll(/^ {2}['"]?([A-Za-z0-9_-]+)['"]?\s*:\s*(#.*)?$/gm),
+  ].map((m) => m[1]);
   const gate = yml.slice(yml.indexOf('\n  gate:'));
+  const inline = /needs:\s*\[([^\]]*)\]/.exec(gate);
+  assert.ok(inline, "gate's needs must stay an inline [list] so this pin can read it");
   const needsList = /needs:\s*\[([^\]]*)\]/
     .exec(gate)[1]
     .split(',')

@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url';
 export function decideGate(needs, skippable) {
   const problems = [];
   const rows = [];
-  if (!needs || typeof needs !== 'object' || Object.keys(needs).length === 0) {
+  if (!needs || typeof needs !== 'object' || Array.isArray(needs) || Object.keys(needs).length === 0) {
     return { ok: false, rows, problems: ['no needs context'] };
   }
   const changes = needs.changes;
@@ -25,7 +25,8 @@ export function decideGate(needs, skippable) {
   else if (docsOnly !== 'true' && docsOnly !== 'false') problems.push(`changes: docs_only is "${docsOnly}"`);
   for (const job of skippable) if (!(job in needs)) problems.push(`${job}: named skippable but not in needs`);
 
-  for (const [job, { result } = {}] of Object.entries(needs)) {
+  for (const [job, value] of Object.entries(needs)) {
+    const result = value?.result;
     let verdict;
     if (result === 'success') verdict = 'ok';
     else if (result === 'skipped' && docsOnly === 'true' && skippable.includes(job))
