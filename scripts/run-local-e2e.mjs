@@ -12,6 +12,7 @@ import { randomBytes } from 'node:crypto';
 import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { readGateEnv } from './lib/gate-env.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const web = join(root, 'apps/web');
@@ -20,6 +21,16 @@ const playwright = join(root, 'node_modules/.bin/playwright');
 const normalPort = 3110;
 const darkPort = 3111;
 const syncWithoutServingPort = 3112;
+// Where this runner deliberately differs from CI's lit server: it turns two owner-mutation gates ON, so their lit
+// suites run here. The one cost: scenario-authoring-dark.authed.spec.ts skips locally (CI runs it).
+const LOCAL_OVERRIDES = {
+  // Both enable owner mutation surfaces CI keeps off; locally they are on so scenario-authoring.authed and the
+  // flag-catalog-sync specs run somewhere.
+  SCENARIO_AUTHORING_ENABLED: 'true',
+  FLAG_DEFINITION_SYNC_ENABLED: 'true',
+  // Stated rather than inherited from the shell: the connector's write surface stays dark everywhere.
+  CONNECTOR_WRITES_ENABLED: 'false',
+};
 // Optional file arguments keep focused local investigation hermetic too. The dark-gate tripwire
 // still always runs because a focused enabled spec must not accidentally skip the OFF boundary.
 // `--authed` and `--browser` select the two opt-in Playwright projects. Neither is in the blocking
@@ -155,37 +166,13 @@ function runPlaywright(env, port, files = [], project = 'api') {
 
 async function main() {
   const local = localSupabaseEnv();
+  // The gates come from the SAME files ci.yml loads (ci-diet D4), so this runner cannot drift from CI's lit server.
+  // LOCAL_OVERRIDES is the one place it deliberately differs, each with its reason.
   const shared = {
     ...process.env,
     ...local,
-    CONNECTOR_ENABLED: 'true',
-    JOURNEY_PROJECTIONS_ENABLED: 'true',
-    EXPERIMENT_GOVERNANCE_ENABLED: 'true',
-    REPORT_SHARES_ENABLED: 'true',
-    SIGNALS_ENABLED: 'true',
-    CONNECTOR_WRITES_ENABLED: 'false',
-    FLAG_SERVING_ENABLED: 'true',
-    FLAG_DEFINITION_SYNC_ENABLED: 'true',
-    RESILIENCE_SCENARIOS_ENABLED: 'true',
-    SECURITY_SIMULATIONS_ENABLED: 'true',
-    AUTOMATIC_CIRCUIT_BREAKERS_ENABLED: 'true',
-    SCENARIO_AUTHORING_ENABLED: 'true',
-    // ⚠️ **These were missing, and two of them gate the epic's flagship guard.**
-    // `console-visual.authed.spec.ts` skips itself unless BOTH are exactly 'true'
-    // (`gatesAreLit()`), and `ci.yml` sets both on its main server — so this runner, which exists to
-    // be "the local counterpart to CI's Playwright gate", silently skipped the one spec that can go
-    // red on the way a page looks. A local gate that is a SUBSET of CI's is worse than no local
-    // gate, because it produces a green nobody should trust (Roadmap/LEARNINGS.md).
-    // Both are ON in production, so this matches CI rather than loosening anything.
-    // `FLAG_RULE_BUILDER_ENABLED` rides along because `ci.yml`'s main server sets it too and the
-    // feature page's Targeting tab renders behind it — a lit server missing it is not the server
-    // CI runs.
-    //
-    // ⚠️ `CONSOLE_SHELL_ENABLED` was the third and is GONE — mockups-as-built Story 3.3 deleted the
-    // flag. The console is the console.
-    FLAG_CONSOLE_ENABLED: 'true',
-    FLAG_RULE_BUILDER_ENABLED: 'true',
-    SIGNUP_ENABLED: requestedProject === 'authed' ? 'true' : 'false',
+    ...readGateEnv(join(root, 'ci/gates.on.env')),
+    ...LOCAL_OVERRIDES,
     SELF_PROJECT_API_KEY: randomBytes(24).toString('hex'),
   };
 
@@ -194,26 +181,8 @@ async function main() {
   process.stdout.write('local-e2e: building against the local Supabase instance...\n');
   run('npm', ['run', 'build'], { env: shared });
 
-  const dark = {
-    ...shared,
-    JOURNEY_PROJECTIONS_ENABLED: 'false',
-    EXPERIMENT_GOVERNANCE_ENABLED: 'false',
-    FLAG_SERVING_ENABLED: 'false',
-    FLAG_DEFINITION_SYNC_ENABLED: 'false',
-    RESILIENCE_SCENARIOS_ENABLED: 'false',
-    SECURITY_SIMULATIONS_ENABLED: 'false',
-    AUTOMATIC_CIRCUIT_BREAKERS_ENABLED: 'false',
-    SCENARIO_AUTHORING_ENABLED: 'false',
-    // The dark server mirrors CI's `:3100`, which turns this OFF so `flag-console-dark` asserts the
-    // dark contract. It is ON above for the same reason CI has it ON there: production does. Both
-    // states get asserted, rather than whichever one the environment happened to be in.
-    //
-    // ⚠️ `CONSOLE_SHELL_ENABLED: 'false'` was here and is GONE with the flag (Story 3.3).
-    // `setup-routes-dark.spec.ts` stays in the list below — it keeps its two unconditional tests,
-    // which are about the credential surface being gated on nothing, and those still have a subject.
-    FLAG_CONSOLE_ENABLED: 'false',
-    SIGNUP_ENABLED: 'false',
-  };
+  // Every gate off, as CI's :3100 server has them.
+  const dark = { ...shared, ...readGateEnv(join(root, 'ci/gates.off.env')) };
   await withServer({ port: darkPort, env: dark, label: 'dark-gate' }, async () => {
     runPlaywright(dark, darkPort, [
       'apps/web/e2e/journey-dark.spec.ts',

@@ -32,7 +32,7 @@ stories:
 
 **Status:** ⬜ not started
 
-## Build contract (the architect locks this before the builder starts)
+## Build contract (locked by the architect before the builder started — README § Architecture lock)
 Cite, don't restate: the epic README's **D1, D2, D3, D5, D6**. The lock confirms which Supabase services the suites use
 (auth/gotrue, rest, kong, postgres, and inbucket if any spec reads mail) and pins the Supabase CLI version the jobs install.
 

@@ -32,7 +32,7 @@ stories:
 
 **Status:** ⬜ not started
 
-## Build contract (the architect locks this before the builder starts)
+## Build contract (locked by the architect before the builder started — README § Architecture lock)
 Cite, don't restate: the epic README's **D3, D7, D8**. The lock decides the quarantine mechanism's shape: a Playwright
 tag (`@quarantine`) plus a small expiry checker modelled on `jev-eval.mjs`'s shadow expiry.
 

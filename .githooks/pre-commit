@@ -43,8 +43,8 @@ fail=0
 # Design-drift: ~75ms, and path-gated to the surfaces it actually governs. Cheap enough to belong
 # here, and it catches exactly the class of mistake that is expensive to unpick after the fact
 # (hardcoded values instead of shared tokens/primitives spreading across components).
-# `design-system` added by design-system-rails S1.3 — see the note in design-drift-guard.yml: the
-# path filter, not SWEPT_ROOTS, is what decides whether the guard runs at all.
+# `design-system` added by design-system-rails S1.3: this path filter, not SWEPT_ROOTS, decides whether the hook
+# runs it. CI's static job runs it on every PR, unfiltered.
 if echo "$changed" | grep -qE '^(apps/web/(app|components|design-system)/|apps/web/brand/|scripts/check-design-drift\.mjs)'; then
   if ! node scripts/check-design-drift.mjs; then
     echo "pre-commit: design-drift failed — use shared tokens/primitives and SVG icons." >&2

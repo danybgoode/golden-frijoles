@@ -1566,8 +1566,7 @@ one-liner + why + date shape.
   `npm run typecheck` failed, because the latter checks FOUR projects (app, app-tests, sdk,
   sdk-tests) and the error was in a test fixture whose object literal narrows more tightly than the
   runtime type. **Invoke CI's own npm scripts, never a hand-written approximation of them**, and run
-  them in CI's order so the cheapest fails first. Especially where Actions minutes are the scarce
-  account-wide resource they are in this repo.
+  them in CI's order so the cheapest fails first.
   **The same holds for a workflow you assemble from its steps by hand.** think-skills S2 ran six skills-ci checks by
   name, missed the groom prose-budget step, and went red. Run every step from the workflow file itself (parse its
   `run:` blocks and skip only the ones that install global CLIs), against the same tree CI uses (here, the subtree
@@ -1599,13 +1598,26 @@ one-liner + why + date shape.
   job silently no-op'd (0 events, no error, by design — that's what made it non-obvious). Fix:
   generate/export anything a long-running background process needs to read from its env BEFORE
   starting that process, not after — even if the value is only used by a LATER step logically.
-- **GitHub Actions minutes are a shared, cyclical, account-wide constraint, not a one-time
-  incident** — seen twice now (root `miyagi-product-management`'s `notion-sync` burning the
-  account's quota 2026-07-16; a general account-wide exhaustion flagged mid-session 2026-07-20).
-  When told minutes are tight, batch changes and verify locally (`tsc`, `build`, and the Playwright
-  `api` project against a local Supabase) before pushing, rather than using CI as an iterative test
-  runner — this repo's `.githooks/pre-push` already runs a local, best-effort version of the same
-  gate for exactly this reason.
+- **Actions minutes stopped being the constraint when the repo went public (public-monorepo, 2026-09-28):
+  GitHub-hosted standard runners are free for public repositories, so wall clock is what's scarce.** The old premise
+  ("minutes are a recurring account-wide constraint", from two exhaustions in July 2026 while the repo was private)
+  kept steering CI design for weeks after it stopped being true: one sequential e2e job to save a checkout, the
+  browser rails kept out of the gate "to save minutes". ci-diet (2026-10-04) rewrote it here, in `ci.yml` and in
+  `dependabot.yml`. **Re-check a cost premise when the thing it costs changes.** If the repo ever goes private again,
+  minutes come back: batch pushes, verify locally first (`npm run test:e2e:local`), and revisit the parallel jobs.
+- **CI's rules, distilled from the incident histories `ci.yml` used to carry (ci-diet, 2026-10-04).** Each one bit
+  more than once; the narratives are in git history before `ci-diet` S1.
+  - **A gate a spec branches on is read twice**: the server decides behaviour, the test process decides expectation.
+    Copied flag lists drifted four times ("set in both places"). One file per gate state (`ci/gates.{on,off}.env`),
+    loaded into `$GITHUB_ENV` before the server boots, makes them agree by construction.
+  - **Run a whole Playwright project, never a positional file list.** A list missed seven authed suites, one at a
+    time, each found after it had already hidden a defect.
+  - **A path filter is a claim about what can break a rule, and it was wrong once.** The blocking gate runs
+    unfiltered; anything skipped is skipped by an exclusion rule that falls back to running everything.
+  - **`cmd | tee` under GitHub's default `bash -e` reports tee's status**: `set -o pipefail`, or the step is green
+    whatever `cmd` did.
+  - **Never hardcode a local Supabase key in a workflow.** A CLI bump changed the key format once; export what
+    `supabase status -o env` issued in this run.
 - **The auto-mode-classifier trap: in auto mode the classifier passes READS and blocks production
   WRITES + shell CREDENTIAL-handling — that is the whole rule. Don't build a security-philosophy
   theory on top of a few blocks; probe the read/write boundary empirically first.** (2026-07-20,
