@@ -30,7 +30,7 @@ _a pitch is waiting at the approval gate._
 - [Analytics visualization — the charting-dependency decision (spike), then the layer](seeds/analytics-visualization-layer.md) — #14 · 01 Growth Engine · seed · Spike · risk: Low · appetite S · _docs: status ready_
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
 
-## Ready to build (8)
+## Ready to build (7)
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
@@ -38,7 +38,6 @@ _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 - [CMS-neutral experiment integration + Payload go/no-go](../01-growth-engine/cms-integration-spike/README.md) — #18 · 01 Growth Engine · 0/6 stories · risk: Low · _docs: status scaffolded_
 - [One plugin, one install — Golden Frijoles ships as a public plugin whose skills run in anyone's repo](../09-platform-infra/golden-frijoles-plugin/README.md) — #34 · 09 Platform Infra · 14/23 stories · risk: High · appetite L · _docs: status in-progress_
 - [One public monorepo — skills/ subtree, a lean install mirror, licences, a private docs repo](../09-platform-infra/public-monorepo/README.md) — #45 · 09 Platform Infra · 13/15 stories · risk: High · appetite M · _docs: status in-progress_
-- [Kickoff generators run from anywhere](../09-platform-infra/kickoff-generator-path/README.md) — #56 · 09 Platform Infra · 0/5 stories · risk: Low · appetite M · _docs: status in-progress_
 - [CLI follow-ups from think-skills](../09-platform-infra/cli-think-skills-followups/README.md) — #57 · 09 Platform Infra · 0/2 stories · risk: Low · appetite S · _docs: status scaffolded_
 - [Several North Star metrics, one reading rule](../01-growth-engine/north-star-multi-metric-read/README.md) — #58 · 01 Growth Engine · 0/1 stories · risk: Low · appetite S · _docs: status scaffolded_
 - [Board renders priority where it should render build_order](seeds/build-order-render-fix.md) — 09 Platform Infra · seed · Chore · risk: Low · appetite S · _docs: status queued_
@@ -51,11 +50,12 @@ _a work branch is on origin. Not in this committed file: `node scripts/build-ord
 
 _a PR is ready for review, or merged and waiting for its close-out. Not in this committed file: `node scripts/build-order.mjs --live` or the Hub board._
 
-## Shipped (51)
+## Shipped (52)
 
 _merged, deployed and closed._
 
 - [CI diet](../09-platform-infra/ci-diet/README.md) — #59 · 09 Platform Infra · 9/9 stories · risk: High · appetite M · _docs: status shipped_
+- [Kickoff generators run from anywhere ✅](../09-platform-infra/kickoff-generator-path/README.md) — #56 · 09 Platform Infra · 5/5 stories · risk: Low · appetite M · _docs: status shipped_
 - [Live build view: the band moves while the agent works, from facts no agent writes ✅](../09-platform-infra/live-build-view/README.md) — #55 · 09 Platform Infra · 7/7 stories · risk: High · appetite M · _docs: status shipped_
 - [✅ Epic: Think skills — PMF Narrative, North Star and Risk Validation ship in the plugin and write files groom reads](../09-platform-infra/think-skills/README.md) — #53 · 09 Platform Infra · 7/7 stories · risk: High · appetite M · _docs: status shipped_
 - [✅ Epic: Sketch specs — a surface spec renders the grey wireframe and becomes the state contract](../09-platform-infra/sketch-specs/README.md) — #52 · 09 Platform Infra · 5/5 stories · risk: Low · appetite M · _docs: status shipped_

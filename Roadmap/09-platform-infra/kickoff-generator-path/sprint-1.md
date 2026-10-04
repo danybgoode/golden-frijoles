@@ -3,7 +3,7 @@ epic: kickoff-generator-path
 sprint: 1
 title: "S1 The kit carries the kickoff generators"
 risk: low
-phase: Building
+phase: Shipped
 stories_total: 3
 stories:
   - id: S1.1
@@ -30,7 +30,7 @@ stories:
 ---
 # Kickoff generators run from anywhere — Sprint 1: S1 The kit carries the kickoff generators
 
-**Status:** 🟦 In review — S1.1+S1.2 `53a81eb` (one import closure, one commit), S1.3 `505e0a7`, release 0.27.0 `a47ea30`
+**Status:** ✅ shipped — merged #262 `326d08e` (kit 0.27.0, live on npm, run from a bare project) · S1.1+S1.2 `53a81eb` (one import closure, one commit), S1.3 `505e0a7`, release 0.27.0 `a47ea30`
 
 ## Build contract (locked by the architect before the builder started, 2026-10-04)
 Cite, don't restate: the epic README's **D1, D2, D3, D6 as corrected by C1–C5** (§ Architecture lock). In short:

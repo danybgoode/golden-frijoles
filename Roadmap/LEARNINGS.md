@@ -1973,6 +1973,12 @@ one-liner + why + date shape.
 - **A version minutes old on npm can still 404.** `npm view` listed kit 0.4.0 while the tarball 404'd in Vercel's
   install. Wait for the tarball URL to return 200 before a consumer depends on it. A re-run fixes it, not a code
   change.
+- **A release guard must cover everything the package ships, not only its code.** `check-release` counted `plugins/**`,
+  `kit/**` and the script closure, but not the Roadmap skeleton `gf-kit init` writes. An edit to the template's
+  WAYS-OF-WORKING would have merged without the release that publishes it. When a package gains a new kind of
+  payload, add it to the guard's surface in the same change, derived from the same list the builder reads (`SKELETON`).
+  And a closure check sees only imports: a file that is *read* (a template) needs a packed-tarball spec.
+  *(2026-10-04, kickoff-generator-path.)*
 - **Copy the shared rails into a consumer before calling the wave done.** The consumers' own lint, Prettier and
   reviews found five defects the source repo's gates couldn't see. The copy-in is a gate, not a chore.
 

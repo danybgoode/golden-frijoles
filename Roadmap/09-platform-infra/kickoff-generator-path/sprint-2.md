@@ -3,7 +3,7 @@ epic: kickoff-generator-path
 sprint: 2
 title: "S2 Every doc names the kit command, guarded, released"
 risk: low
-phase: Shaping
+phase: Shipped
 stories_total: 2
 stories:
   - id: S2.1
@@ -23,7 +23,7 @@ stories:
 ---
 # Kickoff generators run from anywhere — Sprint 2: S2 Every doc names the kit command, guarded, released
 
-**Status:** 🟦 In review — S2.1 `744577a`, S2.2 `d9160e7` (+ C7, check-release counts the kit skeleton), release 0.27.1 `fd58213`. Smoke walkthrough runs after the merge and the kit publish.
+**Status:** ✅ shipped — merged #263 `2c1cef7` · S2.1 `744577a`, S2.2 `d9160e7` + review fixes `83dac5c` (+ C7, check-release counts the kit skeleton), release 0.27.1 `fd58213`.
 
 ## Build contract (locked by the architect before the builder started, 2026-10-04)
 Cite, don't restate: the epic README's **D4, D5, D7 as corrected by C5–C6** (§ Architecture lock): the guard is the
@@ -76,3 +76,9 @@ Env: your terminal, after the merge and the release CI run.
    → the prompt box fills, so the mod's offline path still works.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+**Run 2026-10-04 by the architect, after the merge (`2c1cef7`) and the kit publish:** 1 ✓ (no output outside the
+exempt epic folders and seeds) · 2 ✓ (item 5 names `/build <slug>` and the kit command) · 3 ✓ (`0.27.1`) · 4 ✓
+(`npx -y @golden-frijoles/kit@0.27.1 emit-epic-kickoff` and `emit-kickoff --sprint 1` print from a scratch copy of
+this `Roadmap/` with no plugin and no `scripts/`; `--list` names both) · **5 owed to Daniel**: an interactive `/build`
+after the plugin update. `claude plugin test` covers it, 7/7.
