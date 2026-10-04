@@ -45,3 +45,4 @@ export function getSiteUrl(): string {
 export function isSiteUrlMisconfiguredInProduction(): boolean {
   return isSiteUrlMisconfiguredInProductionEnv(siteUrlEnv())
 }
+// ci-diet S2.3 mutation (d): docs + .ts runs everything. Scratch PR, closed after.
