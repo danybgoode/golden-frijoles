@@ -114,6 +114,13 @@ design-drift, coverage + ratchet, audit (advisory), typecheck, build.
   `AGENT_RAIL_ENABLED`, `DESTINATION_DELIVERY_ENABLED`, `CONNECTOR_WRITES_ENABLED` (CI never sets them; specs that need
   them set them in-process). The **Build step runs before either file is loaded**, as today (no gate at build time).
 
+- **C7 — D2's `**/*.md` is too wide (found building S2, 2026-10-04).** `apps/web/design-system/MEASURED-SPEC.md` is
+  generated and only `measure-contract --check` (the `design-contract` job) catches a hand-edit; `APPROVED.md` is read
+  by `state-contract`/`surface-contract`. A markdown-only PR touching them would have skipped the one job that guards
+  them. **D2 as built:** a file is docs iff it is under `Roadmap/`, or it ends in `.md` and is NOT under `apps/` or
+  `packages/` (what the e2e jobs build and read). Renames are diffed with `--no-renames`, so a `.ts` moved into
+  `Roadmap/` still lists its old path.
+
 **Decisions added at the lock:**
 - **D10 — The gate's logic and the docs-only matcher are pure scripts with specs**, not inline YAML expressions:
   `scripts/ci-gate.mjs` (input: `toJSON(needs)` + `docs_only`; exit 1 unless D3 holds) and `scripts/ci-changes.mjs`
