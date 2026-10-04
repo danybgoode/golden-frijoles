@@ -22,17 +22,15 @@ import { CATEGORY, CATEGORY_DEFINITION } from '@/lib/positioning'
 // says "the entire product discipline", and the difference survives for a year because both read
 // fine in isolation. Exact containment is the only assertion that catches that.
 
-test('the landing states the category exactly once', async ({ page }) => {
+// The hero copy edit (24220da, 2026-09-02) took the definition off the landing on purpose, so this no
+// longer asks for it there. What still holds: if it comes back, it comes back once. A definition
+// repeated on one page stops being a definition and becomes a slogan.
+test('the landing never states the category more than once', async ({ page }) => {
   await page.goto('/')
   const text = await page.locator('body').innerText()
 
-  expect(text, 'the landing should define the category it claims').toContain(CATEGORY_DEFINITION)
-
-  // Once, not twice. A definition repeated on one page stops being a definition and becomes a
-  // slogan — and epic D1 spreads the borrowed register across seven sections precisely so no single
-  // idea has to be stated twice to land.
   const occurrences = text.split(CATEGORY_DEFINITION).length - 1
-  expect(occurrences, 'the definition should appear once on the landing, not repeated').toBe(1)
+  expect(occurrences, 'the definition should not be repeated on the landing').toBeLessThanOrEqual(1)
 })
 
 test('/methodology opens on the same category as the landing', async ({ page }) => {

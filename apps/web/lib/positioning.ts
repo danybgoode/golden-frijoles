@@ -12,9 +12,9 @@
 // longer fuse. Nobody would notice the fifth copy going stale — it is prose, and prose has no type.
 //
 // ── Who imports this ──────────────────────────────────────────────────────────────────────────
-// Five outward surfaces, each of which a stranger may hit first:
+// Outward surfaces, each of which a stranger may hit first (four since the hero dropped it):
 //   - `app/northstar-self-serve.md/route.ts`  — the workshop's header       (Story 1.2)
-//   - `components/landing/MakerHero.tsx`      — §hero, once, where it cannot be missed (Story 3.1)
+//   - `components/landing/MakerHero.tsx`      — §hero, until the hero copy edit removed it (24220da, 2026-09-02)
 //   - `app/layout.tsx`                        — the link preview            (Story 3.2)
 //   - `app/llms.txt/route.ts`                 — the agent-facing brief      (Story 3.3)
 //   - `lib/methodology-chapters.ts`'s intro   — /methodology's opening      (Story 3.4)

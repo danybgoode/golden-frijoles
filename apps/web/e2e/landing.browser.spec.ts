@@ -17,7 +17,7 @@ test('the landing renders the maker-ops narrative', async ({ page }) => {
   await page.goto('/')
 
   await expect(page.locator('nav.gb')).toBeVisible()
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('Make more')
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('For serial makers')
 
   // TWO copy-a-prompt blocks, and the count changed WITH its reasoning rather than quietly
   // (agentic-pm-public-surface, epic D5). `landing-readability-pass` D1 cut the old §try because
@@ -634,7 +634,8 @@ test('every in-page anchor on the landing page resolves to a section that exists
     .locator('a[href*="#"]')
     .evaluateAll((links) => links.map((link) => link.getAttribute('href') ?? ''))
 
-  expect(anchors.length, 'the page should have in-page links').toBeGreaterThan(3)
+  // Two since the nav slimmed to §ops and §pricing; a floor above what the page has fails every night.
+  expect(anchors.length, 'the page should have in-page links').toBeGreaterThanOrEqual(2)
 
   const seen = new Set<string>()
   for (const href of anchors) {
@@ -649,7 +650,7 @@ test('every in-page anchor on the landing page resolves to a section that exists
     ).toHaveCount(1)
   }
 
-  expect(seen.size, 'no in-page anchors were actually checked — this guard would be vacuous').toBeGreaterThan(
+  expect(seen.size, 'no in-page anchors were actually checked — this guard would be vacuous').toBeGreaterThanOrEqual(
     2
   )
 })
