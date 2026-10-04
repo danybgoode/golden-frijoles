@@ -1,0 +1,31 @@
+name: e2e ON server
+description: >-
+  Loads ci/gates.on.env, boots the ON server on :3000 and seeds the demo + self-tracking projects. Everything the
+  server must read goes into $GITHUB_ENV BEFORE it boots: a value appended later never reaches a running process.
+runs:
+  using: composite
+  steps:
+    - name: Load the ON gates
+      shell: bash
+      run: node scripts/lib/gate-env.mjs ci/gates.on.env >> "$GITHUB_ENV"
+    - name: Generate the self-tracking project's API key
+      shell: bash
+      run: echo "SELF_PROJECT_API_KEY=$(openssl rand -hex 24)" >> "$GITHUB_ENV"
+    - name: Start the app in the background
+      shell: bash
+      working-directory: apps/web
+      run: |
+        npm run start > /tmp/next-server.log 2>&1 &
+        for i in $(seq 1 30); do curl -sf http://localhost:3000 > /dev/null && exit 0; sleep 1; done
+        echo "::error::App never became ready"; exit 1
+    - name: Seed the public demo project
+      shell: bash
+      env:
+        GROWTH_ENGINE_URL: http://localhost:3000
+      run: npm run seed:demo
+    # Upserts the key generated above, so the stored hash matches what the running server was booted with.
+    - name: Seed the self-tracking project
+      shell: bash
+      env:
+        GROWTH_ENGINE_URL: http://localhost:3000
+      run: npm run seed:self
