@@ -1,10 +1,13 @@
 name: CI
 
 # The deterministic pre-merge gate (Roadmap/WAYS-OF-WORKING.md → Review & merge).
-#   typecheck-build — every static check, cheapest first, then typecheck + build.
-#   e2e             — Playwright against a LOCAL Supabase and locally built servers: the suite needs a database it
-#                     can seed and clean, plus a second, differently-enved server to prove the dark contracts. A
-#                     Vercel preview offers neither (it points at production Supabase and carries one env set).
+#   changes          — is this PR docs-only? (scripts/ci-changes.mjs; exclusion-only, unsure ⇒ run everything)
+#   typecheck-build  — every static check, cheapest first, then typecheck + build. Always runs.
+#   e2e-api, e2e-authed, design-contract — in parallel, skipped only on a docs-only PR. The e2e jobs run Playwright
+#                      against a LOCAL Supabase and locally built servers: the suite needs a database it can seed and
+#                      clean, plus a second, differently-enved server to prove the dark contracts. A Vercel preview
+#                      offers neither (it points at production Supabase and carries one env set).
+#   gate             — the one required check (scripts/ci-gate.mjs, ci-diet D3).
 # Minutes: the repo is public, so GitHub-hosted standard runners are free and wall clock is the scarce thing.
 # If the repo ever goes private again, revisit the job split (ci-diet D9).
 
@@ -17,6 +20,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    name: Docs-only?
+    runs-on: ubuntu-latest
+    outputs:
+      docs_only: ${{ steps.diff.outputs.docs_only }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: diff
+        run: node scripts/ci-changes.mjs "$BASE" "$HEAD" >> "$GITHUB_OUTPUT"
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+
   typecheck-build:
     name: Static gate + build
     runs-on: ubuntu-latest
@@ -73,47 +91,18 @@ jobs:
       - name: Build
         run: npm run build
 
-  e2e:
-    name: Playwright vs local Supabase + local server
+  e2e-api:
+    name: e2e · api (+ the OFF server)
+    needs: changes
+    if: needs.changes.outputs.docs_only != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci --no-audit --no-fund
-
-      - uses: supabase/setup-cli@v1
-        with:
-          version: latest
-      - name: Start local Supabase (applies migrations + seed.sql)
-        working-directory: apps/web
-        run: supabase start
-
-      # Export whatever THIS run's CLI issued, never a hardcoded key (a CLI bump changed the key format once).
-      # NEXT_PUBLIC_* are inlined at build time, so they must be in $GITHUB_ENV before the Build step.
-      # SUPABASE_DB_URL is the migration-owner connection specs use to clean their own fixtures.
-      - name: Export live local Supabase credentials
-        working-directory: apps/web
-        run: |
-          eval "$(supabase status -o env)"
-          {
-            echo "SUPABASE_URL=$API_URL"
-            echo "SUPABASE_SERVICE_ROLE_KEY=$SECRET_KEY"
-            echo "SUPABASE_DB_URL=$DB_URL"
-            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
-            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY"
-          } >> "$GITHUB_ENV"
-
-      # Built with no gate set, before either gate file is loaded.
-      - name: Build
-        run: npm run build
+      - uses: ./.github/actions/e2e-setup
 
       # Gates come from ci/gates.{off,on}.env, loaded into $GITHUB_ENV before the server that reads them boots, so
-      # the server and the test process after it agree by construction (ci-diet D4). A value appended later never
-      # reaches an already-running process.
+      # the server and the test process after it agree by construction (ci-diet D4).
       - name: Load the OFF gates
         run: node scripts/lib/gate-env.mjs ci/gates.off.env >> "$GITHUB_ENV"
 
@@ -139,48 +128,27 @@ jobs:
             apps/web/e2e/signup.spec.ts \
             || { cat /tmp/off-server.log; exit 1; }
 
-      - name: Load the ON gates
-        run: node scripts/lib/gate-env.mjs ci/gates.on.env >> "$GITHUB_ENV"
-      # Before the server boots, for the same reason as the gates: the server must see it from its first request.
-      - name: Generate the self-tracking project's API key
-        run: echo "SELF_PROJECT_API_KEY=$(openssl rand -hex 24)" >> "$GITHUB_ENV"
-
-      - name: Start the app in the background
-        working-directory: apps/web
-        run: |
-          npm run start > /tmp/next-server.log 2>&1 &
-          for i in $(seq 1 30); do curl -sf http://localhost:3000 > /dev/null && exit 0; sleep 1; done
-          echo "::error::App never became ready"; exit 1
-
-      - name: Seed the public demo project
-        run: npm run seed:demo
-        env:
-          GROWTH_ENGINE_URL: http://localhost:3000
-      # Upserts the key generated above, so the stored hash matches what the running server was booted with.
-      - name: Seed the self-tracking project
-        run: npm run seed:self
-        env:
-          GROWTH_ENGINE_URL: http://localhost:3000
-
+      - uses: ./.github/actions/e2e-on-server
       - name: Run Playwright api suite
         run: npm run test:e2e
+      - name: Dump Next.js server log (diagnostics)
+        if: always()
+        run: cat /tmp/next-server.log || true
 
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
-
-      # Opens the approved prototype in a real browser: the measured spec and state contract must reproduce, and
-      # every approved state must render. The authed suite reads STATE-CONTRACT.json, which this verifies first.
-      - name: The measured spec and the state contract reproduce, and every approved state renders
-        run: |
-          node apps/web/design-system/measure-contract.mjs --check
-          node apps/web/design-system/state-contract.mjs --check
-          node apps/web/design-system/render-reference.mjs
-
+  e2e-authed:
+    name: e2e · authed (incl. the console visual gate)
+    needs: changes
+    if: needs.changes.outputs.docs_only != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/e2e-setup
+      - uses: ./.github/actions/e2e-on-server
+      - uses: ./.github/actions/chromium
       # The WHOLE authed project, never a file list: a hand-maintained list missed seven suites, one at a time.
       # auth-setup / auth-teardown run as its dependency graph.
-      - name: Run Playwright authed suite (incl. the console visual gate)
+      - name: Run Playwright authed suite
         run: npx playwright test --config=apps/web/playwright.config.ts --project=authed
-
       - name: Upload the visual gate's screenshots
         if: always()
         uses: actions/upload-artifact@v7
@@ -190,7 +158,39 @@ jobs:
             test-results/console-visual/
             test-results/design-system/
           if-no-files-found: ignore
-
       - name: Dump Next.js server log (diagnostics)
         if: always()
         run: cat /tmp/next-server.log || true
+
+  # Opens the approved prototype at file:// in a real browser: no Supabase, no server (lock C2). The measured spec
+  # and the state contract must reproduce, and every approved state must render.
+  design-contract:
+    name: Design contract (measured spec, state contract, approved states)
+    needs: changes
+    if: needs.changes.outputs.docs_only != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - uses: ./.github/actions/chromium
+      - run: node apps/web/design-system/measure-contract.mjs --check
+      - run: node apps/web/design-system/state-contract.mjs --check
+      - run: node apps/web/design-system/render-reference.mjs
+
+  # The one check the ruleset requires. Green only when every job succeeded, or was skipped because `changes` said the
+  # PR is docs-only. cancelled, failure, and a skip the rule did not order are red (ci-diet D3).
+  gate:
+    name: gate
+    if: always()
+    needs: [changes, typecheck-build, e2e-api, e2e-authed, design-contract]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Every job passed, or was skipped by the docs-only rule
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: node scripts/ci-gate.mjs --skippable e2e-api,e2e-authed,design-contract
