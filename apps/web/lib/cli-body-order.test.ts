@@ -36,7 +36,7 @@ const CONST_PARAM = new RegExp(
 )
 // `export { handler as POST }`, `export const { POST } = …` and `export * from …` hide the handler from the parser.
 const HIDDEN_EXPORT = new RegExp(
-  `export\\s+(?:(?:const|let|var)\\s*)?\\{[^}]*\\b${VERB}\\b[^}]*\\}|export\\s*\\*`
+  `export\\s+(?:(?:const|let|var)\\s*)?\\{[^}]*\\b${VERB}\\b[^}]*\\}|export\\s*\\*\\s*(?:as\\s+[\\w$]+\\s+)?from\\b`
 )
 
 /**
@@ -59,8 +59,9 @@ function handlerParams(source: string): string[] {
 
 /**
  * Every place `source` reads a request body through a handler's own parameter, including across a line break or
- * through `?.`. Accepted residuals, out of a regex's reach: an alias (`const r = req`), a cast (`(req as Request)`)
- * and a computed member (`req['json']`). A route that writes any of those is visibly not using `readCliBody`.
+ * through `?.`. Accepted residuals, out of a regex's reach: an alias (`const r = req`, `const { body } = req`), a
+ * cast (`(req as Request)`), a computed member (`req['json']`) and a second declarator in one export
+ * (`export const GET = …, POST = …`). A route that writes any of those is visibly not using `readCliBody`.
  */
 function bodyReads(source: string): string[] {
   return handlerParams(source).flatMap((name) => {
@@ -122,6 +123,11 @@ test('a handler declared in a shape the parser cannot read is reported, never sk
     'req',
     undefined,
   ])
+  // Prose that ends a line with "export" before a JSDoc ` * ` line is not a re-export.
+  assert.deepEqual(
+    handlers('/** what we export\n * here */\nexport async function GET(req: NextRequest) {}'),
+    ['req']
+  )
 })
 
 test('no CLI route parses a request body itself — every body goes through readCliBody', () => {
