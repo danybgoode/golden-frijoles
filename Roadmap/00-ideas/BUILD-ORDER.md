@@ -10,15 +10,17 @@
 > This committed file reads the docs alone, so **Building and QA are not here** — they are facts git
 > and GitHub hold. For the live board run `node scripts/build-order.mjs --live`, or open the Hub board.
 
-## To groom (6)
+## To groom (8)
 
 _seeds with no pitch yet._
 
 - [Scenarios freeze: archive the epic, correct the landing's SecOps claim, deprecate the SDK scenario API](seeds/scenarios-freeze.md) — #36 · 01 Growth Engine · seed · Chore · risk: Low · appetite S · _docs: status raw_
 - [Verify module: the verification depth ladder as a product (after the spike)](seeds/verify-module.md) — #54 · 09 Platform Infra · seed · Feature · risk: High · appetite L · _docs: status raw_
 - [A delivery whose settle keeps failing is re-sent every 5 minutes, uncounted and unlogged](seeds/delivery-stale-reclaim-uncounted.md) — 01 Growth Engine · seed · Bug · risk: High · appetite S · _docs: status raw_
+- [landing.browser.spec.ts is red on main, and only the nightly run sees it](seeds/landing-browser-spec-red.md) — 02 Commercial · seed · Bug · risk: Low · appetite S · _docs: status raw_
 - [perf-probe only requests the hosts a project names](seeds/perf-probe-target-allowlist.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
 - [Template scripts run when invoked through a symlinked path](seeds/script-ismain-realpath.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
+- [The portfolio loop test fails intermittently in CI and has been quarantined](seeds/portfolio-loop-flake.md) — 02 Commercial · seed · Bug · risk: Low · appetite S · _docs: status raw_
 - [This repo lints its template scripts the way its consumers do](seeds/foundation-lint-gate.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
 
 ## Grooming (2)
@@ -106,4 +108,4 @@ _merged, deployed and closed._
 - [The flag console a human can operate — Flagsmith-grade IA, terminology and list ergonomics](../01-growth-engine/flags-console-parity/README.md) — 01 Growth Engine · 11/11 stories · risk: High · appetite M · _docs: status shipped_
 
 ---
-_67 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._
+_69 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._

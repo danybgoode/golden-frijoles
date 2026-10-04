@@ -121,6 +121,16 @@ design-drift, coverage + ratchet, audit (advisory), typecheck, build.
   `packages/` (what the e2e jobs build and read). Renames are diffed with `--no-renames`, so a `.ts` moved into
   `Roadmap/` still lists its old path.
 
+- **C8 — S3.3's "no Pod Report row on a PR" is only half reachable (found building S3, 2026-10-04).** Vercel posts a
+  `deployment_status` for PREVIEW deployments too, on the PR's head SHA, so any `deployment_status` workflow leaves one
+  skipped row on the PR (notify-telegram's "Production deploy-finish ping — skipping" is the same thing). Moving the
+  job to `pod-report-push.yml` removes the `pull_request`-event row; the preview-deploy row stays until the deploy
+  signal is something other than `deployment_status`. Not built here.
+- **C9 — two decisions by Daniel mid-build (2026-10-04).** Jev's shadow expiry runs daily only (`jev-eval --no-expiry`
+  in the PR gate; plugin/kit 0.26.2), and Dependabot alerts + security updates are ON (they were off; enabled by the
+  builder on his instruction), so the advisory audit could go. D7's quarantine expiry still turns `gate` red on every
+  PR, as approved at grooming.
+
 **Decisions added at the lock:**
 - **D10 — The gate's logic and the docs-only matcher are pure scripts with specs**, not inline YAML expressions:
   `scripts/ci-gate.mjs` (input: `toJSON(needs)` + `docs_only`; exit 1 unless D3 holds) and `scripts/ci-changes.mjs`

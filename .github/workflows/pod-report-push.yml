@@ -1,0 +1,48 @@
+# Push golden-beans' own Pod Report to the engine, once per successful Production deploy (moved out of
+# roadmap-push.yml by ci-diet S3.3). Its own workflow, on deployment_status only, so it never appears as a skipped
+# row in a PR's checks. `workflow_dispatch` re-pushes on demand.
+name: Push Pod Report
+
+on:
+  deployment_status:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  # pod-report's review-latency rows read PRs through `gh`.
+  pull-requests: read
+
+jobs:
+  # pod-report · Sprint 3, Story 3.2 — the landing's §5 reads THIS artifact, so it has to stay current on its own.
+  # Computed from this very checkout (`--repo .`): golden-beans measuring golden-beans. It stays on the deploy signal:
+  # a push carries a commit SHA, and stamping one whose deployment has not finished would claim a state that is not
+  # serving yet. `continue-on-error`: a failed Pod Report must not fail the deploy pipeline; the landing falls back to
+  # its honest teaser when no artifact is readable.
+  push-pod-report:
+    name: Push golden-beans' own Pod Report
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'deployment_status' &&
+       github.event.deployment_status.environment == 'Production' &&
+       github.event.deployment_status.state == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.deployment.sha || github.sha }}
+          # FULL history, load-bearing: scripts/pod-report.mjs derives every number from `git log` and from when
+          # each epic README first appeared. On a shallow clone it would report "1 commit / 0 measurable epics".
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Push golden-beans' own Pod Report artifact
+        continue-on-error: true
+        env:
+          GROWTH_ENGINE_URL: ${{ vars.SITE_URL || 'https://golden-beans-gamma.vercel.app' }}
+          SELF_PROJECT_API_KEY: ${{ secrets.SELF_PROJECT_API_KEY }}
+          # `gh` reads GH_TOKEN from the environment; the job token carries the pull-requests: read scope above.
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/pod-report.mjs --repo . --push
