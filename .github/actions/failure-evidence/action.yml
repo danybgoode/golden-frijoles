@@ -1,0 +1,21 @@
+name: Failure evidence
+description: >-
+  Uploads what a red e2e run leaves behind (ci-diet S3.1): Playwright's traces, screenshots and error context
+  (apps/web/test-results/) plus the servers' logs, kept for a few days. Run it under `if: failure()` (or `always()`).
+inputs:
+  name:
+    description: Artifact name, unique per job.
+    required: true
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        mkdir -p apps/web/test-results/_server-logs
+        cp /tmp/next-server.log /tmp/off-server.log apps/web/test-results/_server-logs/ 2>/dev/null || true
+    - uses: actions/upload-artifact@v7
+      with:
+        name: ${{ inputs.name }}
+        path: apps/web/test-results/
+        retention-days: 5
+        if-no-files-found: warn

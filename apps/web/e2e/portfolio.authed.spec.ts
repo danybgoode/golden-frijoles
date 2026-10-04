@@ -158,86 +158,95 @@ test('2+ products: bare /app opens on the portfolio — one row per product of m
   }
 })
 
-test('the loop: an owner places a product from its row; a member sees the stage read-only', async ({
-  browser,
-}) => {
-  // Three hydration waits and five post-submit budgets do not fit Playwright's default 30 s: on a slow runner the test
-  // would die at "test timeout" instead of at the step that was slow (fresh reviewer, #239).
-  test.setTimeout(90_000)
-  const session = await disposableSession(browser, 'owner')
-  const extra: Extra = { projects: [], users: [] }
-  try {
-    const { owned, memberOf, sibling } = await seedTwoProductWorkspace(session, extra)
-    const { page, db } = session
-    await page.goto('/app/portfolio')
-    const rowOf = (slug: string) =>
-      page.locator('.ds-table-row', { has: page.locator(`[data-product="${slug}"]`) })
-
-    // The approved `portfolio-loop-unbuilt` state: unplaced, with the owner's "Place it".
-    const mine = rowOf(owned.slug)
-    await expect(mine.locator('[data-loop-stage="unplaced"]')).toContainText('Not placed')
-    await expect(mine.getByText('Place it')).toBeVisible()
-    // The member's row: the same "Not placed", and no control at all.
-    const theirs = rowOf(memberOf.slug)
-    await expect(theirs.locator('[data-loop-stage="unplaced"]')).toContainText('Not placed')
-    await expect(theirs.locator('form')).toHaveCount(0)
-    await expect(theirs.getByText('Place it')).toHaveCount(0)
-
-    await hydrated(mine.locator('form'))
-    await mine.getByText('Place it').click()
-    await expect(mine.locator('details')).toHaveAttribute('open', '')
-    await mine.getByRole('menuitem', { name: 'Operate' }).click()
-    await expect(rowOf(owned.slug).locator('[data-loop-stage="operate"]')).toContainText(
-      'Operate',
-      AFTER_SUBMIT
-    )
-    // It was WRITTEN — the database holds the owner's choice, nothing inferred it.
-    await expect
-      .poll(
-        async () =>
-          (await db.from('projects').select('loop_stage').eq('id', owned.id).single()).data?.loop_stage
-      )
-      .toBe('operate')
-    const { data: memberRow } = await db.from('projects').select('loop_stage').eq('id', memberOf.id).single()
-    expect(memberRow?.loop_stage).toBeNull()
-
-    // The ACTION is the guard, not the hidden control (fresh reviewer, PR #235). Forge the owner's own form: point its
-    // hidden project id at a project they only MEMBER, then at the sibling they do not belong to, and submit.
-    const forge = async (projectId: string) => {
+// ⚠️ QUARANTINED (ci-diet S3.2): red in 3 of 5 CI runs on 2026-10-04 with no code change behind it. It runs and reports
+// in ci.yml's non-blocking `quarantine` job; scripts/check-quarantine.mjs turns `gate` red past the expiry. The fix is
+// Roadmap/00-ideas/seeds/portfolio-loop-flake.md, which starts from the trace a red run now uploads.
+test(
+  'the loop: an owner places a product from its row; a member sees the stage read-only',
+  { tag: '@quarantine', annotation: { type: 'quarantine', description: 'owner=Daniel expires=2026-10-18' } },
+  async ({ browser }) => {
+    // Three hydration waits and five post-submit budgets do not fit Playwright's default 30 s: on a slow runner the test
+    // would die at "test timeout" instead of at the step that was slow (fresh reviewer, #239).
+    test.setTimeout(90_000)
+    const session = await disposableSession(browser, 'owner')
+    const extra: Extra = { projects: [], users: [] }
+    try {
+      const { owned, memberOf, sibling } = await seedTwoProductWorkspace(session, extra)
+      const { page, db } = session
       await page.goto('/app/portfolio')
-      const row = rowOf(owned.slug)
-      // Wait for React to own the form, THEN rewrite the hidden id and prove it took: set before hydration, React
-      // restores the rendered value and the forged submit silently becomes the owner's own (seen in CI on #235 and on
-      // every PR on 2026-10-03 — opening the menu first was not enough; see the note at the top).
-      await hydrated(row.locator('form'))
-      await row.getByText('Change').click()
-      const input = row.locator('form input[name="projectId"]')
-      await input.evaluate((el, id) => ((el as HTMLInputElement).value = id), projectId)
-      await expect(input).toHaveValue(projectId)
-      await row.getByRole('menuitem', { name: 'Exit' }).click()
+      const rowOf = (slug: string) =>
+        page.locator('.ds-table-row', { has: page.locator(`[data-product="${slug}"]`) })
+
+      // The approved `portfolio-loop-unbuilt` state: unplaced, with the owner's "Place it".
+      const mine = rowOf(owned.slug)
+      await expect(mine.locator('[data-loop-stage="unplaced"]')).toContainText('Not placed')
+      await expect(mine.getByText('Place it')).toBeVisible()
+      // The member's row: the same "Not placed", and no control at all.
+      const theirs = rowOf(memberOf.slug)
+      await expect(theirs.locator('[data-loop-stage="unplaced"]')).toContainText('Not placed')
+      await expect(theirs.locator('form')).toHaveCount(0)
+      await expect(theirs.getByText('Place it')).toHaveCount(0)
+
+      await hydrated(mine.locator('form'))
+      await mine.getByText('Place it').click()
+      await expect(mine.locator('details')).toHaveAttribute('open', '')
+      await mine.getByRole('menuitem', { name: 'Operate' }).click()
+      await expect(rowOf(owned.slug).locator('[data-loop-stage="operate"]')).toContainText(
+        'Operate',
+        AFTER_SUBMIT
+      )
+      // It was WRITTEN — the database holds the owner's choice, nothing inferred it.
+      await expect
+        .poll(
+          async () =>
+            (await db.from('projects').select('loop_stage').eq('id', owned.id).single()).data?.loop_stage
+        )
+        .toBe('operate')
+      const { data: memberRow } = await db
+        .from('projects')
+        .select('loop_stage')
+        .eq('id', memberOf.id)
+        .single()
+      expect(memberRow?.loop_stage).toBeNull()
+
+      // The ACTION is the guard, not the hidden control (fresh reviewer, PR #235). Forge the owner's own form: point its
+      // hidden project id at a project they only MEMBER, then at the sibling they do not belong to, and submit.
+      const forge = async (projectId: string) => {
+        await page.goto('/app/portfolio')
+        const row = rowOf(owned.slug)
+        // Wait for React to own the form, THEN rewrite the hidden id and prove it took: set before hydration, React
+        // restores the rendered value and the forged submit silently becomes the owner's own (seen in CI on #235 and on
+        // every PR on 2026-10-03 — opening the menu first was not enough; see the note at the top).
+        await hydrated(row.locator('form'))
+        await row.getByText('Change').click()
+        const input = row.locator('form input[name="projectId"]')
+        await input.evaluate((el, id) => ((el as HTMLInputElement).value = id), projectId)
+        await expect(input).toHaveValue(projectId)
+        await row.getByRole('menuitem', { name: 'Exit' }).click()
+      }
+      const stageOf = async (id: string) =>
+        (await db.from('projects').select('loop_stage').eq('id', id).single()).data?.loop_stage ?? null
+
+      await forge(memberOf.id)
+      // Refused with a named outcome on the page — not the "couldn't load your workspace" error boundary.
+      await expect(page).toHaveURL(/[?&]loop=forbidden/, AFTER_SUBMIT)
+      await expect(page.locator('main')).toContainText(
+        'Only a project owner can place it on the loop.',
+        AFTER_SUBMIT
+      )
+      expect(await stageOf(memberOf.id)).toBeNull()
+
+      await forge(sibling.id)
+      await expect(page.locator('main [data-portfolio-state]')).toHaveCount(0, AFTER_SUBMIT) // the not-found page, not the portfolio
+      expect(await stageOf(sibling.id)).toBeNull()
+      // CONTROL: the owner's own row was not touched by either forged submit.
+      expect(await stageOf(owned.id)).toBe('operate')
+    } finally {
+      await removeExtra(session, extra)
+      await session.cleanup()
     }
-    const stageOf = async (id: string) =>
-      (await db.from('projects').select('loop_stage').eq('id', id).single()).data?.loop_stage ?? null
-
-    await forge(memberOf.id)
-    // Refused with a named outcome on the page — not the "couldn't load your workspace" error boundary.
-    await expect(page).toHaveURL(/[?&]loop=forbidden/, AFTER_SUBMIT)
-    await expect(page.locator('main')).toContainText(
-      'Only a project owner can place it on the loop.',
-      AFTER_SUBMIT
-    )
-    expect(await stageOf(memberOf.id)).toBeNull()
-
-    await forge(sibling.id)
-    await expect(page.locator('main [data-portfolio-state]')).toHaveCount(0, AFTER_SUBMIT) // the not-found page, not the portfolio
-    expect(await stageOf(sibling.id)).toBeNull()
-    // CONTROL: the owner's own row was not touched by either forged submit.
-    expect(await stageOf(owned.id)).toBe('operate')
-  } finally {
-    await removeExtra(session, extra)
-    await session.cleanup()
   }
-})
+)
 
 test('one product: /app is unchanged, and the portfolio is its own empty state', async ({ browser }) => {
   const session = await disposableSession(browser, 'owner')

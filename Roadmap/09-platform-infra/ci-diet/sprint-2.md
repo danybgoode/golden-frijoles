@@ -12,25 +12,25 @@ stories:
     i_want: "CI to answer in about two minutes"
     so_that: "a docs change never waits on, or is blocked by, the browser suite"
     risk: high
-    status: planned
+    status: done
   - id: S2.2
     title: "e2e splits into parallel jobs; leaner Supabase; cached browsers"
     as_a: "a builder"
     i_want: "a code PR's CI to finish in about five minutes"
     so_that: "the gate stops being the slowest part of a sprint"
     risk: high
-    status: planned
+    status: done
   - id: S2.3
     title: "One gate check, proven by mutation; the branch-protection handoff"
     as_a: "the product owner"
     i_want: "one check that is red whenever anything that should have run didn't pass"
     so_that: "a ruleset can require it and a skipped or cancelled job can never read as green"
     risk: high
-    status: planned
+    status: done
 ---
 # CI diet — Sprint 2: S2 Faster, with a real gate
 
-**Status:** ⬜ not started
+**Status:** ✅ shipped 2026-10-04: #247 squash-merged as `93d9b49` (stories `58bcf0f` S2.1, `c51ad80` S2.2, `604abd7` S2.3; fixes `f95a3bc` `56d88f9` `c17f61a`). D6 (the ruleset) is owed to Daniel.
 
 ## Build contract (locked by the architect before the builder started — README § Architecture lock)
 Cite, don't restate: the epic README's **D1, D2, D3, D5, D6**. The lock confirms which Supabase services the suites use
@@ -93,3 +93,18 @@ Env: GitHub.
    → a new PR shows `gate` as **Required**.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+### Walkthrough as run (2026-10-04, by the builder)
+1. **Mutation (c), docs-only** (#250, run [37173081662](https://github.com/danybgoode/golden-frijoles/actions/runs/37173081662)) → `e2e-api`, `e2e-authed`, `design-contract`
+   **skipped**; `gate` green; 2m10s total. ✅
+2. **Mutation (a), a failing test** (#248, run [37173077330](https://github.com/danybgoode/golden-frijoles/actions/runs/37173077330)) → `e2e-api` red on `zz-gate-mutation.spec.ts`;
+   `gate` red. ✅ Also (b), a run cancelled mid-flight (#249, [37173079797](https://github.com/danybgoode/golden-frijoles/actions/runs/37173079797)) → `gate` red; and (d), docs +
+   `.ts` (#251, [37173083659](https://github.com/danybgoode/golden-frijoles/actions/runs/37173083659)) → everything ran, `gate` green. ✅
+3. **#247's own run** ([37178471860](https://github.com/danybgoode/golden-frijoles/actions/runs/37178471860)) → `e2e-api` 04:57:23–05:01:41, `e2e-authed` 04:57:23–05:02:08 and
+   `design-contract` 04:57:23–04:58:29 ran side by side; `gate` green. ✅
+4. **The ruleset (D6)**: owed to Daniel by name; the exact `gh api` call is in #247's body. ⏳
+
+**Wall clock:** a code PR is 6m04s–6m16s (baseline 7m38s); docs-only is 2m10s. The ≤ 6 min target is missed by
+seconds. `e2e-authed` (about 1.5 min of setup plus a 2.4–2.7 min suite) is the critical path, and getting under 6
+would mean sharding it.
+**D1:** OFF 30/0, api 648/37, authed 169 with 6 skipped, the same as the baseline.

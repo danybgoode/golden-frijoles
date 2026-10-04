@@ -76,6 +76,9 @@ jobs:
       # Every node:test under scripts/, optimize/, apps/web and packages — ~1s, so it runs in front of the build.
       - name: Unit tests (pure logic)
         run: npm run test:unit
+      # A quarantined test needs an owner and an expiry ≤ 30 days out; past it, this goes red (ci-diet D7).
+      - name: Every quarantine has an owner and a date
+        run: node scripts/check-quarantine.mjs
       - name: The generated design contract is in sync with the approved prototype
         run: node apps/web/design-system/extract-css.mjs --check
       # The ratchet diffs against the PR base, which resolves because this workflow is pull_request-only; the
@@ -119,7 +122,7 @@ jobs:
           trap 'kill "$off_pid" 2>/dev/null || true; sleep 2; kill -9 "$off_pid" 2>/dev/null || true; wait "$off_pid" 2>/dev/null || true' EXIT
           for i in $(seq 1 30); do curl -sf http://127.0.0.1:3100/llms.txt > /dev/null && break; sleep 1; done
           curl -sf http://127.0.0.1:3100/llms.txt > /dev/null || { echo "::error::OFF app never became ready"; cat /tmp/off-server.log; exit 1; }
-          ./node_modules/.bin/playwright test --config=apps/web/playwright.config.ts --project=api \
+          ./node_modules/.bin/playwright test --config=apps/web/playwright.config.ts --project=api --grep-invert @quarantine \
             apps/web/e2e/journey-dark.spec.ts \
             apps/web/e2e/experiment-governance-dark.spec.ts \
             apps/web/e2e/flag-serving-dark.spec.ts \
@@ -130,11 +133,13 @@ jobs:
             || { cat /tmp/off-server.log; exit 1; }
 
       - uses: ./.github/actions/e2e-on-server
+      # Quarantined tests run in the `quarantine` job instead (ci-diet D7).
       - name: Run Playwright api suite
-        run: npm run test:e2e
-      - name: Dump Next.js server log (diagnostics)
-        if: always()
-        run: cat /tmp/next-server.log || true
+        run: npx playwright test --config=apps/web/playwright.config.ts --project=api --grep-invert @quarantine
+      - uses: ./.github/actions/failure-evidence
+        if: failure()
+        with:
+          name: e2e-api-failure
 
   e2e-authed:
     name: e2e · authed (incl. the console visual gate)
@@ -150,7 +155,7 @@ jobs:
       # The WHOLE authed project, never a file list: a hand-maintained list missed seven suites, one at a time.
       # auth-setup / auth-teardown run as its dependency graph.
       - name: Run Playwright authed suite
-        run: npx playwright test --config=apps/web/playwright.config.ts --project=authed
+        run: npx playwright test --config=apps/web/playwright.config.ts --project=authed --grep-invert @quarantine
       - name: Upload the visual gate's screenshots
         if: always()
         uses: actions/upload-artifact@v7
@@ -160,9 +165,38 @@ jobs:
             test-results/console-visual/
             test-results/design-system/
           if-no-files-found: ignore
-      - name: Dump Next.js server log (diagnostics)
+      - uses: ./.github/actions/failure-evidence
+        if: failure()
+        with:
+          name: e2e-authed-failure
+
+  # Known flakes, tagged @quarantine with an owner and an expiry. They run and report here, and never block: this job
+  # is deliberately NOT in `gate`'s needs. The static job's quarantine check turns `gate` red past an expiry.
+  quarantine:
+    name: Quarantined tests (non-blocking)
+    needs: changes
+    if: needs.changes.outputs.docs_only != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/e2e-setup
+      - uses: ./.github/actions/e2e-on-server
+      - uses: ./.github/actions/chromium
+      - id: run
+        continue-on-error: true
+        run: npx playwright test --config=apps/web/playwright.config.ts --project=api --project=authed --grep @quarantine --pass-with-no-tests
+      - name: Report
         if: always()
-        run: cat /tmp/next-server.log || true
+        run: |
+          node scripts/check-quarantine.mjs || true
+          echo "**Result: ${{ steps.run.outcome }}** (reported, not blocking)" >> "$GITHUB_STEP_SUMMARY"
+          [ "${{ steps.run.outcome }}" = success ] || echo "::warning::A quarantined test failed (see the job summary and the uploaded trace)."
+      # Always: a flaky pass is evidence too, and it is exactly what the quarantine's fix needs.
+      - uses: ./.github/actions/failure-evidence
+        if: always()
+        with:
+          name: quarantine-evidence
 
   # Opens the approved prototype at file:// in a real browser: no Supabase, no server (lock C2). The measured spec
   # and the state contract must reproduce, and every approved state must render.

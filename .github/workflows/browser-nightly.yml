@@ -1,0 +1,47 @@
+# The anonymous `browser` Playwright project, nightly (ci-diet D8, Daniel 2026-10-04). It never blocks a PR: a suite
+# no pipeline runs decays silently, and this one did (landing.browser.spec.ts went red on main with nothing noticing).
+# Red → a Telegram ping through scripts/telegram-notify.mjs, plus the traces as an artifact. It also runs the
+# quarantine expiry check, because an expiry is a date and the PR gate only sees it when a PR is open.
+name: browser-nightly
+
+on:
+  schedule:
+    - cron: '23 9 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser:
+    name: Playwright browser project (nightly)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/e2e-setup
+      - uses: ./.github/actions/e2e-on-server
+      - uses: ./.github/actions/chromium
+      - name: Run Playwright browser project
+        run: npx playwright test --config=apps/web/playwright.config.ts --project=browser
+      # After the run and whatever it did, so a lapsed quarantine never costs the night's browser signal.
+      - name: Every quarantine has an owner and a date
+        if: always()
+        run: node scripts/check-quarantine.mjs
+      - uses: ./.github/actions/failure-evidence
+        if: failure()
+        with:
+          name: browser-nightly-failure
+      - name: Ping Telegram on red
+        if: failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CICD_CHAT_ID: ${{ secrets.TELEGRAM_CICD_CHAT_ID }}
+        run: |
+          node scripts/telegram-notify.mjs \
+            --icon 🌙 \
+            --sha "$GITHUB_SHA" \
+            --subject "browser-nightly is red on main (the browser suite, or a lapsed quarantine)" \
+            --status "failed" \
+            --url "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            --link-label "open the run"
