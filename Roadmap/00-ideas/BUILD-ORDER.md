@@ -28,7 +28,7 @@ _a pitch is waiting at the approval gate._
 - [Analytics visualization — the charting-dependency decision (spike), then the layer](seeds/analytics-visualization-layer.md) — #14 · 01 Growth Engine · seed · Spike · risk: Low · appetite S · _docs: status ready_
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
 
-## Ready to build (7)
+## Ready to build (9)
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
@@ -38,6 +38,8 @@ _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 - [One public monorepo — skills/ subtree, a lean install mirror, licences, a private docs repo](../09-platform-infra/public-monorepo/README.md) — #45 · 09 Platform Infra · 13/15 stories · risk: High · appetite M · _docs: status in-progress_
 - [Kickoff generators run from anywhere](../09-platform-infra/kickoff-generator-path/README.md) — #56 · 09 Platform Infra · 0/5 stories · risk: Low · appetite M · _docs: status scaffolded_
 - [CLI follow-ups from think-skills](../09-platform-infra/cli-think-skills-followups/README.md) — #57 · 09 Platform Infra · 0/2 stories · risk: Low · appetite S · _docs: status scaffolded_
+- [Several North Star metrics, one reading rule](../01-growth-engine/north-star-multi-metric-read/README.md) — #58 · 01 Growth Engine · 0/1 stories · risk: Low · appetite S · _docs: status scaffolded_
+- [CI diet](../09-platform-infra/ci-diet/README.md) — #59 · 09 Platform Infra · 0/9 stories · risk: High · appetite M · _docs: status scaffolded_
 - [Board renders priority where it should render build_order](seeds/build-order-render-fix.md) — 09 Platform Infra · seed · Chore · risk: Low · appetite S · _docs: status queued_
 
 ## Building — live only
@@ -104,4 +106,4 @@ _merged, deployed and closed._
 - [The flag console a human can operate — Flagsmith-grade IA, terminology and list ergonomics](../01-growth-engine/flags-console-parity/README.md) — 01 Growth Engine · 11/11 stories · risk: High · appetite M · _docs: status shipped_
 
 ---
-_65 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._
+_67 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._
