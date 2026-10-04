@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // gate-env — the ONE reader of ci/gates.{on,off}.env (ci-diet D4).
 //
-// ci.yml appends its output to $GITHUB_ENV before each server boots; run-local-e2e.mjs imports parseGateEnv.
+// ci.yml appends its output to $GITHUB_ENV before each server boots; run-local-e2e.mjs imports readGateEnv.
 // One parser, so CI and the local runner cannot read the same file differently. Strict on purpose: a line that
 // is not a comment, blank, or KEY=true|false throws, because a mistyped gate is the "the server and the test
 // disagree" bug this file exists to end.
