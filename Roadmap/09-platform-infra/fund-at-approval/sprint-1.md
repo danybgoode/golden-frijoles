@@ -3,7 +3,7 @@ epic: fund-at-approval
 sprint: 1
 title: "Fund at approval"
 risk: low
-phase: Shaping
+phase: Building
 stories_total: 6
 stories:
   - id: S1.1
