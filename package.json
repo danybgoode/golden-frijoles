@@ -31,9 +31,8 @@
     "pg": "^8.22.0"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.6",
     "eslint": "^9.39.5",
-    "eslint-config-next": "^15.5.20",
+    "eslint-config-next": "^16.3.8",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.9.6"
   }

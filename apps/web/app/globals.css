@@ -3932,7 +3932,6 @@ a.stat-card:hover {
      recipe — without it the wash goes grey and reads as fog, not as glass. */
   background: color-mix(in srgb, var(--roast) 72%, transparent);
   backdrop-filter: blur(14px) saturate(1.5);
-  -webkit-backdrop-filter: blur(14px) saturate(1.5);
   border-bottom: 1px solid var(--line);
 }
 
@@ -3954,7 +3953,6 @@ a.stat-card:hover {
     max-height: calc(100vh - var(--methodology-chrome-h));
     background: color-mix(in srgb, var(--roast) 80%, transparent);
     backdrop-filter: blur(10px) saturate(1.3);
-    -webkit-backdrop-filter: blur(10px) saturate(1.3);
   }
 }
 
@@ -4018,7 +4016,6 @@ a.stat-card:hover {
   .methodology-chrome .methodology-toc {
     background: var(--roast);
     backdrop-filter: none;
-    -webkit-backdrop-filter: none;
   }
 }
 
@@ -4027,7 +4024,6 @@ a.stat-card:hover {
   .methodology-chrome .methodology-toc {
     background: var(--roast);
     backdrop-filter: none;
-    -webkit-backdrop-filter: none;
     /* Increase Contrast asks for MORE separation, not merely for opacity — a
        reader who turns it on wants the edge between surfaces to be obvious. */
     border-color: var(--crema);

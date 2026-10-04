@@ -2070,3 +2070,19 @@ one-liner + why + date shape.
   final tree (`git diff --stat origin/main <parent>` is empty) — then "ours" is provably right and the merge changes
   nothing.
 
+
+### A frozen page after a Server Action, and the Next 16 upgrade (portfolio-loop-flake, 2026-10-04)
+
+- **A Server Action that writes, answers in full, and leaves the page unchanged forever is a lost React ping, not a
+  slow test.** Next ≤16.2 vendors a React that drops the wake-up when a transition suspends on a Flight chunk already in
+  `resolved_model` (vercel/next.js#98303); every chunk ends `fulfilled` and nothing re-renders. It only shows on a busy
+  CPU: reproduce with CDP `Emulation.setCPUThrottlingRate` 6× on a production build, not by adding waits. Fixed by Next
+  16.3. The tell in a trace: the action's response is complete, and no `_rsc` GET or `pushState` follows it.
+- **Read the response before blaming the server.** Byte-identical action bodies in passing and failing runs ruled the
+  server out in one comparison; days of hydration waits had been aimed at the wrong side.
+- **Next 16 minifies CSS with Lightning CSS, which keeps ONE of `prop` / `-webkit-prop`: the last one written.** Our
+  hand-written `-webkit-backdrop-filter` after `backdrop-filter` shipped only the prefixed one, which Chromium ignores,
+  and the glass material vanished. Never hand-prefix; the minifier adds prefixes. It also respells values (`0ms` → `0s`,
+  `160ms` → `.16s`), so assert the meaning of a token, not its spelling.
+- **Baseline a red suite against `main` on the same database before calling it a regression.** Eleven api failures
+  (`URI too long` from PostgREST) were local DB state: identical on Next 15.

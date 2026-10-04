@@ -1,7 +1,7 @@
 ---
 title: 'Five browser-project specs are red on main, and only the nightly run sees them'
 slug: landing-browser-spec-red
-status: raw
+status: shipped
 area: '02'
 type: bug
 priority: unranked
@@ -41,3 +41,15 @@ was deliberately redesigned (fix the spec, and cite the epic that changed it). T
 ## Done when
 
 `browser-nightly` is green on `main` for three consecutive nights.
+
+## Resolution (2026-10-04): fixed in #267, confirmed on `main`
+
+Commit `43929e9` (merged in #267) settled each failure. Four specs still asserted the hero from before the Sep 2 redesign
+(`24220da`: "Make more", the category definition, >3 in-page anchors), so the specs were wrong and now follow the
+shipped page. `/talk` really did overflow a 360px screen by 3px with Linux fonts, so the page was wrong and was fixed.
+`browser-nightly` then ran green twice: on the branch (run 37214267301) and on `main` at `31e397b` (run 37219943111),
+both 64 passed and 1 skipped, the same skip as the first run. The seed's "three consecutive nights" is left to the
+nightly itself, which pings Telegram if it goes red.
+
+The Next 16 upgrade (portfolio-loop-flake) briefly turned four of these browser specs red again, through the new CSS
+minifier. They are fixed in that same change, and the browser project is 64/1 on it.

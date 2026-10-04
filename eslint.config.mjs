@@ -12,12 +12,9 @@
 // a time, with the cleanup in the same diff. Do NOT tighten several at once "while you're here":
 // that produces a 200-file diff nobody can review, which is how a lint baseline dies.
 
-import { dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { FlatCompat } from '@eslint/eslintrc';
+import nextCoreWebVitals from 'eslint-config-next/core-web-vitals';
+import nextTypescript from 'eslint-config-next/typescript';
 import prettier from 'eslint-config-prettier';
-
-const compat = new FlatCompat({ baseDirectory: dirname(fileURLToPath(import.meta.url)) });
 
 export default [
   {
@@ -46,8 +43,8 @@ export default [
 
   // ── apps/web — the Next.js app ───────────────────────────────────────────────────────────────
   // `next/core-web-vitals` bundles the React, react-hooks, jsx-a11y and Next-specific plugins.
-  // FlatCompat is the supported bridge: eslint-config-next is still authored as eslintrc-style.
-  ...compat.extends('next/core-web-vitals', 'next/typescript').map((config) => ({
+  // eslint-config-next 16 ships flat configs natively (the FlatCompat bridge it needed on 15 now throws).
+  ...[...nextCoreWebVitals, ...nextTypescript].map((config) => ({
     ...config,
     files: ['apps/web/**/*.{ts,tsx}', 'packages/**/*.{ts,tsx}'],
     // ESLint runs from the monorepo ROOT but the Next app lives at apps/web. Without this,
@@ -89,6 +86,12 @@ export default [
       // Bans `catch (e) { throw e }`-shaped no-ops and unreachable code that tsc permits.
       'no-useless-catch': 'error',
       'no-unreachable': 'error',
+
+      // Born with the Next 16 upgrade (2026-10-04): eslint-config-next 16 brings these two, and they flag four
+      // `setState` calls in effects and one relative `location.assign` that predate them. Off, per the design rule
+      // above — each is its own follow-up PR, the cleanup in the same diff as the switch to `error`.
+      'react-hooks/set-state-in-effect': 'off',
+      '@next/next/no-location-assign-relative-destination': 'off',
     },
   },
 
