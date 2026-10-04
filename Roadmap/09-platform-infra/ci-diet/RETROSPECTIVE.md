@@ -19,3 +19,5 @@ _Quote vs actual: <quote $lo–hi (basis), or "not quoted"> → <actual ≈$n> (
 
 ## Gaps / follow-ups
 <!-- Smoke gaps owed to the product owner, deferred slices, known limitations. -->
+
+<!-- ci-diet S2.3 mutation (c): docs-only. Scratch PR, closed after. -->
