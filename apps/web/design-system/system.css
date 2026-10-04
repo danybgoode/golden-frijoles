@@ -3673,6 +3673,15 @@
   z-index: 2;
 }
 
+/* At 360px the brand and two actions (/talk: "Try the demo" + "Sign in") overran the bar by 3px with Linux
+   fonts (browser-nightly, 2026-10-04); a narrow phone gets the room back from the padding and gaps. */
+@media (max-width: 420px) {
+  .ds .ds-pubbar {
+    gap: 8px;
+    padding: 0 14px;
+  }
+}
+
 .ds .ds-pubbar-spacer {
   flex: 1;
 }

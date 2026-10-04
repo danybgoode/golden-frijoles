@@ -92,6 +92,51 @@ export function richText(v) {
 // Decide the live PR overlay label from the PR state — the SINGLE source the workflow (`--lifecycle`)
 // and its node:test both read, so the bash and the test can't drift. Draft PR → In progress;
 // ready PR → In review; closed (merged or not) → clear (notion-sync.yml re-derives Status on merge).
+// Notion answers a burst with 429 + a retry_after of a few seconds, and now and then with an HTML 5xx page.
+// A full --sync is ~160 sequential calls, and notion-pr-sync shares the token on every merge, so 5 of the
+// last 11 notion-sync runs on main died on a 429 that asked to be retried in 1-11 s (2026-09-28 → 10-04).
+// Retries 429 and 5xx (and a network error), waiting Retry-After when Notion gives one; a 4xx is the
+// request's own fault and fails at once, with Notion's body in the message.
+export async function notionRequest(url, init = {}, { fetchImpl = fetch, sleep = defaultSleep, attempts = 6 } = {}) {
+  for (let attempt = 1; ; attempt += 1) {
+    let r;
+    try {
+      r = await fetchImpl(url, init);
+    } catch (err) {
+      if (attempt >= attempts) throw err;
+      await sleep(backoffMs(attempt));
+      continue;
+    }
+    const text = await r.text();
+    let body;
+    try {
+      body = JSON.parse(text);
+    } catch {
+      body = null;
+    }
+    if (r.ok && body) return body;
+    const retryable = r.status === 429 || r.status >= 500;
+    if (retryable && attempt < attempts) {
+      await sleep(retryAfterMs(r, body) ?? backoffMs(attempt));
+      continue;
+    }
+    throw new Error(body ? JSON.stringify(body) : `Notion ${r.status}: ${text.slice(0, 200)}`);
+  }
+}
+
+function defaultSleep(ms) {
+  return new Promise((done) => setTimeout(done, ms));
+}
+
+function backoffMs(attempt) {
+  return Math.min(30_000, 1000 * 2 ** (attempt - 1));
+}
+
+function retryAfterMs(r, body) {
+  const s = Number(r.headers?.get?.('retry-after') ?? body?.additional_data?.retry_after);
+  return Number.isFinite(s) && s >= 0 ? Math.min(60_000, s * 1000 + 250) : null;
+}
+
 export function lifecycleForPr({ action, draft }) {
   if (action === 'closed') return { clear: true };
   return { status: draft ? 'In progress' : 'In review' };
@@ -145,7 +190,7 @@ async function main() {
   }
   const NV = '2022-06-28';
   const api = (path, init = {}) =>
-    fetch(`https://api.notion.com/v1${path}`, {
+    notionRequest(`https://api.notion.com/v1${path}`, {
       ...init,
       headers: {
         Authorization: `Bearer ${TOKEN}`,
@@ -153,10 +198,6 @@ async function main() {
         'Content-Type': 'application/json',
         ...(init.headers || {}),
       },
-    }).then(async (r) => {
-      const j = await r.json();
-      if (!r.ok) throw new Error(JSON.stringify(j));
-      return j;
     });
 
   const sel = (v) => (v ? { select: { name: String(v) } } : { select: null });

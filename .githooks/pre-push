@@ -91,6 +91,17 @@ if echo "$changed" | grep -qE '^scripts/'; then
   fi
 fi
 
+# The generated files Skills CI checks (~70ms). A forgotten regen was the most common Skills CI red,
+# 2026-09-30 → 10-04: stale skill adverts and WAYS-OF-WORKING renders, each found a CI round-trip later.
+if echo "$changed" | grep -qE '^skills/'; then
+  echo "pre-push: skills/ generated files..." >&2
+  if ! (cd skills && node scripts/render-skill-adverts.mjs --check && node template/scripts/render-ways-of-working.mjs --check); then
+    echo "pre-push: a skills/ generated file is STALE. Run, from skills/:" >&2
+    echo "          node scripts/render-skill-adverts.mjs && node template/scripts/render-ways-of-working.mjs" >&2
+    push_fail=1
+  fi
+fi
+
 if [ "$push_fail" -ne 0 ]; then
   echo "pre-push: a blocking check failed. Fix and re-push, or 'git push --no-verify' to bypass." >&2
   exit 1
