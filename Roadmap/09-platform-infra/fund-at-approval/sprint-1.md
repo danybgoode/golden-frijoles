@@ -3,7 +3,7 @@ epic: fund-at-approval
 sprint: 1
 title: "Fund at approval"
 risk: low
-phase: Building
+phase: In review
 stories_total: 6
 stories:
   - id: S1.1
@@ -12,50 +12,50 @@ stories:
     i_want: "the bet recorded and placed in the queue by one command"
     so_that: "nobody renumbers build_order by hand and shipped history keeps its numbers"
     risk: low
-    status: planned
+    status: done
   - id: S1.2
     title: "The cycle file opens itself (one per month)"
     as_a: "a product owner"
     i_want: "the month's cycle file created on first use"
     so_that: "starting a cycle needs no wave-boundary meeting"
     risk: low
-    status: planned
+    status: done
   - id: S1.3
     title: "The gate: approve funds, approve-don't-fund stays ready"
     as_a: "a product owner at groom's approval gate"
     i_want: "one answer that funds and scaffolds the bet in the same commit"
     so_that: "nothing leaves grooming scaffolded but unfunded, with no follow-up step"
     risk: low
-    status: planned
+    status: done
   - id: S1.4
     title: "The guard, the backfill, and priority retired"
     as_a: "a product owner reading the board"
     i_want: "the board to fail on an unfunded live bet, after an honest backfill"
     so_that: "scaffolded means funded, enforced rather than hoped for"
     risk: low
-    status: planned
+    status: done
   - id: S1.5
     title: "A fixed-scope seed scaffolds and kicks off without a detour (F33)"
     as_a: "a builder handed a funded fixed-scope seed"
     i_want: "scaffold-epic to take the seed alone and the kickoff generators to point at it"
     so_that: "no hand-written prompt is ever needed for a seed"
     risk: low
-    status: planned
+    status: done
   - id: S1.6
     title: "Docs: the flow, betting rules and the wave-boundary re-bet"
     as_a: "anyone reading how seeds flow"
     i_want: "the docs to describe funding at approval"
     so_that: "the written process matches the one the tools run"
     risk: low
-    status: planned
+    status: done
 ---
 # Fund at approval: the approval gate is the betting table — Sprint 1: Fund at approval
 
-**Status:** ⬜ not started
+**Status:** 🟦 In review — all six stories built; PR open
 
 ## Stories
 
-### Story 1.1 — `fund.mjs`: cycle row, `underwritten_by`, queue placement
+### Story 1.1 — `fund.mjs`: cycle row, `underwritten_by`, queue placement ✅ `60cebf0`
 **As a** product owner approving a pitch, **I want** the bet recorded and placed in the queue by one command, **so that**
 nobody renumbers `build_order` by hand and shipped history keeps its numbers.
 **Acceptance:** `fund.mjs --after <slug>` and `--next` place a bet in the queue; shipped `build_order` values never
@@ -63,14 +63,14 @@ change (seed AC 3). The seed gets `underwritten_by`, `build_order`, `appetite` a
 one row (bet · appetite · displaced). Placement follows README D4.
 **Risk:** low
 
-### Story 1.2 — The cycle file opens itself (one per month)
+### Story 1.2 — The cycle file opens itself (one per month) ✅ `60cebf0`
 **As a** product owner, **I want** the month's cycle file created on first use, **so that** starting a cycle needs no
 wave-boundary meeting.
 **Acceptance:** the cycle file for the month is created on first use (seed AC 5), with the bets README's table shape;
 a second bet that month appends to it (README D2).
 **Risk:** low
 
-### Story 1.3 — The gate: approve funds, "approve, don't fund" stays ready
+### Story 1.3 — The gate: approve funds, "approve, don't fund" stays ready ✅ `9abdcf3`
 **As a** product owner at `groom`'s approval gate, **I want** one answer that funds and scaffolds the bet in the same
 commit, **so that** nothing leaves grooming scaffolded but unfunded, with no follow-up step.
 **Acceptance:** approving a pitch in `groom` writes the cycle row, `underwritten_by` and the build position in the same
@@ -78,14 +78,14 @@ commit as the scaffold, with no further step (seed AC 1). "Approve, don't fund" 
 scaffolds nothing (seed AC 2). `scaffold-epic` refuses a seed with no `underwritten_by` (README D5).
 **Risk:** low
 
-### Story 1.4 — The guard, the backfill, and `priority:` retired
+### Story 1.4 — The guard, the backfill, and `priority:` retired ✅ `0f604a6`
 **As a** product owner reading the board, **I want** the board to fail on an unfunded live bet, after an honest
 backfill, **so that** scaffolded means funded, enforced rather than hoped for.
 **Acceptance:** `build-order.mjs` fails on a scaffolded bet with no `underwritten_by`; passes after the backfill (seed
 AC 4). `priority:` is gone from the seeds, the template and the extractor (README D9, D10).
 **Risk:** low
 
-### Story 1.5 — A fixed-scope seed scaffolds and kicks off without a detour (F33)
+### Story 1.5 — A fixed-scope seed scaffolds and kicks off without a detour (F33) ✅ `b46688e`
 **As a** builder handed a funded fixed-scope seed, **I want** `scaffold-epic` to take the seed alone and the kickoff
 generators to point at it, **so that** no hand-written prompt is ever needed for a seed.
 **Acceptance:** `scaffold-epic.mjs --slug <seed>` with no other flags scaffolds a one-sprint epic whose stories are the
@@ -93,7 +93,7 @@ seed's acceptance criteria; `emit-epic-kickoff --epic <seed-slug>` on an unscaff
 (README D11).
 **Risk:** low
 
-### Story 1.6 — Docs: the flow, betting rules and the wave-boundary re-bet
+### Story 1.6 — Docs: the flow, betting rules and the wave-boundary re-bet ✅ `6e0eea6`
 **As** anyone reading how seeds flow, **I want** the docs to describe funding at approval, **so that** the written
 process matches the one the tools run.
 **Acceptance:** `00-ideas/README.md` (*How seeds flow*, the frontmatter block, *Ordering*), WAYS-OF-WORKING → *Betting &

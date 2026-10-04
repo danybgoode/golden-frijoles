@@ -1,6 +1,6 @@
 ---
 status: scaffolded   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Building       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+phase: In review      # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
 locked_at: "2026-10-04T23:38:01Z"
 slug: fund-at-approval
@@ -104,6 +104,24 @@ No product primitive is involved: this is planning tooling over `Roadmap/` front
 | 1 | S1.4 The guard + the backfill + `priority:` retired | low |
 | 1 | S1.5 A fixed-scope seed scaffolds and kicks off without a detour (F33) | low |
 | 1 | S1.6 Docs: the flow, betting rules and the wave-boundary re-bet | low |
+
+## Build notes (deviations and findings, 2026-10-04)
+
+- **A bug the dry run found before any test did:** a `ready` seed's legacy `build_order` (14) set the queue's start,
+  pouring the live queue into the shipped history's gaps (#18, #34, #45…). Only a target already in the queue sets the
+  start now; a spec pins it (D4).
+- **The gate commit needs `fund.mjs`'s renumbered paths too.** The scaffolder cannot know them, so it says so and
+  SKILL.md step 4 names both lists. Found by the end-to-end run on a scratch copy of this Roadmap.
+- **The L re-bet line lives in the epic kickoff** (`buildEpicRules`, appetite L from the README else the seed), not
+  only in WAYS-OF-WORKING: the builder reads the kickoff, and that is where it stops at a boundary (D7).
+- **The backfill touched 46 bets, not 43**: 40 seeds (some epics have more than one seed pointing at them) and 6
+  seedless shipped epics, whose README now carries `underwritten_by` (D8, D10). 10 legacy path values normalised;
+  `priority:` stripped from all 71 seeds.
+- **Notion's `Priority` column is no longer written** and keeps its last values; deleting it is the product owner's
+  call, outside this repo.
+- **`skills/Roadmap/` (the mirror's own copy) was updated too**: its WoW source must byte-match the template's
+  (skills CI), and its 00-ideas/bets/SESSION-KICKOFFS copies described the old flow.
+- **groom SKILL.md sits at exactly its 210-line prose budget**; the detail moved to `references/funding.md`.
 
 ## Deploy order
 
