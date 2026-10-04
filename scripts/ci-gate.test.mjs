@@ -81,7 +81,7 @@ test('ci.yml: gate needs every other job, and --skippable names exactly the e2e 
     .exec(gate)[1]
     .split(',')
     .map((s) => s.trim());
-  const nonBlocking = []; // jobs deliberately outside the gate, each with a reason in ci.yml
+  const nonBlocking = ['quarantine']; // deliberately outside the gate; ci.yml says why above the job
   assert.deepEqual(needsList.sort(), jobs.filter((j) => j !== 'gate' && !nonBlocking.includes(j)).sort());
   assert.match(gate, /if: always\(\)/);
   const skippable = /--skippable ([a-z0-9,-]+)/.exec(gate)[1].split(',');
