@@ -69,13 +69,13 @@ jobs, **so that** a suite no pipeline runs stops decaying, and a PR's checks are
   `scripts/telegram-notify.mjs` on red (D8). It's not on `pull_request`.
 - A seed `landing-browser-spec-red` is written for the spec that's red on `main` today.
 - `push-pod-report` moves to its own workflow triggered only by `deployment_status` (+ `workflow_dispatch`);
-  `roadmap-push.yml` keeps only the board push. A PR's checks list no longer shows "Push golden-beans' own Pod Report —
-  skipping".
+  `roadmap-push.yml` keeps only the board push. **Amended by lock C8:** the `pull_request`-event row goes, but a
+  preview deployment's `deployment_status` still leaves one skipped "Push golden-beans' own Pod Report" row.
 **Risk:** low
 
 ## Sprint QA
-- **gate:** this PR's own CI green; the expiry checker's spec; a `workflow_dispatch` run of the nightly workflow linked in
-  the PR body.
+- **gate:** this PR's own CI green; the expiry checker's spec; a `workflow_dispatch` run of the nightly workflow,
+  linked in the sprint walkthrough. It can only run after merge, because dispatch needs the workflow on `main`.
 - **browser smoke owed:** no.
 - **security lens:** yes on 3.2 (it changes what blocks a merge).
 
@@ -83,9 +83,9 @@ jobs, **so that** a suite no pipeline runs stops decaying, and a PR's checks are
 Env: GitHub.
 
 1. Open the S3 PR's checks
-   → no Pod Report row, and a non-blocking `quarantine` job whose summary names the portfolio loop test, its owner and
-   expiry.
-2. Open the nightly workflow's `workflow_dispatch` run linked in the PR body
+   → one Pod Report row at most (C8: the preview deploy's), and a non-blocking `quarantine` job whose summary names the
+   portfolio loop test, its owner and expiry.
+2. Open the nightly workflow's `workflow_dispatch` run (after merge) linked in this file's walkthrough
    → it ran the `browser` project; if it was red, Telegram got a ping (check the channel).
 3. Open the artifact on the deliberately failing re-run linked in the PR body, download it, and run
    `npx playwright show-trace trace.zip`

@@ -1,7 +1,7 @@
 name: Failure evidence
 description: >-
   Uploads what a red e2e run leaves behind (ci-diet S3.1): Playwright's traces, screenshots and error context
-  (apps/web/test-results/) plus the servers' logs, kept for a few days. Run it under `if: failure()`.
+  (apps/web/test-results/) plus the servers' logs, kept for a few days. Run it under `if: failure()` (or `always()`).
 inputs:
   name:
     description: Artifact name, unique per job.

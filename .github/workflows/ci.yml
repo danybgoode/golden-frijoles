@@ -189,13 +189,14 @@ jobs:
       - name: Report
         if: always()
         run: |
-          node scripts/check-quarantine.mjs > /dev/null || true
+          node scripts/check-quarantine.mjs || true
           echo "**Result: ${{ steps.run.outcome }}** (reported, not blocking)" >> "$GITHUB_STEP_SUMMARY"
           [ "${{ steps.run.outcome }}" = success ] || echo "::warning::A quarantined test failed (see the job summary and the uploaded trace)."
+      # Always: a flaky pass is evidence too, and it is exactly what the quarantine's fix needs.
       - uses: ./.github/actions/failure-evidence
-        if: steps.run.outcome == 'failure'
+        if: always()
         with:
-          name: quarantine-failure
+          name: quarantine-evidence
 
   # Opens the approved prototype at file:// in a real browser: no Supabase, no server (lock C2). The measured spec
   # and the state contract must reproduce, and every approved state must render.

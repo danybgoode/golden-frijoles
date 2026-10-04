@@ -42,8 +42,8 @@ on:
 
 permissions:
   contents: read
-  # `gh pr list` (the board's PR facts) needs it. Without it neither fails:
-  # each degrades to "no PR facts", which on the board would read every open PR as plain Building.
+  # `gh pr list` (the board's PR facts) needs it. Without it the push still succeeds, but with "no PR facts", which
+  # on the board would read every open PR as plain Building.
   pull-requests: read
 
 jobs:

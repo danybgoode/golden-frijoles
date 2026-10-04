@@ -41,7 +41,7 @@ jobs:
           node scripts/telegram-notify.mjs \
             --icon 🌙 \
             --sha "$GITHUB_SHA" \
-            --subject "browser-nightly is red on main" \
+            --subject "browser-nightly is red on main (the browser suite, or a lapsed quarantine)" \
             --status "failed" \
             --url "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
             --link-label "open the run"

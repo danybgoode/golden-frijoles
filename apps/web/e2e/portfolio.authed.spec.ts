@@ -163,7 +163,7 @@ test('2+ products: bare /app opens on the portfolio — one row per product of m
 // Roadmap/00-ideas/seeds/portfolio-loop-flake.md, which starts from the trace a red run now uploads.
 test(
   'the loop: an owner places a product from its row; a member sees the stage read-only',
-  { tag: '@quarantine', annotation: { type: 'quarantine', description: 'owner=Daniel expires=2026-11-03' } },
+  { tag: '@quarantine', annotation: { type: 'quarantine', description: 'owner=Daniel expires=2026-10-18' } },
   async ({ browser }) => {
     // Three hydration waits and five post-submit budgets do not fit Playwright's default 30 s: on a slow runner the test
     // would die at "test timeout" instead of at the step that was slow (fresh reviewer, #239).
