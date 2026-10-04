@@ -3,7 +3,7 @@ epic: kickoff-generator-path
 sprint: 1
 title: "S1 The kit carries the kickoff generators"
 risk: low
-phase: Shaping
+phase: Building
 stories_total: 3
 stories:
   - id: S1.1
@@ -32,10 +32,11 @@ stories:
 
 **Status:** ⬜ not started
 
-## Build contract (the architect locks this before the builder starts)
-Cite, don't restate: the epic README's **D1, D2, D3, D6**. The architect verifies each against live code first,
-especially that `render-hook-vendor.mjs` can vendor a top-level entry (not only `lib/`) and that
-`check-skill-scripts` accepts the declared `kickoff.md`. Any deviation is named in the README.
+## Build contract (locked by the architect before the builder started, 2026-10-04)
+Cite, don't restate: the epic README's **D1, D2, D3, D6 as corrected by C1–C5** (§ Architecture lock). In short:
+the groom copies are `groom/vendor/emit-*.mjs` (C1), the root rule lives once in `lib/kickoff-cli.mjs` (C2), the
+template is `template/scripts/templates/kickoff.md` (C3), the specs move to `template/scripts/` (C4), and S1 releases
+0.27.0 (C5).
 
 ## Stories
 

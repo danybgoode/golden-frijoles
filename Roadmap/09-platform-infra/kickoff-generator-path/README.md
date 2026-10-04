@@ -1,7 +1,8 @@
 ---
-status: scaffolded   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Shaping       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+status: in-progress  # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+phase: Building       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
+locked_at: "2026-10-04T12:25:54Z"
 slug: kickoff-generator-path
 title: "Kickoff generators run from anywhere"
 area: 09-platform-infra
@@ -67,6 +68,63 @@ This epic adds the two entry points and points the docs at them. Every edit unde
 - **D7 — Release: lockstep plugin + kit bump** in S2's PR (or S1's, if S1 already ships a kit-closure change;
   `check-release.mjs` decides, don't argue with it). CI publishes the kit via OIDC; no human step.
 
+## Architecture lock (2026-10-04, verified against `main` @ `e832dc5`)
+
+D1–D7 above stand, **with the corrections C1–C6 below**, each forced by live code. Builders cite these; nothing here
+is restated elsewhere.
+
+- **C1 — Groom's vendored copies live in `groom/vendor/`, not at `groom/emit-*.mjs` (corrects D1).**
+  `render-hook-vendor.mjs`'s `writeVendor` does `rmSync(vendorDir)` before writing, and the source's relative imports
+  (`./lib/epic-kickoff.mjs`) only resolve when the copy sits beside its `lib/`. Vendoring into `groom/` itself would
+  delete `SKILL.md`; a byte-identical copy at `groom/emit-*.mjs` would import a `groom/lib/` that does not exist. So
+  the groom kickoff bundle becomes **entry `emit-epic-kickoff.mjs`** (its closure pulls in `emit-kickoff.mjs`,
+  `lib/epic-kickoff.mjs`, `lib/wip.mjs`, `lib/project-root.mjs` and the extractor chain, derived, never listed) **+
+  `also: ['templates/kickoff.md']`**. `groom/emit-epic-kickoff.mjs`, `groom/emit-kickoff.mjs` and
+  `groom/templates/kickoff.md` are **deleted**. The mod's `VENDOR_EMIT_KICKOFF` becomes
+  `../skills/groom/vendor/emit-epic-kickoff.mjs`, and groom's `SKILL.md` Stage 8 / `references/per-sprint-kickoff.md`
+  name `$GROOM/vendor/…`. That is the "path change only" S1.1 allows for `build-view.mod.test.ts` and
+  `build-view.test.mjs`.
+- **C2 — Root resolution needs one more rung than `projectRoot()` (corrects D3).** In copied mode `projectRoot()`
+  answers `kitRoot()/..`. That is right for a project's own `scripts/`, but for the plugin's vendored copy it is
+  `groom/`, which holds no `Roadmap/`. Today's copy uses `cwd`, and groom's Stage 8 runs it from the project root. The
+  rule, written **once** in a new `lib/kickoff-cli.mjs` that both entries import: `--repo-root` → `GF_PROJECT_ROOT`
+  (verbatim, even without a `Roadmap/`: a person said so) → `projectRoot()` when it holds `Roadmap/` → the nearest
+  `Roadmap/`-or-`.git` walking up from `cwd` (`findProjectRoot`) → `cwd`. The same module holds the one
+  `findEpicDir` (today duplicated byte-for-byte in both CLIs) and `parseArgs` (re-exported from `emit-kickoff.mjs` for
+  its spec).
+- **C3 — The per-sprint template lives at `template/scripts/templates/kickoff.md` (settles D2).** It is declared in
+  groom's `requires_scripts` by hand. `emit-kickoff.mjs` reads it from its own directory, which is `kitRoot()` in every
+  mode (project `scripts/`, kit `dist/`, `groom/vendor/`). It is not a `projectAsset`, and a project cannot override
+  it. `bundleManifest` passes it through `importClosure`, which reads a non-import file as a closure of one. This is
+  verified by the S1.1 build, not assumed.
+- **C4 — The specs move with their sources** to `template/scripts/emit-{epic-,}kickoff.test.mjs`. skills-ci's
+  `template script tests` step already globs `template/scripts/*.test.mjs`, so the explicit `groom generator tests`
+  step drops those two lines. The edit goes in the source `skills/.github/workflows/ci.yml`, then
+  `node scripts/render-skills-ci.mjs`; the generated file is never hand-edited. The epic spec's WAYS-OF-WORKING lookup
+  becomes `../Roadmap/WAYS-OF-WORKING.template.md` relative to `template/scripts/`.
+- **C5 — The release happens in S1 too (settles D7).** S1 touches `plugins/**` (the vendor bundle, the mod) and the
+  kit closure, so `check-release --base` forces a bump there: **0.27.0** (minor, because the kit gains two entries).
+  S2 bumps again (**0.27.1**) only if `check-release` asks. This **removes** the release window the Deploy-order
+  section worried about: the kit that carries the commands is on npm before any doc names them. S2's smoke pins
+  `@0.27.x`.
+- **C6 — The D5 guard is a root spec, `scripts/kickoff-doc-paths.test.mjs`.** It runs under `npm run test:unit` in the
+  main CI's static job, which ci-diet never skips for docs. It cannot live in skills-ci, because the subtree split
+  holds no root `Roadmap/`. It scans root `Roadmap/` (excluding `Roadmap/00-ideas/`, where seeds quote the bug as
+  evidence, and every epic folder `Roadmap/<NN-area>/<slug>/`), `skills/Roadmap/` and `skills/template/` (docs **and**
+  `template/scripts/**`, which covers the generators' output strings and usage comments). It also scans the plugin's
+  shipped skill docs (`skills/plugins/golden-frijoles/skills/**/*.md`) for the literal `node skills/groom/`.
+  Plugin-relative code paths (`../skills/groom/`) are not the pattern, so they never match. **The nine docs** are
+  re-verified live: root WoW template + rendered + `SESSION-KICKOFFS.md`, plus the same three in each of
+  `skills/Roadmap/` and `skills/template/Roadmap/`. `skills/Roadmap/SESSION-KICKOFFS.md` and its template twin differ
+  today (line 54); each is edited at its own lines and nothing is synced.
+
+**Sprint build contracts.** S1 = D1, D2, D3, D6 as corrected by C1–C5; S2 = D4, D5, D7 as corrected by C5–C6. They
+are recorded in each sprint file's *Build contract*.
+
+**Routing (amended).** The architect builds both sprints in place. They share every hot file (the bundle, groom's
+`SKILL.md`, the CHANGELOG), and this is the only session in the checkout. External review follows
+`review-route.mjs`. The fresh `pr-reviewer` on S1 runs the packed-tarball spec itself.
+
 ## What already exists (reuse, don't rebuild)
 - `skills/template/scripts/lib/epic-kickoff.mjs` (`epicKickoffFromDir`, `EPIC_KICKOFF_TEMPLATE`), `lib/wip.mjs`,
   `lib/project-root.mjs`
@@ -95,7 +153,7 @@ and can go to the faster one. The fresh `pr-reviewer` on S1 should run the packe
 report.
 
 ## Deploy order
-S1 then S2, stacked (`fix/kickoff-generator-path` → `-s2`). Nothing on Vercel changes. The release is the version bump
+S1 then S2, stacked (`feat/kickoff-generator-path` → `-s2`). Nothing on Vercel changes. The release is the version bump
 merging to `main`, and the skills subtree split + CI publish follow. Docs must not point at the kit command before the
 kit version that carries it is on npm: S2 merges the docs **and** the bump together, so the window is the few minutes
 RELEASING.md already describes.

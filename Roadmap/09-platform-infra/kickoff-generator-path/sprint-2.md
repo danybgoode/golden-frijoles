@@ -25,8 +25,9 @@ stories:
 
 **Status:** ⬜ not started
 
-## Build contract (the architect locks this before the builder starts)
-Cite, don't restate: the epic README's **D4, D5, D7**. Edit **sources only**: `WAYS-OF-WORKING.template.md` (then
+## Build contract (locked by the architect before the builder started, 2026-10-04)
+Cite, don't restate: the epic README's **D4, D5, D7 as corrected by C5–C6** (§ Architecture lock): the guard is the
+root spec `scripts/kickoff-doc-paths.test.mjs` (C6), and the kit already carries the commands from 0.27.0 (C5). Edit **sources only**: `WAYS-OF-WORKING.template.md` (then
 `node scripts/render-ways-of-working.mjs`), the `skills/` sources and their byte-checked copies per `skills/RELEASING.md`.
 Never hand-edit a generated file.
 
