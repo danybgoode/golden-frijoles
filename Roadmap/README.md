@@ -412,7 +412,8 @@ independently shippable slice of value.
   one line, `Moves: <input> · Tests: <dimension>`. With no folder it says nothing. intent-match's "worth doing?" route
   points at the coaches. **`gf north-star set <file>`** sends the workshop's metric and inputs to the engine over a new
   owner-only `/api/v1/cli/north-star` route, which shares its logic with the ingest-key route. It's a dry run by
-  default and names what a sync can't undo. All CLI POST routes now check the gate before reading the body.
+  default and names what a sync can't undo. Under `--json` the dry run says `sendable` and `blockers` (CLI 0.4.1, cli-think-skills-followups). All CLI POST routes
+  check the gate before reading the body, and a parameter-anchored guard goes red on any route that reads it itself.
   **Shipped 2026-10-01** (#214, #215, #216; plugin 0.17.0–0.19.0, CLI 0.3.0). ⚠️ Owed to Daniel: the CLI's npm
   publish, the first real North Star run and its live `--yes`, and removing the account copies.
 - ✅ [Sketch specs](09-platform-infra/sketch-specs/README.md): **a screen is written once as a `surface` block** — a
@@ -460,6 +461,12 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-04**: `cli-think-skills-followups` **shipped**: one sprint, CLI 0.4.1 (the npm publish is owed), ≈$3.79
+  against an $11–17 quote.
+  - An agent driving `gf north-star set --json` branches on `sendable` and `blockers` instead of parsing a sentence.
+    The gate-before-body guard now fails on every body read a regex can see, and on any handler it can't parse.
+  - The lock corrected D4 (arrow handlers). Review found the guard's real hole: "can't read this parameter" was being
+    recorded as "no parameter". It fails red now.
 - **2026-10-04**: `kickoff-generator-path` **shipped**: two sprints in one run, kit 0.27.0–0.27.1, ≈$11.65 against a
   $23–36 quote.
   - Any plugin user, on any host, generates the build kickoff with `npx -y @golden-frijoles/kit emit-epic-kickoff`.

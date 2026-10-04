@@ -418,6 +418,11 @@ one-liner + why + date shape.
   `/* … */` doing the same · a case-sensitive scheme strip. Every one looked right and reported
   success. **Budget for this shape when the deliverable IS a guard** — the code under test was
   trivial and the guard around it was not. *(2026-08-20, site-url-preview-aware.)*
+  **Give the parser a third answer, "can't read this", and make it fail red.** In
+  cli-think-skills-followups the body-order guard recorded a destructured `{ body }` parameter, a comment and a rest
+  parameter as "takes no parameter" and passed. Only a literal `()` may mean none; anything the parser can't name is
+  its own state, and the guard refuses it. Three review rounds on a test-only story again, none on the product code.
+  *(2026-10-04, cli-think-skills-followups.)*
 - **A platform-set environment variable is not a request Host header, and the difference is worth
   making STRUCTURAL.** AGENTS rule #5 forbids a `Host` fallback because a bare-container Host is
   attacker-controllable. `VERCEL_BRANCH_URL` is set by the platform into the deployment, is identical
