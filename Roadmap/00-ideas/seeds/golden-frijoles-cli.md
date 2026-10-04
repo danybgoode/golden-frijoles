@@ -4,7 +4,6 @@ slug: golden-frijoles-cli
 status: scaffolded
 area: "02"
 type: feature
-priority: wave-2026-09-16
 appetite: L
 underwritten_by: wave-2026-09-16
 risk: high

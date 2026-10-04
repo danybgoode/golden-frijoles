@@ -4,11 +4,11 @@ slug: flag-serving-and-prd-g
 status: scaffolded
 area: "01"
 type: feature
-priority: null
 risk: high
 epic: "01-growth-engine/flag-serving-and-prd-g"
 build_order: 11
 updated: 2026-07-27
+underwritten_by: wave-backfill
 ---
 
 # Scope — E5 Flag control plane + PRD-G

@@ -4,9 +4,8 @@ slug: scenarios-pm-operable
 status: scaffolded
 area: "01"
 type: feature
-priority: "wave-2026-08-08"
 appetite: M
-underwritten_by: "Roadmap/bets/wave-2026-08-13-scenarios.md"
+underwritten_by: wave-2026-08-13-scenarios
 risk: high
 epic: "01-growth-engine/scenarios-pm-operable"
 build_order: 16

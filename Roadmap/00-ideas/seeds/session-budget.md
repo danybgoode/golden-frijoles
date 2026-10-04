@@ -4,9 +4,8 @@ slug: session-budget
 status: scaffolded
 area: "09"
 type: chore
-priority: "single-product-wave-B"
 appetite: S
-underwritten_by: null
+underwritten_by: wave-backfill
 risk: low
 epic: "09-platform-infra/session-budget"
 build_order: 50

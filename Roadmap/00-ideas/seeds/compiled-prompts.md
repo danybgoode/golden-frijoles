@@ -4,9 +4,8 @@ slug: compiled-prompts
 status: shipped
 area: "09"
 type: feature
-priority: "single-product-wave-C"
 appetite: M
-underwritten_by: null
+underwritten_by: wave-backfill
 risk: low
 epic: "09-platform-infra/compiled-prompts"
 build_order: 51

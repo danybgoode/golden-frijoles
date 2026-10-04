@@ -4,7 +4,6 @@ slug: landing-browser-spec-red
 status: shipped
 area: '02'
 type: bug
-priority: unranked
 appetite: S
 underwritten_by: null
 risk: low

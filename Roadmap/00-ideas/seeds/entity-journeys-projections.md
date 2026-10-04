@@ -4,11 +4,11 @@ slug: entity-journeys-projections
 status: scaffolded
 area: "01"
 type: feature
-priority: null
 risk: high
 epic: "01-growth-engine/entity-journeys-projections"
 build_order: 5
 updated: 2026-07-21
+underwritten_by: wave-backfill
 ---
 
 # Scope — Entity journeys — configurable lifecycle projections beyond fixed TARS

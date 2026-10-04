@@ -4,9 +4,8 @@ slug: portfolio-view
 status: scaffolded
 area: "02"
 type: feature
-priority: "audit-wave-C"
 appetite: M
-underwritten_by: null
+underwritten_by: wave-backfill
 risk: high
 epic: "02-commercial/portfolio-view"
 build_order: 41

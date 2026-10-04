@@ -4,11 +4,11 @@ slug: ai-adoption-maturity-lens
 status: scaffolded
 area: "02"
 type: feature
-priority: null
 risk: low
 epic: "02-commercial/pod-report"
 build_order: 7
 updated: 2026-07-20
+underwritten_by: wave-backfill
 ---
 
 # Scope — the AI-adoption maturity lens, as an amendment to E3 `pod-report` v1

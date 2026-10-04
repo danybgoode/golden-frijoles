@@ -4,7 +4,6 @@ slug: fund-at-approval
 status: scaffolded
 area: "09"
 type: chore
-priority: null
 appetite: S
 underwritten_by: wave-2026-10-04-launch
 risk: low

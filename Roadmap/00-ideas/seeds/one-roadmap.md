@@ -4,9 +4,8 @@ slug: one-roadmap
 status: scaffolded
 area: "09"
 type: chore
-priority: "single-product-wave-A"
 appetite: S
-underwritten_by: null
+underwritten_by: wave-backfill
 risk: low
 epic: "09-platform-infra/one-roadmap"
 build_order: 43

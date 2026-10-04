@@ -4,7 +4,6 @@ slug: build-visualization-claude-mods
 status: scaffolded
 area: "09"
 type: feature
-priority: wave-2026-09-16-plugin
 appetite: M
 underwritten_by: wave-2026-09-16-plugin
 risk: low

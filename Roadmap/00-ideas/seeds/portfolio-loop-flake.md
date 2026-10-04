@@ -4,7 +4,6 @@ slug: portfolio-loop-flake
 status: shipped
 area: '02'
 type: bug
-priority: unranked
 appetite: S
 underwritten_by: null
 risk: low

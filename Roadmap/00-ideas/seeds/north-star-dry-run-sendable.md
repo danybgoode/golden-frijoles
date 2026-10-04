@@ -4,9 +4,8 @@ slug: north-star-dry-run-sendable
 status: scaffolded
 area: "09"
 type: feature
-priority: null
 appetite: S
-underwritten_by: null
+underwritten_by: wave-backfill
 risk: low
 epic: "09-platform-infra/cli-think-skills-followups"
 build_order: 57

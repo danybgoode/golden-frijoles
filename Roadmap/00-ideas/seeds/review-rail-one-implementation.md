@@ -4,10 +4,10 @@ slug: review-rail-one-implementation
 status: archived
 area: "09"
 type: chore
-priority: unranked
 epic: "09-platform-infra/distribute-what-we-use"
 build_order: 46
 updated: 2026-09-29
+underwritten_by: wave-backfill
 ---
 
 # Seed — the review rail, one implementation

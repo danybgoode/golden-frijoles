@@ -4,7 +4,6 @@ slug: delivery-stale-reclaim-uncounted
 status: raw
 area: '01'
 type: bug
-priority: unranked
 appetite: S
 underwritten_by: null
 risk: high

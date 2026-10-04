@@ -4,9 +4,8 @@ slug: experiments-for-humans
 status: scaffolded
 area: "01"
 type: feature
-priority: "audit-wave-A"
 appetite: L
-underwritten_by: null
+underwritten_by: wave-backfill
 risk: high
 epic: "01-growth-engine/experiments-for-humans"
 build_order: 35

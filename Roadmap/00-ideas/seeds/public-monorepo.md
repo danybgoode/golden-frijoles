@@ -4,9 +4,8 @@ slug: public-monorepo
 status: scaffolded
 area: "09"
 type: feature
-priority: "single-product-wave-A"
 appetite: M
-underwritten_by: null
+underwritten_by: wave-backfill
 risk: high
 epic: "09-platform-infra/public-monorepo"
 build_order: 45

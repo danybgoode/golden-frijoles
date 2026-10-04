@@ -4,9 +4,8 @@ slug: live-build-view
 status: scaffolded
 area: "09-platform-infra"
 type: feature
-priority: null
 appetite: M
-underwritten_by: null
+underwritten_by: wave-backfill
 risk: high
 epic: "09-platform-infra/live-build-view"
 build_order: 55

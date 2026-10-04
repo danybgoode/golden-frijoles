@@ -4,11 +4,11 @@ slug: commercial-shell
 status: scaffolded
 area: "02"
 type: feature
-priority: null
 risk: high
 epic: "02-commercial/commercial-shell"
 build_order: 2
 updated: 2026-07-15
+underwritten_by: wave-backfill
 ---
 
 # Scope — E1 Commercial shell (landing-first, backfill-forward)

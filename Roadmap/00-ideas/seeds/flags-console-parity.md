@@ -4,9 +4,8 @@ slug: flags-console-parity
 status: scaffolded
 area: "01"
 type: feature
-priority: null
 appetite: M
-underwritten_by: null
+underwritten_by: wave-backfill
 risk: high
 epic: "01-growth-engine/flags-console-parity"
 build_order: null

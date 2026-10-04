@@ -4,9 +4,8 @@ slug: golden-frijoles-plugin
 status: scaffolded
 area: "09"
 type: feature
-priority: null
 appetite: L
-underwritten_by: null
+underwritten_by: wave-backfill
 risk: high
 epic: "09-platform-infra/golden-frijoles-plugin"
 build_order: 34

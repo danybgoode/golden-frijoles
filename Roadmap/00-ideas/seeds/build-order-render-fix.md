@@ -4,9 +4,8 @@ slug: build-order-render-fix
 status: archived   # absorbed by fund-at-approval (2026-10-04): retiring priority removes the cause
 area: "09"
 type: chore
-priority: "wave-2026-08-08"
 appetite: S
-underwritten_by: "Roadmap/bets/wave-2026-08-08.md"
+underwritten_by: wave-2026-08-08
 risk: low
 epic: null
 build_order: null

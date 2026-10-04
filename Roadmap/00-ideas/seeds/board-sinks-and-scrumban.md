@@ -4,9 +4,8 @@ slug: board-sinks-and-scrumban
 status: scaffolded
 area: "02"
 type: feature
-priority: "audit-wave-C"
 appetite: L
-underwritten_by: null
+underwritten_by: wave-backfill
 risk: high
 epic: "02-commercial/board-sinks-and-scrumban"
 build_order: 39

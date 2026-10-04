@@ -4,9 +4,8 @@ slug: cli-body-order-guard-clone
 status: scaffolded
 area: "09"
 type: chore
-priority: unranked
 appetite: S
-underwritten_by: null
+underwritten_by: wave-backfill
 risk: low
 epic: "09-platform-infra/cli-think-skills-followups"
 build_order: 57

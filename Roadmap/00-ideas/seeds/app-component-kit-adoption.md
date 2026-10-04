@@ -4,9 +4,8 @@ slug: app-component-kit-adoption
 status: scaffolded
 area: "02"
 type: chore
-priority: "wave-2026-08-08"
 appetite: M
-underwritten_by: "Roadmap/bets/wave-2026-08-08.md"
+underwritten_by: wave-2026-08-08
 risk: low
 epic: "02-commercial/app-component-kit-adoption"
 build_order: 13

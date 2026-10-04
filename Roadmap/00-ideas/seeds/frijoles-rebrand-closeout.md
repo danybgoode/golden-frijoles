@@ -4,9 +4,8 @@ slug: frijoles-rebrand-closeout
 status: scaffolded
 area: "02"
 type: chore
-priority: null
 appetite: S
-underwritten_by: null
+underwritten_by: wave-backfill
 risk: low
 epic: "02-commercial/frijoles-rebrand-closeout"
 build_order: 19

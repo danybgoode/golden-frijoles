@@ -4,7 +4,6 @@ slug: coaches-v2
 status: scaffolded
 area: "09"
 type: feature
-priority: null
 appetite: M
 underwritten_by: wave-2026-10-04-launch
 risk: low

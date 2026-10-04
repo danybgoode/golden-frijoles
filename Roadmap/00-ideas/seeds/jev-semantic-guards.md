@@ -4,7 +4,6 @@ slug: jev-semantic-guards
 status: shipped
 area: "09"
 type: feature
-priority: wave-2026-09-19
 appetite: L
 underwritten_by: wave-2026-09-19
 risk: high

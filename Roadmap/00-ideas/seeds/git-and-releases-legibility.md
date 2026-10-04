@@ -4,7 +4,6 @@ slug: git-and-releases-legibility
 status: ready
 area: "02"
 type: spike
-priority: null
 appetite: S
 underwritten_by: null
 risk: low

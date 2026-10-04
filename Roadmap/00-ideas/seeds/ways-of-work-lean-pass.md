@@ -4,7 +4,6 @@ slug: ways-of-work-lean-pass
 status: scaffolded
 area: "09"
 type: chore
-priority: wave-2026-09-16-plugin
 appetite: L
 underwritten_by: wave-2026-09-16-plugin
 risk: high
