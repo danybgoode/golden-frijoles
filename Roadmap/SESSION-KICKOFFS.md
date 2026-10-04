@@ -44,7 +44,7 @@ Pleasantries are fine and cost nothing — the leverage is the defined verb, not
 | **Groom: \<ask\>** / **Shape: \<ask\>** | §1 — groom a raw ask into a shaped pitch (synonyms; "Shape" just names the stage) |
 | **Bet** / **Bet the wave** | §9 — run the betting table at a wave boundary, write `Roadmap/bets/<wave>.md` |
 | **Re-shape \<slug\>** | §10 — an M/L bet hit its circuit breaker; back to shaping, never extended in flight |
-| **Build epic \<epic\>** | §2 — build a WHOLE epic in one orchestrated run (**the default**). Generate the prompt: `node skills/groom/emit-epic-kickoff.mjs --epic <slug>` |
+| **Build epic \<epic\>** | §2 — build a WHOLE epic in one orchestrated run (**the default**). Start it: `/build <slug>` (or `node skills/groom/emit-epic-kickoff.mjs --epic <slug>` without the plugin's mod) |
 | **Build S\<N\> of \<epic\>** | §2 — build a single sprint (the exception: one-sprint epic, or the next sprint's scope genuinely isn't knowable yet) |
 | **Spike \<name\>** | §3 — run a spike |
 | **Review PR #\<N\>** | §4 — route it: `node scripts/review-route.mjs --builder <who> <N>` → one external general pass + the fresh `pr-reviewer` subagent (+ a security lens when the paths trigger it) |
