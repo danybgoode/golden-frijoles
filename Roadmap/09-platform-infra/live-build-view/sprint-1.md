@@ -3,7 +3,7 @@ epic: live-build-view
 sprint: 1
 title: "The band goes live"
 risk: low
-phase: Building
+phase: Shipped
 stories_total: 3
 stories:
   - id: S1.1
@@ -30,7 +30,7 @@ stories:
 ---
 # Live build view — Sprint 1: The band goes live
 
-**Status:** 🟦 In review — S1.1 S1.2 `84a2948`, S1.3 `0c54406`
+**Status:** ✅ Shipped — #240 `16aaf73` (plugin/kit 0.25.0)
 
 ## Build contract (locked by the architect before the builder started — README § Architecture lock)
 Cite, don't restate: D1–D6, D14, D15, C1–C3.
@@ -101,3 +101,13 @@ Env: your machine, Claude Code ≥ 2.1.287, this repo, plugin updated to the rel
 5. If your installed plugin is older than published: the band shows the `Plugin` row naming both versions.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+### Walkthrough results (2026-10-03)
+- **Run by the builder (headless, not the interactive steps):** a `claude -p --plugin-dir … --debug-file` session with
+  the installed copy disabled logged `turn check resolved in 288 ms (535 Roadmap entries)`, then `turn check cached in
+  48 ms`. The engine tests (`claude plugin test`, 4/4 at S1) drive the tick, the Bash re-check, the push trigger and the
+  online timer on a mocked clock.
+- **Owed to the product owner:** steps 1–5 in an interactive session. Step 5 also depends on `autoUpdate`: on
+  2026-10-03 this machine's install was still 0.24.0 after a headless run, because headless sessions do not run the
+  marketplace update. Run one session with `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS` unset, which proves "mods on by
+  default" (your user settings set it).

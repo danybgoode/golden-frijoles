@@ -1,6 +1,6 @@
 ---
-status: in-progress  # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Building      # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+status: shipped      # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+phase: Shipped       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
 slug: live-build-view
 locked_at: "2026-10-03T20:34:34Z"   # stamped by hand this once — scripts/epic-phase.mjs (S2.3, D10) does it from here on
@@ -17,9 +17,12 @@ quote_basis: "M, n=5, p25–p75"
 build_order: 55      # integer position in the ONE global build sequence — the SSOT once the epic
                      # exists (the seed's value is only a fallback). Fill it in at the betting
                      # table; plain integers, no "#2a" suffixes. See 00-ideas/README.md → Ordering.
+actual_usd: 36.63
+actual_mtok: 105.3
+actual_basis: "this machine · 2026-10-04 · 5 sessions · prices 2026-10-02"
 ---
 
-# Epic: Live build view: the band moves while the agent works, from facts no agent writes
+# Epic: Live build view: the band moves while the agent works, from facts no agent writes ✅
 
 > **Area:** 09-platform-infra · **Risk:** high · **Class:** Feature · **Scope seed:** [`00-ideas/seeds/live-build-view.md`](../../00-ideas/seeds/live-build-view.md)
 <!-- Class (above) is the Stage-2 classification: Feature, Spike, Bug, or Chore — see SKILL.md's
@@ -192,17 +195,13 @@ to golden-frijoles/skills follows the merge. S1's autoUpdate makes S2's release 
 did (the drift row is the check).
 
 ## Definition of Done (epic)
-- [ ] All sprints merged to `main` + smoke-tested (gaps stated — `node scripts/owed-ledger.mjs` counts what is still owed)
-- [ ] Each `sprint-N.md` has its smoke walkthrough (real URLs)
-- [ ] This README marked ✅; every sprint status ticked with commit refs
-- [ ] `RETROSPECTIVE.md` written
-- [ ] Product poster (`Roadmap/README.md`) updated
-- [ ] Team memory + `MEMORY.md` index updated
-- [ ] Durable learnings promoted to `Roadmap/LEARNINGS.md` (dedupe — sharpen, don't append)
-- [ ] **Kill-switch (only if one was planned at grooming — Stage 6b):** the flag slice shipped, the flag
-      exists **in Golden Frijoles, in every env**, with the stated polarity, **and is ACTIVATED there** —
-      `gf flags get <key>` must not print `—` in its PRODUCTION row. Creating a definition is not
-      turning it on, and a flag that is synced but never activated serves compile-time defaults while
-      every dashboard says it exists. *Verify-only — not a new gate; whether a high-risk epic needs one
-      is decided at grooming, not here.*
-- [ ] Feature branch deleted; **this README's frontmatter `status: shipped`** (the SSOT — the board & Notion derive from it; run `node scripts/build-order.mjs`)
+- [x] All sprints merged to `main` + smoke-tested (gaps stated in the sprint files and the retro — the interactive steps
+      are owed to the product owner)
+- [x] Each `sprint-N.md` has its smoke walkthrough
+- [x] This README marked ✅; every sprint status ticked with commit refs (S1 #240 `16aaf73`, S2 #241 `afc7689`)
+- [x] `RETROSPECTIVE.md` written
+- [x] Product poster (`Roadmap/README.md`) updated
+- [x] Team memory + `MEMORY.md` index updated
+- [x] Durable learnings promoted to `Roadmap/LEARNINGS.md`
+- [x] Kill-switch: none planned (Stage 6b) — the mod's switch is its `hooks.json` entry, the hook's `GF_SKIP_STORY_CHECK=1`
+- [x] Feature branches deleted; `status: shipped`; `node scripts/build-order.mjs` run

@@ -3,7 +3,7 @@ epic: live-build-view
 sprint: 2
 title: "Statuses from facts no agent writes"
 risk: high
-phase: Building
+phase: Shipped
 stories_total: 4
 stories:
   - id: S2.1
@@ -37,7 +37,7 @@ stories:
 ---
 # Live build view — Sprint 2: Statuses from facts no agent writes
 
-**Status:** 🟦 In review — S2.1 `360b52f`, S2.2 `d24aa2c`, S2.3 `2b53c30`, S2.4 `87e6769`
+**Status:** ✅ Shipped — #241 `afc7689` (plugin/kit 0.26.0)
 
 ## Build contract (locked by the architect before the builder started — README § Architecture lock)
 Cite, don't restate: D7–D14, C4–C6.
@@ -124,3 +124,14 @@ Env: your machine, this repo, the plugin release this sprint ships.
 6. Clean up: `git switch main && git branch -D feat/scenarios-pm-operable-smoke`.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+### Walkthrough results (2026-10-03, on `main` after the merge)
+1. ✅ `feat(x): no story` refused, listing scenarios-pm-operable's ids (`S1.1 Rewrite the page around ProductShell…`).
+2. ✅ `feat(x): S1.1/1.2 two stories` refused: "it names 2 stories (S1.1, S1.2) — one commit, one story".
+3. ✅ `docs(x): notes` accepted.
+4. ✅ `feat(x): S1.1 one story` accepted; `node scripts/build-state.mjs --offline` reads
+   `Progress 1 of 10 stories have commits · in flight S1.1 · Sprint 1 of 3`. The band shows the same line once the
+   installed plugin is 0.26.0.
+5. ⏳ **Owed to the product owner:** `/build scenarios-pm-operable` in an interactive session (the engine tests fill
+   the prompt through `$.prompt.fill`; a real prompt box is unproven).
+6. ✅ Cleaned up: back on `main`, the smoke branch deleted.
