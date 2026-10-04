@@ -451,12 +451,21 @@ independently shippable slice of value.
     shipped actuals by appetite, written by groom), the build view's `$ Spend` row against the quote (alert only), the
     actual stamped at close, and an opt-in `$agent_usage` push to `/app/finops/<project>`. Claude Code only. Shipped
     2026-10-03 (#230–#232, kit 0.22.0–0.24.0).
+  - ✅ **The build view is live** — the band re-checks after every Bash call and every 30 s and re-resolves only when a worktree, a commit or an epic doc moved (48 ms when nothing did); PR facts refresh on their own timer, never on a turn. From the lock on, every rung comes from a trigger: `scripts/epic-phase.mjs lock` stamps it (Locking architecture until then), a `commit-msg` hook makes each feat/fix commit on an epic branch name exactly one story, and Progress counts stories with commits. `/build <slug>` is the kickoff's one home, and a `Plugin` row plus marketplace `autoUpdate` let a fix reach the session. **Shipped 2026-10-03** (#240–#241, kit 0.25.0–0.26.0). [`live-build-view`](09-platform-infra/live-build-view/README.md)
   - ✅ **Distribute what we use** — a stranger's repo gets the rails this one runs, from the kit, by construction. **One review rail**, byte-identical across this repo, the template and medusa-bonsai. It is locked down: Vibe runs with no host tools, devin is refused, codex runs read-only with no user config or MCP, a reply carrying a secret is never posted, and outsiders' diffs are refused. One doctor. The **review rail, `session-resume` and `build-state` ship in the kit**. The **build view never runs the open repo's code**. A **byte-parity guard** covers the shared scripts. **Jev asks before anything is sent**, and a Jev setup route leads to a proof that writes nothing. A **notify setup route** covers `--chat-id` and `--test`. **Routines** are paste-ready for `/schedule`, and there are model-free cron templates. **Shipped 2026-09-30** (#188–#191, kit 0.6.0–0.9.0; medusa-bonsai #197). [`distribute-what-we-use`](09-platform-infra/distribute-what-we-use/README.md)
 
 ---
 
 ## Recent highlights
 
+- **2026-10-03**: `live-build-view` **shipped**: two sprints in one run, kit 0.25.0–0.26.0.
+  - The build view now moves while an agent works, not only when a person types: it re-checks after every Bash call
+    and every 30 s, and its story and progress come from commits a hook keeps honest (one story per feat/fix commit
+    on an epic branch). `/build <slug>` starts a build from the generated kickoff, which nothing saves to a file.
+  - The lock found the band has no "In review" (a ready PR is QA, a draft is Building) and that CI checked the mod on
+    a Claude Code too old to run it. Measuring in a real session found a spec fixture that misspelled the engine's own
+    directory kind, and three fresh-review rounds caught a cache shared across sessions and version numbers read as
+    stories.
 - **2026-10-03**: `portfolio-view` **shipped**: two sprints in one run, one migration applied before its merge.
   - Anyone holding two or more products in a workspace now lands on one page that compares them, each placed on
     the Consider · Operate · Exit loop by its owner.

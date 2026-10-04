@@ -5,7 +5,7 @@
 
 # Build order — the six stages
 
-> **Generated 2026-10-03 — do not hand-edit.** One stage per initiative, decided in one place
+> **Generated 2026-10-04 — do not hand-edit.** One stage per initiative, decided in one place
 > (`scripts/lib/stage.mjs`): To groom · Grooming · Ready to build · Building · QA · Shipped.
 > This committed file reads the docs alone, so **Building and QA are not here** — they are facts git
 > and GitHub hold. For the live board run `node scripts/build-order.mjs --live`, or open the Hub board.
@@ -31,7 +31,7 @@ _a pitch is waiting at the approval gate._
 - [Analytics visualization — the charting-dependency decision (spike), then the layer](seeds/analytics-visualization-layer.md) — #14 · 01 Growth Engine · seed · Spike · risk: Low · appetite S · _docs: status ready_
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
 
-## Ready to build (6)
+## Ready to build (5)
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
@@ -39,7 +39,6 @@ _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 - [CMS-neutral experiment integration + Payload go/no-go](../01-growth-engine/cms-integration-spike/README.md) — #18 · 01 Growth Engine · 0/6 stories · risk: Low · _docs: status scaffolded_
 - [One plugin, one install — Golden Frijoles ships as a public plugin whose skills run in anyone's repo](../09-platform-infra/golden-frijoles-plugin/README.md) — #34 · 09 Platform Infra · 14/23 stories · risk: High · appetite L · _docs: status in-progress_
 - [One public monorepo — skills/ subtree, a lean install mirror, licences, a private docs repo](../09-platform-infra/public-monorepo/README.md) — #45 · 09 Platform Infra · 13/15 stories · risk: High · appetite M · _docs: status in-progress_
-- [Live build view: the band moves while the agent works, from facts no agent writes](../09-platform-infra/live-build-view/README.md) — #55 · 09 Platform Infra · 0/7 stories · risk: High · appetite M · _docs: status in-progress_
 - [Board renders priority where it should render build_order](seeds/build-order-render-fix.md) — 09 Platform Infra · seed · Chore · risk: Low · appetite S · _docs: status queued_
 
 ## Building — live only
@@ -50,10 +49,11 @@ _a work branch is on origin. Not in this committed file: `node scripts/build-ord
 
 _a PR is ready for review, or merged and waiting for its close-out. Not in this committed file: `node scripts/build-order.mjs --live` or the Hub board._
 
-## Shipped (49)
+## Shipped (50)
 
 _merged, deployed and closed._
 
+- [Live build view: the band moves while the agent works, from facts no agent writes ✅](../09-platform-infra/live-build-view/README.md) — #55 · 09 Platform Infra · 7/7 stories · risk: High · appetite M · _docs: status shipped_
 - [✅ Epic: Think skills — PMF Narrative, North Star and Risk Validation ship in the plugin and write files groom reads](../09-platform-infra/think-skills/README.md) — #53 · 09 Platform Infra · 7/7 stories · risk: High · appetite M · _docs: status shipped_
 - [✅ Epic: Sketch specs — a surface spec renders the grey wireframe and becomes the state contract](../09-platform-infra/sketch-specs/README.md) — #52 · 09 Platform Infra · 5/5 stories · risk: Low · appetite M · _docs: status shipped_
 - [✅ Epic: Compiled prompts, wave 1 — Jev questions become data, optimize/ is committed, and wording gets measured](../09-platform-infra/compiled-prompts/README.md) — #51 · 09 Platform Infra · 6/6 stories · risk: Low · appetite M · _docs: status shipped_

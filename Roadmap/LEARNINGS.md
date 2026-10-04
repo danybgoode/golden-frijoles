@@ -693,6 +693,10 @@ one-liner + why + date shape.
   which libs to copy into a temp repo and broke twice as the extractor grew; copying the extractor's whole closure
   ended it. Same epic, same shape: prettier formats `scripts/` but not the byte-identical `skills/` mirror, so every
   format run broke parity until the mirror was re-copied from the formatted tree as one step.
+  **And twice more in live-build-view (2026-10-03):** `format:changed -- --write` reformats MODIFIED files too (the
+  gate checks only ADDED ones), which broke byte-parity of three shared scripts — format the added files, then mirror;
+  and a spec that read this repo's own `Roadmap/` passed here and failed in the skills mirror CI runs (`skills/` alone).
+  "Every skills-ci step green locally" means nothing until it was run from a copy of `skills/`.
 - **A reviewer that could not see the risky file has not reviewed it — and the tooling says so in
   its own output.** `cross-review.mjs` prints "N did not fit the budget" when a diff exceeds agy's
   256 KB argv cap. In `landing-readability-pass` the withheld file was `globals.css`, where every bit
@@ -1850,6 +1854,17 @@ one-liner + why + date shape.
 - **Pin the CLI version in the check that validates against it.** The first unpinned CI install failed on
   a schema the probed version does not have (`hooks: Invalid input: expected record`). Same discipline as
   the cross-review families' pinned CLIs — bump deliberately, after re-probing. *(2026-09-19)*
+  **A pin can also pin you BELOW your own code** (live-build-view, 2026-10-03): CI stayed on 2.1.278, which has no
+  `$.state`, for two epics after the mod started using it, because nothing failed loudly. Bump the pin in the same PR
+  that first uses a newer noun.
+- **A fixture written from memory of the API is a second, wrong API.** `claude plugin test` and a real
+  `--debug-file` session are the only judges: the spec fixture said `kind: 'directory'` (the engine says `'dir'`, and
+  reports `mtimeMs: 0` for directories), and an event's answer was wrapped in `{ value }` like an op's (an event answers
+  bare: `{ isFilled }`). Every node spec stayed green; one headless run walked 12 entries instead of 535.
+  *(live-build-view, 2026-10-03)*
+- **`$` may be passed to a function declared at the TOP of the module** (`function ioFor($: EngineInterface)`), not
+  to a nested const — the validator says exactly this. That is how one I/O object serves `session.start`, `turn.start`
+  and a timer, and how the orchestration moves into a pure, `node --test`-able module. *(live-build-view, 2026-10-03)*
 
 ### A model as a guard's judge (jev-semantic-guards, 2026-09-23)
 
