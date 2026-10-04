@@ -126,7 +126,7 @@ jobs:
           ./node_modules/.bin/next start apps/web --hostname 127.0.0.1 --port 3100 > /tmp/off-server.log 2>&1 &
           off_pid=$!
           # SIGTERM, then SIGKILL after 2s: a server that ignores TERM must not hang the job.
-          trap 'kill "$off_pid" 2>/dev/null; sleep 2; kill -9 "$off_pid" 2>/dev/null; wait "$off_pid" 2>/dev/null || true' EXIT
+          trap 'kill "$off_pid" 2>/dev/null || true; sleep 2; kill -9 "$off_pid" 2>/dev/null || true; wait "$off_pid" 2>/dev/null || true' EXIT
           for i in $(seq 1 30); do curl -sf http://127.0.0.1:3100/llms.txt > /dev/null && break; sleep 1; done
           curl -sf http://127.0.0.1:3100/llms.txt > /dev/null || { echo "::error::OFF app never became ready"; cat /tmp/off-server.log; exit 1; }
           ./node_modules/.bin/playwright test --config=apps/web/playwright.config.ts --project=api \
