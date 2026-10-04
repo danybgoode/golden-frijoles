@@ -3,7 +3,7 @@ epic: kickoff-generator-path
 sprint: 1
 title: "S1 The kit carries the kickoff generators"
 risk: low
-phase: Shaping
+phase: Building
 stories_total: 3
 stories:
   - id: S1.1
@@ -12,30 +12,31 @@ stories:
     i_want: "npx -y @golden-frijoles/kit emit-epic-kickoff --epic <slug> to print the kickoff"
     so_that: "I never hand-compose one because the plugin path doesn't exist where I am"
     risk: low
-    status: planned
+    status: done
   - id: S1.2
     title: "emit-kickoff + its template ship in the kit"
     as_a: "a plugin user running a one-sprint epic"
     i_want: "the per-sprint kickoff from the same kit"
     so_that: "the documented exception works on every host too"
     risk: low
-    status: planned
+    status: done
   - id: S1.3
     title: "The packed kit runs both from a scratch project"
     as_a: "the product owner"
     i_want: "proof from the npm tarball, not the source tree"
     so_that: "a packaging hole can't ship green"
     risk: low
-    status: planned
+    status: done
 ---
 # Kickoff generators run from anywhere — Sprint 1: S1 The kit carries the kickoff generators
 
-**Status:** ⬜ not started
+**Status:** 🟦 In review — S1.1+S1.2 `53a81eb` (one import closure, one commit), S1.3 `505e0a7`, release 0.27.0 `a47ea30`
 
-## Build contract (the architect locks this before the builder starts)
-Cite, don't restate: the epic README's **D1, D2, D3, D6**. The architect verifies each against live code first,
-especially that `render-hook-vendor.mjs` can vendor a top-level entry (not only `lib/`) and that
-`check-skill-scripts` accepts the declared `kickoff.md`. Any deviation is named in the README.
+## Build contract (locked by the architect before the builder started, 2026-10-04)
+Cite, don't restate: the epic README's **D1, D2, D3, D6 as corrected by C1–C5** (§ Architecture lock). In short:
+the groom copies are `groom/vendor/emit-*.mjs` (C1), the root rule lives once in `lib/kickoff-cli.mjs` (C2), the
+template is `template/scripts/templates/kickoff.md` (C3), the specs move to `template/scripts/` (C4), and S1 releases
+0.27.0 (C5).
 
 ## Stories
 
@@ -92,3 +93,9 @@ Env: your terminal, on the S1 branch.
    → prints the per-sprint kickoff for that one-sprint epic.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+**Run 2026-10-04 by the architect, on the S1 branch (`a47ea30`), against a copy of the real `Roadmap/`:** 1 ✓
+(`golden-frijoles-kit-0.27.0.tgz`) · 2 ✓ (`added 1 package`) · 3 ✓ (`emit-epic-kickoff`, `emit-kickoff`) · 4 ✓ (the
+epic-mode prompt for this epic; `kit-tarball.test.mjs` pins it byte-identical to groom's vendored copy, which is what
+`/build` runs) · 5 ✓ (the per-sprint kickoff, `feat/cli-think-skills-followups`). Also: `claude plugin validate` +
+`claude plugin test` (7/7, incl. `/build`) on 2.1.289, and the skills-ci Scaffolder smoke replayed locally.
