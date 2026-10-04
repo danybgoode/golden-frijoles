@@ -544,8 +544,9 @@ for (const route of MOTION_ROUTES)
     // vacuously and this spec becomes the thing it exists to prevent.
     expect(motion.queryMatches, 'the reduced-motion emulation must actually reach the page').toBe(true)
     expect(motion.scrollBehavior, 'smooth scrolling must be off').toBe('auto')
-    expect(motion.motionBase, 'the motion tokens are zeroed at the source').toBe('0ms')
-    expect(motion.motionQuick).toBe('0ms')
+    // Zero, in either unit: since Next 16 the CSS minifier rewrites `0ms` as `0s`, and the spelling is not the claim.
+    expect(motion.motionBase, 'the motion tokens are zeroed at the source').toMatch(/^0m?s$/)
+    expect(motion.motionQuick).toMatch(/^0m?s$/)
     expect(motion.moving, `${route}: these still animate: ${motion.moving.join(', ')}`).toEqual([])
   })
 
