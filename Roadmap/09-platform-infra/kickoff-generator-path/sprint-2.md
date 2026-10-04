@@ -12,18 +12,18 @@ stories:
     i_want: "the kickoff command I copy to run"
     so_that: "the instruction works where I read it"
     risk: low
-    status: planned
+    status: done
   - id: S2.2
     title: "A guard keeps node skills/groom/ out; release"
     as_a: "the product owner"
     i_want: "CI to go red if a doc names the plugin-relative path again, and the kit published"
     so_that: "the fix can't regress and users actually get it"
     risk: low
-    status: planned
+    status: done
 ---
 # Kickoff generators run from anywhere — Sprint 2: S2 Every doc names the kit command, guarded, released
 
-**Status:** ⬜ not started
+**Status:** 🟦 In review — S2.1 `744577a`, S2.2 `d9160e7` (+ C7, check-release counts the kit skeleton), release 0.27.1 `fd58213`. Smoke walkthrough runs after the merge and the kit publish.
 
 ## Build contract (locked by the architect before the builder started, 2026-10-04)
 Cite, don't restate: the epic README's **D4, D5, D7 as corrected by C5–C6** (§ Architecture lock): the guard is the

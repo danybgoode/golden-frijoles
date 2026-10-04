@@ -118,6 +118,13 @@ is restated elsewhere.
   `skills/Roadmap/` and `skills/template/Roadmap/`. `skills/Roadmap/SESSION-KICKOFFS.md` and its template twin differ
   today (line 54); each is edited at its own lines and nothing is synced.
 
+- **C7 — Amended 2026-10-04 during S2: `check-release` counts the kit's Roadmap skeleton.** `gf-kit init` writes
+  `template/Roadmap/WAYS-OF-WORKING.md` (it is in `init.mjs`'s `SKELETON`, which build-kit copies into
+  `dist/skeleton/`). `check-release`'s shipped surface held only `plugins/**`, `kit/**` and the script closure, so
+  S2.1's edit to that file would have passed with no release, and a new project would still get the broken line.
+  `kitClosureFiles` now adds `template/<SKELETON path>` (same list, imported). S2 therefore releases **0.27.1**. The
+  bug is the class, not this file: any skeleton edit now needs a version.
+
 **Sprint build contracts.** S1 = D1, D2, D3, D6 as corrected by C1–C5; S2 = D4, D5, D7 as corrected by C5–C6. They
 are recorded in each sprint file's *Build contract*.
 
