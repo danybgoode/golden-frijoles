@@ -27,9 +27,12 @@ function routeFiles(dir: string): string[] {
 const VERB = '(?:GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)'
 const IDENT = '[A-Za-z_$][\\w$]*'
 const HANDLER_HEAD = new RegExp(`export\\s+(?:async\\s+)?(function|const)\\s+${VERB}\\b`, 'g')
-const FUNCTION_PARAM = new RegExp(`^\\s*\\(\\s*(${IDENT})?`)
+// A parameter is a bare name followed by `:`, `,`, `)`, `=` or `?`; `()` is no parameter. Anything else (a
+// destructured `{ body }`, a comment) is a shape this guard can't read, so it matches neither and is reported.
+const PARAM = `\\(\\s*(?:(${IDENT})\\s*[:,)=?]|(\\)))`
+const FUNCTION_PARAM = new RegExp(`^\\s*${PARAM}`)
 const CONST_PARAM = new RegExp(
-  `^\\s*(?::[^=]+)?=\\s*(?:async\\b\\s*)?(?:function\\b[^(]*)?(?:\\(\\s*(${IDENT})?|(${IDENT})\\s*=>)`
+  `^\\s*(?::[^=]+)?=\\s*(?:async\\b\\s*)?(?:function\\b[^(]*)?(?:${PARAM}|(${IDENT})\\s*=>)`
 )
 // `export { handler as POST }` and `export const { POST } = …` hide the handler from the parser altogether.
 const HIDDEN_EXPORT = new RegExp(`export\\s+(?:const\\s*)?\\{[^}]*\\b${VERB}\\b[^}]*\\}`)
@@ -42,7 +45,8 @@ function handlers(source: string): Array<string | null | undefined> {
   const found = [...source.matchAll(HANDLER_HEAD)].map((head) => {
     const rest = source.slice(head.index + head[0].length)
     const param = (head[1] === 'function' ? FUNCTION_PARAM : CONST_PARAM).exec(rest)
-    return param ? (param[1] ?? param[2] ?? null) : undefined
+    if (!param) return undefined
+    return param[1] ?? param[3] ?? (param[2] ? null : undefined)
   })
   return HIDDEN_EXPORT.test(source) ? [...found, undefined] : found
 }
@@ -56,7 +60,7 @@ function bodyReads(source: string): string[] {
   return handlerParams(source).flatMap((name) => {
     const escaped = name.replace(/\$/g, '\\$')
     const read = new RegExp(
-      `(?<![\\w$.])${escaped}(?:\\.clone\\(\\))?\\.(?:json|text|formData|arrayBuffer|blob)\\(|(?<![\\w$.])${escaped}\\.body\\b`,
+      `(?<![\\w$.])${escaped}(?:\\.clone\\(\\))?\\.(?:(?:json|text|formData|arrayBuffer|blob)\\(|body\\b)`,
       'g'
     )
     return [...source.matchAll(read)].map((match) => match[0])
@@ -73,6 +77,7 @@ test('the body-read matcher fires on every way a handler can read its body', () 
     blob: 'export function PUT(req: NextRequest) {\n  return req.blob()\n}',
     'const function': 'export const POST = async function (rq: NextRequest) {\n  return rq.formData()\n}',
     'bare arrow': 'export const POST = async rq => rq.arrayBuffer()',
+    'clone().body': 'export async function POST(req: NextRequest) {\n  const stream = req.clone().body\n}',
   }
   for (const [name, source] of Object.entries(firing)) {
     assert.ok(bodyReads(source).length > 0, `${name} must fire: ${source}`)
@@ -98,6 +103,9 @@ test('a handler declared in a shape the parser cannot read is reported, never sk
     undefined,
   ])
   assert.deepEqual(handlers('export const POST = handler'), [undefined])
+  assert.deepEqual(handlers('export async function POST({ body }: NextRequest) {}'), [undefined])
+  assert.deepEqual(handlers('export async function POST(/* the request */ req: NextRequest) {}'), [undefined])
+  assert.deepEqual(handlers('export const POST = async ({ body }: NextRequest) => body'), [undefined])
 })
 
 test('no CLI route parses a request body itself — every body goes through readCliBody', () => {
