@@ -1,5 +1,5 @@
 ---
-title: 'landing.browser.spec.ts is red on main, and only the nightly run sees it'
+title: 'Five browser-project specs are red on main, and only the nightly run sees them'
 slug: landing-browser-spec-red
 status: raw
 area: '02'
@@ -13,7 +13,7 @@ build_order: null
 updated: 2026-10-04
 ---
 
-# Seed: the anonymous landing browser spec is red on `main`
+# Seed: five anonymous browser specs (mostly the landing) are red on `main`
 
 **Found by** ci-diet: the seed's Problem section, and ci.yml's own old comment ("`landing.browser.spec.ts` is in this
 repo right now, red on `main`, because the `browser` project runs nowhere"). It was out of ci-diet's scope, which
@@ -21,9 +21,15 @@ changes where tests run, never what they assert.
 
 ## Problem
 
-`apps/web/e2e/landing.browser.spec.ts` (23 tests) belongs to the `browser` project, which no pipeline ran until
-ci-diet S3.3 added `.github/workflows/browser-nightly.yml`. Its assertions have drifted from the landing that ships,
-and nobody knows which half is wrong: the spec or the page.
+The `browser` project ran in no pipeline until ci-diet S3.3 added `.github/workflows/browser-nightly.yml`. Its first
+run ([37180389744](https://github.com/danybgoode/golden-frijoles/actions/runs/37180389744), 2026-10-04) was 59 passed, 1 skipped, **5 failed on both attempts**, in 4 files:
+- `landing.browser.spec.ts:16`: "the landing renders the maker-ops narrative"
+- `landing.browser.spec.ts:630`: "every in-page anchor on the landing page resolves to a section that exists"
+- `design-system.browser.spec.ts:3`: "the landing renders the approved roast, foil, icon, and tactile system"
+- `mobile-heuristics.browser.spec.ts:87`: "/talk is mobile-clean"
+- `positioning-surfaces.browser.spec.ts:25`: "the landing states the category exactly once"
+
+Their assertions have drifted from the landing that ships, and nobody knows which half is wrong: the spec or the page.
 
 ## Start here
 

@@ -452,12 +452,21 @@ independently shippable slice of value.
     actual stamped at close, and an opt-in `$agent_usage` push to `/app/finops/<project>`. Claude Code only. Shipped
     2026-10-03 (#230–#232, kit 0.22.0–0.24.0).
   - ✅ **The build view is live** — the band re-checks after every Bash call and every 30 s and re-resolves only when a worktree, a commit or an epic doc moved (48 ms when nothing did); PR facts refresh on their own timer, never on a turn. From the lock on, every rung comes from a trigger: `scripts/epic-phase.mjs lock` stamps it (Locking architecture until then), a `commit-msg` hook makes each feat/fix commit on an epic branch name exactly one story, and Progress counts stories with commits. `/build <slug>` is the kickoff's one home, and a `Plugin` row plus marketplace `autoUpdate` let a fix reach the session. **Shipped 2026-10-03** (#240–#241, kit 0.25.0–0.26.0). [`live-build-view`](09-platform-infra/live-build-view/README.md)
+  - ✅ **CI diet** — CI runs what a change can break, in parallel, behind one required-ready check. A docs-only PR skips e2e by an exclusion rule (2m10s, down from 7m38s). `e2e-api`, `e2e-authed` and `design-contract` run side by side, and the same tests still run, counted. `gate` is green only when every job passed or the docs rule skipped it, as proven by four mutation PRs. One env file per gate state replaces four copied flag lists, and three duplicate workflows are gone. A red run uploads its trace. A known flake can be `@quarantine`d with an owner and an expiry ≤ 30 days, and runs without blocking until that date. `browser` runs nightly. **Shipped 2026-10-04** (#246, #247, #258; kit 0.26.2). Owed: the `gate` ruleset. [`ci-diet`](09-platform-infra/ci-diet/README.md)
   - ✅ **Distribute what we use** — a stranger's repo gets the rails this one runs, from the kit, by construction. **One review rail**, byte-identical across this repo, the template and medusa-bonsai. It is locked down: Vibe runs with no host tools, devin is refused, codex runs read-only with no user config or MCP, a reply carrying a secret is never posted, and outsiders' diffs are refused. One doctor. The **review rail, `session-resume` and `build-state` ship in the kit**. The **build view never runs the open repo's code**. A **byte-parity guard** covers the shared scripts. **Jev asks before anything is sent**, and a Jev setup route leads to a proof that writes nothing. A **notify setup route** covers `--chat-id` and `--test`. **Routines** are paste-ready for `/schedule`, and there are model-free cron templates. **Shipped 2026-09-30** (#188–#191, kit 0.6.0–0.9.0; medusa-bonsai #197). [`distribute-what-we-use`](09-platform-infra/distribute-what-we-use/README.md)
 
 ---
 
 ## Recent highlights
 
+- **2026-10-04**: `ci-diet` **shipped**: three sprints in one run, kit 0.26.2.
+  - A docs-only PR answers in about two minutes. A code PR's tests run in three parallel jobs, the same tests as
+    before, counted. One check, `gate`, can now be required on `main`. Red runs leave a trace, and a known flake can
+    be quarantined with an owner and an expiry instead of blocking everyone.
+  - The lock and the build disproved five premises, among them the groom's `**/*.md` docs rule, which would have let a
+    markdown-only PR skip the one job guarding the measured design spec. The fresh reviewer caught the quarantine
+    check failing closed on every PR outside a developer's checkout. Dependabot security updates were found switched
+    off and are now on.
 - **2026-10-03**: `live-build-view` **shipped**: two sprints in one run, kit 0.25.0–0.26.0.
   - The build view now moves while an agent works, not only when a person types: it re-checks after every Bash call
     and every 30 s, and its story and progress come from commits a hook keeps honest (one story per feat/fix commit

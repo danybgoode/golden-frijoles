@@ -1575,7 +1575,8 @@ one-liner + why + date shape.
   sketch-specs paid for this rule a second time in the same order: lint went red, and once fixed, the Format step
   behind it went red on the next push (CI stops at the first failure, so a reviewer cannot see past it either). The
   fix that held was listing the job's `run:` lines from `.github/workflows/ci.yml` and replaying all of them locally
-  before the push. *(2026-09-30, sketch-specs.)*
+  before the push. *(2026-09-30, sketch-specs.)* ci-diet paid it twice more in one epic (a stale BUILD-ORDER, then a
+  mirrored spec edited once), each time after running only `test:unit`. *(2026-10-04.)*
 - **Re-derive a handover's status from the artifact, never from the previous session's summary.**
   pod-report Sprint 2's close-out said all four stories were built. Two claims did not survive a check
   against `origin/main`, the production database and the live site: `--push` printed "not wired yet"
@@ -1618,6 +1619,17 @@ one-liner + why + date shape.
     whatever `cmd` did.
   - **Never hardcode a local Supabase key in a workflow.** A CLI bump changed the key format once; export what
     `supabase status -o env` issued in this run.
+  - **Every command in an EXIT trap needs `|| true` under `set -e`.** A `kill -9` on an already-exited server became
+    the step's exit status, and the step went red with 30/30 passed (ci-diet S1).
+  - **Run a new CI step from a checkout without your `.env.local` before pushing it.** `check-quarantine` listed tests
+    fine locally and failed closed on every PR in CI, because listing imports a spec that reads Supabase env at load
+    (ci-diet S3, fresh reviewer).
+  - **Folding a date-based guard into the blocking gate changes who it blocks.** Jev's shadow expiry, once
+    path-filtered, would have turned every PR red on its date; it runs daily instead. Decide per guard whether a lapsed
+    date should stop all merges (a quarantine's expiry: yes, by design) or only page someone.
+  - **A quarantine can take a security proof out of the gate.** The flaky steps of the first quarantined test were the
+    only end-to-end check of a Server Action's authorization wiring. Before quarantining, name what the test is the
+    sole guard for, and shorten the expiry to match (ci-diet: 14 days, not 30).
 - **The auto-mode-classifier trap: in auto mode the classifier passes READS and blocks production
   WRITES + shell CREDENTIAL-handling — that is the whole rule. Don't build a security-philosophy
   theory on top of a few blocks; probe the read/write boundary empirically first.** (2026-07-20,

@@ -30,7 +30,7 @@ stories:
 ---
 # CI diet — Sprint 2: S2 Faster, with a real gate
 
-**Status:** ✅ shipped 2026-10-04: #247 squash-merged as `93d9b49` (stories `58bcf0f` S2.1, `c51ad80` S2.2, `604abd7` S2.3; fixes `f95a3bc` `56d88f9` `c17f61a`). D6 (the ruleset) is owed to Daniel.
+**Status:** ✅ shipped 2026-10-04: #247, squash-merged as `93d9b49` (S2.1–S2.3 and their review fixes). D6 (the ruleset) is owed to Daniel.
 
 ## Build contract (locked by the architect before the builder started — README § Architecture lock)
 Cite, don't restate: the epic README's **D1, D2, D3, D5, D6**. The lock confirms which Supabase services the suites use
@@ -95,11 +95,11 @@ Env: GitHub.
 If any step fails, note the step number + what you saw — that's the bug report.
 
 ### Walkthrough as run (2026-10-04, by the builder)
-1. **Mutation (c), docs-only** (#250, run [37173081662](https://github.com/danybgoode/golden-frijoles/actions/runs/37173081662)) → `e2e-api`, `e2e-authed`, `design-contract`
+1. **Mutation (c), docs-only** (scratch PR (c), run [37173081662](https://github.com/danybgoode/golden-frijoles/actions/runs/37173081662)) → `e2e-api`, `e2e-authed`, `design-contract`
    **skipped**; `gate` green; 2m10s total. ✅
-2. **Mutation (a), a failing test** (#248, run [37173077330](https://github.com/danybgoode/golden-frijoles/actions/runs/37173077330)) → `e2e-api` red on `zz-gate-mutation.spec.ts`;
-   `gate` red. ✅ Also (b), a run cancelled mid-flight (#249, [37173079797](https://github.com/danybgoode/golden-frijoles/actions/runs/37173079797)) → `gate` red; and (d), docs +
-   `.ts` (#251, [37173083659](https://github.com/danybgoode/golden-frijoles/actions/runs/37173083659)) → everything ran, `gate` green. ✅
+2. **Mutation (a), a failing test** (scratch PR (a), run [37173077330](https://github.com/danybgoode/golden-frijoles/actions/runs/37173077330)) → `e2e-api` red on `zz-gate-mutation.spec.ts`;
+   `gate` red. ✅ Also (b), a run cancelled mid-flight (scratch PR (b), [37173079797](https://github.com/danybgoode/golden-frijoles/actions/runs/37173079797)) → `gate` red; and (d), docs +
+   `.ts` (scratch PR (d), [37173083659](https://github.com/danybgoode/golden-frijoles/actions/runs/37173083659)) → everything ran, `gate` green. ✅
 3. **#247's own run** ([37178471860](https://github.com/danybgoode/golden-frijoles/actions/runs/37178471860)) → `e2e-api` 04:57:23–05:01:41, `e2e-authed` 04:57:23–05:02:08 and
    `design-contract` 04:57:23–04:58:29 ran side by side; `gate` green. ✅
 4. **The ruleset (D6)**: owed to Daniel by name; the exact `gh api` call is in #247's body. ⏳
