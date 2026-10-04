@@ -7,7 +7,9 @@
         "id": "rule-1",
         "source": "AGENTS.md rule 1 (the growth engine owns telemetry; never build a parallel pipeline)",
         "severity": "should-fix",
-        "globs": ["apps/web/**"],
+        "globs": [
+          "apps/web/**"
+        ],
         "allowlist": [
           "apps/web/app/api/v1/track/route.ts",
           "apps/web/app/api/v1/features/sync/route.ts",
@@ -46,7 +48,11 @@
         "id": "tenancy",
         "source": "AGENTS.md § The tenancy invariant (workspace level; a request path reads several projects only through getWorkspaceProjects())",
         "severity": "blocking",
-        "globs": ["apps/web/app/**", "apps/web/lib/**", "apps/web/components/**"],
+        "globs": [
+          "apps/web/app/**",
+          "apps/web/lib/**",
+          "apps/web/components/**"
+        ],
         "allowlist": [
           "apps/web/lib/workspace.ts",
           "apps/web/lib/workspace-projects.ts",
@@ -82,5 +88,8 @@
       "QA": 3
     },
     "hubUrl": "https://goldenfrijoles.com/hub/golden-beans-demo"
+  },
+  "spend": {
+    "telemetry": "on"
   }
 }
