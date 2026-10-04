@@ -3,7 +3,7 @@ epic: cli-think-skills-followups
 sprint: 1
 title: "S1 Dry-run verdict as data, and a body-order guard that can fail"
 risk: low
-phase: In review
+phase: Shipped
 stories_total: 2
 stories:
   - id: S1.1
@@ -12,18 +12,18 @@ stories:
     i_want: "gf north-star set --json to state whether --yes would be accepted, and why not"
     so_that: "I branch on data instead of parsing the human sentence"
     risk: low
-    status: in-review
+    status: done
   - id: S1.2
     title: "The body-order guard catches clone, renamed parameters and .body"
     as_a: "the product owner"
     i_want: "the gate-before-body guard to fail on every way a route can read its body"
     so_that: "a gate-off 400 can't come back unnoticed"
     risk: low
-    status: in-review
+    status: done
 ---
 # CLI follow-ups from think-skills — Sprint 1: S1 Dry-run verdict as data, and a body-order guard that can fail
 
-**Status:** 🔍 in review — S1.1 `7e1cc2a` (CLI 0.4.1), S1.2 `4f850d8`. Packed 0.4.1 run under a real TTY against prod (golden-beans): smoke steps 1–3 pass; steps 4–5 (npm publish, 2FA) owed to Daniel.
+**Status:** ✅ shipped — merged #265 `86cfbdb` · S1.1 `7e1cc2a` (CLI 0.4.1), S1.2 `4f850d8` + review fixes `0539ecf`, `621dfd0`, `77fe805`. Smoke steps 1–3 run against prod (golden-beans) from the packed 0.4.1 tarball and again from merged `main`, under a real TTY: all pass. Steps 4–5 (npm publish, 2FA) are owed to Daniel.
 
 ## Build contract (the architect locks this before the builder starts)
 Cite, don't restate: the epic README's **D1–D5**. Verify against live code first: `nextStep`'s two refusal branches
