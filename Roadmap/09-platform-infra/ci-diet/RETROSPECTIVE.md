@@ -54,11 +54,9 @@ _Quote vs actual: $23–36 (M, n=6, p25–p75) → ≈$30.73 (within; −15% vs 
   of a Server Action's authz wiring. The fresh reviewer saw it, and Daniel accepted 14 days rather than 30.
 
 ## Gaps / follow-ups
-- **Owed to Daniel:**
-  - **D6:** a ruleset requiring `gate` on `main` (admin bypass, pinned to GitHub Actions). The exact `gh api` call is
-    in #247's body.
-  - Open one `trace.zip` in `npx playwright show-trace` (S3 smoke step 3).
-  - The `_Intent:_` answer above.
+- **Done after close (2026-10-04):** D6 is active (ruleset 24454738: `gate` required on `main`, admin bypass), and a
+  `trace.zip` was opened in `show-trace` on its failing step.
+- **Owed to Daniel:** the `_Intent:_` answer above.
 - **The ≤ 6 min code-PR target is missed by seconds.** `e2e-authed` is the critical path; sharding it is the next
   lever.
 - **C8:** a preview deploy's `deployment_status` still leaves one skipped Pod Report row on each PR.

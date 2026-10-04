@@ -102,7 +102,8 @@ If any step fails, note the step number + what you saw — that's the bug report
    `.ts` (scratch PR (d), [37173083659](https://github.com/danybgoode/golden-frijoles/actions/runs/37173083659)) → everything ran, `gate` green. ✅
 3. **#247's own run** ([37178471860](https://github.com/danybgoode/golden-frijoles/actions/runs/37178471860)) → `e2e-api` 04:57:23–05:01:41, `e2e-authed` 04:57:23–05:02:08 and
    `design-contract` 04:57:23–04:58:29 ran side by side; `gate` green. ✅
-4. **The ruleset (D6)**: owed to Daniel by name; the exact `gh api` call is in #247's body. ⏳
+4. **The ruleset (D6)** → active: ruleset 24454738 "main requires gate" (default branch, `gate` pinned to GitHub
+   Actions 15368, admin bypass). `GET …/rules/branches/main` returns it as a required status check. ✅
 
 **Wall clock:** a code PR is 6m04s–6m16s (baseline 7m38s); docs-only is 2m10s. The ≤ 6 min target is missed by
 seconds. `e2e-authed` (about 1.5 min of setup plus a 2.4–2.7 min suite) is the critical path, and getting under 6
