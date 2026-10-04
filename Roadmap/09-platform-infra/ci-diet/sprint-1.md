@@ -3,7 +3,7 @@ epic: ci-diet
 sprint: 1
 title: "S1 Less, same behaviour"
 risk: high
-phase: Shaping
+phase: Building
 stories_total: 3
 stories:
   - id: S1.1
@@ -32,7 +32,7 @@ stories:
 
 **Status:** ⬜ not started
 
-## Build contract (the architect locks this before the builder starts)
+## Build contract (locked by the architect before the builder started — README § Architecture lock)
 Cite, don't restate: the epic README's **D1, D4, D9**. Before any edit, record the baseline in the README: the static
 job's step list, the three deleted workflows' steps, and `playwright test --list --project=<p> | tail -1` for `api` and
 `authed` (plus the OFF-server spec list).
