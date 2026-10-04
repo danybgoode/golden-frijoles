@@ -26,7 +26,7 @@ function routeFiles(dir: string): string[] {
 // It now anchors on each exported handler's OWN parameter name, whatever it is.
 const VERB = '(?:GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)'
 const IDENT = '[A-Za-z_$][\\w$]*'
-const HANDLER_HEAD = new RegExp(`export\\s+(?:async\\s+)?(function|const)\\s+${VERB}\\b`, 'g')
+const HANDLER_HEAD = new RegExp(`export\\s+(?:async\\s+)?(function|const|let|var)\\s+${VERB}\\b`, 'g')
 // A parameter is a bare name followed by `:`, `,`, `)`, `=` or `?`; `()` is no parameter. Anything else (a
 // destructured `{ body }`, a comment) is a shape this guard can't read, so it matches neither and is reported.
 const PARAM = `\\(\\s*(?:(${IDENT})\\s*[:,)=?]|(\\)))`
@@ -34,8 +34,10 @@ const FUNCTION_PARAM = new RegExp(`^\\s*${PARAM}`)
 const CONST_PARAM = new RegExp(
   `^\\s*(?::[^=]+)?=\\s*(?:async\\b\\s*)?(?:function\\b[^(]*)?(?:${PARAM}|(${IDENT})\\s*=>)`
 )
-// `export { handler as POST }` and `export const { POST } = …` hide the handler from the parser altogether.
-const HIDDEN_EXPORT = new RegExp(`export\\s+(?:const\\s*)?\\{[^}]*\\b${VERB}\\b[^}]*\\}`)
+// `export { handler as POST }`, `export const { POST } = …` and `export * from …` hide the handler from the parser.
+const HIDDEN_EXPORT = new RegExp(
+  `export\\s+(?:(?:const|let|var)\\s*)?\\{[^}]*\\b${VERB}\\b[^}]*\\}|export\\s*\\*`
+)
 
 /**
  * Each exported route handler's parameter: its name, `null` when it takes none, `undefined` when this parser can't
@@ -55,12 +57,16 @@ function handlerParams(source: string): string[] {
   return [...new Set(handlers(source).filter((name): name is string => typeof name === 'string'))]
 }
 
-/** Every place `source` reads a request body through a handler's own parameter. */
+/**
+ * Every place `source` reads a request body through a handler's own parameter, including across a line break or
+ * through `?.`. Accepted residuals, out of a regex's reach: an alias (`const r = req`), a cast (`(req as Request)`)
+ * and a computed member (`req['json']`). A route that writes any of those is visibly not using `readCliBody`.
+ */
 function bodyReads(source: string): string[] {
   return handlerParams(source).flatMap((name) => {
     const escaped = name.replace(/\$/g, '\\$')
     const read = new RegExp(
-      `(?<![\\w$.])${escaped}(?:\\.clone\\(\\))?\\.(?:(?:json|text|formData|arrayBuffer|blob)\\(|body\\b)`,
+      `(?<![\\w$.])${escaped}(?:\\s*\\??\\.clone\\(\\))?\\s*\\??\\.(?:(?:json|text|formData|arrayBuffer|blob)\\(|body\\b)`,
       'g'
     )
     return [...source.matchAll(read)].map((match) => match[0])
@@ -77,6 +83,10 @@ test('the body-read matcher fires on every way a handler can read its body', () 
     blob: 'export function PUT(req: NextRequest) {\n  return req.blob()\n}',
     'const function': 'export const POST = async function (rq: NextRequest) {\n  return rq.formData()\n}',
     'bare arrow': 'export const POST = async rq => rq.arrayBuffer()',
+    'multi-line chain':
+      'export async function POST(req: NextRequest) {\n  return req\n    .clone()\n    .json()\n}',
+    'optional chain': 'export async function POST(req: NextRequest) {\n  return req?.text()\n}',
+    'let export': 'export let POST = async (r: NextRequest) => r.json()',
     'clone().body': 'export async function POST(req: NextRequest) {\n  const stream = req.clone().body\n}',
   }
   for (const [name, source] of Object.entries(firing)) {
@@ -106,6 +116,12 @@ test('a handler declared in a shape the parser cannot read is reported, never sk
   assert.deepEqual(handlers('export async function POST({ body }: NextRequest) {}'), [undefined])
   assert.deepEqual(handlers('export async function POST(/* the request */ req: NextRequest) {}'), [undefined])
   assert.deepEqual(handlers('export const POST = async ({ body }: NextRequest) => body'), [undefined])
+  assert.deepEqual(handlers('export async function POST(...args: [NextRequest]) {}'), [undefined])
+  assert.deepEqual(handlers('export const POST = (async (req: NextRequest) => req.json())'), [undefined])
+  assert.deepEqual(handlers("export async function GET(req: NextRequest) {}\nexport * from './impl'"), [
+    'req',
+    undefined,
+  ])
 })
 
 test('no CLI route parses a request body itself — every body goes through readCliBody', () => {
