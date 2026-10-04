@@ -3,7 +3,7 @@ epic: cli-think-skills-followups
 sprint: 1
 title: "S1 Dry-run verdict as data, and a body-order guard that can fail"
 risk: low
-phase: Shaping
+phase: Building
 stories_total: 2
 stories:
   - id: S1.1
