@@ -25,7 +25,8 @@ actual_basis: "this machine · 2026-10-04 · 1 session · prices 2026-10-02"
 # Epic: CI diet
 
 > ✅ **Shipped 2026-10-04.** S1 #246 `000fc5e` · S2 #247 `93d9b49` · S3 #258 `a081953`, each deployed to Production
-> and verified. Plugin/kit 0.26.2. Owed to Daniel: the `gate` ruleset (D6), and opening one trace in `show-trace`.
+> and verified. Plugin/kit 0.26.2. `gate` is a required check on `main` (ruleset 24454738, D6). Owed: the retro's
+> `_Intent:_` answer.
 
 > **Area:** 09-platform-infra · **Risk:** high · **Class:** Chore · **Scope seed:** [`00-ideas/seeds/ci-diet.md`](../../00-ideas/seeds/ci-diet.md)
 <!-- Class (above) is the Stage-2 classification: Feature, Spike, Bug, or Chore — see SKILL.md's

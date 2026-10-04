@@ -104,8 +104,9 @@ If any step fails, note the step number + what you saw — that's the bug report
    all five). The quarantine check passed, evidence was uploaded, and the **Telegram ping was delivered** (`✓ ping
    delivered`). ✅
 3. **The trace** from the deliberately failing re-run (a scratch PR, run [37178830880](https://github.com/danybgoode/golden-frijoles/actions/runs/37178830880), artifact
-   `e2e-api-failure`) → `…-this-fails-on-purpose-api/trace.zip` records the GET and the failing `expect`. Opening it in
-   `npx playwright show-trace` is the step **owed to Daniel**. ⏳
+   `e2e-api-failure`) → `…-this-fails-on-purpose-api/trace.zip` opens in `npx playwright show-trace` on the failing step:
+   `Expect "toBe"` (expected `"418"`) after `GET "/llms.txt"`, with Errors (1). Done by the builder at Daniel's request,
+   2026-10-04. ✅
 4. **`Roadmap/00-ideas/seeds/`** → `portfolio-loop-flake.md` and `landing-browser-spec-red.md` exist. ✅
 
 **Found by the fresh reviewer:** the quarantine check failed closed in the static job on every PR (listing imports a
