@@ -1,17 +1,12 @@
 name: CI
 
-# Deterministic pre-merge gate (Roadmap/WAYS-OF-WORKING.md -> Review & merge):
-#   typecheck-build  -- lint + format(new files) + unit tests + audit + tsc --noEmit + npm run build
-#   e2e              -- the `api` Playwright project against local Supabase + locally built OFF/ON
-#                       `next start` servers.
-#
-# Vercel IS provisioned (project `golden-beans`, prod on every merge to `main`) — corrected
-# 2026-07-24; an earlier version of this comment said it wasn't and went stale. This gate still
-# runs against a LOCAL build rather than the PR's preview deployment, and that is deliberate, not
-# a leftover: the suite needs a real Supabase it can seed and clean (`supabase start` applies the
-# migrations + seed.sql), plus a SECOND differently-enved server to prove dark/flag-OFF behavior.
-# A preview deployment gives neither — it points at production Supabase and carries one env set.
-# Deploy-finish is observed instead of gated: see `notify-telegram.yml`'s deploy-notification job.
+# The deterministic pre-merge gate (Roadmap/WAYS-OF-WORKING.md → Review & merge).
+#   typecheck-build — every static check, cheapest first, then typecheck + build.
+#   e2e             — Playwright against a LOCAL Supabase and locally built servers: the suite needs a database it
+#                     can seed and clean, plus a second, differently-enved server to prove the dark contracts. A
+#                     Vercel preview offers neither (it points at production Supabase and carries one env set).
+# Minutes: the repo is public, so GitHub-hosted standard runners are free and wall clock is the scarce thing.
+# If the repo ever goes private again, revisit the job split (ci-diet D9).
 
 on:
   pull_request:
@@ -22,111 +17,56 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # One job, ordered cheapest-first. Deliberately NOT split into separate lint/test/build jobs:
-  # each additional job pays its own checkout + `npm ci` (~40s of runner time), and Actions minutes
-  # are a recurring account-wide constraint here (Roadmap/LEARNINGS.md -> Working efficiently).
-  # Sequential steps in one job also fail fast — a lint error stops before the 2-minute build.
   typecheck-build:
     name: Static gate + build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
-          # scripts/format-changed.mjs diffs against the PR base. A shallow clone has no
-          # origin/main to resolve, and the script would (correctly, by design) no-op — a gate
-          # that silently checks nothing. Full history makes it real.
+          # format-changed, the coverage ratchet and build-order's extractor all diff against history; a shallow
+          # clone makes the first two no-op silently.
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
-      # Zero-dep guard — runs before install so template drift fails fast and cheap.
+      # Zero-dependency guards run before install, so drift fails fast and cheap.
       - name: Template-drift guard
         run: node scripts/check-template-drift.mjs
-      - run: npm ci --no-audit --no-fund
+      - name: BUILD-ORDER.md is up to date
+        run: node scripts/build-order.mjs --check
+      - name: Jev — eval replay + shadow expiry
+        run: node scripts/jev-eval.mjs
+      - name: Permissions contract
+        run: node scripts/permissions-smoke.mjs
+      - name: Script parity with the template
+        run: node scripts/check-script-parity.mjs
+      - name: Design-drift guard
+        run: node scripts/check-design-drift.mjs
 
+      - run: npm ci --no-audit --no-fund
       - name: Lint
         run: npm run lint
-
-      # New files only — see the script's header for why modified legacy files are exempt.
+      # New files only — the script's header says why modified legacy files are exempt.
       - name: Format (files this PR adds)
         env:
           PRETTIER_BASE_REF: ${{ github.event.pull_request.base.sha }}
         run: npm run format:changed
-
-      # The fast pure-logic layer: no Supabase, no browser, no server. Runs in ~1s, so it belongs
-      # here in front of the slow gate rather than beside the Playwright job.
+      # Every node:test under scripts/, optimize/, apps/web and packages — ~1s, so it runs in front of the build.
       - name: Unit tests (pure logic)
         run: npm run test:unit
-
-      # ── design-system-rails · Story 1.4, closing Mechanism D ─────────────────────────────────
-      #
-      # The design system's three scripts died with ERR_MODULE_NOT_FOUND on a fresh clone for four
-      # DAYS — through an entire build, unnoticed — because `_harness.mjs` was never committed and
-      # nothing in CI ran them. A regenerator nobody runs is a regenerator that does not exist, and
-      # a contract that says "regenerate this table" while shipping without the thing that
-      # regenerates it is worse than one that says nothing.
-      #
-      # `--check` on both generators means a hand-edit to a generated file, or a prototype that has
-      # moved without its outputs, fails here in minutes. Neither needs a browser: `extract-css`
-      # reads the file. `measure-contract` DOES need Chromium and runs in the e2e job below, beside
-      # the browser it already installs.
       - name: The generated design contract is in sync with the approved prototype
         run: node apps/web/design-system/extract-css.mjs --check
-
-      # ── The drift guard, unconditionally ────────────────────────────────────────────────────
-      #
-      # `design-drift-guard.yml` runs it too, but that workflow is PATH-FILTERED and therefore does
-      # not run on every PR — which is fine as an optimisation and fatal as the only execution. A
-      # path filter is a claim about which changes can break a rule, and it was wrong once already:
-      # the design-system rules never fired on a PR touching only `apps/web/design-system/` until
-      # that path was added (fresh reviewer, Blocking).
-      #
-      # ~75ms. The blocking gate should not depend on a filter list being complete.
-      - name: Design-drift guard
-        run: node scripts/check-design-drift.mjs
-
-      # ── design-system-rails · Story 1.5 — coverage, and the ratchet ──────────────────────────
-      #
-      # Prints the finish line on every run, and fails when it moves backwards. The ratchet compares
-      # against the PR's base branch, which is why this job checks out with `fetch-depth: 0` — the
-      # script fails loudly rather than passing quietly when the base ref cannot be resolved
-      # (Roadmap/LEARNINGS.md: `format-changed.mjs` reported "no added files" and exited 0).
-      # ⚠️ `COVERAGE_BASE_REF` resolves because **this workflow is `pull_request`-only** (see `on:` at
-      # the top). Two cross-family rounds have flagged "this expands to an empty string on push
-      # events" — correct in general, unreachable here, and the script refuses an empty value rather
-      # than defaulting precisely so that it would be LOUD if someone added a `push:` trigger. Said
-      # here rather than argued a third time: a file that does not explain why a hazard cannot occur
-      # gets the hazard reported once per reviewer.
+      # The ratchet diffs against the PR base, which resolves because this workflow is pull_request-only; the
+      # script refuses an empty base rather than passing. pipefail, because bash -e alone reports tee's status.
       - name: Design coverage + ratchet
         env:
           COVERAGE_BASE_REF: ${{ github.event.pull_request.base.sha }}
         run: |
-          # ⚠️ `set -o pipefail` is load-bearing, not boilerplate. GitHub's DEFAULT shell is
-          # `bash -e`, WITHOUT pipefail — so `node … | tee` would exit with tee's status and a failed
-          # ratchet would report a green step. That is this epic's own subject: a gate that cannot
-          # fail is worse than no gate.
           set -o pipefail
           node scripts/design-coverage.mjs --check | tee -a "$GITHUB_STEP_SUMMARY"
-
-      # Dependency CVEs. `|| true` is deliberate and NOT laziness: a transitive advisory published
-      # overnight would otherwise block every unrelated PR until someone triages it, which trains
-      # people to merge red. The finding still appears in the log and in the job summary, and
-      # Dependabot (.github/dependabot.yml) opens the actual fix PR. Revisit at launch: once real
-      # tenant data is in production, this should block.
-      - name: Dependency audit (advisory)
-        run: |
-          echo '### Dependency audit' >> "$GITHUB_STEP_SUMMARY"
-          npm audit --audit-level=high >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
-
-      # Four projects, not one. The unit tests import with an explicit `.ts` extension because
-      # that is what Node's native type-stripping requires — and the app/sdk tsconfigs reject it
-      # (TS5097). Rather than enable `allowImportingTsExtensions` globally (which would also let
-      # APP code write `./foo.ts`, an import Next's bundler may not resolve — trading a caught type
-      # error for an uncaught build break), each package excludes its tests and a sibling
-      # tsconfig.test.json opts only the tests into the looser rule. Tests stay type-checked;
-      # app code keeps the strict rule.
-      - name: Type-check (app + tests, web + sdk)
+      # Four tsconfig projects (app, app tests, sdk, cli + their tests): `tsc -p apps/web` alone is a subset.
+      - name: Type-check (app + tests, web + sdk + cli)
         run: npm run typecheck
       - name: Build
         run: npm run build
@@ -135,8 +75,8 @@ jobs:
     name: Playwright vs local Supabase + local server
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -149,91 +89,43 @@ jobs:
         working-directory: apps/web
         run: supabase start
 
-      # Never hardcode a demo key literal here: it drifted once already (a CLI-version
-      # bump changed which key format the local API gateway accepts — the old-format
-      # service_role JWT worked against one CLI version and 500'd against a newer one).
-      # Capture whatever THIS run's CLI actually issued and export it for every later
-      # step, so a future CLI bump can't silently break this gate again.
+      # Export whatever THIS run's CLI issued, never a hardcoded key (a CLI bump changed the key format once).
+      # NEXT_PUBLIC_* are inlined at build time, so they must be in $GITHUB_ENV before the Build step.
+      # SUPABASE_DB_URL is the migration-owner connection specs use to clean their own fixtures.
       - name: Export live local Supabase credentials
         working-directory: apps/web
         run: |
           eval "$(supabase status -o env)"
-          echo "SUPABASE_URL=$API_URL" >> "$GITHUB_ENV"
-          echo "SUPABASE_SERVICE_ROLE_KEY=$SECRET_KEY" >> "$GITHUB_ENV"
-          # Database-backed specs clean their own fixtures through the local migration-owner
-          # connection. The app service role remains intentionally unable to DELETE projects or
-          # append-only audit evidence.
-          echo "SUPABASE_DB_URL=$DB_URL" >> "$GITHUB_ENV"
-          # Auth session client (multi-tenant-activation Story 1.1). NEXT_PUBLIC_* are BUILD-time
-          # inlined into the client bundle, so they must be exported BEFORE the Build step below —
-          # and they persist to the runtime `npm run start` process too (same $GITHUB_ENV rail).
-          echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL" >> "$GITHUB_ENV"
-          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY" >> "$GITHUB_ENV"
+          {
+            echo "SUPABASE_URL=$API_URL"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$SECRET_KEY"
+            echo "SUPABASE_DB_URL=$DB_URL"
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY"
+          } >> "$GITHUB_ENV"
 
+      # Built with no gate set, before either gate file is loaded.
       - name: Build
         run: npm run build
 
-      # Kill-switch behavior needs a real, differently-enved process. The Playwright process gets
-      # the same explicit OFF value as this second-port built server, so this cannot accidentally
-      # assert dark behavior against the normal ON server started later in the job.
-      - name: Verify new governance seams with enablement gates OFF
+      # Gates come from ci/gates.{off,on}.env, loaded into $GITHUB_ENV before the server that reads them boots, so
+      # the server and the test process after it agree by construction (ci-diet D4). A value appended later never
+      # reaches an already-running process.
+      - name: Load the OFF gates
+        run: node scripts/lib/gate-env.mjs ci/gates.off.env >> "$GITHUB_ENV"
+
+      # The dark contracts, against a real second server with every gate off. Every spec here branches on its gate.
+      - name: Verify the dark contracts with every gate OFF
         env:
-          JOURNEY_PROJECTIONS_ENABLED: 'false'
-          EXPERIMENT_GOVERNANCE_ENABLED: 'false'
-          FLAG_SERVING_ENABLED: 'false'
-          RESILIENCE_SCENARIOS_ENABLED: 'false'
-          SECURITY_SIMULATIONS_ENABLED: 'false'
-          AUTOMATIC_CIRCUIT_BREAKERS_ENABLED: 'false'
-          # ⚠️ `CONSOLE_SHELL_ENABLED` is GONE — mockups-as-built Story 3.3 deleted the flag from
-          # `lib/flags.ts` and from every Vercel environment. `setup-routes-dark.spec.ts` keeps its
-          # name and its two unconditional tests; its dark describes are deleted, because a dark
-          # assertion about a flag that does not exist asserts the opposite of production.
-          # ⚠️ Sprint 3 — `FLAG_CONSOLE_ENABLED` was set NOWHERE in this workflow, so the whole
-          # blocking gate ran with the flag console dark while production has served it ON since
-          # flags-console-parity. That is the same defect A19 caught for `CONSOLE_SHELL_ENABLED`,
-          # one flag over: CI matched production by accident, and stopped when production moved.
-          # Explicitly OFF here, ON below, and `flag-console-dark.spec.ts` branches on it — so both
-          # states are asserted rather than whichever one the environment happened to be in.
-          FLAG_CONSOLE_ENABLED: 'false'
-          # ⚠️ Sprint 3 — `SIGNUP_ENABLED` moves to the MAIN server (production has it ON), so the
-          # signup DARK contract moves here, where it is the only place it can still be asserted.
-          # `signup.spec.ts`'s two dark tests skip themselves when the gate is on, so leaving them
-          # only on the lit server would have silently retired them.
-          SIGNUP_ENABLED: 'false'
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:3100
         run: |
           set -euo pipefail
-          ./node_modules/.bin/next start apps/web --hostname 127.0.0.1 --port 3100 > /tmp/journey-dark-server.log 2>&1 &
-          dark_pid=$!
-          cleanup() {
-            if kill -0 "$dark_pid" 2>/dev/null; then
-              kill "$dark_pid" 2>/dev/null || true
-              for i in $(seq 1 20); do
-                kill -0 "$dark_pid" 2>/dev/null || break
-                sleep 0.1
-              done
-              kill -KILL "$dark_pid" 2>/dev/null || true
-            fi
-            wait "$dark_pid" 2>/dev/null || true
-          }
-          trap cleanup EXIT
-
-          ready=0
-          for i in $(seq 1 30); do
-            if curl -sf http://127.0.0.1:3100/llms.txt > /dev/null; then
-              ready=1
-              break
-            fi
-            sleep 1
-          done
-          if [ "$ready" -ne 1 ]; then
-            echo "::error::OFF app never became ready"
-            cat /tmp/journey-dark-server.log
-            exit 1
-          fi
-
-          if ! ./node_modules/.bin/playwright test \
-            --config=apps/web/playwright.config.ts \
+          ./node_modules/.bin/next start apps/web --hostname 127.0.0.1 --port 3100 > /tmp/off-server.log 2>&1 &
+          off_pid=$!
+          trap 'kill "$off_pid" 2>/dev/null || true; wait "$off_pid" 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:3100/llms.txt > /dev/null && break; sleep 1; done
+          curl -sf http://127.0.0.1:3100/llms.txt > /dev/null || { echo "::error::OFF app never became ready"; cat /tmp/off-server.log; exit 1; }
+          ./node_modules/.bin/playwright test --config=apps/web/playwright.config.ts --project=api \
             apps/web/e2e/journey-dark.spec.ts \
             apps/web/e2e/experiment-governance-dark.spec.ts \
             apps/web/e2e/flag-serving-dark.spec.ts \
@@ -241,305 +133,55 @@ jobs:
             apps/web/e2e/setup-routes-dark.spec.ts \
             apps/web/e2e/flag-console-dark.spec.ts \
             apps/web/e2e/signup.spec.ts \
-            --project=api; then
-            cat /tmp/journey-dark-server.log
-            exit 1
-          fi
+            || { cat /tmp/off-server.log; exit 1; }
 
-      # commercial-shell Story 3.1 — MUST run before the server starts, not after: a value only
-      # reaches an already-running Node process's env if it was set before that process forked.
-      # Adding SELF_PROJECT_API_KEY to $GITHUB_ENV after "Start the app" (an earlier version of
-      # this workflow did exactly that) exports it for LATER steps' shells, but the already-running
-      # `npm run start` background process never re-reads its env — every self-track call silently
-      # no-op'd for the rest of the job (0 events, no error — caught live by this exact CI run
-      # during Sprint 3's cross-review round 2). Generating the key here, before boot, means the
-      # server sees it from its very first request.
+      - name: Load the ON gates
+        run: node scripts/lib/gate-env.mjs ci/gates.on.env >> "$GITHUB_ENV"
+      # Before the server boots, for the same reason as the gates: the server must see it from its first request.
       - name: Generate the self-tracking project's API key
         run: echo "SELF_PROJECT_API_KEY=$(openssl rand -hex 24)" >> "$GITHUB_ENV"
 
       - name: Start the app in the background
         working-directory: apps/web
-        # CONNECTOR_ENABLED=true so the Story 2.1 MCP connector round-trip/isolation/revocation
-        # specs exercise a live route; the connector's dark-by-default behavior is instead covered
-        # as a pure-function assertion (e2e/mcp-connector.spec.ts) — see lib/flags.ts's header
-        # comment for why that doesn't need a second differently-enved server boot.
-        # SELF_PROJECT_API_KEY rides in via $GITHUB_ENV (set above) — no explicit env: line needed,
-        # same as SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY above.
-        env:
-          CONNECTOR_ENABLED: 'true'
-          # console-ia-overhaul · A19. The console ships ENABLED, so the gate MUST be on here or the
-          # blocking gate asserts the opposite of production: `setup-routes-dark.spec.ts` would
-          # assert 404 on two routes that serve, and the lit halves of `console-shell.authed` and
-          # all of `setup-surfaces.authed` would skip permanently — three suites silently inverting
-          # on the day this merges. The dark contract moved to the OFF server above.
-          # Same argument, the flag console's own gate: ON in production since
-          # flags-console-parity, and set nowhere in this workflow until Sprint 3. The visual gate
-          # below needs it too — it asserts the LIT console and skips silently without it.
-          FLAG_CONSOLE_ENABLED: 'true'
-          # The rule builder rides its own gate and is ON in production; the feature page's
-          # Targeting tab is where it renders now.
-          FLAG_RULE_BUILDER_ENABLED: 'true'
-          # ⚠️ **Required by the authed browser rail, and it matches production.**
-          # `SIGNUP_ENABLED` gates the PROVISIONING redirect, not just the `/signup` page:
-          # `auth.setup.ts` signs in through the real form and then waits for the app to create the
-          # tenant, which never happens with the gate off — it fails with "sign-in succeeded but no
-          # tenant was provisioned", which is exactly what the first CI run of the visual gate said.
-          # It has been ON in production since multi-tenant-activation, so this is CI catching up
-          # rather than CI being loosened. The dark contract moved to the OFF server above.
-          SIGNUP_ENABLED: 'true'
-          # Journey projection HTTP specs exercise the live API seam. The preceding dedicated
-          # built-server pass covers the canonical OFF integration; deployment remains born OFF.
-          JOURNEY_PROJECTIONS_ENABLED: 'true'
-          EXPERIMENT_GOVERNANCE_ENABLED: 'true'
-          # experiments-for-humans D9 — ON in Production since 2026-09-25, so CI asserts the same state.
-          EXPERIMENT_BUILDER_ENABLED: 'true'
-          # flag-serving-and-prd-g. The four rails run live in this disposable CI process, while
-          # the dedicated differently-enved server above proves every route is absent while dark.
-          FLAG_SERVING_ENABLED: 'true'
-          RESILIENCE_SCENARIOS_ENABLED: 'true'
-          SECURITY_SIMULATIONS_ENABLED: 'true'
-          AUTOMATIC_CIRCUIT_BREAKERS_ENABLED: 'true'
-          # pod-report Story 3.1 — the share route needs a live gate for its render/revoke/expiry
-          # specs. Its DARK behaviour is covered without a second server boot: e2e/report-share.spec.ts
-          # asserts gate-OFF-404 only when the flag is off, and lib/flags.test.ts pins the predicate
-          # itself. Same arrangement, and the same reasoning, as CONNECTOR_ENABLED above. Deployment
-          # remains born OFF.
-          REPORT_SHARES_ENABLED: 'true'
-          # signals-loop Story 1.0 — the signals seam needs a live gate for the ingest→grouping and
-          # friction specs to exercise a real path. Same arrangement and same reasoning as every
-          # flag above: the DARK behaviour is covered without a second server boot (the specs assert
-          # gate-OFF only when the flag is off, and lib/flags.test.ts pins the predicates directly).
-          # Deployment remains born OFF. CONNECTOR_WRITES_ENABLED is deliberately NOT set here —
-          # the write surface stays dark even in CI until Sprint 3 builds it.
-          SIGNALS_ENABLED: 'true'
         run: |
           npm run start > /tmp/next-server.log 2>&1 &
-          echo "Waiting for http://localhost:3000..."
-          for i in $(seq 1 30); do
-            curl -sf http://localhost:3000 > /dev/null && exit 0
-            sleep 1
-          done
+          for i in $(seq 1 30); do curl -sf http://localhost:3000 > /dev/null && exit 0; sleep 1; done
           echo "::error::App never became ready"; exit 1
 
-      - name: Seed the public demo project (commercial-shell Story 1.2)
+      - name: Seed the public demo project
         run: npm run seed:demo
         env:
           GROWTH_ENGINE_URL: http://localhost:3000
-
-      # A fresh CI Supabase never already has this project, so provisionProject() always takes the
-      # first-creation path — but here it upserts the SAME key generated above (SELF_PROJECT_API_KEY
-      # is already set), so the DB's stored hash matches what the running server was booted with,
-      # instead of seed:self minting a second, different random key nobody told the server about.
-      - name: Seed the self-tracking project (commercial-shell Story 3.1)
+      # Upserts the key generated above, so the stored hash matches what the running server was booted with.
+      - name: Seed the self-tracking project
         run: npm run seed:self
         env:
           GROWTH_ENGINE_URL: http://localhost:3000
 
       - name: Run Playwright api suite
-        # Match the test process to the already-running ON server. journey-dark.spec.ts skips in
-        # this pass; its assertions ran, without a skip, against the dedicated OFF server above.
-        env:
-          JOURNEY_PROJECTIONS_ENABLED: 'true'
-          EXPERIMENT_GOVERNANCE_ENABLED: 'true'
-          # experiments-for-humans D9 — ON in Production since 2026-09-25, so CI asserts the same state.
-          EXPERIMENT_BUILDER_ENABLED: 'true'
-          # Match the test process to the server it is talking to: report-share.spec.ts branches on
-          # this to pick between its gate-OFF and its live-render assertions, and a mismatch would
-          # silently skip whichever half matters.
-          REPORT_SHARES_ENABLED: 'true'
-          # signals-loop. The same rule, and it bit: CONNECTOR_ENABLED + SIGNALS_ENABLED were set on
-          # the SERVER step but not here, so the server registered list_tasks/get_task while the test
-          # process — which evaluates isTaskMcpToolEnabled() locally to decide what to expect — did
-          # not know they existed. Three specs failed with the tools present-but-unexpected, and the
-          # dark-state dashboard spec ran (instead of skipping) against a server where the seam was
-          # live. Every flag a spec BRANCHES on has to be set in both places or the two halves of the
-          # test disagree about what they are testing.
-          CONNECTOR_ENABLED: 'true'
-          # Both places, per this block's own rule — `setup-routes-dark.spec.ts` BRANCHES on this to
-          # decide which half to run, so the server and the test process must agree about it.
-          # `flag-console-dark.spec.ts` branches on this one the same way, and it is now set on the
-          # server above — a mismatch here would make it assert the dark contract against a lit
-          # server, which is the single most confusing CI-only failure this repo records.
-          FLAG_CONSOLE_ENABLED: 'true'
-          FLAG_RULE_BUILDER_ENABLED: 'true'
-          # `signup.spec.ts` BRANCHES on this — its two dark tests skip when the gate is on — so the
-          # test process has to agree with the server or it asserts the dark contract against a lit
-          # one. That half now runs on the `:3100` server instead.
-          SIGNUP_ENABLED: 'true'
-          SIGNALS_ENABLED: 'true'
-          FLAG_SERVING_ENABLED: 'true'
-          RESILIENCE_SCENARIOS_ENABLED: 'true'
-          SECURITY_SIMULATIONS_ENABLED: 'true'
-          AUTOMATIC_CIRCUIT_BREAKERS_ENABLED: 'true'
         run: npm run test:e2e
 
-      # ── console-ia-overhaul · Story 3.3's closing step — the VISUAL gate joins CI ─────────────
-      #
-      # `e2e/console-visual.authed.spec.ts` was written in Part A and deliberately NOT wired in,
-      # for a stated reason: its assertion [1] was RED until Story 3.3 deleted the JSON authoring
-      # stack, so adding it then would have made CI permanently red and blocked every merge behind
-      # it. Story 3.3 landed; the gate is green; this is the step that was promised.
-      #
-      # It is the epic's flagship guard — the one thing in the plan that can go red on the way a
-      # page LOOKS — and until now it executed only when a human exported two variables and skipped
-      # silently otherwise. A gate nothing runs is a gate that decays: `landing.browser.spec.ts` is
-      # in this repo right now, red on `main`, because the `browser` project runs nowhere.
-      #
-      # ⚠️ Deliberately NOT the whole `authed` project. That is 84 specs of opt-in browser smoke,
-      # and WAYS-OF-WORKING is explicit that the browser rails are not the blocking gate; adding
-      # them all would spend Actions minutes (a recurring account-wide constraint here) and put 84
-      # chances of flake in front of every merge. This adds the ONE file the epic argued for.
-      - name: Install Chromium for the visual gate
+      - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
-      # ── design-system-rails · Story 1.4 — the MEASURED half of the contract ──────────────────
-      #
-      # Here rather than in the static job because it opens the approved prototype in a real browser
-      # and reads computed geometry out of it — that is the entire point, and it is why the two
-      # numbers in the old hand-written table (project switcher 140x30, feature row 78) survived for
-      # an epic: nothing measured them. `--check` regenerates `MEASURED-SPEC.md` and fails on any
-      # diff, so a number nobody can reproduce can no longer be committed and then reasoned about as
-      # design intent.
-      #
-      # It also renders all 32 approved states, which is what proves `_harness.mjs` and the
-      # prototype still load at all — the fresh-clone failure this closes.
-      - name: The measured spec and the state contract reproduce, and all 33 approved states render
+      # Opens the approved prototype in a real browser: the measured spec and state contract must reproduce, and
+      # every approved state must render. The authed suite reads STATE-CONTRACT.json, which this verifies first.
+      - name: The measured spec and the state contract reproduce, and every approved state renders
         run: |
           node apps/web/design-system/measure-contract.mjs --check
-          # ── mockups-as-built · Story 1.1 ───────────────────────────────────────────────────
-          # The STRUCTURE of every approved state, read out of the prototype and compared against
-          # the committed file. Same discipline as the two `--check`s beside it: a hand-edit is
-          # reverted rather than argued about, and a prototype that changed without an APPROVED.md
-          # line fails here rather than being silently adopted as the new design.
-          #
-          # It must run BEFORE the gate step below, which reads STATE-CONTRACT.json.
           node apps/web/design-system/state-contract.mjs --check
           node apps/web/design-system/render-reference.mjs
 
-      # ⚠️ TWO files, and the second one is here because it was not — which is Mechanism E
-      # ⚠️ **THIRD FILE, added in Sprint 3, and for the third time for the same reason.**
-      # `console-shell.authed.spec.ts` holds the assertions for the rebuilt shell — the rail's active
-      # state, the environment control, the palette's painted cursor and its visible affordance, and
-      # the per-route walk that proves every route marks its OWN rail item. Nineteen tests, run
-      # locally by `run-local-e2e.mjs --authed`, run by NO pipeline: this step named its two siblings
-      # positionally and nothing named this one.
-      #
-      # Sprint 1 wired the first file in for this reason and Sprint 2 the second, each recording that
-      # "a suite no pipeline runs decays silently". Sprint 3 then built its entire gate inside a
-      # third unwired file.
-      #
-      # ⚠️ **A SEVENTH: `setup-keys.authed.spec.ts`.** Story 4.5 moves credential MINTING onto Setup ›
-      # Keys and retires three routes into redirects. That is the highest-consequence change in the
-      # sprint — four kinds of bearer credential, issued and destroyed — and the only thing that
-      # exercises the real forms end to end is this file. Named here in the commit that writes it.
-      #
-      # ⚠️ **A SIXTH, and it was written a whole epic ago: `setup-surfaces.authed.spec.ts`.** Its own
-      # header says it — *"NOT in the blocking gate… the PR body states the run and its result rather
-      # than implying CI covered it. LEARNINGS: a suite outside the gate decays silently."* It has
-      # been the only automated check on Setup's connector status, its member/owner boundary and its
-      # capability column since `console-ia-overhaul`, and Sprint 4 rebuilds all three of those
-      # surfaces. Wiring it in is what turns a stated gap into a gate.
-      #
-      # ⚠️ **A FIFTH, and the pattern is now the rule rather than the exception:
-      # `feature-tabs.authed.spec.ts`.** Sprint 4 builds the feature destination's seven tabs, and
-      # its whole gate — every tab renders from `design-system/`, none of them scrolls, the 38 x 21
-      # switch is the approved pair rather than the 44px accessibility floor, the dashed "never"
-      # state exists, and a feature that HAS a funnel renders numbers — lives in this one file.
-      # Named positionally here at the same time it was written, which is the fix for the four
-      # findings below rather than a fifth instance of them.
-      #
-      # ⚠️ **AND A FOURTH: `mobile-heuristics.authed.spec.ts`.** It sweeps 360/390 across twelve
-      # console routes and it caught a Blocking on this very PR — the new `⌘K` button pushed the
-      # account menu, the ONLY sign-out control on a console route, off a 360px screen. Twelve of its
-      # fourteen tests were red on a branch whose CI was entirely green, because `grep
-      # mobile-heuristics .github/workflows/ci.yml` returned nothing. The defect AND the guard that
-      # catches it were both invisible to the pipeline (fresh reviewer, round 2). Found while checking whether a newly-added gate-off assertion executed
-      # anywhere — it did not, and neither did the other eighteen.
-      # reproduced inside the epic that names it. `design-system-specimen.authed.spec.ts` shipped
-      # with eight assertions and a positional filter naming only its sibling, so ALL of them
-      # executed nowhere: the dialog-position assertion D12 exists to buy, the TYPE/WEIGHT welds
-      # against `scales.ts`, the keyboard focus pass, and the two anonymous auth-boundary specs that
-      # exist BECAUSE that route shipped with no auth check.
-      #
-      # `run-local-e2e.mjs`'s own comment says the sentence: "a suite no pipeline runs decays
-      # silently." Found by the fresh reviewer, Blocking.
-      - name: Console visual gate (the approved design, asserted)
-        # Every flag a spec BRANCHES on is read in two places — the server decides behaviour, the
-        # test decides expectation — and `gatesAreLit()` in this spec reads two of these. Set in both
-        # places or the suite skips silently and reports green having asserted nothing.
-        #
-        # ⚠️ The FULL set is mirrored from the api step above, not just the two this spec reads.
-        # Cross-review (agy) flagged the partial list: the running server has twelve gates open, and
-        # a test process that disagrees with it about any of them is the single most confusing
-        # CI-only failure this repo records. Mirroring costs nothing and removes the class rather
-        # than the instance.
-        env:
-          FLAG_CONSOLE_ENABLED: 'true'
-          FLAG_RULE_BUILDER_ENABLED: 'true'
-          FLAG_SERVING_ENABLED: 'true'
-          CONNECTOR_ENABLED: 'true'
-          JOURNEY_PROJECTIONS_ENABLED: 'true'
-          EXPERIMENT_GOVERNANCE_ENABLED: 'true'
-          # experiments-for-humans D9 — ON in Production since 2026-09-25, so CI asserts the same state.
-          EXPERIMENT_BUILDER_ENABLED: 'true'
-          REPORT_SHARES_ENABLED: 'true'
-          SIGNALS_ENABLED: 'true'
-          RESILIENCE_SCENARIOS_ENABLED: 'true'
-          SECURITY_SIMULATIONS_ENABLED: 'true'
-          AUTOMATIC_CIRCUIT_BREAKERS_ENABLED: 'true'
-          SIGNUP_ENABLED: 'true'
-          # ⚠️ **Explicitly OFF, and that is the point of writing them down.** The server this step
-          # talks to does not set either, so a suite that reads them would otherwise branch on an
-          # unset variable — and a skip nobody decided reads exactly like a suite that ran.
-          #
-          # The two authoring suites are INVERSES of each other, which is why this is a decision
-          # rather than a loss: `scenario-authoring-dark.authed.spec.ts` skips when the gate is ON,
-          # so with it off here that one RUNS and asserts the dark path; `scenario-authoring.authed`
-          # skips, and `npm run test:e2e:local -- --authed` is what exercises it (the local runner
-          # sets both gates on). Turning them on here would enable owner mutation surfaces on the CI
-          # server, which is a decision this sprint did not make.
-          #
-          # `console-shell.authed.spec.ts` already documents that these two are the gates that differ
-          # between the runner and this step, and that neither appears in any inventory row's `gate`
-          # field — so its rail count is unaffected either way.
-          SCENARIO_AUTHORING_ENABLED: 'false'
-          FLAG_DEFINITION_SYNC_ENABLED: 'false'
-        # ⚠️ `auth-setup` / `auth-teardown` are NOT named, and never were.
-        # An earlier version listed all three files, and cross-review (agy) read that as forcing the
-        # teardown to run as an ordinary test that could invalidate the session mid-suite. It does
-        # not — `dependencies` and `teardown` are a project GRAPH, not a filter — but the argument
-        # only has to be made because the extra arguments were there. With the file list gone (see
-        # below) there is nothing left to explain at all.
-        #
-        # ⚠️ **THE FILE LIST IS GONE — design-system-rails Sprint 5. The whole `authed` project runs.**
-        #
-        # Sprint 4 found `setup-surfaces.authed.spec.ts` outside this list, having said in its own
-        # header for a whole epic that "a suite outside the gate decays silently" while being the
-        # only automated check on Setup's connector status and member boundary. It added that one
-        # file — the instance — and left the class: SEVEN more authed suites were still outside,
-        # including `design-system`, `flag-console`, `command-center` and every scenario spec, and
-        # this sprint broke assertions in four of them without CI noticing.
-        #
-        # A hand-maintained list of tests is a list somebody must remember to extend on the day they
-        # add a suite, which is the day they are thinking about something else. `--project=authed`
-        # cannot go stale. Measured before switching: the full project is 121 tests in ~23s against a
-        # server that is already built and running for the step above, so the cost of closing this is
-        # a rounding error against the Chromium install that precedes it.
-        run: |
-          npx playwright test \
-            --config=apps/web/playwright.config.ts \
-            --project=authed
+      # The WHOLE authed project, never a file list: a hand-maintained list missed seven suites, one at a time.
+      # auth-setup / auth-teardown run as its dependency graph.
+      - name: Run Playwright authed suite (incl. the console visual gate)
+        run: npx playwright test --config=apps/web/playwright.config.ts --project=authed
 
       - name: Upload the visual gate's screenshots
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: console-visual
-          # ⚠️ `design-system/` was missing, so the specimen screenshot was produced and DISCARDED on
-          # every run. The spec that writes it calls it "evidence for the human half of the review",
-          # and Sprint 2's walkthrough step 1 asks Daniel to look at that screen — the one artefact
-          # this sprint exists to put in front of a person never left the runner (fresh reviewer,
-          # round 2, Major).
           path: |
             test-results/console-visual/
             test-results/design-system/
