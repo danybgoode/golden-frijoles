@@ -10,17 +10,15 @@
 > This committed file reads the docs alone, so **Building and QA are not here** — they are facts git
 > and GitHub hold. For the live board run `node scripts/build-order.mjs --live`, or open the Hub board.
 
-## To groom (8)
+## To groom (6)
 
 _seeds with no pitch yet._
 
 - [Scenarios freeze: archive the epic, correct the landing's SecOps claim, deprecate the SDK scenario API](seeds/scenarios-freeze.md) — #36 · 01 Growth Engine · seed · Chore · risk: Low · appetite S · _docs: status raw_
 - [Verify module: the verification depth ladder as a product (after the spike)](seeds/verify-module.md) — #54 · 09 Platform Infra · seed · Feature · risk: High · appetite L · _docs: status raw_
 - [A delivery whose settle keeps failing is re-sent every 5 minutes, uncounted and unlogged](seeds/delivery-stale-reclaim-uncounted.md) — 01 Growth Engine · seed · Bug · risk: High · appetite S · _docs: status raw_
-- [Five browser-project specs are red on main, and only the nightly run sees them](seeds/landing-browser-spec-red.md) — 02 Commercial · seed · Bug · risk: Low · appetite S · _docs: status raw_
 - [perf-probe only requests the hosts a project names](seeds/perf-probe-target-allowlist.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
 - [Template scripts run when invoked through a symlinked path](seeds/script-ismain-realpath.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
-- [The portfolio loop test fails intermittently in CI and has been quarantined](seeds/portfolio-loop-flake.md) — 02 Commercial · seed · Bug · risk: Low · appetite S · _docs: status raw_
 - [This repo lints its template scripts the way its consumers do](seeds/foundation-lint-gate.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
 
 ## Grooming (2)
@@ -49,7 +47,7 @@ _a work branch is on origin. Not in this committed file: `node scripts/build-ord
 
 _a PR is ready for review, or merged and waiting for its close-out. Not in this committed file: `node scripts/build-order.mjs --live` or the Hub board._
 
-## Shipped (53)
+## Shipped (55)
 
 _merged, deployed and closed._
 
@@ -103,9 +101,11 @@ _merged, deployed and closed._
 - [Multi-tenant activation — auth hardening, self-serve tenants, pod trials](../02-commercial/multi-tenant-activation/README.md) — #3 · 02 Commercial · 9/9 stories · risk: High · _docs: status shipped_
 - [Commercial shell — Golden Beans landing, waitlist, connector install page](../02-commercial/commercial-shell/README.md) — #2 · 02 Commercial · 10/10 stories · risk: High · _docs: status shipped_
 - [Growth Engine v1 — telemetry ingest, SDK, TARS funnel, North Star, A/B bucketing — ✅ shipped](../01-growth-engine/growth-engine-v1/README.md) — #1 · 01 Growth Engine · 13/13 stories · risk: Low · _docs: status shipped_
+- [Five browser-project specs are red on main, and only the nightly run sees them](seeds/landing-browser-spec-red.md) — 02 Commercial · seed · Bug · risk: Low · appetite S · _docs: status shipped_
 - [Golden Beans project rules and poster hardening](seeds/project-rules-and-poster-hardening.md) — 09 Platform Infra · seed · Chore · risk: Low · _docs: status shipped_
 - [The board's epic links resolve one folder too high](seeds/board-link-depth.md) — 09 Platform Infra · seed · Bug · risk: Low · appetite S · _docs: status shipped_
 - [The flag console a human can operate — Flagsmith-grade IA, terminology and list ergonomics](../01-growth-engine/flags-console-parity/README.md) — 01 Growth Engine · 11/11 stories · risk: High · appetite M · _docs: status shipped_
+- [The portfolio loop test fails intermittently in CI and has been quarantined](seeds/portfolio-loop-flake.md) — 02 Commercial · seed · Bug · risk: Low · appetite S · _docs: status shipped_
 
 ---
 _69 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._

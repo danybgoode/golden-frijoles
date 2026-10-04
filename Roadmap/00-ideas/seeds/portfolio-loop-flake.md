@@ -1,7 +1,7 @@
 ---
 title: 'The portfolio loop test fails intermittently in CI and has been quarantined'
 slug: portfolio-loop-flake
-status: raw
+status: shipped
 area: '02'
 type: bug
 priority: unranked
@@ -45,3 +45,27 @@ screenshot, the server log). Open the `quarantine-evidence` artifact of the next
 
 The test runs green in the `quarantine` job across ~10 consecutive runs, its `@quarantine` tag and annotation are
 removed, and it is back in the blocking `e2e-authed` job.
+
+## Resolution (2026-10-04): a Next.js/React bug, fixed by upgrading to Next 16
+
+**Root cause, not in this repo.** The two red traces showed the server doing everything right: the forged submit got
+its `303 → ?loop=forbidden` (and the sibling its `404`), with a complete body that was byte-identical between passing
+and failing runs. The client then never moved: no `_rsc` GET, no `pushState`, no error. Reproduced locally with 6× CPU
+throttling (fails most runs on a fresh server) and probed through Next's action queue and React itself. The router
+resolved the action normally (nothing discarded), React suspended the transition on a Flight chunk in `resolved_model`,
+the chunk fulfilled, and React was never pinged again, so the update never committed. That is
+[vercel/next.js#98303](https://github.com/vercel/next.js/issues/98303), a lost ping in the React that Next ≤16.2
+vendors. The 15.5 line was never patched; the same freeze hit **real people** on slow devices (the stage saved, the row
+never updated until a reload).
+
+**Fix.** Next 15.5.20 → 16.3.8 (React 19.3). The same throttled repro: 20/20 green. The test is un-quarantined and back in
+the blocking `e2e-authed` job. The hydration waits stay: they guard a real, separate hazard (a forged hidden value set
+before hydration is restored).
+
+**What the upgrade also needed:** `eslint-config-next` 16 ships flat configs (the FlatCompat bridge throws), and its two
+new rules start `off` as calibrated follow-ups; Lightning CSS (Turbopack's minifier) dropped our unprefixed
+`backdrop-filter`, so the hand-written `-webkit-` duplicates are gone; one spec now accepts `0s` for `0ms`.
+
+**Follow-ups, not done here:** `middleware.ts` → `proxy.ts` (deprecated in 16, still works); switch
+`react-hooks/set-state-in-effect` (4 sites) and `@next/next/no-location-assign-relative-destination` (1) to `error`
+with their cleanups.
