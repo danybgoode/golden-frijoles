@@ -12,25 +12,25 @@ stories:
     i_want: "each check to run once, in one place"
     so_that: "the checks list says what ran, not the same thing three times"
     risk: high
-    status: planned
+    status: done
   - id: S1.2
     title: "One env file per gate state replaces the four copied flag lists"
     as_a: "a builder adding or flipping a gate"
     i_want: "one line to change"
     so_that: "the server and the tests can't disagree about a flag"
     risk: high
-    status: planned
+    status: done
   - id: S1.3
     title: "ci.yml reads in one sitting; the stale minutes premise is rewritten; actions v5"
     as_a: "the next agent that edits CI"
     i_want: "a file that states its rules, not its incident history"
     so_that: "I change it correctly instead of re-deriving it"
     risk: low
-    status: planned
+    status: done
 ---
 # CI diet — Sprint 1: S1 Less, same behaviour
 
-**Status:** ⬜ not started
+**Status:** ✅ shipped 2026-10-04 — #246 squash-merged as `000fc5e` (stories: `2fcb569` S1.1, `451d3e5` S1.2, `cea0564` S1.3, fixes `d371419` `5120382` `d463655`)
 
 ## Build contract (locked by the architect before the builder started — README § Architecture lock)
 Cite, don't restate: the epic README's **D1, D4, D9**. Before any edit, record the baseline in the README: the static
@@ -96,3 +96,18 @@ Env: GitHub, the S1 PR.
    → ≤ 250 lines, and no gate flag set inline.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+### Walkthrough as run (2026-10-04, by the builder, on #246)
+1. **Checks tab** → no `design-system-fresh`, `cli-tests` or `build-order-fresh`; `Static gate + build` green
+   (run [37172991191](https://github.com/danybgoode/golden-frijoles/actions/runs/37172991191)). ✅
+2. **Static gate steps** → `BUILD-ORDER.md is up to date`, `Jev — eval replay`, `Permissions contract`,
+   `Script parity with the template`, `Design-drift guard`, each passed. ✅
+3. **Counts** (run [37171756616](https://github.com/danybgoode/golden-frijoles/actions/runs/37171756616)) → OFF 30/0,
+   api 648 passed / 37 skipped, authed 169 tests / 6 skipped = baseline. The one authed failure there was the known
+   `portfolio.authed.spec.ts:161` flake; the head run 37172991191 is fully green. ✅
+4. **ci.yml** → 192 lines, `grep -cE "_ENABLED: '(true|false)'"` → 0. ✅
+
+**Found and fixed during the sprint:** under `set -e`, the OFF server's EXIT trap turned a `kill -9` on an
+already-exited process into a red step with 30/30 passed (`d463655`). **Decided by Daniel:** Jev's shadow expiry runs
+daily only (`jev-eval --no-expiry` in the PR gate; plugin/kit 0.26.2), and Dependabot alerts + security updates are now
+ON (enabled by the builder on his instruction, verified: `dependabot_security_updates: enabled`).
