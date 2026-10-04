@@ -10,7 +10,7 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import {
   isCodexAuthError,
   decideCodexFallback,
@@ -21,6 +21,7 @@ import {
   resolveCurrentPr,
   runAntigravity,
   agyFailureKind,
+  agyLogError,
   runDevin,
   AGENTS,
   checkAgyVersion,
@@ -725,7 +726,8 @@ test('runAntigravity: stubbed agy → non-empty capture, with `-p <argv> --model
   const { cmd, args, opts } = calls[0];
   assert.equal(cmd, 'agy');
   // the 1.0.10 contract: prompt is the -p value, an explicit --model is passed (the fix for the empty output)
-  assert.deepEqual(args, ['-p', 'PROMPT+DIFF', '--model', AGY_MODEL]);
+  assert.deepEqual(args.slice(0, 4), ['-p', 'PROMPT+DIFF', '--model', AGY_MODEL]);
+  assert.equal(args[4], '--log-file', 'each call keeps its own log, so an empty answer can say why');
   assert.equal(opts.input, '', 'stdin must be given an immediate EOF (input:"") or print mode blocks');
 });
 
@@ -738,9 +740,9 @@ test('runAntigravity: primary empty (quota) → AUTO-FALLS-BACK to AGY_FALLBACK_
   const out = runAntigravity('PROMPT+DIFF', {}, { spawn, warn: (m) => (warned = m) });
   assert.equal(out, 'FALLBACK FINDINGS');
   assert.equal(calls.length, 2);
-  assert.deepEqual(calls[0].args, ['-p', 'PROMPT+DIFF', '--model', AGY_MODEL]);
-  assert.deepEqual(calls[1].args, ['-p', 'PROMPT+DIFF', '--model', AGY_FALLBACK_MODEL]);
-  assert.match(warned, /returned no output.*used "/); // the substitution is announced, not silent
+  assert.deepEqual(calls[0].args.slice(0, 4), ['-p', 'PROMPT+DIFF', '--model', AGY_MODEL]);
+  assert.deepEqual(calls[1].args.slice(0, 4), ['-p', 'PROMPT+DIFF', '--model', AGY_FALLBACK_MODEL]);
+  assert.match(warned, /did not answer \(.*empty output.*\) → used "/); // the substitution is announced, not silent
 });
 
 test('runAntigravity: BOTH primary and fallback empty → fail naming the quota cap', () => {
@@ -908,7 +910,10 @@ test('devinErrorLine keeps the Error: line, not the JSON tail', async () => {
   const stderr =
     'Error: Agent error: Your weekly usage quota has been exhausted. (trace ID: abc): {\n' +
     '  "cognition.ai/errorKind": "resource_exhausted"\n}';
-  assert.equal(devinErrorLine(stderr), 'Error: Agent error: Your weekly usage quota has been exhausted. (trace ID: abc)');
+  assert.equal(
+    devinErrorLine(stderr),
+    'Error: Agent error: Your weekly usage quota has been exhausted. (trace ID: abc)'
+  );
   assert.equal(devinErrorLine('warming up\nsomething broke\n}'), 'something broke');
   assert.equal(devinErrorLine(''), 'unknown error');
 });
@@ -968,4 +973,43 @@ test('runAntigravity: when both fail, the message names each model’s own cause
   const msg = errs.join('');
   assert.match(msg, new RegExp(`"${AGY_MODEL}": quota reached, resets in 155h5m1s`));
   assert.match(msg, new RegExp(`"${AGY_FALLBACK_MODEL}": no capacity after 3 tries \\(transient, NOT quota`));
+});
+
+test('agyLogError finds the reason an empty answer left in the log, skipping side calls that do not cost it', () => {
+  const log = [
+    'I1004 09:50:58.713942     124 quota_manager.go:45] doRefreshQuota: starting reload (force=true)',
+    'E1004 09:51:04.287112     642 errorreport.go:224] conversation title generation for x: UNAVAILABLE (code 503): No capacity available for model gemini-3.5-flash-lite',
+    'E1004 09:51:05.000000     658 session.go:271] Print mode: run ended with error and no response: RESOURCE_EXHAUSTED (code 429)',
+    'E1004 09:51:05.100000    1368 telemetry.go:81] error recording trajectory segment analytics: context canceled',
+  ].join('\n');
+  assert.equal(
+    agyLogError(log),
+    'Print mode: run ended with error and no response: RESOURCE_EXHAUSTED (code 429)'
+  );
+  assert.equal(agyLogError(log.split('\n').slice(0, 2).join('\n')), null);
+  assert.equal(agyLogError(null), null);
+});
+
+test('runAntigravity: an empty answer reports what the log said, not a guessed quota cap', () => {
+  const spawn = (cmd, args) => {
+    const logFile = args[args.indexOf('--log-file') + 1];
+    writeFileSync(
+      logFile,
+      'E1004 09:51:05.000000     658 session.go:271] Print mode: run ended with error and no response: deadline exceeded\n'
+    );
+    return { status: 0, stdout: '', stderr: '' };
+  };
+  const errs = [];
+  const origWrite = process.stderr.write;
+  process.stderr.write = (m) => (errs.push(String(m)), true);
+  try {
+    assert.equal(runAntigravity('P', { soft: true }, { spawn, warn: noWarn }), null);
+  } finally {
+    process.stderr.write = origWrite;
+  }
+  assert.match(
+    errs.join(''),
+    /agy's log says: Print mode: run ended with error and no response: deadline exceeded/
+  );
+  assert.doesNotMatch(errs.join(''), /likely a quota cap/);
 });
