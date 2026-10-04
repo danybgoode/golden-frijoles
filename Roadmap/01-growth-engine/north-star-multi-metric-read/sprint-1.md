@@ -18,19 +18,10 @@ stories:
 
 **Status:** ⬜ not started
 
-## Stories
-<!-- One block per story. Thinnest shippable slice first.
-     Each story ALSO has an entry in the frontmatter `stories:` list above — that entry is what tools
-     read (the build view, build-state.mjs); the prose below is what people read. Add both, and keep
-     `stories_total` (here and in the epic README) equal to the number of entries.
-     Story `status:` is planned | in-progress | done. The sprint's `phase:` is the executive ladder
-     (Shaping | Locking architecture | Building | Verifying | In review | Shipped), WRITTEN at each
-     cadence event. Name the story in each commit subject (`S1.1 …`): that is how the build view
-     knows which story is in flight.
-     Keep the heading shape `### Story 1.M — <title>` (this is what the status board counts).
-     When a story ships, append ✅ + its commit ref to the heading, e.g.
-       ## Build contract (the architect locks this before the builder starts)
+## Build contract (the architect locks this before the builder starts)
 Cite, don't restate: the epic README's **D1–D5**. D5's live count is part of the lock: record the number in the README.
+
+## Stories
 
 ### Story 1.1 — One rule for the current North Star, every reader uses it
 **As a** project owner whose project holds two North Star metrics, **I want** my North Star page and Pod Report to show
