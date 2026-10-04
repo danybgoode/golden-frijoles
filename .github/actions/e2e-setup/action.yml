@@ -1,0 +1,44 @@
+name: e2e setup
+description: >-
+  Node + deps, a local Supabase (migrations + seed.sql), its credentials in $GITHUB_ENV, and a build baked with them.
+  Each e2e job runs this itself: NEXT_PUBLIC_* are inlined at build time from THIS job's Supabase (ci-diet D5).
+  Expects actions/checkout to have run.
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v7
+      with:
+        node-version: 22
+        cache: npm
+    - run: npm ci --no-audit --no-fund
+      shell: bash
+
+    # Pinned: `-x` names change between CLI versions (ci-diet D11). Bump the version and the list together.
+    - uses: supabase/setup-cli@v3
+      with:
+        version: 2.119.0
+    # Excluded: services no spec or route uses (no storage, realtime, functions or mail; sign-in is a password grant).
+    - name: Start local Supabase (applies migrations + seed.sql)
+      shell: bash
+      working-directory: apps/web
+      run: supabase start -x realtime,storage-api,imgproxy,mailpit,studio,edge-runtime,logflare,vector,supavisor
+
+    # Export what THIS run's CLI issued, never a hardcoded key (a CLI bump changed the key format once).
+    # SUPABASE_DB_URL is the migration-owner connection specs use to clean their own fixtures.
+    - name: Export live local Supabase credentials
+      shell: bash
+      working-directory: apps/web
+      run: |
+        eval "$(supabase status -o env)"
+        {
+          echo "SUPABASE_URL=$API_URL"
+          echo "SUPABASE_SERVICE_ROLE_KEY=$SECRET_KEY"
+          echo "SUPABASE_DB_URL=$DB_URL"
+          echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY"
+        } >> "$GITHUB_ENV"
+
+    # Built with no gate set, before either gate file is loaded.
+    - name: Build
+      shell: bash
+      run: npm run build
