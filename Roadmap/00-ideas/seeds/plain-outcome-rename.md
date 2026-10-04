@@ -6,10 +6,10 @@ area: "09"
 type: feature
 priority: null
 appetite: L
-underwritten_by: null
+underwritten_by: wave-2026-10-04-launch
 risk: high
 epic: "09-platform-infra/plain-outcome-rename"
-build_order: null
+build_order: 61
 updated: 2026-10-04
 intent_ask: verbatim   # verbatim = the product owner's own words below · proxy = reconstructed after the fact
 intent_match: null     # written by `node scripts/intent-match.mjs <this seed> --write` (groom Stage 3.5) — advisory

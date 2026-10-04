@@ -9,7 +9,7 @@ risk: high
 type: feature
 sprints_total: 4
 stories_total: 14  # the sum of every sprint's stories_total — keep it in step when a story is added
-build_order: 45      # integer position in the ONE global build sequence — the SSOT once the epic
+build_order: 66      # integer position in the ONE global build sequence — the SSOT once the epic
                      # exists (the seed's value is only a fallback). Fill it in at the betting
                      # table; plain integers, no "#2a" suffixes. See 00-ideas/README.md → Ordering.
 ---
