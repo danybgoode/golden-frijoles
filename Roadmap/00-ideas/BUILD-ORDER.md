@@ -39,7 +39,7 @@ _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 - [Kickoff generators run from anywhere](../09-platform-infra/kickoff-generator-path/README.md) — #56 · 09 Platform Infra · 0/5 stories · risk: Low · appetite M · _docs: status scaffolded_
 - [CLI follow-ups from think-skills](../09-platform-infra/cli-think-skills-followups/README.md) — #57 · 09 Platform Infra · 0/2 stories · risk: Low · appetite S · _docs: status scaffolded_
 - [Several North Star metrics, one reading rule](../01-growth-engine/north-star-multi-metric-read/README.md) — #58 · 01 Growth Engine · 0/1 stories · risk: Low · appetite S · _docs: status scaffolded_
-- [CI diet](../09-platform-infra/ci-diet/README.md) — #59 · 09 Platform Infra · 0/9 stories · risk: High · appetite M · _docs: status scaffolded_
+- [CI diet](../09-platform-infra/ci-diet/README.md) — #59 · 09 Platform Infra · 3/9 stories · risk: High · appetite M · _docs: status scaffolded_
 - [Board renders priority where it should render build_order](seeds/build-order-render-fix.md) — 09 Platform Infra · seed · Chore · risk: Low · appetite S · _docs: status queued_
 
 ## Building — live only
