@@ -1,7 +1,8 @@
 ---
-status: scaffolded   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Shaping       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+status: in-progress  # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+phase: In review            # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
+locked_at: "2026-10-04T14:34:04Z"
 slug: cli-think-skills-followups
 title: "CLI follow-ups from think-skills"
 area: 09-platform-infra
@@ -57,6 +58,44 @@ body reader.
   skipped. `NextResponse.json(` must never fire.
 - **D5 — Release: CLI 0.4.1** (patch, additive). `npm publish` is Daniel's 2FA step, owed by name. Test the PACKED
   tarball under a real TTY before handing it over (memory: *golden-frijoles-cli*).
+
+## Architecture lock (2026-10-04, verified against `main` @ `2fb2629`)
+
+D1–D5 stand as proposed, with these corrections and additions. Each was checked against the live file named.
+
+- **C1 — D4 also parses arrow handlers.** As groomed, D4 reads only `export (async )?function <VERB>(<name>`, but
+  S1.2's acceptance fixture is `(r: NextRequest) => … r.json()`. The parser reads BOTH
+  `export (async )?function <VERB>(<name>` and `export const <VERB> = (async )?(<name>` / `= (async )?<name> =>`.
+  All six live routes (`flags`, `flags/write`, `keys`, `north-star`, `projects`, `whoami`, ten handlers) use the
+  `function <VERB>(req: NextRequest)` form, so the real routes are read today either way.
+- **C2 — the name must stand alone.** The match is `(?<![\w$.])<name>(\.clone\(\))?\.(json|text|formData|arrayBuffer|blob)\(`
+  plus `(?<![\w$.])<name>\.body\b` (so `bodyUsed` does not fire). `NextResponse.json(` cannot fire: no handler
+  parameter is preceded by `.`.
+- **C3 — the guard points both ways** (LEARNINGS, site-url-preview-aware: *a discovery guard needs a second
+  assertion pointing the other way*). Besides "no offenders", it asserts every real route file yields at least one
+  parsed handler parameter, so a handler shape the parser can't read turns the guard red instead of silently passing.
+- **C4 — every blocker, first one rendered.** `dryRunVerdict` lists EVERY blocker that applies, in `nextStep`'s order
+  (placeholders, then value-source; both can hold at once, e.g. a filled key with a `<…>` value source); `nextStep`
+  renders the FIRST, so the human sentence is byte-identical to today's. Verified: `nextStep` (`north-star.ts:163`) has
+  exactly two refusal branches and the dry run knows no other refusal. Server-side schema errors stay the server's
+  (think-skills: one judge of validity), so `sendable: true` means "the CLI knows of nothing that refuses it", stated
+  in the `--json` docs in the code comment.
+- **C5 — the `--json` dry run keeps `unfilled`** (additive contract: nothing removed) and gains `sendable` and
+  `blockers` beside it.
+- **C6 — the version lives in three places**: `packages/cli/package.json`, `packages/cli/src/version.ts` (the literal
+  `version.test.ts` pins) and the `packages/cli` entry in `package-lock.json`. Published today: `0.4.0`
+  (`npm view`), so 0.4.1 is the next patch.
+- **C7 — architect builds in place**, one branch, one PR (the per-sprint shape the grooming named): two small
+  independent stories, no worktree needed.
+
+### Sprint 1 build contract
+- **S1.1:** `export function dryRunVerdict(plan, unfilled): { sendable: boolean; blockers: Blocker[] }` in
+  `north-star.ts`; `nextStep(verdict)` renders from it; the dry run's `emit.ok` data adds `sendable` + `blockers`.
+  Tests in `cli-write.test.ts`: the three acceptance cases on `--json`, plus a unit test of the both-blockers order.
+  `golden.test.ts` untouched. Version → 0.4.1 (C6).
+- **S1.2:** in `cli-body-order.test.ts`, a pure `handlerParams(source)` + `bodyReads(source)`; inline fixtures for
+  the five firing forms and the one clean form; the real-route walk uses `bodyReads` and C3's reverse assertion; the
+  "readCliBody gates first" test is byte-unchanged.
 
 ## What already exists (reuse, don't rebuild)
 - `nextStep`, `unfilledPaths`, `planSync` — `packages/cli/src/commands/north-star.ts`

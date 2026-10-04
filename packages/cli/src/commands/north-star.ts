@@ -11,6 +11,8 @@
 // sends nothing. A sync never replaces or deletes (think-skills C2): a new metric key is ADDED beside any existing
 // metric, and an input key that already exists MOVES to this metric. Both effects are named before anything is sent,
 // because neither can be undone by syncing again.
+// Under `--json` it also says, as data, whether `--yes` would be accepted: `sendable`, and `blockers` saying why not
+// (`dryRunVerdict`). The human sentence is rendered from that same verdict, so the two can't disagree.
 //
 // ── An unfilled template is refused here ──────────────────────────────────────────────────────────────────────────
 // The template's `<metric_key>` placeholders satisfy the schema (any non-empty string does), so the server would store
@@ -159,14 +161,29 @@ function issueLines(issues: unknown): string[] {
   return out
 }
 
-/** The dry run's last sentence. It never invites a `--yes` that is certain to be refused. */
-function nextStep(plan: SyncPlan, unfilled: string[]): string {
-  if (unfilled.length > 0) return 'Fill in the placeholders first: --yes refuses a file that still has them.'
+/** One reason `--yes` would be refused, as data an agent can branch on instead of parsing the sentence below. */
+export type Blocker = { kind: 'placeholders'; paths: string[] } | { kind: 'value-source'; keys: string[] }
+export type DryRunVerdict = { sendable: boolean; blockers: Blocker[] }
+
+/**
+ * Would `--yes` be accepted? Every blocker the CLI knows of, in the order the dry run's sentence checks them.
+ * `sendable: true` means nothing HERE refuses it; whether the payload is valid is still the server's question.
+ */
+export function dryRunVerdict(plan: SyncPlan, unfilled: string[]): DryRunVerdict {
+  const blockers: Blocker[] = []
+  if (unfilled.length > 0) blockers.push({ kind: 'placeholders', paths: unfilled })
   const refused = plan.inputs.filter((input) => input.change.startsWith('refused'))
-  if (refused.length > 0) {
-    return `--yes would be refused: an existing input's value source never changes (${refused.map((i) => i.key).join(', ')}). Use a new key, or keep its value source.`
-  }
-  return 'Run again with --yes to send it.'
+  if (refused.length > 0) blockers.push({ kind: 'value-source', keys: refused.map((input) => input.key) })
+  return { sendable: blockers.length === 0, blockers }
+}
+
+/** The dry run's last sentence, rendered from the verdict's first blocker. It never invites a refused `--yes`. */
+function nextStep(verdict: DryRunVerdict): string {
+  const [first] = verdict.blockers
+  if (!first) return 'Run again with --yes to send it.'
+  if (first.kind === 'placeholders')
+    return 'Fill in the placeholders first: --yes refuses a file that still has them.'
+  return `--yes would be refused: an existing input's value source never changes (${first.keys.join(', ')}). Use a new key, or keep its value source.`
 }
 
 async function readCurrent(context: CommandContext, project: string): Promise<CurrentMetric[] | ExitCode> {
@@ -241,9 +258,10 @@ export const northStarSetCommand: Command = {
     const plan = planSync(current, payload as SyncPayload)
 
     if (!send) {
+      const verdict = dryRunVerdict(plan, unfilled)
       context.emit.ok(
-        { dryRun: true, project, ...plan, unfilled },
-        `${describePlan(project, plan, unfilled)}\n\nDry run: nothing was sent. ${nextStep(plan, unfilled)}`
+        { dryRun: true, project, ...plan, unfilled, ...verdict },
+        `${describePlan(project, plan, unfilled)}\n\nDry run: nothing was sent. ${nextStep(verdict)}`
       )
       return EXIT.OK
     }

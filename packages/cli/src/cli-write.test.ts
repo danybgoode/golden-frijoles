@@ -852,6 +852,110 @@ test("north-star set: a refused input turns the dry run's last line into a warni
   assert.match(out.join('\n'), /--yes would be refused: .*\(seeds_groomed\)/)
 })
 
+// cli-think-skills-followups S1.1 — the dry run's verdict as data. Each case pairs the `--json` verdict with the human
+// sentence rendered from it, so the two are checked against the same file and can't drift apart.
+const VERDICT_CASES: Array<{
+  name: string
+  payload: unknown
+  current: unknown[]
+  verdict: { sendable: boolean; blockers: unknown[] }
+  sentence: RegExp
+}> = [
+  {
+    name: 'an unfilled template',
+    payload: {
+      metric: { key: '<metric_key>', name: 'Named' },
+      inputs: [{ key: 'real_key', name: '<Input name>', valueSource: 'external_push' }],
+    },
+    current: [],
+    verdict: {
+      sendable: false,
+      blockers: [{ kind: 'placeholders', paths: ['metric.key', 'inputs[0].name'] }],
+    },
+    sentence:
+      /Dry run: nothing was sent\. Fill in the placeholders first: --yes refuses a file that still has them\.$/,
+  },
+  {
+    name: "a file that changes an existing input's value source",
+    payload: PROPOSED,
+    current: [
+      {
+        key: 'other',
+        name: 'Other',
+        description: null,
+        inputs: [
+          { key: 'seeds_groomed', name: 'Seeds groomed', valueSource: 'external_push', sourceEvent: null },
+        ],
+      },
+    ],
+    verdict: { sendable: false, blockers: [{ kind: 'value-source', keys: ['seeds_groomed'] }] },
+    sentence:
+      /Dry run: nothing was sent\. --yes would be refused: an existing input's value source never changes \(seeds_groomed\)\. Use a new key, or keep its value source\.$/,
+  },
+  {
+    // Both at once: a filled key whose value source is still `<…>` differs from the stored one. The sentence names
+    // the FIRST blocker, so it asks for the placeholders, never for a new key.
+    name: 'a file with both blockers',
+    payload: {
+      metric: { key: 'weekly_planned_seeds', name: 'Weekly planned seeds' },
+      inputs: [{ key: 'seeds_groomed', name: 'Seeds groomed', valueSource: '<value_source>' }],
+    },
+    current: [
+      {
+        key: 'weekly_planned_seeds',
+        name: 'Weekly planned seeds',
+        description: null,
+        inputs: [
+          { key: 'seeds_groomed', name: 'Seeds groomed', valueSource: 'external_push', sourceEvent: null },
+        ],
+      },
+    ],
+    verdict: {
+      sendable: false,
+      blockers: [
+        { kind: 'placeholders', paths: ['inputs[0].valueSource'] },
+        { kind: 'value-source', keys: ['seeds_groomed'] },
+      ],
+    },
+    sentence:
+      /Dry run: nothing was sent\. Fill in the placeholders first: --yes refuses a file that still has them\.$/,
+  },
+  {
+    name: 'a clean file',
+    payload: PROPOSED,
+    current: [],
+    verdict: { sendable: true, blockers: [] },
+    sentence: /Dry run: nothing was sent\. Run again with --yes to send it\.$/,
+  },
+]
+
+for (const { name, payload, current, verdict, sentence } of VERDICT_CASES) {
+  test(`north-star set --json: ${name} — the dry run says sendable and blockers, and the sentence agrees`, async () => {
+    const json = capture()
+    const code = await run({
+      argv: ['north-star', 'set', 'north-star.md', '--json'],
+      writer: json.writer,
+      env: sandbox(),
+      cwd: workspace(NORTH_STAR_FILE(payload)),
+      fetchImpl: stubNorthStar(current),
+    })
+    assert.equal(code, EXIT.OK)
+    const data = JSON.parse(json.out.join('\n')) as { dryRun: boolean; sendable: unknown; blockers: unknown }
+    assert.equal(data.dryRun, true)
+    assert.deepEqual({ sendable: data.sendable, blockers: data.blockers }, verdict)
+
+    const human = capture()
+    await run({
+      argv: ['north-star', 'set', 'north-star.md'],
+      writer: human.writer,
+      env: sandbox(),
+      cwd: workspace(NORTH_STAR_FILE(payload)),
+      fetchImpl: stubNorthStar(current),
+    })
+    assert.match(human.out.join('\n').trimEnd(), sentence)
+  })
+}
+
 test('north-star set: a json block that is not an object is a usage error, never a stack trace', async () => {
   for (const block of [null, [1, 2], 'text']) {
     const { writer, err } = capture()
