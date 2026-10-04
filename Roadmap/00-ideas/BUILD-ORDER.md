@@ -32,7 +32,7 @@ _a pitch is waiting at the approval gate._
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
-- [Fund at approval: the approval gate is the betting table](seeds/fund-at-approval.md) — #60 · 09 Platform Infra · seed · Chore · risk: Low · appetite S · _docs: status queued_
+- [Fund at approval: the approval gate is the betting table](../09-platform-infra/fund-at-approval/README.md) — #60 · 09 Platform Infra · 0/6 stories · risk: Low · appetite S · _docs: status scaffolded_
 - [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #61 · 09 Platform Infra · 0/14 stories · risk: High · appetite L · _docs: status scaffolded_
 - [Coaches v2: a cold read first, then coaches that read each other, save as they go and leave one-pagers](../09-platform-infra/coaches-v2/README.md) — #62 · 09 Platform Infra · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
 - [Scenarios made PM-operable — define, launch, and kill a scenario from the UI](../01-growth-engine/scenarios-pm-operable/README.md) — #63 · 01 Growth Engine · 10/10 stories · risk: High · appetite M · _docs: status in-progress_

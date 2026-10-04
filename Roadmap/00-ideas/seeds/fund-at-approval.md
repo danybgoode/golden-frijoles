@@ -1,14 +1,14 @@
 ---
 title: "Fund at approval: the approval gate is the betting table"
 slug: fund-at-approval
-status: queued
+status: scaffolded
 area: "09"
 type: chore
 priority: null
 appetite: S
 underwritten_by: wave-2026-10-04-launch
 risk: low
-epic: null
+epic: "09-platform-infra/fund-at-approval"
 build_order: 60
 updated: 2026-10-04
 intent_ask: verbatim
