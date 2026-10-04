@@ -20,6 +20,7 @@ import {
   isDocFile,
   resolveCurrentPr,
   runAntigravity,
+  agyFailureKind,
   runDevin,
   AGENTS,
   checkAgyVersion,
@@ -910,4 +911,61 @@ test('devinErrorLine keeps the Error: line, not the JSON tail', async () => {
   assert.equal(devinErrorLine(stderr), 'Error: Agent error: Your weekly usage quota has been exhausted. (trace ID: abc)');
   assert.equal(devinErrorLine('warming up\nsomething broke\n}'), 'something broke');
   assert.equal(devinErrorLine(''), 'unknown error');
+});
+
+// agy 1.2.16 exits 3 with the reason on stderr (probed 2026-10-04). Quota and capacity mean opposite things.
+const AGY_QUOTA = {
+  status: 3,
+  stdout: '',
+  stderr:
+    'error: Individual quota reached. Please upgrade your subscription to increase your limits. Resets in 155h5m1s.\n' +
+    'AGY_ERROR: {"short_error":"RESOURCE_EXHAUSTED (code 429): Individual quota reached. Resets in 155h5m1s."}\n',
+};
+const AGY_NO_CAPACITY = {
+  status: 3,
+  stdout: '',
+  stderr:
+    'error: Our servers are experiencing high traffic right now, please try again in a minute. ' +
+    '(UNAVAILABLE (code 503): No capacity available for model gpt-oss-120b-medium on the server)\n',
+};
+
+test('agyFailureKind tells a weekly quota from a passing capacity shortage', () => {
+  assert.equal(agyFailureKind(AGY_QUOTA.stderr), 'quota');
+  assert.equal(agyFailureKind(AGY_NO_CAPACITY.stderr), 'capacity');
+  assert.equal(agyFailureKind('boom: bad flag'), null);
+});
+
+test('runAntigravity: a quota-capped primary falls back; a no-capacity fallback is retried on the SAME model, not called quota', () => {
+  const { spawn, calls } = spawnSeq([
+    AGY_QUOTA,
+    AGY_NO_CAPACITY,
+    { status: 0, stdout: 'FALLBACK FINDINGS\n', stderr: '' },
+  ]);
+  const slept = [];
+  const warned = [];
+  const out = runAntigravity('P', {}, { spawn, warn: (m) => warned.push(m), sleep: (ms) => slept.push(ms) });
+  assert.equal(out, 'FALLBACK FINDINGS');
+  assert.deepEqual(
+    calls.map((c) => c.args[3]),
+    [AGY_MODEL, AGY_FALLBACK_MODEL, AGY_FALLBACK_MODEL],
+    'quota is not retried (a weekly window); capacity is'
+  );
+  assert.equal(slept.length, 1);
+  assert.match(warned.join('\n'), /quota reached, resets in 155h5m1s/);
+  assert.match(warned.join('\n'), /no capacity right now \(not quota\)/);
+});
+
+test('runAntigravity: when both fail, the message names each model’s own cause', () => {
+  const { spawn } = spawnSeq([AGY_QUOTA, AGY_NO_CAPACITY, AGY_NO_CAPACITY, AGY_NO_CAPACITY]);
+  const errs = [];
+  const origWrite = process.stderr.write;
+  process.stderr.write = (m) => (errs.push(String(m)), true);
+  try {
+    assert.equal(runAntigravity('P', { soft: true }, { spawn, warn: noWarn, sleep: () => {} }), null);
+  } finally {
+    process.stderr.write = origWrite;
+  }
+  const msg = errs.join('');
+  assert.match(msg, new RegExp(`"${AGY_MODEL}": quota reached, resets in 155h5m1s`));
+  assert.match(msg, new RegExp(`"${AGY_FALLBACK_MODEL}": no capacity after 3 tries \\(transient, NOT quota`));
 });
