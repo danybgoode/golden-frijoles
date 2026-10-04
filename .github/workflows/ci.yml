@@ -23,8 +23,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          # format-changed, the coverage ratchet and build-order's extractor all diff against history; a shallow
-          # clone makes the first two no-op silently.
+          # format-changed and the coverage ratchet diff against the PR base; a shallow clone makes them no-op
+          # silently.
           fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
@@ -35,8 +35,10 @@ jobs:
         run: node scripts/check-template-drift.mjs
       - name: BUILD-ORDER.md is up to date
         run: node scripts/build-order.mjs --check
-      - name: Jev — eval replay + shadow expiry
-        run: node scripts/jev-eval.mjs
+      # Replay only. Shadow expiry is a DATE, so here it would turn every unrelated PR red; jev-expiry.yml runs it
+      # daily instead, and that red run is what forces the promote/tune/drop decision.
+      - name: Jev — eval replay
+        run: node scripts/jev-eval.mjs --no-expiry
       - name: Permissions contract
         run: node scripts/permissions-smoke.mjs
       - name: Script parity with the template
@@ -74,6 +76,7 @@ jobs:
   e2e:
     name: Playwright vs local Supabase + local server
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -122,7 +125,8 @@ jobs:
           set -euo pipefail
           ./node_modules/.bin/next start apps/web --hostname 127.0.0.1 --port 3100 > /tmp/off-server.log 2>&1 &
           off_pid=$!
-          trap 'kill "$off_pid" 2>/dev/null || true; wait "$off_pid" 2>/dev/null || true' EXIT
+          # SIGTERM, then SIGKILL after 2s: a server that ignores TERM must not hang the job.
+          trap 'kill "$off_pid" 2>/dev/null; sleep 2; kill -9 "$off_pid" 2>/dev/null; wait "$off_pid" 2>/dev/null || true' EXIT
           for i in $(seq 1 30); do curl -sf http://127.0.0.1:3100/llms.txt > /dev/null && break; sleep 1; done
           curl -sf http://127.0.0.1:3100/llms.txt > /dev/null || { echo "::error::OFF app never became ready"; cat /tmp/off-server.log; exit 1; }
           ./node_modules/.bin/playwright test --config=apps/web/playwright.config.ts --project=api \

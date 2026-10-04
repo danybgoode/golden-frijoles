@@ -21,7 +21,8 @@ const playwright = join(root, 'node_modules/.bin/playwright');
 const normalPort = 3110;
 const darkPort = 3111;
 const syncWithoutServingPort = 3112;
-// Where this runner deliberately differs from CI's lit server. Locally it exercises MORE than CI, never less.
+// Where this runner deliberately differs from CI's lit server: it turns two owner-mutation gates ON, so their lit
+// suites run here. The one cost: scenario-authoring-dark.authed.spec.ts skips locally (CI runs it).
 const LOCAL_OVERRIDES = {
   // Both enable owner mutation surfaces CI keeps off; locally they are on so scenario-authoring.authed and the
   // flag-catalog-sync specs run somewhere.
