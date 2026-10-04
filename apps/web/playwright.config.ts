@@ -54,8 +54,9 @@ export default defineConfig({
   use: {
     baseURL,
     // On CI every red test leaves something to open (ci-diet S3.1): the first failed attempt's trace is kept, and a
-    // screenshot of the failure. Each e2e job uploads `apps/web/test-results/` when it fails.
-    trace: process.env.CI ? 'retain-on-first-failure' : 'off',
+    // screenshot of the failure. Each e2e job uploads `apps/web/test-results/` when it fails. A trace records request
+    // headers, and this repo's artifacts are public: never trace a run that carries the bypass secret.
+    trace: process.env.CI && !bypass ? 'retain-on-first-failure' : 'off',
     screenshot: process.env.CI ? 'only-on-failure' : 'off',
     extraHTTPHeaders: {
       Accept: 'application/json',
