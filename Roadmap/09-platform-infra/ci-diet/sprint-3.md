@@ -12,25 +12,25 @@ stories:
     i_want: "a trace, screenshot and server log attached to the run"
     so_that: "a flake gets diagnosed from evidence, not guessed at"
     risk: low
-    status: planned
+    status: done
   - id: S3.2
     title: "Quarantine with expiry; the portfolio loop test is its first tenant"
     as_a: "the product owner"
     i_want: "a known flake to keep running and reporting without blocking unrelated PRs"
     so_that: "nobody merges red out of habit, and nobody deletes the test either"
     risk: high
-    status: planned
+    status: done
   - id: S3.3
     title: "browser runs nightly; the Pod Report push leaves PR events"
     as_a: "the product owner"
     i_want: "the dead browser suite run somewhere, and PR check lists free of unrelated skipped jobs"
     so_that: "a suite no pipeline runs stops decaying, and a PR's checks are only about the PR"
     risk: low
-    status: planned
+    status: done
 ---
 # CI diet — Sprint 3: S3 Evidence and hygiene
 
-**Status:** ⬜ not started
+**Status:** ✅ shipped 2026-10-04: #258, squash-merged as `a081953` (S3.1–S3.3 and their review fixes)
 
 ## Build contract (locked by the architect before the builder started — README § Architecture lock)
 Cite, don't restate: the epic README's **D3, D7, D8**. The lock decides the quarantine mechanism's shape: a Playwright
@@ -94,3 +94,20 @@ Env: GitHub.
    → `portfolio-loop-flake.md` and `landing-browser-spec-red.md` exist.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+### Walkthrough as run (2026-10-04, by the builder)
+1. **#258's checks** (run [37179981211](https://github.com/danybgoode/golden-frijoles/actions/runs/37179981211)) → a non-blocking `Quarantined tests` job, green, whose summary
+   names the portfolio loop test, owner Daniel, expiry 2026-10-18. A preview deploy leaves one skipped Pod Report row
+   (lock C8). ✅
+2. **The nightly's `workflow_dispatch` run** (after merge, run [37180389744](https://github.com/danybgoode/golden-frijoles/actions/runs/37180389744)) → it ran the `browser`
+   project: 59 passed / 1 skipped / **5 failed** (already red on `main`; seed `landing-browser-spec-red`, now listing
+   all five). The quarantine check passed, evidence was uploaded, and the **Telegram ping was delivered** (`✓ ping
+   delivered`). ✅
+3. **The trace** from the deliberately failing re-run (a scratch PR, run [37178830880](https://github.com/danybgoode/golden-frijoles/actions/runs/37178830880), artifact
+   `e2e-api-failure`) → `…-this-fails-on-purpose-api/trace.zip` records the GET and the failing `expect`. Opening it in
+   `npx playwright show-trace` is the step **owed to Daniel**. ⏳
+4. **`Roadmap/00-ideas/seeds/`** → `portfolio-loop-flake.md` and `landing-browser-spec-red.md` exist. ✅
+
+**Found by the fresh reviewer:** the quarantine check failed closed in the static job on every PR (listing imports a
+spec that reads Supabase env at load), and a quarantine would have silently stopped a dark or browser test from
+running. Both are fixed. **Decided by Daniel:** the loop test's authz wiring goes unguarded for 14 days at most.

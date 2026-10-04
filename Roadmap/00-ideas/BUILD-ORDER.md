@@ -17,7 +17,7 @@ _seeds with no pitch yet._
 - [Scenarios freeze: archive the epic, correct the landing's SecOps claim, deprecate the SDK scenario API](seeds/scenarios-freeze.md) — #36 · 01 Growth Engine · seed · Chore · risk: Low · appetite S · _docs: status raw_
 - [Verify module: the verification depth ladder as a product (after the spike)](seeds/verify-module.md) — #54 · 09 Platform Infra · seed · Feature · risk: High · appetite L · _docs: status raw_
 - [A delivery whose settle keeps failing is re-sent every 5 minutes, uncounted and unlogged](seeds/delivery-stale-reclaim-uncounted.md) — 01 Growth Engine · seed · Bug · risk: High · appetite S · _docs: status raw_
-- [landing.browser.spec.ts is red on main, and only the nightly run sees it](seeds/landing-browser-spec-red.md) — 02 Commercial · seed · Bug · risk: Low · appetite S · _docs: status raw_
+- [Five browser-project specs are red on main, and only the nightly run sees them](seeds/landing-browser-spec-red.md) — 02 Commercial · seed · Bug · risk: Low · appetite S · _docs: status raw_
 - [perf-probe only requests the hosts a project names](seeds/perf-probe-target-allowlist.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
 - [Template scripts run when invoked through a symlinked path](seeds/script-ismain-realpath.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
 - [The portfolio loop test fails intermittently in CI and has been quarantined](seeds/portfolio-loop-flake.md) — 02 Commercial · seed · Bug · risk: Low · appetite S · _docs: status raw_
@@ -30,7 +30,7 @@ _a pitch is waiting at the approval gate._
 - [Analytics visualization — the charting-dependency decision (spike), then the layer](seeds/analytics-visualization-layer.md) — #14 · 01 Growth Engine · seed · Spike · risk: Low · appetite S · _docs: status ready_
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
 
-## Ready to build (9)
+## Ready to build (8)
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
@@ -41,7 +41,6 @@ _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 - [Kickoff generators run from anywhere](../09-platform-infra/kickoff-generator-path/README.md) — #56 · 09 Platform Infra · 0/5 stories · risk: Low · appetite M · _docs: status scaffolded_
 - [CLI follow-ups from think-skills](../09-platform-infra/cli-think-skills-followups/README.md) — #57 · 09 Platform Infra · 0/2 stories · risk: Low · appetite S · _docs: status scaffolded_
 - [Several North Star metrics, one reading rule](../01-growth-engine/north-star-multi-metric-read/README.md) — #58 · 01 Growth Engine · 0/1 stories · risk: Low · appetite S · _docs: status scaffolded_
-- [CI diet](../09-platform-infra/ci-diet/README.md) — #59 · 09 Platform Infra · 6/9 stories · risk: High · appetite M · _docs: status scaffolded_
 - [Board renders priority where it should render build_order](seeds/build-order-render-fix.md) — 09 Platform Infra · seed · Chore · risk: Low · appetite S · _docs: status queued_
 
 ## Building — live only
@@ -52,10 +51,11 @@ _a work branch is on origin. Not in this committed file: `node scripts/build-ord
 
 _a PR is ready for review, or merged and waiting for its close-out. Not in this committed file: `node scripts/build-order.mjs --live` or the Hub board._
 
-## Shipped (50)
+## Shipped (51)
 
 _merged, deployed and closed._
 
+- [CI diet](../09-platform-infra/ci-diet/README.md) — #59 · 09 Platform Infra · 9/9 stories · risk: High · appetite M · _docs: status shipped_
 - [Live build view: the band moves while the agent works, from facts no agent writes ✅](../09-platform-infra/live-build-view/README.md) — #55 · 09 Platform Infra · 7/7 stories · risk: High · appetite M · _docs: status shipped_
 - [✅ Epic: Think skills — PMF Narrative, North Star and Risk Validation ship in the plugin and write files groom reads](../09-platform-infra/think-skills/README.md) — #53 · 09 Platform Infra · 7/7 stories · risk: High · appetite M · _docs: status shipped_
 - [✅ Epic: Sketch specs — a surface spec renders the grey wireframe and becomes the state contract](../09-platform-infra/sketch-specs/README.md) — #52 · 09 Platform Infra · 5/5 stories · risk: Low · appetite M · _docs: status shipped_

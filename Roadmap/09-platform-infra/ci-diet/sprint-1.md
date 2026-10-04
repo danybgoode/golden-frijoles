@@ -30,7 +30,7 @@ stories:
 ---
 # CI diet — Sprint 1: S1 Less, same behaviour
 
-**Status:** ✅ shipped 2026-10-04 — #246 squash-merged as `000fc5e` (stories: `2fcb569` S1.1, `451d3e5` S1.2, `cea0564` S1.3, fixes `d371419` `5120382` `d463655`)
+**Status:** ✅ shipped 2026-10-04 — #246, squash-merged as `000fc5e` (S1.1–S1.3 and their review fixes)
 
 ## Build contract (locked by the architect before the builder started — README § Architecture lock)
 Cite, don't restate: the epic README's **D1, D4, D9**. Before any edit, record the baseline in the README: the static
@@ -108,6 +108,6 @@ If any step fails, note the step number + what you saw — that's the bug report
 4. **ci.yml** → 192 lines, `grep -cE "_ENABLED: '(true|false)'"` → 0. ✅
 
 **Found and fixed during the sprint:** under `set -e`, the OFF server's EXIT trap turned a `kill -9` on an
-already-exited process into a red step with 30/30 passed (`d463655`). **Decided by Daniel:** Jev's shadow expiry runs
+already-exited process into a red step with 30/30 passed (fixed before merge). **Decided by Daniel:** Jev's shadow expiry runs
 daily only (`jev-eval --no-expiry` in the PR gate; plugin/kit 0.26.2), and Dependabot alerts + security updates are now
 ON (enabled by the builder on his instruction, verified: `dependabot_security_updates: enabled`).
