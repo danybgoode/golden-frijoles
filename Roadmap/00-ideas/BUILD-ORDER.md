@@ -33,7 +33,7 @@ _a pitch is waiting at the approval gate._
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
 - [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #61 · 09 Platform Infra · 0/14 stories · risk: High · appetite L · _docs: status scaffolded_
-- [Coaches v2: a cold read first, then coaches that read each other, save as they go and leave one-pagers](../09-platform-infra/coaches-v2/README.md) — #62 · 09 Platform Infra · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
+- [Coaches v2: a cold read first, then coaches that read each other, save as they go and leave one-pagers](../09-platform-infra/coaches-v2/README.md) — #62 · 09 Platform Infra · 0/9 stories · risk: Low · appetite M · _docs: status scaffolded_
 - [Scenarios made PM-operable — define, launch, and kill a scenario from the UI](../01-growth-engine/scenarios-pm-operable/README.md) — #63 · 01 Growth Engine · 10/10 stories · risk: High · appetite M · _docs: status in-progress_
 - [CMS-neutral experiment integration + Payload go/no-go](../01-growth-engine/cms-integration-spike/README.md) — #64 · 01 Growth Engine · 0/6 stories · risk: Low · _docs: status scaffolded_
 - [One plugin, one install — Golden Frijoles ships as a public plugin whose skills run in anyone's repo](../09-platform-infra/golden-frijoles-plugin/README.md) — #65 · 09 Platform Infra · 14/23 stories · risk: High · appetite L · _docs: status in-progress_

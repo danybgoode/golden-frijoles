@@ -4,7 +4,7 @@ sprint: 2
 title: "Shared coach behaviours: progress, options, save, check"
 risk: low
 phase: Shaping
-stories_total: 3
+stories_total: 4
 stories:
   - id: S2.1
     title: "One shared coach reference"
@@ -27,6 +27,13 @@ stories:
     so_that: "the coach does the homework honestly and my strategy stays mine"
     risk: low
     status: planned
+  - id: S2.4
+    title: "Ladder up: an example becomes a need, with evidence"
+    as_a: "a founder answering the narrative coach"
+    i_want: "the coach to turn each example I give into the need behind it, check it against outside evidence, and ask me to confirm before it becomes a dimension or a persona line"
+    so_that: "my strategy and one-pagers carry real goals and frustrations, not anecdotes"
+    risk: low
+    status: planned
 ---
 # Coaches v2 — Sprint 2: Shared coach behaviours: progress, options, save, check
 
@@ -47,6 +54,11 @@ stories:
 ### Story 2.3 — Delegation, the product check and private strategy
 **As a** a maker with a real product on a public repo, **I want** an options brief when I hand a step over (marked proposed), claims labelled true today or aspirational against my repo, and the strategy folder git-ignored unless I opt in, **so that** the coach does the homework honestly and my strategy stays mine.
 **Acceptance:** A delegated section is `proposed` until I agree; an aspirational benefit is labelled in the file; a public repo gets the folder ignored by default.
+**Risk:** low
+
+### Story 2.4 — Ladder up: an example becomes a need, with evidence
+**As a** founder answering the narrative coach, **I want** the coach to turn each example I give into the need behind it, check it against outside evidence, and ask me to confirm before it becomes a dimension or a persona line, **so that** my strategy and one-pagers carry real goals and frustrations, not anecdotes.
+**Acceptance:** A fixture conversation where the founder answers with three anecdotes produces three needs, each with a source or a "hypothesis" label, and none of the anecdotes verbatim in `narrative.md` or the persona poster; the persona poster labels every line sourced, agreed or hypothesis. (Dogfood F34: on 2026-10-04 the coach wrote the founder's career anecdotes down as the persona's frustrations and drivers.)
 **Risk:** low
 
 ## Sprint QA

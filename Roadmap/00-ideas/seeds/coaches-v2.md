@@ -84,6 +84,7 @@ already proved.
 | A shared coach reference every coach reads: play back agreed files; save a draft after each step; park early answers; options brief when delegated; "true today / aspirational" against the repo | One behaviour, three coaches (F8, F11, F13, F14, F17, F19) |
 | Strategy folder git-ignored by default, opt-in to commit | Strategy stays private on public repos (F2) |
 | `narrative`: a distil-and-test step; pick one person before the problem | F7, F9 |
+| `narrative`: a ladder-up step (example → need → evidence, confirmed by the founder) before anything becomes a dimension or persona line | F34: anecdotes became the persona's frustrations |
 | `north-star`: run candidates against 4–5 customer scenarios | Caught two leaks in this run (F17) |
 | `riskiest-assumption`: reads the North Star too; carries forward risks from earlier coaches | F19 |
 | CLI version in the send command comes from the kit version, not a literal | F15 |
