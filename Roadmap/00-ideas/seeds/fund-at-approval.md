@@ -1,7 +1,7 @@
 ---
 title: "Fund at approval: the approval gate is the betting table"
 slug: fund-at-approval
-status: scaffolded
+status: shipped
 area: "09"
 type: chore
 appetite: S

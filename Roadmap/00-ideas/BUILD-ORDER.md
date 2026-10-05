@@ -28,11 +28,10 @@ _a pitch is waiting at the approval gate._
 - [Analytics visualization — the charting-dependency decision (spike), then the layer](seeds/analytics-visualization-layer.md) — #14 · 01 Growth Engine · seed · Spike · risk: Low · appetite S · _docs: status ready_
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
 
-## Ready to build (8)
+## Ready to build (7)
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
-- [Fund at approval: the approval gate is the betting table](../09-platform-infra/fund-at-approval/README.md) — #60 · 09 Platform Infra · 6/6 stories · risk: Low · appetite S · _docs: status scaffolded_
 - [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #61 · 09 Platform Infra · 0/14 stories · risk: High · appetite L · _docs: status scaffolded_
 - [Coaches v2: a cold read first, then coaches that read each other, save as they go and leave one-pagers](../09-platform-infra/coaches-v2/README.md) — #62 · 09 Platform Infra · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
 - [Scenarios made PM-operable — define, launch, and kill a scenario from the UI](../01-growth-engine/scenarios-pm-operable/README.md) — #63 · 01 Growth Engine · 10/10 stories · risk: High · appetite M · _docs: status in-progress_
@@ -49,10 +48,11 @@ _a work branch is on origin. Not in this committed file: `node scripts/build-ord
 
 _a PR is ready for review, or merged and waiting for its close-out. Not in this committed file: `node scripts/build-order.mjs --live` or the Hub board._
 
-## Shipped (55)
+## Shipped (56)
 
 _merged, deployed and closed._
 
+- [Fund at approval: the approval gate is the betting table](../09-platform-infra/fund-at-approval/README.md) — #60 · 09 Platform Infra · 6/6 stories · risk: Low · appetite S · _docs: status shipped_
 - [CI diet](../09-platform-infra/ci-diet/README.md) — #59 · 09 Platform Infra · 9/9 stories · risk: High · appetite M · _docs: status shipped_
 - [CLI follow-ups from think-skills ✅](../09-platform-infra/cli-think-skills-followups/README.md) — #57 · 09 Platform Infra · 2/2 stories · risk: Low · appetite S · _docs: status shipped_
 - [Kickoff generators run from anywhere ✅](../09-platform-infra/kickoff-generator-path/README.md) — #56 · 09 Platform Infra · 5/5 stories · risk: Low · appetite M · _docs: status shipped_

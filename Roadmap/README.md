@@ -364,6 +364,12 @@ independently shippable slice of value.
   2026-07-20) with a live demo token on `/install`. Staying on the `vercel.app` domain for v1.
 
 ### 09 · Platform & Infra
+- ✅ [Fund at approval](09-platform-infra/fund-at-approval/README.md): **the approval gate is the betting table.**
+  Approving a pitch in `groom` funds it in the same commit as the scaffold: `fund.mjs` writes a row in the month's
+  cycle file (`Roadmap/bets/wave-YYYY-MM.md`), `underwritten_by:` and a build position, renumbering only the queue.
+  "Approve, don't fund" leaves the pitch `ready`. `build-order.mjs` fails any live bet with no funding record, after
+  an honest 45-row `wave-backfill`. `priority:` is retired. A fixed-scope seed scaffolds from its slug alone, with its
+  acceptance criteria as the stories (dogfood F33). **Shipped 2026-10-04** (#271, plugin + kit 0.28.0).
 - ✅ [Notification rails](09-platform-infra/notification-rails/README.md) (Telegram + Slack
   mechanical push/deploy pings · identical reviewed prose reports · per-channel retry checkpoints)
   — **shipped 2026-07-28** (PR #51); Slack uses a channel-scoped Incoming Webhook and plain-text
@@ -461,6 +467,10 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-04**: `fund-at-approval` **shipped**: one sprint, plugin + kit 0.28.0, ≈$20.74 against a $7–16 quote.
+  - Approving a pitch now funds it, in one commit; nothing leaves grooming scaffolded but unfunded, and the board
+    enforces it.
+  - A fixed-scope seed goes straight from its slug to a scaffolded epic and a kickoff.
 - **2026-10-04**: `cli-think-skills-followups` **shipped**: one sprint, CLI 0.4.1 (the npm publish is owed), ≈$3.79
   against an $11–17 quote.
   - An agent driving `gf north-star set --json` branches on `sendable` and `blockers` instead of parsing a sentence.

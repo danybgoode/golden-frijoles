@@ -3,7 +3,7 @@ epic: fund-at-approval
 sprint: 1
 title: "Fund at approval"
 risk: low
-phase: In review
+phase: Shipped
 stories_total: 6
 stories:
   - id: S1.1
@@ -51,7 +51,7 @@ stories:
 ---
 # Fund at approval: the approval gate is the betting table — Sprint 1: Fund at approval
 
-**Status:** 🟦 In review — all six stories built; PR open
+**Status:** ✅ Shipped — #271, merge `d9f9328` (plugin + kit 0.28.0)
 
 ## Stories
 
