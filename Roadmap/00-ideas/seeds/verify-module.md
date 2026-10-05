@@ -4,7 +4,6 @@ slug: verify-module
 status: raw
 area: "09"
 type: feature
-priority: "audit-wave-D"
 appetite: L
 underwritten_by: null
 risk: high

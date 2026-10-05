@@ -4,11 +4,11 @@ slug: signals-loop
 status: scaffolded
 area: "01"
 type: feature
-priority: null
 risk: high
 epic: "01-growth-engine/signals-loop"
 build_order: 8
 updated: 2026-07-15
+underwritten_by: wave-backfill
 ---
 
 # Scope — E4 Signals loop (the PostHog steal, inverted)

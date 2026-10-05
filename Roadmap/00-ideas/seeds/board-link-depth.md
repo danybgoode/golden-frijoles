@@ -4,7 +4,6 @@ slug: board-link-depth
 status: shipped
 area: "09"
 type: bug
-priority: unranked
 appetite: S
 underwritten_by: null
 risk: low

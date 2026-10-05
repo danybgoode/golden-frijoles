@@ -4,9 +4,8 @@ slug: design-system-rails
 status: scaffolded
 area: "02"
 type: feature
-priority: null
 appetite: L
-underwritten_by: null
+underwritten_by: wave-backfill
 risk: high
 epic: "02-commercial/design-system-rails"
 build_order: 26

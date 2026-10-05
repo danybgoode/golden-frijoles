@@ -4,7 +4,6 @@ slug: project-rules-and-poster-hardening
 status: shipped
 area: "09"
 type: chore
-priority: null
 risk: low
 epic: null
 build_order: null

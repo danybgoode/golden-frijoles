@@ -9,6 +9,7 @@ type: feature
 phase: Shipped
 sprints_total: 3
 stories_total: 11
+underwritten_by: wave-backfill
 ---
 
 # Epic: Landing redesign v2 — the agent harness for product managers

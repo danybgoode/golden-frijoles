@@ -4,11 +4,11 @@ slug: pod-report
 status: scaffolded
 area: "02"
 type: feature
-priority: null
 risk: high
 epic: "02-commercial/pod-report"
 build_order: 7
 updated: 2026-07-15
+underwritten_by: wave-backfill
 ---
 
 # Scope — E3 Pod Report + Roadmap Hub (the rendering primitive)

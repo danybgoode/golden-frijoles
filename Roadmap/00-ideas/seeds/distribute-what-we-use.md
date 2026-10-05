@@ -4,9 +4,8 @@ slug: distribute-what-we-use
 status: scaffolded
 area: "09"
 type: feature
-priority: "single-product-wave-B"
 appetite: M
-underwritten_by: null
+underwritten_by: wave-backfill
 risk: high
 epic: "09-platform-infra/distribute-what-we-use"
 build_order: 47

@@ -4,9 +4,8 @@ slug: semantic-lint
 status: scaffolded
 area: "09"
 type: feature
-priority: "single-product-wave-B"
 appetite: S
-underwritten_by: null
+underwritten_by: wave-backfill
 risk: low
 epic: "09-platform-infra/semantic-lint"
 build_order: 49

@@ -4,9 +4,8 @@ slug: kickoff-generator-path
 status: scaffolded
 area: "09"
 type: bug
-priority: null
 appetite: M
-underwritten_by: null
+underwritten_by: wave-backfill
 risk: low
 epic: "09-platform-infra/kickoff-generator-path"
 build_order: 56

@@ -4,11 +4,11 @@ slug: growth-engine-v1
 status: scaffolded
 area: "01"
 type: feature
-priority: null
 risk: low
 epic: "01-growth-engine/growth-engine-v1"
 build_order: 1
 updated: 2026-07-13
+underwritten_by: wave-backfill
 ---
 
 # Growth Engine v1 — scope seed (mirror)

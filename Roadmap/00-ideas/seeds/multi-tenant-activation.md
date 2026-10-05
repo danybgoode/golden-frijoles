@@ -4,11 +4,11 @@ slug: multi-tenant-activation
 status: scaffolded
 area: "02"
 type: feature
-priority: null
 risk: high
 epic: "02-commercial/multi-tenant-activation"
 build_order: 3
 updated: 2026-07-15
+underwritten_by: wave-backfill
 ---
 
 # Scope — E2 Multi-tenant activation (credentials, signup, isolation, the CTA flip)

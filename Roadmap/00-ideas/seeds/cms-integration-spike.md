@@ -4,11 +4,11 @@ slug: cms-integration-spike
 status: scaffolded
 area: "01"
 type: spike
-priority: null
 risk: low
 epic: "01-growth-engine/cms-integration-spike"
 build_order: 18
 updated: 2026-07-27
+underwritten_by: wave-backfill
 ---
 
 # Spike — E6 CMS-neutral integration + Payload decision

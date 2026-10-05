@@ -4,9 +4,8 @@ slug: console-ia-overhaul
 status: scaffolded
 area: "02"
 type: feature
-priority: null
 appetite: M
-underwritten_by: null
+underwritten_by: wave-backfill
 risk: high
 epic: "02-commercial/console-ia-overhaul"
 build_order: 25

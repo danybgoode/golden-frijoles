@@ -4,9 +4,8 @@ slug: flags-visual-rule-builder
 status: scaffolded
 area: "01"
 type: feature
-priority: "wave-2026-08-08"
 appetite: M
-underwritten_by: "Roadmap/bets/wave-2026-08-08.md"
+underwritten_by: wave-2026-08-08
 risk: high
 epic: "01-growth-engine/flags-visual-rule-builder"
 build_order: 15

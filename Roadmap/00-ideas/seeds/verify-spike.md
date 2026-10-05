@@ -4,9 +4,8 @@ slug: verify-spike
 status: scaffolded
 area: "09"
 type: spike
-priority: "audit-wave-B"
 appetite: S
-underwritten_by: null
+underwritten_by: wave-backfill
 risk: low
 epic: "09-platform-infra/verify-spike"
 build_order: 37

@@ -4,9 +4,8 @@ slug: landing-maker-ops
 status: scaffolded
 area: "02"
 type: feature
-priority: "wave-2026-08-19"
 appetite: M
-underwritten_by: "Roadmap/bets/wave-2026-08-19-maker-ops.md"
+underwritten_by: wave-2026-08-19-maker-ops
 risk: low
 epic: "02-commercial/landing-maker-ops"
 build_order: 20

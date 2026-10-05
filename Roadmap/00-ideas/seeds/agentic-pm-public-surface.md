@@ -4,9 +4,8 @@ slug: agentic-pm-public-surface
 status: queued
 area: "02"
 type: feature
-priority: "wave-2026-08-20"
 appetite: L
-underwritten_by: "Roadmap/bets/wave-2026-08-20-agentic-pm.md"
+underwritten_by: wave-2026-08-20-agentic-pm
 risk: low
 epic: "02-commercial/agentic-pm-public-surface"
 build_order: 23

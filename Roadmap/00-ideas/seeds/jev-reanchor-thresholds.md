@@ -4,7 +4,6 @@ slug: jev-reanchor-thresholds
 status: shipped   # spike decided 2026-09-28: clean negative, see ## Decision
 area: "09"
 type: spike
-priority: "single-product-wave-A"
 appetite: S
 underwritten_by: null
 risk: low

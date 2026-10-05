@@ -4,11 +4,11 @@ slug: experiment-governance-v2
 status: scaffolded
 area: "01"
 type: feature
-priority: null
 risk: high
 epic: "01-growth-engine/experiment-governance-v2"
 build_order: 6
 updated: 2026-07-21
+underwritten_by: wave-backfill
 ---
 
 # Scope — Experiment governance v2 — registry, metrics, guardrails, and decision record

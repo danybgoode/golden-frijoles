@@ -4,11 +4,11 @@ slug: event-destination-router
 status: scaffolded
 area: "01"
 type: feature
-priority: null
 risk: high
 epic: "01-growth-engine/event-destination-router"
 build_order: 4
 updated: 2026-07-20
+underwritten_by: wave-backfill
 ---
 
 # Scope — Event destination router — reliable fan-out to CRM and downstream tools

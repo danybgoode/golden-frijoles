@@ -211,7 +211,6 @@ async function main() {
       // board-sinks-and-scrumban S3.3 — the six-stage word, only when the board has a `Stage` select (see stageProp).
       ...(stageProp ? { Stage: sel(row.stage) } : {}),
       Area: sel(row.area),
-      Priority: sel(row.priority),
       Type: sel(row.type),
       Risk: sel(row.risk),
       Grain: sel(row.grain),

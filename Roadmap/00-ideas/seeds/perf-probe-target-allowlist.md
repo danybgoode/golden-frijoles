@@ -4,7 +4,6 @@ slug: perf-probe-target-allowlist
 status: raw
 area: "09"
 type: chore
-priority: unranked
 updated: 2026-09-24
 ---
 

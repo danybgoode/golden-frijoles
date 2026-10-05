@@ -4,9 +4,8 @@ slug: analytics-visualization-layer
 status: ready
 area: "01"
 type: spike
-priority: "wave-2026-08-08"
 appetite: S
-underwritten_by: "Roadmap/bets/wave-2026-08-08.md"
+underwritten_by: wave-2026-08-08
 risk: low
 epic: null
 build_order: 14

@@ -4,9 +4,8 @@ slug: app-shell-and-agent-rail
 status: queued
 area: "02"
 type: feature
-priority: "wave-2026-08-06"
 appetite: M
-underwritten_by: "Roadmap/bets/wave-2026-08-06.md"
+underwritten_by: wave-2026-08-06
 risk: high
 epic: "02-commercial/app-shell-and-agent-rail"
 build_order: 12

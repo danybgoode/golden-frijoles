@@ -4,9 +4,8 @@ slug: north-star-multi-metric-read
 status: scaffolded
 area: "01"
 type: bug
-priority: null
 appetite: S
-underwritten_by: null
+underwritten_by: wave-backfill
 risk: low
 epic: "01-growth-engine/north-star-multi-metric-read"
 build_order: 58

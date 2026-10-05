@@ -62,6 +62,13 @@ test('compactStory keeps the id and title, drops shipped notes, clips long title
   assert.equal(compactStory('not a story heading'), 'not a story heading');
 });
 
+test('an L bet carries the one-line re-bet at each wave boundary; S and M do not (fund-at-approval D7)', () => {
+  const l = buildEpicRules({ risk: 'LOW', texts: [''], appetite: 'L', slug: 'big-bet' });
+  assert.match(l, /L bet:.*fund the next wave of `big-bet`\?.*fund\.mjs --slug big-bet --displaced/);
+  assert.equal(buildEpicRules({ risk: 'LOW', texts: [''], appetite: 'M', slug: 'big-bet' }), '');
+  assert.equal(buildEpicRules({ risk: 'LOW', texts: [''] }), '');
+});
+
 test('buildEpicRules picks only the rules this epic needs', () => {
   assert.equal(buildEpicRules({ risk: 'LOW', texts: ['Copy change on the landing page.'] }), '');
   const high = buildEpicRules({ risk: 'HIGH', texts: ['Nothing new is modelled. No new table, no migration.'] });
@@ -216,4 +223,22 @@ test('listEpics: startable only, build order first, ties and unordered epics by 
   const exists = (p) => p === '/r/Roadmap' || p in readmes;
   const out = listEpics('/r', { read: (p) => readmes[p], exists, list: (p) => dirs[p] ?? [] });
   assert.deepEqual(out.map((e) => e.slug), ['alpha', 'beta', 'zeta', 'xray', 'yank']);
+});
+
+test("the L re-bet line finds the epic's seed by its epic: pointer, even when the seed's slug differs", async () => {
+  const { epicKickoffFromDir } = await import('./lib/epic-kickoff.mjs');
+  const files = {
+    '/r/Roadmap/09-x/big/README.md': '---\nstatus: scaffolded\n---\n# Epic: Big\n\n> **Risk:** low\n',
+    '/r/Roadmap/09-x/big/sprint-1.md': '# Big — Sprint 1: One\n\n### Story 1.1 — A\n',
+    '/r/Roadmap/00-ideas/seeds/big-actuals.md': '---\nslug: big-actuals\nappetite: L\nepic: "09-x/big"\n---\n',
+    '/r/Roadmap/00-ideas/seeds/other.md': '---\nslug: other\nappetite: S\nepic: "09-x/other"\n---\n',
+  };
+  const read = (p) => {
+    const k = p.replace(/\/[^/]+\/\.\.\/\.\.\//, '/');
+    if (!(k in files)) throw new Error(`ENOENT ${k}`);
+    return files[k];
+  };
+  const list = (d) => Object.keys(files).filter((k) => k.startsWith(`${d.replace(/\/[^/]+\/\.\.\/\.\.\//, '/')}/`)).map((k) => k.split('/').pop());
+  const { kickoff } = epicKickoffFromDir({ macro: '09-x', slug: 'big', dir: '/r/Roadmap/09-x/big', read, list });
+  assert.match(kickoff, /L bet:.*fund\.mjs --slug big /);
 });

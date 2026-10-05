@@ -4,9 +4,8 @@ slug: methodology-experience
 status: shipped
 area: "02"
 type: feature
-priority: "wave-2026-08-20"
 appetite: L
-underwritten_by: "Roadmap/bets/wave-2026-08-20-methodology.md"
+underwritten_by: wave-2026-08-20-methodology
 risk: low
 epic: "02-commercial/methodology-experience"
 build_order: 22

@@ -4,9 +4,8 @@ slug: think-skills
 status: scaffolded
 area: "09"
 type: feature
-priority: "audit-wave-B"
 appetite: M
-underwritten_by: null
+underwritten_by: wave-backfill
 risk: high
 epic: "09-platform-infra/think-skills"
 build_order: 53

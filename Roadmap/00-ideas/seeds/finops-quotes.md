@@ -4,9 +4,8 @@ slug: finops-quotes
 status: scaffolded
 area: "09"
 type: feature
-priority: "audit-wave-D"
 appetite: M
-underwritten_by: null
+underwritten_by: wave-backfill
 risk: low
 epic: "09-platform-infra/finops"
 build_order: 42

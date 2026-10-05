@@ -4,7 +4,6 @@ slug: scenarios-freeze
 status: raw
 area: "01"
 type: chore
-priority: "audit-wave-A"
 appetite: S
 underwritten_by: null
 risk: low
