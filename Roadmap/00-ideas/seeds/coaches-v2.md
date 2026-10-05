@@ -91,7 +91,7 @@ already proved.
 | Persona and sources rewritten to the brand platform; claude.ai duplicates retired | F3, F4 |
 | "Step N of X" on every coach message, X fixed per coach | The maker always knows where they are |
 | Options to choose from at each step (2–4), researched online when the step leans on the present (competitors, analogs, current case studies); the classic cases kept as fallbacks | Interactive, current, faster than a blank page |
-| `one-pagers.mjs`: renders three standalone sheets from the agreed files (business model canvas, value proposition sheet, persona poster), each a printable HTML page plus Markdown | Quick consultation without rereading the narrative |
+| One-pagers as standard outputs: each coach regenerates the business model canvas, value proposition sheet and persona poster it feeds when its file is agreed (`gf-kit one-pagers` on demand); the narrative template gains a structured persona block | Quick consultation that never drifts from the agreed strategy (PO, 2026-10-05: part of the process, not a one-off) |
 
 ## Scope
 
