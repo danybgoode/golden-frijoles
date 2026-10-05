@@ -8,7 +8,7 @@ area: 09-platform-infra
 risk: low
 type: feature
 sprints_total: 3
-stories_total: 8   # the sum of every sprint's stories_total — keep it in step when a story is added
+stories_total: 9   # the sum of every sprint's stories_total — keep it in step when a story is added
 intent_match: null   # copied from the seed by scaffold-epic (intent-match); the reader at the lock may update it
 quote_low_usd: 22    # ≈ API $ — copied from the seed's `quote:` by scaffold-epic (finops); null = not quoted, never 0
 quote_high_usd: 34
@@ -58,6 +58,7 @@ unchanged. The other-family runner exists (`scripts/lib/cross-agent-cli.mjs`). N
 | 2 | S2.1 One shared coach reference | low |
 | 2 | S2.2 Options, research and current use cases | low |
 | 2 | S2.3 Delegation, the product check and private strategy | low |
+| 2 | S2.4 Ladder up: an example becomes a need, with evidence | low |
 | 3 | S3.1 Per-coach fixes | low |
 | 3 | S3.2 Standalone one-pagers | low |
 | 3 | S3.3 Voice, sources and one copy | low |
