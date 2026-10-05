@@ -5,7 +5,7 @@ status: scaffolded
 area: "09"
 type: feature
 appetite: L
-underwritten_by: wave-backfill
+underwritten_by: wave-2026-09-24
 risk: high
 epic: "09-platform-infra/golden-frijoles-plugin"
 build_order: 34

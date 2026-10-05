@@ -114,13 +114,19 @@ No product primitive is involved: this is planning tooling over `Roadmap/` front
   SKILL.md step 4 names both lists. Found by the end-to-end run on a scratch copy of this Roadmap.
 - **The L re-bet line lives in the epic kickoff** (`buildEpicRules`, appetite L from the README else the seed), not
   only in WAYS-OF-WORKING: the builder reads the kickoff, and that is where it stops at a boundary (D7).
-- **The backfill touched 46 bets, not 43**: 40 seeds (some epics have more than one seed pointing at them) and 6
+- **The backfill funded 45 bets, not 43**: 39 seeds (some epics have more than one seed pointing at them) and 6
   seedless shipped epics, whose README now carries `underwritten_by` (D8, D10). 10 legacy path values normalised;
   `priority:` stripped from all 71 seeds.
 - **Notion's `Priority` column is no longer written** and keeps its last values; deleting it is the product owner's
   call, outside this repo.
 - **`skills/Roadmap/` (the mirror's own copy) was updated too**: its WoW source must byte-match the template's
   (skills CI), and its 00-ideas/bets/SESSION-KICKOFFS copies described the old flow.
+- **Review round 1 (#271)** found, and this branch fixed: `$`-patterns expanding in `String.replace` (title or criterion
+  text corrupted), a `ready` seed's legacy number accepted as a "re-bet" position (the start-number bug again, by
+  another door), a reorder that silently re-funded the bet (now three modes: fund · re-bet · reorder), acceptance
+  criteria parsed from `-` bullets only (14 of 42 seeds → 40 of 42 with numbered lists and any `## Acceptance…`
+  heading), `golden-frijoles-plugin` wrongly in the backfill (it was funded by `wave-2026-09-24`), path segments
+  unvalidated, and the L line missing a seed whose slug differs from its epic's.
 - **groom SKILL.md sits at exactly its 210-line prose budget**; the detail moved to `references/funding.md`.
 
 ## Deploy order

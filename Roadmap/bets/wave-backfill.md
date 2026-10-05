@@ -1,7 +1,7 @@
 # Backfill — bets built with no funding record (2026-10-04)
 
 **This is not a cycle and nothing here was bet.** When fund-at-approval made "scaffolded ⇒ funded" a hard rule
-(`build-order.mjs` fails a live bet with no `underwritten_by`), 46 scaffolded or shipped bets had no funding record:
+(`build-order.mjs` fails a live bet with no `underwritten_by`), 45 scaffolded or shipped bets had no funding record:
 the betting table had been a separate step `groom` never reached. Each now points here, so the rule can go hard on
 day one without inventing history. What each displaced was never written down, so the column says so.
 
@@ -30,7 +30,6 @@ is added to this file again.
 | **flag-serving-and-prd-g**: E5 — Flag control plane + Miyagi migration + resilience/SecOps circuit breakers | — | not recorded |
 | **flags-console-parity**: The flag console a human can operate — Flagsmith-grade IA, terminology and list ergonomics | **M** | not recorded |
 | **frijoles-rebrand-closeout**: Golden Frijoles rebrand close-out — SDK identity, footer cleanup, and authed mobile rail | **S** | not recorded |
-| **golden-frijoles-plugin**: One plugin, one install: Golden Frijoles ships as a public plugin whose skills run in anyone's repo | **L** | not recorded |
 | **growth-engine-v1**: Growth Engine v1 — telemetry ingest, SDK, TARS funnel, North Star, A/B bucketing | — | not recorded |
 | **intent-match**: Intent match (wave 1, advisory): a score for how well the plan captured the ask, routed follow-ups, and a rule for visuals | **M** | not recorded |
 | **kickoff-generator-path**: The kickoff generators run from anywhere: shipped in the kit, named correctly in every doc | **M** | not recorded |
