@@ -1018,6 +1018,10 @@ one-liner + why + date shape.
   partial retry either duplicates the successful channel or asks the writer for different prose.
   Slack’s Incoming Webhook response is plain text (`ok` or an error token), not Telegram JSON—read
   it as text and pin both branches in tests. *(2026-07-28, notification-rails.)*
+- **`String.replace` with a STRING replacement expands `$&`, `$'` and `` $` ``** — a title or acceptance criterion
+  holding one is silently rewritten. Every frontmatter/markdown rewrite takes a function replacer
+  (`s.replace(re, () => text)`); the spec that pinned it fell into the same trap the first time.
+  *(2026-10-04, fund-at-approval review.)*
 - **A scripted `str.replace()` that finds nothing SUCCEEDS SILENTLY — and the test you write alongside
   it can pass while the change never landed.** pod-report S2 added `checkSucceeded()` (accepting both
   GitHub check-run `conclusion` and classic commit-status `state`), unit-tested it, and shipped —
@@ -1188,7 +1192,14 @@ one-liner + why + date shape.
   registration too — one constraint metastasising into three defects across two review rounds.
   Moving the retry into a Route Handler (which can set cookies) deleted the mode and all of its
   consequences at once. When a fix needs a flag/mode to accommodate where it lives, question the
-  location before adding the flag. *(2026-07-21, multi-tenant-activation S2.)*
+  location before adding the flag. *(2026-07-21, multi-tenant-activation S2.)* **When the modes are the feature**
+  (fund · re-bet · reorder), write the input matrix before the code: four review rounds of fund-at-approval were one
+  mode decision re-found case by case, until a 25-case {doc shape × funded × placed × flag} matrix closed it.
+  *(2026-10-04, fund-at-approval.)*
+- **A tool that writes what a board reads must read it the way the board reads it.** `fund.mjs` read
+  `build_order`/`underwritten_by`/`appetite` from the seed while the extractor read the epic README first, so a
+  hand-made README/seed split could be funded twice. Import or mirror the reader's precedence, and spec the mixed
+  state. *(2026-10-04, fund-at-approval.)*
 
 - **An enablement flag flipped at launch is only half a launch — verify by exercising the surface,
   and expect to need a deploy.** The multi-tenant-activation flip looked done (`vercel env add`
