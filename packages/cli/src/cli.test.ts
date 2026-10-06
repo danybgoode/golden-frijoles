@@ -549,7 +549,10 @@ test('\u26a0\ufe0f gf init REFUSES when git does not actually ignore .env.local'
   // checked, on the one property that keeps a live credential out of a public repository.
   const env = sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN, GOLDEN_FRIJOLES_PROJECT: 'acme' })
   const cwd = mkdtempSync(join(tmpdir(), 'gf-tracked-'))
-  const git = (...args: string[]) => execFileSync('git', args, { cwd, stdio: 'ignore' })
+  // Sealed: inside a git hook, GIT_DIR and friends beat `cwd` and `git init` would rewrite the REAL
+  // repository (scripts/git-fixtures-sealed.test.mjs, which does not scan packages/).
+  const sealedEnv = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_')))
+  const git = (...args: string[]) => execFileSync('git', args, { cwd, stdio: 'ignore', env: sealedEnv })
   git('init', '-q')
   git('config', 'user.email', 'spec@example.test')
   git('config', 'user.name', 'spec')
