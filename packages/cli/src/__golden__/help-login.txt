@@ -1,13 +1,15 @@
-gf login — save a CLI token for this machine
+gf login — sign this machine in (browser), or save a CLI token
 
 Usage
   gf login [--token <token>] [--api <url>]
 
-Mint a token at /app/setup/cli in the console, then paste it here.
+At a terminal, opens your browser: confirm the code it shows and this machine
+  is signed in. If browser sign-in is not available, it asks for a token instead — mint
+  one in the console under Setup › CLI access and paste it.
 
-  With no --token, the token is read from STDIN — so it never appears in your shell
-  history or in `ps`. For CI, set GOLDEN_FRIJOLES_TOKEN instead and skip this verb;
-  nothing is written to disk in that case.
+  With --token, or a token piped in, no browser is involved. A pasted token is read
+  from STDIN — so it never appears in your shell history or in `ps`. For CI, set
+  GOLDEN_FRIJOLES_TOKEN instead and skip this verb; nothing is written to disk in that case.
 
 Flags
   --token <token>  the token, instead of reading stdin

@@ -713,6 +713,29 @@ export const ROUTE_MANIFEST: readonly CoverageRow[] = [
     retiresIn: null,
     deferred: null,
   },
+  // account-from-the-terminal · Sprint 2, Story 2.2 — the device-code confirm page `gf login` opens. Built from the
+  // door frame and its primitives (doorlede, doorform, doornote); the canvas SignIn frame it follows is not yet an
+  // approved state, so — like FinOps and the portfolio — it joins the DENOMINATOR with a dated deferral.
+  {
+    route: '/cli/connect',
+    page: 'cli/connect/page.tsx',
+    label: 'Connect your terminal',
+    frame: 'door',
+    seam: 'frame',
+    surface: null,
+    referenceState: null,
+    rendersFromDesignSystem: false,
+    landsIn: 6,
+    retiresIn: null,
+    deferred: {
+      owner: 'Daniel',
+      until: '2026-12-31',
+      why:
+        '/cli/connect renders the door frame from the design system; the canvas SignIn frame is not yet a hashed ' +
+        'state contract. Approve it in the next batch and this row claims coverage. Until then it counts against the ' +
+        'percentage.',
+    },
+  },
   {
     route: '/signup',
     page: 'signup/page.tsx',

@@ -4,7 +4,7 @@ Usage
   gf logout
 
 Removes the local credential only. It does NOT revoke the token — anything else
-  holding it still works. Revoke at /app/setup/cli when that is what you mean.
+  holding it still works. Revoke it in the console (Setup › CLI access) when that is what you mean.
 
 Exit codes
   0  ok         it worked
