@@ -73,6 +73,14 @@ Then Daniel runs both sprints' walkthroughs on production.
 - Both walkthroughs pass, blind.
 **Risk:** low
 
+## Build contract (locked by the architect before the builder started)
+Cites the epic README's D1–D13; nothing here restates them.
+- **2.1** = D7. Files: `lib/console-palette.ts` (+ test), `CommandPalette.tsx`, `ProductShell.tsx` (products prop),
+  new `app/api/internal/epic-index/[projectSlug]/route.ts`.
+- **2.2** = D8 + D9 + D10 + D12. Files: new `lib/screen-words.ts` (+ test), the inventory labels, the page titles,
+  crumbs and list labels the guard finds, board/roadmap stage rendering, `design-system/vocabulary.ts` (+ test).
+- **2.3** = `Roadmap/README.md` only (decision 1 and 2 words, no Golden Beans title), then the walkthroughs.
+
 ## Sprint QA
 - **api spec(s):** S2.1 → a pure-logic spec on the palette entries (kinds, labels, membership), and
   `command-center.authed.spec.ts`; S2.2 → the label module's test, `vocabulary.test.ts`, the visual gate; S2.3 → docs.
