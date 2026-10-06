@@ -6,6 +6,7 @@ import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/
 import {
   isCliWriteApiEnabled,
   isConnectorEnabled,
+  isConnectorWritesEnabled,
   isConnectorWriteToolEnabled,
   isExperimentGovernanceMcpToolEnabled,
   isJourneyMcpToolEnabled,
@@ -20,6 +21,8 @@ import { proposeTaskChange, applyTaskChange } from '@/lib/task-write-staging'
 import { listTasksByProjectId, getTaskByProjectId, promoteEligibleSignals } from '@/lib/tasks'
 import { evaluateFrictionForProject } from '@/lib/friction-eval'
 import { resolveConnectorToken, TOKEN_FORMAT } from '@/lib/connector-tokens'
+import { makerMayWrite } from '@/lib/connector-maker'
+import { DEMO_PROJECT_SLUG } from '@/lib/public-demo'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { getFeatureFunnelByProjectId } from '@/lib/tars-query'
 import { getFeatureImpactByProjectId } from '@/lib/north-star-query'
@@ -43,7 +46,9 @@ export const runtime = 'nodejs'
 // cheap shape check runs BEFORE rate-limiting (not after, per a cross-review catch) — rate-limiting
 // on the raw, unvalidated token first would let a malformed/arbitrarily-long token create an
 // unbounded number of noisy rate_limit_hits keys, one per garbage string an attacker sends.
-async function gate(token: string): Promise<{ ok: true; projectId: string; projectSlug: string } | Response> {
+async function gate(
+  token: string
+): Promise<{ ok: true; projectId: string; projectSlug: string; createdBy: string | null } | Response> {
   if (!isConnectorEnabled()) {
     return Response.json({ error: 'Not found.' }, { status: 404 })
   }
@@ -63,7 +68,12 @@ async function gate(token: string): Promise<{ ok: true; projectId: string; proje
     return Response.json({ error: 'Unauthorized.' }, { status: 401 })
   }
 
-  return { ok: true, projectId: resolved.projectId, projectSlug: resolved.projectSlug }
+  return {
+    ok: true,
+    projectId: resolved.projectId,
+    projectSlug: resolved.projectSlug,
+    createdBy: resolved.createdBy,
+  }
 }
 
 // Every tool call is scoped to this one resolved project — no tool schema below accepts a
@@ -535,6 +545,32 @@ async function resolveFlagWriteActor(
   return membership && isOwner(membership) ? { userId: resolved.userId } : null
 }
 
+/**
+ * account-from-the-terminal · Sprint 3, Story 3.1 (epic D11) — a URL made by a person acts AS that
+ * person, with NO Bearer header: the Claude app's connector settings take only a URL.
+ *
+ * Only when no Bearer key was presented. A caller who sends one gets exactly the answer above,
+ * so a wrong or foreign key never falls through to the URL's own maker. The rule itself is
+ * `makerMayWrite` (`lib/connector-maker.ts`): a maker on the URL, not the demo project, both write
+ * switches on. The owner check is re-resolved here, by project id, every request.
+ */
+async function resolveMakerActor(
+  projectId: string,
+  projectSlug: string,
+  createdBy: string | null
+): Promise<{ userId: string } | null> {
+  const facts = {
+    createdBy,
+    projectSlug,
+    demoProjectSlug: DEMO_PROJECT_SLUG,
+    connectorWritesEnabled: isConnectorWritesEnabled(),
+    cliWritesEnabled: isCliWriteApiEnabled(),
+  }
+  if (!makerMayWrite(facts)) return null
+  const membership = await getMembershipByProjectId(facts.createdBy, projectId)
+  return membership && isOwner(membership) ? { userId: facts.createdBy } : null
+}
+
 export async function POST(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params
   const gated = await gate(token)
@@ -567,7 +603,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
   // Failure is silent here for exactly the reason the write-key resolution above is silent: the
   // observable consequence of missing, unknown, revoked, expired, not-an-owner or belonging-to-
   // another-project is identical — the flag write tools are absent from tools/list.
-  const flagWriteActor = await resolveFlagWriteActor(gated.projectId, presentedKey)
+  const flagWriteActor =
+    (await resolveFlagWriteActor(gated.projectId, presentedKey)) ??
+    (presentedKey ? null : await resolveMakerActor(gated.projectId, gated.projectSlug, gated.createdBy))
 
   const server = buildMcpServer(gated.projectId, gated.projectSlug, writeKeyId, flagWriteActor)
   // Stateless: a fresh server + transport per request, no session ID, no connection reuse —

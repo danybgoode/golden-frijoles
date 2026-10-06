@@ -2,6 +2,8 @@ import 'server-only'
 import { randomBytes } from 'node:crypto'
 import { getSupabaseServiceClient } from './supabase'
 import { getSiteUrl } from './site-url'
+import { DEMO_PROJECT_SLUG } from './public-demo'
+import { makerToStamp } from './connector-maker'
 
 // Story 2.1 (commercial-shell/sprint-2.md) — the MCP connector's per-project credential.
 // Plaintext by design (see the migration's header comment): the value is meant to be openly
@@ -16,7 +18,18 @@ export function generateConnectorToken(): string {
   return `${TOKEN_PREFIX}${randomBytes(24).toString('base64url')}`
 }
 
-export type ResolvedConnectorToken = { ok: true; projectId: string; projectSlug: string } | { ok: false }
+export type ResolvedConnectorToken =
+  | {
+      ok: true
+      projectId: string
+      projectSlug: string
+      /** account-from-the-terminal D11 — the owner who minted it, or null (read-only). */
+      createdBy: string | null
+    }
+  | { ok: false }
+
+/** How stale `last_used_at` may get before a resolve stamps it again (D12). */
+const LAST_USED_RESOLUTION_MS = 60_000
 
 // Same 401 for "malformed", "unknown", and "revoked" — no oracle on which reason, matching the
 // mb pattern this is lifted from.
@@ -26,7 +39,7 @@ export async function resolveConnectorToken(token: string): Promise<ResolvedConn
   const supabase = getSupabaseServiceClient()
   const { data, error } = await supabase
     .from('connector_tokens')
-    .select('project_id, revoked_at, projects(slug)')
+    .select('id, project_id, revoked_at, created_by, last_used_at, projects(slug)')
     .eq('token', token)
     .is('revoked_at', null)
     .maybeSingle()
@@ -41,7 +54,33 @@ export async function resolveConnectorToken(token: string): Promise<ResolvedConn
   const project = data.projects as unknown as { slug: string } | null
   if (!project) return { ok: false }
 
-  return { ok: true, projectId: data.project_id, projectSlug: project.slug }
+  await touchConnectorToken(data.id as string, (data.last_used_at as string | null) ?? null)
+
+  return {
+    ok: true,
+    projectId: data.project_id,
+    projectSlug: project.slug,
+    createdBy: (data.created_by as string | null) ?? null,
+  }
+}
+
+/**
+ * Stamp `last_used_at` — "turns green the first time it is used" (D12). Throttled to once a minute so
+ * a busy connector is not one write per request, and best-effort: bookkeeping must never fail the
+ * request it describes (the `touchCliToken` trade). Awaited, because an un-awaited promise in a
+ * serverless function can be killed when the response is sent.
+ */
+async function touchConnectorToken(tokenId: string, lastUsedAt: string | null): Promise<void> {
+  if (lastUsedAt !== null && Date.now() - Date.parse(lastUsedAt) < LAST_USED_RESOLUTION_MS) return
+  try {
+    const { error } = await getSupabaseServiceClient()
+      .from('connector_tokens')
+      .update({ last_used_at: new Date().toISOString() })
+      .eq('id', tokenId)
+    if (error) console.error('[connector-tokens] touch failed:', { code: error.code ?? 'unknown' })
+  } catch (err) {
+    console.error('[connector-tokens] touch threw:', err instanceof Error ? err.message : err)
+  }
 }
 
 // Story 2.2 — the install page's copy-your-URL field. Read-only by design: v1 has no self-serve
@@ -73,7 +112,15 @@ export async function getActiveConnectorUrl(projectSlug: string): Promise<string
 
 // console-ia-overhaul · Sprint 2, Story 2.1 (epic README, A10) — the signed-in Connect surface.
 
-export type ActiveConnector = { url: string; createdAt: string; tokenId: string }
+export type ActiveConnector = {
+  url: string
+  createdAt: string
+  tokenId: string
+  /** D11: the owner it acts as, or null — a project-only, read-only URL. */
+  createdBy: string | null
+  /** D12: null until the URL is first used. */
+  lastUsedAt: string | null
+}
 
 export type ConnectorStatus =
   | { state: 'absent' }
@@ -124,7 +171,7 @@ export async function getConnectorStatus(projectId: string): Promise<ConnectorSt
   const supabase = getSupabaseServiceClient()
   const { data, error } = await supabase
     .from('connector_tokens')
-    .select('id, token, created_at')
+    .select('id, token, created_at, created_by, last_used_at')
     .eq('project_id', projectId)
     .is('revoked_at', null)
     .order('created_at', { ascending: false })
@@ -142,6 +189,8 @@ export async function getConnectorStatus(projectId: string): Promise<ConnectorSt
       url: `${getSiteUrl()}/api/v1/public/mcp/c/${row.token}`,
       createdAt: row.created_at as string,
       tokenId: row.id as string,
+      createdBy: (row.created_by as string | null) ?? null,
+      lastUsedAt: (row.last_used_at as string | null) ?? null,
     })),
   }
 }
@@ -182,7 +231,11 @@ export type MintedConnectorToken =
  * The caller re-checks ownership AND `CONNECTOR_ENABLED` before reaching here (AGENTS rule #3: the
  * two kill switches are independent, and minting the second must never route around the first).
  */
-export async function mintConnectorToken(projectId: string): Promise<MintedConnectorToken> {
+export async function mintConnectorToken(
+  projectId: string,
+  projectSlug: string,
+  ownerUserId: string
+): Promise<MintedConnectorToken> {
   const supabase = getSupabaseServiceClient()
   const existing = await getConnectorStatus(projectId)
   if (existing.state === 'active') return { ok: false, reason: 'already-active' }
@@ -193,7 +246,13 @@ export async function mintConnectorToken(projectId: string): Promise<MintedConne
   const token = generateConnectorToken()
   const { data, error } = await supabase
     .from('connector_tokens')
-    .insert({ project_id: projectId, token })
+    // D11: the URL acts as the owner who made it — except the public demo project's, which never
+    // names anybody (`makerToStamp`, AGENTS rule #2).
+    .insert({
+      project_id: projectId,
+      token,
+      created_by: makerToStamp(projectSlug, DEMO_PROJECT_SLUG, ownerUserId),
+    })
     .select('id')
     .single()
   if (error || !data) {

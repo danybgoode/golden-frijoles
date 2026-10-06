@@ -66,7 +66,8 @@ export async function mintConnectorAction(slug: unknown) {
   }
 
   const { projectId, userId } = await requireProjectOwnership(safeSlug)
-  const result = await mintConnectorToken(projectId)
+  // D11: the URL will act as this owner (never on the demo project — `mintConnectorToken` enforces it).
+  const result = await mintConnectorToken(projectId, safeSlug, userId)
 
   if (!result.ok) {
     // "Already active" is a distinct, honest answer rather than a generic failure: it means someone
@@ -123,4 +124,49 @@ export async function revokeConnectorAction(slug: unknown, tokenId: unknown) {
     })
   }
   return { ok: revoked }
+}
+
+/**
+ * account-from-the-terminal · Sprint 3, Story 3.2 — "Get a new URL": revoke this one, then mint its
+ * replacement, in one press. The old URL stops answering the moment the revoke lands (the route
+ * resolves `revoked_at IS NULL` on every request), and the new one acts as the owner pressing it
+ * (D11). If the mint fails after the revoke, the project is left with NO URL — never two — and the
+ * page offers "Create a connector URL" again: the safe direction for a credential.
+ */
+export async function rotateConnectorAction(slug: unknown, tokenId: unknown) {
+  const safeSlug = requireString(slug, 'project')
+  const safeTokenId = requireString(tokenId, 'token id')
+  if (closedGate() !== null) {
+    return {
+      ok: false as const,
+      error: 'The MCP connector is switched off for this deployment, so a new URL would not serve.',
+    }
+  }
+
+  const { projectId, userId } = await requireProjectOwnership(safeSlug)
+  const revoked = await revokeConnectorToken(projectId, safeTokenId)
+  if (!revoked)
+    return { ok: false as const, error: 'That URL is no longer active. Reload to see the current one.' }
+  await recordAudit({
+    action: 'connector_token_revoked',
+    projectId,
+    actorUserId: userId,
+    metadata: { tokenId: safeTokenId, rotated: true },
+  })
+
+  const minted = await mintConnectorToken(projectId, safeSlug, userId)
+  if (!minted.ok) {
+    return {
+      ok: false as const,
+      error:
+        'The old URL is stopped, but a new one could not be created. Press “Create a connector URL” to try again.',
+    }
+  }
+  await recordAudit({
+    action: 'connector_token_minted',
+    projectId,
+    actorUserId: userId,
+    metadata: { tokenId: minted.tokenId, rotated: true },
+  })
+  return { ok: true as const, url: minted.url }
 }
