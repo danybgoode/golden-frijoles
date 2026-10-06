@@ -43,7 +43,8 @@ export type ProjectSurfaceGate =
 //
 // The three routes still ANSWER, as permanent redirects, and their manifest rows carry
 // `retiresIn: 4`. What is gone is their status as destinations somebody navigates to.
-export type ProjectSurfaceStatus = 'linked' | 'gated' | 'flow-only'
+// connect-page D2 retired the one `flow-only` surface (onboarding); the value went with it.
+export type ProjectSurfaceStatus = 'linked' | 'gated'
 
 // console-ia-overhaul · Sprint 1, Story 1.2 (epic README, D2) — the four destinations.
 //
@@ -303,7 +304,7 @@ export const PROJECT_ROUTE_INVENTORY = [
     status: 'gated',
     topLevelProjectRoute: false,
     section: 'setup',
-    label: 'Connect your agent',
+    label: 'Connect',
     href: (slug: string) => `/app/setup/connect/${slug}`,
     description: () => 'your own project’s connector URL',
   },
@@ -426,18 +427,6 @@ export const PROJECT_ROUTE_INVENTORY = [
   },
   // The agent-write gate controls mutations, not credential preparation: an owner needs a key
   // ready before the live task-write surface can be verified.
-  {
-    routeSegment: 'onboarding',
-    iconKey: 'sparkles',
-    audience: 'member',
-    gate: 'always',
-    status: 'flow-only',
-    topLevelProjectRoute: true,
-    section: 'setup',
-    label: 'Onboarding',
-    href: (slug: string) => `/app/onboarding/${slug}`,
-    description: () => 'first-key and starter-feature handoff',
-  },
 ] as const satisfies readonly ProjectSurface[]
 
 function isGateOpen(gate: ProjectSurfaceGate, gates: ProjectSurfaceGates): boolean {
@@ -452,7 +441,6 @@ export function getProjectSurfaceLinks(input: {
   gates: ProjectSurfaceGates
 }): ProjectSurfaceLink[] {
   return PROJECT_ROUTE_INVENTORY.filter((surface) => {
-    if (surface.status === 'flow-only') return false
     if (surface.audience === 'owner' && input.role !== 'owner') return false
     return isGateOpen(surface.gate, input.gates)
   }).map((surface) => ({

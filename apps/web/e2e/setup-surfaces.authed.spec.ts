@@ -32,7 +32,7 @@ test.describe('Setup surfaces', () => {
 
     // The fixture tenant is freshly provisioned and has no connector token, which is also the state
     // `miyagisanchez` is in on production (A10) — so this is the real common case, not an edge.
-    await expect(page.getByRole('heading', { name: /Connect your agent/ })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Connect' })).toBeVisible()
 
     // ── The assertion A10 exists for, and my first version of it was WRONG ──────────────────
     // The page must never CLAIM a last-used time, because nothing in this product records connector
@@ -84,8 +84,11 @@ test.describe('Setup surfaces', () => {
     // field renders from `apps/web/design-system/` now, and it is a `<code>` rather than a readonly
     // `<input>`: a credential is not something you edit, and `<code>` is what a screen reader
     // announces it as. `.copy-url` WAS the landing's field; design-system-rails Story 6.4 deleted it with its last caller, so the console's copy control is `design-system/copy-field.tsx` and there is no second one to leave alone.
-    const copyField = page.locator('.ds-copyrow code')
+    // connect-page D4: Connect also carries command fields (the plugin and Codex commands), so the
+    // property is scoped to the CONNECTOR URL's field — the one an empty value would make lie.
+    const copyField = page.locator('.ds-copyrow code').filter({ hasText: /\/api\/v1\/public\/mcp\/c\// })
     const fieldCount = await copyField.count()
+    await expect(page.locator('.ds-copyrow code').filter({ hasText: /^\s*$/ })).toHaveCount(0)
     if (fieldCount > 0) {
       // If a field rendered, the tenant has a token and it must be a real one.
       await expect(copyField.first()).toHaveText(/^https?:\/\/.+\/api\/v1\/public\/mcp\/c\/gb_connector_/)
@@ -108,7 +111,12 @@ test.describe('Setup surfaces', () => {
     // The status pill is always there — one of the three states, never nothing.
     await expect(body.locator('.ds-pill')).not.toHaveCount(0)
 
-    const hasUrl = (await page.locator('.ds-copyrow code').count()) > 0
+    // Scoped to the connector URL's field: Connect also carries command fields (connect-page D4).
+    const hasUrl =
+      (await page
+        .locator('.ds-copyrow code')
+        .filter({ hasText: /\/api\/v1\/public\/mcp\/c\// })
+        .count()) > 0
     if (!hasUrl) {
       // ⚠️ Without a token there is nothing to copy and nothing to paste, so the steps are
       // deliberately absent — a numbered list telling you to "copy the URL above" with no URL above

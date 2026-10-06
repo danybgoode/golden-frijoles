@@ -580,7 +580,6 @@ const REACHABLE: Record<string, ((slug: string) => string) | { coveredBy: string
   '/app/setup/keys/[projectSlug]': (slug) => `/app/setup/keys/${slug}`,
   '/app/destinations/[projectSlug]': (slug) => `/app/destinations/${slug}`,
   '/app/shares/[projectSlug]': (slug) => `/app/shares/${slug}`,
-  '/app/onboarding/[projectSlug]': (slug) => `/app/onboarding/${slug}`,
   // ⚠️ The three retired routes. They still need an entry — `every manifest row has a way to be
   // reached` demands one for every row, and their rows stay in the manifest so `retiresIn: 4` can
   // take them out of the denominator. They are never OPENED, though: `every route claiming the
@@ -1719,7 +1718,8 @@ test('a borrowed state is owned and has not expired', () => {
   // built that route, and Daniel ruled (2026-09-10, epic D14-b) that the impact page borrows the
   // state rather than losing it — the approved 33 hold no impact screen, and a route in the
   // denominator with no state could never be covered.
-  expect(borrows.length, 'update this count when a route starts or stops borrowing a state').toBe(3)
+  // 2 since connect-page D2 retired `/app/onboarding`, which borrowed `setup-connect`.
+  expect(borrows.length, 'update this count when a route starts or stops borrowing a state').toBe(2)
   for (const row of borrows) {
     const borrow = row.borrowsState!
     expect(borrow.owner.length, `${row.route} borrows a state with no owner`).toBeGreaterThan(0)

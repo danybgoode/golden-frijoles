@@ -8,6 +8,7 @@ import { recordAudit } from './audit'
 import { DEMO_PROJECT_SLUG } from './public-demo'
 import { claimWorkspace, releaseWorkspace, workspaceNameFor, type WorkspaceClaim } from './workspace-tenancy'
 import { SELF_PROJECT_SLUG } from './self-track'
+import { makerToStamp } from './connector-maker'
 
 // multi-tenant-activation · Sprint 2, Story 2.1 — turning a CONFIRMED auth user into a working
 // tenant: a project, an owner membership, a first API key, and a connector token for onboarding.
@@ -314,7 +315,13 @@ export async function provisionTenantForUser(
   // costs a convenience, not the tenant.
   const { error: tokenError } = await supabase
     .from('connector_tokens')
-    .insert({ project_id: projectId, token: generateConnectorToken() })
+    // connect-page D1: the URL a new account is handed acts as its owner from the start, exactly like
+    // one made with Create — the same rule, imported (`makerToStamp`), so the demo project never names anyone.
+    .insert({
+      project_id: projectId,
+      token: generateConnectorToken(),
+      created_by: makerToStamp(projectSlug, DEMO_PROJECT_SLUG, userId),
+    })
   if (tokenError) console.error('[provisioning] connector token insert failed:', tokenError)
 
   await recordAudit({

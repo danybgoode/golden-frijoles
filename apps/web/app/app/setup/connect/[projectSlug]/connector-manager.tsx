@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { Icon } from '@/components/ui/Icon'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { CopyField } from '@/design-system/copy-field'
-import { Callout, Field, ListCard, ShownOnce, Step, Steps } from '@/design-system/primitives'
+import { Callout, Field, ShownOnce, Step, Steps } from '@/design-system/primitives'
 import type { ActiveConnector } from '@/lib/connector-tokens'
 import { mintConnectorAction, revokeConnectorAction, rotateConnectorAction } from './actions'
 
@@ -278,7 +278,8 @@ export function ConnectorManager({
 export function ConnectorSteps({ canManage, hasConnector }: { canManage: boolean; hasConnector: boolean }) {
   if (!canManage || !hasConnector) return null
   return (
-    <ListCard plain>
+    <>
+      {/* Inside the page's connections card (connect-page D6), so a fragment, not a card in a card. */}
       <span className="ds-label">Three steps</span>
       <Steps>
         <Step>
@@ -314,7 +315,7 @@ export function ConnectorSteps({ canManage, hasConnector }: { canManage: boolean
           and North Star.
         </Step>
       </Steps>
-    </ListCard>
+    </>
   )
 }
 

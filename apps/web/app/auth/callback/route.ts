@@ -6,7 +6,6 @@ import { isSignupEnabled } from '@/lib/flags'
 import { displayNameFrom } from '@/lib/display-name'
 import { provisionTenantForUser, registerStarterFeature } from '@/lib/provisioning'
 import { trackSelfEvent, ACCOUNT_CONFIRMED_EVENT } from '@/lib/self-track'
-import { setOnboardingKeyCookie } from '@/lib/onboarding-key'
 
 // multi-tenant-activation · Sprint 1, Story 1.1 — the code-exchange landing. Supabase links back
 // here with a `code`; we exchange it for a session (setting the auth cookies) and send the user on.
@@ -49,13 +48,10 @@ export async function GET(request: NextRequest) {
           // claimed "the next sign-in retries provisioning" while no such retry existed anywhere,
           // which would have stranded a confirmed user permanently (cross-review, Codex 2026-07-20).
         } else if (result.created) {
-          // The plaintext key exists for exactly this one request and is never stored. Hand it to
-          // the onboarding page through a short-lived, httpOnly cookie BOUND TO THIS PROJECT'S
-          // SLUG — never a query parameter, which would land in server logs, browser history, and
-          // any Referer header the destination page emits. The slug binding is what stops a
-          // multi-project user seeing this credential on a different tenant's onboarding page.
+          // connect-page D3: the plaintext key exists for exactly this one request and is never
+          // stored or handed to the browser any more — it registers the starter feature (through the
+          // SDK, AGENTS rule #1) and stays listed and revocable under Setup › Keys.
           if (result.plaintextKey) {
-            await setOnboardingKeyCookie(result.projectSlug, result.plaintextKey)
             // Off the request path deliberately — see registerStarterFeature's own comment.
             const starterKey = result.plaintextKey
             after(() => registerStarterFeature(starterKey))
@@ -63,9 +59,9 @@ export async function GET(request: NextRequest) {
           after(() => trackSelfEvent(ACCOUNT_CONFIRMED_EVENT, user.id))
           // account-from-the-terminal D8: a brand-new account that signed up FROM `gf login`'s
           // browser page goes back to that page, or the terminal waits on a code nobody confirms.
-          // The onboarding key cookie above is still set; onboarding stays one click away.
           if (new URL(target).pathname === '/cli/connect') return NextResponse.redirect(target)
-          return NextResponse.redirect(new URL(`/app/onboarding/${result.projectSlug}`, getSiteUrl()))
+          // connect-page D2: otherwise a new account lands on Connect.
+          return NextResponse.redirect(new URL(`/app/setup/connect/${result.projectSlug}`, getSiteUrl()))
         }
       }
       return NextResponse.redirect(target)

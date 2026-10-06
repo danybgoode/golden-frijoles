@@ -5,7 +5,6 @@ import { getSiteUrl } from '@/lib/site-url'
 import { isSignupEnabled } from '@/lib/flags'
 import { displayNameFrom } from '@/lib/display-name'
 import { provisionTenantForUser, registerStarterFeature } from '@/lib/provisioning'
-import { setOnboardingKeyCookie } from '@/lib/onboarding-key'
 import { trackSelfEvent, ACCOUNT_CONFIRMED_EVENT } from '@/lib/self-track'
 
 // multi-tenant-activation · Sprint 2 — the provisioning RETRY, as a Route Handler.
@@ -54,15 +53,17 @@ export async function GET() {
     // two paths is harmless: TARS counts DISTINCT users per event.
     after(() => trackSelfEvent(ACCOUNT_CONFIRMED_EVENT, user.id))
 
+    // connect-page D3: the first key registers the starter feature (through the SDK, AGENTS rule #1)
+    // and is never handed to the browser. It stays listed and revocable under Setup › Keys.
     if (result.plaintextKey) {
-      await setOnboardingKeyCookie(result.projectSlug, result.plaintextKey)
       const starterKey = result.plaintextKey
       after(() => registerStarterFeature(starterKey))
     }
   }
 
   if (result.created) {
-    return NextResponse.redirect(new URL(`/app/onboarding/${result.projectSlug}`, siteUrl))
+    // connect-page D2: a new account lands on Connect.
+    return NextResponse.redirect(new URL(`/app/setup/connect/${result.projectSlug}`, siteUrl))
   }
 
   // `created: false` means "you already had one" — but we only got here BECAUSE /app saw zero
