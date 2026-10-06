@@ -118,8 +118,8 @@ export default async function CliConnectPage({
       <p className="ds-doorlede">
         Only confirm if you just ran <span className="ds-mono">gf login</span> yourself and your terminal
         shows <span className="ds-mono">{code}</span>. Confirming signs that terminal in as{' '}
-        <b>{user.email ?? 'you'}</b>, with access to every project you can open, until you disconnect it under
-        Setup › Connections.
+        <b>{user.email ?? 'you'}</b>, with access to every project you can open, until you revoke it under
+        Setup › CLI access.
       </p>
       <div className="ds-doorform">
         <p className="ds-hint">

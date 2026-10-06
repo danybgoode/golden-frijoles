@@ -120,7 +120,7 @@ test('slow_down backs the polling off instead of failing', async () => {
       { status: 200, body: { ok: true, status: 'approved', token: 'gf_pat_minted' } },
     ],
   })
-  // The back-off adds 5 s, so this test really sleeps 5 s once — the price of asserting the delay.
+  // The 1 s floor plus a 5 s back-off: this test really sleeps ~7 s — the price of asserting the delay.
   const result = await deviceLogin(context, 'https://site.example')
   assert.equal(result.kind, 'token')
   assert.equal(calls.filter((call) => call.path === '/api/v1/cli/device/token').length, 2)
