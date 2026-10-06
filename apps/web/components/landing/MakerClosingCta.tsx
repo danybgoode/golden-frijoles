@@ -1,4 +1,5 @@
-import { INSTALL_PROMPT } from '@/lib/install-prompt'
+import { installPrompt } from '@/lib/install-prompt'
+import { getSiteUrl } from '@/lib/site-url'
 import { Button } from '@/components/ui/Button'
 import { Icon } from '@/components/ui/Icon'
 import { CopyPromptCard } from './CopyPromptCard'
@@ -14,16 +15,17 @@ import { RunYourFirstBet } from './RunYourFirstBet'
 // both ways by the reader's own agent. That prompt is still exported and still pinned by
 // `e2e/landing-prompts.spec.ts` (a reader can still ask it, from `/northstar-self-serve.md`'s own
 // links), but the closing ask's own card now does what closing asks are for: it hands the reader
-// something to run right now. `INSTALL_PROMPT` (`lib/install-prompt.ts`) is the one string every
-// install surface carries — `/install`, the signed-in onboarding page, and this card — so a reader
+// something to run right now. `installPrompt(getSiteUrl())` (`lib/install-prompt.ts`) is the one string
+// every install surface carries — `/install`, the signed-in onboarding page, the hero and this card — so a reader
 // who is ready does not have to go find a terminal command; it is already in their clipboard.
 //
-// `TryItSection`'s handoff prompt did NOT survive (see the epic's D1): it was the second of two
-// copy-a-prompt blocks, and two is where a device stops reading as an invitation and starts reading
-// as a pattern. The hero's `handoffPrompt` is unchanged — this file only ever touched the closing
-// card.
+// ── account-from-the-terminal S1.3 — the hero now carries the SAME prompt ─────────────────────
+// `landing-readability-pass` D1 held that two copy-a-prompt blocks read as a pattern. The canvas
+// Landing frame overrides that for this one string: the hero is where a stranger decides, and the
+// closing card is where a reader who scrolled decides — both hand over the same install prompt.
+// The story scoped every section below the hero as unchanged, so this card stayed.
 export function MakerClosingCta() {
-  const prompt = INSTALL_PROMPT
+  const prompt = installPrompt(getSiteUrl())
 
   return (
     <section id="start">
