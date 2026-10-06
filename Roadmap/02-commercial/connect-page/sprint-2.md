@@ -12,25 +12,25 @@ stories:
     i_want: "Connect to offer one path at a time, easiest first"
     so_that: "I know what to do next"
     risk: low
-    status: in-progress
+    status: done
   - id: S2.2
     title: "Connect Codex"
     as_a: "a founder using Codex"
     i_want: "one command that connects Codex to my project"
     so_that: "Codex can read and change it too"
     risk: low
-    status: in-progress
+    status: done
   - id: S2.3
     title: "The SDK, said plainly"
     as_a: "a founder wiring my product"
     i_want: "to understand what the SDK is for and where its key comes from"
     so_that: "I can send my product's events"
     risk: low
-    status: in-progress
+    status: done
 ---
 # Connect: start where you are — Sprint 2: The Connect page, in order
 
-**Status:** 🟦 In review
+**Status:** ✅ shipped 2026-10-06 — PR #284 (`b8f5231`)
 
 ## Build contract (locked by the architect before the builder started — README § Architecture lock)
 - S2.1 → **D4** + **D6**. S2.2 → **D5**. S2.3 → **D4** (the SDK block; the key's sources per **D3**).
@@ -39,7 +39,7 @@ stories:
 <!-- Keep the heading shape `### Story 2.M — <title>`. When a story ships, append ✅ + its commit ref.
      The epic README frontmatter `status:` is the AUTHORITATIVE epic status. -->
 
-### Story 2.1 — Connect, in order
+### Story 2.1 — Connect, in order ✅ 4673d69, 32b5957, ecc2aed
 **As** a founder setting up, **I want** Connect to offer one path at a time, easiest first, **so that** I know what to
 do next.
 Titled **Connect** (the section is Set up). In order: (1) Set up with your agent — the install prompt; (2) Or do it
@@ -49,7 +49,7 @@ uses; (3) Connect the Claude app — the URL, its first-use status, Get a new UR
 **Acceptance:** the page reads top to bottom in that order; nothing on it says the URL is read-only for a new account.
 **Risk:** low
 
-### Story 2.2 — Connect Codex
+### Story 2.2 — Connect Codex ✅ 4673d69
 **As** a founder using Codex, **I want** one command that connects Codex to my project, **so that** Codex can read and
 change it too.
 `codex mcp add golden-frijoles --url <your connector URL>` (Codex supports streamable-HTTP MCP servers; checked against
@@ -57,7 +57,7 @@ codex-cli 0.160.0), with the URL filled in for owners, plus how to check it (`co
 **Acceptance:** the command on the page, pasted into a terminal with Codex installed, adds the server.
 **Risk:** low
 
-### Story 2.3 — The SDK, said plainly
+### Story 2.3 — The SDK, said plainly ✅ 4673d69, ecc2aed
 **As** a founder wiring my product, **I want** to understand what the SDK is for and where its key comes from, **so
 that** I can send my product's events.
 One sentence on what it does (your product reports what users do; your agent reads it back as funnels and your North
@@ -83,3 +83,7 @@ Env: production · https://goldenfrijoles.com
    → It says what it is for and where the key comes from.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+**Run 2026-10-06:** the six groups render in order (screenshot at 1440 checked before merge); the visual gate matches
+`setup-connect`'s structure; a member's page carries no connector URL or Codex command. Steps 1–3 on production
+(Codex `mcp list`) **owed to Daniel**.
