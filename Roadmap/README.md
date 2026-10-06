@@ -328,6 +328,18 @@ independently shippable slice of value.
   through `getWorkspaceProjects()`. A bare `/app` opens on it at 2+ products in one workspace; Today stays one click
   away. No metric level for the North Star exists yet, so there is no week-over-week (lock C1, a follow-up).
   **Owed to Daniel:** the signed-in walkthrough, and placing his products on the loop.
+- ✅ [Account from the terminal](02-commercial/account-from-the-terminal/README.md) (launch epic 2: one prompt, one
+  browser click, one URL) — **shipped and live 2026-10-06** (#277, #280, #282; plugin + kit 0.29.0–0.30.0, CLI 0.5.0).
+  The install prompt has the agent read `/install.md` first (what installs, what changes on the machine, which
+  services it contacts, how to remove it) and wait for a go-ahead; the hero says "Plan, ship and prove it paid off".
+  "Continue with Google" signs in through Supabase's own provider (Clerk was offered and declined at the lock;
+  GitHub and email links are follow-ups). `gf login` opens the browser and signs in when you confirm the code —
+  device codes live ten minutes, work once, store no token, and every mint is audited — behind the kill switch
+  `auth.terminal_sign_in_enabled`, which lives in Golden Frijoles's own catalog. A connector URL an owner makes now
+  acts as them, so the Claude app can turn a flag off under their name; the public demo URL never writes, and the
+  URL is shown to owners only. Setup › Connections shows whether Claude has used it, your signed-in machines
+  (Disconnect) and Get a new URL. **Owed to Daniel:** the walkthroughs (an agent reading install.md, `gf login` on a
+  clean machine, the Claude app turning a flag off).
 - ✅ [One stage, every client](02-commercial/board-sinks-and-scrumban/README.md) (a six-stage board on the Hub, the CLI
   mod and every sink) — **shipped and live 2026-10-02** (PRs #224–#228, plugin + kit 0.20.0/0.21.0). Every client now
   reads ONE stage: To groom · Grooming · Ready to build · Building · QA · Shipped, decided once by
@@ -467,6 +479,14 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-06**: `account-from-the-terminal` **shipped**: three sprints in one run, two migrations applied before their
+  merges, ≈$55.44 against a $67–144 quote.
+  - A stranger now gets from the landing to a signed-in terminal with one prompt, one browser click and one URL, and
+    the Claude app can change a flag as the person who connected it.
+  - The lock turned down a second identity system (Clerk) for Supabase's own Google provider. The fresh reviewer
+    caught three untrue sentences on the install page a careful founder would have checked, and the one real
+    authorization defect: once the connector URL could write, a page outside the diff was still showing it to
+    every member. A test fixture was found rewriting the real repository from a worktree hook, and is sealed.
 - **2026-10-04**: `fund-at-approval` **shipped**: one sprint, plugin + kit 0.28.0, ≈$20.74 against a $7–16 quote.
   - Approving a pitch now funds it, in one commit; nothing leaves grooming scaffolded but unfunded, and the board
     enforces it.

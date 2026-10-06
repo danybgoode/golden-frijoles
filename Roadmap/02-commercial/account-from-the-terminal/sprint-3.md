@@ -12,18 +12,18 @@ stories:
     i_want: "the connector URL I make to act as me"
     so_that: "the Claude app can change things in my project"
     risk: high
-    status: in-progress
+    status: done
   - id: S3.2
     title: "Setup › Connections: who and what is connected"
     as_a: "a founder"
     i_want: "one place that shows who and what is connected"
     so_that: "I can see it and stop it"
     risk: low
-    status: in-progress
+    status: done
 ---
 # Account from the terminal — Sprint 3: The Claude app can change things
 
-**Status:** 🟦 In review
+**Status:** ✅ shipped 2026-10-06 — PR #282 (`ff29242`), migration `20261006110000` applied before merge
 
 ## Build contract (locked by the architect before the builder started — README § Architecture lock)
 - S3.1 → **D11** (migration applied BEFORE merge; flag writes only — the task-write tools stay key-bound).
@@ -33,7 +33,7 @@ stories:
 <!-- Keep the heading shape `### Story 3.M — <title>`. When a story ships, append ✅ + its commit ref.
      The epic README frontmatter `status:` is the AUTHORITATIVE epic status. -->
 
-### Story 3.1 — A connector URL that acts as you
+### Story 3.1 — A connector URL that acts as you ✅ 4d7f7fb, 5287a21, e51b1ff
 **As** a founder, **I want** the connector URL I make to act as me, **so that** the Claude app can change things in my
 project.
 `connector_tokens` gains the person who made it (additive migration, nullable). A URL with a person resolves both the
@@ -47,7 +47,7 @@ token stays in the path, never a query string; the existing 60-a-minute rate lim
 - With `isConnectorWritesEnabled` off, every URL is read-only.
 **Risk:** high
 
-### Story 3.2 — Setup › Connections: who and what is connected
+### Story 3.2 — Setup › Connections: who and what is connected ✅ 066b9e6, 116dfb6, 9433ea5
 **As** a founder, **I want** one place that shows who and what is connected, **so that** I can see it and stop it.
 The "Who and what is connected" block of the canvas Setup-Connections frame, built on the existing connect and CLI
 managers: your coding agent and gf (device label, connected date, last active, Disconnect revokes that CLI token);
@@ -83,3 +83,9 @@ Env: production · https://goldenfrijoles.com   (or the preview URL while testin
    → It tells you to sign in again.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+**Run 2026-10-06:** covered end to end by CI on a real server — a person-bound URL lists and runs the flag write
+tools and the audit names its maker; pre-sprint, demoted, removed and revoked URLs do not write; Get a new URL makes
+the old URL a 401; Disconnect makes the next `whoami` a 401; a member never receives the URL. Steps 1–5 on production
+(the Claude app itself) **owed to Daniel**: note an existing URL is read-only until **Get a new URL** stamps you as
+its maker.

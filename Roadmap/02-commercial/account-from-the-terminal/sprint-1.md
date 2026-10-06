@@ -30,7 +30,7 @@ stories:
 ---
 # Account from the terminal — Sprint 1: Read before installing
 
-**Status:** ✅ built and reviewed — PR #277 (merge = deploy; production smoke below)
+**Status:** ✅ shipped 2026-10-06 — PR #277 (`59dfa26`), plugin + kit 0.29.0
 
 ## Build contract (locked by the architect before the builder started — README § Architecture lock)
 - S1.1 → **D1**. S1.2 → **D2** (the prompt text is the canvas text in Story 1.2, verbatim, with `<site>` from
@@ -102,3 +102,9 @@ Env: production · https://goldenfrijoles.com   (or the preview URL while testin
    → It installs the way install.md says and starts setup.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+**Run 2026-10-06 (agent, production, curl):** steps 1–3 ✅ — the hero reads "Plan, ship and prove it paid off" with the
+prompt (twice on the page: hero + closing CTA, both verbatim with `https://goldenfrijoles.com/install.md`); `/install`
+carries the same prompt; `/install.md` answers `text/markdown` with all five sections, naming `api.github.com`,
+`add-skill.vercel.sh` (+ `DISABLE_TELEMETRY=1`) and `claude plugin marketplace remove`. Steps 4–5 (a real agent
+reading install.md and waiting) **owed to Daniel**.
