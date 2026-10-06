@@ -44,9 +44,14 @@ the constants in `lib/cli-install.ts` and `lib/install-prompt.ts`. Sections: per
 `npx skills`), what installs (plugin, optional `gf` CLI), what changes on the machine (plugin cache, `Roadmap/`,
 `golden-frijoles.config.json`, the CLI credentials file, only after sign-in), which services it contacts (github.com,
 the npm registry, goldenfrijoles.com only with an account), how to remove it.
+*Amended 2026-10-05 (canvas First run, frame 2):* it also names the release it describes (plugin version, `gf`
+version) and lists a SHA-256 for every file in that plugin release, read from a checksum manifest the skills repo's
+release publishes (`skills/RELEASING.md` gains the step), never typed by hand. It tells the agent how to check them:
+fetch the release into a temporary folder, compare every file, and only then install from that same folder or tag.
 **Acceptance:**
 - `goldenfrijoles.com/install.md` returns the page; every install command on it is one the site already shows.
 - Every service the install contacts is named; nothing is named that isn't contacted.
+- It names the release and lists a SHA-256 per file; a fixture release with one changed file fails the comparison.
 **Risk:** low
 
 ### Story 1.2 — The prompt reads first and waits
@@ -58,8 +63,18 @@ contacts. Offer me a security review, and wait for my go-ahead. 3. Install it th
 you are. 4. Run the golden-frijoles skill and start its setup." It now names a goldenfrijoles.com URL, so it is built
 with `getSiteUrl()` here (AGENTS rule #5); the transcriptions in `skills/` (`golden-onboarding.mjs`, the README, the
 umbrella SKILL.md) carry the production URL, and the lock decides how the parity check compares them.
+*Amended 2026-10-05 (canvas First run, frames 2 and 3):* `install.md` gains a "Security review" section the agent
+follows when asked: download to a temporary folder (nothing installed), compare the checksums, read every skill,
+script, hook and the `gf` package, then report in plain lines against the claims the page makes (nothing runs at
+install time; nothing is sent anywhere unless you sign in, then only to goldenfrijoles.com; keys only go into
+`.env.local`, and only once it's in `.gitignore`; scripts run through `npx` pinned to the release; the status line
+reads `Roadmap/` and git and sends nothing). It offers "Review it before installing", "Also ask a second model
+(Codex), if installed" and "Install it now"; "Not now" deletes the download. Each claim is checked against the code
+by a test, so the page can't say something the release doesn't do.
 **Acceptance:**
 - The landing, `/install` and onboarding show the same prompt, character for character.
+- A review run on a real release reports each claim as checked; "Not now" leaves nothing installed or downloaded.
+- Each security claim on the page has a test that fails if the release stops matching it.
 - `install-prompt.test.ts`, `site-url-callers.test.ts` and `check-onboarding-parity.mjs` are green; no preview URL in
   the skills repo.
 **Risk:** low
@@ -91,7 +106,9 @@ Env: production · https://goldenfrijoles.com   (or the preview URL while testin
    → A plain page: what installs, what changes on your machine, which services it contacts, how to remove it.
 4. Paste the prompt into Claude Code in an empty folder
    → The agent reads install.md, summarises it in a few lines, offers a security review and waits. Nothing installs yet.
-5. Say "go ahead"
-   → It installs the way install.md says and starts setup.
+5. Choose "Review it before installing"
+   → It downloads to a temporary folder, says the checksums match, and reports each security claim as checked.
+6. Say "Install it"
+   → It installs from what it checked and starts setup.
 
 If any step fails, note the step number + what you saw — that's the bug report.
