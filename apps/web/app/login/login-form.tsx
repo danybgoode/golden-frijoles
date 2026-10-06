@@ -3,6 +3,8 @@ import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { createAuthBrowserClient } from '@/lib/supabase-browser'
 import { Button, Field } from '@/design-system/primitives'
+import { GoogleSignIn } from '@/components/auth/GoogleSignIn'
+import { safeRedirectPath } from '@/lib/safe-redirect'
 
 // multi-tenant-activation · Sprint 1, Story 1.1 — SIGN-IN ONLY. Account creation lives on
 // `/signup`, behind `SIGNUP_ENABLED`, and the door links there only when that gate is open.
@@ -44,7 +46,26 @@ function isCredentialFailure(status: number | undefined, code: string | undefine
   return status === 400 || status === 422
 }
 
-export function LoginForm() {
+/**
+ * `siteUrl` is the server's `getSiteUrl()`; `next` is where to land after signing in — `/cli/connect`
+ * hands its own path here (account-from-the-terminal D8). It is guarded with `safeRedirectPath`, the
+ * same origin check `/auth/callback` uses, so a crafted `?next=` cannot send a signed-in person away.
+ * `google` is decided by the server page (`isTerminalSignInEnabled()`), never here.
+ */
+export function LoginForm({
+  siteUrl,
+  next,
+  google,
+}: {
+  siteUrl: string
+  next: string | null
+  google: boolean
+}) {
+  const landing = (() => {
+    const target = new URL(safeRedirectPath(next, siteUrl))
+    return `${target.pathname}${target.search}`
+  })()
+
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -67,12 +88,13 @@ export function LoginForm() {
       else setFormError(error.message)
       return
     }
-    router.push('/app')
+    router.push(landing)
     router.refresh()
   }
 
   return (
     <form className="ds-doorform" onSubmit={onSubmit}>
+      {google && <GoogleSignIn siteUrl={siteUrl} next={landing} />}
       <Field label="Email" controlId="login-email">
         {(control) => (
           <input

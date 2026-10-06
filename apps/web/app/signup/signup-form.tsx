@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from 'react'
 import { Button, Field } from '@/design-system/primitives'
 import { MIN_PASSWORD_LENGTH } from '@/lib/signup-schema'
+import { GoogleSignIn } from '@/components/auth/GoogleSignIn'
 
 // multi-tenant-activation · Sprint 3, Story 3.1/3.2 — posts to /api/v1/public/signup (Sprint 2,
 // Story 2.1). The honeypot + submit-state + error-handling idiom is lifted from
@@ -25,7 +26,8 @@ type Status = 'idle' | 'submitting' | 'success' | 'error'
 // second source of truth for the same rule, which is what this whole epic is about.
 const PASSWORD_HINT = `At least ${MIN_PASSWORD_LENGTH} characters`
 
-export function SignupForm() {
+/** `google` (with the server's `siteUrl`) is decided by the page: the flag AND signup being open. */
+export function SignupForm({ google }: { google: { siteUrl: string } | null }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
@@ -70,6 +72,7 @@ export function SignupForm() {
 
   return (
     <form className="ds-doorform" onSubmit={onSubmit}>
+      {google && <GoogleSignIn siteUrl={google.siteUrl} next="/app" />}
       <Field label="Email" controlId="signup-email">
         {(control) => (
           <input

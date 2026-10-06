@@ -61,6 +61,10 @@ export async function GET(request: NextRequest) {
             after(() => registerStarterFeature(starterKey))
           }
           after(() => trackSelfEvent(ACCOUNT_CONFIRMED_EVENT, user.id))
+          // account-from-the-terminal D8: a brand-new account that signed up FROM `gf login`'s
+          // browser page goes back to that page, or the terminal waits on a code nobody confirms.
+          // The onboarding key cookie above is still set; onboarding stays one click away.
+          if (new URL(target).pathname === '/cli/connect') return NextResponse.redirect(target)
           return NextResponse.redirect(new URL(`/app/onboarding/${result.projectSlug}`, getSiteUrl()))
         }
       }
