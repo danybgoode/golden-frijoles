@@ -116,7 +116,7 @@ nothing looks like a different product.
 
 ## Groomed (2026-10-05)
 
-All eight launch-critical epics are groomed, funded in `Roadmap/bets/wave-2026-10.md` and scaffolded, in build order:
+All nine launch-critical epics are groomed, funded in `Roadmap/bets/wave-2026-10.md` and scaffolded, in build order:
 
 | # | Epic | Appetite · risk | Flag |
 |---|---|---|---|
@@ -127,9 +127,13 @@ All eight launch-critical epics are groomed, funded in `Roadmap/bets/wave-2026-1
 | 65 | [`one-epic-page`](../../02-commercial/one-epic-page/README.md) | M · low | none |
 | 66 | [`outcome-report-v2`](../../02-commercial/outcome-report-v2/README.md) | M · low | none |
 | 67 | [`gates-in-plain-agile`](../../02-commercial/gates-in-plain-agile/README.md) | M · low | none |
-| 68 | [`build-view-upgrade`](../../02-commercial/build-view-upgrade/README.md) | S · low | none |
+| 68 | [`first-run-setup`](../../02-commercial/first-run-setup/README.md) | M · low | none |
+| 69 | [`build-view-upgrade`](../../02-commercial/build-view-upgrade/README.md) | S · low | none |
 
-Then `plain-outcome-rename` (#69, sprints 1–4, to be re-groomed) and the rest of the queue, order kept.
+The canvas First run flow (page 2) is covered by `account-from-the-terminal` (frames 1–6, amended 2026-10-05),
+`first-run-setup` (7, 8a, 8b) and `gates-in-plain-agile` (9–11).
+
+Then `plain-outcome-rename` (#70, sprints 1–4, to be re-groomed) and the rest of the queue, order kept.
 
 ## What this supersedes
 - [`naming-spec-plain-outcome-2026-10-04.md`](naming-spec-plain-outcome-2026-10-04.md): screen vocabulary (decision 1).
