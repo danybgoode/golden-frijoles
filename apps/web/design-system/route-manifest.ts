@@ -523,7 +523,9 @@ export const ROUTE_MANIFEST: readonly CoverageRow[] = [
     seam: 'product-shell',
     surface: 'setup/connect',
     // connect-page D6: the six groups sit in the approved head → card → card → note structure, so the
-    // state still describes this page's SHAPE; its contents changed (Daniel's feedback, 2026-10-06).
+    // state still describes this page's SHAPE — but not its contents: card 1 is now your agent (prompt,
+    // do it yourself), card 2 everything you connect (URL, steps, Codex, SDK, machines). The contract
+    // measures sequence only; a re-approved `setup-connect` picture is owed to Daniel.
     referenceState: 'setup-connect',
     // design-system-rails · Story 4.4. The head, the status field with its pill, the connector URL in
     // a mono copy field, and the numbered three-step card ending in `Add to Claude ↗` — whose arrow

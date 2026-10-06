@@ -1,5 +1,5 @@
 ---
-status: scaffolded   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+status: in-progress   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
 phase: Building       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
 locked_at: "2026-10-06T20:06:26Z"
@@ -94,12 +94,15 @@ path itself keeps its existing gates (`CONNECTOR_WRITES_ENABLED`, `CLI_WRITE_API
   state measures STRUCTURE (head → card → card → note), so the six groups sit in two cards — **your agent** (1–2) and
   **connections** (3–6) — plus a closing note: Daniel's order, the same contract, Connect still covered. The retired
   onboarding row leaves the denominator (it borrowed `setup-connect`): 29 of 33 at close.
+  ⚠️ **Daniel's call, owed:** the contract measures block SEQUENCE only, so "still covered" means "same skeleton".
+  The approved picture draws card 1 = URL + status and card 2 = the three steps; the page now draws card 1 = your
+  agent and card 2 = connections. Accept the two-card grouping, or approve a new `setup-connect` picture.
 - **One PR for both sprints (deviation from the stack rule):** S1's landing target is the page S2 rebuilds, so
   reviewing them apart would review a landing on a page about to change; the PR is reviewed at the higher tier.
 - **Routing:** the architect builds in place. Reviews: `review-route.mjs` + the fresh `pr-reviewer` on each PR.
 
 ## Deploy order
-No migration. Sprint 1 then sprint 2, one PR each, merged in order; merge = deploy.
+No migration. One PR for both sprints (see the lock's deviation); merge = deploy.
 
 ## Definition of Done (epic)
 - [ ] All sprints merged to `main` + smoke-tested (gaps stated — `node scripts/owed-ledger.mjs` counts what is still owed)

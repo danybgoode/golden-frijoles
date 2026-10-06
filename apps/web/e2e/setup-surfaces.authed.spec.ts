@@ -111,7 +111,12 @@ test.describe('Setup surfaces', () => {
     // The status pill is always there — one of the three states, never nothing.
     await expect(body.locator('.ds-pill')).not.toHaveCount(0)
 
-    const hasUrl = (await page.locator('.ds-copyrow code').count()) > 0
+    // Scoped to the connector URL's field: Connect also carries command fields (connect-page D4).
+    const hasUrl =
+      (await page
+        .locator('.ds-copyrow code')
+        .filter({ hasText: /\/api\/v1\/public\/mcp\/c\// })
+        .count()) > 0
     if (!hasUrl) {
       // ⚠️ Without a token there is nothing to copy and nothing to paste, so the steps are
       // deliberately absent — a numbered list telling you to "copy the URL above" with no URL above

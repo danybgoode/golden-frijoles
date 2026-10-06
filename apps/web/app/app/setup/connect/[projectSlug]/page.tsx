@@ -200,9 +200,9 @@ export default async function SetupConnectPage({ params }: { params: Promise<{ p
           <p className="ds-hint">
             Your product reports what its users do; your agent reads it back as funnels and your North Star.
             Add the SDK where your app runs, with an <b>ingest key</b> in <code>GROWTH_ENGINE_API_KEY</code> —
-            get one with <code>gf keys create --type ingest --label &quot;my app&quot;</code> or under{' '}
-            <a href={`/app/setup/keys/${projectSlug}`}>Setup › Keys</a>. It is shown once; keep it in your
-            environment, never in code.
+            an owner gets one with <code>gf keys create --type ingest --label &quot;my app&quot;</code> or
+            under <a href={`/app/setup/keys/${projectSlug}`}>Setup › Keys</a>. It is shown once; keep it in
+            your environment, never in code.
           </p>
           <pre className="ds-mono ds-codeblock">
             {`npm install @golden-frijoles/sdk
@@ -217,9 +217,13 @@ const engine = createGrowthEngineClient({
 
 await engine.track('${STARTER_TARGET_EVENT}', { featureId: '${STARTER_FEATURE_KEY}' })`}
           </pre>
+          {/* Hedged, as the retired onboarding page was (fresh reviewer, #284): the starter feature is
+              registered best-effort at signup, and projects made another way never had one. */}
           <p className="ds-hint">
-            That event lands in the starter feature already set up for you, so its funnel fills the first time
-            it runs.
+            Run it once, then look for it on{' '}
+            <a href={`/app/funnel/${projectSlug}/${STARTER_FEATURE_KEY}`}>the {STARTER_FEATURE_KEY} funnel</a>
+            . New accounts get that starter feature at signup; if the funnel reads zero after the event fired,
+            the feature was not registered — track an event of a feature you have registered instead.
           </p>
 
           <h2 className="ds-label">6 · Your signed-in machines</h2>
