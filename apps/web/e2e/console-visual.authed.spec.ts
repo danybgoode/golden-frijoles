@@ -595,6 +595,8 @@ const REACHABLE: Record<string, ((slug: string) => string) | { coveredBy: string
   },
   '/login': () => '/login',
   '/signup': () => '/signup',
+  // account-from-the-terminal D8 — the bare page (no code) is the reachable state of the device confirm door.
+  '/cli/connect': () => '/cli/connect',
   '/install': () => '/install',
   '/talk': () => '/talk',
   '/hub/[projectSlug]': (slug) => `/hub/${slug}`,

@@ -1,5 +1,7 @@
 import { notFound } from 'next/navigation'
 import { isSignupEnabled } from '@/lib/flags'
+import { isTerminalSignInEnabled } from '@/lib/terminal-sign-in-flag'
+import { getSiteUrl } from '@/lib/site-url'
 import { Frame } from '@/design-system/Frame'
 import { SignupForm } from './signup-form'
 
@@ -26,14 +28,15 @@ import { SignupForm } from './signup-form'
 // route's reference state and says why the other one is not it.
 export const dynamic = 'force-dynamic'
 
-export default function SignupPage() {
+export default async function SignupPage() {
   if (!isSignupEnabled()) notFound()
 
   return (
     <Frame variant="door" brandHref="/">
       <h1>Create your account</h1>
       <p className="ds-doorlede">One project to start. You can add more once you are in.</p>
-      <SignupForm />
+      {/* account-from-the-terminal D4: Google here only when signup itself is open (checked above). */}
+      <SignupForm google={(await isTerminalSignInEnabled()) ? { siteUrl: getSiteUrl() } : null} />
       <div className="ds-doorfoot">
         Already have one? <a href="/login">Sign in</a>
       </div>

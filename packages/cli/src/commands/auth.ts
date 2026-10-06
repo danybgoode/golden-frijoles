@@ -11,6 +11,7 @@ import {
 } from '../credentials'
 import { EXIT, exitForServerCode, type ExitCode } from '../exit-codes'
 import { table } from '../output'
+import { deviceLogin } from './device-login'
 
 type WhoamiBody = {
   account: { userId: string; email: string | null }
@@ -70,28 +71,43 @@ async function readTokenFromStdin(context: CommandContext): Promise<string | nul
 
 export const loginCommand: Command = {
   path: ['login'],
-  summary: 'save a CLI token for this machine',
+  summary: 'sign this machine in (browser), or save a CLI token',
   usage: 'gf login [--token <token>] [--api <url>]',
   needsAuth: false,
-  detail: `Mint a token at /app/setup/cli in the console, then paste it here.
+  detail: `At a terminal, opens your browser: confirm the code it shows and this machine
+  is signed in. If browser sign-in is not available, it asks for a token instead — mint
+  one in the console under Setup › CLI access and paste it.
 
-  With no --token, the token is read from STDIN — so it never appears in your shell
-  history or in \`ps\`. For CI, set GOLDEN_FRIJOLES_TOKEN instead and skip this verb;
-  nothing is written to disk in that case.`,
+  With --token, or a token piped in, no browser is involved. A pasted token is read
+  from STDIN — so it never appears in your shell history or in \`ps\`. For CI, set
+  GOLDEN_FRIJOLES_TOKEN instead and skip this verb; nothing is written to disk in that case.`,
   flags: [
     { name: 'token', value: '<token>', describe: 'the token, instead of reading stdin' },
     { name: 'api', value: '<url>', describe: `the deployment (default: ${DEFAULT_API_URL})` },
   ],
   async run(context): Promise<ExitCode> {
-    const token = flagValue(context.args, 'token')?.trim() || (await readTokenFromStdin(context))
+    const apiUrl = normalizeApiUrl(
+      flagValue(context.args, 'api')?.trim() || context.env.GOLDEN_FRIJOLES_URL?.trim() || DEFAULT_API_URL
+    )
+
+    let token = flagValue(context.args, 'token')?.trim() || null
+    // account-from-the-terminal D9 — a person at a terminal (nothing piped, no --token, not --json)
+    // signs in through the browser. A server that predates the device routes, or has the
+    // `auth.terminal_sign_in_enabled` kill switch off, answers 404 — and that, or no network, falls
+    // through to the paste prompt below, unchanged. Piping and --token never reach this.
+    if (!token && process.stdin.isTTY && !context.emit.json) {
+      const device = await deviceLogin(context, apiUrl)
+      if (device.kind === 'token') token = device.token
+      else if (device.kind === 'refused') {
+        context.emit.fail(device.code, device.message)
+        return exitForServerCode(device.code)
+      } else context.emit.note(`Browser sign-in is not available here (${device.why}).`)
+    }
+    if (!token) token = await readTokenFromStdin(context)
     if (!token) {
       context.emit.fail('invalid', 'No token supplied. Pass --token, or pipe one into `gf login`.')
       return EXIT.USAGE
     }
-
-    const apiUrl = normalizeApiUrl(
-      flagValue(context.args, 'api')?.trim() || context.env.GOLDEN_FRIJOLES_URL?.trim() || DEFAULT_API_URL
-    )
 
     // ⚠️ VERIFY before saving. Writing an unverified token produces a credentials file that looks
     // fine and fails on every later command with an error about that command — which is how someone
@@ -141,7 +157,7 @@ export const logoutCommand: Command = {
   usage: 'gf logout',
   needsAuth: false,
   detail: `Removes the local credential only. It does NOT revoke the token — anything else
-  holding it still works. Revoke at /app/setup/cli when that is what you mean.`,
+  holding it still works. Revoke it in the console (Setup › CLI access) when that is what you mean.`,
   flags: [],
   async run(context): Promise<ExitCode> {
     const path = credentialsPath(context.env)
@@ -154,7 +170,7 @@ export const logoutCommand: Command = {
     writeCredentials({ token: '', apiUrl: DEFAULT_API_URL }, context.env)
     context.emit.ok(
       { removed: true, credentialsPath: path },
-      `Removed the saved credential from ${path}. The token itself is NOT revoked — revoke it at /app/setup/cli.`
+      `Removed the saved credential from ${path}. The token itself is NOT revoked — revoke it in the console under Setup › CLI access.`
     )
     return EXIT.OK
   },

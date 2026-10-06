@@ -5,7 +5,7 @@
     "commands": [
       {
         "command": "login",
-        "summary": "save a CLI token for this machine",
+        "summary": "sign this machine in (browser), or save a CLI token",
         "usage": "gf login [--token <token>] [--api <url>]",
         "needsAuth": false,
         "flags": [

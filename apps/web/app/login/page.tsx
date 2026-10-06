@@ -1,6 +1,9 @@
 import { redirect } from 'next/navigation'
 import { getSessionUser } from '@/lib/supabase-auth'
+import { safeRedirectPath } from '@/lib/safe-redirect'
 import { isSignupEnabled } from '@/lib/flags'
+import { isTerminalSignInEnabled } from '@/lib/terminal-sign-in-flag'
+import { getSiteUrl } from '@/lib/site-url'
 import { Frame } from '@/design-system/Frame'
 import { LoginForm } from './login-form'
 
@@ -13,9 +16,18 @@ import { LoginForm } from './login-form'
 // private stylesheet.
 export const dynamic = 'force-dynamic'
 
-export default async function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string | string[] }>
+}) {
+  const rawNext = (await searchParams).next
+  const next = typeof rawNext === 'string' ? rawNext : undefined
+  const siteUrl = getSiteUrl()
+  // account-from-the-terminal D8: a signed-in person who arrives with a `next` (from /cli/connect)
+  // goes there, guarded — not to /app.
   const user = await getSessionUser()
-  if (user) redirect('/app')
+  if (user) redirect(next ? safeRedirectPath(next, siteUrl) : '/app')
 
   // Gate-aware, and it has to be: `/signup` calls `notFound()` while `SIGNUP_ENABLED` is off
   // (`app/signup/page.tsx`), so an unconditional "Create one" would be a link to a hard 404 on the
@@ -29,7 +41,7 @@ export default async function LoginPage() {
       <p className="ds-doorlede">
         Your projects, your numbers, and whatever your agent got done while you were away.
       </p>
-      <LoginForm />
+      <LoginForm siteUrl={siteUrl} next={next ?? null} google={await isTerminalSignInEnabled()} />
       {signupOpen && (
         <div className="ds-doorfoot">
           No account yet? <a href="/signup">Create one</a>

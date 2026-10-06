@@ -7,7 +7,7 @@ Usage
   gf <command> [flags]
 
 Commands
-  login            save a CLI token for this machine
+  login            sign this machine in (browser), or save a CLI token
   logout           forget the saved token on this machine
   whoami           the account, the credential and the projects it reaches
   doctor           why is it not working — every check, in order

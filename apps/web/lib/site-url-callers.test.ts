@@ -75,6 +75,15 @@ const CALLERS: Record<string, { kind: 'informational' } | { kind: 'durable'; gat
   'components/landing/MakerClosingCta.tsx': { kind: 'informational' },
   // account-from-the-terminal D1 — the plain page the install prompt sends an agent to.
   'app/install.md/route.ts': { kind: 'informational' },
+  // account-from-the-terminal D4 — the door pages hand `getSiteUrl()` to "Continue with Google" as
+  // the OAuth return. It lives one round trip and is never stored or emailed, so it is read-now, not
+  // kept; on a preview it must BE the preview, or the return lands on production's session cookies.
+  'app/login/page.tsx': { kind: 'informational' },
+  'app/signup/page.tsx': { kind: 'informational' },
+  // D7 — the device flow's verification URL lives ten minutes and is opened once.
+  'app/api/v1/cli/device/route.ts': { kind: 'informational' },
+  // D8 — the same OAuth return as the door pages, for a person signing in from `gf login`.
+  'app/cli/connect/page.tsx': { kind: 'informational' },
   //
   // The install page RENDERS a connector URL, and it is the surface that already refuses to show a
   // misconfigured one — `isSiteUrlMisconfiguredInProduction()` exists for it. The minting itself is

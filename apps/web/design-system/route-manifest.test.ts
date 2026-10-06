@@ -186,8 +186,10 @@ test('the denominator moves exactly as the D13 ledger says', () => {
   // row carries a dated deferral instead of claiming coverage.
   // ⚠️ **+1 — portfolio-view Sprint 2, Story 2.1: `/app/portfolio`.** Like FinOps: the denominator, not the covered
   // count, with a dated deferral.
-  assert.equal(beforeSprint4.length, 36, 'every row is live before Story 4.5 retires three')
-  assert.equal(atClose.length, 33, 'after Story 4.5: 36 rows minus the three retired')
+  // ⚠️ **+1 — account-from-the-terminal Sprint 2, Story 2.2: `/cli/connect`.** A door, not a console route; like
+  // FinOps: the denominator, not the covered count, with a dated deferral.
+  assert.equal(beforeSprint4.length, 37, 'every row is live before Story 4.5 retires three')
+  assert.equal(atClose.length, 34, 'after Story 4.5: 37 rows minus the three retired')
 
   // ...and the row that does not exist yet is the one Daniel approved as a designed empty state.
   const scheduled = ROUTE_MANIFEST.find((row) => row.route === '/app/scheduled/[projectSlug]')
@@ -209,7 +211,7 @@ test('coverage counts a route only when BOTH booleans are true', () => {
   const now = coverage(1)
   // 32 since golden-frijoles-cli added Setup › CLI access, 33 since board-sinks-and-scrumban added the Board tab — see
   // the ledger test above.
-  assert.equal(now.total, 36) // +1: /app/finops (finops S3.3), +1: /app/portfolio (portfolio-view S2.1)
+  assert.equal(now.total, 37) // +1: /app/finops (finops S3.3), +1: /app/portfolio (portfolio-view S2.1), +1: /cli/connect
   // ⚠️ **`>=`, not `>` — and the change is the whole point of Sprint 6.** This line asserted
   // `hasReferenceState > complete` under the message "reference states exist ahead of the work",
   // which was true for five sprints and is FALSE at epic close by design: the work caught up. The
@@ -255,15 +257,16 @@ test('coverage counts a route only when BOTH booleans are true', () => {
   // ⚠️ **32 and still 30 since finops S3.3** — `/app/finops` joins CLI access as the second uncovered route, each with
   // a deferral naming its owner and date; `outstanding` is pinned to exactly those two.
   // ⚠️ **33 and still 30 since portfolio-view S2.1** — `/app/portfolio` is the third uncovered route, deferred the same way.
-  assert.equal(atClose.total, 33, 'the epic-close denominator is not the 33 the two ledgers compute')
+  // ⚠️ **34 and still 30 since account-from-the-terminal S2.2** — `/cli/connect` is the fourth uncovered route.
+  assert.equal(atClose.total, 34, 'the epic-close denominator is not the 34 the two ledgers compute')
   assert.equal(
     atClose.complete,
     30,
-    `30 of 33 routes are covered — outstanding: ${atClose.outstanding.join(', ')}`
+    `30 of 34 routes are covered — outstanding: ${atClose.outstanding.join(', ')}`
   )
   assert.deepEqual(
     atClose.outstanding,
-    ['/app/finops/[projectSlug]', '/app/portfolio', '/app/setup/cli/[projectSlug]'],
+    ['/app/finops/[projectSlug]', '/app/portfolio', '/app/setup/cli/[projectSlug]', '/cli/connect'],
     'the only uncovered console route is the one whose deferral names an owner and a date'
   )
 
@@ -363,8 +366,8 @@ test('every row names a seam, and the seam matches the frame', () => {
   )
   assert.equal(
     bySeam('frame'),
-    11,
-    'seam B: six hub routes (the Board tab and the workspace board since board-sinks-and-scrumban) and five doors'
+    12,
+    'seam B: six hub routes (the Board tab and the workspace board since board-sinks-and-scrumban) and six doors (/cli/connect since account-from-the-terminal)'
   )
 })
 

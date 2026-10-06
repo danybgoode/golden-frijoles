@@ -42,6 +42,8 @@ export async function middleware(request: NextRequest) {
   return response
 }
 
+// account-from-the-terminal D8: `/cli/connect` reads the session too (the device-code confirm), and
+// a stale access token there would show a signed-in person the signed-out page.
 export const config = {
-  matcher: ['/app/:path*'],
+  matcher: ['/app/:path*', '/cli/:path*'],
 }

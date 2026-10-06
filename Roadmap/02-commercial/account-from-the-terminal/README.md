@@ -112,7 +112,8 @@ database — `site-url-callers.test.ts` header).
   `/auth/callback` code exchange + `provisionTenantForUser` — no new callback. Account linking is Supabase's automatic
   linking of a verified email to the existing user (password account + Google on the same address = same `auth.users`
   row); nothing in this repo links accounts. `/login` shows the button whenever the flag is on; `/signup` only when
-  `isSignupEnabled()` too.
+  `isSignupEnabled()` too. With signup off, a new Google identity still creates a projectless `auth.users` row (as
+  Supabase's own `signUp()` already allows with the anon key) — it gets no tenant, since provisioning stays gated.
 - **D5 — The flag lives in Golden Frijoles and the app reads its OWN catalog in-process (S2.1).**
   `auth.terminal_sign_in_enabled` in project `golden-beans` (`SELF_PROJECT_SLUG`), kill switch, born ON, created
   with `gf flags create … --kill-switch --all-envs`. Seam: `isTerminalSignInEnabled(): Promise<boolean>` in
@@ -121,10 +122,13 @@ database — `site-url-callers.test.ts` header).
   (`VERCEL_ENV` → production/preview, else development) serves `false`**. Absent flag, `off`/`never` activation, an
   unreadable row or any read error ⇒ `true` (the born-ON literal default — the SDK's own fallback rule), logged.
   Module-level 30 s cache (one global, non-tenant boolean; safe to share across requests). **No circularity:** the read
-  is service-role and needs no sign-in. A kill reaches running functions within 30 s, no redeploy.
+  is service-role and needs no sign-in. A kill reaches running functions within 30 s, no redeploy. ⚠️ **Kill with
+  `gf flags kill` (serves `false`), never by deactivating:** a deactivated environment serves nothing, which this rule
+  — like the SDK — reads as the born-ON literal (fresh reviewer, PR #280).
 - **D6 — Device codes: a new table, the token minted at poll time (S2.2).** Migration
   `cli_device_codes(id, device_code_hash UNIQUE sha256, user_code UNIQUE, label, status pending|approved|denied|consumed,
-  user_id → auth.users ON DELETE CASCADE, created_at, expires_at = +10 min, approved_at, consumed_at)`, RLS on,
+  user_id → auth.users ON DELETE CASCADE, created_at, expires_at = +10 min, decided_at, consumed_at)` (built: `decided_at`
+  covers approve AND deny), RLS on,
   service-role only (the `cli_tokens` grant shape). **Deviation from the seed:** the scope said "the minted token handed
   out once" (stored); instead NO token is stored — the poll that wins an atomic `UPDATE … SET status='consumed' WHERE
   status='approved' AND expires_at > now() RETURNING user_id, label` mints with `mintCliToken` and returns it once. The
@@ -132,7 +136,7 @@ database — `site-url-callers.test.ts` header).
   alphabet with no 0/O/1/I) is the display handle and grants nothing without a signed-in confirm.
 - **D7 — Device endpoints (S2.2).** `POST /api/v1/cli/device` (start: `{label}` → `{deviceCode, userCode,
   verificationUrl, expiresIn, interval}`) and `POST /api/v1/cli/device/token` (poll: `{deviceCode}` → `ok {status:
-  'pending'|'slow_down'}` · `ok {status:'approved', token, account}` · `cliError('not_found', …, {reason:
+  'pending'|'slow_down'}` · `ok {status:'approved', token}` (built without `account`: the CLI's own whoami probe names the account) · `cliError('not_found', …, {reason:
   'expired'|'used'|'denied'|'unknown'})`). Both check `isTerminalSignInEnabled()` AND `isCliWriteApiEnabled()` **before
   reading the body** (LEARNINGS: a kill switch comes before the body) and answer the uniform 404 `disabled` when off.
   Rate-limited through `lib/rate-limit.ts`: start per IP, poll per device code (interval 5 s ⇒ `slow_down`).

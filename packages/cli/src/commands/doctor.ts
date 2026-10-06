@@ -136,7 +136,7 @@ export const doctorCommand: Command = {
         // Unknown, revoked and expired are one answer at the server by design, so `doctor` must not
         // invent a distinction it cannot have. It names all three and one remedy that covers them.
         detail:
-          'The deployment rejected this credential — unknown, revoked or expired. Mint a new one at /app/setup/cli.',
+          'The deployment rejected this credential — unknown, revoked or expired. Run `gf login` again (or mint one in the console under Setup › CLI access).',
       })
       return report(context, checks)
     }
