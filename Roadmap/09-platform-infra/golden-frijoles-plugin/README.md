@@ -9,7 +9,7 @@ risk: high
 type: feature
 sprints_total: 5
 stories_total: 23   # the sum of every sprint's stories_total — keep it in step when a story is added
-build_order: 68       # integer position in the ONE global build sequence
+build_order: 69       # integer position in the ONE global build sequence
 ---
 
 # Epic: One plugin, one install — Golden Frijoles ships as a public plugin whose skills run in anyone's repo
