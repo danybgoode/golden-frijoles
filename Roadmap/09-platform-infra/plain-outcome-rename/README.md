@@ -7,13 +7,13 @@ title: "Plain Outcome: one vocabulary and one lifecycle across the plugin, the r
 area: 09-platform-infra
 risk: high
 type: feature
-sprints_total: 5
-stories_total: 14   # the sum of every sprint's stories_total — keep it in step when a story is added
+sprints_total: 4
+stories_total: 12   # the sum of every sprint's stories_total — keep it in step when a story is added
 intent_match: null   # copied from the seed by scaffold-epic (intent-match); the reader at the lock may update it
 quote_low_usd: 67    # ≈ API $ — copied from the seed's `quote:` by scaffold-epic (finops); null = not quoted, never 0
 quote_high_usd: 144
 quote_basis: "L, n=3, p25–p75"
-build_order: 63    # integer position in the ONE global build sequence — the SSOT once the epic
+build_order: 64    # integer position in the ONE global build sequence — the SSOT once the epic
                      # exists (the seed's value is only a fallback). Fill it in at the betting
                      # table; plain integers, no "#2a" suffixes. See 00-ideas/README.md → Ordering.
 ---
@@ -21,6 +21,13 @@ build_order: 63    # integer position in the ONE global build sequence — the S
 # Epic: Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console
 
 > **Area:** 09-platform-infra · **Risk:** high · **Class:** Feature · **Scope seed:** [`00-ideas/seeds/plain-outcome-rename.md`](../../00-ideas/seeds/plain-outcome-rename.md)
+
+> **Split, 2026-10-05 (Daniel, UX audit):** screen words are superseded by plain agile
+> ([`audits/ux-ui-audit-2026-10.md`](../../00-ideas/audits/ux-ui-audit-2026-10.md), decision 1). Sprint 5 (console and
+> report labels, the walkthrough and the roadmap overview) moved to launch epic 3,
+> [`one-header-one-name`](../../02-commercial/one-header-one-name/README.md); its file is in git history. Sprints 1–4
+> wait for after launch and are **re-groomed to plain agile words before anyone builds them** (stage names Backlog ·
+> Grooming · Ready · Building · QA · Shipped, then Proven · Disproven · Unclear).
 <!-- Class (above) is the Stage-2 classification: Feature, Spike, Bug, or Chore — see SKILL.md's
      Stage 2 table; sourced from scaffold-epic.mjs's --type flag (a fixed 4-value enum, not free
      text — a longer description belongs in the Why section below, not here; this comment never names
@@ -71,10 +78,8 @@ change.
 | 4 | S4.1 One command moves a repo | high |
 | 4 | S4.2 Every reader and the template use the new layout | high |
 | 4 | S4.3 This repo migrated | high |
-| 5 | S5.1 Console and report labels | low |
-| 5 | S5.2 Walkthrough and the roadmap overview | low |
 
-**Waves:** wave 1 = sprints 1–3 (plugin release 0.28.0, old names as stubs); wave 2 = sprints 4–5, re-bet at the boundary (stubs removed in the release after wave 2).
+**Waves:** wave 1 = sprints 1–3 (plugin release 0.28.0, old names as stubs); wave 2 = sprint 4, re-bet at the boundary (stubs removed in the release after wave 2).
 
 ## Deploy order
 1. **Engine first (S1.1):** accept-both on `/api/v1/roadmap/push` merges, deploys, and is verified with a real push of

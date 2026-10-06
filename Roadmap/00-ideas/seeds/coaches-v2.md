@@ -8,7 +8,7 @@ appetite: M
 underwritten_by: wave-2026-10-04-launch
 risk: low
 epic: "09-platform-infra/coaches-v2"
-build_order: 64
+build_order: 65
 updated: 2026-10-04
 intent_ask: verbatim
 intent_match: null
