@@ -106,6 +106,11 @@ test('members see every live member surface but never owner-only or flow-only ro
     // whose entire content is "this is not built yet" would tell a member less than it tells
     // everyone else for no boundary in return.
     [
+      // one-header-one-name D2 — Plan's three, FIRST in the inventory so Roadmap is Plan's entry. Member-readable:
+      // every member passes the Hub's `requireDashboardAccess`.
+      'hub',
+      'hub/board',
+      'hub/horizon',
       'north-star',
       'finops', // finops S3.3 — Measure, beside the North Star
       'journeys',
@@ -117,6 +122,8 @@ test('members see every live member surface but never owner-only or flow-only ro
       'experiments',
       'tasks',
       'scenarios',
+      // one-header-one-name D2 — the Outcome report, Measure's last item; member-readable like the rest of the Hub.
+      'hub/report',
       'setup/connect',
       'setup/cli',
       'scheduled',
@@ -190,11 +197,15 @@ test('owner-only links stay owner-only while Flags and Tasks follow their indepe
   assert.deepEqual(
     links.map(({ routeSegment }) => routeSegment),
     [
+      'hub',
+      'hub/board',
+      'hub/horizon',
       'north-star',
       'finops',
       'journeys',
       'experiments',
       'scenarios',
+      'hub/report',
       // console-ia-overhaul Sprint 2 (A7): with the console ON, `keys`, `flag-credentials` and
       // `agent-keys` are ABSENT and these two are present. `allGatesOpen` sets `console-shell: true`
       // and `legacy-keys: false`, which is the only combination `readGates()` can produce.
@@ -218,14 +229,16 @@ test('owner-only links stay owner-only while Flags and Tasks follow their indepe
 
 // ── console-ia-overhaul · Sprint 1, Story 1.2 (epic README, D2) ────────────────────────────────
 
-test('every surface declares a section, and every section is one of the four', () => {
+// one-header-one-name D1 — FIVE since Plan joined. The count is still pinned: a sixth section is a decision, and the
+// test should make somebody say so.
+test('every surface declares a section, and every section is one of the five', () => {
   const valid = new Set<ConsoleSection>(CONSOLE_SECTIONS.map((section) => section.id))
-  assert.equal(valid.size, 4)
+  assert.equal(valid.size, 5)
 
   for (const surface of PROJECT_ROUTE_INVENTORY) {
     assert.ok(
       valid.has(surface.section),
-      `${surface.routeSegment} declares section ${JSON.stringify(surface.section)}, which is not one of the four`
+      `${surface.routeSegment} declares section ${JSON.stringify(surface.section)}, which is not one of the five`
     )
   }
 })
@@ -286,7 +299,13 @@ test('Ship holds the feature-operating surfaces and Setup holds every credential
     // ⚠️ **`north-star` FIRST — mockups-as-built Story 3.1 (epic D14).** Measure's rail opens on it
     // because `getSectionEntryHref` takes `[0]`, so the order in the inventory is the design
     // decision rather than a second `isDefault` field somebody would have to keep in step.
-    ['north-star', 'finops', 'journeys', 'scenarios']
+    // one-header-one-name D2 — the Outcome report LAST: it reads everything above it.
+    ['north-star', 'finops', 'journeys', 'scenarios', 'hub/report']
+  )
+  // one-header-one-name D2 — Plan is the Hub's three views, Roadmap first (it is Plan's entry).
+  assert.deepEqual(
+    getSectionLinks(links, 'plan').map((l) => l.routeSegment),
+    ['hub', 'hub/board', 'hub/horizon']
   )
   assert.deepEqual(
     getSectionLinks(links, 'today').map((l) => l.routeSegment),

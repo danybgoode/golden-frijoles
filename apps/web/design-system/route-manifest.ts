@@ -792,7 +792,7 @@ export const ROUTE_MANIFEST: readonly CoverageRow[] = [
     label: 'Roadmap hub',
     frame: 'hub',
     seam: 'frame',
-    surface: null,
+    surface: 'hub',
     // board-sinks-and-scrumban S4.1 — the Roadmap tab is areas × Shipped · Now · Next · Later now, held to the approved
     // SURFACE `hub-roadmap-areas` (D23). The prototype's `hub-roadmap` (the journey track) stays approved: the share page
     // draws its own journey.
@@ -824,7 +824,7 @@ export const ROUTE_MANIFEST: readonly CoverageRow[] = [
     label: 'Board',
     frame: 'hub',
     seam: 'frame',
-    surface: null,
+    surface: 'hub/board',
     referenceState: 'hub-board',
     rendersFromDesignSystem: true,
     landsIn: 6,
@@ -852,7 +852,7 @@ export const ROUTE_MANIFEST: readonly CoverageRow[] = [
     label: 'Horizon',
     frame: 'hub',
     seam: 'frame',
-    surface: null,
+    surface: 'hub/horizon',
     referenceState: 'hub-horizon',
     rendersFromDesignSystem: true,
     landsIn: 6,
@@ -865,7 +865,7 @@ export const ROUTE_MANIFEST: readonly CoverageRow[] = [
     label: 'Pod report',
     frame: 'hub',
     seam: 'frame',
-    surface: null,
+    surface: 'hub/report',
     referenceState: 'hub-report',
     rendersFromDesignSystem: true,
     landsIn: 6,

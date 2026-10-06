@@ -76,8 +76,8 @@ test('every entry carries its section in the words the header uses', () => {
   assert.equal(entries.find((entry) => entry.label === 'Features')?.hint, 'Ship')
   for (const entry of entries) {
     assert.ok(
-      ['Today', 'Measure', 'Ship', 'Setup'].includes(entry.hint),
-      `${entry.label} is hinted "${entry.hint}", which is not one of the four section labels`
+      ['Today', 'Plan', 'Ship', 'Measure', 'Setup'].includes(entry.hint),
+      `${entry.label} is hinted "${entry.hint}", which is not one of the five section labels`
     )
   }
 })

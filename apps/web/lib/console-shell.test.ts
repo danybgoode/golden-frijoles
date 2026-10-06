@@ -89,10 +89,11 @@ function header(section: ShellSection, gates = allGatesOpen, projects = owner, s
   })
 }
 
-test('with every gate open an owner sees exactly the four sections, in order', () => {
+// one-header-one-name D1 — FIVE, in the loop's order. Plan is new (the Hub's views), and Measure moved after Ship.
+test('with every gate open an owner sees exactly the five sections, in the loop order', () => {
   assert.deepEqual(
     header('home').tabs.map((tab) => tab.label),
-    ['Today', 'Measure', 'Ship', 'Setup']
+    ['Today', 'Plan', 'Ship', 'Measure', 'Setup']
   )
 })
 
@@ -161,8 +162,10 @@ test('on PREVIEW gates all four tabs still render, and Ship lands on a surface a
   const { tabs } = header('home', previewGates)
   assert.deepEqual(
     tabs.map((tab) => tab.id),
-    ['today', 'measure', 'ship', 'setup']
+    ['today', 'plan', 'ship', 'measure', 'setup']
   )
+  // one-header-one-name D2 — Plan is `gate: 'always'`, so a preview lands where production does: the Roadmap.
+  assert.equal(tabs.find((tab) => tab.id === 'plan')?.href, '/hub/miyagisanchez')
   assert.equal(
     tabs.find((tab) => tab.id === 'ship')?.href,
     '/app/scheduled/miyagisanchez',
@@ -196,7 +199,7 @@ test('a section with ZERO entitled surfaces renders no tab at all', () => {
   )
   assert.deepEqual(
     tabs.map((tab) => tab.id),
-    ['today', 'measure', 'setup']
+    ['today', 'plan', 'measure', 'setup']
   )
 })
 
@@ -218,7 +221,7 @@ test('a member DOES see Setup now, because Connect your agent is member-readable
   ]).tabs
   assert.deepEqual(
     tabs.map((tab) => tab.id),
-    ['today', 'measure', 'ship', 'setup']
+    ['today', 'plan', 'ship', 'measure', 'setup']
   )
   // ⚠️ **TWO since golden-frijoles-cli.** `setup/cli` is member-readable on purpose: a CLI token
   // grants exactly what its holder's console session grants, and every project-scoped call the CLI
