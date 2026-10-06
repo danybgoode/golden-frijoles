@@ -1,8 +1,10 @@
 import { test, expect } from '@playwright/test'
-import { INSTALL_PROMPT } from '@/lib/install-prompt'
+import { installPrompt } from '@/lib/install-prompt'
 
 // golden-frijoles-plugin · Sprint 3, Story 3.3/3.4 — the install prompt is ONE string on three
-// surfaces: the landing's closing CTA (`/`), `/install`, and the signed-in onboarding page.
+// surfaces: the landing (`/`, hero and closing CTA), `/install`, and the signed-in onboarding page.
+// account-from-the-terminal D2: it is `installPrompt(getSiteUrl())`, and the test server's site URL
+// is its own `baseURL` — the same assumption `landing-prompts.spec.ts` makes.
 //
 // ── Why this checks the RENDERED HTML rather than trusting the import ───────────────────────────
 // `CopyPromptCard` renders `{prompt}` as a text child of a `<pre>`, so a real page load is the only
@@ -22,16 +24,37 @@ function decodeHtmlEntities(html: string): string {
     .replace(/&amp;/g, '&')
 }
 
-test('the closing CTA (/) serves INSTALL_PROMPT verbatim', async ({ request }) => {
+test('the landing (/) serves the install prompt verbatim', async ({ request, baseURL }) => {
   const res = await request.get('/')
   expect(res.status()).toBe(200)
   const html = decodeHtmlEntities(await res.text())
-  expect(html, '/ does not carry the install prompt verbatim').toContain(INSTALL_PROMPT)
+  // Presence only: the raw HTML repeats every string in the RSC payload, so a count here measures
+  // React, not the page. That BOTH cards carry it is asserted on rendered text in
+  // `landing.browser.spec.ts`.
+  expect(html, '/ does not carry the install prompt verbatim').toContain(installPrompt(baseURL!))
 })
 
-test('/install serves INSTALL_PROMPT verbatim', async ({ request }) => {
+test('/install serves the install prompt verbatim', async ({ request, baseURL }) => {
   const res = await request.get('/install')
   expect(res.status()).toBe(200)
   const html = decodeHtmlEntities(await res.text())
-  expect(html, '/install does not carry the install prompt verbatim').toContain(INSTALL_PROMPT)
+  expect(html, '/install does not carry the install prompt verbatim').toContain(installPrompt(baseURL!))
+})
+
+// account-from-the-terminal S1.1 — the page the prompt sends the agent to, served as Markdown.
+test('/install.md is the plain page the prompt names', async ({ request, baseURL }) => {
+  const res = await request.get('/install.md')
+  expect(res.status()).toBe(200)
+  expect(res.headers()['content-type']).toContain('text/markdown')
+  const body = await res.text()
+  for (const heading of [
+    '## What installs',
+    '## What changes on this machine',
+    '## Which services it contacts',
+    '## How to remove it',
+  ]) {
+    expect(body, `install.md is missing ${heading}`).toContain(heading)
+  }
+  // The prompt names exactly this URL — the route it names must be the route that answers.
+  expect(installPrompt(baseURL!)).toContain(`${baseURL}/install.md`)
 })

@@ -1,7 +1,7 @@
 import { DEMO_PROJECT_SLUG } from '@/lib/public-demo'
 import { getActiveConnectorUrl } from '@/lib/connector-tokens'
 import { CLI_BIN, CLI_GLOBAL_INSTALL, CLI_KILL_SWITCH_STORY, CLI_NPX_INIT } from '@/lib/cli-install'
-import { INSTALL_PROMPT } from '@/lib/install-prompt'
+import { installPrompt, PLUGIN_INSTALL, PLUGIN_MARKETPLACE_ADD, SKILLS_ADD } from '@/lib/install-prompt'
 import { getSiteUrl, isSiteUrlMisconfiguredInProduction } from '@/lib/site-url'
 import { isConnectorWritesEnabled } from '@/lib/flags'
 import { Icon } from '@/components/ui/Icon'
@@ -53,7 +53,7 @@ const ADD_TO_CLAUDE_URL = 'https://claude.ai/customize/connectors?modal=add-cust
 // which is how both hold at once: the approved block sequence exactly, and nothing lost.
 //
 // ── golden-frijoles-plugin · Sprint 3, Story 3.3 — the install prompt is a FOURTH section ───────
-// Same technique, same reason: `INSTALL_PROMPT` (`lib/install-prompt.ts`) is a `CopyPromptCard`
+// Same technique, same reason: `installPrompt(getSiteUrl())` (`lib/install-prompt.ts`) is a `CopyPromptCard`
 // placed FIRST inside the one `.listcard` — before "Demo connector URL" — because it is the single
 // action most visitors of this page actually want (plan and build with an agent), and it needs no
 // signed-in project, no seeded demo data and no CLI token to be useful immediately. It is a labelled
@@ -98,11 +98,14 @@ export default async function InstallPage() {
             Needs no signed-in session, no seeded demo data, nothing below to have loaded. */}
         <h2 className="ds-label">Plan and build with an agent</h2>
         <p className="ds-hint">
-          Paste this into Claude Code, Codex, or any agent <code>npx skills</code> supports. It installs the
-          Golden Frijoles plugin and starts you planning your first idea — the demo connector and CLI below
-          are a different thing: your <em>product&apos;s</em> own data, once you have one connected.
+          Paste this into Claude Code, Codex, or any agent <code>npx skills</code> supports. Your agent reads{' '}
+          <a href="/install.md">install.md</a> first, tells you what it installs, changes and contacts, and
+          waits for your go-ahead. Then it runs <code>{PLUGIN_MARKETPLACE_ADD}</code> and{' '}
+          <code>{PLUGIN_INSTALL}</code> (Claude Code) or <code>{SKILLS_ADD}</code> (other agents). The demo
+          connector and CLI below are a different thing: your <em>product&apos;s</em> own data, once you have
+          one connected.
         </p>
-        <CopyPromptCard label="Paste this into your agent" prompt={INSTALL_PROMPT} />
+        <CopyPromptCard label="Paste this into your agent" prompt={installPrompt(getSiteUrl())} />
 
         {/* ⚠️ An `h2`, not a `ds-label` span — fresh reviewer, Minor. The page this replaced had two
             `<h2>`s and the port turned both into styled spans, leaving the outline h1-only: heading
