@@ -2,25 +2,25 @@
 status: scaffolded   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
 phase: Shaping       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
-slug: coaches-v2
-title: "Coaches v2: a cold read first, then coaches that read each other, save as they go and leave one-pagers"
-area: 09-platform-infra
+slug: build-view-upgrade
+title: "Build view upgrade"
+area: 02-commercial
 risk: low
 type: feature
-sprints_total: 3
-stories_total: 9   # the sum of every sprint's stories_total — keep it in step when a story is added
+sprints_total: 1
+stories_total: 3   # the sum of every sprint's stories_total — keep it in step when a story is added
 intent_match: null   # copied from the seed by scaffold-epic (intent-match); the reader at the lock may update it
-quote_low_usd: 22    # ≈ API $ — copied from the seed's `quote:` by scaffold-epic (finops); null = not quoted, never 0
-quote_high_usd: 34
-quote_basis: "M, n=8, p25–p75"
-build_order: 70    # integer position in the ONE global build sequence — the SSOT once the epic
+quote_low_usd: 8    # ≈ API $ — copied from the seed's `quote:` by scaffold-epic (finops); null = not quoted, never 0
+quote_high_usd: 19
+quote_basis: "S, n=5, p25–p75"
+build_order: 68      # integer position in the ONE global build sequence — the SSOT once the epic
                      # exists (the seed's value is only a fallback). Fill it in at the betting
                      # table; plain integers, no "#2a" suffixes. See 00-ideas/README.md → Ordering.
 ---
 
-# Epic: Coaches v2: a cold read first, then coaches that read each other, save as they go and leave one-pagers
+# Epic: Build view upgrade
 
-> **Area:** 09-platform-infra · **Risk:** low · **Class:** Feature · **Scope seed:** [`00-ideas/seeds/coaches-v2.md`](../../00-ideas/seeds/coaches-v2.md)
+> **Area:** 02-commercial · **Risk:** low · **Class:** Feature · **Scope seed:** [`00-ideas/seeds/build-view-upgrade.md`](../../00-ideas/seeds/build-view-upgrade.md)
 <!-- Class (above) is the Stage-2 classification: Feature, Spike, Bug, or Chore — see SKILL.md's
      Stage 2 table; sourced from scaffold-epic.mjs's --type flag (a fixed 4-value enum, not free
      text — a longer description belongs in the Why section below, not here; this comment never names
@@ -34,38 +34,46 @@ build_order: 70    # integer position in the ONE global build sequence — the S
      that doesn't exist. -->
 
 ## Why
-The three coaches got this product to an agreed narrative, North Star and riskiest assumption, and surfaced 15 problems a
-stranger would hit (dogfood-launch-2026-10). This bet makes the sequence cohesive (a cold read first, coaches that read
-each other, save as they go, check the product and offer options), shows progress, and leaves three one-pagers a maker
-can consult in seconds. It builds on bet A's names. Pitch: `00-ideas/seeds/coaches-v2.md`. Moves: grounded_bets_share ·
-Tests: Value proposition.
+The build view works, in Daniel's words, but it doesn't say why the epic exists, shows progress as one count, shows the
+stage as a sentence, and links to the board's card view in the demo project (F41). This epic adds a Why line
+(hypothesis, metric from → to, read date), the story's "As a…, I want…, so that…", one progress bar per sprint, a stage
+track in plain words, and a link to the epic's own page. Spend and Board stay as they are. Launch epic 8 of
+[`audits/ux-ui-audit-2026-10.md`](../../00-ideas/audits/ux-ui-audit-2026-10.md). Moves: grounded_bets_share · Tests:
+Value proposition.
+
+**Signal:** start building an epic; the view says why and how far, and its link opens the epic page.
 
 ## Platform-first note
-Strategy lives in files the maker owns (`strategy/`), read by `groom/strategy.mjs`; the engine's North Star sync is
-unchanged. The other-family runner exists (`scripts/lib/cross-agent-cli.mjs`). No engine change.
+No new data. `scripts/build-state.mjs` already resolves every fact and renders the `lines` the mod shows as-is; the
+target and read date come from launch epic 4, the epic page from launch epic 5, the stage words from launch epic 3.
 
 ## What already exists (reuse, don't rebuild)
-- The three coach skills, their templates and `strategy-templates.test`; `groom/strategy.mjs`
-- `scripts/lib/cross-agent-cli.mjs` (Codex, Gemini, Mistral)
-- Reference implementations from this run: `00-strategy/blind/2026-10-04-compare.md`, `north-star/nsm.py`,
-  `business-model-scenarios.md`, the dogfood log's findings F2–F5, F7–F9, F11, F13–F15, F17, F19, F22
+- `scripts/build-state.mjs` (`lines`, `--json`, the board line and `board.hubUrl`), `scripts/build-state.test.mjs`.
+- `skills/plugins/golden-frijoles/hooks/{build-view.mjs,index.tsx,vendor/}`, `skills/scripts/render-hook-vendor.mjs`,
+  `skills/template/scripts/build-state.mjs`, `scripts/check-script-parity.mjs`.
+- `golden-frijoles.config.json` (`board.hubUrl`), `scripts/lib/config-registry.mjs`.
+- Design source: the private canvas, page 4: Band (proposed) and BandNow (today).
 
 ## Scope — stories
 | Sprint | Story | Risk |
 |---|---|---|
-| 1 | S1.1 The cold-read skill | low |
-| 1 | S1.2 The compare | low |
-| 2 | S2.1 One shared coach reference | low |
-| 2 | S2.2 Options, research and current use cases | low |
-| 2 | S2.3 Delegation, the product check and private strategy | low |
-| 2 | S2.4 Ladder up: an example becomes a need, with evidence | low |
-| 3 | S3.1 Per-coach fixes | low |
-| 3 | S3.2 Standalone one-pagers | low |
-| 3 | S3.3 Voice, sources and one copy | low |
+| 1 | S1.1 Why we're building it, while it builds | low |
+| 1 | S1.2 Progress by sprint, and the stage as a track | low |
+| 1 | S1.3 The link opens the epic's page | low |
+
+**No-gos:** removing Spend or Board (the canvas drops Board; Daniel's call, not this epic's) · new data or a
+"questions waiting" marker · the mod's refresh, cache and key · styling beyond what the terminal renders.
+
+**Rabbit holes** (detail in the seed): the mod renders `lines` as-is, so every change lives in `build-state.mjs` ·
+narrow terminals: truncate, never wrap the track · no target means "no target set" · three identical copies · the
+link only with an https `board.hubUrl` · which project this repo pushes to is checked at the lock (Daniel thinks
+`golden-beans-demo`), never guessed.
+
+**Flag:** none. Risk low. Rollback is a revert and a plugin release.
 
 ## Deploy order
-After bet A's wave 1 (plugin 0.28.0), as the next plugin minor. No engine deploy. The value proposition sheet ships
-without the VPC; the VPC only with Strategyzer's permission (owed to the PO).
+One PR, merge on green; the hook vendor is re-rendered in the same PR, and the plugin release follows
+`skills/RELEASING.md`.
 
 ## Definition of Done (epic)
 - [ ] All sprints merged to `main` + smoke-tested (gaps stated — `node scripts/owed-ledger.mjs` counts what is still owed)
