@@ -8,7 +8,7 @@ appetite: S
 underwritten_by: wave-backfill
 risk: low
 epic: "01-growth-engine/north-star-multi-metric-read"
-build_order: 68
+build_order: 69
 updated: 2026-10-04
 intent_ask: proxy   # found in CI's server log on #243 (2026-10-04); Daniel asked to seed it alongside ci-diet
 intent_match: 87
