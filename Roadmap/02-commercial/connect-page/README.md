@@ -99,9 +99,9 @@ path itself keeps its existing gates (`CONNECTOR_WRITES_ENABLED`, `CLI_WRITE_API
   state measures STRUCTURE (head → card → card → note), so the six groups sit in two cards — **your agent** (1–2) and
   **connections** (3–6) — plus a closing note: Daniel's order, the same contract, Connect still covered. The retired
   onboarding row leaves the denominator (it borrowed `setup-connect`): 29 of 33 at close.
-  ⚠️ **Daniel's call, owed:** the contract measures block SEQUENCE only, so "still covered" means "same skeleton".
+  ✅ **Accepted by Daniel, 2026-10-06 ("design is fine"):** the contract measures block SEQUENCE only, so "still covered" means "same skeleton".
   The approved picture draws card 1 = URL + status and card 2 = the three steps; the page now draws card 1 = your
-  agent and card 2 = connections. Accept the two-card grouping, or approve a new `setup-connect` picture.
+  agent and card 2 = connections. The two-card grouping stands; no new `setup-connect` picture is needed.
 - **One PR for both sprints (deviation from the stack rule):** S1's landing target is the page S2 rebuilds, so
   reviewing them apart would review a landing on a page about to change; the PR is reviewed at the higher tier.
 - **Routing:** the architect builds in place. Reviews: `review-route.mjs` + the fresh `pr-reviewer` on each PR.

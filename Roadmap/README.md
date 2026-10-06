@@ -345,7 +345,7 @@ independently shippable slice of value.
   that pushed a one-time API key; the connector URL a new account is handed can already change flags as its owner.
   Connect reads top to bottom: the install prompt; do it yourself (Claude Code, or `npx skills` for any other agent);
   the Claude app; **Codex** (one `codex mcp add … --url` command); the SDK, with where an ingest key really comes from;
-  and your signed-in machines. **Owed to Daniel:** accept the two-card grouping or approve a new Connect picture.
+  and your signed-in machines. The two-card grouping was accepted by Daniel. **Owed to Daniel:** the walkthrough.
 - ✅ [One stage, every client](02-commercial/board-sinks-and-scrumban/README.md) (a six-stage board on the Hub, the CLI
   mod and every sink) — **shipped and live 2026-10-02** (PRs #224–#228, plugin + kit 0.20.0/0.21.0). Every client now
   reads ONE stage: To groom · Grooming · Ready to build · Building · QA · Shipped, decided once by

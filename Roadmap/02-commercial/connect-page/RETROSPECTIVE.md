@@ -9,8 +9,8 @@ _Quote vs actual: $25–60 (M, architect estimate) → ≈$17.38 (−71% vs the 
 <!-- The actual is STAMPED, never typed: `node scripts/epic-actuals.mjs --epic <slug> --write` writes actual_* into
      the README (finops S2.5); copy its numbers here. -->
 
-> _Intent_ is provisional ("mostly"), owed to Daniel: the six groups he asked for sit in two cards (D6), which is
-> his call to accept or to re-approve as a new `setup-connect` picture.
+> _Intent_ is provisional ("mostly"), owed to Daniel. The two-card grouping (D6) was accepted by him on 2026-10-06
+> ("design is fine").
 
 ## What shipped
 - **#284** (`b8f5231`), both sprints in one PR (a recorded deviation: S1 lands on the page S2 rebuilt).
@@ -39,7 +39,7 @@ _Quote vs actual: $25–60 (M, architect estimate) → ≈$17.38 (−71% vs the 
 - **Prettier on a glob reformats files you never meant to touch.** Format only the files you changed.
 
 ## Gaps / follow-ups
-- **Owed to Daniel:** accept the two-card grouping or approve a new `setup-connect` picture (D6); the walkthrough
+- **Owed to Daniel:** the walkthrough
   (a fresh Google signup lands on Connect with no key; the Claude app turns a flag off with the URL it was given).
 - URLs minted at signup before this shipped stay read-only until Get a new URL (no credential backfill).
 - Dead `.ds-code` CSS left by the retired onboarding page; a handful of stale comments naming onboarding.
