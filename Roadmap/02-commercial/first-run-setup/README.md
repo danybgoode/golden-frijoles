@@ -2,25 +2,25 @@
 status: scaffolded   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
 phase: Shaping       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
-slug: coaches-v2
-title: "Coaches v2: a cold read first, then coaches that read each other, save as they go and leave one-pagers"
-area: 09-platform-infra
+slug: first-run-setup
+title: "First run: setup starts"
+area: 02-commercial
 risk: low
 type: feature
-sprints_total: 3
-stories_total: 9   # the sum of every sprint's stories_total — keep it in step when a story is added
+sprints_total: 1
+stories_total: 3   # the sum of every sprint's stories_total — keep it in step when a story is added
 intent_match: null   # copied from the seed by scaffold-epic (intent-match); the reader at the lock may update it
 quote_low_usd: 22    # ≈ API $ — copied from the seed's `quote:` by scaffold-epic (finops); null = not quoted, never 0
 quote_high_usd: 34
 quote_basis: "M, n=8, p25–p75"
-build_order: 71    # integer position in the ONE global build sequence — the SSOT once the epic
+build_order: 68      # integer position in the ONE global build sequence — the SSOT once the epic
                      # exists (the seed's value is only a fallback). Fill it in at the betting
                      # table; plain integers, no "#2a" suffixes. See 00-ideas/README.md → Ordering.
 ---
 
-# Epic: Coaches v2: a cold read first, then coaches that read each other, save as they go and leave one-pagers
+# Epic: First run: setup starts
 
-> **Area:** 09-platform-infra · **Risk:** low · **Class:** Feature · **Scope seed:** [`00-ideas/seeds/coaches-v2.md`](../../00-ideas/seeds/coaches-v2.md)
+> **Area:** 02-commercial · **Risk:** low · **Class:** Feature · **Scope seed:** [`00-ideas/seeds/first-run-setup.md`](../../00-ideas/seeds/first-run-setup.md)
 <!-- Class (above) is the Stage-2 classification: Feature, Spike, Bug, or Chore — see SKILL.md's
      Stage 2 table; sourced from scaffold-epic.mjs's --type flag (a fixed 4-value enum, not free
      text — a longer description belongs in the Why section below, not here; this comment never names
@@ -34,38 +34,48 @@ build_order: 71    # integer position in the ONE global build sequence — the S
      that doesn't exist. -->
 
 ## Why
-The three coaches got this product to an agreed narrative, North Star and riskiest assumption, and surfaced 15 problems a
-stranger would hit (dogfood-launch-2026-10). This bet makes the sequence cohesive (a cold read first, coaches that read
-each other, save as they go, check the product and offer options), shows progress, and leaves three one-pagers a maker
-can consult in seconds. It builds on bet A's names. Pitch: `00-ideas/seeds/coaches-v2.md`. Moves: grounded_bets_share ·
-Tests: Value proposition.
+Setup asks its first questions cold, and an existing product with years of history starts with an empty `Roadmap/`:
+nothing it shipped shows on the board and the Outcome report has nothing to read. This epic builds the last part of
+the canvas First run flow (frames 7, 8a, 8b): after sign-in, setup says what happened and what it found before asking
+anything; an existing project is read into the roadmap (shipped work, open pull requests, issues as ideas) with a dry
+run first and nothing moved; a new idea starts with one sentence and a choice between strategy first and a first epic
+now. Closes gap 4 of the First run review (gaps 1–3 went into `account-from-the-terminal`).
+Moves: proving_workspaces · Tests: Value proposition.
+
+**Signal:** setup on a real repo with history and issues; the board shows what shipped, what's building and the
+backlog, and nothing in the repo moved.
 
 ## Platform-first note
-Strategy lives in files the maker owns (`strategy/`), read by `groom/strategy.mjs`; the engine's North Star sync is
-unchanged. The other-family runner exists (`scripts/lib/cross-agent-cli.mjs`). No engine change.
+Local only. The read writes plain Markdown into `Roadmap/` through the generators that already exist
+(`scaffold-epic.mjs`, the seed template), so everything passes the roadmap contract and reaches the Hub only when the
+founder pushes. Pull requests and issues come from `gh` when installed; otherwise git alone.
 
 ## What already exists (reuse, don't rebuild)
-- The three coach skills, their templates and `strategy-templates.test`; `groom/strategy.mjs`
-- `scripts/lib/cross-agent-cli.mjs` (Codex, Gemini, Mistral)
-- Reference implementations from this run: `00-strategy/blind/2026-10-04-compare.md`, `north-star/nsm.py`,
-  `business-model-scenarios.md`, the dogfood log's findings F2–F5, F7–F9, F11, F13–F15, F17, F19, F22
+- `skills/plugins/golden-frijoles/skills/golden-frijoles/SKILL.md` (Stage 1 detect, Stage 2 Q1/Q2/Q4, Stage 3 routing).
+- `skills/plugins/golden-frijoles/skills/groom/scaffold-epic.mjs`, `templates/scope-seed.md`, `scripts/roadmap-backfill.mjs`,
+  `scripts/lib/roadmap-contract.mjs`, `scripts/build-order.mjs`.
+- The coaches: `pmf-narrative`, `north-star`, `risk-validation`.
+- From launch epics 2, 4, 7: the sign-in result, "not grounded", the gate shape.
+- Design source: the private canvas, page 2 · First run: frames 7, 8a, 8b.
 
 ## Scope — stories
 | Sprint | Story | Risk |
 |---|---|---|
-| 1 | S1.1 The cold-read skill | low |
-| 1 | S1.2 The compare | low |
-| 2 | S2.1 One shared coach reference | low |
-| 2 | S2.2 Options, research and current use cases | low |
-| 2 | S2.3 Delegation, the product check and private strategy | low |
-| 2 | S2.4 Ladder up: an example becomes a need, with evidence | low |
-| 3 | S3.1 Per-coach fixes | low |
-| 3 | S3.2 Standalone one-pagers | low |
-| 3 | S3.3 Voice, sources and one copy | low |
+| 1 | S1.1 Setup says what happened and what it found | low |
+| 1 | S1.2 An existing project, read into the roadmap | low |
+| 1 | S1.3 A new idea, in a sentence | low |
+
+**No-gos:** persona, business model canvas or value proposition drafts · targets or verdicts for backfilled work ·
+moving, renaming or deleting anything, and the folder layout move · issue trackers other than GitHub · console work.
+
+**Rabbit holes** (detail in the seed): what counts as shipped work (merged PRs, else tags, else docs; capped, each
+saying where it came from) · issues grouped into ideas, never touched on GitHub · no `gh` means git only, said out loud ·
+dry run first · everything through the generators and the contract · nothing leaves the machine unless pushed.
+
+**Flag:** none. Risk low. Rollback is a revert and a plugin release.
 
 ## Deploy order
-After bet A's wave 1 (plugin 0.28.0), as the next plugin minor. No engine deploy. The value proposition sheet ships
-without the VPC; the VPC only with Strategyzer's permission (owed to the PO).
+One PR, merge on green; ships in the plugin release after launch epic 7, whose gate shape it uses.
 
 ## Definition of Done (epic)
 - [ ] All sprints merged to `main` + smoke-tested (gaps stated — `node scripts/owed-ledger.mjs` counts what is still owed)
