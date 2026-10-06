@@ -107,10 +107,11 @@ ${CLI_NPX_INIT}
 - **Claude Code:** the plugin is cached under \`~/.claude/plugins/\`; the marketplace is registered (with
   auto-update on) in \`~/.claude/plugins/known_marketplaces.json\`, and the plugin is switched on in
   \`~/.claude/settings.json\` (\`enabledPlugins\`).
-- **Claude Code — the plugin's hook:** it runs on each turn to draw a one-line build status. To do that
-  it reads this project's Claude Code session transcripts under \`~/.claude/projects/\` and writes a
-  \`.golden-frijoles/\` folder in the project (a usage index and summary, a session log), which ignores
-  itself in git. Nothing it reads or writes leaves the machine.
+- **Claude Code — the plugin's hook:** it runs on each turn to draw the build status above the prompt.
+  To count what this project's sessions cost, it reads your Claude Code session transcripts under
+  \`~/.claude/projects/\` and keeps only this project's sessions, in a \`.golden-frijoles/\` folder in the
+  project (a usage index and summary, a session log) that ignores itself in git. Nothing it reads or
+  writes leaves the machine unless you turn spend telemetry on.
 - **Other agents:** \`npx skills\` copies the skills into \`.agents/skills/\` (or your agent's own skills
   folder) and records them in \`skills-lock.json\`. No hooks are installed on this path.
 - **In this project, during setup:** a \`Roadmap/\` folder (your plans, as Markdown) and
