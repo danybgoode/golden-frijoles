@@ -87,3 +87,26 @@ test('Disconnect signs a coding agent out: its next whoami is refused', async ({
   const after = await request.get('/api/v1/cli/whoami', { headers: { authorization: `Bearer ${token}` } })
   expect(after.status()).toBe(401)
 })
+
+// Fresh reviewer, PR #282 (Blocking): since S3.1 an owner-made URL WRITES as that owner, so a MEMBER must
+// never be handed the plaintext — not on Setup › Connect (always withheld) and not on the onboarding page
+// (which showed it to any member until this fix). Asserted on the raw HTML, which carries the RSC
+// payload too: hiding a credential with a conditional render is not hiding it.
+test('a member never receives the connector URL — onboarding or Setup › Connect', async ({ browser }) => {
+  const { disposableSession } = await import('./helpers/disposable-session')
+  const session = await disposableSession(browser, 'member')
+  try {
+    const project = await session.addProject('member', 'member-no-url')
+    const token = `gb_connector_${randomBytes(24).toString('base64url')}`
+    await session.db.from('connector_tokens').insert({ project_id: project.id, token })
+    for (const path of [`/app/onboarding/${project.slug}`, `/app/setup/connect/${project.slug}`]) {
+      const response = await session.page.goto(path)
+      expect(response?.status(), `${path} did not render for a member`).toBe(200)
+      const html = await response!.text()
+      expect(html, `${path} hands a member the connector URL`).not.toContain(token)
+      expect(html).not.toContain('gb_connector_')
+    }
+  } finally {
+    await session.cleanup()
+  }
+})

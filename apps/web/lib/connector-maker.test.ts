@@ -2,6 +2,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { makerMayWrite, makerToStamp } from './connector-maker.ts'
 
 const base = {
@@ -26,4 +27,15 @@ test('each condition alone turns it read-only', () => {
 test('the mint never stamps a maker on the demo project', () => {
   assert.equal(makerToStamp('golden-beans-demo', 'golden-beans-demo', 'user-1'), null)
   assert.equal(makerToStamp('acme', 'golden-beans-demo', 'user-1'), 'user-1')
+})
+
+// The dark side, pinned STRUCTURALLY (fresh reviewer, PR #282): CI's lit server now matches production
+// (CONNECTOR_WRITES_ENABLED=true) and its OFF server turns the whole connector off, so "connector on,
+// writes off" exists on neither — the LEARNINGS rule for a gate the test server can't turn off.
+test('the route feeds BOTH write gates into the maker rule, and task writes stay behind their own gate', () => {
+  const route = readFileSync(new URL('../app/api/v1/public/mcp/c/[token]/route.ts', import.meta.url), 'utf8')
+  assert.match(route, /connectorWritesEnabled: isConnectorWritesEnabled\(\)/)
+  assert.match(route, /cliWritesEnabled: isCliWriteApiEnabled\(\)/)
+  assert.match(route, /if \(!makerMayWrite\(facts\)\) return null/)
+  assert.match(route, /if \(isConnectorWriteToolEnabled\(\) && writeKeyId\)/)
 })

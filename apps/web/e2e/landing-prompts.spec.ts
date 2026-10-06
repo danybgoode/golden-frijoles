@@ -85,7 +85,7 @@ test('the agent is told not to claim a connection it does not have', async ({ re
   )
 })
 
-test('the agent is told the connector is read-only and cannot save the work', async ({
+test('the agent is told what the connector can change, and that it cannot save the work', async ({
   request,
   baseURL,
 }) => {
@@ -95,6 +95,14 @@ test('the agent is told the connector is read-only and cannot save the work', as
   const manifest = await request.get(`${baseURL}/llms.txt`)
   expect(manifest.status()).toBe(200)
   const body = await manifest.text()
-  expect(body, 'llms.txt no longer states the read-only boundary').toContain('the connector is read-only')
+  // account-from-the-terminal S3.1 narrowed the boundary rather than removing it: a URL an owner made
+  // can change feature flags as that owner (D11). What must still be said is that nothing ELSE can be
+  // saved — the false promise this guard exists to stop is "I'll save your North Star".
+  expect(body, 'llms.txt no longer says the connector cannot save the work').toContain(
+    'the connector cannot save their North Star'
+  )
+  expect(body, 'llms.txt no longer bounds what the connector can change').toContain(
+    'The only thing it\n  can change is feature flags'
+  )
   expect(body, 'llms.txt no longer says the agent cannot write').toContain('you cannot write anything')
 })

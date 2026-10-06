@@ -215,7 +215,7 @@ export function ConnectorManager({
               noun="connector URL"
               subject={`${slug} · …${token.url.slice(-8)}`}
               consequence="This URL stops working at once. Paste the new one into Claude’s connector settings in its place."
-              details="The new URL acts as you."
+              details={writesOn ? 'The new URL acts as you.' : 'The new URL is read-only here.'}
               pending={pending}
               onConfirm={() => onRotate(token.tokenId)}
               onCancel={() => setRotating(null)}

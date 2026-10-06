@@ -168,9 +168,16 @@ database — `site-url-callers.test.ts` header).
   never stamps a maker on `DEMO_PROJECT_SLUG`, and the route's `makerMayWrite` ignores one there anyway (an e2e
   stamps a maker on the demo URL and asserts read-only). CI's gate env had `CONNECTOR_WRITES_ENABLED` absent while
   production has it ON; `ci/gates.on.env` now matches production so the lit path is tested.
+  **Decided at review (PR #282): one URL per project, so co-owners share it — and it acts as its MAKER.** An owner
+  B who uses owner A's URL acts with A's identity in `flag_lifecycle_audit`. Accepted: B gains no authority (every
+  owner already holds the same flag rights), the page names whose URL it is ("as you" / "as the owner who made it"),
+  and "Get a new URL" re-stamps it to whoever presses it. The plaintext URL is OWNER-only everywhere it renders
+  (Setup › Connect, and since this review the onboarding page too — a member could otherwise copy a write
+  credential). With writes on in CI, "connector on, writes off" exists on no test server, so that branch is pinned
+  in `lib/connector-maker.test.ts` (rule + a structural check on the route).
 - **D12 — "Turns green when first used" is `last_used_at` (S3.2).** Touched on resolve, throttled to once a minute
   (the `touchCliToken` shape). Setup › Connections composes the existing connect + CLI managers; Disconnect =
-  `revokeCliToken`, Get a new URL = the existing rotate.
+  `revokeCliToken`, Get a new URL = a new `rotateConnectorAction` (revoke, then mint; owner-only, connector-gated).
 
 ### Routing
 The architect builds every story in place (auth, migrations and a credential path are never delegated); S1 is low risk

@@ -56,7 +56,9 @@ export default async function SetupConnectPage({ params }: { params: Promise<{ p
   const canManage = isOwner({ projectId: membership.projectId, role: membership.role })
   // account-from-the-terminal S3.2 — the viewer's OWN signed-in machines (CLI tokens are per account,
   // not per project, so every member sees their own and nobody else's). Active ones only.
-  const codingAgents = activeCliTokens(await listCliTokens(membership.userId))
+  // `listCliTokens` throws on a failed read by design ("could not check" is not "none"). Caught HERE so a
+  // CLI-token outage cannot 500 the page that revokes connector URLs (fresh reviewer, PR #282).
+  const codingAgents = await listCliTokens(membership.userId).then(activeCliTokens, () => null)
   // D11: whether a URL made by a person may write here at all. Never on the public demo project.
   const writesOn = isConnectorWritesEnabled() && isCliWriteApiEnabled() && projectSlug !== DEMO_PROJECT_SLUG
   const firstUse = status.state === 'active' ? status.tokens[0].lastUsedAt : null
@@ -69,8 +71,8 @@ export default async function SetupConnectPage({ params }: { params: Promise<{ p
           lede={
             <>
               Your own URL, with your own token, for the project in the switcher above. Paste it into Claude
-              and it can read <strong>this project&apos;s</strong> numbers — not the demo project&apos;s, and
-              not any other tenant&apos;s.
+              and it can read <strong>this project&apos;s</strong> numbers and change its feature flags as you
+              — not the demo project&apos;s, and not any other tenant&apos;s.
             </>
           }
         />

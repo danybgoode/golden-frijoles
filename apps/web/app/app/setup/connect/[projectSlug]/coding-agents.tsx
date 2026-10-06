@@ -15,7 +15,8 @@ import { revokeCliTokenAction } from '../../cli/[projectSlug]/actions'
 //
 // Rendered as a `Field` INSIDE the page's first card: the approved `setup-connect` state is a fixed
 // block sequence, and a field inside a card adds no block.
-export function CodingAgents({ slug, tokens }: { slug: string; tokens: readonly CliTokenRow[] }) {
+/** `tokens` is null when the list could not be read — said as such, never shown as "nothing connected". */
+export function CodingAgents({ slug, tokens }: { slug: string; tokens: readonly CliTokenRow[] | null }) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [confirming, setConfirming] = useState<string | null>(null)
@@ -38,12 +39,14 @@ export function CodingAgents({ slug, tokens }: { slug: string; tokens: readonly 
     <Field
       label="Your coding agent and gf"
       hint={
-        tokens.length === 0
-          ? 'Nothing connected yet. Run `gf login` in your terminal; it signs this account in through the browser.'
-          : 'Each one is a machine signed in with `gf login`. Disconnect signs it out: its next command asks to sign in again.'
+        tokens === null
+          ? 'Could not check your signed-in machines right now. Reload in a moment — nothing was changed.'
+          : tokens.length === 0
+            ? 'Nothing connected yet. Run `gf login` in your terminal; it signs this account in through the browser.'
+            : 'Each one is a machine signed in with `gf login`. Disconnect signs it out: its next command asks to sign in again.'
       }
     >
-      {tokens.map((token) => (
+      {(tokens ?? []).map((token) => (
         <span className="ds-copyrow" key={token.id}>
           <span>
             <b>{token.label}</b>{' '}
