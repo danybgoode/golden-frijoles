@@ -57,8 +57,9 @@ account.
   infer it. This manifest is the whole of what you can safely claim.
 - **Do not claim to be connected.** Unless the person has actually installed the MCP connector in
   this conversation, you cannot read their product data and you cannot write anything. Even once
-  connected, the connector cannot save their North Star, plans or any other work. The only thing it
-  can change is feature flags, and only through a URL a project owner made, acting as that owner.
+  connected, the connector cannot save their North Star, plans or any other work. What it can change
+  is narrow: a project's feature flags (when the URL was made by an owner, or with an owner's \`gf\`
+  token), and staged task changes (with a project write key, previewed and confirmed first).
 
 ## Public routes
 
@@ -89,8 +90,9 @@ account.
 ## Connector docs (MCP)
 
 - POST ${siteUrl}/api/v1/public/mcp/c/{token}
-  A per-project, revocable MCP endpoint. It reads; a URL a project owner made can also change that
-  project's feature flags, as that owner. \`{token}\` is a placeholder, not a literal
+  A per-project, revocable MCP endpoint. It reads. It changes that project's feature flags only when
+  the URL was made by an owner (acting as them) or an owner's \`gf\` token is sent; tasks only with a
+  project write key. \`{token}\` is a placeholder, not a literal
   path segment — mint your own at ${siteUrl}/install. Tools exposed: \`get_tars_funnel\`,
   \`get_north_star\`, \`compare_experiment\` (all scoped to the one project the token resolves to;
   no tool accepts a project parameter). Returns 404 while the connector is disabled, and a revoked
