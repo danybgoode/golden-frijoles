@@ -33,7 +33,10 @@ function openBrowser(url: string, env: NodeJS.ProcessEnv): void {
     os === 'darwin'
       ? ['open', [url]]
       : os === 'win32'
-        ? ['cmd', ['/c', 'start', '', url]]
+        ? // NOT `cmd /c start`: cmd re-parses an unquoted argument, so a `&` in even a same-origin URL
+          // runs a second command (fresh reviewer, PR #280 round 2). rundll32 hands the URL to the
+          // protocol handler without a shell.
+          ['rundll32', ['url.dll,FileProtocolHandler', url]]
         : ['xdg-open', [url]]
   try {
     const child = spawn(command, args as string[], { stdio: 'ignore', detached: true })
@@ -42,6 +45,25 @@ function openBrowser(url: string, env: NodeJS.ProcessEnv): void {
   } catch {
     // The URL is printed either way; a machine with no browser just follows it by hand.
   }
+}
+
+export function isSameOriginHttp(url: string, apiUrl: string): boolean {
+  try {
+    const target = new URL(url)
+    return (
+      (target.protocol === 'https:' || target.protocol === 'http:') &&
+      target.origin === new URL(apiUrl).origin
+    )
+  } catch {
+    return false
+  }
+}
+
+/** A finite, non-negative number (floored at 1 s), or the fallback. */
+function positiveOr(value: unknown, fallback: number): number {
+  const n = Number(value)
+  // A 1 s floor: a buggy server answering `interval: 0` must not turn the poll into a tight loop.
+  return Number.isFinite(n) && n >= 0 ? Math.max(1, n) : fallback
 }
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -64,7 +86,7 @@ export async function deviceLogin(context: CommandContext, apiUrl: string): Prom
     return { kind: 'fallback', why: started.message }
   }
   const { deviceCode, userCode, verificationUrl } = started.body
-  let interval = Math.max(0, Number(started.body.interval) || 5)
+  let interval = positiveOr(started.body.interval, 5)
   const deadline = Date.now() + Math.max(1, Number(started.body.expiresIn) || 600) * 1000
 
   context.emit.note(
@@ -72,7 +94,10 @@ export async function deviceLogin(context: CommandContext, apiUrl: string): Prom
       `Opening ${verificationUrl}\n` +
       'Check that the browser shows the same code, then confirm. (Not opening? Visit the link yourself.)'
   )
-  openBrowser(verificationUrl, context.env)
+  // Only a URL on the deployment we are signing in to, over http(s), is handed to the OS opener —
+  // `open`/`start` will run whatever a hostile `--api` server puts here (fresh reviewer, PR #280).
+  // Anything else is printed above and left for the person to follow, or not.
+  if (isSameOriginHttp(verificationUrl, apiUrl)) openBrowser(verificationUrl, context.env)
 
   while (Date.now() < deadline) {
     await sleep(interval * 1000)
@@ -86,7 +111,7 @@ export async function deviceLogin(context: CommandContext, apiUrl: string): Prom
       return { kind: 'token', token: polled.body.token }
     }
     if (polled.body.status === 'slow_down')
-      interval = Math.max(interval + 5, Number(polled.body.interval) || 0)
+      interval = Math.max(interval + 5, positiveOr(polled.body.interval, 0))
   }
   return {
     kind: 'refused',

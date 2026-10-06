@@ -3,6 +3,7 @@ import { randomBytes } from 'node:crypto'
 import { getSupabaseServiceClient } from './supabase'
 import { hashCredential } from './credential-hash'
 import { mintCliToken } from './cli-tokens'
+import { recordAudit } from './audit'
 import {
   DEVICE_CODE_FORMAT,
   deviceCodeFromBytes,
@@ -159,6 +160,19 @@ export async function collectDeviceCode(deviceCode: unknown): Promise<CollectOut
         label: `gf login · ${typeof row.label === 'string' ? row.label : 'a terminal'}`,
       })
       if (!minted.ok) return { kind: 'error' }
+      // The same trail the console mint leaves (fresh reviewer, PR #280): the device path is the more
+      // phishable one, so it is the last one that may mint without a record. `projectId: null` —
+      // a CLI token belongs to an account, not a project. Never the token itself.
+      await recordAudit({
+        action: 'cli_token_minted',
+        projectId: null,
+        actorUserId: row.user_id,
+        metadata: {
+          tokenId: minted.id,
+          label: typeof row.label === 'string' ? row.label : null,
+          via: 'device',
+        },
+      })
       return { kind: 'approved', token: minted.plaintext, userId: row.user_id }
     }
     default:

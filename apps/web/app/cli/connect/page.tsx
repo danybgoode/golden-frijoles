@@ -106,14 +106,28 @@ export default async function CliConnectPage({
     )
   }
 
+  // ── Written against remote phishing (RFC 8628 §5.4; the security lens on PR #280) ─────────────
+  // Anyone can start a `gf login` and send this link to someone signed in. Nothing in a device flow
+  // can tell that apart from the real thing, so this page has to: the label is the requester's OWN
+  // words (shown as such, never as a fact), the request's age is shown, what confirming grants is
+  // stated in full, and "if someone sent you this link" is said before the button, not after.
+  const minutesAgo = Math.max(0, Math.round((Date.now() - Date.parse(view.createdAt)) / 60_000))
   return (
     <Frame variant="door" brandHref="/">
       <h1>Same code as your terminal?</h1>
       <p className="ds-doorlede">
-        <span className="ds-mono">{code}</span> — requested by <b>{view.label}</b>. Confirming signs that
-        terminal in as <b>{user.email ?? 'you'}</b>.
+        Only confirm if you just ran <span className="ds-mono">gf login</span> yourself and your terminal
+        shows <span className="ds-mono">{code}</span>. Confirming signs that terminal in as{' '}
+        <b>{user.email ?? 'you'}</b>, with access to every project you can open, until you revoke it under
+        Setup › CLI access.
       </p>
       <div className="ds-doorform">
+        <p className="ds-hint">
+          Requested{' '}
+          {minutesAgo === 0 ? 'less than a minute' : `${minutesAgo} minute${minutesAgo === 1 ? '' : 's'}`}{' '}
+          ago. The terminal calls itself “{view.label}” — that name is its own claim, not something we
+          checked.
+        </p>
         <form action={confirmDeviceCode}>
           <input type="hidden" name="code" value={code} />
           <Button type="submit" variant="primary">
@@ -126,7 +140,8 @@ export default async function CliConnectPage({
         </form>
       </div>
       <div className="ds-doornote">
-        <b>Didn&apos;t start this from your terminal?</b> Close this page. Nothing happens.
+        <b>If someone sent you this link, choose No.</b> Didn&apos;t start this from your terminal? Close this
+        page. Nothing happens.
       </div>
     </Frame>
   )

@@ -25,7 +25,7 @@ type ResolveHook = (
   },
 })
 
-const { deviceLogin } = await import('./device-login.ts')
+const { deviceLogin, isSameOriginHttp } = await import('./device-login.ts')
 
 type Reply = { status: number; body: unknown }
 
@@ -120,8 +120,17 @@ test('slow_down backs the polling off instead of failing', async () => {
       { status: 200, body: { ok: true, status: 'approved', token: 'gf_pat_minted' } },
     ],
   })
-  // The back-off adds 5 s, so this test waits once — the price of asserting the real delay.
+  // The 1 s floor plus a 5 s back-off: this test really sleeps ~7 s — the price of asserting the delay.
   const result = await deviceLogin(context, 'https://site.example')
   assert.equal(result.kind, 'token')
   assert.equal(calls.filter((call) => call.path === '/api/v1/cli/device/token').length, 2)
+})
+
+test('only an http(s) URL on the API origin may be handed to the OS opener', () => {
+  // Tested directly, never by running the opener: a failing guard would really launch `open`.
+  assert.equal(isSameOriginHttp('https://site.example/cli/connect?code=X', 'https://site.example'), true)
+  assert.equal(isSameOriginHttp('file:///etc/passwd', 'https://site.example'), false)
+  assert.equal(isSameOriginHttp('https://evil.example/cli/connect', 'https://site.example'), false)
+  assert.equal(isSameOriginHttp('javascript:alert(1)', 'https://site.example'), false)
+  assert.equal(isSameOriginHttp('not a url', 'https://site.example'), false)
 })

@@ -12,25 +12,25 @@ stories:
     i_want: "to sign in with Google, GitHub or an email link"
     so_that: "I don't make another password"
     risk: high
-    status: planned
+    status: in-progress
   - id: S2.2
     title: "gf login through the browser"
     as_a: "a founder in my terminal"
     i_want: "gf login to open my browser, show a code and sign me in when I confirm it"
     so_that: "I never copy a token"
     risk: high
-    status: planned
+    status: in-progress
   - id: S2.3
     title: "The account question, as the Account screen"
     as_a: "a founder running setup"
     i_want: "to hear what an account adds before I'm asked"
     so_that: "I can choose"
     risk: low
-    status: planned
+    status: in-progress
 ---
 # Account from the terminal — Sprint 2: Sign in from the terminal
 
-**Status:** ⬜ not started
+**Status:** 🟦 In review — PR #280
 
 ## Build contract (locked by the architect before the builder started — README § Architecture lock)
 - S2.1 → **D4** (Google only — the 2026-10-06 amendment cuts GitHub and the email link) + **D5** (the flag).
