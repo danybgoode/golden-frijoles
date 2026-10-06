@@ -45,7 +45,11 @@ test('Get a new URL revokes the old one and mints one that acts as you', async (
   await page.getByRole('dialog').getByRole('button', { name: 'Get a new URL' }).click()
   await expect(page.getByText('Copy this now — it is not shown again')).toBeVisible()
 
-  const { data: oldRow } = await client.from('connector_tokens').select('revoked_at').eq('id', old.id).single()
+  const { data: oldRow } = await client
+    .from('connector_tokens')
+    .select('revoked_at')
+    .eq('id', old.id)
+    .single()
   expect(oldRow?.revoked_at).not.toBeNull()
   // The old URL stops answering at once.
   const stale = await request.post(`/api/v1/public/mcp/c/${old.token}`, {
