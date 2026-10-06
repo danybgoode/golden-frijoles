@@ -24,7 +24,9 @@ function tenantSlug(): string {
 }
 
 test.describe('Setup surfaces', () => {
-  test('Connect shows the honest status, and never claims Claude has used it', async ({ page }) => {
+  test('Connect shows the honest status, and claims Claude used it only when a use is recorded', async ({
+    page,
+  }) => {
     const response = await page.goto(`/app/setup/connect/${tenantSlug()}`)
     expect(response?.status()).toBe(200)
 
@@ -42,8 +44,34 @@ test.describe('Setup surfaces', () => {
     // present. The second half matters as much as the first — a page that simply omitted the subject
     // would pass a negative assertion while leaving the reader to assume the URL's existence means
     // it has been used.
-    await expect(page.locator('main')).not.toContainText(/last used[^.]*\d/i)
-    await expect(page.locator('main')).toContainText(/not that Claude has ever used it/i)
+    // ⚠️ **account-from-the-terminal S3.2 changed the FACT this guarded, so it is re-pointed, not
+    // deleted.** The connector now records use (`connector_tokens.last_used_at`, D12), so the page may
+    // say "last used" — but ONLY when a use is recorded. The property is unchanged in substance: the
+    // page never claims a use the database does not hold. So the expectation is read from the database,
+    // because other specs in this project can create or use the tenant's URL before this one runs.
+    const record = readTenantRecord()
+    const { createClient } = await import('@supabase/supabase-js')
+    const db = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+      auth: { persistSession: false },
+    })
+    const { data: live } = await db
+      .from('connector_tokens')
+      .select('last_used_at')
+      .eq('project_id', record!.projectId!)
+      .is('revoked_at', null)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    const main = page.locator('main')
+    if (!live) {
+      await expect(main).toContainText('Not connected yet')
+      await expect(main).not.toContainText(/last used[^.]*\d/i)
+    } else if (live.last_used_at === null) {
+      await expect(main).toContainText('Not added yet')
+      await expect(main).not.toContainText(/last used[^.]*\d/i)
+    } else {
+      await expect(main).toContainText(/last used/i)
+    }
   })
 
   test('Connect never renders an empty field that looks like a URL', async ({ page }) => {
