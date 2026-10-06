@@ -340,6 +340,12 @@ independently shippable slice of value.
   URL is shown to owners only. Setup › Connections shows whether Claude has used it, your signed-in machines
   (Disconnect) and Get a new URL. **Owed to Daniel:** the walkthroughs (an agent reading install.md, `gf login` on a
   clean machine, the Claude app turning a flag off).
+- ✅ [Connect: start where you are](02-commercial/connect-page/README.md) (Daniel's feedback on the epic above) —
+  **shipped and live 2026-10-06** (#284). Signup — password or Google — lands on **Connect**, not on an onboarding page
+  that pushed a one-time API key; the connector URL a new account is handed can already change flags as its owner.
+  Connect reads top to bottom: the install prompt; do it yourself (Claude Code, or `npx skills` for any other agent);
+  the Claude app; **Codex** (one `codex mcp add … --url` command); the SDK, with where an ingest key really comes from;
+  and your signed-in machines. **Owed to Daniel:** accept the two-card grouping or approve a new Connect picture.
 - ✅ [One stage, every client](02-commercial/board-sinks-and-scrumban/README.md) (a six-stage board on the Hub, the CLI
   mod and every sink) — **shipped and live 2026-10-02** (PRs #224–#228, plugin + kit 0.20.0/0.21.0). Every client now
   reads ONE stage: To groom · Grooming · Ready to build · Building · QA · Shipped, decided once by
@@ -479,6 +485,11 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-06**: `connect-page` **shipped**: two sprints in one PR, ≈$17.38 against a $25–60 quote.
+  - A new founder now lands on the one page that connects their agent, the Claude app, Codex and their product, and the
+    URL they are handed can already change things. The plan's own claim that `gf init` writes the SDK's key was false
+    (it writes a flag-read key) and was caught before it shipped; the coverage ratchet refused a planned design
+    deferral, and the approved page structure fit the requested order.
 - **2026-10-06**: `account-from-the-terminal` **shipped**: three sprints in one run, two migrations applied before their
   merges, ≈$55.44 against a $67–144 quote.
   - A stranger now gets from the landing to a signed-in terminal with one prompt, one browser click and one URL, and

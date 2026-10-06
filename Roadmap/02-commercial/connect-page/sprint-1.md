@@ -12,25 +12,25 @@ stories:
     i_want: "the connector URL I'm given to change things as me"
     so_that: "I don't have to make a new one first"
     risk: high
-    status: in-progress
+    status: done
   - id: S1.2
     title: "Signup lands on Connect"
     as_a: "a founder who just signed up"
     i_want: "to land on Connect"
     so_that: "I start from the page I'll use, not a separate onboarding page"
     risk: high
-    status: in-progress
+    status: done
   - id: S1.3
     title: "No one-time key at signup"
     as_a: "a founder who just signed up"
     i_want: "not to be pushed to copy a key I don't need yet"
     so_that: "the first screen doesn't feel urgent"
     risk: high
-    status: in-progress
+    status: done
 ---
 # Connect: start where you are — Sprint 1: Land on Connect, connected
 
-**Status:** 🟦 In review
+**Status:** ✅ shipped 2026-10-06 — PR #284 (`b8f5231`)
 
 ## Build contract (locked by the architect before the builder started — README § Architecture lock)
 - S1.1 → **D1**. S1.2 → **D2**. S1.3 → **D3**.
@@ -39,7 +39,7 @@ stories:
 <!-- Keep the heading shape `### Story 1.M — <title>`. When a story ships, append ✅ + its commit ref.
      The epic README frontmatter `status:` is the AUTHORITATIVE epic status. -->
 
-### Story 1.1 — A new account's connector URL can already change things
+### Story 1.1 — A new account's connector URL can already change things ✅ 5eb5f75
 **As** a founder who just signed up, **I want** the connector URL I'm given to change things as me, **so that** I
 don't have to make a new one first.
 The URL signup provisioning mints names its owner (`created_by`), exactly like one made with the Create button —
@@ -48,7 +48,7 @@ never on the demo project. URLs minted at signup before this ship stay read-only
 app can turn a flag off with it.
 **Risk:** high
 
-### Story 1.2 — Signup lands on Connect
+### Story 1.2 — Signup lands on Connect ✅ 5d4ce6c, e1f5d8a
 **As** a founder who just signed up, **I want** to land on Connect, **so that** I start from the page I'll use.
 `/auth/callback` (including the Google return) and `/app/provision` send a newly provisioned account to
 `/app/setup/connect/<slug>`. `/app/onboarding/<slug>` redirects there, so old links keep working. A `/cli/connect`
@@ -56,7 +56,7 @@ app can turn a flag off with it.
 **Acceptance:** sign up with Google and land on Connect; open an old onboarding link and land on Connect.
 **Risk:** high
 
-### Story 1.3 — No one-time key at signup
+### Story 1.3 — No one-time key at signup ✅ e050871
 **As** a founder who just signed up, **I want** not to be pushed to copy a key I don't need yet, **so that** the first
 screen doesn't feel urgent.
 Signup still mints the project's first ingest key (it registers the starter feature through the SDK), but no longer
@@ -82,3 +82,8 @@ Env: production · https://goldenfrijoles.com
    → You end up on Connect.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+**Run 2026-10-06 (agent, production):** `/app/onboarding/<slug>` → 307 to `/app/setup/connect/<slug>`; `/signup` says
+"Straight to Setup › Connect". In CI, a brand-new account signs in through the real form, lands on Connect with no key
+on screen, and its connector URL's `created_by` is the user (`connect-landing.authed.spec.ts`). Steps 1–2 with a fresh
+Google account on production **owed to Daniel**.

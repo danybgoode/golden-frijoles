@@ -2108,6 +2108,9 @@ one-liner + why + date shape.
   touched.** Making the connector URL write as its maker turned the onboarding page's long-standing "show the URL
   to any member" into a way for a member to copy an owner's write credential. Neither external pass saw it: the file
   was outside the diff. Before merging a capability change, grep every renderer of the credential, not the diff.
+  **The same holds for every place it is MINTED (connect-page, 2026-10-06):** the owner stamp went on the Create button
+  but not on signup provisioning, the other mint path, so every new account got a read-only URL. List the mint paths
+  as well as the renderers.
 - **"Read-only" is a claim that rots when write paths are added elsewhere.** `llms.txt` said the connector was
   read-only for weeks after task and flag writes shipped over it; the first correction overclaimed the other way
   ("the only thing it can change is…"). State the boundary as the list of write paths and the credential each
@@ -2123,3 +2126,7 @@ one-liner + why + date shape.
   Turning `CONNECTOR_WRITES_ENABLED` on in CI (correctly: production has it on) left the dark branch untested, and the
   OFF server turns the whole connector off. Pin that branch with a unit test on the rule plus a structural check on
   the route, and say so where the gate is set.
+- **A structural design contract can be satisfied by a different page (connect-page, 2026-10-06).** `setup-connect`
+  measures block sequence, so a reordered page with the same skeleton still "matches". When contents move under an
+  unchanged contract, say so where the row is pinned and put the re-approval to the product owner — a green gate is
+  not an approval of the new picture.
