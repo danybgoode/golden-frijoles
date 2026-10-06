@@ -1,7 +1,7 @@
 ---
 status: in-progress   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
 slug: scenarios-pm-operable
-build_order: 69
+build_order: 70
 title: "Scenarios made PM-operable — define, launch, and kill a scenario from the UI"
 area: 01-growth-engine
 risk: high
