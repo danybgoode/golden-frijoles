@@ -10,11 +10,10 @@ test('the landing renders the approved roast, foil, icon, and tactile system', a
   expect(response?.status()).toBe(200)
   await expect(page.locator('.brand-lockup').first()).toBeVisible()
   await expect(page.locator('.golden-frijol-mark__face').first()).toBeVisible()
-  // The current headline (hero copy edit 24220da, 2026-09-02). `toContainText` normalises the <br/>
-  // away, so this reads as one string; the `.foil` assertion below is what pins which half gets the
-  // gold-foil treatment, and that split is the whole typographic idea of the hero.
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('For serial makers')
-  await expect(page.locator('h1 .foil')).toHaveText('Take your Moonshot')
+  // The current headline (account-from-the-terminal S1.3). The `.foil` assertion pins which half
+  // gets the gold-foil treatment, and that split is the whole typographic idea of the hero.
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Plan, ship and prove it paid off')
+  await expect(page.locator('h1 .foil')).toHaveText('prove it paid off')
   await expect(page.locator('.tag svg').first()).toBeVisible()
 
   const beanFill = await page

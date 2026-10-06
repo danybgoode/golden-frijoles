@@ -3,7 +3,7 @@ epic: account-from-the-terminal
 sprint: 1
 title: "Read before installing"
 risk: low
-phase: Shaping
+phase: Building
 stories_total: 3
 stories:
   - id: S1.1
@@ -12,31 +12,38 @@ stories:
     i_want: "a page my agent reads before installing anything"
     so_that: "I know what it installs, changes and contacts"
     risk: low
-    status: planned
+    status: done
   - id: S1.2
     title: "The prompt reads first and waits"
     as_a: "a founder"
     i_want: "the prompt to have my agent read install.md, summarise it, offer a security review and wait for my go-ahead"
     so_that: "nothing installs before I agree"
     risk: low
-    status: planned
+    status: done
   - id: S1.3
     title: "The landing hero in one line"
     as_a: "a visitor"
     i_want: "the landing to say what it does in one line, with the prompt right there"
     so_that: "I know in five seconds whether it's for me"
     risk: low
-    status: planned
+    status: done
 ---
 # Account from the terminal — Sprint 1: Read before installing
 
-**Status:** ⬜ not started
+**Status:** ✅ built and reviewed — PR #277 (merge = deploy; production smoke below)
+
+## Build contract (locked by the architect before the builder started — README § Architecture lock)
+- S1.1 → **D1**. S1.2 → **D2** (the prompt text is the canvas text in Story 1.2, verbatim, with `<site>` from
+  `getSiteUrl()`). S1.3 → **D3**.
+- The skills edit (transcription, README, umbrella SKILL.md) is a plugin release: follow `skills/RELEASING.md`.
+- Proof: `install-prompt.test.ts` (incl. the D2 weld), a pure spec on `installManifest`, `GET /install.md` 200 in the
+  `api` project, `check-onboarding-parity.mjs` green, `site-url-callers.test.ts` green.
 
 ## Stories
 <!-- Keep the heading shape `### Story 1.M — <title>`. When a story ships, append ✅ + its commit ref.
      The epic README frontmatter `status:` is the AUTHORITATIVE epic status. -->
 
-### Story 1.1 — install.md: what it installs, changes and contacts
+### Story 1.1 — install.md: what it installs, changes and contacts ✅ 9a2639d, 8de0955
 **As** a careful founder, **I want** a page my agent reads before installing anything, **so that** I know what it
 installs, changes and contacts.
 `GET /install.md` (text/markdown), a route like `app/llms.txt/route.ts`, built with `getSiteUrl()` and generated from
@@ -49,7 +56,7 @@ the npm registry, goldenfrijoles.com only with an account), how to remove it.
 - Every service the install contacts is named; nothing is named that isn't contacted.
 **Risk:** low
 
-### Story 1.2 — The prompt reads first and waits
+### Story 1.2 — The prompt reads first and waits ✅ 68430f1 (plugin + kit 0.29.0)
 **As** a founder, **I want** the prompt to have my agent read `install.md`, summarise it, offer a security review and
 wait for my go-ahead, **so that** nothing installs before I agree.
 Text, as on the canvas Landing frame: "Set up Golden Frijoles in this project. 1. Read <site>/install.md before
@@ -64,7 +71,7 @@ umbrella SKILL.md) carry the production URL, and the lock decides how the parity
   the skills repo.
 **Risk:** low
 
-### Story 1.3 — The landing hero in one line
+### Story 1.3 — The landing hero in one line ✅ 2e98710
 **As** a visitor, **I want** the landing to say what it does in one line, with the prompt right there, **so that** I
 know in five seconds whether it's for me.
 `MakerHero` becomes "Plan, ship and prove it paid off." plus the copy-prompt box. Every section below the hero stays

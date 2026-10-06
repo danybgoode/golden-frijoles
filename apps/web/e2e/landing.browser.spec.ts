@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { LANDING_SECTIONS } from '@/lib/landing-sections'
+import { installPrompt } from '@/lib/install-prompt'
 
 // The landing's rendered-content contract.
 //
@@ -13,23 +14,20 @@ import { LANDING_SECTIONS } from '@/lib/landing-sections'
 // What is left is the thing only this page can assert: that the v2 narrative actually rendered,
 // and that the nav's promises resolve to real anchors.
 
-test('the landing renders the maker-ops narrative', async ({ page }) => {
+test('the landing renders the maker-ops narrative', async ({ page, baseURL }) => {
   await page.goto('/')
 
   await expect(page.locator('nav.gb')).toBeVisible()
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('For serial makers')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Plan, ship and prove it paid off')
 
-  // TWO copy-a-prompt blocks, and the count changed WITH its reasoning rather than quietly
-  // (agentic-pm-public-surface, epic D5). `landing-readability-pass` D1 cut the old §try because
-  // two such blocks read as a pattern rather than an invitation — true of two blocks asking the
-  // SAME thing. These do different jobs at different moments: the hero offers to teach you
-  // something (`handoffPrompt`), and the closing CTA hands your agent the actual install command
-  // (`INSTALL_PROMPT`, golden-frijoles-plugin S3.3 — it replaced the closing card's `decisionPrompt`,
-  // which is still reachable from `/northstar-self-serve.md`'s own links).
-  //
-  // A comment justifying the opposite of what the assertion below checks is CODE-QUALITY #3, and
-  // it is the kind a reviewer reads as evidence and then stops looking.
+  // TWO copy-a-prompt blocks carrying the SAME install prompt (account-from-the-terminal S1.3): the
+  // canvas Landing frame puts it in the hero, and the closing CTA — below the hero, so untouched by
+  // that story — already carried it. `handoffPrompt` is no longer on the page; it stays exported and
+  // pinned by `e2e/landing-prompts.spec.ts`.
   await expect(page.locator('.prompt-card')).toHaveCount(2)
+  for (const copy of await page.locator('.prompt-card .prompt-copy').all()) {
+    expect((await copy.innerText()).trim()).toBe(installPrompt(baseURL!))
+  }
 })
 
 // The copy button's actual contract: what lands on the clipboard is what the reader saw.
@@ -314,7 +312,9 @@ test('selecting a paragraph is a wash, not a slab', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
 
-  const paragraph = page.locator('.hero-sub').first()
+  // The hero lost its `.hero-sub` paragraphs (S1.3); the closing CTA's copy is the page's
+  // remaining large body paragraph, under the same `::selection` rule.
+  const paragraph = page.locator('#start .measure').first()
   await paragraph.scrollIntoViewIfNeeded()
 
   const material = await paragraph.evaluate((node) => {
@@ -352,9 +352,7 @@ test('selecting a paragraph is a wash, not a slab', async ({ page }) => {
   // pointed out that the bound was decorative.
   await paragraph.click({ clickCount: 3 })
   const selected = await page.evaluate(() => getSelection()?.toString().trim() ?? '')
-  expect(selected, 'a paragraph must be selectable by triple-click').toContain(
-    'Agents can turn your ideas into reality'
-  )
+  expect(selected, 'a paragraph must be selectable by triple-click').toContain('Bring the idea')
 })
 
 // ── landing-frijoles-rebrand · Sprint 3 ─────────────────────────────────────────────────────────
@@ -651,9 +649,10 @@ test('every in-page anchor on the landing page resolves to a section that exists
     ).toHaveCount(1)
   }
 
-  expect(seen.size, 'no in-page anchors were actually checked — this guard would be vacuous').toBeGreaterThanOrEqual(
-    2
-  )
+  expect(
+    seen.size,
+    'no in-page anchors were actually checked — this guard would be vacuous'
+  ).toBeGreaterThanOrEqual(2)
 })
 
 // The same contract on `/talk`, which is where a BARE fragment actually breaks. A root-relative

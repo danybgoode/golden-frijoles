@@ -67,12 +67,14 @@ const CALLERS: Record<string, { kind: 'informational' } | { kind: 'durable'; gat
   'app/methodology/[chapter]/page.tsx': { kind: 'informational' },
   'app/methodology/edition.md/route.ts': { kind: 'informational' },
   'components/landing/MakerHero.tsx': { kind: 'informational' },
-  // golden-frijoles-plugin · Sprint 3, Story 3.3 — `MakerClosingCta.tsx` REMOVED from this registry.
-  // It rendered `decisionPrompt(getSiteUrl())`; the closing card now renders `INSTALL_PROMPT`
-  // (`lib/install-prompt.ts`), a constant that names no site URL at all (only github.com /
-  // raw.githubusercontent.com — see that file's own header for why), so the file no longer imports
-  // `getSiteUrl` and has nothing for this registry to classify. `decisionPrompt` itself is
-  // unchanged and still exported from `lib/landing-prompts.ts`.
+  // account-from-the-terminal D2 — `MakerClosingCta.tsx` is BACK. golden-frijoles-plugin S3.3 had
+  // removed it when the closing card switched to a constant install prompt that named no site URL;
+  // the prompt now tells the agent to read `<site>/install.md` first, so it is
+  // `installPrompt(getSiteUrl())` and the file imports the seam again. A prompt is read now:
+  // informational.
+  'components/landing/MakerClosingCta.tsx': { kind: 'informational' },
+  // account-from-the-terminal D1 — the plain page the install prompt sends an agent to.
+  'app/install.md/route.ts': { kind: 'informational' },
   //
   // The install page RENDERS a connector URL, and it is the surface that already refuses to show a
   // misconfigured one — `isSiteUrlMisconfiguredInProduction()` exists for it. The minting itself is

@@ -1,43 +1,48 @@
 // golden-frijoles-plugin · Sprint 3, Story 3.3 — a sanity floor on the one string every install
-// surface renders. The cross-repo weld (this string matches golden-frijoles/skills' own
-// transcription and the repo README/umbrella SKILL.md) is checked on THAT repo, by
-// `scripts/check-onboarding-parity.mjs` — a template cannot import a product's web app to read a
-// string, and the reverse is equally true. This just guards against the gross local corruption a
-// unit test can actually catch: the wrong marketplace/plugin name, a missing installation method,
-// or a URL that stopped pointing at github.com/raw.githubusercontent.com.
+// surface renders; account-from-the-terminal D2 made it a function of the site URL and moved the
+// cross-repo weld HERE.
+//
+// ── The weld ────────────────────────────────────────────────────────────────────────────────────
+// `skills/` (mirrored to golden-frijoles/skills) transcribes the prompt in
+// `template/scripts/lib/golden-onboarding.mjs`, against the PRODUCTION URL, and that repo's own
+// `check-onboarding-parity.mjs` holds its README and umbrella SKILL.md to the transcription. What
+// that repo cannot see is THIS file — a template cannot import a product's web app. The reverse is
+// free: both live in this monorepo, so this test imports the transcription and asserts it equals
+// `installPrompt(PRODUCTION_SITE_URL)`. A one-word edit on either side, without the other, goes red.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { INSTALL_PROMPT } from './install-prompt.ts'
+import {
+  installPrompt,
+  PRODUCTION_SITE_URL,
+  PLUGIN_INSTALL,
+  PLUGIN_MARKETPLACE_ADD,
+  SKILLS_ADD,
+} from './install-prompt.ts'
+// @ts-expect-error — a plain .mjs module with no type declarations; only its string export is read.
+import { INSTALL_PROMPT as SKILLS_TRANSCRIPTION } from '../../../skills/template/scripts/lib/golden-onboarding.mjs'
 
-test('names both installation methods, and exactly one plugin/marketplace pair', () => {
-  assert.match(INSTALL_PROMPT, /claude plugin marketplace add golden-frijoles\/skills/)
-  assert.match(INSTALL_PROMPT, /claude plugin install golden-frijoles@golden-frijoles/)
+test('the skills repo transcribes the production prompt, byte for byte', () => {
+  assert.equal(SKILLS_TRANSCRIPTION, installPrompt(PRODUCTION_SITE_URL))
+})
+
+test('the prompt sends the agent to install.md FIRST and makes it wait', () => {
+  const prompt = installPrompt('https://example.test')
+  assert.match(prompt, /1\. Read https:\/\/example\.test\/install\.md before installing anything\./)
+  assert.match(prompt, /wait for my go-ahead/)
+  // The order is the whole point: read, summarise, wait, THEN install.
+  assert.ok(prompt.indexOf('install.md') < prompt.indexOf('3. Install it'))
+})
+
+test('the only URL in the prompt is the site it was built for', () => {
+  const urls = installPrompt('https://example.test').match(/https?:\/\/\S+/g) ?? []
+  assert.deepEqual(urls, ['https://example.test/install.md'])
+})
+
+test('the plugin commands are the published names', () => {
+  assert.equal(PLUGIN_MARKETPLACE_ADD, 'claude plugin marketplace add golden-frijoles/skills')
+  assert.equal(PLUGIN_INSTALL, 'claude plugin install golden-frijoles@golden-frijoles')
   // Every skill, not just the umbrella: with `--skill golden-frijoles` alone only the umbrella installs and its
   // hand-off to groom dead-ends (measured, golden-frijoles-plugin X12).
-  assert.match(INSTALL_PROMPT, /npx skills add golden-frijoles\/skills --skill '\*'/)
-})
-
-test('names only github.com / raw.githubusercontent.com URLs — never a goldenfrijoles.com host', () => {
-  const urls = INSTALL_PROMPT.match(/https?:\/\/\S+/g) ?? []
-  assert.ok(urls.length > 0, 'a prompt with no URLs gives the reader nowhere to verify it from')
-  for (const url of urls) {
-    assert.match(
-      url,
-      /^https?:\/\/(raw\.githubusercontent\.com|github\.com)\//,
-      `${url} is not github.com or raw.githubusercontent.com — this prompt is a constant precisely ` +
-        'because it should never need a site URL'
-    )
-  }
-})
-
-test('the raw URL is the github URL, mirrored', () => {
-  const githubUrl = INSTALL_PROMPT.match(/https:\/\/github\.com\/\S+?SKILL\.md/)?.[0]
-  const rawUrl = INSTALL_PROMPT.match(/https:\/\/raw\.githubusercontent\.com\/\S+?SKILL\.md/)?.[0]
-  assert.ok(githubUrl && rawUrl, 'both a github.com and a raw.githubusercontent.com link are expected')
-  assert.equal(
-    githubUrl!.replace('github.com', 'HOST').replace('/blob/main/', '/main/'),
-    rawUrl!.replace('raw.githubusercontent.com', 'HOST'),
-    'the two links should name the identical path, just via github.com/blob vs raw.githubusercontent.com'
-  )
+  assert.equal(SKILLS_ADD, "npx skills add golden-frijoles/skills --skill '*'")
 })

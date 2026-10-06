@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { readTenantRecord } from './helpers/authed-fixture'
-import { INSTALL_PROMPT } from '@/lib/install-prompt'
+import { installPrompt } from '@/lib/install-prompt'
 
 // golden-frijoles-plugin · Sprint 3, Story 3.3 — the third of the three install-prompt surfaces:
 // the signed-in onboarding page (`/app/onboarding/[projectSlug]`). It needs a real session, so it
@@ -14,7 +14,7 @@ function tenantSlug(): string {
   return slug
 }
 
-test('the signed-in onboarding page serves INSTALL_PROMPT verbatim', async ({ page }) => {
+test('the signed-in onboarding page serves the install prompt verbatim', async ({ page, baseURL }) => {
   const path = `/app/onboarding/${tenantSlug()}`
   const response = await page.goto(path)
 
@@ -27,6 +27,6 @@ test('the signed-in onboarding page serves INSTALL_PROMPT verbatim', async ({ pa
   await expect(card, `${path} does not render a CopyPromptCard`).toBeVisible()
   const visible = await card.locator('.prompt-copy').innerText()
   expect(visible.trim(), `${path}'s prompt card does not carry the install prompt verbatim`).toBe(
-    INSTALL_PROMPT
+    installPrompt(baseURL!)
   )
 })
