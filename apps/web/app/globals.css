@@ -3283,6 +3283,16 @@ a.stat-card:hover {
   margin-bottom: 4px;
 }
 
+/* account-from-the-terminal S1.3 — the foil half now ENDS on an italic "f", whose overhang leaves
+   the element's box; `background-clip: text` paints only inside the box, so the glyph's tail was cut
+   off. Inline padding widens the painted box past the overhang, and `clone` gives every wrapped
+   fragment its own, since the headline wraps at most widths. */
+.hero .display .foil {
+  padding-inline-end: 0.12em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
 .hero .hero-sub {
   max-width: 620px;
   font-size: clamp(17px, 1.9vw, 22px);

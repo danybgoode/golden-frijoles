@@ -1,4 +1,4 @@
-import { handoffPrompt } from '@/lib/landing-prompts'
+import { installPrompt } from '@/lib/install-prompt'
 import { getSiteUrl } from '@/lib/site-url'
 import { Button } from '@/components/ui/Button'
 import { Icon } from '@/components/ui/Icon'
@@ -43,40 +43,29 @@ import { RunYourFirstBet } from './RunYourFirstBet'
 // `handoffPrompt` had been written, documented, specced and CALL-SITE-FREE for two epics — dead
 // code that every test in `e2e/landing-prompts.spec.ts` was faithfully exercising. This is its
 // first real call site since §try was cut.
+//
+// ── account-from-the-terminal · Sprint 1, Story 1.3 — one line and the install prompt ──────────
+// The canvas Landing frame: the hero says what the product does in ONE line, with the prompt that
+// installs it right there. The two `.hero-sub` paragraphs and the `handoffPrompt` card are gone; the
+// card now carries `installPrompt(getSiteUrl())` — the same string `/install`, onboarding and the
+// closing CTA carry. Everything below the hero is untouched (the story's acceptance). The comments
+// above are kept as the history of what this hero argued before; `handoffPrompt` stays exported and
+// pinned by `e2e/landing-prompts.spec.ts`, as `decisionPrompt` already was.
 export function MakerHero() {
   return (
     <section className="hero" id="hero">
       <div className="wrap hero-grid">
         <div>
-          {/* No terminal full stop: the line is two beats, and the second is the payoff. Headings are titles, not sentences — the D7 rule
-              `scripts/check-design-drift.mjs` enforces, which reads only the final character. */}
+          {/* No terminal full stop: headings are titles, not sentences — the D7 rule
+              `scripts/check-design-drift.mjs` enforces, which reads only the final character. The
+              foil half is the payoff, which is the whole typographic idea of this hero. */}
           <h1 className="display">
-            For serial makers
-            <br />
-            <em className="foil">Take your Moonshot</em>
+            Plan, ship and <em className="foil">prove it paid off</em>
           </h1>
-          {/* Set at the mockup's scale (`.hero .hero-sub` in globals.css), which is a size up from the
-              rest of the page's body copy. This is the one paragraph a reader definitely reads. */}
-          <p className="hero-sub">
-            Agents can turn your ideas into reality faster than ever. Golden Frijoles gives you and your agent
-            the methodology, operating rails and evidence to keep moving fast without losing the thread.
-          </p>
-          {/* "Future-proof as models evolve" is the borrowed idea, re-pointed at one person (epic D1):
-              the enterprise version is a company avoiding vendor lock-in, and ours is you not being
-              stuck with whichever agent you happened to start with. It is a claim we can actually
-              back — nothing here ships a model, and the connector is the same for all of them. */}
-          <p className="hero-sub hero-sub--tight">
-            Plant your own Golden Frijoles across product, delivery, security and AI operations. You bring the
-            agent, and you keep bringing whichever one is best — the rails do not change when the models do.
-          </p>
 
           <div className="hero-cta">
             <RunYourFirstBet />
-            {/* methodology-experience · Story 2.4 — re-pointed from `/#methodology` to the real
-                route. The in-page section is a PREVIEW of the method (its contents page and a
-                one-paragraph pitch); this button's words promise to show how the method works, and
-                only `/methodology` does that. Jumping a reader down the sales page to a card that
-                then asks them to click again is the offer being made twice. */}
+            {/* methodology-experience · Story 2.4 — the real route, not an in-page anchor. */}
             <Button href="/methodology" variant="ghost">
               See how the method works
               <Icon name="arrow-right" />
@@ -84,18 +73,9 @@ export function MakerHero() {
           </div>
         </div>
 
-        {/* The card is the hero's second object, and the only one. `handoffPrompt` takes the site
-            URL rather than hardcoding one, so no production hostname is baked into the source
-            (AGENTS.md rule #5). `SITE_URL` decides it wherever that is set — which is production —
-            and since site-url-preview-aware a PREVIEW, which has no `SITE_URL`, resolves its own
-            hostname from Vercel's platform variables instead of falling through to
-            `http://localhost:3000` and telling the reader's agent to fetch their own machine.
-            See lib/site-url-resolve.ts for the order and lib/landing-prompts.ts for the rest. */}
+        {/* The install prompt names `<site>/install.md`, so it takes `getSiteUrl()` (AGENTS rule #5). */}
         <div className="hero-magic">
-          <CopyPromptCard
-            label=""
-            prompt={handoffPrompt(getSiteUrl())}
-          />
+          <CopyPromptCard label="Paste this into your agent" prompt={installPrompt(getSiteUrl())} />
         </div>
       </div>
     </section>
