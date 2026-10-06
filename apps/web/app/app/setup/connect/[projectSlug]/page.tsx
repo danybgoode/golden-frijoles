@@ -217,13 +217,16 @@ const engine = createGrowthEngineClient({
 
 await engine.track('${STARTER_TARGET_EVENT}', { featureId: '${STARTER_FEATURE_KEY}' })`}
           </pre>
-          {/* Hedged, as the retired onboarding page was (fresh reviewer, #284): the starter feature is
-              registered best-effort at signup, and projects made another way never had one. */}
+          {/* Hedged (fresh reviewer, #284): the starter feature is registered best-effort at signup, and
+              projects made another way never had one. An unregistered feature's funnel is a 404
+              (`tars-query.ts` → feature_not_found → notFound()); `/api/v1/track` accepts the event either
+              way, so a ZERO means the event never arrived, not that the feature is missing. */}
           <p className="ds-hint">
             Run it once, then look for it on{' '}
             <a href={`/app/funnel/${projectSlug}/${STARTER_FEATURE_KEY}`}>the {STARTER_FEATURE_KEY} funnel</a>
-            . New accounts get that starter feature at signup; if the funnel reads zero after the event fired,
-            the feature was not registered — track an event of a feature you have registered instead.
+            . New accounts get that starter feature at signup. If the link says Not found, the feature was not
+            registered — track an event of a feature you have registered instead. If it reads zero after the
+            event fired, the event did not arrive: check the key and the base URL.
           </p>
 
           <h2 className="ds-label">6 · Your signed-in machines</h2>
