@@ -12,25 +12,25 @@ stories:
     i_want: "Connect to offer one path at a time, easiest first"
     so_that: "I know what to do next"
     risk: low
-    status: planned
+    status: in-progress
   - id: S2.2
     title: "Connect Codex"
     as_a: "a founder using Codex"
     i_want: "one command that connects Codex to my project"
     so_that: "Codex can read and change it too"
     risk: low
-    status: planned
+    status: in-progress
   - id: S2.3
     title: "The SDK, said plainly"
     as_a: "a founder wiring my product"
     i_want: "to understand what the SDK is for and where its key comes from"
     so_that: "I can send my product's events"
     risk: low
-    status: planned
+    status: in-progress
 ---
 # Connect: start where you are — Sprint 2: The Connect page, in order
 
-**Status:** ⬜ not started
+**Status:** 🟦 In review
 
 ## Build contract (locked by the architect before the builder started — README § Architecture lock)
 - S2.1 → **D4** + **D6**. S2.2 → **D5**. S2.3 → **D4** (the SDK block; the key's sources per **D3**).

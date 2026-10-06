@@ -12,25 +12,25 @@ stories:
     i_want: "the connector URL I'm given to change things as me"
     so_that: "I don't have to make a new one first"
     risk: high
-    status: planned
+    status: in-progress
   - id: S1.2
     title: "Signup lands on Connect"
     as_a: "a founder who just signed up"
     i_want: "to land on Connect"
     so_that: "I start from the page I'll use, not a separate onboarding page"
     risk: high
-    status: planned
+    status: in-progress
   - id: S1.3
     title: "No one-time key at signup"
     as_a: "a founder who just signed up"
     i_want: "not to be pushed to copy a key I don't need yet"
     so_that: "the first screen doesn't feel urgent"
     risk: high
-    status: planned
+    status: in-progress
 ---
 # Connect: start where you are — Sprint 1: Land on Connect, connected
 
-**Status:** ⬜ not started
+**Status:** 🟦 In review
 
 ## Build contract (locked by the architect before the builder started — README § Architecture lock)
 - S1.1 → **D1**. S1.2 → **D2**. S1.3 → **D3**.
