@@ -12,18 +12,18 @@ stories:
     i_want: "the connector URL I make to act as me"
     so_that: "the Claude app can change things in my project"
     risk: high
-    status: planned
+    status: in-progress
   - id: S3.2
     title: "Setup › Connections: who and what is connected"
     as_a: "a founder"
     i_want: "one place that shows who and what is connected"
     so_that: "I can see it and stop it"
     risk: low
-    status: planned
+    status: in-progress
 ---
 # Account from the terminal — Sprint 3: The Claude app can change things
 
-**Status:** ⬜ not started
+**Status:** 🟦 In review
 
 ## Build contract (locked by the architect before the builder started — README § Architecture lock)
 - S3.1 → **D11** (migration applied BEFORE merge; flag writes only — the task-write tools stay key-bound).

@@ -1,5 +1,11 @@
 import { requireProjectMembership } from '@/lib/dashboard-auth'
-import { isConnectorEnabled } from '@/lib/flags'
+import { isCliWriteApiEnabled, isConnectorEnabled, isConnectorWritesEnabled } from '@/lib/flags'
+import { listCliTokens } from '@/lib/cli-tokens'
+import { DEMO_PROJECT_SLUG } from '@/lib/public-demo'
+import { installPrompt } from '@/lib/install-prompt'
+import { getSiteUrl } from '@/lib/site-url'
+import { CopyField } from '@/design-system/copy-field'
+import { CodingAgents } from './coding-agents'
 import { isOwner } from '@/lib/roles'
 import { getConnectorStatus } from '@/lib/connector-tokens'
 import { formatUtc } from '@/lib/format-utc'
@@ -48,6 +54,14 @@ export default async function SetupConnectPage({ params }: { params: Promise<{ p
   // UI reaching it did not, because this line skipped the read entirely.
   const status = await getConnectorStatus(membership.projectId)
   const canManage = isOwner({ projectId: membership.projectId, role: membership.role })
+  // account-from-the-terminal S3.2 — the viewer's OWN signed-in machines (CLI tokens are per account,
+  // not per project, so every member sees their own and nobody else's). Active ones only.
+  // `listCliTokens` throws on a failed read by design ("could not check" is not "none"). Caught HERE so a
+  // CLI-token outage cannot 500 the page that revokes connector URLs (fresh reviewer, PR #282).
+  const codingAgents = await listCliTokens(membership.userId).then(activeCliTokens, () => null)
+  // D11: whether a URL made by a person may write here at all. Never on the public demo project.
+  const writesOn = isConnectorWritesEnabled() && isCliWriteApiEnabled() && projectSlug !== DEMO_PROJECT_SLUG
+  const firstUse = status.state === 'active' ? status.tokens[0].lastUsedAt : null
 
   return (
     <ProductShell projectSlug={projectSlug} section="setup" railActive={'setup/connect'}>
@@ -57,8 +71,8 @@ export default async function SetupConnectPage({ params }: { params: Promise<{ p
           lede={
             <>
               Your own URL, with your own token, for the project in the switcher above. Paste it into Claude
-              and it can read <strong>this project&apos;s</strong> numbers — not the demo project&apos;s, and
-              not any other tenant&apos;s.
+              and it can read <strong>this project&apos;s</strong> numbers and change its feature flags as you
+              — not the demo project&apos;s, and not any other tenant&apos;s.
             </>
           }
         />
@@ -108,6 +122,8 @@ export default async function SetupConnectPage({ params }: { params: Promise<{ p
                either way, and a button guaranteed to fail is worse than no button. Revoke is NOT
                withheld. */
             canMint={status.state === 'absent' && connectorEnabled}
+            viewerUserId={membership.userId}
+            writesOn={writesOn}
           />
 
           {/* ⚠️ **BELOW the URL, which is the order the approved state draws** — the thing first,
@@ -120,11 +136,16 @@ export default async function SetupConnectPage({ params }: { params: Promise<{ p
               this says whether a URL EXISTS, and says out loud that existing is not the same as
               being used — rather than showing a "last used" that would be invented.
               Verified on production 2026-08-29: `miyagisanchez` has exactly one connector token. */}
+          {/* account-from-the-terminal S3.2 — "the Claude app" row. Since D12 the route stamps
+              `last_used_at` (at most once a minute), so "used" is now a recorded fact rather than a
+              guess: "Not added yet" until the first request, then green with the time. */}
           <Field
-            label="Status"
+            label="The Claude app"
             hint={
               status.state === 'active'
-                ? 'That means the URL is live and will serve — not that Claude has ever used it. Nothing in this product records connector reads, so a page claiming “last used” would be guessing. To check a connection actually works, ask your agent for this project’s funnel.'
+                ? firstUse
+                  ? 'Claude has used this URL. It stays connected until you get a new URL or revoke it.'
+                  : 'Three steps: copy the URL, open Claude’s connector settings, paste it and press Add. This turns green the first time Claude uses it.'
                 : undefined
             }
           >
@@ -143,11 +164,13 @@ export default async function SetupConnectPage({ params }: { params: Promise<{ p
 
             {status.state === 'active' && (
               <p role="status">
-                <Pill state="on">
-                  {status.tokens.length === 1 ? 'A URL exists' : `${status.tokens.length} URLs exist`}
-                </Pill>{' '}
+                {firstUse ? (
+                  <Pill state="on">Connected · last used {formatUtc(firstUse)}</Pill>
+                ) : (
+                  <Pill state="never">Not added yet</Pill>
+                )}{' '}
                 <span className="ds-hint">
-                  Created {formatUtc(status.tokens[0].createdAt)}
+                  URL created {formatUtc(status.tokens[0].createdAt)}
                   {status.tokens.length > 1 ? ' (most recent)' : ''}.
                 </span>
               </p>
@@ -166,6 +189,13 @@ export default async function SetupConnectPage({ params }: { params: Promise<{ p
                 </span>
               </p>
             )}
+          </Field>
+          <CodingAgents slug={projectSlug} tokens={codingAgents} />
+          <Field
+            label="Another coding agent"
+            hint="Paste this into Codex, Cursor or any agent `npx skills` supports. It reads install.md first and waits for your go-ahead."
+          >
+            <CopyField value={installPrompt(getSiteUrl())} label="Copy the setup prompt" />
           </Field>
         </ListCard>
 
@@ -186,5 +216,13 @@ export default async function SetupConnectPage({ params }: { params: Promise<{ p
         </p>
       </main>
     </ProductShell>
+  )
+}
+
+/** Live CLI tokens only (S3.2). Outside the component: reading the clock is not a render concern. */
+function activeCliTokens<T extends { revokedAt: string | null; expiresAt: string | null }>(tokens: T[]): T[] {
+  const now = Date.now()
+  return tokens.filter(
+    (token) => token.revokedAt === null && (token.expiresAt === null || Date.parse(token.expiresAt) > now)
   )
 }

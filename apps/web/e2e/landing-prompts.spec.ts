@@ -85,7 +85,7 @@ test('the agent is told not to claim a connection it does not have', async ({ re
   )
 })
 
-test('the agent is told the connector is read-only and cannot save the work', async ({
+test('the agent is told what the connector can change, and that it cannot save the work', async ({
   request,
   baseURL,
 }) => {
@@ -95,6 +95,16 @@ test('the agent is told the connector is read-only and cannot save the work', as
   const manifest = await request.get(`${baseURL}/llms.txt`)
   expect(manifest.status()).toBe(200)
   const body = await manifest.text()
-  expect(body, 'llms.txt no longer states the read-only boundary').toContain('the connector is read-only')
+  // The boundary was never "read-only" once signals-loop shipped task writes and the CLI shipped flag
+  // writes over the connector; account-from-the-terminal S3.1 added owner-made URLs (D11). What must be
+  // said is that the work itself cannot be saved — the false promise this guard exists to stop is
+  // "I'll save your North Star" — and that every write path needs a credential the URL alone is not.
+  expect(body, 'llms.txt no longer says the connector cannot save the work').toContain(
+    'the connector cannot save their North Star'
+  )
+  expect(body, 'llms.txt no longer names what the connector can change').toContain(
+    'What it can change\n  is narrow'
+  )
+  expect(body).toContain('staged task changes (with a project write key')
   expect(body, 'llms.txt no longer says the agent cannot write').toContain('you cannot write anything')
 })

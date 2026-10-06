@@ -255,7 +255,7 @@ export const CREDENTIAL_KINDS_NOT_LISTED = [
     kind: 'connector',
     label: 'Connector URLs',
     where: '/app/setup/connect',
-    why: 'A bearer URL that reads this whole project over MCP — managed on its own Setup surface.',
+    why: 'A bearer URL that reads this whole project over MCP — and, when an owner made it, changes its feature flags as them. Managed on its own Setup surface.',
   },
   {
     // ⚠️ **golden-frijoles-cli · Sprint 1. It reaches this project, so this page has to name it.**

@@ -28,8 +28,6 @@ const LOCAL_OVERRIDES = {
   // flag-catalog-sync specs run somewhere.
   SCENARIO_AUTHORING_ENABLED: 'true',
   FLAG_DEFINITION_SYNC_ENABLED: 'true',
-  // Stated rather than inherited from the shell: the connector's write surface stays dark everywhere.
-  CONNECTOR_WRITES_ENABLED: 'false',
 };
 // Optional file arguments keep focused local investigation hermetic too. The dark-gate tripwire
 // still always runs because a focused enabled spec must not accidentally skip the OFF boundary.

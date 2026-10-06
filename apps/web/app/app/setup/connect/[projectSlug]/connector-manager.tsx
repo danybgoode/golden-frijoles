@@ -6,7 +6,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { CopyField } from '@/design-system/copy-field'
 import { Callout, Field, ListCard, ShownOnce, Step, Steps } from '@/design-system/primitives'
 import type { ActiveConnector } from '@/lib/connector-tokens'
-import { mintConnectorAction, revokeConnectorAction } from './actions'
+import { mintConnectorAction, revokeConnectorAction, rotateConnectorAction } from './actions'
 
 // Setup › Connect — the interactive half.
 //
@@ -31,6 +31,8 @@ export function ConnectorManager({
   hasConnector,
   canManage,
   canMint,
+  viewerUserId,
+  writesOn,
 }: {
   slug: string
   /**
@@ -53,6 +55,10 @@ export function ConnectorManager({
   canManage: boolean
   /** False when a token already exists AND when the state could not be read — see the page. */
   canMint: boolean
+  /** account-from-the-terminal S3.2 — whose URL each one is, said as "you" or "the owner who made it". */
+  viewerUserId: string
+  /** Both write switches (D11). Off, every URL is read-only whatever its maker, and the page says so. */
+  writesOn: boolean
 }) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
@@ -62,6 +68,7 @@ export function ConnectorManager({
   // The row id awaiting confirmation, or null. Keyed by id rather than a boolean, because there can
   // legitimately be more than one revocable token on screen.
   const [confirming, setConfirming] = useState<string | null>(null)
+  const [rotating, setRotating] = useState<string | null>(null)
 
   function onMint() {
     setError(null)
@@ -117,6 +124,29 @@ export function ConnectorManager({
     })
   }
 
+  // "Get a new URL" (S3.2): the old one stops at once, the new one is shown once, like a mint.
+  function onRotate(tokenId: string) {
+    setError(null)
+    startTransition(async () => {
+      let result: Awaited<ReturnType<typeof rotateConnectorAction>>
+      try {
+        result = await rotateConnectorAction(slug, tokenId)
+      } catch {
+        setRotating(null)
+        setError('Could not reach the server. Check your connection and retry.')
+        return
+      }
+      setRotating(null)
+      if (!result.ok) {
+        setError(result.error)
+        router.refresh()
+        return
+      }
+      setMinted(result.url)
+      router.refresh()
+    })
+  }
+
   return (
     <>
       {/* ⚠️ **The value is shown ONCE, on its own, and this is that screen** (sprint contract #7).
@@ -150,7 +180,7 @@ export function ConnectorManager({
           <Field
             key={token.tokenId}
             label={`Your connector URL · ${slug}`}
-            hint="Read-only and revocable. Revoke the token and access stops — no deploy. Switching project in the top bar switches this URL."
+            hint={actsAsHint(token, slug, viewerUserId, writesOn)}
           >
             {/* Skipped when this is the one just minted: the reveal above already shows it, and two
                 identical copy fields would read as two different credentials. */}
@@ -165,12 +195,31 @@ export function ConnectorManager({
               <button
                 type="button"
                 className="ds-btn ds-btn--secondary"
+                onClick={() => setRotating(token.tokenId)}
+                disabled={pending}
+              >
+                Get a new URL
+              </button>
+              <button
+                type="button"
+                className="ds-btn ds-btn--secondary"
                 onClick={() => setConfirming(token.tokenId)}
                 disabled={pending}
               >
                 Revoke
               </button>
             </span>
+            <ConfirmDialog
+              open={rotating === token.tokenId}
+              verb="Get a new URL"
+              noun="connector URL"
+              subject={`${slug} · …${token.url.slice(-8)}`}
+              consequence="This URL stops working at once. Paste the new one into Claude’s connector settings in its place."
+              details={writesOn ? 'The new URL acts as you.' : 'The new URL is read-only here.'}
+              pending={pending}
+              onConfirm={() => onRotate(token.tokenId)}
+              onCancel={() => setRotating(null)}
+            />
             <ConfirmDialog
               open={confirming === token.tokenId}
               /* `verb` matches the button that opened this, unchanged — a control's name must not
@@ -267,4 +316,19 @@ export function ConnectorSteps({ canManage, hasConnector }: { canManage: boolean
       </Steps>
     </ListCard>
   )
+}
+
+/**
+ * What a URL can do, said plainly (S3.2, D11). "As you" only when the viewer made it; a URL made by a
+ * co-owner acts as THEM, and one made before this sprint acts as nobody — it is read-only.
+ */
+function actsAsHint(token: ActiveConnector, slug: string, viewerUserId: string, writesOn: boolean): string {
+  // `writesOn` is false on the public demo project too (the page decides), so neither sentence below
+  // promises a write the route would refuse.
+  if (!writesOn) return 'Read-only: changing things through this connector is off for this project.'
+  if (token.createdBy === null) {
+    return 'Read-only: it was made before connector URLs could act as a person. Get a new URL to let Claude change things as you.'
+  }
+  const who = token.createdBy === viewerUserId ? 'you' : 'the owner who made it'
+  return `It can read and change ${slug} as ${who}. Treat it like a password — Get a new URL stops this one at once.`
 }

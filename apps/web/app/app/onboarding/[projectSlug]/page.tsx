@@ -4,6 +4,7 @@ import { DismissKeyButton } from './dismiss-key-button'
 import { getActiveConnectorUrl } from '@/lib/connector-tokens'
 import { isConnectorEnabled } from '@/lib/flags'
 import { getSiteUrl } from '@/lib/site-url'
+import { isOwner } from '@/lib/roles'
 import { installPrompt } from '@/lib/install-prompt'
 import { STARTER_FEATURE_KEY, STARTER_TARGET_EVENT } from '@/lib/provisioning'
 import { ProductShell } from '@/components/product/ProductShell'
@@ -50,7 +51,7 @@ export default async function OnboardingPage({ params }: { params: Promise<{ pro
   // MEMBER gate, not the demo-carve-out dashboard gate (lib/dashboard-auth.ts): this page renders
   // a credential, so even the demo project must never render here anonymously — unauthed → /login,
   // authed-but-not-a-member → 404 (never confirms a foreign slug exists).
-  await requireProjectMembership(projectSlug)
+  const membership = await requireProjectMembership(projectSlug)
 
   // Scoped to THIS project's slug. A user who belongs to more than one project must never be
   // shown another tenant's freshly minted credential under this page's heading — the hand-off
@@ -63,7 +64,13 @@ export default async function OnboardingPage({ params }: { params: Promise<{ pro
   // AGENTS rule #3: the connector is enablement-gated by TWO independent switches (the env flag
   // and a live per-project token). Both must be true, and when the flag is off we don't even
   // attempt the DB lookup — no connector section renders at all, not a disabled-looking one.
-  const connectorUrl = isConnectorEnabled() ? await getActiveConnectorUrl(projectSlug) : null
+  //
+  // OWNER-only since account-from-the-terminal S3.1 (fresh reviewer, PR #282, Blocking): a URL an
+  // owner makes now ACTS AS that owner (D11), so it is a write credential — and Setup › Connect has
+  // always withheld it from members. A member reaching this page must not copy it here instead.
+  const canSeeConnector = isOwner({ projectId: membership.projectId, role: membership.role })
+  const connectorUrl =
+    isConnectorEnabled() && canSeeConnector ? await getActiveConnectorUrl(projectSlug) : null
 
   const siteUrl = getSiteUrl()
   // A JS expression, not a value to be re-quoted — when there's no key to hand over, the pasted
@@ -131,8 +138,8 @@ await engine.track('${STARTER_TARGET_EVENT}', { featureId: '${STARTER_FEATURE_KE
           <Card>
             <span className="ds-label">Optional — bring your agent</span>
             <p className="ds-hint">
-              Your tokenized MCP URL for <strong>{projectSlug}</strong> — read-only, revocable, and no deploy
-              required to rotate it.
+              Your tokenized MCP URL for <strong>{projectSlug}</strong>. It can act as the owner who made it,
+              so treat it like a password; get a new one under Setup › Connect and the old one stops at once.
             </p>
             <CopyField value={connectorUrl} label="Copy your connector URL" />
             <Steps>

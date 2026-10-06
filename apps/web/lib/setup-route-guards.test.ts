@@ -289,7 +289,11 @@ test('minting requires the connector gate; revoking deliberately does not', () =
   )
   const revokeAt = actions.indexOf('export async function revokeConnectorAction')
   const mint = actions.slice(actions.indexOf('export async function mintConnectorAction'), revokeAt)
-  const revoke = actions.slice(revokeAt)
+  // Bounded at the next action (account-from-the-terminal S3.2 added `rotateConnectorAction` after it,
+  // and rotate MINTS, so it is gated — asserted below — and must not be read as part of revoke).
+  const rotateAt = actions.indexOf('export async function rotateConnectorAction')
+  const revoke = actions.slice(revokeAt, rotateAt === -1 ? undefined : rotateAt)
+  const rotate = rotateAt === -1 ? '' : actions.slice(rotateAt)
 
   // ⚠️ Keyed on the CALL, not the mention. The first version matched `/gatesOpen\(\)/` against the
   // whole function body and failed — on revoke's own comment explaining why it is not gated. Same
@@ -303,6 +307,11 @@ test('minting requires the connector gate; revoking deliberately does not', () =
     callsGate(revoke),
     false,
     'revoke was gated — an owner must be able to kill a credential even with the feature switched off'
+  )
+  assert.equal(
+    callsGate(rotate),
+    true,
+    'rotate mints a new URL, so it must check the connector gate like mint'
   )
 })
 
