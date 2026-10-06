@@ -25,6 +25,10 @@ stories:
 
 **Status:** ⬜ not started
 
+## Build contract (locked by the architect before the builder started — README § Architecture lock)
+- S3.1 → **D11** (migration applied BEFORE merge; flag writes only — the task-write tools stay key-bound).
+- S3.2 → **D12**.
+
 ## Stories
 <!-- Keep the heading shape `### Story 3.M — <title>`. When a story ships, append ✅ + its commit ref.
      The epic README frontmatter `status:` is the AUTHORITATIVE epic status. -->

@@ -1,7 +1,8 @@
 ---
-status: scaffolded   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Shaping       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+status: in-progress   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+phase: Building                   # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
+locked_at: "2026-10-06T13:44:02Z"
 slug: account-from-the-terminal
 title: "Account from the terminal"
 area: 02-commercial
@@ -70,13 +71,105 @@ finds a circular dependency on its own sign-in.
 - `skills/plugins/golden-frijoles/skills/golden-frijoles/SKILL.md`, setup Q4 (`project.account`: later · now).
 - Design source: the private canvas, Landing, SignIn, Account and Setup-Connections frames.
 
+## Architecture lock (2026-10-06, verified against live code before any builder started)
+
+**Amendment — Daniel, 2026-10-06 (scope corrected out loud).** At kickoff Daniel offered Clerk (app "Golden
+Frijoles", dev + prod instances already created) as the sign-in provider. The lock found: every signed-in surface reads
+the user through ONE Supabase seam (`getSessionUser()`, `lib/supabase-auth.ts`), every `project_members`,
+`workspace_members` and `cli_tokens` row keys on `auth.users(id)`, and the Clerk prod instance's domain
+(`clerk.goldenfrijoles.com`, DNS on Cloudflare) has no records yet. Put as an either/or, Daniel chose **Supabase's own
+Google provider** (no bridge route, no second identity system, no DNS) over a Clerk front door. **Clerk is not used by
+this epic.** He also chose **Google only**: "Continue with GitHub" and "Email me a sign-in link" are cut to named
+follow-ups (S2.1 below is Google + the flag). Password sign-in and token paste stay, as scoped.
+
+**Live data the lock could NOT read.** Production row counts (`connector_tokens`, `cli_tokens`, `auth.identities`) were
+refused by the auto-mode classifier ("Production Reads") and were not pursued. They do not decide anything here: both
+migrations are additive (one new table, nullable columns), which is free at any row count. Read live: `gf flags ls` on
+`golden-beans` → **no flags at all** (this is the app's first flag in its own catalog); `vercel env ls production` →
+no Clerk or Google variables, `SUPABASE_*` and `CONNECTOR_WRITES_ENABLED` present (Production-only, so previews have no
+database — `site-url-callers.test.ts` header).
+
+### Decisions (the builders cite these; nothing below is restated elsewhere)
+- **D1 — `install.md` is a route, generated (S1.1).** `app/install.md/route.ts`, `text/markdown; charset=utf-8`,
+  `force-dynamic`, built by a pure `installManifest(siteUrl)` in `lib/install-manifest.ts` from the constants in
+  `lib/cli-install.ts` and `lib/install-prompt.ts` — never a hand-typed command. Services named: github.com +
+  raw.githubusercontent.com (plugin), registry.npmjs.org (`npx skills`, `gf`), the site origin (only with an account).
+- **D2 — The prompt becomes `installPrompt(siteUrl)` (S1.2).** It names `<site>/install.md`, so it is a function of
+  `getSiteUrl()` (AGENTS rule #5) and `INSTALL_PROMPT` is deleted. Classified `informational` in
+  `site-url-callers.test.ts`. The skills transcription (`skills/template/scripts/lib/golden-onboarding.mjs`, README,
+  umbrella SKILL.md) carries `installPrompt('https://goldenfrijoles.com')` — the production URL, never a preview.
+  **The cross-repo weld moves into this repo's test:** `install-prompt.test.ts` reads the transcription off disk
+  (`skills/` is in this monorepo) and asserts equality with `installPrompt(PRODUCTION_SITE_URL)`; the skills repo's own
+  `check-onboarding-parity.mjs` keeps checking its surfaces against its transcription, unchanged.
+- **D3 — The hero is one line + the copy box (S1.3).** `MakerHero` only; every other landing section byte-identical.
+- **D4 — Google through Supabase, from the browser (S2.1).** `signInWithOAuth({ provider: 'google', options: {
+  redirectTo } })` on the existing browser client; `redirectTo = <siteUrl>/auth/callback?next=<guarded path>`, with
+  `siteUrl` handed down from the server page (`getSiteUrl()`, never `window.location`). The return is the EXISTING
+  `/auth/callback` code exchange + `provisionTenantForUser` — no new callback. Account linking is Supabase's automatic
+  linking of a verified email to the existing user (password account + Google on the same address = same `auth.users`
+  row); nothing in this repo links accounts. `/login` shows the button whenever the flag is on; `/signup` only when
+  `isSignupEnabled()` too.
+- **D5 — The flag lives in Golden Frijoles and the app reads its OWN catalog in-process (S2.1).**
+  `auth.terminal_sign_in_enabled` in project `golden-beans` (`SELF_PROJECT_SLUG`), kill switch, born ON, created
+  with `gf flags create … --kill-switch --all-envs`. Seam: `isTerminalSignInEnabled(): Promise<boolean>` in
+  `lib/terminal-sign-in-flag.ts` (server-only; `lib/flags.ts` stays sync env gates). It reads
+  `getFlagRegistryView(selfProjectId)` → `toCliFlagView` and is **killed only when the deployment's environment
+  (`VERCEL_ENV` → production/preview, else development) serves `false`**. Absent flag, `off`/`never` activation, an
+  unreadable row or any read error ⇒ `true` (the born-ON literal default — the SDK's own fallback rule), logged.
+  Module-level 30 s cache (one global, non-tenant boolean; safe to share across requests). **No circularity:** the read
+  is service-role and needs no sign-in. A kill reaches running functions within 30 s, no redeploy.
+- **D6 — Device codes: a new table, the token minted at poll time (S2.2).** Migration
+  `cli_device_codes(id, device_code_hash UNIQUE sha256, user_code UNIQUE, label, status pending|approved|denied|consumed,
+  user_id → auth.users ON DELETE CASCADE, created_at, expires_at = +10 min, approved_at, consumed_at)`, RLS on,
+  service-role only (the `cli_tokens` grant shape). **Deviation from the seed:** the scope said "the minted token handed
+  out once" (stored); instead NO token is stored — the poll that wins an atomic `UPDATE … SET status='consumed' WHERE
+  status='approved' AND expires_at > now() RETURNING user_id, label` mints with `mintCliToken` and returns it once. The
+  device code (secret, 32 bytes, CLI-held) only ever exists hashed; the user code (`XXXX-XXXX`, 8 of a 32-letter
+  alphabet with no 0/O/1/I) is the display handle and grants nothing without a signed-in confirm.
+- **D7 — Device endpoints (S2.2).** `POST /api/v1/cli/device` (start: `{label}` → `{deviceCode, userCode,
+  verificationUrl, expiresIn, interval}`) and `POST /api/v1/cli/device/token` (poll: `{deviceCode}` → `ok {status:
+  'pending'|'slow_down'}` · `ok {status:'approved', token, account}` · `cliError('not_found', …, {reason:
+  'expired'|'used'|'denied'|'unknown'})`). Both check `isTerminalSignInEnabled()` AND `isCliWriteApiEnabled()` **before
+  reading the body** (LEARNINGS: a kill switch comes before the body) and answer the uniform 404 `disabled` when off.
+  Rate-limited through `lib/rate-limit.ts`: start per IP, poll per device code (interval 5 s ⇒ `slow_down`).
+  `verificationUrl` from `getSiteUrl()` (`informational` in the caller registry: it lives 10 minutes).
+- **D8 — `/cli/connect?code=` confirms, signed in (S2.2).** Signed out: Continue with Google (D4) and a password link to
+  `/login?next=…`; `LoginForm` gains a `next` honoured through `safeRedirectPath` (pure, usable client-side). Signed
+  in: the code, the device label, "Same code as your terminal?" → Confirm / "Not mine". Confirm is a Server Action:
+  `UPDATE … SET status='approved', user_id=<session user> WHERE user_code=$1 AND status='pending' AND expires_at >
+  now()`. Copy: "Didn't start this from your terminal? Close this page. Nothing happens." Flag killed ⇒ `notFound()`.
+  `/auth/callback` honours a `/cli/connect` `next` even when it just provisioned a tenant (otherwise a brand-new Google
+  user lands on onboarding and loses the code).
+- **D9 — `gf login` with no token tries the browser first (S2.2).** TTY, no `--token`, nothing piped, no
+  `GOLDEN_FRIJOLES_TOKEN`: start → print the code + URL → open the browser (`open`/`xdg-open`/`start`, no dependency;
+  a failure just prints the URL) → poll → save through `credentials.ts` → print `whoami`. Start answering 404/`disabled`
+  or a network error ⇒ the paste prompt, as today. `--token`, piping and `--json` are untouched. CLI minor release;
+  npm publish is Daniel's 2FA step.
+- **D10 — The account question is Q4 reworded (S2.3).** `skills/plugins/golden-frijoles/skills/golden-frijoles/SKILL.md`
+  only; the `project.account` key and its values (`later · now`) are unchanged so no config migration exists.
+- **D11 — A connector URL can carry its maker (S3.1).** Migration: `connector_tokens.created_by uuid NULL REFERENCES
+  auth.users ON DELETE SET NULL` + `last_used_at timestamptz NULL`. `mintConnectorToken(projectId, createdBy)` stamps
+  the signed-in owner. In the route, with NO Bearer header, a URL whose `created_by` is set yields the existing
+  `flagWriteActor` iff `isConnectorWritesEnabled() && isCliWriteApiEnabled()` and `created_by` is STILL an owner of the
+  URL's project (`getMembershipByProjectId`, re-resolved per request — removed ⇒ read-only). Writes go through the
+  existing flag tools and RPCs, so history records that user id. **Scope corrected:** flag writes only — the task write
+  tools stay behind their `agent_write` key (their staging layer binds to a key id; the acceptance names flags only).
+  Pre-existing URLs (`created_by` NULL) are unchanged: read-only.
+- **D12 — "Turns green when first used" is `last_used_at` (S3.2).** Touched on resolve, throttled to once a minute
+  (the `touchCliToken` shape). Setup › Connections composes the existing connect + CLI managers; Disconnect =
+  `revokeCliToken`, Get a new URL = the existing rotate.
+
+### Routing
+The architect builds every story in place (auth, migrations and a credential path are never delegated); S1 is low risk
+but shares `site-url-callers.test.ts` with S2. Reviews: `review-route.mjs` + the mandatory fresh `pr-reviewer` per PR.
+
 ## Scope — stories
 | Sprint | Story | Risk |
 |---|---|---|
 | 1 | S1.1 `install.md`: what it installs, changes and contacts | low |
 | 1 | S1.2 The prompt reads first and waits | low |
 | 1 | S1.3 The landing hero in one line | low |
-| 2 | S2.1 Google, GitHub and email-link sign-in, and the flag | high |
+| 2 | S2.1 Google sign-in, and the flag (GitHub + email link cut 2026-10-06, see the lock) | high |
 | 2 | S2.2 `gf login` through the browser | high |
 | 2 | S2.3 The account question, as the Account screen | low |
 | 3 | S3.1 A connector URL that acts as you | high |
@@ -103,8 +196,10 @@ their existing switch (`isConnectorWritesEnabled`). Activation check: `gf flags 
 shows `on` in every env.
 
 ## Deploy order
-1. Day one, owed by Daniel: Google Cloud OAuth client and consent screen, a GitHub OAuth app, both providers and the
-   redirect URLs in Supabase for preview and production.
+1. Owed by Daniel before S2 can be smoke-tested (amended 2026-10-06, Google only): a Google Cloud OAuth client (web)
+   with authorized redirect URI `https://slweidgffcfndnskcskc.supabase.co/auth/v1/callback` and its consent screen;
+   its client id + secret in Supabase › Authentication › Providers › Google; `https://goldenfrijoles.com/auth/callback**`
+   in Supabase › Authentication › URL Configuration › Redirect URLs.
 2. Sprint 1 (low risk, no data): merge on green.
 3. Sprint 2: the device-code migration applied first (expand-only, AGENTS rule #4), then the web change with the flag
    created on, then the CLI release. Old CLIs keep working (paste). High risk: Daniel merges.

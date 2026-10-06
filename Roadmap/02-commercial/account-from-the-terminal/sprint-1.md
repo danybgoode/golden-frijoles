@@ -3,7 +3,7 @@ epic: account-from-the-terminal
 sprint: 1
 title: "Read before installing"
 risk: low
-phase: Shaping
+phase: Building
 stories_total: 3
 stories:
   - id: S1.1
@@ -31,6 +31,13 @@ stories:
 # Account from the terminal — Sprint 1: Read before installing
 
 **Status:** ⬜ not started
+
+## Build contract (locked by the architect before the builder started — README § Architecture lock)
+- S1.1 → **D1**. S1.2 → **D2** (the prompt text is the canvas text in Story 1.2, verbatim, with `<site>` from
+  `getSiteUrl()`). S1.3 → **D3**.
+- The skills edit (transcription, README, umbrella SKILL.md) is a plugin release: follow `skills/RELEASING.md`.
+- Proof: `install-prompt.test.ts` (incl. the D2 weld), a pure spec on `installManifest`, `GET /install.md` 200 in the
+  `api` project, `check-onboarding-parity.mjs` green, `site-url-callers.test.ts` green.
 
 ## Stories
 <!-- Keep the heading shape `### Story 1.M — <title>`. When a story ships, append ✅ + its commit ref.

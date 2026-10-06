@@ -32,6 +32,12 @@ stories:
 
 **Status:** ⬜ not started
 
+## Build contract (locked by the architect before the builder started — README § Architecture lock)
+- S2.1 → **D4** (Google only — the 2026-10-06 amendment cuts GitHub and the email link) + **D5** (the flag).
+- S2.2 → **D6** (migration, applied BEFORE merge), **D7** (endpoints), **D8** (`/cli/connect`), **D9** (CLI).
+- S2.3 → **D10**.
+- Acceptance lines naming GitHub or the email link are void by the amendment; the remaining lines hold.
+
 ## Stories
 <!-- Keep the heading shape `### Story 2.M — <title>`. When a story ships, append ✅ + its commit ref.
      The epic README frontmatter `status:` is the AUTHORITATIVE epic status. -->
