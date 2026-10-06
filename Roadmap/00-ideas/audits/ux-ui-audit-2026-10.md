@@ -114,16 +114,36 @@ nothing looks like a different product.
 - Upgrades: the flag upgrades in decision 7, the incident flow, the A/B flow, several products and a team, and
   phone layouts.
 
+## Groomed (2026-10-05)
+
+All eight launch-critical epics are groomed, funded in `Roadmap/bets/wave-2026-10.md` and scaffolded, in build order:
+
+| # | Epic | Appetite · risk | Flag |
+|---|---|---|---|
+| 61 | [`night-garden-design-system`](../../02-commercial/night-garden-design-system/README.md) | M · low | none |
+| 62 | [`account-from-the-terminal`](../../02-commercial/account-from-the-terminal/README.md) | L · high | `auth.terminal_sign_in_enabled`, kill switch, born on |
+| 63 | [`one-header-one-name`](../../02-commercial/one-header-one-name/README.md) | M · low | none |
+| 64 | [`result-record`](../../02-commercial/result-record/README.md) | M · low | none |
+| 65 | [`one-epic-page`](../../02-commercial/one-epic-page/README.md) | M · low | none |
+| 66 | [`outcome-report-v2`](../../02-commercial/outcome-report-v2/README.md) | M · low | none |
+| 67 | [`gates-in-plain-agile`](../../02-commercial/gates-in-plain-agile/README.md) | M · low | none |
+| 68 | [`build-view-upgrade`](../../02-commercial/build-view-upgrade/README.md) | S · low | none |
+
+Then `plain-outcome-rename` (#69, sprints 1–4, to be re-groomed) and the rest of the queue, order kept.
+
 ## What this supersedes
 - [`naming-spec-plain-outcome-2026-10-04.md`](naming-spec-plain-outcome-2026-10-04.md): screen vocabulary (decision 1).
-- `plain-outcome-rename` (#61): re-scope to decision 2, as launch epic 3.
-- `coaches-v2` (#62): fold the gates in plain agile, launch epic 7.
+- `plain-outcome-rename` (#61): re-scope to decision 2, as launch epic 3. Groomed 2026-10-05 as a split: the new
+  `one-header-one-name` takes its sprint 5; sprints 1–4 wait for after launch and are re-groomed to plain agile first.
+- `coaches-v2` (#62): ~~fold the gates in plain agile, launch epic 7~~. Groomed 2026-10-05 as its own epic,
+  `gates-in-plain-agile`; `coaches-v2` stays after launch, unchanged.
 - The canvas's first console draft (page 3) and the epic frames on pages 4–6: superseded by the page 0, step 4 frames.
 
 ## Open questions
-1. The epic page's commands as plain lines ("Wrap sprint 2 of the overdue-reminders epic in Ledgerly") instead of
-   today's shorthand ("Wrap S2").
-2. Overspend shown in Ember on the Outcome report, an exception to "Ember is for broken only".
+1. ~~The epic page's commands as plain lines instead of today's shorthand.~~ **Decided 2026-10-05: plain lines**;
+   the shorthand keeps working (`one-epic-page` S1.3).
+2. ~~Overspend shown in Ember on the Outcome report.~~ **Decided 2026-10-05: neutral**, "▲ $3.30 over $5–8"; Ember
+   stays for broken only (`outcome-report-v2` S1.3).
 3. Can a flag be turned on for one signed-in person? Percentage rollout and kill exist in the engine; per-user
    targeting is assumed by the QA design and not yet checked.
 4. The incident rule in decision 7.
