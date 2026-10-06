@@ -47,6 +47,7 @@ test('every gated surface calls isTerminalSignInEnabled, and only the seam names
     'app/login/page.tsx',
     'app/signup/page.tsx',
     'app/cli/connect/page.tsx',
+    'app/cli/connect/actions.ts',
     'app/api/v1/cli/device/route.ts',
     'app/api/v1/cli/device/token/route.ts',
   ]

@@ -54,7 +54,9 @@ export function normalizeUserCode(input: unknown): string | null {
 export function sanitizeDeviceLabel(input: unknown): string {
   const raw = typeof input === 'string' ? input : ''
   const cleaned = raw
-    .replace(/[\u0000-\u001f\u007f]/g, ' ')
+    // C0/DEL, and the invisible ones a phishing label would use to look like something else: zero-width
+    // and bidi controls (fresh reviewer, PR #280).
+    .replace(/[\u0000-\u001f\u007f\u200b-\u200f\u202a-\u202e\u2066-\u2069\ufeff]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
   return (cleaned || 'a terminal').slice(0, 80)

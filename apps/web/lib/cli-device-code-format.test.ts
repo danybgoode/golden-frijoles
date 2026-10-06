@@ -44,6 +44,7 @@ test('normalising forgives case, spaces and a missing dash — and nothing that 
 
 test('a device label from an unauthenticated caller is bounded, single-line and never empty', () => {
   assert.equal(sanitizeDeviceLabel('mac\n\tbook\u0007'), 'mac book')
+  assert.equal(sanitizeDeviceLabel('lap\u202etop\u200b'), 'lap top', 'bidi and zero-width are not text')
   assert.equal(sanitizeDeviceLabel(''), 'a terminal')
   assert.equal(sanitizeDeviceLabel(42), 'a terminal')
   assert.equal(sanitizeDeviceLabel('x'.repeat(500)).length, 80)
