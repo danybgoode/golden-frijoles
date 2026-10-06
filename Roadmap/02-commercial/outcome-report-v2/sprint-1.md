@@ -1,0 +1,90 @@
+---
+epic: outcome-report-v2
+sprint: 1
+title: "Is it paying off"
+risk: low
+phase: Shaping
+stories_total: 3
+stories:
+  - id: S1.1
+    title: "Is it paying off: the sentence and the chart"
+    as_a: "a founder"
+    i_want: "the report to open by saying whether the product is paying off"
+    so_that: "I know before I read anything else"
+    risk: low
+    status: planned
+  - id: S1.2
+    title: "Four figures, each against expected"
+    as_a: "a founder"
+    i_want: "four figures, each against what I expected"
+    so_that: "I see the summary in one look"
+    risk: low
+    status: planned
+  - id: S1.3
+    title: "The epics table"
+    as_a: "a founder"
+    i_want: "every epic's bet, expected and actual, result and spend in one table"
+    so_that: "I see which paid off and what each cost"
+    risk: low
+    status: planned
+---
+# Outcome report v2 — Sprint 1: Is it paying off
+
+**Status:** ⬜ not started
+
+## Stories
+<!-- Keep the heading shape `### Story 1.M — <title>`. When a story ships, append ✅ + its commit ref.
+     The epic README frontmatter `status:` is the AUTHORITATIVE epic status. -->
+
+### Story 1.1 — Is it paying off: the sentence and the chart
+**As** a founder, **I want** the report to open by saying whether the product is paying off, **so that** I know before
+I read anything else.
+A pure module builds the expected series from shipped epics' targets: an epic targeting the North Star moves its
+expected line from `target_from` to `target_to` by its read date; an epic targeting an input moves that input's line.
+The chart shows the North Star's actual against expected, with each epic marked (as its bean) where it shipped. One
+sentence above it: ahead of, on, or behind the pace you planned, or "No targets yet, so we can't say if it's on pace".
+**Acceptance:**
+- With grounded epics, the chart shows both lines and the sentence matches the gap.
+- With none, it shows the actual only and says it can't tell yet; no invented line.
+**Risk:** low
+
+### Story 1.2 — Four figures, each against expected
+**As** a founder, **I want** four figures, each against what I expected, **so that** I see the summary in one look.
+North Star now against expected (with the gap) · epics that paid off, of those read (with how many aren't read yet) ·
+spend against the summed quote (within, or "▲ … over …", neutral) · cost per epic that paid off. Each figure has one
+line on what it is. Spend figures are team-only in v1.
+**Acceptance:**
+- Each figure shows its expected value or says there isn't one.
+- A client or investor share link shows the first two figures only, and still counts unread epics.
+**Risk:** low
+
+### Story 1.3 — The epics table
+**As** a founder, **I want** every epic's bet, expected and actual, result and spend in one table, **so that** I see
+which paid off and what each cost.
+Columns: Epic · what we bet (hypothesis under the name) | Metric · expected → actual (metric name in the column, gap) |
+Result (bean) | Spend · vs quote (gap; overspend neutral). Each row links to its epic page. Team-only in v1.
+**Acceptance:**
+- Column names show; every row links to its epic page; overspend is not red.
+- The table is absent on client and investor share links; the lens test proves it.
+**Risk:** low
+
+## Sprint QA
+- **api spec(s):** S1.1 → pure-logic specs on the expected series (none, one, several; input vs North Star); S1.2 →
+  the figures' spec and a lens test; S1.3 → the table's spec and a lens test (absent for client and investor, honesty
+  counts present).
+- **browser smoke owed:** yes, to Daniel: the walkthrough below.
+- **deterministic gate:** `tsc --noEmit` + `npm run build` + Playwright `api` green before merge. Low risk: merge on green.
+
+## Sprint 1 — Smoke walkthrough (do these in order)
+Env: production · https://goldenfrijoles.com   (or the preview URL while testing pre-merge)
+
+1. Signed in, go to https://goldenfrijoles.com/hub/<your-project>/report
+   → One sentence on whether it's paying off, then the chart with epics marked.
+2. Read the four figures
+   → Each has its expected value or says there isn't one.
+3. Scroll to the epics table and click an epic
+   → Its epic page opens.
+4. Make a client share link from Setup › Share links and open it signed out
+   → The sentence, the chart and two figures; no spend, no epics table; unread epics still counted.
+
+If any step fails, note the step number + what you saw — that's the bug report.
