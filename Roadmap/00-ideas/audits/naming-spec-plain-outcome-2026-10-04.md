@@ -1,5 +1,11 @@
 # Naming spec: Plain · Outcome (2026-10-04)
 
+> **Superseded for words on screen (2026-10-05).** The PO reverted to plain agile (Epic · Sprint · User story ·
+> Backlog → Grooming → Ready → Building → QA → Shipped) with the bet as framing. See
+> [`ux-ui-audit-2026-10.md`](ux-ui-audit-2026-10.md), decision 1. Verdict words (Proven · Disproven · Unclear) and
+> the result record stand.
+
+
 **Status:** decided by the PO on 2026-10-04 (system: Plain · Outcome; product name: Golden Frijoles, kept). This is the
 input to `shape` (today `groom`) for the rename work. Source of the options: the Naming Workbench artifact and
 `naming-inventory-2026-10-04.md`. Rows marked **(refined)** changed from the workbench after review; they are the
