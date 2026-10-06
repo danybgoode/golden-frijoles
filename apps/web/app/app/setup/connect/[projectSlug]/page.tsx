@@ -56,10 +56,7 @@ export default async function SetupConnectPage({ params }: { params: Promise<{ p
   const canManage = isOwner({ projectId: membership.projectId, role: membership.role })
   // account-from-the-terminal S3.2 — the viewer's OWN signed-in machines (CLI tokens are per account,
   // not per project, so every member sees their own and nobody else's). Active ones only.
-  const now = Date.now()
-  const codingAgents = (await listCliTokens(membership.userId)).filter(
-    (token) => token.revokedAt === null && (token.expiresAt === null || Date.parse(token.expiresAt) > now)
-  )
+  const codingAgents = activeCliTokens(await listCliTokens(membership.userId))
   // D11: whether a URL made by a person may write here at all. Never on the public demo project.
   const writesOn = isConnectorWritesEnabled() && isCliWriteApiEnabled() && projectSlug !== DEMO_PROJECT_SLUG
   const firstUse = status.state === 'active' ? status.tokens[0].lastUsedAt : null
@@ -217,5 +214,13 @@ export default async function SetupConnectPage({ params }: { params: Promise<{ p
         </p>
       </main>
     </ProductShell>
+  )
+}
+
+/** Live CLI tokens only (S3.2). Outside the component: reading the clock is not a render concern. */
+function activeCliTokens<T extends { revokedAt: string | null; expiresAt: string | null }>(tokens: T[]): T[] {
+  const now = Date.now()
+  return tokens.filter(
+    (token) => token.revokedAt === null && (token.expiresAt === null || Date.parse(token.expiresAt) > now)
   )
 }
