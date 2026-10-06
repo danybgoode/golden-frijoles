@@ -92,8 +92,12 @@ database — `site-url-callers.test.ts` header).
 ### Decisions (the builders cite these; nothing below is restated elsewhere)
 - **D1 — `install.md` is a route, generated (S1.1).** `app/install.md/route.ts`, `text/markdown; charset=utf-8`,
   `force-dynamic`, built by a pure `installManifest(siteUrl)` in `lib/install-manifest.ts` from the constants in
-  `lib/cli-install.ts` and `lib/install-prompt.ts` — never a hand-typed command. Services named: github.com +
-  raw.githubusercontent.com (plugin), registry.npmjs.org (`npx skills`, `gf`), the site origin (only with an account).
+  `lib/cli-install.ts` and `lib/install-prompt.ts` — never a hand-typed command. **Corrected at review (PR #277,
+  fresh reviewer):** raw.githubusercontent.com is NOT contacted by any install path and is dropped; the list is
+  github.com (download + Claude Code's marketplace auto-update), registry.npmjs.org, and — `npx skills` only —
+  api.github.com and add-skill.vercel.sh (that tool's own telemetry, opt-out `DISABLE_TELEMETRY=1`), plus the site
+  origin (this page, then only with an account). "What changes" names the `~/.claude` settings/marketplace entries,
+  the plugin hook's `.golden-frijoles/` folder and transcript reads, and `gf init`'s `.gitignore` edit.
 - **D2 — The prompt becomes `installPrompt(siteUrl)` (S1.2).** It names `<site>/install.md`, so it is a function of
   `getSiteUrl()` (AGENTS rule #5) and `INSTALL_PROMPT` is deleted. Classified `informational` in
   `site-url-callers.test.ts`. The skills transcription (`skills/template/scripts/lib/golden-onboarding.mjs`, README,

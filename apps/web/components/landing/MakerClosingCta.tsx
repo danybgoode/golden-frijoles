@@ -19,10 +19,11 @@ import { RunYourFirstBet } from './RunYourFirstBet'
 // every install surface carries — `/install`, the signed-in onboarding page, the hero and this card — so a reader
 // who is ready does not have to go find a terminal command; it is already in their clipboard.
 //
-// `TryItSection`'s handoff prompt did NOT survive (see the epic's D1): it was the second of two
-// copy-a-prompt blocks, and two is where a device stops reading as an invitation and starts reading
-// as a pattern. (account-from-the-terminal S1.3 put the SAME install prompt in the hero, by the
-// canvas Landing frame's design; every section below the hero, this one included, is unchanged.)
+// ── account-from-the-terminal S1.3 — the hero now carries the SAME prompt ─────────────────────
+// `landing-readability-pass` D1 held that two copy-a-prompt blocks read as a pattern. The canvas
+// Landing frame overrides that for this one string: the hero is where a stranger decides, and the
+// closing card is where a reader who scrolled decides — both hand over the same install prompt.
+// The story scoped every section below the hero as unchanged, so this card stayed.
 export function MakerClosingCta() {
   const prompt = installPrompt(getSiteUrl())
 

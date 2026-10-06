@@ -55,6 +55,9 @@ test('/install.md is the plain page the prompt names', async ({ request, baseURL
   ]) {
     expect(body, `install.md is missing ${heading}`).toContain(heading)
   }
-  // The prompt names exactly this URL — the route it names must be the route that answers.
-  expect(installPrompt(baseURL!)).toContain(`${baseURL}/install.md`)
+  // The URL the prompt NAMES must be a route that answers — taken from the prompt, not restated.
+  const named = installPrompt(baseURL!).match(/https?:\/\/\S+?\/install\.md/)?.[0]
+  expect(named, 'the prompt no longer names an install.md URL').toBeTruthy()
+  const followed = await request.get(new URL(named!).pathname)
+  expect(followed.status(), `${named} is named in the prompt but does not resolve`).toBe(200)
 })

@@ -1863,21 +1863,6 @@ a.stat-card:hover {
   text-transform: uppercase;
 }
 
-.hero-sub {
-  max-width: 560px;
-  margin: 22px 0 24px;
-  color: var(--dim);
-  font-size: 18px;
-}
-
-.hero-sub--tight {
-  margin-top: 0;
-}
-
-.hero-sub strong {
-  color: var(--crema);
-}
-
 /* The page's rhythm device: a short bolded line that closes an argument. It is
    the one piece of copy in each section that states the point rather than
    explaining it, so it gets crema on a page whose body copy is dim. */
@@ -3291,12 +3276,6 @@ a.stat-card:hover {
   padding-inline-end: 0.12em;
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
-}
-
-.hero .hero-sub {
-  max-width: 620px;
-  font-size: clamp(17px, 1.9vw, 22px);
-  line-height: 1.45;
 }
 
 /* ── The hero's right-hand column ───────────────────────────────────────────

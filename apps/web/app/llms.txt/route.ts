@@ -64,6 +64,9 @@ account.
 - ${siteUrl}/
   The landing page — the product pitch, a prompt you can hand to your own agent, and the
   signup/waitlist entry point.
+- ${siteUrl}/install.md
+  Read this before installing anything: what installs, what changes on the machine, which
+  services it contacts, and how to remove it.
 - ${siteUrl}/install
   Get your own tokenized MCP connector URL ("Add to Claude" deep-link) for the demo project, plus
   the SDK install docs for wiring your own product into the engine.

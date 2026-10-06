@@ -45,6 +45,12 @@ export const PLUGIN_INSTALL = 'claude plugin install golden-frijoles@golden-frij
 /** Every skill, not just the umbrella: with `--skill golden-frijoles` alone groom's hand-off dead-ends (X12). */
 export const SKILLS_ADD = "npx skills add golden-frijoles/skills --skill '*'"
 export const PLUGIN_REMOVE = 'claude plugin uninstall golden-frijoles@golden-frijoles'
+/** `uninstall` leaves the marketplace registered, and it keeps auto-updating — this removes it. */
+export const PLUGIN_MARKETPLACE_REMOVE = 'claude plugin marketplace remove golden-frijoles'
+/** The `npx skills` CLI's own documented opt-out from its install telemetry. */
+export const SKILLS_TELEMETRY_OPT_OUT = 'DISABLE_TELEMETRY=1'
+/** The planning kit the skills run through `npx` (never installed globally). */
+export const KIT_PACKAGE = '@golden-frijoles/kit'
 export const SKILLS_REPO_URL = 'https://github.com/golden-frijoles/skills'
 export const UMBRELLA_SKILL_URL =
   'https://github.com/golden-frijoles/skills/blob/main/plugins/golden-frijoles/skills/golden-frijoles/SKILL.md'

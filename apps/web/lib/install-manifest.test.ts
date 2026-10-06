@@ -27,8 +27,14 @@ type ResolveHook = (
 
 const { installManifest, installServices } = await import('./install-manifest.ts')
 const { CLI_GLOBAL_INSTALL, CLI_NPX_INIT, CLI_NPX_LOGIN } = await import('./cli-install.ts')
-const { PLUGIN_INSTALL, PLUGIN_MARKETPLACE_ADD, PLUGIN_REMOVE, SKILLS_ADD } =
-  await import('./install-prompt.ts')
+const {
+  PLUGIN_INSTALL,
+  PLUGIN_MARKETPLACE_ADD,
+  PLUGIN_MARKETPLACE_REMOVE,
+  PLUGIN_REMOVE,
+  SKILLS_ADD,
+  SKILLS_TELEMETRY_OPT_OUT,
+} = await import('./install-prompt.ts')
 
 const SITE = 'https://site.example'
 const page = installManifest(SITE)
@@ -45,6 +51,11 @@ test('every install command on the page is a named constant the site renders', (
     assert.ok(page.includes(command), `install.md is missing \`${command}\``)
   }
   assert.ok(page.includes(PLUGIN_REMOVE), 'install.md must say how to remove it')
+  // `uninstall` alone leaves the marketplace registered and auto-updating (fresh reviewer, PR #277).
+  assert.ok(
+    page.includes(PLUGIN_MARKETPLACE_REMOVE),
+    'install.md must say how to stop the marketplace updating'
+  )
 })
 
 test('every host the page names is in the services list, and every listed service is named', () => {
@@ -60,10 +71,24 @@ test('every host the page names is in the services list, and every listed servic
     assert.ok(page.includes(`**${host}**`), `${host} is a listed service the page does not show`)
 })
 
-test('the site itself is contacted only with an account', () => {
+test('the site itself is contacted only for this page, and otherwise only with an account', () => {
   const site = installServices(SITE).find((service) => service.host === 'site.example')
   assert.ok(site)
-  assert.match(site.when, /only once you sign in/)
+  assert.match(site.when, /reading this page; after that, only once you sign in/)
+})
+
+test("`npx skills`'s own telemetry is named, with its opt-out", () => {
+  // The third-party CLI posts install telemetry to add-skill.vercel.sh unless opted out (its
+  // `dist/cli.mjs`, read during PR #277's review). A trust page that omits it is wrong.
+  const telemetry = installServices(SITE).find((service) => service.host === 'add-skill.vercel.sh')
+  assert.ok(telemetry)
+  assert.ok(telemetry.when.includes(SKILLS_TELEMETRY_OPT_OUT))
+})
+
+test('no relative console link that 404s: revocation points at the console root', () => {
+  // `/app/setup/cli` has no index route (only `/app/setup/cli/[projectSlug]`) and answered 404 in
+  // production when PR #277 named it.
+  assert.ok(!page.includes('/app/setup/cli'))
 })
 
 test('the four sections the story names, in order', () => {
