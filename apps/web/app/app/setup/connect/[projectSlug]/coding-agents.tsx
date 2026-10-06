@@ -42,8 +42,8 @@ export function CodingAgents({ slug, tokens }: { slug: string; tokens: readonly 
         tokens === null
           ? 'Could not check your signed-in machines right now. Reload in a moment — nothing was changed.'
           : tokens.length === 0
-            ? 'Nothing connected yet. Run `gf login` in your terminal; it signs this account in through the browser.'
-            : 'Each one is a machine signed in with `gf login`. Disconnect signs it out: its next command asks to sign in again.'
+            ? 'Nothing connected yet. Run “gf login” in your terminal; it signs this account in through the browser.'
+            : 'Each one is a machine signed in with “gf login”. Disconnect signs it out: its next command asks to sign in again.'
       }
     >
       {(tokens ?? []).map((token) => (

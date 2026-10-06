@@ -2,7 +2,9 @@ import { requireProjectMembership } from '@/lib/dashboard-auth'
 import { isCliWriteApiEnabled, isConnectorEnabled, isConnectorWritesEnabled } from '@/lib/flags'
 import { listCliTokens } from '@/lib/cli-tokens'
 import { DEMO_PROJECT_SLUG } from '@/lib/public-demo'
-import { installPrompt } from '@/lib/install-prompt'
+import { installPrompt, PLUGIN_INSTALL, PLUGIN_MARKETPLACE_ADD, SKILLS_ADD } from '@/lib/install-prompt'
+import { STARTER_FEATURE_KEY, STARTER_TARGET_EVENT } from '@/lib/provisioning'
+import { CopyPromptCard } from '@/components/landing/CopyPromptCard'
 import { getSiteUrl } from '@/lib/site-url'
 import { CopyField } from '@/design-system/copy-field'
 import { CodingAgents } from './coding-agents'
@@ -62,97 +64,82 @@ export default async function SetupConnectPage({ params }: { params: Promise<{ p
   // D11: whether a URL made by a person may write here at all. Never on the public demo project.
   const writesOn = isConnectorWritesEnabled() && isCliWriteApiEnabled() && projectSlug !== DEMO_PROJECT_SLUG
   const firstUse = status.state === 'active' ? status.tokens[0].lastUsedAt : null
+  // D5: the Codex command carries the newest URL — owner-only, like the URL itself.
+  const codexUrl = canManage && status.state === 'active' ? status.tokens[0].url : null
 
   return (
     <ProductShell projectSlug={projectSlug} section="setup" railActive={'setup/connect'}>
       <main>
+        {/* connect-page D4 — titled Connect (the section is Set up), in six groups ordered by the path of
+            least resistance: the prompt, do it yourself, the Claude app, Codex, the SDK, your machines. */}
         <PageHead
-          title="Connect your agent"
+          title="Connect"
           lede={
             <>
-              Your own URL, with your own token, for the project in the switcher above. Paste it into Claude
-              and it can read <strong>this project&apos;s</strong> numbers and change its feature flags as you
-              — not the demo project&apos;s, and not any other tenant&apos;s.
+              Pick one way in. The first is the easiest: your agent reads what it installs, tells you, and
+              waits for your go-ahead. Everything here works on <strong>{projectSlug}</strong> only.
             </>
           }
         />
 
-        {/* Block 2 of the approved `setup-connect` state: the URL, its status, and the controls
-            that mint or revoke it. `ListCard plain` is the `.listcard` used as a padded surface,
-            which is what the prototype draws (`console-prototype.html`). */}
         <ListCard plain>
+          <h2 className="ds-label">1 · Set up with your agent</h2>
+          <p className="ds-hint">
+            Paste this into Claude Code, Codex, Cursor or any agent. It plans and builds in your repo, and
+            asks before it installs anything.
+          </p>
+          <CopyPromptCard label="Paste this into your agent" prompt={installPrompt(getSiteUrl())} />
+
+          <h2 className="ds-label">2 · Or do it yourself</h2>
+          <Field
+            label="Claude Code"
+            hint="Two commands, then run the golden-frijoles skill and start its setup."
+          >
+            <CopyField value={PLUGIN_MARKETPLACE_ADD} label="Copy the marketplace command" />
+            <CopyField value={PLUGIN_INSTALL} label="Copy the install command" />
+          </Field>
+          <Field label="Codex, Cursor and other agents" hint="Pick your agent when it asks.">
+            <CopyField value={SKILLS_ADD} label="Copy the npx skills command" />
+          </Field>
+        </ListCard>
+
+        <ListCard plain>
+          <h2 className="ds-label">3 · Connect the Claude app</h2>
           {!connectorEnabled && (
-            // Honest, and specific about WHICH switch is off. "Unavailable" would leave a reader
-            // unable to tell a disabled feature from a broken one. It does not REPLACE the panel: an
-            // existing token stays listed and revocable, because killing a credential must not
-            // depend on the feature it belongs to being switched on.
             <Callout tone="warn">
               The MCP connector is switched off for this deployment (<code>CONNECTOR_ENABLED</code>). Nothing
               can connect through a URL until it is enabled in a new deployment
               {status.state === 'active' ? ', but an existing URL can still be revoked below.' : '.'}
             </Callout>
           )}
-
           {status.state === 'active' && status.tokens.length > 1 && canManage && (
-            // Should not happen, and is shown rather than hidden when it does. Two concurrent mints
-            // can both pass the check-then-act in `mintConnectorToken`; listing every active token is
-            // what keeps the extra one revocable instead of invisible.
             <Callout tone="warn">
-              <b>More than one connector URL is active.</b> Each one below can read this project until it is
+              <b>More than one connector URL is active.</b> Each one below can reach this project until it is
               revoked. Revoke the ones you are not using.
             </Callout>
           )}
-
+          {/* The plaintext URL is OWNER-only and filtered on the server: props crossing into a client
+              component are serialized into the HTML, so a conditional render would not hide it. */}
           <ConnectorManager
             slug={projectSlug}
-            /* ⚠️ FILTERED HERE, on the server, and that is the whole fix. The previous revision
-               passed every token and let the client component decide what to render — but this page
-               is a Server Component and `ConnectorManager` is `'use client'`, so props crossing that
-               boundary are serialized into the RSC flight payload and shipped inside the HTML. A
-               member could read the plaintext bearer URL out of View Source while the page politely
-               told them to ask an owner.
-               Hiding a credential with a conditional render is not hiding it. The `canManage` check
-               has to happen before the data leaves the server. */
             tokens={canManage && status.state === 'active' ? status.tokens : []}
-            /* Separate from `tokens` precisely BECAUSE tokens is now empty for a member: the member
-               notice cannot be derived from `tokens.length` any more. */
             hasConnector={status.state === 'active'}
             canManage={canManage}
-            /* Withheld while unreadable, and while the connector is off: the mint action refuses
-               either way, and a button guaranteed to fail is worse than no button. Revoke is NOT
-               withheld. */
             canMint={status.state === 'absent' && connectorEnabled}
             viewerUserId={membership.userId}
             writesOn={writesOn}
           />
-
-          {/* ⚠️ **BELOW the URL, which is the order the approved state draws** — the thing first,
-              then whether it is live (`setup-connect.png`: "YOUR CONNECTOR URL", then "STATUS").
-              It rendered above, so the page opened on a verdict about something the reader had not
-              been shown yet. */}
-          {/* ── The status line, and what it deliberately does NOT claim (sprint contract #10) ───
-              Two states, because two is what the data supports. `connector_tokens` has five columns
-              and NONE of them records use; the MCP route resolves a token and writes nothing. So
-              this says whether a URL EXISTS, and says out loud that existing is not the same as
-              being used — rather than showing a "last used" that would be invented.
-              Verified on production 2026-08-29: `miyagisanchez` has exactly one connector token. */}
-          {/* account-from-the-terminal S3.2 — "the Claude app" row. Since D12 the route stamps
-              `last_used_at` (at most once a minute), so "used" is now a recorded fact rather than a
-              guess: "Not added yet" until the first request, then green with the time. */}
+          {/* `last_used_at` is stamped on use (account-from-the-terminal D12), so "used" is recorded,
+              never guessed: "Not added yet" until the first request, then green with the time. */}
           <Field
-            label="The Claude app"
+            label="Status"
             hint={
-              status.state === 'active'
-                ? firstUse
-                  ? 'Claude has used this URL. It stays connected until you get a new URL or revoke it.'
-                  : 'Three steps: copy the URL, open Claude’s connector settings, paste it and press Add. This turns green the first time Claude uses it.'
+              status.state === 'active' && !firstUse
+                ? 'This turns green the first time Claude uses the URL.'
                 : undefined
             }
           >
             {status.state === 'unreadable' && (
-              // Not "there is none" — we could not check. The mint control is withheld below for the
-              // same reason: minting on the strength of an unanswered question is how a second live
-              // credential appears.
               <p role="alert">
                 <Pill state="off">Could not check</Pill>{' '}
                 <span className="ds-hint">
@@ -161,7 +148,6 @@ export default async function SetupConnectPage({ params }: { params: Promise<{ p
                 </span>
               </p>
             )}
-
             {status.state === 'active' && (
               <p role="status">
                 {firstUse ? (
@@ -175,44 +161,76 @@ export default async function SetupConnectPage({ params }: { params: Promise<{ p
                 </span>
               </p>
             )}
-
             {status.state === 'absent' && (
               <p role="status">
-                {/* The `never` pill, and it is the right one: nobody has ever created a URL here.
-                    Solid rather than dashed would say "switched off", which is a decision somebody
-                    made — and nobody has. */}
                 <Pill state="never">Not connected yet</Pill>{' '}
                 <span className="ds-hint">
                   {canManage
-                    ? 'Create one below, then paste it into Claude.'
+                    ? 'Create a URL above, then add it to Claude.'
                     : 'An owner of this project can create one.'}
                 </span>
               </p>
             )}
           </Field>
+          <ConnectorSteps canManage={canManage} hasConnector={status.state === 'active'} />
+
+          <h2 className="ds-label">4 · Connect Codex</h2>
+          {/* connect-page D5. The command carries the URL, so it is owner-only for the same reason the URL is. */}
+          {canManage && codexUrl ? (
+            <Field
+              label="One command"
+              hint="Run it once in a terminal with Codex installed; “codex mcp list” then shows golden-frijoles. It uses the same URL as the Claude app, so Get a new URL above stops both."
+            >
+              <CopyField
+                value={`codex mcp add golden-frijoles --url ${codexUrl}`}
+                label="Copy the Codex command"
+              />
+            </Field>
+          ) : (
+            <p className="ds-hint">
+              {canManage
+                ? 'Create a connector URL above; the command to add it to Codex appears here.'
+                : 'An owner of this project can connect Codex — the command carries the project’s URL, so only owners see it.'}
+            </p>
+          )}
+
+          <h2 className="ds-label">5 · Send your product&apos;s events</h2>
+          {/* connect-page S2.3. The key's real sources: `gf keys create --type ingest` or Setup › Keys —
+              NOT `gf init`, which writes a flag-read key only. */}
+          <p className="ds-hint">
+            Your product reports what its users do; your agent reads it back as funnels and your North Star.
+            Add the SDK where your app runs, with an <b>ingest key</b> in <code>GROWTH_ENGINE_API_KEY</code> —
+            get one with <code>gf keys create --type ingest --label &quot;my app&quot;</code> or under{' '}
+            <a href={`/app/setup/keys/${projectSlug}`}>Setup › Keys</a>. It is shown once; keep it in your
+            environment, never in code.
+          </p>
+          <pre className="ds-mono ds-codeblock">
+            {`npm install @golden-frijoles/sdk
+
+import { createGrowthEngineClient } from '@golden-frijoles/sdk'
+
+const engine = createGrowthEngineClient({
+  baseUrl: '${getSiteUrl()}',
+  apiKey: process.env.GROWTH_ENGINE_API_KEY,
+  userId: currentUser.id,
+})
+
+await engine.track('${STARTER_TARGET_EVENT}', { featureId: '${STARTER_FEATURE_KEY}' })`}
+          </pre>
+          <p className="ds-hint">
+            That event lands in the starter feature already set up for you, so its funnel fills the first time
+            it runs.
+          </p>
+
+          <h2 className="ds-label">6 · Your signed-in machines</h2>
           <CodingAgents slug={projectSlug} tokens={codingAgents} />
-          <Field
-            label="Another coding agent"
-            hint="Paste this into Codex, Cursor or any agent `npx skills` supports. It reads install.md first and waits for your go-ahead."
-          >
-            <CopyField value={installPrompt(getSiteUrl())} label="Copy the setup prompt" />
-          </Field>
         </ListCard>
 
-        {/* Block 3 — the three steps, in a card of their own beside the URL rather than inside it. */}
-        <ConnectorSteps canManage={canManage} hasConnector={status.state === 'active'} />
-
-        {/* Block 4 — a plain closing sentence, which is what the approved state draws under the
-            annotation: `head → list → list → note`. It was a `Callout`, and a `.ds-callout--info` is
-            an ANNOTATION to the contract (epic D2-c) — excluded from the sequence entirely — so the
-            page's fourth block was missing while this line was on screen. The words are unchanged.
-
-            The SDK snippet is deliberately NOT here — two audiences, two places. This page is for
-            pointing an agent at data that already flows; sending events is a different job with a
-            different reader, and duplicating the snippet would mean two copies to keep correct. */}
+        {/* The approved `setup-connect` structure is head → card → card → note (D6): your agent (1–2), then
+            connections (3–6), then this closing note. Six groups, two cards — Daniel's order, the same contract. */}
         <p className="ds-hint">
-          Sending events instead? That is an engineer&apos;s job, not this one — the SDK snippet lives on{' '}
-          <a href={`/app/onboarding/${projectSlug}`}>your setup guide</a>.
+          Not sure where to start? Use the first prompt — your agent reads what it installs and asks before it
+          does.
         </p>
       </main>
     </ProductShell>

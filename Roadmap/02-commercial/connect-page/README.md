@@ -89,9 +89,13 @@ path itself keeps its existing gates (`CONNECTOR_WRITES_ENABLED`, `CLI_WRITE_API
   and the Codex command carrying it stay owner-only (account-from-the-terminal D11 review).
 - **D5 — Codex.** `codex mcp add golden-frijoles --url <url>` (verified against codex-cli 0.160.0 `codex mcp add --help`:
   `--url` = streamable HTTP). The token is in the URL path, so the command is the whole setup.
-- **D6 — The design contract.** `setup-connect` is an approved state the new order no longer matches. The manifest row
-  keeps `rendersFromDesignSystem: true` and moves to a dated deferral (owner Daniel) until he approves the new picture;
-  the coverage pins move with it, said where they are pinned.
+- **D6 — The design contract (corrected at build).** The lock planned a deferral; the coverage ratchet
+  (`scripts/design-coverage.mjs`) forbids coverage falling and, by design, has no override. The approved `setup-connect`
+  state measures STRUCTURE (head → card → card → note), so the six groups sit in two cards — **your agent** (1–2) and
+  **connections** (3–6) — plus a closing note: Daniel's order, the same contract, Connect still covered. The retired
+  onboarding row leaves the denominator (it borrowed `setup-connect`): 29 of 33 at close.
+- **One PR for both sprints (deviation from the stack rule):** S1's landing target is the page S2 rebuilds, so
+  reviewing them apart would review a landing on a page about to change; the PR is reviewed at the higher tier.
 - **Routing:** the architect builds in place. Reviews: `review-route.mjs` + the fresh `pr-reviewer` on each PR.
 
 ## Deploy order
