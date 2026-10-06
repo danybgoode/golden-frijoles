@@ -12,25 +12,25 @@ stories:
     i_want: "to sign in with Google, GitHub or an email link"
     so_that: "I don't make another password"
     risk: high
-    status: in-progress
+    status: done
   - id: S2.2
     title: "gf login through the browser"
     as_a: "a founder in my terminal"
     i_want: "gf login to open my browser, show a code and sign me in when I confirm it"
     so_that: "I never copy a token"
     risk: high
-    status: in-progress
+    status: done
   - id: S2.3
     title: "The account question, as the Account screen"
     as_a: "a founder running setup"
     i_want: "to hear what an account adds before I'm asked"
     so_that: "I can choose"
     risk: low
-    status: in-progress
+    status: done
 ---
 # Account from the terminal — Sprint 2: Sign in from the terminal
 
-**Status:** 🟦 In review — PR #280
+**Status:** ✅ shipped 2026-10-06 — PR #280 (`0959d9f`), plugin + kit 0.30.0, CLI 0.5.0
 
 ## Build contract (locked by the architect before the builder started — README § Architecture lock)
 - S2.1 → **D4** (Google only — the 2026-10-06 amendment cuts GitHub and the email link) + **D5** (the flag).
@@ -42,7 +42,7 @@ stories:
 <!-- Keep the heading shape `### Story 2.M — <title>`. When a story ships, append ✅ + its commit ref.
      The epic README frontmatter `status:` is the AUTHORITATIVE epic status. -->
 
-### Story 2.1 — Google, GitHub and email-link sign-in, and the flag
+### Story 2.1 — Google, GitHub and email-link sign-in, and the flag ✅ 08fde77 (Google only — the lock's amendment)
 **As** a founder, **I want** to sign in with Google, GitHub or an email link, **so that** I don't make another password.
 "Continue with Google", "Continue with GitHub" and "Email me a sign-in link" on `/login` and `/signup`, through
 Supabase's own providers; the return lands on `/auth/callback`, which already provisions a new account. Password
@@ -60,7 +60,7 @@ redirect URLs in Supabase (preview and production).
 - `gf flags get auth.terminal_sign_in_enabled` shows `on` in every env.
 **Risk:** high
 
-### Story 2.2 — gf login through the browser
+### Story 2.2 — gf login through the browser ✅ ff5b1be, 52e3ff2, ff00603
 **As** a founder in my terminal, **I want** `gf login` to open my browser, show a code and sign me in when I confirm
 it, **so that** I never copy a token.
 A device-code table (additive migration: code, user code like `KQ7M-3RTX`, status, user, expiry, the minted token
@@ -77,7 +77,7 @@ the flag killed or an older server, `gf login` falls back to the paste prompt.
 - `gf login --token`, piping and `GOLDEN_FRIJOLES_TOKEN` behave as today.
 **Risk:** high
 
-### Story 2.3 — The account question, as the Account screen
+### Story 2.3 — The account question, as the Account screen ✅ 851f840
 **As** a founder running setup, **I want** to hear what an account adds before I'm asked, **so that** I can choose.
 Setup's Q4 in the golden-frijoles skill, reworded as the canvas Account frame: works on this machine with no account
 (planning, coaches, build and review, all in `Roadmap/`); an account adds flags you can roll out and turn off, each
@@ -115,3 +115,10 @@ Env: production · https://goldenfrijoles.com   (or the preview URL while testin
    → The terminal says the code expired. Nothing was signed in.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+**Run 2026-10-06:** step 1 ✅ (agent: production `/login` and `/signup` serve "Continue with Google"). Step 2 ✅ (Daniel,
+after fixing Supabase's Site URL + Redirect URLs — the first attempt landed `?code=` on the old vercel domain): a
+Google sign-up landed on `/app/onboarding/<new project>`. Step 3 is void (email link cut at the lock). Kill switch:
+`gf flags get auth.terminal_sign_in_enabled` → `true v1` in development, preview and production. Steps 4–6
+(`gf login` on a clean machine, confirm, expiry) **owed to Daniel** — CLI 0.5.0 is published and both migrations are
+applied.

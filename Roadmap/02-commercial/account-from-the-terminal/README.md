@@ -1,6 +1,6 @@
 ---
-status: in-progress   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Building                   # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+status: shipped   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+phase: Shipped                   # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
 locked_at: "2026-10-06T13:44:02Z"
 slug: account-from-the-terminal
@@ -17,9 +17,15 @@ quote_basis: "L, n=3, p25–p75"
 build_order: 62      # integer position in the ONE global build sequence — the SSOT once the epic
                      # exists (the seed's value is only a fallback). Fill it in at the betting
                      # table; plain integers, no "#2a" suffixes. See 00-ideas/README.md → Ordering.
+actual_usd: 55.44
+actual_mtok: 204.1
+actual_basis: "this machine · 2026-10-06 · 1 session · prices 2026-10-02"
 ---
 
-# Epic: Account from the terminal
+# Epic: Account from the terminal ✅
+
+> **Shipped 2026-10-06** — #277 (S1, `59dfa26`), #280 (S2, `0959d9f`), #282 (S3, `ff29242`); side fix #278. Plugin + kit
+> 0.29.0–0.30.0, CLI 0.5.0, migrations `20261006100000` + `20261006110000` applied before their merges. See RETROSPECTIVE.md.
 
 > **Area:** 02-commercial · **Risk:** high · **Class:** Feature · **Scope seed:** [`00-ideas/seeds/account-from-the-terminal.md`](../../00-ideas/seeds/account-from-the-terminal.md)
 <!-- Class (above) is the Stage-2 classification: Feature, Spike, Bug, or Chore — see SKILL.md's
@@ -228,17 +234,17 @@ shows `on` in every env.
 5. The skills repo release for S1.2 and S2.3 follows `skills/RELEASING.md`.
 
 ## Definition of Done (epic)
-- [ ] All sprints merged to `main` + smoke-tested (gaps stated — `node scripts/owed-ledger.mjs` counts what is still owed)
-- [ ] Each `sprint-N.md` has its smoke walkthrough (real URLs)
-- [ ] This README marked ✅; every sprint status ticked with commit refs
-- [ ] `RETROSPECTIVE.md` written
-- [ ] Product poster (`Roadmap/README.md`) updated
-- [ ] Team memory + `MEMORY.md` index updated
-- [ ] Durable learnings promoted to `Roadmap/LEARNINGS.md` (dedupe — sharpen, don't append)
-- [ ] **Kill-switch (only if one was planned at grooming — Stage 6b):** the flag slice shipped, the flag
+- [x] All sprints merged to `main` + smoke-tested (gaps stated — `node scripts/owed-ledger.mjs` counts what is still owed)
+- [x] Each `sprint-N.md` has its smoke walkthrough (real URLs)
+- [x] This README marked ✅; every sprint status ticked with commit refs
+- [x] `RETROSPECTIVE.md` written
+- [x] Product poster (`Roadmap/README.md`) updated
+- [x] Team memory + `MEMORY.md` index updated
+- [x] Durable learnings promoted to `Roadmap/LEARNINGS.md` (dedupe — sharpen, don't append)
+- [x] **Kill-switch (only if one was planned at grooming — Stage 6b):** the flag slice shipped, the flag
       exists **in Golden Frijoles, in every env**, with the stated polarity, **and is ACTIVATED there** —
       `gf flags get <key>` must not print `—` in its PRODUCTION row. Creating a definition is not
       turning it on, and a flag that is synced but never activated serves compile-time defaults while
       every dashboard says it exists. *Verify-only — not a new gate; whether a high-risk epic needs one
       is decided at grooming, not here.*
-- [ ] Feature branch deleted; **this README's frontmatter `status: shipped`** (the SSOT — the board & Notion derive from it; run `node scripts/build-order.mjs`)
+- [x] Feature branch deleted; **this README's frontmatter `status: shipped`** (the SSOT — the board & Notion derive from it; run `node scripts/build-order.mjs`)

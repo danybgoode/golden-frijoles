@@ -1749,6 +1749,10 @@ one-liner + why + date shape.
   `config` / `commit` rewrites the real repository: `core.bare=true`, identity `t <t@t>`, junk commits on
   `main`. It happened three times (2026-09-09, -16, -23), each time sealed in one file only.
   `template/scripts/git-fixtures-sealed.test.mjs` now fails the class. *(2026-09-23)*
+  **A fourth time, 2026-10-06, past that guard:** its detector matched `git('init'` but not the cwd-first helper
+  `git(root, 'init', …)`, and a worktree pre-push flipped `core.bare` again. A class guard keyed on call SHAPES needs
+  a case per shape you have actually written; it now has one (#278). Its scan still stops at `scripts/` — `packages/`
+  specs are sealed by hand.
 - **Never put markdown in a double-quoted shell string.** The backticks in `node -e "…`codex login`…"` are
   command substitution: they started an OAuth flow and logged a CLI out. Put data scripts in files
   (heredoc with a quoted delimiter). *(2026-09-23)*
@@ -2097,3 +2101,25 @@ one-liner + why + date shape.
   `160ms` → `.16s`), so assert the meaning of a token, not its spelling.
 - **Baseline a red suite against `main` on the same database before calling it a regression.** Eleven api failures
   (`URI too long` from PostgREST) were local DB state: identical on Next 15.
+
+### A credential that gains power, and the claims around it (account-from-the-terminal, 2026-10-06)
+
+- **When a credential gains power, every place that DISPLAYS it is re-classified — including files you never
+  touched.** Making the connector URL write as its maker turned the onboarding page's long-standing "show the URL
+  to any member" into a way for a member to copy an owner's write credential. Neither external pass saw it: the file
+  was outside the diff. Before merging a capability change, grep every renderer of the credential, not the diff.
+- **"Read-only" is a claim that rots when write paths are added elsewhere.** `llms.txt` said the connector was
+  read-only for weeks after task and flag writes shipped over it; the first correction overclaimed the other way
+  ("the only thing it can change is…"). State the boundary as the list of write paths and the credential each
+  needs, and point the guard at that list — a guard on a summary sentence pins whatever the summary got wrong.
+- **A trust page is a set of checkable claims about OTHER people's tools.** `install.md` was wrong three times
+  (a third-party CLI's own telemetry, writes into `~/.claude`, a revoke link that 404'd). A test can hold the page
+  to its own list of hosts; only reading the tools themselves (the npx cache, `--help`, the route table) checks the
+  list is complete.
+- **Supabase silently falls back to its Site URL when `redirectTo` isn't allow-listed.** The symptom — `?code=` on an
+  old domain, every later visit following it — points away from the cause. Check Authentication › URL Configuration
+  (Site URL AND Redirect URLs, with `/**`) before debugging the callback.
+- **When a gate's ON state matches production, its "connector on, writes off" state may exist on NO test server.**
+  Turning `CONNECTOR_WRITES_ENABLED` on in CI (correctly: production has it on) left the dark branch untested, and the
+  OFF server turns the whole connector off. Pin that branch with a unit test on the rule plus a structural check on
+  the route, and say so where the gate is set.
