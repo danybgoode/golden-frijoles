@@ -110,7 +110,6 @@ const CALLERS: Record<string, { kind: 'informational' } | { kind: 'durable'; gat
   'app/api/v1/public/signup/route.ts': { kind: 'durable', gatedBy: 'isSignupEnabled' },
   'app/auth/callback/route.ts': { kind: 'durable', gatedBy: 'isSignupEnabled' },
   'app/app/provision/route.ts': { kind: 'durable', gatedBy: 'isSignupEnabled' },
-  'app/app/onboarding/[projectSlug]/page.tsx': { kind: 'durable', gatedBy: 'isConnectorEnabled' },
 }
 
 // SKIP_DIRS applies at the TOP LEVEL only. Matching bare directory names at any depth looked

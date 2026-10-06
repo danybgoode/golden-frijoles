@@ -40,7 +40,7 @@ test('Get a new URL revokes the old one and mints one that acts as you', async (
     ).data!
 
   await page.goto(`/app/setup/connect/${t.slug}`)
-  await expect(page.getByText('The Claude app')).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Connect the Claude app/ })).toBeVisible()
   await page.getByRole('button', { name: 'Get a new URL' }).first().click()
   await page.getByRole('dialog').getByRole('button', { name: 'Get a new URL' }).click()
   await expect(page.getByText('Copy this now — it is not shown again')).toBeVisible()
@@ -99,6 +99,8 @@ test('a member never receives the connector URL — onboarding or Setup › Conn
     const project = await session.addProject('member', 'member-no-url')
     const token = `gb_connector_${randomBytes(24).toString('base64url')}`
     await session.db.from('connector_tokens').insert({ project_id: project.id, token })
+    // `/app/onboarding` now redirects to Connect (connect-page D2); following it is the point — an old
+    // link must not be a way round the owner gate either.
     for (const path of [`/app/onboarding/${project.slug}`, `/app/setup/connect/${project.slug}`]) {
       const response = await session.page.goto(path)
       expect(response?.status(), `${path} did not render for a member`).toBe(200)

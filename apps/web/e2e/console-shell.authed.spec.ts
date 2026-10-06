@@ -293,7 +293,6 @@ test.describe('the console shell', () => {
     const railOffers: string[] = []
 
     for (const surface of PROJECT_ROUTE_INVENTORY) {
-      if (surface.status === 'flow-only') continue
       const href = `/app/${surface.routeSegment}/${slug}`
       const response = await page.goto(href)
       // A gate-closed or owner-only surface is not a failure of this test — but it must be RECORDED,
@@ -397,9 +396,7 @@ test.describe('the console shell', () => {
     // appear in no inventory row's `gate` field.
     const expected = PROJECT_ROUTE_INVENTORY.filter(
       (surface) =>
-        surface.status !== 'flow-only' &&
-        !OFF_RAIL_WHILE_CONSOLE_IS_LIT.includes(surface.routeSegment) &&
-        surface.routeSegment !== 'tasks'
+        !OFF_RAIL_WHILE_CONSOLE_IS_LIT.includes(surface.routeSegment) && surface.routeSegment !== 'tasks'
     ).length
 
     expect(

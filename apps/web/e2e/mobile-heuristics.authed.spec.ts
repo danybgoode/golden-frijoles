@@ -36,7 +36,6 @@ const AUTHED_MOBILE_ROUTES: readonly AuthedRoute[] = [
   // broken at both widths with no assertion watching.
   { label: 'destinations', path: (slug) => `/app/destinations/${slug}` },
   { label: 'share links', path: (slug) => `/app/shares/${slug}` },
-  { label: 'onboarding', path: (slug) => `/app/onboarding/${slug}` },
   // flags-console-parity · Sprint 3, Story 3.4 — covering a new route is one array entry, which is
   // the point of this rail.
   //

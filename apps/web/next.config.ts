@@ -8,9 +8,27 @@ import type { NextConfig } from 'next'
 const nextConfig: NextConfig = {
   async redirects() {
     return [
-      { source: '/funnel/:projectSlug/:featureKey', destination: '/app/funnel/:projectSlug/:featureKey', permanent: false },
-      { source: '/impact/:projectSlug/:featureKey', destination: '/app/impact/:projectSlug/:featureKey', permanent: false },
-      { source: '/experiments/:projectSlug/:experimentKey', destination: '/app/experiments/:projectSlug/:experimentKey', permanent: false },
+      {
+        source: '/funnel/:projectSlug/:featureKey',
+        destination: '/app/funnel/:projectSlug/:featureKey',
+        permanent: false,
+      },
+      {
+        source: '/impact/:projectSlug/:featureKey',
+        destination: '/app/impact/:projectSlug/:featureKey',
+        permanent: false,
+      },
+      {
+        source: '/experiments/:projectSlug/:experimentKey',
+        destination: '/app/experiments/:projectSlug/:experimentKey',
+        permanent: false,
+      },
+      // connect-page D2 — onboarding retired: signup lands on Connect, and old links and bookmarks follow it.
+      {
+        source: '/app/onboarding/:projectSlug',
+        destination: '/app/setup/connect/:projectSlug',
+        permanent: false,
+      },
     ]
   },
 }

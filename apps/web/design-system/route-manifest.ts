@@ -131,7 +131,7 @@ export type CoverageRow = {
    * ⚠️ **This names an exemption that already existed implicitly** (`mockups-as-built`, D2-d). Two
    * routes carry a state they cannot possibly match: `/app/scheduled` cites `ship-activity` while
    * rendering the `unbuilt` empty state — Daniel's call on 2026-08-29, to ship the designed empty
-   * state rather than drop a rail item — and `/app/onboarding` cites `setup-connect` while being a
+   * state rather than drop a rail item — and `/app/onboarding` (retired by connect-page) cited `setup-connect` while being a
    * different flow that happens to teach in the same language. The structural gate would have gone
    * red on both, and the obvious repair would have been to loosen the gate for everyone.
    *
@@ -518,10 +518,12 @@ export const ROUTE_MANIFEST: readonly CoverageRow[] = [
   {
     route: '/app/setup/connect/[projectSlug]',
     page: 'app/setup/connect/[projectSlug]/page.tsx',
-    label: 'Connect your agent',
+    label: 'Connect',
     frame: 'console',
     seam: 'product-shell',
     surface: 'setup/connect',
+    // connect-page D6: the six groups sit in the approved head → card → card → note structure, so the
+    // state still describes this page's SHAPE; its contents changed (Daniel's feedback, 2026-10-06).
     referenceState: 'setup-connect',
     // design-system-rails · Story 4.4. The head, the status field with its pill, the connector URL in
     // a mono copy field, and the numbered three-step card ending in `Add to Claude ↗` — whose arrow
@@ -619,30 +621,6 @@ export const ROUTE_MANIFEST: readonly CoverageRow[] = [
     landsIn: 4,
     retiresIn: null,
     deferred: null,
-  },
-  {
-    route: '/app/onboarding/[projectSlug]',
-    page: 'app/onboarding/[projectSlug]/page.tsx',
-    label: 'Onboarding',
-    frame: 'console',
-    seam: 'product-shell',
-    surface: 'onboarding',
-    // `flow-only` in the inventory and gated out of the nav. It gets a state because a person can
-    // reach it, not because the nav lists it — and its job (first key, starter feature) is the
-    // Connect teaching shape, which is why it renders that language.
-    referenceState: 'setup-connect',
-    rendersFromDesignSystem: true,
-    landsIn: 5,
-    retiresIn: null,
-    deferred: null,
-    borrowsState: {
-      owner: 'Daniel',
-      until: '2027-03-31',
-      why:
-        'Onboarding is a FLOW (first key, starter feature) that teaches in Connect\u2019s language ' +
-        'and has no approved state of its own. It cites `setup-connect` so the row is not ' +
-        'stateless, never because the two screens have the same structure.',
-    },
   },
 
   // ── The three credential routes Story 4.5 retires ───────────────────────────────────────────
