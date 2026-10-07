@@ -3,7 +3,7 @@ epic: one-epic-page
 sprint: 2
 title: "Why, progress, flag and spend"
 risk: low
-phase: In review
+phase: Shipped
 stories_total: 3
 stories:
   - id: S2.1
@@ -30,7 +30,7 @@ stories:
 ---
 # One epic page — Sprint 2: Why, progress, flag and spend
 
-**Status:** 🟦 In review
+**Status:** ✅ Shipped — #297, merged 9b83399 2026-10-07, deployed to production and verified
 
 ## Stories
 <!-- Keep the heading shape `### Story 2.M — <title>`. When a story ships, append ✅ + its commit ref.
@@ -96,5 +96,12 @@ Env: production · https://goldenfrijoles.com   (or the preview URL while testin
    → The bean, the actual and "target was …".
 5. Open each document
    → Each opens.
+
+**Verified live 2026-10-07 (signed out, the public demo, by the builder):** `result-record`'s page shows "Why we're
+building this", "No target set.", three green bars at 3/3 (step 1's bars), "No flag" with the README's own line, and
+spend "Quote $22–34 · Actual ≈$42.44 (+25%)" in red with FinOps → `/app/finops/golden-beans-demo#epic-result-record`
+(3); every document link renders (5). Kit + plugin 0.34.0 published (npm + tag). **Owed:** step 2 (Open in Ship)
+cannot pass on prod yet — the only roadmap tenant holds no flags; it lands with `one-product-project` (seed). Step 4
+(a read epic) waits for the first verdict on prod; the authed fixture proves it. Steps 1–5 signed in owed to Daniel.
 
 If any step fails, note the step number + what you saw — that's the bug report.

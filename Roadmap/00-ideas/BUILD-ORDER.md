@@ -10,13 +10,14 @@
 > This committed file reads the docs alone, so **Building and QA are not here** — they are facts git
 > and GitHub hold. For the live board run `node scripts/build-order.mjs --live`, or open the Hub board.
 
-## To groom (6)
+## To groom (7)
 
 _seeds with no pitch yet._
 
 - [Scenarios freeze: archive the epic, correct the landing's SecOps claim, deprecate the SDK scenario API](seeds/scenarios-freeze.md) — #36 · 01 Growth Engine · seed · Chore · risk: Low · appetite S · _docs: status raw_
 - [Verify module: the verification depth ladder as a product (after the spike)](seeds/verify-module.md) — #54 · 09 Platform Infra · seed · Feature · risk: High · appetite L · _docs: status raw_
 - [A delivery whose settle keeps failing is re-sent every 5 minutes, uncounted and unlogged](seeds/delivery-stale-reclaim-uncounted.md) — 01 Growth Engine · seed · Bug · risk: High · appetite S · _docs: status raw_
+- [One product project: golden-frijoles, built in the open](seeds/one-product-project.md) — 02-commercial · seed · Chore · risk: High · _docs: status raw_
 - [perf-probe only requests the hosts a project names](seeds/perf-probe-target-allowlist.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
 - [Template scripts run when invoked through a symlinked path](seeds/script-ismain-realpath.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
 - [This repo lints its template scripts the way its consumers do](seeds/foundation-lint-gate.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
@@ -28,12 +29,11 @@ _a pitch is waiting at the approval gate._
 - [Analytics visualization — the charting-dependency decision (spike), then the layer](seeds/analytics-visualization-layer.md) — #14 · 01 Growth Engine · seed · Spike · risk: Low · appetite S · _docs: status ready_
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
 
-## Ready to build (12)
+## Ready to build (11)
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
 - [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #63 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
-- [One epic page](../02-commercial/one-epic-page/README.md) — #66 · 02 Commercial · 6/6 stories · risk: Low · appetite M · _docs: status in-progress_
 - [Outcome report v2](../02-commercial/outcome-report-v2/README.md) — #67 · 02 Commercial · 0/6 stories · risk: Low · appetite M · _docs: status scaffolded_
 - [Gates in plain agile](../02-commercial/gates-in-plain-agile/README.md) — #68 · 02 Commercial · 0/5 stories · risk: Low · appetite M · _docs: status scaffolded_
 - [Build view upgrade](../02-commercial/build-view-upgrade/README.md) — #69 · 02 Commercial · 0/3 stories · risk: Low · appetite S · _docs: status scaffolded_
@@ -53,10 +53,11 @@ _a work branch is on origin. Not in this committed file: `node scripts/build-ord
 
 _a PR is ready for review, or merged and waiting for its close-out. Not in this committed file: `node scripts/build-order.mjs --live` or the Hub board._
 
-## Shipped (60)
+## Shipped (61)
 
 _merged, deployed and closed._
 
+- [One epic page ✅](../02-commercial/one-epic-page/README.md) — #66 · 02 Commercial · 6/6 stories · risk: Low · appetite M · _docs: status shipped_
 - [The result record ✅](../02-commercial/result-record/README.md) — #65 · 02 Commercial · 9/9 stories · risk: Low · appetite M · _docs: status shipped_
 - [One header and one name per thing ✅](../02-commercial/one-header-one-name/README.md) — #64 · 02 Commercial · 6/6 stories · risk: Low · appetite M · _docs: status shipped_
 - [Account from the terminal ✅](../02-commercial/account-from-the-terminal/README.md) — #62 · 02 Commercial · 8/8 stories · risk: High · appetite L · _docs: status shipped_
@@ -119,4 +120,4 @@ _merged, deployed and closed._
 - [The portfolio loop test fails intermittently in CI and has been quarantined](seeds/portfolio-loop-flake.md) — 02 Commercial · seed · Bug · risk: Low · appetite S · _docs: status shipped_
 
 ---
-_80 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._
+_81 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._

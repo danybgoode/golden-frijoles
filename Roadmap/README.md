@@ -357,6 +357,14 @@ independently shippable slice of value.
   shows in the session's opening lines and on Today; shipped board cards show the result as a **Bean** (gold only on
   Proven). The record lives in the epic file and reaches the Hub with the roadmap push, ready for the epic page and
   the Outcome report (epics 5 and 6). **Owed to Daniel:** the CLI 0.6.0 npm publish, then the grooming and end-to-end read walkthroughs.
+- ✅ [One epic page](02-commercial/one-epic-page/README.md) (launch epic 5) — **shipped and live 2026-10-07** (#295,
+  #297; plugin + kit 0.34.0). Every card, Roadmap row, workspace card and ⌘K epic opens one page,
+  `/hub/<p>/epic/<e>`; old `?card=` links redirect there with their filters. It shows where the epic is (chips and a
+  Backlog → Read track), one next command in plain words any agent understands (the rest under More), why we're
+  building it (hypothesis, target, read date, the Bean once read), one bar per sprint, the epic's flag from the
+  project's own registry with "Open in Ship", and spend against the quote with its FinOps row. `flag_key` is set at
+  grooming and travels with the roadmap push. **Owed:** both signed-in walkthroughs; a design-gate picture of the page;
+  flag lines read "not found" on prod until `one-product-project` puts roadmap and flags in one project.
 - ✅ [Connect: start where you are](02-commercial/connect-page/README.md) (Daniel's feedback on the epic above) —
   **shipped and live 2026-10-06** (#284). Signup — password or Google — lands on **Connect**, not on an onboarding page
   that pushed a one-time API key; the connector URL a new account is handed can already change flags as its owner.
@@ -502,6 +510,10 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-07**: `one-epic-page` **shipped**: two sprints, two PRs, ≈$31.17 against a $22–34 quote. One page per epic
+  replaces the Board's card view and the Hub's drill-down; commands read as plain lines, proven by pasting each into an
+  agent (one wording failed and was changed). The lock's live-data check found the roadmap and the flags in different
+  projects, and Daniel decided the follow-up the same day: one public `golden-frijoles` project, its own epic next.
 - **2026-10-07**: `result-record` **shipped**: three sprints, three PRs, ≈$42.44 against a $22–34 quote (S3 added
   after the close: the agent fetches the number — verified end to end on production).
   - An epic now carries what it should move and gets an evidenced verdict you approve on its read date. The lock
