@@ -108,7 +108,17 @@ export async function readCliBody(req: NextRequest): Promise<Record<string, unkn
   }
 }
 
-export type CliAccount = { userId: string; tokenId: string; tokenLabel: string }
+/**
+ * `scopeProjectId`: null for an account-wide token (the console mint); set for a token minted on the approve
+ * page (`gf login` through /cli/connect), which reaches that ONE project and nothing else. Every project read
+ * below honours it — a scoped token asking for a sibling project gets the same 404 a stranger gets.
+ */
+export type CliAccount = {
+  userId: string
+  tokenId: string
+  tokenLabel: string
+  scopeProjectId: string | null
+}
 
 /**
  * Gate + authenticate. The entry point for a route that needs an account but no project.
@@ -136,7 +146,12 @@ export async function requireCliAccount(req: NextRequest): Promise<CliAccount | 
   }
 
   await touchCliToken(resolved.tokenId)
-  return { userId: resolved.userId, tokenId: resolved.tokenId, tokenLabel: resolved.label }
+  return {
+    userId: resolved.userId,
+    tokenId: resolved.tokenId,
+    tokenLabel: resolved.label,
+    scopeProjectId: resolved.projectId,
+  }
 }
 
 export type CliProjectContext = CliAccount & { projectId: string; projectSlug: string; role: string }
@@ -160,8 +175,10 @@ export async function requireCliMember(
     return cliError('invalid', 'Name a project with --project, or set one with `gf projects use`.')
 
   const membership = await getMembership(account.userId, slug)
-  // Not a member and no such project are indistinguishable — see this module's header.
-  if (!membership) return cliError('not_found', `No project \`${slug}\` is available to this account.`)
+  // Not a member, no such project, and outside this token's product are indistinguishable — see this module's
+  // header.
+  if (!membership || !withinScope(account, membership.projectId))
+    return cliError('not_found', `No project \`${slug}\` is available to this account.`)
 
   return { ...account, projectId: membership.projectId, projectSlug: slug, role: membership.role }
 }
@@ -185,7 +202,15 @@ export async function requireCliOwner(
   return context
 }
 
-/** The caller's memberships, for `gf whoami` and `gf projects ls`. */
-export async function cliUserProjects(userId: string): Promise<MemberProject[]> {
-  return getUserProjects(userId)
+/** Does this credential reach `projectId`? An account-wide token reaches every membership; a scoped one, one. */
+export function withinScope(account: Pick<CliAccount, 'scopeProjectId'>, projectId: string): boolean {
+  return account.scopeProjectId === null || account.scopeProjectId === projectId
+}
+
+/** The caller's memberships this credential reaches, for `gf whoami` and `gf projects ls`. */
+export async function cliUserProjects(
+  account: Pick<CliAccount, 'userId' | 'scopeProjectId'>
+): Promise<MemberProject[]> {
+  const projects = await getUserProjects(account.userId)
+  return projects.filter((project) => withinScope(account, project.id))
 }

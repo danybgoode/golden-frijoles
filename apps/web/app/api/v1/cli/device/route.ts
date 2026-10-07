@@ -32,9 +32,8 @@ export async function POST(req: NextRequest) {
   // The one body reader every CLI route uses (`lib/cli-body-order.test.ts`); it re-checks the gate.
   const body = await readCliBody(req)
   if (body instanceof Response) return body
-  const label = body.label
-
-  const started = await startDeviceCode(label)
+  // `repo` (CLIs after 0.6.0): the terminal's word for its repo, to pre-select a product. Older CLIs omit it.
+  const started = await startDeviceCode(body.label, body.repo)
   if (!started) return cliError('server_error', 'Could not start a browser sign-in right now.')
 
   return cliOk({

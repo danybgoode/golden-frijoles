@@ -118,6 +118,11 @@ test('every security claim is on the page, under the security review', async () 
   const { securityClaims } = await import('./install-security-claims.ts')
   const review = page.slice(page.indexOf('## Security review'), page.indexOf('## How to remove it'))
   for (const claim of securityClaims(SITE)) assert.ok(review.includes(claim.text), claim.id)
-  for (const choice of ['Review it before installing', 'Also ask a second model (Codex), if installed', 'Install it now', 'Not now'])
+  for (const choice of [
+    'Review it before installing',
+    'Also ask a second model (Codex), if installed',
+    'Install it now',
+    'Not now',
+  ])
     assert.ok(review.includes(choice), choice)
 })

@@ -9,7 +9,9 @@ import {
   DEVICE_CODE_TTL_SECONDS,
   USER_CODE_ALPHABET,
   USER_CODE_FORMAT,
+  defaultProjectSlug,
   deviceCodeFromBytes,
+  sanitizeRepoHint,
   normalizeUserCode,
   sanitizeDeviceLabel,
   userCodeFromBytes,
@@ -58,4 +60,19 @@ test("the TTL matches the migration's column default", () => {
   assert.match(sql, new RegExp(`now\\(\\) \\+ interval '${DEVICE_CODE_TTL_SECONDS / 60} minutes'`))
   // And the DB's own user-code CHECK is the same expression as the app's.
   assert.ok(sql.includes(USER_CODE_FORMAT.source.replace(/^\^|\$$/g, '')))
+})
+
+test('the repo hint is cleaned like the label, and empty is no hint', () => {
+  assert.equal(sanitizeRepoHint('  golden‮frijoles\n'), 'golden frijoles')
+  assert.equal(sanitizeRepoHint('   '), null)
+  assert.equal(sanitizeRepoHint(42), null)
+  assert.equal(sanitizeRepoHint('x'.repeat(200))?.length, 80)
+})
+
+test('the approve page pre-selects the product named after the repo, else the first, and only ever one of yours', () => {
+  const mine = [{ slug: 'acme' }, { slug: 'golden-frijoles' }]
+  assert.equal(defaultProjectSlug(mine, 'Golden_Frijoles'), 'golden-frijoles')
+  assert.equal(defaultProjectSlug(mine, 'someone-elses'), 'acme')
+  assert.equal(defaultProjectSlug(mine, null), 'acme')
+  assert.equal(defaultProjectSlug([], 'golden-frijoles'), null)
 })

@@ -76,6 +76,11 @@ that product, get a key for your app's events when an epic needs measuring, send
 in; "Your code never comes here"; Allow · Cancel; "Disconnect it any time in Setup". Allow mints the token for that
 product, creating it the way `gf init` does (idempotent); Cancel mints nothing. Only products the person belongs to
 can be picked.
+*As built (2026-10-07, Daniel's calls):* the token is **scoped to the picked product** (`cli_tokens.project_id`,
+enforced in `lib/cli-auth.ts` and the connector's write actor; console-minted tokens stay account-wide). The picker
+offers **existing products only**, pre-selecting the one named after the repo the CLI reports; a "new product per repo"
+would break `projects_one_per_creator_idx`, so a person with no product gets their first one on Allow, the `gf init`
+way. "Send you links that open already signed in" is not on the page: no such capability exists yet.
 **Acceptance:**
 - `gf login` with no token opens the browser, the code matches the terminal, and on confirm the terminal prints who
   you are within a few seconds.

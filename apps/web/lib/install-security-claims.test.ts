@@ -77,7 +77,10 @@ claimTest('nothing-at-install', () => {
 })
 
 claimTest('cli-talks-to-site', () => {
-  assert.match(read(join(CLI_SRC, 'credentials.ts')), new RegExp(`DEFAULT_API_URL = '${PRODUCTION_SITE_URL}'`))
+  assert.match(
+    read(join(CLI_SRC, 'credentials.ts')),
+    new RegExp(`DEFAULT_API_URL = '${PRODUCTION_SITE_URL}'`)
+  )
   const calls = cliSources.filter((path) => /\b(fetch|doFetch|fetchImpl)\(/.test(code(path)))
   assert.deepEqual(
     calls.map((path) => path.slice(CLI_SRC.length + 1)).sort(),
@@ -85,7 +88,9 @@ claimTest('cli-talks-to-site', () => {
     'a CLI file other than the API client and doctor makes a network call'
   )
   const hosts = new Set(
-    cliSources.flatMap((path) => [...code(path).matchAll(/https?:\/\/([a-z0-9.-]+)/g)].map((match) => match[1]))
+    cliSources.flatMap((path) =>
+      [...code(path).matchAll(/https?:\/\/([a-z0-9.-]+)/g)].map((match) => match[1])
+    )
   )
   assert.deepEqual([...hosts].sort(), ['goldenfrijoles.com', 'registry.npmjs.org'])
 })
@@ -117,7 +122,9 @@ claimTest('kit-pinned', () => {
   assert.equal(json(join(REPO, 'skills', 'kit', 'package.json')).version, PLUGIN_VERSION)
   const skills = files(join(PLUGIN, 'skills'), (path) => path.endsWith('SKILL.md'))
   const pins = skills.flatMap((path) =>
-    [...read(path).matchAll(new RegExp(`npx -y ${KIT_PACKAGE}@(\\d+\\.\\d+\\.\\d+)`, 'g'))].map((match) => match[1])
+    [...read(path).matchAll(new RegExp(`npx -y ${KIT_PACKAGE}@(\\d+\\.\\d+\\.\\d+)`, 'g'))].map(
+      (match) => match[1]
+    )
   )
   assert.ok(pins.length > 0, 'no skill runs the kit pinned')
   assert.deepEqual([...new Set(pins)], [PLUGIN_VERSION], 'a skill pins a different kit version')
@@ -139,19 +146,27 @@ claimTest('status-line', () => {
   // The usage push is behind spend.telemetry, and its target is the engine URL you set.
   const actuals = code(join(PLUGIN, 'hooks', 'vendor', 'epic-actuals.mjs'))
   const gate = actuals.indexOf("if (setting !== 'on')")
-  assert.ok(gate > 0 && gate < actuals.indexOf('await fetchImpl('), 'usage can be sent without spend.telemetry on')
+  assert.ok(
+    gate > 0 && gate < actuals.indexOf('await fetchImpl('),
+    'usage can be sent without spend.telemetry on'
+  )
   assert.match(actuals, /const base = String\(env\.GROWTH_ENGINE_URL/)
   // The roadmap push is reached only from roadmap-extract's `--sink hub` (or roadmap-push run by hand), and the
   // status line never asks for that sink.
   for (const path of reachable.filter((path) => path.endsWith('roadmap-extract.mjs'))) {
-    const line = code(path).split('\n').findIndex((text) => text.includes('pushRoadmap('))
+    const line = code(path)
+      .split('\n')
+      .findIndex((text) => text.includes('pushRoadmap('))
     assert.match(code(path).split('\n')[line - 1], /sink === 'hub'/, `${path} pushes outside the hub sink`)
   }
   const view = code(join(PLUGIN, 'hooks', 'build-view.mjs')) + code(join(PLUGIN, 'hooks', 'index.tsx'))
   assert.doesNotMatch(view, /\bhub\b|--sink|--push/, 'the status line asks a script to push')
   // Every program it runs is git, gh or node.
   const spawned = reachable.flatMap((path) =>
-    [...code(path).matchAll(/(?:execFileSync|spawnSync|execFile|spawn)\(\s*['"]([^'"]+)['"]/g)].map((m) => m[1])
+    [...code(path).matchAll(/(?:execFileSync|spawnSync|execFile|spawn)\(\s*['"]([^'"]+)['"]/g)].map(
+      (m) => m[1]
+    )
   )
-  for (const program of spawned) assert.ok(['git', 'gh', 'node'].includes(program), `the status line runs ${program}`)
+  for (const program of spawned)
+    assert.ok(['git', 'gh', 'node'].includes(program), `the status line runs ${program}`)
 })

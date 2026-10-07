@@ -622,6 +622,8 @@ async function resolveFlagWriteActor(
   if (!isCliWriteApiEnabled() || !presentedKey) return null
   const resolved = await resolveCliToken(presentedKey)
   if (!resolved.ok) return null
+  // A token made for one product (the /cli/connect approve page) writes to that product only.
+  if (resolved.projectId !== null && resolved.projectId !== projectId) return null
   // BY PROJECT ID, not by slug. The connector token already resolved the id; going back through the
   // slug would re-resolve identity from the mutable half of the pair (AGENTS #10), and a rename
   // would then read as "you are not a member" — a silent authorization change caused by a display

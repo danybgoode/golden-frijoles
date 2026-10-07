@@ -52,12 +52,40 @@ export function normalizeUserCode(input: unknown): string | null {
  * unauthenticated caller, so it is bounded, stripped of control characters, and never empty.
  */
 export function sanitizeDeviceLabel(input: unknown): string {
+  return (cleanTerminalText(input) || 'a terminal').slice(0, 80)
+}
+
+/** What the terminal says its repo is called, or null. A suggestion for the product picker, never a grant. */
+export function sanitizeRepoHint(input: unknown): string | null {
+  return cleanTerminalText(input).slice(0, 80) || null
+}
+
+/**
+ * The product the approve page pre-selects: the one whose slug is the repo's name as a slug would spell it, else
+ * the first. Only ever one of `projects` — the person's own memberships — so the hint can steer the default and
+ * nothing else.
+ */
+export function defaultProjectSlug(
+  projects: readonly { slug: string }[],
+  repoHint: string | null
+): string | null {
+  const wanted = (repoHint ?? '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return (
+    projects.find((project) => wanted !== '' && project.slug === wanted)?.slug ?? projects[0]?.slug ?? null
+  )
+}
+
+function cleanTerminalText(input: unknown): string {
   const raw = typeof input === 'string' ? input : ''
-  const cleaned = raw
-    // C0/DEL, and the invisible ones a phishing label would use to look like something else: zero-width
-    // and bidi controls (fresh reviewer, PR #280).
-    .replace(/[\u0000-\u001f\u007f\u00ad\u061c\u200b-\u200f\u202a-\u202e\u2060-\u2069\ufeff]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-  return (cleaned || 'a terminal').slice(0, 80)
+  return (
+    raw
+      // C0/DEL, and the invisible ones a phishing label would use to look like something else: zero-width
+      // and bidi controls (fresh reviewer, PR #280).
+      .replace(/[\u0000-\u001f\u007f\u00ad\u061c\u200b-\u200f\u202a-\u202e\u2060-\u2069\ufeff]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+  )
 }

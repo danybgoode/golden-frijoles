@@ -132,8 +132,8 @@ All nine launch-critical epics are groomed, funded in `Roadmap/bets/wave-2026-10
 
 \* Numbers as groomed on 2026-10-05; `BUILD-ORDER.md` is the live order. `first-run-setup` was added 2026-10-05 and
 re-landed 2026-10-07 (its first groom commit missed the merge). The canvas First run flow (page 2) maps to
-`account-from-the-terminal` (frames 1–6; checksums, the security review and the approve page are handled outside the
-epics), `first-run-setup` (7, 8a, 8b) and `gates-in-plain-agile` (9–11).
+`account-from-the-terminal` (frames 1–6; checksums, the security review and the approve page built in
+place 2026-10-07), `first-run-setup` (7, 8a, 8b) and `gates-in-plain-agile` (9–11).
 
 Then `plain-outcome-rename` (sprints 1–4, to be re-groomed) and the rest of the queue, order kept.
 

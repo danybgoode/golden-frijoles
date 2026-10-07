@@ -47,8 +47,8 @@ export function securityClaims(siteUrl: string): SecurityClaim[] {
     {
       id: 'status-line',
       text:
-        'The status line reads `Roadmap/`, git and this project\'s Claude Code transcripts. It goes online only ' +
-        'through your own `git` and `gh`, to read this branch\'s pull request, and sends usage only if you turn ' +
+        "The status line reads `Roadmap/`, git and this project's Claude Code transcripts. It goes online only " +
+        "through your own `git` and `gh`, to read this branch's pull request, and sends usage only if you turn " +
         'spend telemetry on — then only to the engine URL you set.',
     },
   ]

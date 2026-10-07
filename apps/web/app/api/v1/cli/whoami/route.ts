@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
   try {
     const [email, projects, workspaces] = await Promise.all([
       accountEmail(account.userId),
-      cliUserProjects(account.userId),
+      cliUserProjects(account),
       // workspaces S2.3 — the tenant, where `gf whoami` already looks. getUserWorkspaces THROWS on a query failure
       // for the same reason getUserProjects does, and lands in the same 500 below.
       getUserWorkspaces(account.userId),
@@ -55,7 +55,14 @@ export async function GET(req: NextRequest) {
       projects: projects
         .map((project) => ({ slug: project.slug, role: project.role }))
         .sort((left, right) => left.slug.localeCompare(right.slug)),
-      workspaces: workspaces.map((workspace) => ({ name: workspace.name, role: workspace.role })),
+      // A token scoped to one product names that product's workspace only, not every tenant the person is in.
+      workspaces: workspaces
+        .filter(
+          (workspace) =>
+            account.scopeProjectId === null ||
+            projects.some((project) => project.workspace.id === workspace.id)
+        )
+        .map((workspace) => ({ name: workspace.name, role: workspace.role })),
     })
   } catch (err) {
     // getUserProjects THROWS on a query failure rather than returning [], deliberately: an empty

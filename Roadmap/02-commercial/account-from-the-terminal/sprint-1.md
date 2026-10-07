@@ -78,6 +78,11 @@ install time; nothing is sent anywhere unless you sign in, then only to goldenfr
 reads `Roadmap/` and git and sends nothing). It offers "Review it before installing", "Also ask a second model
 (Codex), if installed" and "Install it now"; "Not now" deletes the download. Each claim is checked against the code
 by a test, so the page can't say something the release doesn't do.
+*As built (2026-10-07):* `skills/SHA256SUMS` (`skills/scripts/plugin-checksums.mjs`, checked in skills CI, attached to
+each GitHub Release) feeds the page through `scripts/render-plugin-release.mjs`; the claims are
+`lib/install-security-claims.ts`, one test each. Three were narrowed to what the code does: `gf doctor` also reads the
+npm registry, the status line goes online through your own `git` and `gh` and pushes usage only with spend telemetry
+on, and groom's printed hand-off commands name the kit unpinned.
 **Acceptance:**
 - The landing, `/install` and onboarding show the same prompt, character for character.
 - A review run on a real release reports each claim as checked; "Not now" leaves nothing installed or downloaded.
