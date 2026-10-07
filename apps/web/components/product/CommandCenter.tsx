@@ -134,15 +134,24 @@ export async function CommandCenter({ project }: { project: CommandCenterProject
           // Counted from the SAME array the band below renders, so a tile cannot contradict the rows
           // under it (CODE-QUALITY #2). ⚠️ With the queue dark there is nothing to count, and a `0`
           // would read as "nothing needs you" — a measurement this project cannot make.
-          // A due read waits on you too (result-record D10), and the band below lists it — so it is counted here.
-          value={!signals || tasks === null ? null : String(bands.open.length + dueReads.length)}
+          // A due read waits on you too (result-record D10), and the band below lists it — so it is counted here,
+          // even with the queue dark: then the band shows only reads, and the tile counts exactly those (codex, #291).
+          value={
+            signals
+              ? tasks === null
+                ? null
+                : String(bands.open.length + dueReads.length)
+              : dueReads.length > 0
+                ? String(dueReads.length)
+                : null
+          }
           tone={bands.open.length + dueReads.length > 0 ? 'warn' : undefined}
           absent={
             signals
               ? 'The queue could not be read, so nothing below should be taken as an empty queue.'
               : 'The task queue is not switched on for this project, so nothing is being counted — this is not a count of zero.'
           }
-          detail={signals ? 'waiting on you' : undefined}
+          detail={signals || dueReads.length > 0 ? 'waiting on you' : undefined}
         />
         <Tile
           label="Deliveries needing attention"
