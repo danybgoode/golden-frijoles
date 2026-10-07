@@ -5,6 +5,7 @@ import type { ReactNode } from 'react'
 import type { Freshness } from '@/lib/hub-freshness'
 import { BOARD_TYPES, boardQuery, type Board, type BoardCard, type BoardFilters } from '@/lib/hub-board'
 import { stageCommands } from '@/lib/stage-commands'
+import { stageLabel } from '@/lib/screen-words'
 import {
   Answer,
   Col,
@@ -112,10 +113,11 @@ export function BoardView({
           <section
             key={column.stage}
             className="ds-tile ds-board-col"
-            aria-label={column.stage}
+            aria-label={stageLabel(column.stage)}
             data-stage={column.stage}
           >
-            <p className="ds-tile-label">{column.stage}</p>
+            {/* one-header-one-name D8 — the column SHOWS its screen word; `data-stage` and the key stay the stored value. */}
+            <p className="ds-tile-label">{stageLabel(column.stage)}</p>
             <p className="ds-tile-value">{column.cards.length}</p>
             {column.wip ? (
               <p className="ds-board-wip" data-over={column.wip.over ? 'true' : 'false'}>
@@ -194,7 +196,7 @@ export function CardView({ card, back, repo }: { card: BoardCard; back: string; 
         title={card.name}
         lede={
           <>
-            {card.stage}
+            {stageLabel(card.stage)}
             {card.stageSource ? <> — read from {card.stageSource}</> : null}.{' '}
             <a href={back}>Back to the board</a>
           </>
@@ -212,7 +214,7 @@ export function CardView({ card, back, repo }: { card: BoardCard; back: string; 
       </Answer>
 
       <Summary>
-        <Stat label="Stage" value={card.stage} />
+        <Stat label="Stage" value={stageLabel(card.stage)} />
         <Stat label="Area" value={card.area ?? '—'} />
         <Stat label="Build order" value={card.buildOrder !== null ? `#${card.buildOrder}` : '—'} />
         <Stat label="Type" value={card.type ?? '—'} />

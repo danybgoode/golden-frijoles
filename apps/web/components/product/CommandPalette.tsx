@@ -1,8 +1,12 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
+  PALETTE_KIND_LABEL,
+  buildEpicEntries,
   buildFeatureEntries,
   buildPaletteEntries,
+  buildProductEntries,
+  type EpicIndexEntry,
   filterPaletteEntries,
   movePaletteCursor,
   type FeatureIndexEntry,
@@ -36,11 +40,20 @@ import type { ProjectSurfaceLink } from '@/lib/project-route-inventory'
  * registry's 5 round trips and ~16 KB on every signed-in page load to serve a control most sessions
  * never press. **`/app` route load cost is unchanged: zero added queries, zero added bytes.**
  */
+// A module constant, not `[]` in the signature: a fresh array each render would defeat the `useMemo` below.
+const NO_PRODUCTS: readonly { slug: string; href: string; current: boolean }[] = []
+
 export function CommandPalette({
   links,
   projectSlug,
+  products = NO_PRODUCTS,
 }: {
   links: readonly ProjectSurfaceLink[]
+  /**
+   * one-header-one-name D7 — the switcher's own list (`header.projects`), handed over by the shell: a second VIEW of a
+   * membership list the server already resolved and already rendered, exactly as `links` is. Never a read of its own.
+   */
+  products?: readonly { slug: string; href: string; current: boolean }[]
   /**
    * The project whose features `⌘K` indexes, or `null` when there is none to index.
    *
@@ -79,14 +92,23 @@ export function CommandPalette({
   // yet", which is exactly what it is from this page's point of view.
   const features = index !== null && index.slug === projectSlug ? index.features : null
 
+  // one-header-one-name D7 — the ACTIVE project's epics, fetched on the same first open and keyed by slug for the same
+  // reason the feature index is: a cache must never be read for a project it was not fetched for.
+  const [epicIndex, setEpicIndex] = useState<{ slug: string; epics: EpicIndexEntry[] } | null>(null)
+  const [epicsFailed, setEpicsFailed] = useState<string | null>(null)
+  const epics = epicIndex !== null && epicIndex.slug === projectSlug ? epicIndex.epics : null
+
   const entries = useMemo(
     () => [
       // Features first — the design's order, and the useful one: 42 features against 13 surfaces,
       // and every surface is already one click away in the header and the rail.
       ...(projectSlug === null || features === null ? [] : buildFeatureEntries(features, projectSlug)),
       ...buildPaletteEntries(links),
+      // Epics and products AFTER the pages: a person typing a page's name still meets the page first.
+      ...(projectSlug === null || epics === null ? [] : buildEpicEntries(epics, projectSlug)),
+      ...buildProductEntries(products),
     ],
-    [links, features, projectSlug]
+    [links, features, projectSlug, epics, products]
   )
   const matches = useMemo(() => filterPaletteEntries(entries, query), [entries, query])
 
@@ -129,6 +151,31 @@ export function CommandPalette({
       cancelled = true
     }
   }, [open, projectSlug, features, indexFailed])
+
+  // one-header-one-name D7 — the epic index, the same way: on first open, once per page, and never retried forever.
+  useEffect(() => {
+    if (!open || projectSlug === null || epics !== null || epicsFailed === projectSlug) return
+    let cancelled = false
+    void (async () => {
+      try {
+        const response = await fetch(`/api/internal/epic-index/${encodeURIComponent(projectSlug)}`, {
+          headers: { Accept: 'application/json' },
+        })
+        // The same content-type check as the feature index: a login redirect answers 200 with HTML.
+        const contentType = response.headers.get('content-type') ?? ''
+        if (!response.ok || !contentType.includes('application/json')) throw new Error('not an index')
+        const body = (await response.json()) as { epics?: EpicIndexEntry[] }
+        if (cancelled) return
+        setEpicIndex({ slug: projectSlug, epics: Array.isArray(body.epics) ? body.epics : [] })
+        // Epics land AFTER the pages, so the cursor's row does not move — no reset needed, unlike the features.
+      } catch {
+        if (!cancelled) setEpicsFailed(projectSlug)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [open, projectSlug, epics, epicsFailed])
 
   // ⌘K / Ctrl-K toggles. Bound to the document because the point of the shortcut is that it works
   // wherever you are on the page, including with focus in a table or a form.
@@ -265,9 +312,7 @@ export function CommandPalette({
                     scanning results has to be able to tell "the Flags page" from "a feature called
                     flags". Derived from the closed union rather than from where the row came from,
                     so a third kind cannot be added without deciding what it says. */}
-                  <span className="command-palette__kind">
-                    {entry.kind === 'feature' ? 'Feature' : 'Go to'}
-                  </span>
+                  <span className="command-palette__kind">{PALETTE_KIND_LABEL[entry.kind]}</span>
                   {entry.label}
                   {entry.hint !== '' && <small>{entry.hint}</small>}
                 </a>
@@ -290,9 +335,14 @@ export function CommandPalette({
           {/* ⚠️ Stated, never silent. If the feature index could not be read, this palette is missing
             most of what it normally holds — and a reader who types a feature key, sees nothing and
             concludes the feature was deleted is worse off than one who is told the list is short. */}
+          {epicsFailed === projectSlug && (
+            <p className="command-palette__empty" role="status">
+              Epics could not be listed just now.
+            </p>
+          )}
           {indexFailed === projectSlug && (
             <p className="command-palette__empty" role="status">
-              Features could not be listed just now, so this only shows places to go.
+              Flags could not be listed just now, so this only shows places to go.
             </p>
           )}
         </div>

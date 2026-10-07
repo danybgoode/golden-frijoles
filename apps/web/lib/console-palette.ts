@@ -11,6 +11,8 @@
 // (CODE-QUALITY rule 5). This module imports nothing at all.
 
 import { CONSOLE_SECTIONS, type ProjectSurfaceLink } from './project-route-inventory'
+import type { RoadmapRow, RoadmapStage } from './roadmap-artifact-schema'
+import { stageLabel } from './screen-words'
 
 /**
  * One row in the palette.
@@ -26,13 +28,64 @@ import { CONSOLE_SECTIONS, type ProjectSurfaceLink } from './project-route-inven
  * "which one is this" for their own kind, which is the only job the column has.
  */
 export type PaletteEntry = {
-  kind: 'surface' | 'feature'
+  // one-header-one-name D7 — `epic` (the ACTIVE project's epics) and `product` (the viewer's other products). A closed
+  // union, and `PALETTE_KIND_LABEL` is a `Record` over it: a fifth kind cannot be added without deciding what it says.
+  kind: 'surface' | 'feature' | 'epic' | 'product'
   /** Stable identity for React keys and for the cursor — unique within one palette. */
   id: string
   label: string
   /** For a surface, the section it lives in; for a feature, what it controls. Rendered beside it. */
   hint: string
   href: string
+}
+
+/** The word each row's kind shows, so a reader can tell the Flags PAGE from a flag, an epic and a product apart. */
+export const PALETTE_KIND_LABEL: Record<PaletteEntry['kind'], string> = {
+  surface: 'Go to',
+  feature: 'Flag', // one-header-one-name D8: Features → Flags
+  epic: 'Epic',
+  product: 'Product',
+}
+
+/** One epic, as `/api/internal/epic-index/<slug>` hands it over: the active project's, never another's (D7). */
+export type EpicIndexEntry = { slug: string; name: string; stage: RoadmapStage | null }
+
+/** The Epic-grain rows of a pushed roadmap, in push order. Seeds and sprints are not epics and are not listed. */
+export function projectEpicIndex(items: readonly RoadmapRow[]): EpicIndexEntry[] {
+  return items
+    .filter((row) => row.grain === 'Epic')
+    .map((row) => ({ slug: row.slug, name: row.name, stage: row.stage ?? null }))
+}
+
+/** Epics open the epic page; the hint is the stage's SCREEN word ("Epic · Building", "Epic · Backlog"). */
+export function buildEpicEntries(epics: readonly EpicIndexEntry[], projectSlug: string): PaletteEntry[] {
+  return epics.map((epic) => ({
+    kind: 'epic' as const,
+    id: `epic:${epic.slug}`,
+    label: epic.name,
+    hint: epic.stage === null ? '' : stageLabel(epic.stage),
+    href: `/hub/${encodeURIComponent(projectSlug)}/epic/${encodeURIComponent(epic.slug)}`,
+  }))
+}
+
+/**
+ * The viewer's OTHER products, from the switcher's own list (`getShellNav` → `getUserProjects`, already
+ * workspace-filtered and already rendered in the header). A membership list, not a data read: nothing here reads a
+ * project's contents, so `getWorkspaceProjects` is not involved (AGENTS.md § the tenancy invariant, the
+ * `getUserProjects` carve-out). Each opens that product's Today. The current one is left out: you are already there.
+ */
+export function buildProductEntries(
+  products: readonly { slug: string; href: string; current: boolean }[]
+): PaletteEntry[] {
+  return products
+    .filter((product) => !product.current)
+    .map((product) => ({
+      kind: 'product' as const,
+      id: `product:${product.slug}`,
+      label: product.slug,
+      hint: '',
+      href: product.href,
+    }))
 }
 
 /** One feature, as the index route hands it over. */

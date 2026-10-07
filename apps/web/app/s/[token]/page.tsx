@@ -11,6 +11,7 @@ import { formatFreshness } from '@/lib/hub-freshness'
 import { journeyMarkerIndex } from '@/lib/hub-journey'
 import { PodReportBody, EmptyPodReportState } from '../../hub/report-components'
 import { ShareJourneyStrip, ShareHorizonStrip, ShareFrame, ShareFooterNote } from './share-components'
+import { SCREEN_WORDS } from '@/lib/screen-words'
 
 // pod-report · Sprint 3, Story 3.1 — the share surface. One opaque token in the path, no account.
 //
@@ -35,7 +36,7 @@ export const dynamic = 'force-dynamic'
 // person it was sent to; a search engine following it out of a leaked referrer is a data leak with a
 // URL attached.
 export const metadata = {
-  title: 'Pod Report',
+  title: SCREEN_WORDS.outcomeReport,
   robots: { index: false, follow: false, nocache: true, noarchive: true, nosnippet: true },
 }
 
@@ -104,7 +105,7 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
 
   const report = await getPodReportByProjectId(projectId, projectSlug, lens)
   if (!report.ok) {
-    if (report.reason === 'query_failed') throw new Error('Pod report lookup failed')
+    if (report.reason === 'query_failed') throw new Error('Outcome report lookup failed')
     // Cross-review round 2 (Agy): this fell through to the empty state, contradicting the contract
     // lib/pod-report-query.ts documents ('project_not_found' → notFound()). Nearly unreachable —
     // the token resolved through a view whose JOIN proves the project existed a moment ago — but

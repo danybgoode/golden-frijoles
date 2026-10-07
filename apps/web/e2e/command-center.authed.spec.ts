@@ -164,7 +164,7 @@ test.describe('command center', () => {
     const tiles = page.locator('main .ds-tile')
     await expect(tiles).toHaveCount(4)
     await expect(tiles.nth(0)).toContainText('North Star')
-    await expect(tiles.nth(1)).toContainText('On in Production')
+    await expect(tiles.nth(1)).toContainText('Flags on')
     await expect(tiles.nth(2)).toContainText('Needs a decision')
 
     // ⚠️ **The North Star renders its never-recorded SENTENCE, not a zero** (sprint L1). No code

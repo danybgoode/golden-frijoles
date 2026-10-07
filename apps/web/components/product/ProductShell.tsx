@@ -8,6 +8,7 @@ import {
   railLinksFor,
   shellRendersAccountMenu,
   TODAY_HREF,
+  todayHrefFor,
   type ShellSection,
 } from '@/lib/console-shell'
 import { SignOutButton } from './SignOutButton'
@@ -320,7 +321,15 @@ export async function ProductShell({
                   when closed cannot show you that it exists. The panel still portals over the page —
                   only the trigger is in the bar. */}
                 <ShellErrorBoundary>
-                  <CommandPalette links={links} projectSlug={activeProject?.slug ?? null} />
+                  <CommandPalette
+                    links={links}
+                    projectSlug={activeProject?.slug ?? null}
+                    products={header.projects.map((project) => ({
+                      slug: project.slug,
+                      href: todayHrefFor(project.slug),
+                      current: project.current,
+                    }))}
+                  />
                 </ShellErrorBoundary>
                 {/* The project switcher (D1). ONE tier — Golden Beans has no organisation layer, and
                   the production schema has no table that could support one. A `<details>` again, for

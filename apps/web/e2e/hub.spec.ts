@@ -334,7 +334,10 @@ test('the board renders the six stages in order, and ?type=spike keeps only spik
 
   const all = await (await request.get(`/hub/${DEMO_SLUG}/board`)).text()
   const labels = [...all.matchAll(/class="ds-tile-label">([^<]+)</g)].map((m) => m[1])
-  expect(labels).toEqual(['To groom', 'Grooming', 'Ready to build', 'Building', 'QA', 'Shipped'])
+  // one-header-one-name D8 — screen words; the keys stay in `data-stage` (asserted next).
+  expect(labels).toEqual(['Backlog', 'Grooming', 'Ready', 'Building', 'QA', 'Shipped'])
+  const keys = [...all.matchAll(/data-stage="([^"]+)"/g)].map((m) => m[1])
+  expect(keys).toEqual(['To groom', 'Grooming', 'Ready to build', 'Building', 'QA', 'Shipped'])
   expect(all).toContain(`Ready ${unique}`)
   expect(all).toContain(`Spike ${unique}`)
   expect(all).toContain(`Next to pull: Ready ${unique} (build order 5).`)

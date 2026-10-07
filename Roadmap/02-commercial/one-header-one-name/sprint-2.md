@@ -30,7 +30,7 @@ stories:
 ---
 # One header and one name per thing — Sprint 2: One name per thing, and ⌘K
 
-**Status:** ⬜ not started
+**Status:** 🔨 built on `feat/one-header-one-name-s2` (S2.2 `535122b`, S2.1 `05c3055`, S2.3 docs); PR open.
 
 ## Stories
 <!-- Keep the heading shape `### Story 2.M — <title>`. When a story ships, append ✅ + its commit ref.

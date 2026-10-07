@@ -16,6 +16,7 @@ import { EnvironmentPicker } from './environment-picker'
 import { NewFeature } from './new-feature'
 import { PageHead } from '@/design-system/primitives'
 import { ProductShell } from '@/components/product/ProductShell'
+import { SCREEN_WORDS } from '@/lib/screen-words'
 
 export const dynamic = 'force-dynamic'
 
@@ -117,7 +118,7 @@ export default async function FlagsPage({
             the button lands with it. */}
         {consoleEnabled ? (
           <PageHead
-            title={view === 'compare' ? 'Compare environments' : 'Features'}
+            title={view === 'compare' ? 'Compare environments' : SCREEN_WORDS.flags}
             lede={
               view === 'compare'
                 ? `All ${registry.flags.length} features against all three environments. The short answer to “which of these are on, and where”.`

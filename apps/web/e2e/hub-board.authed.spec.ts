@@ -40,7 +40,10 @@ test('the board: six columns in order, the answer names the next pull, filters l
   await page.goto(`/hub/${slug()}/board`)
   await expect(page.locator('main h1')).toHaveText('Board')
   const columns = page.locator('.ds-tiles--board > .ds-tile .ds-tile-label')
-  await expect(columns).toHaveText(['To groom', 'Grooming', 'Ready to build', 'Building', 'QA', 'Shipped'])
+  // one-header-one-name D8 — the columns SHOW the decision-2 words; `data-stage` keeps the stored key, and the cards
+  // below are the same cards (no key was renamed, so no column emptied).
+  await expect(columns).toHaveText(['Backlog', 'Grooming', 'Ready', 'Building', 'QA', 'Shipped'])
+  await expect(page.locator('.ds-tiles--board > .ds-tile').first()).toHaveAttribute('data-stage', 'To groom')
   await expect(page.locator('.ds-answer')).toContainText('Next to pull: An idea nobody has bet on yet.')
   // one-header-one-name S1.2 — the board is IN the console: the header has Plan current, the Plan rail has Board current,
   // and the Hub's own bar and its "Back to the console" are gone (they were `HubFrame`'s, deleted).

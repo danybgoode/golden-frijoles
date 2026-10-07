@@ -41,10 +41,10 @@ test('a project member can discover the live Flags and Tasks operating surfaces 
   // at 48px it wrapped to four lines on a real slug. What this spec actually cares about is that
   // the destination rendered its own page rather than an error or an empty shell — so it asserts
   // the heading AND that the list arrived, which the old title check never did.
-  await expect(page.getByRole('heading', { name: 'Features', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Flags', exact: true })).toBeVisible()
   await expect(page.locator('[data-feature-list]')).toBeVisible()
 
   const tasksResponse = await page.goto(`/app/tasks/${slug}`)
   expect(tasksResponse?.status()).toBe(200)
-  await expect(page.getByRole('heading', { name: 'Tasks', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Agent queue', exact: true })).toBeVisible()
 })

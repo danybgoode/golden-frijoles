@@ -102,7 +102,7 @@ test('2+ products: bare /app opens on the portfolio — one row per product of m
     await page.goto('/app')
     await expect(page).toHaveURL(/\/app\/portfolio$/)
     const main = page.locator('main [data-portfolio-state="portfolio"]')
-    await expect(page.locator('main h1')).toHaveText('Your workspace')
+    await expect(page.locator('main h1')).toHaveText('Portfolio')
 
     // CONTROL first: both of mine are there, so an empty page cannot pass the absence check below.
     await expect(main.locator(`[data-product="${owned.slug}"]`)).toBeVisible()
@@ -265,7 +265,7 @@ test('one product: /app is unchanged, and the portfolio is its own empty state',
 
     await page.goto('/app/portfolio')
     const main = page.locator('main [data-portfolio-state="empty"]')
-    await expect(main).toContainText('Your workspace has one product.')
+    await expect(main).toContainText('This workspace has one product.')
     await expect(main).toContainText('The portfolio appears when you add a second.')
   } finally {
     await session.cleanup()

@@ -22,6 +22,7 @@ import { ExperimentBuilder } from '../experiment-builder'
 import { RetryServing } from '../retry-serving'
 import { DecideFlow } from './decide-flow'
 import { LifecycleAction } from './lifecycle-action'
+import { SCREEN_WORDS } from '@/lib/screen-words'
 
 // experiments-for-humans · Story 4.1 (epic README D10) — the decision-first experiment page, on the
 // approved states `experiment-results` (gathering), `experiment-results-ready` and
@@ -356,7 +357,7 @@ function Shell({
   return (
     <ProductShell projectSlug={slug} section="ship" railActive={'experiments'}>
       <main>
-        <Crumbs back={{ href: `/app/experiments/${encodeURIComponent(slug)}`, label: 'Experiments' }}>
+        <Crumbs back={{ href: `/app/experiments/${encodeURIComponent(slug)}`, label: SCREEN_WORDS.abTests }}>
           <Crumb mono>{experimentKey}</Crumb>
         </Crumbs>
         {/* The approved head carries `action: null`: the state pill, never a primary button. */}

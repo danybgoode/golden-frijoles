@@ -6,16 +6,18 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { readFileSync, readdirSync } from 'node:fs'
+import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { dirname, extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
   CONTROL_PLANE_WINS,
   SPECIMEN_WORDS,
+  RETIRED_SCREEN_WORDS,
   STORAGE_WORDS,
   UPPERCASE_ALLOWED,
   bannedWords,
   controlPlaneWord,
+  findRetiredScreenWord,
   isConsoleSurface,
 } from './vocabulary.ts'
 
@@ -378,4 +380,73 @@ test('every word the vocabulary exports for the specimen is one the specimen use
       `SPECIMEN_WORDS.${key} is exported and the specimen never reads it`
     )
   }
+})
+
+// ── one-header-one-name · Sprint 2, Story 2.2 (epic README D9) — retired screen names stay gone ─────────────────────
+
+/** Every `.ts`/`.tsx` source under `dir`, tests excluded — they quote the old words on purpose. */
+function sourcesUnder(dir: string): string[] {
+  const out: string[] = []
+  for (const name of readdirSync(dir)) {
+    const path = join(dir, name)
+    if (statSync(path).isDirectory()) out.push(...sourcesUnder(path))
+    else if (/\.tsx?$/.test(name) && !/\.(test|spec)\.tsx?$/.test(name)) out.push(path)
+  }
+  return out
+}
+
+/** Comments explain history and quote the old names constantly; the ban is on what a person READS. */
+function withoutComments(source: string): string {
+  return source
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/^\s*\/\/.*$/gm, '')
+    .replace(/(\s)\/\/.*$/gm, '$1')
+}
+
+const SCREEN_SURFACES = [
+  ...sourcesUnder(join(WEB, 'app/app')),
+  ...sourcesUnder(join(WEB, 'app/hub')),
+  ...sourcesUnder(join(WEB, 'app/s')),
+  ...sourcesUnder(join(WEB, 'components/product')),
+  join(WEB, 'lib/project-route-inventory.ts'),
+]
+
+test('no console, Hub or share page shows a retired screen name', () => {
+  // A "found some files" pin: a moved directory must not leave this green having read nothing.
+  assert.ok(SCREEN_SURFACES.length >= 40, `the retired-word scan read only ${SCREEN_SURFACES.length} files`)
+  const found: string[] = []
+  for (const path of SCREEN_SURFACES) {
+    const source = withoutComments(readFileSync(path, 'utf8'))
+    for (const entry of RETIRED_SCREEN_WORDS) {
+      const hit = findRetiredScreenWord(source, entry)
+      if (hit)
+        found.push(
+          `${path.slice(WEB.length + 1)} shows "${entry.word}" (${hit.trim()}) — say "${entry.insteadSay}"`
+        )
+    }
+  }
+  assert.deepEqual(found, [])
+})
+
+test('each retired-word rule fires on the shape it is written for, and only that shape', () => {
+  const rule = (word: string) => RETIRED_SCREEN_WORDS.find((entry) => entry.word === word)!
+  // phrase: anywhere in rendered text, any case.
+  assert.ok(findRetiredScreenWord(`<PageHead title="Pod report" />`, rule('Pod report')))
+  assert.ok(findRetiredScreenWord(`<p>Read the pod report weekly.</p>`, rule('Pod report')))
+  assert.equal(findRetiredScreenWord(`const podReport = 1`, rule('Pod report')), null)
+  // label: a whole label only — a sentence that uses the word stays legal.
+  assert.ok(findRetiredScreenWord(`label: 'Features',`, rule('Features')))
+  assert.ok(findRetiredScreenWord(`<a href="/x">Features</a>`, rule('Features')))
+  assert.equal(findRetiredScreenWord(`<p>The features this project has.</p>`, rule('Features')), null)
+  // stage: JSX text only — the stored key in a comparison is legal.
+  assert.ok(findRetiredScreenWord(`<p>Next is Ready to build.</p>`, rule('Ready to build')))
+  // …including a run of text that ends at an expression, the shape the Roadmap's hint had.
+  assert.ok(findRetiredScreenWord(`<p>Later is To groom. {fresh ? 'x' : null}</p>`, rule('To groom')))
+  assert.equal(findRetiredScreenWord(`if (stage === 'Ready to build') {}`, rule('Ready to build')), null)
+  // KNOWN MISSES, recorded so that widening a rule is a decision someone can see (see the D9 doc comment).
+  assert.equal(findRetiredScreenWord(`<Pill label="Ready to build" />`, rule('Ready to build')), null)
+  assert.equal(findRetiredScreenWord(`<a>Features{' '}</a>`, rule('Features')), null)
+  assert.equal(findRetiredScreenWord('label={`On in ${environment}`}', rule('On in Production')), null)
+  // Horizon keeps its own word.
+  assert.equal(findRetiredScreenWord(`<h2>End-state destinations</h2>`, rule('Destinations')), null)
 })

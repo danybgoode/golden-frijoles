@@ -36,6 +36,7 @@ import { requireProjectMembership } from '@/lib/dashboard-auth'
 import { isFlagConsoleEnabled } from '@/lib/flags'
 import { Callout, EmptyCard, PageHead } from '@/design-system/primitives'
 import { ProductShell } from '@/components/product/ProductShell'
+import { SCREEN_WORDS } from '@/lib/screen-words'
 
 export const dynamic = 'force-dynamic'
 
@@ -75,8 +76,9 @@ export default async function ScheduledChangesPage({ params }: { params: Promise
             feature on and off is available right now, and it is one click away. */}
         <Callout>
           Until then, a feature change happens the moment you make it. You can turn one on or off per
-          environment from <a href={`/app/flags/${projectSlug}`}>Features</a>, and every change is recorded
-          with who made it and why in <a href={`/app/flag-audit/${projectSlug}`}>Activity</a>.
+          environment from <a href={`/app/flags/${projectSlug}`}>{SCREEN_WORDS.flags}</a>, and every change is
+          recorded with who made it and why in{' '}
+          <a href={`/app/flag-audit/${projectSlug}`}>{SCREEN_WORDS.flagHistory}</a>.
         </Callout>
       </main>
     </ProductShell>

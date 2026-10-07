@@ -147,7 +147,7 @@ export function FlagAuditTimeline({
           Rendered only when there is more than one page: a pager on a single page is two dead
           controls and a sentence nobody needs. */}
       {page.pageCount > 1 ? (
-        <nav className="ds-pager" aria-label="Activity pages">
+        <nav className="ds-pager" aria-label="Flag history pages">
           {/* Links, not buttons: the page is in the URL (`console-ia-overhaul` Story 1.3's rule),
               so this is navigation and a middle-click or a copied link has to work. */}
           {page.previousPage === null ? (

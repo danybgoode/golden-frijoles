@@ -666,10 +666,11 @@ test.describe('the console shell', () => {
     await openPalette(page)
     const palette = page.locator('.command-palette')
 
-    await page.keyboard.type('dest')
+    // one-header-one-name D8 — Setup's Destinations is called Webhooks on screen (audit decision 2).
+    await page.keyboard.type('webh')
     const options = palette.locator('[role="option"]')
     await expect(options).toHaveCount(1)
-    await expect(options.first()).toContainText('Destinations')
+    await expect(options.first()).toContainText('Webhooks')
     // The row states its section, which is what makes the list readable at 13 entries.
     await expect(options.first()).toContainText('Setup')
 
@@ -695,18 +696,41 @@ test.describe('the console shell', () => {
 
     // Labelled by kind — Story 3.4's acceptance. Without it a reader cannot tell "the Flags page"
     // from "a feature called flags".
-    await expect(options.first()).toContainText('Feature')
+    // one-header-one-name D8 — the kind word is "Flag" now (Features → Flags).
+    await expect(options.first().locator('.command-palette__kind')).toHaveText('Flag')
     const key = (await options
       .first()
       .locator('.command-palette__kind')
       .evaluate((el) => {
-        return el.parentElement?.textContent?.replace('Feature', '').trim() ?? ''
+        return el.parentElement?.textContent?.replace('Flag', '').trim() ?? ''
       })) as string
     expect(key.startsWith('gb.e2e.owner')).toBe(true)
 
     await page.keyboard.press('Enter')
     // It opens the FEATURE, on the route Story 2.1 built — not the list, and not a URL anybody typed.
     await page.waitForURL(new RegExp(`/app/flags/${slug}/gb.e2e.owner`))
+  })
+
+  // one-header-one-name S2.1 (D7) — ⌘K finds an EPIC of the active project by its name. The fixture's roadmap pushes
+  // "The mockups, as built" at stage Building; the row says so with its kind and stage, and ↵ opens the epic page.
+  test('⌘K finds an EPIC by its name, labelled "Epic · <stage>", and opens it', async ({ page }) => {
+    const slug = tenantSlug()
+    await page.goto('/app')
+    const epicsLanded = page.waitForResponse(
+      (response) => response.url().includes('/api/internal/epic-index/'),
+      {
+        timeout: 15_000,
+      }
+    )
+    await openPalette(page)
+    await epicsLanded
+    await page.keyboard.type('the mockups')
+    const option = page.locator('.command-palette [role="option"]', { hasText: 'The mockups, as built' })
+    await expect(option).toHaveCount(1)
+    await expect(option.locator('.command-palette__kind')).toHaveText('Epic')
+    await expect(option.locator('small')).toHaveText('Building')
+    await option.click()
+    await page.waitForURL(new RegExp(`/hub/${slug}/epic/fixture-mockups$`))
   })
 
   test('⌘K still finds a SURFACE once features are in the list', async ({ page }) => {
@@ -728,7 +752,9 @@ test.describe('the console shell', () => {
     // first and went red against that design, which is the ordering comment doing its job.
     await page.goto('/app')
     await openPalette(page)
-    await page.keyboard.type('Activity')
+    // one-header-one-name D8 — the surface is called Flag history now; `history` still collides with the seeded
+    // `gb_e2e_activity_history` feature, which is the crowded case this test is for.
+    await page.keyboard.type('history')
     const options = page.locator('.command-palette [role="option"]')
     // The collision is real, so the assertion below is made under the crowded condition this test is
     // named for rather than on a fixture where the surface was the only match.
@@ -862,6 +888,30 @@ test.describe('the console shell', () => {
 // A DISPOSABLE signed-in person (helpers/disposable-session.ts), never the shared fixture user: handing that user a
 // second project would change what every other authed spec running in parallel sees on `/app` (fresh reviewer, #221).
 test.describe('the grouped project switcher', () => {
+  // one-header-one-name S2.1 (D7) — ⌘K finds another PRODUCT by name, from the switcher's own membership list, and
+  // switches to it. The disposable person holds two projects; a project they do not belong to never appears.
+  test('⌘K finds another product, labelled "Product", and ↵ switches to it', async ({ browser }) => {
+    const session = await disposableSession(browser, 'owner')
+    try {
+      const { page } = session
+      const other = await session.addProject('member', 'palette product')
+      await page.goto('/app')
+      await openPalette(page)
+      await page.keyboard.type(other.slug)
+      const option = page.locator('.command-palette [role="option"]', { hasText: other.slug })
+      await expect(option).toHaveCount(1)
+      await expect(option.locator('.command-palette__kind')).toHaveText('Product')
+      await page.keyboard.press('Enter')
+      await page.waitForURL(new RegExp(`/app\\?project=${other.slug}$`))
+      // The shared fixture tenant is not this person's: it must never be offered.
+      await openPalette(page)
+      await page.keyboard.type(tenantSlug())
+      await expect(page.locator('.command-palette [role="option"]', { hasText: 'Product' })).toHaveCount(0)
+    } finally {
+      await session.cleanup()
+    }
+  })
+
   test('two projects in two workspaces render as two named groups, each row "Project | Role", one link per project', async ({
     browser,
   }) => {

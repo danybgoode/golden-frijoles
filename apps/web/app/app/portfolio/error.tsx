@@ -1,5 +1,6 @@
 'use client'
 import { Callout, PageHead } from '@/design-system/primitives'
+import { SCREEN_WORDS } from '@/lib/screen-words'
 
 // portfolio-view · Sprint 2, Story 2.1 — the approved `portfolio-error` state. Reached when the viewer's own workspaces
 // or projects could not be read (both reads THROW rather than answer "none", which would render an outage as an empty
@@ -11,7 +12,7 @@ export default function PortfolioError({ reset }: { error: Error; reset: () => v
       <main>
         <div data-portfolio-state="error">
           <PageHead
-            title="Your workspace"
+            title={SCREEN_WORDS.portfolio}
             lede="Every product you belong to, on one page."
             actions={
               <button type="button" className="ds-btn ds-btn--secondary" onClick={reset}>

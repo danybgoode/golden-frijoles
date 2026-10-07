@@ -7,6 +7,7 @@ import { EmptyHubState } from '../hub-components'
 import { HubShell } from '../hub-shell'
 import { Answer, Empty, ListCard, ListHead, PageHead } from '@/design-system/primitives'
 import { hasStages } from '@/lib/hub-board'
+import { stageLabel } from '@/lib/screen-words'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,7 +49,7 @@ function Cell({
         >
           {item.name}
           {!shipped && item.stage !== 'Ready to build' ? (
-            <span className="ds-areas-stage"> · {item.stage}</span>
+            <span className="ds-areas-stage"> · {stageLabel(item.stage)}</span>
           ) : null}
         </a>
       ))}
@@ -134,8 +135,9 @@ export default async function HubRoadmapPage({ params }: { params: Promise<{ pro
       </ListCard>
 
       <p className="ds-hint" data-freshness-tone={freshness.tone}>
-        Now is Building and QA. Next is Ready to build. Later is To groom and Grooming. Each row runs in build
-        order. {freshness.tone === 'stale' ? <strong>Possibly stale — </strong> : null}
+        Now is Building and QA. Next is {stageLabel('Ready to build')}. Later is {stageLabel('To groom')} and
+        Grooming. Each row runs in build order.{' '}
+        {freshness.tone === 'stale' ? <strong>Possibly stale — </strong> : null}
         Pushed{' '}
         {freshness.iso ? (
           <time dateTime={freshness.iso} title={freshness.iso}>

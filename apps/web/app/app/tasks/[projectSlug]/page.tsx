@@ -8,6 +8,7 @@ import { TaskQueue } from './task-queue'
 import { ProductShell } from '@/components/product/ProductShell'
 import { Answer, Crumb, Crumbs, PageHead } from '@/design-system/primitives'
 import { todayHrefFor } from '@/lib/console-shell'
+import { SCREEN_WORDS } from '@/lib/screen-words'
 
 // signals-loop · Sprint 2, Story 2.2 — the task queue, for humans.
 //
@@ -69,7 +70,7 @@ export default async function TasksPage({
         <Crumbs back={{ href: todayHrefFor(projectSlug), label: 'Today' }}>
           <Crumb>All tasks</Crumb>
         </Crumbs>
-        <PageHead title="Tasks" lede="Every signal that became a job, and who has it." />
+        <PageHead title={SCREEN_WORDS.agentQueue} lede="Every signal that became a job, and who has it." />
         <Answer>
           <strong>This is Today&rsquo;s bands at full length — the same design, mounted as its own page.</strong>{' '}
           A task queue is not a fifth place to look; it is the middle of Today, which is where you will

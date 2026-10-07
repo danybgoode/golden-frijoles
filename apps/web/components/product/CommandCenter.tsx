@@ -10,6 +10,7 @@ import { northStarFigure } from '@/lib/stat-figures'
 import { Callout, PageHead } from '@/design-system/primitives'
 import { Band, BandEmpty, TaskList } from '@/design-system/bands'
 import { TaskLines } from './TaskLines'
+import { SCREEN_WORDS } from '@/lib/screen-words'
 
 // design-system-rails · Sprint 5, Story 5.2 — Today.
 //
@@ -115,7 +116,7 @@ export async function CommandCenter({ project }: { project: CommandCenterProject
           detailMono
         />
         <Tile
-          label="On in Production"
+          label={SCREEN_WORDS.flagsOn}
           value={flagSummary === null ? null : String(flagSummary.serving)}
           absent="The feature registry could not be read, so this is not a count of zero."
           detail={flagSummary === null ? undefined : `of ${flagSummary.total} features`}
