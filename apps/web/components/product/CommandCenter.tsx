@@ -10,6 +10,9 @@ import { northStarFigure } from '@/lib/stat-figures'
 import { Callout, PageHead } from '@/design-system/primitives'
 import { Band, BandEmpty, TaskList } from '@/design-system/bands'
 import { TaskLines } from './TaskLines'
+import { ReadDueLines } from './ReadDueLines'
+import { getLatestArtifact } from '@/lib/report-artifacts'
+import { readsDue, type EpicResult } from '@/lib/roadmap-result'
 import { SCREEN_WORDS } from '@/lib/screen-words'
 
 // design-system-rails · Sprint 5, Story 5.2 — Today.
@@ -67,7 +70,9 @@ export async function CommandCenter({ project }: { project: CommandCenterProject
 
   // Read in parallel, and independently: one slow or failing layer must not take the others with it.
   // The queue is not read at all when its gate is dark — a dark capability is not a slow one.
-  const [outcome, flags, tasks, deliveries, agentFacts] = await Promise.all([
+  // result-record D10 — reads due come from the latest pushed roadmap, and fail SOFT to none: Today must not
+  // become an error page because a roadmap payload could not be read.
+  const [outcome, flags, tasks, deliveries, agentFacts, dueReads] = await Promise.all([
     getProjectOutcome(project.id, project.slug).catch(() => null),
     getFlagRegistryView(project.id).catch(() => null),
     signals
@@ -75,6 +80,9 @@ export async function CommandCenter({ project }: { project: CommandCenterProject
       : Promise.resolve<TaskRow[] | null>([]),
     getDeliveryHealth(project.id).catch(() => null),
     signals ? getTaskLifecycleFacts(project.id).catch(() => null) : Promise.resolve(null),
+    getLatestArtifact(project.id, 'roadmap')
+      .then((artifact) => readsDue(artifact?.payload ?? null))
+      .catch((): EpicResult[] => []),
   ])
 
   const bands = splitTaskBands(tasks ?? [])
@@ -126,8 +134,9 @@ export async function CommandCenter({ project }: { project: CommandCenterProject
           // Counted from the SAME array the band below renders, so a tile cannot contradict the rows
           // under it (CODE-QUALITY #2). ⚠️ With the queue dark there is nothing to count, and a `0`
           // would read as "nothing needs you" — a measurement this project cannot make.
-          value={!signals || tasks === null ? null : String(bands.open.length)}
-          tone={bands.open.length > 0 ? 'warn' : undefined}
+          // A due read waits on you too (result-record D10), and the band below lists it — so it is counted here.
+          value={!signals || tasks === null ? null : String(bands.open.length + dueReads.length)}
+          tone={bands.open.length + dueReads.length > 0 ? 'warn' : undefined}
           absent={
             signals
               ? 'The queue could not be read, so nothing below should be taken as an empty queue.'
@@ -143,11 +152,22 @@ export async function CommandCenter({ project }: { project: CommandCenterProject
         />
       </div>
 
+      {/* A due read is waiting on you even with the task queue dark (result-record D10), so this band shows then too,
+          with only the reads in it. */}
+      {!signals && dueReads.length > 0 ? (
+        <Band title="Waiting on you" who="you" sub="Decisions nothing else is allowed to make.">
+          <TaskList>
+            <ReadDueLines reads={dueReads} />
+          </TaskList>
+        </Band>
+      ) : null}
+
       {signals ? (
         <>
           <Band title="Waiting on you" who="you" sub="Decisions nothing else is allowed to make.">
             <TaskList>
-              {bands.open.length === 0 ? (
+              <ReadDueLines reads={dueReads} />
+              {bands.open.length === 0 && dueReads.length > 0 ? null : bands.open.length === 0 ? (
                 <BandEmpty
                   head="Nothing is waiting on you"
                   body={
