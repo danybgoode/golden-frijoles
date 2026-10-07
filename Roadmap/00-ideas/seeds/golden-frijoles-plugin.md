@@ -8,7 +8,7 @@ appetite: L
 underwritten_by: wave-2026-09-24
 risk: high
 epic: "09-platform-infra/golden-frijoles-plugin"
-build_order: 74
+build_order: 75
 updated: 2026-09-23
 ---
 
