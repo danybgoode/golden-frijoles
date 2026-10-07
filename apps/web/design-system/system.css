@@ -3686,18 +3686,6 @@
   flex: 1;
 }
 
-.ds .ds-pubbar-scope {
-  font-family: var(--mono);
-  font-size: 12.5px;
-  color: var(--dim-2);
-  padding-left: 12px;
-  border-left: 1px solid var(--line);
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .ds .ds-pubwrap {
   max-width: 820px;
   margin: 0 auto;
@@ -3725,38 +3713,8 @@
   margin-bottom: 26px;
 }
 
-/* ── Tier 2, for the hub only (DD2: the hub is the console's PEER, not a fifth section) ─────── */
-.ds .ds-pubnav {
-  display: flex;
-  gap: 2px;
-  padding: 0 22px;
-  border-bottom: 1px solid var(--line);
-  background: var(--roast-2);
-  overflow-x: auto;
-}
-
-.ds .ds-pubnav a {
-  padding: 11px 14px 9px;
-  font-size: 13px;
-  color: var(--dim);
-  border-bottom: 2px solid transparent;
-  white-space: nowrap;
-}
-
-.ds .ds-pubnav a:hover {
-  color: var(--crema);
-}
-
-.ds .ds-pubnav a[aria-current='page'] {
-  color: var(--crema);
-  border-bottom-color: var(--gold);
-}
-
-/* The hub is a wider read than a shared report: it draws a build-order track and a destination
-   grid, neither of which fits an 820px measure. */
-.ds .ds-public--hub .ds-pubwrap {
-  max-width: 1080px;
-}
+/* one-header-one-name D11 — the hub's tier 2 (`.ds-pubnav`) and its wider measure (`.ds-public--hub`) are GONE with
+   `Frame`'s `hub` variant: the Hub renders in `ProductShell` now (audit decision 3 reverses DD2). */
 
 /* ── /install's demo banner ─────────────────────────────────────────────────────────────────
  * `/install` serves the DEMO project's connector token, and that is correct (AGENTS rule #2). The
@@ -5192,7 +5150,6 @@
     of selector that quietly matches nothing: `Frame` renders `<main class="ds-pubwrap …">` and the
     `<footer>` as SIBLINGS inside the same wrapper, so `+` really does reach it. `/talk` is the only
     `wide` public page, and its footer would otherwise sit at 820px under a 1080px page. */
-.ds .ds-public--hub .ds-pubfoot,
 .ds .ds-pubwrap--wide + .ds-pubfoot {
   max-width: 1080px;
 }

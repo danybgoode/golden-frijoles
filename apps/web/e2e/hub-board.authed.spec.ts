@@ -42,8 +42,14 @@ test('the board: six columns in order, the answer names the next pull, filters l
   const columns = page.locator('.ds-tiles--board > .ds-tile .ds-tile-label')
   await expect(columns).toHaveText(['To groom', 'Grooming', 'Ready to build', 'Building', 'QA', 'Shipped'])
   await expect(page.locator('.ds-answer')).toContainText('Next to pull: An idea nobody has bet on yet.')
-  // The hub frame's tabs: Board is the fourth hub tab, second in order, and current here.
-  await expect(page.locator('nav a[aria-current="page"]')).toHaveText('Board')
+  // one-header-one-name S1.2 — the board is IN the console: the header has Plan current, the Plan rail has Board current,
+  // and the Hub's own bar and its "Back to the console" are gone (they were `HubFrame`'s, deleted).
+  await expect(page.locator('nav[aria-label="Sections"] a[aria-current="page"]')).toHaveText('Plan')
+  await expect(page.locator('nav[aria-label="Section"] a')).toHaveText(['Roadmap', 'Board', 'Horizon'])
+  await expect(page.locator('nav[aria-label="Section"] a[aria-current="page"]')).toHaveText('Board')
+  await expect(page.getByText('Back to the console')).toHaveCount(0)
+  // A member has the rail, so the shell's no-rail fallback (D4) does not render.
+  await expect(page.locator('[data-fallback-nav]')).toHaveCount(0)
 
   await page.getByRole('link', { name: 'Feature', exact: true }).click()
   await expect(page).toHaveURL(/\/board\?type=feature$/)

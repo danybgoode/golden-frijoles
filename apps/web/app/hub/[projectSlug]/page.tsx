@@ -4,7 +4,7 @@ import { getHubRoadmap } from '@/lib/hub-query'
 import { formatFreshness } from '@/lib/hub-freshness'
 import { areasAnswer, buildAreas, HORIZONS, type AreaItem } from '@/lib/hub-areas'
 import { EmptyHubState } from '../hub-components'
-import { HubFrame } from '../hub-frame'
+import { HubShell } from '../hub-shell'
 import { Answer, Empty, ListCard, ListHead, PageHead } from '@/design-system/primitives'
 import { hasStages } from '@/lib/hub-board'
 
@@ -65,13 +65,13 @@ export default async function HubRoadmapPage({ params }: { params: Promise<{ pro
     if (result.reason === 'query_failed') throw new Error('Roadmap artifact lookup failed')
     if (result.reason === 'project_not_found') notFound()
     return (
-      <HubFrame projectSlug={projectSlug} tab="roadmap">
+      <HubShell projectSlug={projectSlug} tab="roadmap">
         <PageHead
           title="Roadmap"
           lede="Where each area is heading: what shipped, what is moving now, next and later."
         />
         <EmptyHubState projectSlug={projectSlug} />
-      </HubFrame>
+      </HubShell>
     )
   }
 
@@ -80,7 +80,7 @@ export default async function HubRoadmapPage({ params }: { params: Promise<{ pro
   // A push from before stages carries none, and the Hub never computes one (D19): the board's empty state, not a guess.
   if (!hasStages(items)) {
     return (
-      <HubFrame projectSlug={projectSlug} tab="roadmap">
+      <HubShell projectSlug={projectSlug} tab="roadmap">
         <PageHead
           title="Roadmap"
           lede="Where each area is heading: what shipped, what is moving now, next and later."
@@ -94,14 +94,14 @@ export default async function HubRoadmapPage({ params }: { params: Promise<{ pro
             </>
           }
         />
-      </HubFrame>
+      </HubShell>
     )
   }
   const view = buildAreas(items)
   const freshness = formatFreshness(artifact.generatedAt, new Date(), artifact.sourceCommit)
 
   return (
-    <HubFrame projectSlug={projectSlug} tab="roadmap">
+    <HubShell projectSlug={projectSlug} tab="roadmap">
       <PageHead
         title="Roadmap"
         lede="Where each area is heading: what shipped, what is moving now, next and later."
@@ -146,6 +146,6 @@ export default async function HubRoadmapPage({ params }: { params: Promise<{ pro
         )}
         {freshness.shortCommit ? ` as of ${freshness.shortCommit}` : ''} (push #{artifact.version}).
       </p>
-    </HubFrame>
+    </HubShell>
   )
 }

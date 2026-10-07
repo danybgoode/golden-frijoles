@@ -36,8 +36,11 @@
 //      module that can only be read by loading half the app — and this one is read by a Playwright
 //      spec, a CI script and a unit test.
 
-/** Which of DD3's three frames a route renders in. `hub` is `public`'s peer, per DD2. */
-export type DesignFrame = 'console' | 'door' | 'public' | 'hub'
+/**
+ * Which of DD3's frames a route renders in. `hub` was a fourth until one-header-one-name D11 put the Hub in the console
+ * (audit decision 3 reverses DD2).
+ */
+export type DesignFrame = 'console' | 'door' | 'public'
 
 /** Which seam's kill-switch covers this route (epic README, D6). */
 export type DesignSeam = 'product-shell' | 'frame'
@@ -785,13 +788,15 @@ export const ROUTE_MANIFEST: readonly CoverageRow[] = [
     deferred: null,
   },
 
-  // ── The hub (seam B) — a PEER view of the project, not a fifth section (DD2) ─────────────────
+  // ── The Hub — Plan's three views, the epic page and the workspace board, plus Measure's Outcome report ──────────
+  // one-header-one-name D11: these were seam B (`Frame`'s `hub` variant, a PEER of the console per DD2). Audit decision
+  // 3 reversed DD2, so all six render in `ProductShell` now — seam A, `frame: 'console'`. Routes and states unchanged.
   {
     route: '/hub/[projectSlug]',
     page: 'hub/[projectSlug]/page.tsx',
     label: 'Roadmap hub',
-    frame: 'hub',
-    seam: 'frame',
+    frame: 'console',
+    seam: 'product-shell',
     surface: 'hub',
     // board-sinks-and-scrumban S4.1 — the Roadmap tab is areas × Shipped · Now · Next · Later now, held to the approved
     // SURFACE `hub-roadmap-areas` (D23). The prototype's `hub-roadmap` (the journey track) stays approved: the share page
@@ -806,8 +811,8 @@ export const ROUTE_MANIFEST: readonly CoverageRow[] = [
     route: '/hub/[projectSlug]/epic/[epicSlug]',
     page: 'hub/[projectSlug]/epic/[epicSlug]/page.tsx',
     label: 'Epic',
-    frame: 'hub',
-    seam: 'frame',
+    frame: 'console',
+    seam: 'product-shell',
     surface: null,
     referenceState: 'hub-epic',
     rendersFromDesignSystem: true,
@@ -822,8 +827,8 @@ export const ROUTE_MANIFEST: readonly CoverageRow[] = [
     route: '/hub/[projectSlug]/board',
     page: 'hub/[projectSlug]/board/page.tsx',
     label: 'Board',
-    frame: 'hub',
-    seam: 'frame',
+    frame: 'console',
+    seam: 'product-shell',
     surface: 'hub/board',
     referenceState: 'hub-board',
     rendersFromDesignSystem: true,
@@ -837,8 +842,8 @@ export const ROUTE_MANIFEST: readonly CoverageRow[] = [
     route: '/hub/w/[workspaceId]/board',
     page: 'hub/w/[workspaceId]/board/page.tsx',
     label: 'Workspace board',
-    frame: 'hub',
-    seam: 'frame',
+    frame: 'console',
+    seam: 'product-shell',
     surface: null,
     referenceState: 'hub-workspace-board',
     rendersFromDesignSystem: true,
@@ -850,8 +855,8 @@ export const ROUTE_MANIFEST: readonly CoverageRow[] = [
     route: '/hub/[projectSlug]/horizon',
     page: 'hub/[projectSlug]/horizon/page.tsx',
     label: 'Horizon',
-    frame: 'hub',
-    seam: 'frame',
+    frame: 'console',
+    seam: 'product-shell',
     surface: 'hub/horizon',
     referenceState: 'hub-horizon',
     rendersFromDesignSystem: true,
@@ -863,8 +868,8 @@ export const ROUTE_MANIFEST: readonly CoverageRow[] = [
     route: '/hub/[projectSlug]/report',
     page: 'hub/[projectSlug]/report/page.tsx',
     label: 'Pod report',
-    frame: 'hub',
-    seam: 'frame',
+    frame: 'console',
+    seam: 'product-shell',
     surface: 'hub/report',
     referenceState: 'hub-report',
     rendersFromDesignSystem: true,

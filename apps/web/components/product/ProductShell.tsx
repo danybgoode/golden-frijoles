@@ -54,6 +54,7 @@ export async function ProductShell({
   section,
   railTop,
   railActive,
+  fallbackNav,
 }: {
   children: React.ReactNode
   projectSlug?: string
@@ -78,11 +79,23 @@ export async function ProductShell({
    * compile error instead of a blank rail — the same reasoning as `iconKey` in Story 2.4.
    */
   railActive: ProjectRouteSegment | null
+  /**
+   * one-header-one-name D4 — a tier-2 nav for a render that has NO rail, and only then.
+   *
+   * The Hub's pages let two viewers in who are not members of the project they show: an anonymous visitor on the
+   * demo project (`requireDashboardAccess`' allow-list → `getShellNav` returns the PUBLIC chrome) and a signed-in
+   * member of something else (a header holding Today alone). Neither gets a rail, so without this they would land on
+   * the Roadmap with no way to its Board, Horizon or report — the tabs `HubFrame` used to draw. A member never sees
+   * it: they have the rail, which lists the same pages.
+   */
+  fallbackNav?: React.ReactNode
 }) {
   const { activeProject, projects, links, header, userEmail, userName } = await getShellNav(
     projectSlug,
     section
   )
+  const rail = header === null ? [] : railLinksFor(section, links)
+  const showFallbackNav = fallbackNav !== undefined && rail.length === 0
 
   return (
     // `is-console` is set by the SAME field that decides whether console chrome renders at all,
@@ -428,6 +441,11 @@ export async function ProductShell({
             ))}
           </nav>
         ) : null}
+        {showFallbackNav ? (
+          <nav aria-label="Hub sections" className="ds-shell-tabs" data-fallback-nav>
+            {fallbackNav}
+          </nav>
+        ) : null}
         <div className="ds-shell-body">
           {/*
           Story 1.4 — the per-section rail. FIRST in the DOM, unlike the agent rail below: this is
@@ -440,7 +458,7 @@ export async function ProductShell({
         */}
           {header !== null && (
             <ConsoleRail
-              links={railLinksFor(section, links)}
+              links={rail}
               top={railTop}
               activeSegment={railActive}
               label={section === 'today' ? undefined : `In ${section[0].toUpperCase()}${section.slice(1)}`}

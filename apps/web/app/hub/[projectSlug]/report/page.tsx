@@ -6,7 +6,7 @@ import { trackSelfEvent, REPORT_VIEWED_EVENT, VISITOR_COOKIE } from '@/lib/self-
 import { getPodReport } from '@/lib/pod-report-query'
 import { formatFreshness } from '@/lib/hub-freshness'
 import { EmptyPodReportState, PodReportBody } from '../../report-components'
-import { HubFrame } from '../../hub-frame'
+import { HubShell } from '../../hub-shell'
 import { PageHead } from '@/design-system/primitives'
 
 export const dynamic = 'force-dynamic'
@@ -42,10 +42,10 @@ export default async function HubPodReportPage({ params }: { params: Promise<{ p
     if (result.reason === 'project_not_found') notFound()
 
     return (
-      <HubFrame projectSlug={projectSlug} tab="report">
+      <HubShell projectSlug={projectSlug} tab="report">
         <PageHead title="Pod report" lede={`What the ${projectSlug} pod shipped, and whether it mattered.`} />
         <EmptyPodReportState projectSlug={projectSlug} />
-      </HubFrame>
+      </HubShell>
     )
   }
 
@@ -63,7 +63,7 @@ export default async function HubPodReportPage({ params }: { params: Promise<{ p
   const freshness = formatFreshness(artifact.generatedAt, new Date(), artifact.sourceCommit)
 
   return (
-    <HubFrame projectSlug={projectSlug} tab="report">
+    <HubShell projectSlug={projectSlug} tab="report">
       {/* Every rendering decision lives in PodReportBody, including the isHonest() refusal. This
           page deliberately holds no branch that could put a number on screen — see
           app/hub/report-components.tsx for why that is the arrangement. */}
@@ -75,6 +75,6 @@ export default async function HubPodReportPage({ params }: { params: Promise<{ p
         artifactVersion={artifact.version}
         freshness={freshness}
       />
-    </HubFrame>
+    </HubShell>
   )
 }

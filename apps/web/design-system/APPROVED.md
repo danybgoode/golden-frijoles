@@ -118,6 +118,12 @@ switcher menu**, so tier 1 stays *switcher · ⌘K · account, nothing else* and
 survives. `⌘K` reaches every hub surface and every epic by slug — required, because the epic's own
 outcome test is "every surface in three clicks or one ⌘K".
 
+> ⚠️ **DD2 is REVERSED — 2026-10-06, audit decision 3, enacted by `one-header-one-name` (D1–D4, D11).** The Hub is no
+> longer the console's peer: its Roadmap, Board and Horizon are the console's **Plan** section and its report is
+> Measure's **Outcome report**, so the header reads Today · Plan · Ship · Measure · Setup and the Hub renders in
+> `ProductShell` with no bar of its own and no "Back to the console". Approved by the product owner in the UX audit
+> session (2026-10-05). The text above is kept as the history of why it was once a peer.
+
 **DD3 — Chrome appears when there is something to navigate.** Three frames, one language:
 **door** (one centred column, no nav — login, signup), **public** (a slim bar, the mark and at most
 one action — install, a shared report, the 404, talk), **console** (the three tiers).

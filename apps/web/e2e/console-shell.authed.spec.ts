@@ -122,7 +122,9 @@ function tenantSlug(): string {
 
 // ── The console shell. Unconditional since Story 3.3 deleted the flag. ───────────────────────
 test.describe('the console shell', () => {
-  test('the header shows the four destinations and none of the legacy links', async ({ page }) => {
+  test('the header shows the five destinations, in the loop order, and none of the legacy links', async ({
+    page,
+  }) => {
     await page.goto('/app')
 
     const tabs = page.locator('.ds-shell-tabs a')
@@ -131,6 +133,9 @@ test.describe('the console shell', () => {
     // wrong four render.
     await expect(tabs.filter({ hasText: 'Today' })).toHaveCount(1)
     await expect(tabs.filter({ hasText: 'Setup' })).toHaveCount(1)
+    // one-header-one-name D1 — the whole header, in order: Plan is new and Measure follows Ship. An owner fixture with
+    // every gate open (CI's gate env) is entitled to all five.
+    await expect(tabs).toHaveText(['Today', 'Plan', 'Ship', 'Measure', 'Setup'])
 
     // Absent, not merely unstyled. Story 1.3's acceptance names all four.
     //
@@ -160,6 +165,20 @@ test.describe('the console shell', () => {
     const onSetup = page.locator('.ds-shell-tabs a[aria-current="page"]')
     await expect(onSetup).toHaveCount(1)
     await expect(onSetup).toHaveText('Setup')
+    // one-header-one-name S1.2 — the Hub is IN the console: Plan current on its views, Measure on the Outcome report,
+    // and `HubFrame`'s "Back to the console" is gone from every one of them.
+    for (const [path, section] of [
+      [`/hub/${tenantSlug()}`, 'Plan'],
+      [`/hub/${tenantSlug()}/board`, 'Plan'],
+      [`/hub/${tenantSlug()}/horizon`, 'Plan'],
+      [`/hub/${tenantSlug()}/report`, 'Measure'],
+    ] as const) {
+      await page.goto(path)
+      const onHub = page.locator('.ds-shell-tabs a[aria-current="page"]')
+      await expect(onHub, path).toHaveCount(1)
+      await expect(onHub, path).toHaveText(section)
+      await expect(page.getByText('Back to the console'), path).toHaveCount(0)
+    }
   })
 
   test('Today renders full width with no rail; Setup renders one', async ({ page }) => {
@@ -293,7 +312,9 @@ test.describe('the console shell', () => {
     const railOffers: string[] = []
 
     for (const surface of PROJECT_ROUTE_INVENTORY) {
-      const href = `/app/${surface.routeSegment}/${slug}`
+      // one-header-one-name D2 — the row's OWN href, not `/app/<segment>/<slug>`: Plan's surfaces and the Outcome report
+      // live at `/hub/…`, and a built URL would have walked four 404s and reported them as unreachable.
+      const href = surface.href(slug)
       const response = await page.goto(href)
       // A gate-closed or owner-only surface is not a failure of this test — but it must be RECORDED,
       // not silently skipped, or a suite that reaches nothing reads exactly like a suite that passes.
@@ -375,12 +396,14 @@ test.describe('the console shell', () => {
       })
       // No serving sibling means the whole section is gone; the count assertion below owns that case.
       if (!sibling) continue
-      await page.goto(`/app/${sibling}/${slug}`)
-      const offered = await page.locator(`.console-rail a[href="/app/${segment}/${slug}"]`).count()
+      const siblingRow = PROJECT_ROUTE_INVENTORY.find((row) => row.routeSegment === sibling)!
+      const target = surface!.href(slug)
+      await page.goto(siblingRow.href(slug))
+      const offered = await page.locator(`.console-rail a[href="${target}"]`).count()
       expect(
         offered,
-        `/app/${segment}/${slug} answers ${entry.replace(`${segment} `, '')} and the rail on ` +
-          `/app/${sibling}/${slug} still offers it as a place to go`
+        `${target} answers ${entry.replace(`${segment} `, '')} and the rail on ` +
+          `${siblingRow.href(slug)} still offers it as a place to go`
       ).toBe(0)
     }
 

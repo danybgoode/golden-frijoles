@@ -10,7 +10,7 @@ import {
   parseBoardFilters,
   type BoardCard,
 } from '@/lib/hub-board'
-import { HubFrame } from '../../hub-frame'
+import { HubShell } from '../../hub-shell'
 import { BoardView, CardView, EmptyBoard } from './board-components'
 
 export const dynamic = 'force-dynamic'
@@ -42,9 +42,9 @@ export default async function HubBoardPage({
     if (result.reason === 'query_failed') throw new Error('Roadmap artifact lookup failed')
     if (result.reason === 'project_not_found') notFound()
     return (
-      <HubFrame projectSlug={projectSlug} tab="board">
+      <HubShell projectSlug={projectSlug} tab="board">
         <EmptyBoard />
-      </HubFrame>
+      </HubShell>
     )
   }
 
@@ -54,9 +54,9 @@ export default async function HubBoardPage({
   // that fixes it — never a board of six empty columns pretending to be a reading.
   if (!hasStages(items)) {
     return (
-      <HubFrame projectSlug={projectSlug} tab="board">
+      <HubShell projectSlug={projectSlug} tab="board">
         <EmptyBoard />
-      </HubFrame>
+      </HubShell>
     )
   }
 
@@ -73,15 +73,15 @@ export default async function HubBoardPage({
     const card: BoardCard | null = findCard(items, cardSlug)
     if (!card) notFound()
     return (
-      <HubFrame projectSlug={projectSlug} tab="board">
+      <HubShell projectSlug={projectSlug} tab="board">
         <CardView card={card} back={`${base}${boardQuery(filters)}`} repo={boardBlock?.repo ?? null} />
-      </HubFrame>
+      </HubShell>
     )
   }
 
   const board = buildBoard(items, { filters, wip: boardBlock?.wip ?? null })
   return (
-    <HubFrame projectSlug={projectSlug} tab="board">
+    <HubShell projectSlug={projectSlug} tab="board">
       <BoardView
         board={board}
         filters={filters}
@@ -89,6 +89,6 @@ export default async function HubBoardPage({
         freshness={freshness}
         version={artifact.version}
       />
-    </HubFrame>
+    </HubShell>
   )
 }
