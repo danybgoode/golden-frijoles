@@ -12,18 +12,18 @@ stories:
     i_want: "the strategy coaches to end in one decision"
     so_that: "I approve my strategy once"
     risk: low
-    status: planned
+    status: done
   - id: S2.2
     title: "The bookkeeping words stay off the screen"
     as_a: "a founder"
     i_want: "the bookkeeping words gone from what the agent shows me"
     so_that: "I only meet plain agile"
     risk: low
-    status: planned
+    status: done
 ---
 # Gates in plain agile — Sprint 2: The Strategy gate, and the words
 
-**Status:** ⬜ not started
+**Status:** 🟡 in review — #303
 
 ## Build contract (locked by the architect before the builder started)
 Cites README D1, D6–D10, D12–D13; it restates none of them.
@@ -37,7 +37,7 @@ Cites README D1, D6–D10, D12–D13; it restates none of them.
 <!-- Keep the heading shape `### Story 2.M — <title>`. When a story ships, append ✅ + its commit ref.
      The epic README frontmatter `status:` is the AUTHORITATIVE epic status. -->
 
-### Story 2.1 — The Strategy gate
+### Story 2.1 — The Strategy gate ✅ 11f9dc8
 **As** a founder, **I want** the strategy coaches to end in one decision, **so that** I approve my strategy once.
 In setup's routing, after the coaches draft: the canvas StrategyGate. Where to read the drafts (`Roadmap/00-strategy/`,
 and the one-pagers when they exist); what was decided from the repo; up to three decisions only you can make (who
@@ -49,7 +49,7 @@ Coach me runs the coaches one at a time.
 - No agreed or draft on screen.
 **Risk:** low
 
-### Story 2.2 — The bookkeeping words stay off the screen
+### Story 2.2 — The bookkeeping words stay off the screen ✅ 55ce261
 **As** a founder, **I want** the bookkeeping words gone from what the agent shows me, **so that** I only meet plain
 agile.
 A check over the gate text the skills print (the reference's screen-word table is its list) fails on fund, scaffold,

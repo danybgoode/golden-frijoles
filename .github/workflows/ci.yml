@@ -64,6 +64,12 @@ jobs:
         run: node scripts/check-script-parity.mjs
       - name: Design-drift guard
         run: node scripts/check-design-drift.mjs
+      # The skills CI checks the plugin's own copies; this adds the root Roadmap's copies of the gate wording
+      # (gates-in-plain-agile D9).
+      - name: Gate words stay off the screen (root Roadmap copies)
+        run: >-
+          node skills/scripts/check-gate-words.mjs --also Roadmap/WAYS-OF-WORKING.md Roadmap/WAYS-OF-WORKING.template.md
+          Roadmap/SESSION-KICKOFFS.md Roadmap/bets/README.md Roadmap/00-ideas/README.md
 
       - run: npm ci --no-audit --no-fund
       - name: Lint
