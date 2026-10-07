@@ -5,7 +5,10 @@
 // The fields come from the epic README's frontmatter (D1), carried by the ordinary roadmap push (D6); the default read
 // date and the late mark are derived by the pusher's extract (D5), never here. Absent is "no target", never a zero.
 
-/** ⚠️ Copies of `READ_DEFAULT_DAYS` / `READ_CAP_DAYS` in `scripts/lib/result-dates.mjs`, pinned by the spec. */
+/**
+ * ⚠️ Copies of `READ_DEFAULT_DAYS` / `READ_CAP_DAYS` in `scripts/lib/result-dates.mjs`, pinned by the spec. Exported
+ * for the Hub pages that will say "30 days after shipping" (epics 5 and 6); the extract already applied them.
+ */
 export const READ_DEFAULT_DAYS = 30
 export const READ_CAP_DAYS = 90
 
@@ -41,7 +44,8 @@ export type EpicResult = {
   bean: BeanKind | null
 }
 
-const VERDICTS: readonly ResultVerdict[] = ['proven', 'disproven', 'unclear']
+/** ⚠️ A copy of `VERDICTS` in `scripts/lib/roadmap-contract.mjs`, pinned by the spec like the day constants. */
+export const RESULT_VERDICTS: readonly ResultVerdict[] = ['proven', 'disproven', 'unclear']
 const DAY = /^\d{4}-\d{2}-\d{2}$/
 
 const num = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? v : null)
@@ -77,7 +81,9 @@ export function epicResult(
   const today = opts.today ?? todayUtc()
   const shipped = (str(row.status) ?? '').trim().toLowerCase() === 'shipped'
   const metric = str(row.target_metric)
-  const verdict = VERDICTS.includes(row.verdict as ResultVerdict) ? (row.verdict as ResultVerdict) : null
+  const verdict = RESULT_VERDICTS.includes(row.verdict as ResultVerdict)
+    ? (row.verdict as ResultVerdict)
+    : null
   const readDate = day(row.read_date)
   return {
     slug: String(row.slug ?? ''),
