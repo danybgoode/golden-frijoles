@@ -24,6 +24,8 @@ import {
   SKILLS_REPO_URL,
   UMBRELLA_SKILL_URL,
 } from './install-prompt'
+import { CLI_VERSION, PLUGIN_SHA256SUMS, PLUGIN_VERSION } from './plugin-release.generated'
+import { securityClaims } from './install-security-claims'
 
 export type InstallService = { host: string; when: string }
 
@@ -56,10 +58,17 @@ export function installServices(siteUrl: string): InstallService[] {
   ]
 }
 
+/** The tag a careful install fetches, checks and installs from: the release these sums describe. */
+export const PLUGIN_TAG = `v${PLUGIN_VERSION}`
+
 export function installManifest(siteUrl: string): string {
   const services = installServices(siteUrl)
     .map((service) => `- **${service.host}** — ${service.when}.`)
     .join('\n')
+  const claims = securityClaims(siteUrl)
+    .map((claim) => `- ${claim.text}`)
+    .join('\n')
+  const fileCount = PLUGIN_SHA256SUMS.split('\n').filter(Boolean).length
 
   return `# Installing Golden Frijoles
 
@@ -75,6 +84,35 @@ go-ahead, runs it.
    it is not installed globally and copies nothing into your repo. It lands in npm's own cache.
 3. **The \`${CLI_BIN}\` CLI** (optional, \`${CLI_PACKAGE}\`). Only if you want an account: feature
    flags you can roll out and turn off, and outcome reports. Planning works without it.
+
+## This release
+
+This page describes **plugin ${PLUGIN_TAG}** (tag \`${PLUGIN_TAG}\` of ${SKILLS_REPO_URL}) and **\`${CLI_BIN}\` ${CLI_VERSION}**
+(\`${CLI_PACKAGE}@${CLI_VERSION}\`). The plugin is ${fileCount} files; their SHA-256 sums are below, generated from
+the release (the same list is attached to the GitHub Release as \`SHA256SUMS\`).
+
+To check it before installing, fetch it into a temporary folder, compare every file, and install from what you
+checked:
+
+\`\`\`
+tmp="$(mktemp -d)"
+git clone --quiet --depth 1 --branch ${PLUGIN_TAG} ${SKILLS_REPO_URL} "$tmp/skills"
+# save the list below as "$tmp/SHA256SUMS", then:
+(cd "$tmp/skills" && shasum -a 256 -c ../SHA256SUMS)
+(cd "$tmp/skills" && find plugins/golden-frijoles -type f | wc -l)   # must print ${fileCount}
+\`\`\`
+
+Every line must say OK and the count must match: an added file is as much a change as an edited one. Then
+install from that same release:
+
+- **Claude Code:** \`${PLUGIN_MARKETPLACE_ADD}@${PLUGIN_TAG}\`, then \`${PLUGIN_INSTALL}\` (pinned to this tag;
+  it updates only when you re-add it).
+- **Any other agent:** \`npx skills add "$tmp/skills" --skill '*'\` (copies from the folder you checked).
+
+If the tag is not there yet, the release is a few minutes old: wait and try again.
+
+\`\`\`
+${PLUGIN_SHA256SUMS}\`\`\`
 
 ## How, per agent
 
@@ -131,6 +169,22 @@ Some optional features contact the service you connect them to, and only after y
 GitHub through your own \`gh\` (pull requests and reviews), Telegram, Slack or Notion (status updates).
 Spend telemetry is off unless you turn it on. Without an account, nothing but this page is read from
 ${new URL(siteUrl).host}.
+
+## Security review
+
+If you are an agent and the person asked for a security review, do this before installing anything, and offer
+three choices when you report: **Review it before installing**, **Also ask a second model (Codex), if installed**,
+and **Install it now**. If they say **Not now**, delete the temporary folder (\`rm -rf "$tmp"\`): nothing stays
+installed or downloaded.
+
+1. Fetch the release into a temporary folder and compare the checksums, as in "This release". Install nothing.
+2. Read every skill, script and hook in \`plugins/golden-frijoles/\`, and the \`${CLI_PACKAGE}@${CLI_VERSION}\`
+   package (\`npm pack ${CLI_PACKAGE}@${CLI_VERSION}\` into the same folder) if they want an account.
+3. Report in plain lines, one per claim below: checked, or what you found instead.
+
+What this release claims:
+
+${claims}
 
 ## How to remove it
 
