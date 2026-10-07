@@ -113,8 +113,11 @@ an explicit `--macro 01-product` creates the macro folder; `fund.mjs` funds an e
   built yet · 3 Just planning: don't change my repo" → `project.mode` `existing` · `new` · `planning-only`, written
   exactly as today. **Q2 is no longer asked**; `project.startPoint` is written from the route (This repo →
   `building`; a new idea → `idea` for strategy first, `plan` for a first epic now; Just planning → not written).
-  Nothing reads `startPoint` (live: `git grep startPoint` finds only the registry and the skill). The registry's
-  `project.mode` question takes the same words, in every copy.
+  The registry's `project.mode` question takes the same words, in every copy. **Amended at review (#307):** "nothing
+  reads `startPoint`" was wrong (the grep missed `packages/cli`). `gf config`'s own terminal setup reads the registry
+  from the kit, so it still asks Q2 (`askWhen: 'setup'`, unchanged here) and its `nextSteps()` sends `building` to
+  `live-smoke`. **Known gap, follow-up:** retire Q2 in the registry and point `nextSteps()` at the golden-frijoles skill's
+  read, in one CLI release (npm publish is Daniel's step). The skill path, which this epic is about, is right today.
 - **D5 · Shipped work.** Merged, non-bot pull requests (`gh`), grouped into epics by their head branch: the
   `work-branch.mjs` reading (`feat/x-s2` → `x`), else the longest proper prefix that is another branch's slug
   (`docs/x-close` → `x`), else the branch slugified, else the title. Without `gh`: first-parent merge commits
@@ -126,7 +129,9 @@ an explicit `--macro 01-product` creates the macro folder; `fund.mjs` funds an e
 - **D6 · Building.** Open, non-bot pull requests, grouped the same way. **The epic slug is the branch's group key**,
   so the live stage resolver (`lib/stage.mjs`) attributes the branch to the epic: Building or QA on `--live` and the
   Hub. The committed `BUILD-ORDER.md` shows it in Ready to build, because Building is live-only by design
-  (board-sinks C3). A key that is both shipped and open is one Building epic citing both.
+  (board-sinks C3). A key that is both shipped and open is one Building epic citing both (an open `docs/x-close` joins
+  a merged `feat/x`). **Limit (review #307):** a branch whose reading changes when slugified (capitals, `_`, `.`, over 60
+  characters) gets a slug the live resolver will not match, so that epic shows Ready to build, not Building.
 - **D7 · Ideas.** Open issues (`gh`, at most 500; more is said), clustered: by the issue's first label
   (alphabetical); unlabelled issues by a shared title word (stop words out, at least 2 per cluster); the rest one
   idea each. Each idea is a `raw` seed (To groom) from `templates/scope-seed.md`'s frontmatter, `appetite: null`,
@@ -149,8 +154,10 @@ an explicit `--macro 01-product` creates the macro folder; `fund.mjs` funds an e
   literal. After writing: `build-order.mjs`, then `build-order.mjs --live` shown, then "1 Yes, review the strategy
   (about 10 minutes) · 2 Later: help me plan a first epic now" (the strategy step and its gate, or `groom`).
 - **D11 · A new idea.** One question: "A new idea. In a sentence or two: what is it, and who is it for?", then
-  "1 Strategy first (…) · 2 A first epic now (…)". Strategy first is setup's existing strategy step ending at the
-  Strategy gate. A first epic now runs `groom` with the sentence as the verbatim ask. **Not grounded** is shown in two
+  "1 Strategy first (…) · 2 A first epic now (…)". Strategy first runs the three coaches in turn from the sentence
+  (the canvas's "about 45 minutes with the coaches… saved as you go"), ending at the Strategy gate. **Deviation
+  (review #307):** the drafting step (`gates.md`: write all three files from the repo, then the gate) has nothing to draft
+  from in an empty repo, so this route is the gate's *Coach me through it*, starting with no file; `gates.md` says so. A first epic now runs `groom` with the sentence as the verbatim ask. **Not grounded** is shown in two
   places, both written by groom: the seed's line `Moves · Tests: not grounded — no strategy yet`, and the Plan gate's
   Moves line (`gates.md`: "not grounded: no strategy yet" when `strategy.mjs` prints nothing). `strategy.mjs` stays
   silent with no strategy (think-skills D5: no nag). "Until a strategy exists" is the Plan gate's reading at the
