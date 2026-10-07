@@ -51,7 +51,31 @@ export type BoardCard = {
   pr: { number: number; url: string; state: string; draft: boolean } | null
   kickoff: string | null
   shippedAt: string | null
+  /**
+   * result-record D11 — the row's result fields, as pushed (an Epic only; null for a seed). Raw on purpose: the page
+   * reads them through `lib/roadmap-result.ts`'s `epicResult`, the ONE derivation of the bean and its line, and this
+   * module stays import-free so `node --test` loads it with no resolver.
+   */
+  result: Record<string, unknown> | null
 }
+
+/** The row fields `epicResult` reads. ⚠️ Kept in step with `lib/roadmap-result.ts` by `hub-board.test.ts`. */
+export const RESULT_ROW_KEYS = [
+  'slug',
+  'name',
+  'status',
+  'hypothesis',
+  'target_metric',
+  'target_from',
+  'target_to',
+  'read_date',
+  'read_date_derived',
+  'verdict',
+  'verdict_actual',
+  'verdict_evidence',
+  'verdict_at',
+  'read_late',
+] as const
 
 export type WipState = { limit: number; count: number; over: boolean; at: boolean }
 
@@ -125,6 +149,7 @@ export function toCard(row: RoadmapRow, project: string | null = null): BoardCar
     pr: (r.pr as BoardCard['pr'] | null | undefined) ?? null,
     kickoff: (r.kickoff as string | null | undefined) ?? null,
     shippedAt: (r.shipped_at as string | null | undefined) ?? null,
+    result: row.grain === 'Epic' ? Object.fromEntries(RESULT_ROW_KEYS.map((k) => [k, r[k] ?? null])) : null,
   }
 }
 
