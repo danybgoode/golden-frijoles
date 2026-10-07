@@ -130,3 +130,9 @@ test('evidence becomes a link only when it is an https URL (security lens, #290)
   assert.equal(read('north-star:x@2026-11-04'), null)
   assert.equal(read('https://'), null)
 })
+
+test('a partial target is no target: no bean, never due (codex review, #290)', () => {
+  const r = epicResult(epic({ target_from: null, target_to: null }), { today: '2027-01-01' })
+  assert.equal(r.bean, null)
+  assert.equal(r.readDue, false)
+})

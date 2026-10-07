@@ -85,14 +85,19 @@ export function epicResult(
     ? (row.verdict as ResultVerdict)
     : null
   const readDate = day(row.read_date)
+  const from = num(row.target_from)
+  const to = num(row.target_to)
+  // A target is metric + from + to together (D1). A pushed row with only some of them is shown as no target — no bean,
+  // never due — rather than as a bet nobody can judge (codex review, #290).
+  const target = metric !== null && from !== null && to !== null
   return {
     slug: String(row.slug ?? ''),
     name: str(row.name),
     shipped,
     hypothesis: str(row.hypothesis),
     metric,
-    from: num(row.target_from),
-    to: num(row.target_to),
+    from,
+    to,
     readDate,
     readDateDerived: readDate !== null && row.read_date_derived === true,
     verdict,
@@ -102,8 +107,8 @@ export function epicResult(
     verdictAt: verdict ? day(row.verdict_at) : null,
     late: verdict !== null && row.read_late === true,
     grounded: metric && opts.inputKeys ? opts.inputKeys.includes(metric) : null,
-    readDue: shipped && metric !== null && verdict === null && readDate !== null && today >= readDate,
-    bean: verdict ?? (shipped && metric ? 'growing' : null),
+    readDue: shipped && target && verdict === null && readDate !== null && today >= readDate,
+    bean: verdict ?? (shipped && target ? 'growing' : null),
   }
 }
 
@@ -149,10 +154,10 @@ export const BEAN_WORDS: Record<BeanKind, string> = {
 
 /**
  * The one line under a card's bean: `61 → 72 (target 70)` once read; `61 → 70 · read 3 Nov` (or `· read due`) while
- * growing; null when there is no target to show. The verdict's reason stands in for an unclear read with no number.
+ * growing; null when there is no bean to go with it. The verdict's reason stands in for an unclear read with no number.
  */
 export function resultLine(r: EpicResult): string | null {
-  if (!r.metric) return null
+  if (!r.bean) return null // no target and no verdict: nothing to show
   if (r.verdict) {
     if (r.actual === null) return r.evidence
     const from = r.from !== null ? `${figure(r.from)} → ` : ''
