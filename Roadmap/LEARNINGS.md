@@ -442,6 +442,8 @@ one-liner + why + date shape.
   skipped. Second epic to pay for "a local gate that is a subset of CI's is worse than no local
   gate" — the fix is to invoke CI's own scripts *with CI's own environment*.
   *(2026-08-20, site-url-preview-aware.)*
+  Third epic, sharpened (result-record, 2026-10-07): the gate checks **new** files, so a branch that adds files must
+  run `PRETTIER_BASE_REF=origin/main node scripts/format-changed.mjs` before each push; two new files went red once each.
 
 
 - **Borrow the register, never the motion — and state the translation rule before anyone writes a
@@ -2145,4 +2147,20 @@ one-liner + why + date shape.
   (a restore makes them "changed"). The bloated diff pushed the PR past agy's input budget and its first review was
   empty.
 - **Grep the mutated file before trusting a green mutation run.** The first "put the old name back" mutation edited
-  nothing (prettier had reflowed the line), and the guard's green meant nothing.
+  nothing (prettier had reflowed the line), and the guard's green meant nothing. The same holds for any scripted edit: a
+  find-and-replace on a file prettier has reflowed silently misses — make the script assert its pattern matched
+  (result-record hit it four times; the asserts caught each, and one unasserted edit left an unused import for lint).
+
+### Recording a result per epic (result-record, 2026-10-07)
+- **A zero-dependency file stays zero-dependency, even for a sibling import.** `roadmap-contract.mjs` importing a new
+  `lib/result-dates.mjs` broke every consumer that copies the contract alone (the pre-commit fixture, copy-once
+  projects). Invert the import: the shared primitive lives in the dependency-free file, the new module imports it.
+- **Let the live data set the default, not the rule's text.** "Read 30 days after shipping" applied literally would
+  have raised 54 "read due" lines on day one for epics shipped before the record existed. A derived default applies
+  only to rows that opted in (an epic with a target).
+- **Answer a reviewer's repeated false positive with a spec, not a second comment.** Codex twice read the reads-due
+  check as never seeing the derived date; a spec building the row through the extract's own function settled it and
+  now guards the path.
+- **A "half" value the contract accepts is a silent failure downstream.** From/to with no metric passed validation
+  and then never came due, because every reader keyed off the metric. When readers agree on what makes a record
+  "complete", the contract must refuse anything less.

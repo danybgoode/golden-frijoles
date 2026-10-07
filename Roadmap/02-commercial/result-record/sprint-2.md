@@ -3,7 +3,7 @@ epic: result-record
 sprint: 2
 title: "The read"
 risk: low
-phase: In review
+phase: Shipped
 stories_total: 3
 stories:
   - id: S2.1
@@ -30,13 +30,13 @@ stories:
 ---
 # The result record — Sprint 2: The read
 
-**Status:** 🟦 In review
+**Status:** ✅ Shipped — #291, merged 30743f2 2026-10-07, deployed to production and verified
 
 ## Stories
 <!-- Keep the heading shape `### Story 2.M — <title>`. When a story ships, append ✅ + its commit ref.
      The epic README frontmatter `status:` is the AUTHORITATIVE epic status. -->
 
-### Story 2.1 — The read: drafted by the agent, approved by you
+### Story 2.1 — The read: drafted by the agent, approved by you ✅ 3de4332
 **As** a founder, **I want** my agent to draft the verdict with its evidence on the read date, and me to approve it,
 **so that** the result is evidenced and mine.
 `scripts/epic-read.mjs --epic <slug>` (shipped in the kit, like `epic-actuals.mjs`). It reads the target, then the
@@ -52,7 +52,7 @@ and a link, one at a time.
 - It works with and without an account.
 **Risk:** low
 
-### Story 2.2 — Read due, in the terminal and on Today
+### Story 2.2 — Read due, in the terminal and on Today ✅ 361c348 · 28a0fb7
 **As** a founder, **I want** to be told when a read is due, **so that** I don't have to remember.
 `session-resume` prints one line per due read ("Read due: Overdue reminders · since 4 Nov · run epic-read"). Today
 shows "Read due" under Waiting on you, from the pushed fields; the lock decides whether that's a derived item or a
@@ -61,7 +61,7 @@ task in the Agent queue.
 - A due read shows in both places until it's written; then it's gone.
 **Risk:** low
 
-### Story 2.3 — The result as a bean on the board card
+### Story 2.3 — The result as a bean on the board card ✅ 79de127
 **As** a founder, **I want** the result as a bean on the board card, **so that** I see what paid off at a glance.
 Shipped cards show epic 1's Bean: Growing until read, then Proven (gold), Disproven or Unclear, with "from → actual
 (target)" in one line.
@@ -95,3 +95,12 @@ Env: production · https://goldenfrijoles.com   (or the preview URL while testin
    → The card shows the bean and "from → actual (target)".
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+### Smoke run (2026-10-07, production)
+- ✅ Merged #291 → `30743f2`, production deployment `success`; plugin + kit **0.32.0** published.
+- ✅ `npx -y @golden-frijoles/kit@0.32.0 epic-read --epic result-record` runs from the published kit (it is in the kit
+  closure) and says "not shipped yet".
+- ✅ `https://goldenfrijoles.com/hub/golden-beans-demo/board` and a card view return 200 signed out (no fixture epic has a
+  target, so no bean renders yet — the render spec covers the markup).
+- ⏳ **Owed to Daniel:** steps 1–5 end to end — they need an epic shipped with a target and a read date of today, a
+  signed-in Today, and his approval of the verdict (the read is his to approve, by design).
