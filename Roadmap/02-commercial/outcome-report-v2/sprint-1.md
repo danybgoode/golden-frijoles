@@ -3,7 +3,7 @@ epic: outcome-report-v2
 sprint: 1
 title: "Is it paying off"
 risk: low
-phase: Shaping
+phase: Building
 stories_total: 3
 stories:
   - id: S1.1
