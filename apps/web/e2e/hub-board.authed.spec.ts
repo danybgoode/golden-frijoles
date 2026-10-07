@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { ACTIVITY_FIXTURE_FLAG_KEY, readTenantRecord } from './helpers/authed-fixture'
+import { ACTIVITY_FIXTURE_FLAG_KEY, SIBLING_ONLY_FLAG_KEY, readTenantRecord } from './helpers/authed-fixture'
 import {
   extractSignature,
   signatureArgs,
@@ -206,14 +206,56 @@ test("an epic's flag: found shows its state and opens it in Ship; a missing key 
   await expect(found).toContainText(`Flag ${ACTIVITY_FIXTURE_FLAG_KEY}`)
   // The activity fixture's flag has versions and no activation anywhere: "never activated", in words, per environment.
   await expect(found.locator('[data-env="production"]')).toHaveText('production: never activated')
+  // D12 — production is the headline: first, before the other environments.
+  await expect(found.locator('[data-env]').first()).toHaveAttribute('data-env', 'production')
   const ship = found.getByRole('link', { name: 'Open in Ship' })
   await expect(ship).toHaveAttribute('href', `/app/flags/${slug()}/${ACTIVITY_FIXTURE_FLAG_KEY}`)
   await ship.click()
   await expect(page).toHaveURL(new RegExp(`/app/flags/${slug()}/${ACTIVITY_FIXTURE_FLAG_KEY}$`))
 
-  await page.goto(`/hub/${slug()}/epic/fixture-design-rails`)
-  await expect(page.locator('main [data-flag="not_found"]')).toHaveText('Flag gb_e2e.no_such_flag not found')
-  await expect(page.locator('main [data-flag] a')).toHaveCount(0)
+  // Tenancy (D12): the key exists in a SIBLING project of the viewer's own workspace — one the viewer owns too — and is
+  // still "not found" here, because the page reads this project's registry only. A read that ignored the
+  // project id would find it; mutating the project scope turns this red (fresh review, #297).
+  const db = serviceDb()
+  const { data: sibling, error } = await db
+    .from('projects')
+    .insert({ workspace_id: await fixtureWorkspaceId(), slug: `flag-sibling-${Date.now()}` })
+    .select('id')
+    .single()
+  if (error || !sibling) throw new Error(`could not create a sibling project: ${error?.message}`)
+  try {
+    // The viewer OWNS the sibling too (the flag RPC requires ownership) — the strongest case: even a project the viewer
+    // can open does not lend its flags to this project's page.
+    const { error: memberErr } = await db
+      .from('project_members')
+      .insert({ project_id: sibling.id, user_id: readTenantRecord()!.userId, role: 'owner' })
+    if (memberErr) throw new Error(`could not make the viewer the sibling's owner: ${memberErr.message}`)
+    const { error: flagErr } = await db.rpc('create_flag_definition_version', {
+      p_project_id: sibling.id,
+      p_flag_key: SIBLING_ONLY_FLAG_KEY,
+      p_definition: {
+        valueType: 'boolean',
+        description: 'Exists only in a sibling project.',
+        defaultVariantKey: 'off',
+        variants: [
+          { key: 'off', value: false },
+          { key: 'on', value: true },
+        ],
+        rules: [],
+      },
+      p_reason: 'one-epic-page tenancy fixture',
+      p_actor_user_id: readTenantRecord()!.userId,
+    })
+    if (flagErr) throw new Error(`could not create the sibling's flag: ${flagErr.message}`)
+    await page.goto(`/hub/${slug()}/epic/fixture-design-rails`)
+    await expect(page.locator('main [data-flag="not_found"]')).toHaveText(
+      `Flag ${SIBLING_ONLY_FLAG_KEY} not found`
+    )
+    await expect(page.locator('main [data-flag] a')).toHaveCount(0)
+  } finally {
+    const { error: dp } = await db.from('projects').delete().eq('id', sibling.id)
+    if (dp) throw new Error(`cleanup failed: ${dp.message}`)
+  }
 
   await page.goto(`/hub/${slug()}/epic/fixture-unbet`)
   await expect(page.locator('main [data-flag="none"]')).toHaveText(
@@ -229,7 +271,7 @@ test('a read epic shows the bean, the actual and what the target was (S2.1)', as
   await page.goto(`/hub/${slug()}/epic/fixture-design-rails`)
   const read = page.getByTestId('epic-read')
   await expect(read).toContainText('Proven')
-  await expect(read).toContainText('actual 27')
+  await expect(read).toContainText('actual 29')
   await expect(read).toContainText('target was 27')
   await expect(read.locator('svg')).toHaveCount(1)
   await expect(page.locator('main .ds-epic-track li[aria-current="step"]')).toHaveAttribute(

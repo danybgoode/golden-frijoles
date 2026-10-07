@@ -278,12 +278,15 @@ export function EpicFlag({ flag, projectSlug }: { flag: EpicFlagView; projectSlu
             Flag <span className="ds-mono">{flag.key}</span>
           </b>
           <span className="ds-epic-flag-envs">
-            {flag.environments.map((env) => (
-              <span key={env.environment} data-env={env.environment} data-state={env.state}>
-                {env.environment}: {ENV_WORD[env.state] ?? env.state}
-                {env.state === 'on' && env.serving !== null ? ` ${JSON.stringify(env.serving)}` : ''}
-              </span>
-            ))}
+            {/* D12 — production is the headline: first, then the others in their usual order. */}
+            {[...flag.environments]
+              .sort((a, b) => Number(b.environment === 'production') - Number(a.environment === 'production'))
+              .map((env) => (
+                <span key={env.environment} data-env={env.environment} data-state={env.state}>
+                  {env.environment}: {ENV_WORD[env.state] ?? env.state}
+                  {env.state === 'on' && env.serving !== null ? ` ${JSON.stringify(env.serving)}` : ''}
+                </span>
+              ))}
           </span>
           <a className="ds-epic-row-action" href={href}>
             Open in Ship
@@ -327,7 +330,11 @@ export function EpicSpend({
           band={{ low: bar.lowPct, high: bar.highPct }}
         />
       ) : null}
-      <span className="ds-epic-now-when">{line ? `${line} ≈ API $` : 'Not quoted · not measured yet'}</span>
+      <span className="ds-epic-now-when">
+        {line ?? 'Not quoted · not measured yet'}
+        {/* The unit marks a figure that was measured, so it sits only beside an actual (seen live on S1). */}
+        {finops.actualUsd !== null ? <span className="ds-mono"> ≈ API $</span> : null}
+      </span>
       <a
         className="ds-epic-row-action"
         href={`/app/finops/${encodeURIComponent(projectSlug)}#epic-${encodeURIComponent(slug)}`}

@@ -19,6 +19,7 @@ import {
   FUNNEL_RETAINED_EVENT,
   FUNNEL_SUBJECTS,
   ACTIVITY_FIXTURE_FLAG_KEY,
+  SIBLING_ONLY_FLAG_KEY,
   AUDIT_FIXTURE_ROWS,
   FUNNEL_TARGET_EVENT,
   NORTH_STAR_EXTRA_INPUTS,
@@ -977,8 +978,8 @@ async function seedRoadmapFixture(db: SupabaseClient, projectId: string) {
         },
         {
           ...epic('fixture-design-rails', 'One design system, every surface', 'shipped', 2, '02-commercial'),
-          // one-epic-page S2 — a READ epic (the bean, the actual, "target was") whose flag key this project does not
-          // hold, so the page must say "not found" rather than borrow anyone else's flag.
+          // one-epic-page S2 — a READ epic (the bean, the actual, "target was"; the two numbers differ so a swapped field
+          // cannot pass) whose flag key this project does not hold.
           ...card('Shipped', {
             shipped_at: today,
             hypothesis: 'One design system makes every surface feel like one product',
@@ -987,10 +988,12 @@ async function seedRoadmapFixture(db: SupabaseClient, projectId: string) {
             target_to: 27,
             read_date: today,
             verdict: 'proven',
-            verdict_actual: 27,
+            verdict_actual: 29,
             verdict_evidence: 'https://example.com/design-coverage',
             verdict_at: today,
-            flag_key: 'gb_e2e.no_such_flag',
+            // A key that exists ONLY in a sibling project (hub-board.authed.spec.ts creates it): the page must say
+            // "not found" rather than read another project's registry (fresh review, #297).
+            flag_key: SIBLING_ONLY_FLAG_KEY,
           }),
         },
         {

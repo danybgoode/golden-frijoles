@@ -28,7 +28,12 @@ export async function readEpicFlag(
     if (!flag) return { kind: 'not_found', key: flagKey }
     return { kind: 'found', key: flagKey, environments: toCliFlagView(flag).environments }
   } catch (error) {
-    console.error('[epic-flag] registry read failed:', error)
+    // The message only, not the object: the registry's own errors are generic, and a log line has no use for a stack
+    // trace that could carry anything else (security lens, #297).
+    console.error(
+      '[epic-flag] registry read failed:',
+      error instanceof Error ? error.message : 'unknown error'
+    )
     return { kind: 'unreadable', key: flagKey }
   }
 }
