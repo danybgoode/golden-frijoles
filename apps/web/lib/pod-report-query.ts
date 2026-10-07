@@ -4,7 +4,12 @@ import { getLatestArtifact, type ReportArtifact } from './report-artifacts'
 import { getFeatureFunnelByProjectId } from './tars-query'
 import { buildPodReportView, type PodReportView } from './pod-report-view'
 import { buildOutcomeSection, type OutcomeSection } from './pod-outcome'
-import { applyLens, type PodReportLens } from './pod-report-lens'
+import { applyLens, applyPayingOffLens, type PodReportLens } from './pod-report-lens'
+import { getProjectNorthStarByProjectId } from './north-star-query'
+import { epicResult } from './roadmap-result'
+import { epicFinops } from './roadmap-finops'
+import { buildPayingOff, unavailablePayingOff, type OutcomeEpic, type PayingOffView } from './outcome-figures'
+import type { MetricSource } from './outcome-expected'
 
 // pod-report · Sprint 2.5d — the Pod Report's single read path.
 //
@@ -26,6 +31,8 @@ export type PodReportResult =
       artifact: ReportArtifact
       view: PodReportView
       outcome: OutcomeSection
+      /** outcome-report-v2 — "is it paying off": the sentence, the lines, the figures, the epics table. Lensed. */
+      payingOff: PayingOffView
       lens: PodReportLens
     }
   // 'project_not_found' → notFound(); 'no_artifact' → the deliberate empty state; 'query_failed' →
@@ -92,9 +99,58 @@ export async function getPodReportByProjectId(
   if (!artifact) return { ok: false, reason: 'no_artifact' }
 
   const view = applyLens(buildPodReportView(artifact.payload), lens)
-  const outcome = await getProjectOutcome(projectId, projectSlug)
+  const [outcome, payingOff] = await Promise.all([
+    getProjectOutcome(projectId, projectSlug),
+    getPayingOff(projectId, projectSlug),
+  ])
 
-  return { ok: true, artifact, view, outcome, lens }
+  return { ok: true, artifact, view, outcome, payingOff: applyPayingOffLens(payingOff, lens), lens }
+}
+
+/**
+ * outcome-report-v2 D6 — the "is it paying off" half, team view (the caller lenses it). The epics' targets, verdicts
+ * and spend come from the latest pushed ROADMAP artifact, read through `epicResult`/`epicFinops`; the actuals from the
+ * North Star read the North Star page makes. Both are scoped to the one `projectId` the caller resolved.
+ *
+ * A failed read of either is the third state, `unavailable` — never "no targets", which would be a truthful-sounding
+ * sentence produced by an outage (the same rule `getProjectOutcome` follows below). A project that never pushed a
+ * roadmap has no epics: that IS "no targets yet".
+ */
+async function getPayingOff(projectId: string, projectSlug: string): Promise<PayingOffView> {
+  let roadmap
+  try {
+    roadmap = await getLatestArtifact(projectId, 'roadmap')
+  } catch {
+    return unavailablePayingOff()
+  }
+  const northStar = await getProjectNorthStarByProjectId(projectId, projectSlug)
+  if (!northStar.ok) return unavailablePayingOff()
+
+  const items = (roadmap?.payload as { items?: unknown } | null)?.items
+  const epics: OutcomeEpic[] = (Array.isArray(items) ? items : [])
+    .filter(
+      (i): i is Record<string, unknown> =>
+        typeof i === 'object' && i !== null && (i as { grain?: unknown }).grain === 'Epic'
+    )
+    .map((row) => ({
+      result: epicResult(row),
+      finops: epicFinops(row),
+      shippedAt: typeof row.shipped_at === 'string' ? row.shipped_at : null,
+    }))
+
+  const sources: MetricSource[] = northStar.inputs.map((input) => ({
+    key: input.key,
+    name: input.name,
+    isNorthStar: false,
+    series: input.series.map((p) => ({ date: p.date, value: p.value })),
+  }))
+  // The metric itself has no recorded level (north-star-query.ts) — it is a source with an empty series, so an epic
+  // targeting it still gets its expected line and says it has no actual.
+  if (northStar.metricKey) {
+    sources.push({ key: northStar.metricKey, name: northStar.metricKey, isNorthStar: true, series: [] })
+  }
+
+  return buildPayingOff({ product: projectSlug, epics, sources })
 }
 
 /**
