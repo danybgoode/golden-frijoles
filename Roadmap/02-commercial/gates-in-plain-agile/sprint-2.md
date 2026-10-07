@@ -3,7 +3,7 @@ epic: gates-in-plain-agile
 sprint: 2
 title: "The Strategy gate, and the words"
 risk: low
-phase: Shaping
+phase: Shipped
 stories_total: 2
 stories:
   - id: S2.1
@@ -23,7 +23,7 @@ stories:
 ---
 # Gates in plain agile — Sprint 2: The Strategy gate, and the words
 
-**Status:** 🟡 in review — #303
+**Status:** ✅ shipped and live 2026-10-07 (#303, merge `d409acf`, plugin + kit 0.36.0 published)
 
 ## Build contract (locked by the architect before the builder started)
 Cites README D1, D6–D10, D12–D13; it restates none of them.
@@ -80,3 +80,7 @@ Env: an empty scratch repo with the plugin installed from this branch
    → The Plan gate, then the Build gate, in the same shape.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+### Builder's walk (2026-10-07, recorded in #303)
+Three fixture strategy files (`status: draft`): the Strategy gate printed with no agreed or draft on screen; **Approve the strategy** set `status: agreed` in each file's frontmatter (3/3), nothing else, and `strategy.mjs` read them as agreed. `check-gate-words` runs in both CIs: clean (48 files; 53 with the root copies).
+**Owed to Daniel:** the interactive walkthrough above, in a scratch repo with the plugin installed from `main`.

@@ -2164,6 +2164,15 @@ one-liner + why + date shape.
 - **Two prettier configs must both accept a file a parity check needs byte-identical.** Format with the root's, copy,
   then `prettier --check` it from `skills/` — otherwise parity and `format:changed` fight each other.
 
+### Text a person decides on is an interface (gates-in-plain-agile, 2026-10-07)
+- **Review a gate's wording the way you'd review an API.** Four rounds on #302 found ambiguities, not style: a kill switch
+  shown as "off", "not installed" for a signed-out gh, no "nothing missing" variant, and decisions and options both
+  numbered, so a reply of "1" meant two things. Letter the questions and number the options.
+- **A word guard may skip placeholders but not alternatives.** `<on | off>` reaches the screen; `<placeholder>` does not.
+  Blanking every `<…>` let "Fund it first" through inside an alternative.
+- **Read the design source before the lock, and correct what it promises out loud.** The canvas drew a flag created at
+  grooming, an email digest and one-pagers that don't exist. Each became a named lock correction, not a review finding.
+
 ### Expected against actual on one report (outcome-report-v2, 2026-10-07)
 - **A tolerance in a lock is a number with a unit.** "On pace within 5%, min 0.5" made every 0–1 rate "on pace" forever
   (0.01 against an expected 0.20). Scale any threshold to the metric it judges and to the move that was planned.
