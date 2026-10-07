@@ -3,7 +3,7 @@ epic: one-header-one-name
 sprint: 2
 title: "One name per thing, and ⌘K"
 risk: low
-phase: Shaping
+phase: Shipped
 stories_total: 3
 stories:
   - id: S2.1
@@ -12,31 +12,31 @@ stories:
     i_want: "⌘K to find epics and products"
     so_that: "I get to work by its name"
     risk: low
-    status: planned
+    status: shipped
   - id: S2.2
     title: "One name per thing, guarded"
     as_a: "a founder"
     i_want: "one name for each thing"
     so_that: "I never wonder if two words mean two things"
     risk: low
-    status: planned
+    status: shipped
   - id: S2.3
     title: "The roadmap overview, and the walkthrough"
     as_a: "the product owner"
     i_want: "the roadmap overview in the same words and the walkthrough run on production"
     so_that: "the launch surfaces are verified, not assumed"
     risk: low
-    status: planned
+    status: shipped
 ---
 # One header and one name per thing — Sprint 2: One name per thing, and ⌘K
 
-**Status:** 🔨 built on `feat/one-header-one-name-s2` (S2.2 `535122b`, S2.1 `05c3055`, S2.3 docs); PR open.
+**Status:** ✅ shipped 2026-10-07 — PR #288, merge `e99019f` (S2.2 `535122b` + review `9a5151e`, S2.1 `05c3055`, S2.3 `bcd1a44`); deployed and the signed-out half verified live (below).
 
 ## Stories
 <!-- Keep the heading shape `### Story 2.M — <title>`. When a story ships, append ✅ + its commit ref.
      The epic README frontmatter `status:` is the AUTHORITATIVE epic status. -->
 
-### Story 2.1 — ⌘K finds epics and products
+### Story 2.1 — ⌘K finds epics and products ✅ `05c3055`
 **As** a founder, **I want** ⌘K to find epics and products, **so that** I get to work by its name.
 `PaletteEntry` gains kinds `epic` (the active project's epics, from `getHubRoadmap`; opens the epic page; hint: its
 stage) and `product` (the projects in the switcher's membership list; opens that product's Today). Each kind is
@@ -48,7 +48,7 @@ workspace goes through `getWorkspaceProjects` (the tenancy invariant).
 - No epic or product of a workspace you don't belong to ever appears.
 **Risk:** low
 
-### Story 2.2 — One name per thing, guarded
+### Story 2.2 — One name per thing, guarded ✅ `535122b`, `9a5151e`
 **As** a founder, **I want** one name for each thing, **so that** I never wonder if two words mean two things.
 Decision 2 on screen, through one label module with a test (carried over from `plain-outcome-rename` S5.1): Features →
 Flags · "On in Production" → "Flags on" · Experiments → A/B tests · Report / Pod report → Outcome report (console,
@@ -63,7 +63,7 @@ The old screen words go into `design-system/vocabulary.ts` so a page that shows 
 - Putting "Pod report" back on a page fails `vocabulary.test.ts`.
 **Risk:** low
 
-### Story 2.3 — The roadmap overview, and the walkthrough
+### Story 2.3 — The roadmap overview, and the walkthrough ✅ `bcd1a44` (walkthrough owed)
 **As** the product owner, **I want** the roadmap overview in the same words and the walkthrough run on production,
 **so that** the launch surfaces are verified, not assumed.
 From `plain-outcome-rename` S5.2: `Roadmap/README.md` uses the decision 1 and 2 words and has no Golden Beans title.
@@ -104,3 +104,8 @@ Env: production · https://goldenfrijoles.com   (or the preview URL while testin
    → Titled Outcome report, not Pod report.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+**Run so far (2026-10-07, architect, production, signed out):** step 4's columns on the demo board read Backlog ·
+Grooming · Ready · Building · QA · Shipped with `data-stage` still `To groom … Shipped` (same cards); step 6's report
+page is titled **Outcome report**; step 5's Horizon still says "destinations"; the epic index sends an anonymous caller
+to login. **Steps 1–6 signed in are owed to Daniel**; CI's authed suite runs the ⌘K epic and product steps on every PR.

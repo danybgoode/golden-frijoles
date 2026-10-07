@@ -340,6 +340,14 @@ independently shippable slice of value.
   URL is shown to owners only. Setup › Connections shows whether Claude has used it, your signed-in machines
   (Disconnect) and Get a new URL. **Owed to Daniel:** the walkthroughs (an agent reading install.md, `gf login` on a
   clean machine, the Claude app turning a flag off).
+- ✅ [One header and one name per thing](02-commercial/one-header-one-name/README.md) (launch epic 3, audit decisions
+  2 and 3) — **shipped and live 2026-10-07** (#287, #288). The console and the Hub are one product: the header reads
+  **Today · Plan · Ship · Measure · Setup**, the Hub's Roadmap, Board and Horizon are Plan, the Outcome report is under
+  Measure, and the Hub's own bar and "Back to the console" are gone, with every URL unchanged. The switcher offers the
+  board across all products beside Portfolio; ⌘K finds epics and products. Each thing has one name on screen (Flags,
+  A/B tests, Outcome report, Webhooks, Portfolio, Agent queue, Flag history; the board's Backlog and Ready), with the
+  stored keys untouched and a guard that fails if an old name comes back. **Owed to Daniel:** both walkthroughs signed
+  in, re-approving the board surfaces' words, and a follow-up list of in-page nouns.
 - ✅ [Connect: start where you are](02-commercial/connect-page/README.md) (Daniel's feedback on the epic above) —
   **shipped and live 2026-10-06** (#284). Signup — password or Google — lands on **Connect**, not on an onboarding page
   that pushed a one-time API key; the connector URL a new account is handed can already change flags as its owner.
@@ -485,6 +493,10 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-07**: `one-header-one-name` **shipped**: two sprints, two PRs, ≈$19.61 against a $22–34 quote.
+  - A founder now walks Plan → Ship → Measure in one header, with no back button, and finds an epic by name with ⌘K.
+    The lock caught the two traps before any code: the demo Hub is public, so it keeps its tabs as a fallback row,
+    and the board's stage names are data keys, so only the screen word changed.
 - **2026-10-06**: `connect-page` **shipped**: two sprints in one PR, ≈$17.38 against a $25–60 quote.
   - A new founder now lands on the one page that connects their agent, the Claude app, Codex and their product, and the
     URL they are handed can already change things. The plan's own claim that `gf init` writes the SDK's key was false
