@@ -2,6 +2,8 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
   applyLens,
+  applyPayingOffLens,
+  PAYING_OFF_INVARIANT_FIELDS,
   lensPolicy,
   parseLens,
   POD_REPORT_LENSES,
@@ -176,4 +178,49 @@ test('the investor lens hides the rows entirely, so it cannot make either claim'
     },
   }
   assert.deepEqual(applyLens(v, 'investor').maturity!.rows, [])
+})
+
+// ── outcome-report-v2 D5 — the paying-off half ─────────────────────────────────────────────────────────────────────
+
+function payingOff() {
+  return {
+    sentence: { kind: 'behind', text: 'Ledgerly is behind the pace you planned.' },
+    lines: [{ metric: 'paid_on_time', markers: [{ slug: 'overdue-reminders', name: 'Overdue reminders', date: '2026-09-01' }] }],
+    figures: {
+      now: { name: 'Paid on time', actual: 60, expected: 65, gap: -5 },
+      paidOff: { proven: 1, read: 2, unread: 3 },
+      spend: { spent: 25.2 },
+      costPerWin: { perWin: 25.2 },
+    },
+    epics: [{ slug: 'overdue-reminders', spend: 9.8 }],
+  }
+}
+
+test('spend figures and the epics table are team-only; the sentence, lines and first two figures reach every lens', () => {
+  for (const lens of POD_REPORT_LENSES) {
+    const v = applyPayingOffLens(payingOff(), lens)
+    assert.deepEqual(v.sentence, payingOff().sentence, lens)
+    assert.deepEqual(v.figures.now, payingOff().figures.now, lens)
+    // The unread count is honesty, not detail: an investor still sees "3 not read yet".
+    assert.deepEqual(v.figures.paidOff, { proven: 1, read: 2, unread: 3 }, lens)
+    assert.equal(v.lines.length, 1, lens)
+    const team = lens === 'team'
+    assert.equal(v.figures.spend === null, !team, `${lens}: spend`)
+    assert.equal(v.figures.costPerWin === null, !team, `${lens}: cost per win`)
+    assert.equal(v.epics.length, team ? 1 : 0, `${lens}: table`)
+    assert.equal(lensPolicy(lens).showLinks, team, `${lens}: links`)
+    assert.equal(lensPolicy(lens).showAgentPrompt, team, `${lens}: agent prompt`)
+  }
+})
+
+test('the chart names its epics for team and client, and only says where they landed for an investor', () => {
+  assert.equal(applyPayingOffLens(payingOff(), 'client').lines[0].markers[0].name, 'Overdue reminders')
+  const investor = applyPayingOffLens(payingOff(), 'investor').lines[0].markers[0]
+  assert.equal(investor.name, null)
+  assert.equal(investor.slug, null)
+  assert.equal(investor.date, '2026-09-01')
+})
+
+test('the paying-off invariant list names the honesty parts', () => {
+  assert.deepEqual([...PAYING_OFF_INVARIANT_FIELDS], ['sentence', 'lines', 'figures.now', 'figures.paidOff'])
 })
