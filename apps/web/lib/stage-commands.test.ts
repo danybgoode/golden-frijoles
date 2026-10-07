@@ -70,6 +70,10 @@ test('Building: Resume first, then Wrap for the first sprint not yet done', () =
     'Wrap sprint 2 of the demo epic in ledgerly',
   ])
   assert.deepEqual(shorthands(card({ stage: 'Building' })), ['Resume', 'Wrap S2'])
+  // A fixed-scope seed is built too, and is not an epic (codex re-review, #295).
+  assert.deepEqual(texts(card({ stage: 'Building', grain: 'Seed' })), [
+    'Resume the demo work in ledgerly where its last session stopped',
+  ])
 })
 
 test('QA with an open PR: Review first, the routing command, then Close and its DoD check', () => {
