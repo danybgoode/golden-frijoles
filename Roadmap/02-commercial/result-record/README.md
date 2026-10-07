@@ -1,6 +1,6 @@
 ---
-status: shipped      # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Shipped       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+status: in-progress  # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+phase: Building      # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
 locked_at: "2026-10-07T01:50:48Z"
 slug: result-record
@@ -8,8 +8,8 @@ title: "The result record"
 area: 02-commercial
 risk: low
 type: feature
-sprints_total: 2
-stories_total: 6   # the sum of every sprint's stories_total — keep it in step when a story is added
+sprints_total: 3
+stories_total: 9   # the sum of every sprint's stories_total — keep it in step when a story is added
 intent_match: null   # copied from the seed by scaffold-epic (intent-match); the reader at the lock may update it
 quote_low_usd: 22    # ≈ API $ — copied from the seed's `quote:` by scaffold-epic (finops); null = not quoted, never 0
 quote_high_usd: 34
@@ -22,7 +22,7 @@ actual_mtok: 92.3
 actual_basis: "this machine · 2026-10-07 · 1 session · prices 2026-10-02"
 ---
 
-# Epic: The result record ✅
+# Epic: The result record
 
 > **Area:** 02-commercial · **Risk:** low · **Class:** Feature · **Scope seed:** [`00-ideas/seeds/result-record.md`](../../00-ideas/seeds/result-record.md)
 <!-- Class (above) is the Stage-2 classification: Feature, Spike, Bug, or Chore — see SKILL.md's
@@ -75,6 +75,9 @@ Frijoles's own North Star count is out of scope.
 | 2 | S2.1 The read: drafted by the agent, approved by you | low |
 | 2 | S2.2 Read due, in the terminal and on Today | low |
 | 2 | S2.3 The result as a bean on the board card | low |
+| 3 | S3.1 The engine answers an agent: an input's readings, an experiment's decision | high |
+| 3 | S3.2 `gf` reads them, and so does the connector | low |
+| 3 | S3.3 `epic-read` fetches the number itself | low |
 
 **Fields:** `hypothesis`, `target_metric`, `target_from`, `target_to`, `read_date` (set at grooming); `verdict`
 (proven · disproven · unclear), `verdict_actual`, `verdict_evidence`, `verdict_at` (set at the read).
@@ -197,18 +200,71 @@ shipped epic would raise 54 "read due" lines on day one: that is the bulk backfi
 4. D11 Bean + board card line; board spec + the visual gate.
 5. D12 0.32.0 + CHANGELOG; D13 parity.
 
+## Amendment — Sprint 3, the agent fetches the number (Daniel, 2026-10-07)
+
+> "all good except for the agent can't fetch the number, that's literally our value proposition, the human gui is just
+> nice to have" · "I'd prefer it's all manageable via cli as the cli is primarily going to be used by agents"
+
+The groom-time no-go "a new table or API" is **lifted for the two reads below** (still no table, no migration). S1–S2
+shipped with the owner typing the actual (the lock's earlier correction); S3 makes the agent fetch it, through `gf`.
+The epic reopens: `status: in-progress`, 3 sprints, 9 stories.
+
+**Live code the S3 lock read.** The data and the reads already exist; only the pipe to an agent is missing:
+`getProjectNorthStarByProjectId` (`lib/north-star-query.ts`) returns every input with its daily series (pushed values
+or telemetry counts); `getExperimentDecisionHistoryByProjectId` (`lib/experiment-decision-query.ts`) reads the ledger
+by experiment id + version id, and only `getExperimentAnalysisByProjectId` resolves a key to those ids. The CLI routes
+under `/api/v1/cli/*` authenticate a `gf login` token and gate on membership through `requireCliMember`
+(`lib/cli-auth.ts`), 404 for a project the caller is not in. The connector has `get_north_star` (feature-keyed) and
+`compare_experiment` (lift), neither of which answers "this input's value on this day" or "this experiment's decision".
+
+- **D14 · `GET /api/v1/cli/north-star/readings?project=&input=&to=`** — member-gated (`requireCliMember`), one project
+  resolved server-side. Reads through `getProjectNorthStarByProjectId` (no new query), returns the one input (`key`,
+  `name`, `valueSource`) and its readings up to `to` (default: all), plus `latest` — the last reading on or before
+  `to`. An unknown input is `not_found` (that is also "not grounded").
+- **D15 · `GET /api/v1/cli/experiments/decision?project=&experiment=&version=`** — member-gated. A new resolver in
+  `lib/experiment-decision-query.ts`, `getExperimentDecisionByKey(projectId, key, version?)`: the registry row by
+  (project, key), the given version or the highest one, then the existing history read. Returns the experiment key,
+  version, lifecycle and its decision records. No analysis recompute.
+- **D16 · `gf north-star readings <input> [--to <day>]` and `gf experiments decision <key> [--version <n>]`** — both
+  `--json`-first, `needsAuth`, `--project` or the remembered project (`resolveProject`). CLI 0.6.0. **npm publish is
+  Daniel's 2FA step** — until then they run from the repo build.
+- **D17 · `epic-read` fetches through `gf`.** With a target and no `--actual`, it runs `gf north-star readings
+  <target_metric> --to <today> --json` (binary: `$GF_BIN`, else `gf` on PATH, spawned without a shell so a shell alias
+  never applies) and takes `latest`: the actual is its value, the evidence `north-star:<input>@<its day>`. A reading
+  dated before shipping is no evidence for this epic → "no reading since it shipped". `--experiment <key>` adds
+  `gf experiments decision` and, when a decision is recorded, `ab:<key>` as the evidence. `--actual`/`--evidence`
+  still win (the owner's word). No `gf`, not signed in, no project, or any failure → one "could not fetch (why)" line
+  and the S2 behaviour (ask the owner). The project-key `groundedCheck` is **removed** (CLI-first; no key in `.env`):
+  grounded is now "the readings route knows this input".
+- **D18 · Two connector tools, `get_input_readings` and `get_experiment_decision`**, on the same two lib reads,
+  scoped to the connector token's project, born on (standing no-flag rule; the connector's own two gates apply).
+- **D19 · Risk HIGH for S3.1** (new request-path reads = authorization boundary): the security lens runs on that PR.
+  Single project per request, no multi-project read, nothing returned the caller's membership does not already show
+  in the console.
+- **D20 · Release.** Kit 0.33.0 (`epic-read`), CLI 0.6.0 (publish owed to Daniel). Today's line showing the drafted
+  verdict is **not** in S3 (follow-up), so S3 stays one sprint.
+
+### Build contract — Sprint 3 (locked by the architect before the builder started)
+1. D15 resolver + D14/D15 routes; api specs: member reads its own project, a non-member gets 404, unknown input /
+   experiment is `not_found`, `latest` respects `to`.
+2. D16 `gf` commands + CLI unit specs against a stubbed API (the existing CLI test harness).
+3. D18 connector tools + the MCP connector spec.
+4. D17 `epic-read` with an injected spawn: fetches and drafts, pre-ship reading refused, `--actual` wins, every
+   failure path falls back with its reason; mutation-checked.
+5. D20 kit 0.33.0 + CHANGELOG; CLI 0.6.0 + its CHANGELOG; D13 parity.
+
 ## Deploy order
 Sprint 1: the contract and templates, then extract and the push schema (nullish, so older pushers keep working), then
 the Hub read. Sprint 2: the kit script, then the reminders and the board card. Merge on green; the kit and plugin
 release follows `skills/RELEASING.md`.
 
 ## Definition of Done (epic)
-- [x] All sprints merged to `main` + smoke-tested (gaps stated — `node scripts/owed-ledger.mjs` counts what is still owed)
-- [x] Each `sprint-N.md` has its smoke walkthrough (real URLs)
-- [x] This README marked ✅; every sprint status ticked with commit refs
+- [ ] All sprints merged to `main` + smoke-tested (gaps stated — `node scripts/owed-ledger.mjs` counts what is still owed)
+- [ ] Each `sprint-N.md` has its smoke walkthrough (real URLs)
+- [ ] This README marked ✅; every sprint status ticked with commit refs
 - [x] `RETROSPECTIVE.md` written
 - [x] Product poster (`Roadmap/README.md`) updated
 - [x] Team memory + `MEMORY.md` index updated
 - [x] Durable learnings promoted to `Roadmap/LEARNINGS.md` (dedupe — sharpen, don't append)
 - [x] **Kill-switch:** n/a — none was planned at grooming (risk low, no flag; rollback is a revert).
-- [x] Feature branch deleted; **this README's frontmatter `status: shipped`** (the SSOT — the board & Notion derive from it; run `node scripts/build-order.mjs`)
+- [ ] Feature branch deleted; **this README's frontmatter `status: shipped`** (the SSOT — the board & Notion derive from it; run `node scripts/build-order.mjs`)
