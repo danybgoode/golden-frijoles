@@ -871,6 +871,10 @@ test.describe('the grouped project switcher', () => {
       const theirs = menu.locator('section', {
         has: page.locator('p', { hasText: 'grouped switcher fixtures' }),
       })
+      // one-header-one-name S1.3 (D6) — ONE product per workspace here, so neither Portfolio nor the board across all
+      // products is offered: `toHaveCount(1)` below is the project row alone, and these say so by name.
+      await expect(menu.locator('[data-portfolio-entry]')).toHaveCount(0)
+      await expect(menu.locator('[data-workspace-board-entry]')).toHaveCount(0)
       await expect(mine.locator('a')).toHaveCount(1)
       await expect(mine.locator('a')).toContainText(homeProject.slug)
       await expect(mine.locator('.ds-shell-role')).toHaveText('owner')

@@ -16,7 +16,7 @@ import { AgentRail } from './AgentRail'
 import { ConsoleRail } from './ConsoleRail'
 import { CommandPalette } from './CommandPalette'
 import { ShellErrorBoundary } from './ShellErrorBoundary'
-import { PORTFOLIO_MIN_PRODUCTS, portfolioHrefFor } from '@/lib/portfolio-workspace'
+import { PORTFOLIO_MIN_PRODUCTS, portfolioHrefFor, workspaceBoardHrefFor } from '@/lib/portfolio-workspace'
 
 /**
  * Product chrome is rendered inside each page after its auth/flag guard resolves.
@@ -355,6 +355,18 @@ export async function ProductShell({
                                   <a href={portfolioHrefFor(group.workspace.id)} data-portfolio-entry>
                                     <span>Portfolio</span>
                                     <span className="ds-shell-role">{group.projects.length} products</span>
+                                  </a>
+                                </li>
+                              ) : null}
+                              {/* one-header-one-name D6 — the board across all of them, beside Portfolio and under the
+                                same condition: with one product it is that product's own board, already in Plan. */}
+                              {group.projects.length >= PORTFOLIO_MIN_PRODUCTS ? (
+                                <li>
+                                  <a
+                                    href={workspaceBoardHrefFor(group.workspace.id)}
+                                    data-workspace-board-entry
+                                  >
+                                    <span>Board across all products</span>
                                   </a>
                                 </li>
                               ) : null}
