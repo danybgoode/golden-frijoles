@@ -369,3 +369,19 @@ test('a non-demo project’s board needs a member: signed out, it bounces to /lo
   expect([302, 307]).toContain(res.status())
   expect(res.headers()['location']).toMatch(/\/login/)
 })
+
+// one-header-one-name D4 (fresh review, PR #287) — the ANONYMOUS demo Hub, in the blocking `api` gate. No session, so
+// the public chrome; no rail, so the Hub's four pages ride the shell's fallback row. No console header, no "Back to the
+// console" (that was `HubFrame`'s, deleted).
+test('the anonymous demo Hub carries its own four pages and no console chrome', async ({ request }) => {
+  const res = await request.get(`/hub/${DEMO_SLUG}`)
+  expect(res.status()).toBe(200)
+  const html = await res.text()
+  const nav = html.match(/<nav[^>]*aria-label="Hub sections"[^>]*>([\s\S]*?)<\/nav>/)
+  expect(nav, 'the fallback row did not render').not.toBeNull()
+  const labels = [...nav![1].matchAll(/<a[^>]*>([^<]+)<\/a>/g)].map((m) => m[1])
+  expect(labels).toEqual(['Roadmap', 'Board', 'Horizon', 'Outcome report'])
+  expect(html).not.toContain('aria-label="Sections"')
+  expect(html).not.toContain('console-rail')
+  expect(html).not.toContain('Back to the console')
+})
