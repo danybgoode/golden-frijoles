@@ -57,7 +57,11 @@ export type ProjectSurfaceStatus = 'linked' | 'gated'
 // what needs you (`today`), you look at what happened (`measure`), you change what is running
 // (`ship`), and you wire the thing up once (`setup`). Every surface in the product answers exactly
 // one of those questions, and the one that does not have a home is the one worth arguing about.
-export type ConsoleSection = 'today' | 'measure' | 'ship' | 'setup'
+//
+// one-header-one-name D1 — FIVE, and `plan` is the one that was missing. The Hub's Roadmap, Board and Horizon were a
+// separate product behind a "Back to the console" button (`design-system-rails` DD2); audit decision 3 reverses that,
+// so planning is a phase of the loop like the other four: plan it, ship it, measure whether it paid off.
+export type ConsoleSection = 'today' | 'plan' | 'measure' | 'ship' | 'setup'
 
 /**
  * The sections in nav order, with the words the header renders.
@@ -66,10 +70,13 @@ export type ConsoleSection = 'today' | 'measure' | 'ship' | 'setup'
  * argument `lib/shell-nav.ts` makes about the inventory, one level up: a hardcoded list in a
  * component is a duplicate source of truth that drifts the first time a section is renamed.
  */
+// one-header-one-name D1 — in the LOOP's order: Today · Plan · Ship · Measure · Setup. Measure used to sit before Ship;
+// it moves after it because you measure what you shipped (the landing's one-liner: plan, ship and prove it paid off).
 export const CONSOLE_SECTIONS: readonly { id: ConsoleSection; label: string }[] = [
   { id: 'today', label: 'Today' },
-  { id: 'measure', label: 'Measure' },
+  { id: 'plan', label: 'Plan' },
   { id: 'ship', label: 'Ship' },
+  { id: 'measure', label: 'Measure' },
   { id: 'setup', label: 'Setup' },
 ]
 
@@ -174,6 +181,48 @@ export const PROJECT_ROUTE_INVENTORY = [
   // `gate: 'always'` for the same reason its page no longer calls `isConsoleShellEnabled()` — it is
   // the ONLY surface that mints, and a rollback that removed it would leave a project unable to
   // issue any credential at all.
+  // ── one-header-one-name D2 — PLAN: the Hub's three views, as console surfaces ───────────────────────────────────
+  //
+  // The URLs are the Hub's own and do not change (`/hub/<slug>`, `/board`, `/horizon`); what changes is that the header,
+  // the rail and ⌘K now list them, because they read this array. `topLevelProjectRoute: false` — none lives under
+  // `app/<segment>/[projectSlug]`. MEMBER and `always`: the pages gate with `requireDashboardAccess`, which every member
+  // passes, and no flag has ever hidden the Hub. Roadmap is first, so it is Plan's entry (`getSectionEntryHref`).
+  {
+    routeSegment: 'hub',
+    iconKey: 'map-pin',
+    audience: 'member',
+    gate: 'always',
+    status: 'linked',
+    topLevelProjectRoute: false,
+    section: 'plan',
+    label: 'Roadmap',
+    href: (slug: string) => `/hub/${slug}`,
+    description: () => 'where each area is heading',
+  },
+  {
+    routeSegment: 'hub/board',
+    iconKey: 'panels',
+    audience: 'member',
+    gate: 'always',
+    status: 'linked',
+    topLevelProjectRoute: false,
+    section: 'plan',
+    label: 'Board',
+    href: (slug: string) => `/hub/${slug}/board`,
+    description: () => 'every initiative, from an idea to shipped',
+  },
+  {
+    routeSegment: 'hub/horizon',
+    iconKey: 'rocket',
+    audience: 'member',
+    gate: 'always',
+    status: 'linked',
+    topLevelProjectRoute: false,
+    section: 'plan',
+    label: 'Horizon',
+    href: (slug: string) => `/hub/${slug}/horizon`,
+    description: () => 'the end states this product is walking toward',
+  },
   // ── mockups-as-built · Sprint 3, Story 3.1 (epic D14) — MEASURE'S DEFAULT ────────────────────
   //
   // ⚠️ **FIRST among the `measure` rows, and that is what makes it the section's entry.**
@@ -287,6 +336,20 @@ export const PROJECT_ROUTE_INVENTORY = [
     label: 'Scenarios & drills',
     href: (slug: string) => `/app/scenarios/${slug}`,
     description: () => 'read-only drills, impact evidence and protective trips',
+  },
+  // one-header-one-name D2 — the Hub's report, under MEASURE and LAST in it: it is the read of everything above it
+  // (did the work pay off). Named "Outcome report" from birth (audit decision 2); its URL stays the Hub's.
+  {
+    routeSegment: 'hub/report',
+    iconKey: 'book',
+    audience: 'member',
+    gate: 'always',
+    status: 'linked',
+    topLevelProjectRoute: false,
+    section: 'measure',
+    label: 'Outcome report',
+    href: (slug: string) => `/hub/${slug}/report`,
+    description: () => 'what shipped, and whether it mattered',
   },
   // console-ia-overhaul · Sprint 2. The two new Setup destinations, listed BEFORE the routes they
   // replace: inventory order is nav order and rail order, so with the console on these are what

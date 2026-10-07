@@ -354,7 +354,8 @@ test('every row names a seam, and the seam matches the frame', () => {
   for (const row of ROUTE_MANIFEST) {
     if (row.frame === 'console') {
       assert.equal(row.seam, 'product-shell', `${row.route} renders in the console frame`)
-      assert.ok(row.page.startsWith('app/'), `${row.route} is a console route`)
+      // one-header-one-name D11 — `/hub/…` is console too since the Hub moved into `ProductShell` (audit decision 3).
+      assert.ok(row.page.startsWith('app/') || row.page.startsWith('hub/'), `${row.route} is a console route`)
     } else {
       assert.equal(row.seam, 'frame', `${row.route} does not render through ProductShell`)
       assert.equal(row.page.startsWith('app/'), false, `${row.route} is not under /app`)
@@ -364,13 +365,13 @@ test('every row names a seam, and the seam matches the frame', () => {
   const bySeam = (seam: string) => liveRows(3).filter((row) => row.seam === seam).length
   assert.equal(
     bySeam('product-shell'),
-    24, // −1: /app/onboarding retired (connect-page D2)
-    'seam A: the 20 console routes, plus Scheduled, North Star, Setup \u203a CLI access, FinOps and Portfolio'
+    30, // −1: /app/onboarding retired (connect-page D2); +6: the Hub moved in (one-header-one-name D11)
+    'seam A: the 20 console routes, plus Scheduled, North Star, Setup \u203a CLI access, FinOps, Portfolio and the six hub routes'
   )
   assert.equal(
     bySeam('frame'),
-    12,
-    'seam B: six hub routes (the Board tab and the workspace board since board-sinks-and-scrumban) and six doors (/cli/connect since account-from-the-terminal)'
+    6,
+    'seam B: six doors (/cli/connect since account-from-the-terminal); the six hub routes left for seam A (one-header-one-name D11)'
   )
 })
 

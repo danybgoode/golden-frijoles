@@ -5,7 +5,7 @@ import { formatFreshness } from '@/lib/hub-freshness'
 import { deriveHorizon, type DestinationStatus } from '@/lib/horizon-destinations'
 import { Icon } from '@/components/ui/Icon'
 import { EmptyHubState } from '../../hub-components'
-import { HubFrame } from '../../hub-frame'
+import { HubShell } from '../../hub-shell'
 import { Answer, Callout, PageHead } from '@/design-system/primitives'
 
 export const dynamic = 'force-dynamic'
@@ -56,13 +56,13 @@ export default async function HubHorizonPage({ params }: { params: Promise<{ pro
     if (result.reason === 'project_not_found') notFound()
 
     return (
-      <HubFrame projectSlug={projectSlug} tab="horizon">
+      <HubShell projectSlug={projectSlug} tab="horizon">
         <PageHead
           title="Horizon"
           lede="The end states this product is walking toward, and which epics light each one."
         />
         <EmptyHubState projectSlug={projectSlug} />
-      </HubFrame>
+      </HubShell>
     )
   }
 
@@ -74,7 +74,7 @@ export default async function HubHorizonPage({ params }: { params: Promise<{ pro
   const litCount = destinations.filter((d) => d.status === 'lit').length
 
   return (
-    <HubFrame projectSlug={projectSlug} tab="horizon">
+    <HubShell projectSlug={projectSlug} tab="horizon">
       <PageHead
         title="Horizon"
         lede="The end states this product is walking toward, and which epics light each one."
@@ -162,6 +162,6 @@ export default async function HubHorizonPage({ params }: { params: Promise<{ pro
         far along — and a sequence is magnitude. Giving it three hues would say these are three different
         kinds of thing.
       </Callout>
-    </HubFrame>
+    </HubShell>
   )
 }

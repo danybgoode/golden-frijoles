@@ -129,3 +129,23 @@ test('the manifest the public chrome links to actually serves', async ({ page })
     expect(response?.status(), `${path} must still serve`).toBe(200)
   }
 })
+
+// one-header-one-name S1.2 (D4) — the Hub moved into `ProductShell`, and its demo is anonymously readable
+// (`requireDashboardAccess`' allow-list). An anonymous visitor gets the PUBLIC chrome, exactly as on the demo dashboard
+// above — and, because they have no rail, the shell's fallback row carries the Hub's four pages so they can still move
+// between them. `HubFrame`'s "Back to the console" is gone for everybody.
+test('the public demo Hub renders public chrome plus its own pages, never the console', async ({ page }) => {
+  const response = await page.goto('/hub/golden-beans-demo')
+  expect(response?.status(), 'the demo Hub must stay anonymously readable').toBe(200)
+
+  await expect(page.locator('.ds-shell-identity')).toHaveCount(0)
+  await expect(page.locator('.ds-shell-account')).toHaveCount(0)
+  await expect(page.locator('.console-rail')).toHaveCount(0)
+  await expect(page.locator('nav[aria-label="Sections"]')).toHaveCount(0)
+
+  const hubNav = page.locator('nav[aria-label="Hub sections"] a')
+  await expect(hubNav).toHaveText(['Roadmap', 'Board', 'Horizon', 'Outcome report'])
+  await expect(page.locator('nav[aria-label="Hub sections"] a[aria-current="page"]')).toHaveText('Roadmap')
+  await expect(hubNav.nth(1)).toHaveAttribute('href', '/hub/golden-beans-demo/board')
+  await expect(page.getByText('Back to the console')).toHaveCount(0)
+})

@@ -31,13 +31,17 @@ import { GoldenFrijolMark } from '@/components/brand/GoldenFrijolMark'
 //   door    — one centred column, no nav at all. `/login`, `/signup`.
 //   public  — a slim bar: the mark, and the actions a stranger may take. `/install`, `/s/[token]`,
 //             `/talk`, and the designed 404 every dead share link lands on.
-//   hub     — the console's peer (DD2): the same bar, plus its own tier 2. The four `/hub` routes.
+//
+// ⚠️ **There was a fourth, `hub`, and one-header-one-name retired it (D11).** It drew the Hub as the console's PEER —
+// the same bar plus its own tabs and a "Back to the console" button — because `design-system-rails` DD2 kept the Hub
+// out of the header. Audit decision 3 reversed DD2: the Hub's pages render in `ProductShell` under Plan (the report
+// under Measure), so the variant, its tier-2 `nav`, its `scope` and the CSS only it used are gone with it.
 //
 // Same tokens, same type, same buttons, same honest empty and error states in all three. Only the
 // frame changes, and it changes for a reason that fits in one sentence.
 
 /** Which of DD3's frames this page wears. `console` is `ProductShell`'s, and is not reachable here. */
-export type FrameVariant = 'door' | 'public' | 'hub'
+export type FrameVariant = 'door' | 'public'
 
 /**
  * The brand, as this design system draws it.
@@ -70,12 +74,8 @@ function Brand({ href }: { href?: string }) {
 export function Frame({
   variant,
   children,
-  /** The bar's controls, right-aligned. `public` and `hub` only — the door frame has no nav. */
+  /** The bar's controls, right-aligned. `public` only — the door frame has no nav. */
   actions,
-  /** Tier 2. `hub` only: the roadmap / horizon / report strip, supplied by the page that knows it. */
-  nav,
-  /** What the bar names as the thing you are looking at. `hub` only. */
-  scope,
   /** Where the mark points. Omitted means the mark is not a link (see `Brand`). */
   brandHref,
   /** `public` only: the 1080px measure the approved `public-talk` state uses. */
@@ -99,8 +99,6 @@ export function Frame({
   variant: FrameVariant
   children: ReactNode
   actions?: ReactNode
-  nav?: ReactNode
-  scope?: ReactNode
   brandHref?: string
   wide?: boolean
   agentFooter?: boolean
@@ -139,18 +137,12 @@ export function Frame({
 
   return (
     <div className="ds">
-      <div className={`ds-public${variant === 'hub' ? ' ds-public--hub' : ''}`}>
+      <div className="ds-public">
         <header className="ds-pubbar">
           <Brand href={brandHref} />
-          {scope === undefined ? null : <span className="ds-pubbar-scope">{scope}</span>}
           <span className="ds-pubbar-spacer" />
           {actions}
         </header>
-        {nav === undefined ? null : (
-          <nav className="ds-pubnav" aria-label="Hub sections">
-            {nav}
-          </nav>
-        )}
         <main className={`ds-pubwrap${wide ? ' ds-pubwrap--wide' : ''}`}>{children}</main>
         {/* The agent-readable paths `/install` and `/talk` lost with the landing's `<Footer />` —
             the only place either page linked them, and two shipped epics

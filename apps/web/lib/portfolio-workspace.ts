@@ -80,6 +80,15 @@ export function portfolioHrefFor(workspaceId: string): string {
 }
 
 /**
+ * The board across every product of one workspace (one-header-one-name D6) — the switcher offers it beside Portfolio,
+ * under the same `PORTFOLIO_MIN_PRODUCTS` condition. The page re-reads the viewer's workspaces and projects itself
+ * (`getWorkspaceProjects`); this only builds the address.
+ */
+export function workspaceBoardHrefFor(workspaceId: string): string {
+  return `/hub/w/${encodeURIComponent(workspaceId)}/board`
+}
+
+/**
  * The loop-stage action reports a refusal or a failed save back to the page under this parameter (S2.3). Only these
  * values render anything; any other value is ignored, so a hand-typed URL can show at most one of these two sentences.
  */

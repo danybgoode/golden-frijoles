@@ -4,7 +4,7 @@ import { getUserWorkspaces, getWorkspaceProjects } from '@/lib/workspace'
 import { getHubRoadmapByProjectId } from '@/lib/hub-query'
 import { boardQuery, buildBoard, hasStages, parseBoardFilters, type BoardCard } from '@/lib/hub-board'
 import type { RoadmapRow } from '@/lib/roadmap-artifact-schema'
-import { Frame } from '@/design-system/Frame'
+import { ProductShell } from '@/components/product/ProductShell'
 import { BoardView } from '../../../[projectSlug]/board/board-components'
 
 export const dynamic = 'force-dynamic'
@@ -81,61 +81,59 @@ export default async function WorkspaceBoardPage({
   )
 
   return (
-    <Frame
-      variant="hub"
-      brandHref="/app"
-      scope={workspace.name}
-      actions={
-        <a className="ds-btn ds-btn--secondary ds-btn--sm" href="/app">
-          Back to the console
-        </a>
-      }
-      nav={
-        <a href={base} aria-current="page">
-          Board
-        </a>
-      }
+    // one-header-one-name D5 — inside the console, Plan current. The shell names a project of THIS workspace (the
+    // filter, else the first `getWorkspaceProjects` returned) so the header and rail describe where the viewer is; it is
+    // a hint `getShellNav` matches against the viewer's own memberships, never an authorization input. No rail item is
+    // current: this board is no single project's. With no project of this workspace to name, it names NONE (Today alone,
+    // `defaultToFirstProject={false}`) rather than the viewer's first project, which may sit in another workspace.
+    <ProductShell
+      projectSlug={firstProject ?? undefined}
+      section="plan"
+      railActive={null}
+      defaultToFirstProject={false}
     >
-      <BoardView
-        board={board}
-        filters={filters}
-        base={base}
-        freshness={null}
-        version={null}
-        showAnswer={false}
-        lede={`Every initiative in ${workspace.name}, from an idea to shipped, across the projects you belong to.`}
-        action={
-          firstProject ? (
-            <a className="ds-btn ds-btn--primary" href={`/hub/${encodeURIComponent(firstProject)}/board`}>
-              Open a project&apos;s board
-            </a>
-          ) : undefined
-        }
-        leadingChips={[
-          projectChip('All projects', null),
-          ...projects.map((p) => projectChip(p.slug, p.slug)),
-        ]}
-        carry={carry}
-        cardHref={(card: BoardCard) =>
-          `/hub/${encodeURIComponent(card.project ?? '')}/board?card=${encodeURIComponent(card.slug)}`
-        }
-        note={
-          projects.length === 0 ? (
-            <p className="ds-hint">
-              No projects of this workspace were found for you: either you belong to none of them yet, or the
-              list could not be read just now. Reload to try again, or open a project from the console.
-            </p>
-          ) : (
-            <p className="ds-hint">
-              Every project in this workspace that you belong to. Filter by project. {withBoard} of{' '}
-              {shown.length} project
-              {shown.length === 1 ? ' has' : 's have'} pushed a board; a project with none yet shows nothing
-              here until it does (
-              <code className="ds-mono">npx -y @golden-frijoles/kit roadmap-extract --sink hub</code>).
-            </p>
-          )
-        }
-      />
-    </Frame>
+      <main>
+        <BoardView
+          board={board}
+          filters={filters}
+          base={base}
+          freshness={null}
+          version={null}
+          showAnswer={false}
+          lede={`Every initiative in ${workspace.name}, from an idea to shipped, across the projects you belong to.`}
+          action={
+            firstProject ? (
+              <a className="ds-btn ds-btn--primary" href={`/hub/${encodeURIComponent(firstProject)}/board`}>
+                Open a project&apos;s board
+              </a>
+            ) : undefined
+          }
+          leadingChips={[
+            projectChip('All projects', null),
+            ...projects.map((p) => projectChip(p.slug, p.slug)),
+          ]}
+          carry={carry}
+          cardHref={(card: BoardCard) =>
+            `/hub/${encodeURIComponent(card.project ?? '')}/board?card=${encodeURIComponent(card.slug)}`
+          }
+          note={
+            projects.length === 0 ? (
+              <p className="ds-hint">
+                No projects of this workspace were found for you: either you belong to none of them yet, or
+                the list could not be read just now. Reload to try again, or open a project from the console.
+              </p>
+            ) : (
+              <p className="ds-hint">
+                Every project in this workspace that you belong to. Filter by project. {withBoard} of{' '}
+                {shown.length} project
+                {shown.length === 1 ? ' has' : 's have'} pushed a board; a project with none yet shows nothing
+                here until it does (
+                <code className="ds-mono">npx -y @golden-frijoles/kit roadmap-extract --sink hub</code>).
+              </p>
+            )
+          }
+        />
+      </main>
+    </ProductShell>
   )
 }

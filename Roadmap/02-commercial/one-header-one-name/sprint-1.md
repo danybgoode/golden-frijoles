@@ -3,7 +3,7 @@ epic: one-header-one-name
 sprint: 1
 title: "One header"
 risk: low
-phase: Shaping
+phase: Building
 stories_total: 3
 stories:
   - id: S1.1
@@ -72,6 +72,15 @@ In `ProductShell`'s switcher, under each workspace with two or more products, "B
 - With two products in a workspace, the switcher's top shows Portfolio and Board across all products.
 - With one product, neither shows.
 **Risk:** low
+
+## Build contract (locked by the architect before the builder started)
+Cites the epic README's D1–D13; nothing here restates them.
+- **1.1** = D1 + D2. Files: `lib/project-route-inventory.ts` (+ its test), `lib/console-shell.test.ts`.
+- **1.2** = D3 + D4 + D11. Files: every `app/hub/**/page.tsx`, new `app/hub/hub-shell.tsx`, `ProductShell.tsx`
+  (`fallbackNav`), `app/hub/hub-frame.tsx` deleted, `design-system/route-manifest.ts` (+ test), `APPROVED.md` DD2,
+  `design-system-rails/README.md`, the specs that read the old frame.
+- **1.3** = D5 + D6. Files: `app/hub/w/[workspaceId]/board/page.tsx`, `ProductShell.tsx`, `lib/portfolio-workspace.ts`.
+- Out: every label rename (S2.2 — S1 adds the new rows with their final names and renames nothing else).
 
 ## Sprint QA
 - **api spec(s):** S1.1 → `route-manifest.test.ts`, `surface-map.test.ts`; S1.2 → `console-shell.authed.spec.ts` and

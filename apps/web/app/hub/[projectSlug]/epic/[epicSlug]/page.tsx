@@ -5,7 +5,7 @@ import { formatFreshness } from '@/lib/hub-freshness'
 import { isRoadmapStatusShipped } from '@/lib/roadmap-artifact-schema'
 import { epicFinops, quoteActualLine } from '@/lib/roadmap-finops'
 import { EmptyHubState, HubProvenance } from '../../../hub-components'
-import { HubFrame } from '../../../hub-frame'
+import { HubShell } from '../../../hub-shell'
 import { Answer, Callout, Crumbs, Crumb, PageHead, Pill, Tag, Tile, Tiles } from '@/design-system/primitives'
 
 export const dynamic = 'force-dynamic'
@@ -38,12 +38,12 @@ export default async function HubEpicDrilldownPage({
     // state as the journey view, not a bare 404 — a 404 here would read as "this epic doesn't
     // exist", when the real story is "nothing has been pushed at all".
     return (
-      <HubFrame projectSlug={projectSlug} tab="roadmap">
+      <HubShell projectSlug={projectSlug} tab="roadmap">
         <Crumbs back={{ href: hubHref, label: 'Roadmap' }}>
           <Crumb mono>{epicSlug}</Crumb>
         </Crumbs>
         <EmptyHubState projectSlug={projectSlug} />
-      </HubFrame>
+      </HubShell>
     )
   }
 
@@ -58,7 +58,7 @@ export default async function HubEpicDrilldownPage({
   const finopsLine = quoteActualLine(epicFinops(epic))
 
   return (
-    <HubFrame projectSlug={projectSlug} tab="roadmap">
+    <HubShell projectSlug={projectSlug} tab="roadmap">
       <Crumbs back={{ href: hubHref, label: 'Roadmap' }}>
         <Crumb mono>{epic.slug}</Crumb>
       </Crumbs>
@@ -149,6 +149,6 @@ export default async function HubEpicDrilldownPage({
         frontmatter and its sprint files. Nothing on this page is ticked by hand — which is the only reason it
         can be trusted about work nobody is watching.
       </Callout>
-    </HubFrame>
+    </HubShell>
   )
 }

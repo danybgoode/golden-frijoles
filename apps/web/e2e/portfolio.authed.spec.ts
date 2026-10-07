@@ -114,6 +114,20 @@ test('2+ products: bare /app opens on the portfolio — one row per product of m
       'href',
       /\/app\/portfolio\?workspace=/
     )
+    // one-header-one-name S1.3 (D6) — the board across all products sits beside Portfolio, in the same group, and
+    // opens the workspace board of THIS workspace.
+    const portfolioGroup = page.locator('.ds-shell-menu section', {
+      has: page.locator('[data-portfolio-entry]'),
+    })
+    await expect(portfolioGroup.locator('[data-workspace-board-entry]')).toHaveText(
+      'Board across all products'
+    )
+    const boardHref = await portfolioGroup.locator('[data-workspace-board-entry]').getAttribute('href')
+    const workspaceId = new URL(
+      (await page.locator('[data-portfolio-entry]').getAttribute('href'))!,
+      'http://x'
+    ).searchParams.get('workspace')
+    expect(boardHref).toBe(`/hub/w/${workspaceId}/board`)
     await expect(main).not.toContainText(sibling.slug)
 
     // The approved columns, in order.

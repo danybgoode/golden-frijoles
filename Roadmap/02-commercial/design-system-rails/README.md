@@ -136,6 +136,10 @@ uses `↗`, a glyph `check-design-drift.mjs` bans inside `/app`. F2: `/s/[token]
 by design, which corrected `sprint-6.md`. F3: one epic has no `build_order`, so the sequence runs to
 26 across 27 epics.
 
+> **2026-10-06 — DD2 reversed.** This epic kept the Hub out of the header (DD2, recorded in
+> `apps/web/design-system/APPROVED.md`). Audit decision 3 reversed it: `one-header-one-name` put the Hub's pages in the
+> console under Plan (the report under Measure) and retired `Frame`'s `hub` variant. See that epic's D1–D4 and D11.
+
 ## Decisions — 🔒 LOCKED 2026-08-29
 
 > Locked against the live code on `main` (`7e43414`), the live production database

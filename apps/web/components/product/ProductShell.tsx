@@ -16,7 +16,7 @@ import { AgentRail } from './AgentRail'
 import { ConsoleRail } from './ConsoleRail'
 import { CommandPalette } from './CommandPalette'
 import { ShellErrorBoundary } from './ShellErrorBoundary'
-import { PORTFOLIO_MIN_PRODUCTS, portfolioHrefFor } from '@/lib/portfolio-workspace'
+import { PORTFOLIO_MIN_PRODUCTS, portfolioHrefFor, workspaceBoardHrefFor } from '@/lib/portfolio-workspace'
 
 /**
  * Product chrome is rendered inside each page after its auth/flag guard resolves.
@@ -54,6 +54,8 @@ export async function ProductShell({
   section,
   railTop,
   railActive,
+  fallbackNav,
+  defaultToFirstProject,
 }: {
   children: React.ReactNode
   projectSlug?: string
@@ -78,11 +80,26 @@ export async function ProductShell({
    * compile error instead of a blank rail — the same reasoning as `iconKey` in Story 2.4.
    */
   railActive: ProjectRouteSegment | null
+  /**
+   * one-header-one-name D4 — a tier-2 nav for a render that has NO rail, and only then.
+   *
+   * The Hub's pages let two viewers in who are not members of the project they show: an anonymous visitor on the
+   * demo project (`requireDashboardAccess`' allow-list → `getShellNav` returns the PUBLIC chrome) and a signed-in
+   * member of something else (a header holding Today alone). Neither gets a rail, so without this they would land on
+   * the Roadmap with no way to its Board, Horizon or report — the tabs `HubFrame` used to draw. A member never sees
+   * it: they have the rail, which lists the same pages.
+   */
+  fallbackNav?: React.ReactNode
+  /** Passed to `getShellNav` — see its `options`. Only the workspace board sets it (`false`). */
+  defaultToFirstProject?: boolean
 }) {
   const { activeProject, projects, links, header, userEmail, userName } = await getShellNav(
     projectSlug,
-    section
+    section,
+    { defaultToFirstProject }
   )
+  const rail = header === null ? [] : railLinksFor(section, links)
+  const showFallbackNav = fallbackNav !== undefined && rail.length === 0
 
   return (
     // `is-console` is set by the SAME field that decides whether console chrome renders at all,
@@ -124,9 +141,9 @@ export async function ProductShell({
     //                  because the page body inside it does, session or no session.
     //   `is-console` — this is the console: `console.css` applies, and the console chrome is there.
     //
-    // Those two anonymous demo dashboards are the ONLY renders this changes, and they are precisely
-    // the two routes Story 5.3 rebuilds — verified by enumerating the allow-list. Nothing else
-    // reaches this component without a session.
+    // Those two anonymous demo dashboards were the ONLY renders this changed when it was written. Since
+    // one-header-one-name S1.2 the demo project's Hub pages reach this component without a session too
+    // (`requireDashboardAccess`' allow-list), and get the same public chrome plus the Hub's `fallbackNav`.
     // ⚠️ **TWO elements, and the nesting is required rather than stylistic.**
     // `system-cascade.test.ts` asserts that every selector in `system.css` is `.ds` itself or a
     // DESCENDANT of it — a compound `.ds.ds-shell` scores the same (0,2,0) and still fails, because
@@ -345,6 +362,18 @@ export async function ProductShell({
                                   </a>
                                 </li>
                               ) : null}
+                              {/* one-header-one-name D6 — the board across all of them, beside Portfolio and under the
+                                same condition: with one product it is that product's own board, already in Plan. */}
+                              {group.projects.length >= PORTFOLIO_MIN_PRODUCTS ? (
+                                <li>
+                                  <a
+                                    href={workspaceBoardHrefFor(group.workspace.id)}
+                                    data-workspace-board-entry
+                                  >
+                                    <span>Board across all products</span>
+                                  </a>
+                                </li>
+                              ) : null}
                               {group.projects.map((project) => (
                                 <li key={project.slug}>
                                   <a href={project.href} aria-current={project.current ? 'true' : undefined}>
@@ -428,6 +457,11 @@ export async function ProductShell({
             ))}
           </nav>
         ) : null}
+        {showFallbackNav ? (
+          <nav aria-label="Hub sections" className="ds-shell-tabs" data-fallback-nav>
+            {fallbackNav}
+          </nav>
+        ) : null}
         <div className="ds-shell-body">
           {/*
           Story 1.4 — the per-section rail. FIRST in the DOM, unlike the agent rail below: this is
@@ -440,7 +474,7 @@ export async function ProductShell({
         */}
           {header !== null && (
             <ConsoleRail
-              links={railLinksFor(section, links)}
+              links={rail}
               top={railTop}
               activeSegment={railActive}
               label={section === 'today' ? undefined : `In ${section[0].toUpperCase()}${section.slice(1)}`}
