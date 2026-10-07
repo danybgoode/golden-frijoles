@@ -25,7 +25,15 @@ stories:
 
 **Status:** ⬜ not started
 
-## Stories
+## Build contract (locked by the architect before the builder started)
+Cites README D1, D6–D10, D12–D13; it restates none of them.
+- `gates.md` gains the `gate strategy` block (D6). Setup's `golden-frijoles/SKILL.md` Stage 2 routes the idea path
+  through it; the three coaches' *Status* lines and `risk-validation`'s hand-off follow D7.
+- New `skills/scripts/check-gate-words.mjs` + `check-gate-words.test.mjs` (D9): a failing fixture (a gate block with
+  "approve (fund + scaffold)") and a passing one; wired into `skills/.github/workflows/ci.yml` (re-rendered with
+  `node scripts/render-skills-ci.mjs`) and the root `ci.yml` static gate with `--also` for the root copies.
+- Release 0.36.0 (D12). Done = skills CI + root CI green, the D13 walk (fixture strategy files) in the PR.
+
 <!-- Keep the heading shape `### Story 2.M — <title>`. When a story ships, append ✅ + its commit ref.
      The epic README frontmatter `status:` is the AUTHORITATIVE epic status. -->
 

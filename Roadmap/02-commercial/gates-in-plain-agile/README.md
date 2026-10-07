@@ -1,7 +1,8 @@
 ---
 status: scaffolded   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Shaping       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+phase: Building       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
+locked_at: "2026-10-07T18:38:23Z"
 slug: gates-in-plain-agile
 title: "Gates in plain agile"
 area: 02-commercial
@@ -48,6 +49,96 @@ after launch. Moves: grounded_bets_share · Tests: Value proposition.
 ## Platform-first note
 No runtime change. The gates are text the skills print; the records behind them (`fund.mjs`'s cycle row,
 `underwritten_by`, `status: agreed`, the scaffold) stay exactly as they are. Only what a person reads changes.
+
+## Architecture lock (2026-10-07, verified against live code and live data)
+
+**Live facts read before the lock.** The Plan gate's words live in three places today: groom `SKILL.md` Stage 7.1
+(the Bet block and "approve (fund + scaffold) · approve, don't fund · change something"), `references/funding.md` (the
+Bet block, verbatim) and the WAYS-OF-WORKING template (§ Betting & appetite, "approve, don't fund") plus the three
+`SESSION-KICKOFFS.md` copies (root, `skills/Roadmap/`, `skills/template/Roadmap/`), which already differ from each other
+in other sections and have no parity check. Groom `SKILL.md` is at **exactly** its 210-line prose budget (skills CI), so
+anything added there must be moved out. The canvas (private, read 2026-10-07: `Gates`, `PlanGate`, `StrategyGate`,
+`Approved`) is the design source. **No flag is created at grooming** (`kill-switch.md`: a flag is a user story), there is
+**no email digest** (the scheduled reports post to Telegram only, setup's *Notify setup*), there are **no one-pagers**
+(that is `coaches-v2`), and the epic page is `/hub/<project>/epic/<slug>` (live route), whose base the config already
+holds as `board.hubUrl` (`null` by default). A North Star input carries its event only in the sync payload
+(`"valueSource": "telemetry_event"`, `"sourceEvent"`), which `strategy.mjs` parses today but drops.
+
+- **D1 — One home: `groom/references/gates.md`.** It holds the shape (Read it · Decided for you · Only you decide, two or
+  three · numbered options), the screen-word table (On screen | Behind it, files keep these | Never on screen), the
+  retired-options table (Was | Now), and the three gates as fenced blocks: ```` ```gate strategy ````, ```` ```gate plan ````,
+  ```` ```gate build ````. Groom Stage 7/8, `funding.md`, setup's routing and the three coaches **point** to it; none
+  restate a gate. Groom `SKILL.md` stays ≤ 210 prose lines: the Bet block and the Stage 8 hand-off move out.
+- **D2 — The Plan gate is the canvas PlanGate.** In order: the plan's path (the seed, as a path); "We bet that <the
+  seed's `hypothesis`>." (no hypothesis → the problem in one sentence; never invented); then aligned lines — Moves (the
+  target metric's name, "(your North Star input)" when grounded; omitted with no target), Target (from → to), Read date
+  (`read_date`, or "30 days after it ships"), Size (appetite and the quote, "about $lo–hi of agent time"), Sprints (titles
+  and the user-story count), Flag (`flag_key`, or "none: <why>"), Measured by (D4); "Decisions only you can make" (the
+  two or three still open; none → the line is left out); then **1 Approve the plan · 2 Park it (it stays in the backlog,
+  groomed) · 3 Change something**; then "What this pushes back: <what waits>. It builds next | after <title>." The
+  budget line follows, unchanged.
+- **D3 — Park it is "approve, don't fund", word for word in behaviour.** The seed stays `status: ready`; `fund.mjs` and
+  `scaffold-epic.mjs` do not run. **Approve the plan** runs exactly today's sequence: `fund.mjs --displaced "<what waits>"
+  --next | --after <slug>`, then `scaffold-epic.mjs`, then the one path-scoped commit. The cycle file is chosen by
+  `fund.mjs` from the month, as today, and is never shown. `fund.mjs`, `scaffold-epic.mjs` and every key they write are
+  unchanged (`scaffold-epic`'s commit message `plan(<slug>): fund + scaffold epic` is a git record and stays).
+- **D4 — "Measured by" comes from the North Star file, never from the agent.** `strategy.mjs` keeps `sourceEvent` on
+  each input whose `valueSource` is `telemetry_event` and prints it on the inputs line (`key ("name", event x)`), with a
+  test. The gate shows the line only when `target_metric` is such an input; otherwise it is left out. This is the
+  epic's one script change in S1.
+- **D5 — The Build gate is the canvas Approved, with two corrections.** "✓ Plan approved: <title>", its sprints and
+  user stories in `<epic dir>`, committed; **Flag: "planned: <key>, on | off when it ships. One user story creates it"** — not
+  "created" (groom creates no flag, D11), and on or off from Stage 6b's polarity: a kill switch ships on, an enablement
+  flag off (*amended at review of #302: the lock said "off", which is false for a kill switch*). "Start building whenever you're ready: `/build <slug>`" (Claude Code with the plugin;
+  anywhere else the kit's `emit-epic-kickoff` command, as a command). "Follow it here: `<board.hubUrl>/epic/<slug>`"
+  only when `board.hubUrl` is set. Optional items **only when missing**, each detected by a command: gh (`command -v
+  gh` → not installed, `gh auth status` → not signed in), Codex (`command -v codex`), Digest = **the Telegram report** (missing when `TELEGRAM_BOT_TOKEN` is in neither
+  the environment nor `.env.local`: a key-name check, never the value; the fix is setup's *Notify setup*), Claude app
+  (only when the project is linked to Golden Frijoles: "the console's Setup has your link"; no detection, so it is a
+  line, never an option). Options: **1 Start building now · 2 <the first missing item> · 3 Later**; nothing missing →
+  **1 Start building now · 2 Later**. Groom stays planning-only: "Start building now" tells the person to type
+  `/build <slug>` (or prints the kit command's output elsewhere), as Stage 8 does today.
+- **D6 — The Strategy gate is the canvas StrategyGate, in setup's idea route.** Setup Stage 2 (`idea`/`plan` → "the
+  strategy coaches first") offers the strategy step; the agent writes the three files from the conversation and the repo
+  (each coach's template and its write rules, `status: draft`), then shows the gate: Read them (`Roadmap/00-strategy/`,
+  the file count; the one-pagers line is left out until `coaches-v2` makes them); Decided from the repo (the problem,
+  the promise, how you charge, from what the files say); up to three decisions (who first, the North Star, the riskiest
+  assumption); "Answer them here, or:" **1 Approve the strategy · 2 Change something · 3 Coach me through it, one piece
+  at a time**. Approve sets `status: agreed` in each file's frontmatter, nothing else; Change leaves `draft` and revises
+  in place; Coach me runs `pmf-narrative` → `north-star` → `risk-validation` in their full step-by-step mode, then shows
+  the gate again. The canvas says `Roadmap/strategy/` and "goes to the top of your Home": the folder keeps its name
+  (no-go) and nothing is sent to the engine (the North Star sync stays the person's own step), so neither is claimed.
+- **D7 — The coaches never ask to mark a file agreed.** Each coach's *Status* line: write `status: draft`, and approval
+  happens at the Strategy gate (groom `references/gates.md`). Overwriting a file already approved still shows what would
+  change and asks first. `risk-validation`'s hand-off shows the Strategy gate when any strategy file is not yet approved,
+  then offers grooming.
+- **D8 — The screen words.** On screen: Epic, Sprint, User story, Approve, Park it, Backlog → Grooming → Ready →
+  Building → QA → Shipped, Proven · Disproven · Unclear, Flag, "What this pushes back", Start building. Never on screen:
+  **fund, scaffold, underwritten, displaced, cycle, kickoff, epic mode, agreed, draft** (and their inflections). "Bet"
+  may appear only as "We bet that …". The words are checked inside gate blocks only; inline code (paths, keys, values,
+  commands) and `<placeholders>` are exempt, so `Roadmap/00-ideas/seeds/…` and `status: agreed` stay legal.
+- **D9 — The check: `skills/scripts/check-gate-words.mjs` + its test** (plugin-repo tooling; it does not ship to
+  projects). (a) The never-on-screen list is parsed from `gates.md`'s table, never restated in code; (b) no gate block
+  in a scanned file contains one; (c) no scanned file contains a retired option (`gates.md`'s Was column) outside that
+  table; (d) a gate block with the same name in two files must be byte-identical. Scanned: every `*.md` under
+  `plugins/`, `template/Roadmap/`, `kit/dist/skeleton/` and `skills/Roadmap/`; `--also <path>` adds the root repo's
+  `Roadmap/WAYS-OF-WORKING.md`, `WAYS-OF-WORKING.template.md` and `SESSION-KICKOFFS.md`. Wired into
+  `skills/.github/workflows/ci.yml` (then `node scripts/render-skills-ci.mjs`) and the root `ci.yml` static gate.
+- **D10 — The copies.** The WAYS-OF-WORKING template says "Approve the plan" and "Park it" where it names the options;
+  the records it explains (the cycle row, `underwritten_by`) stay, because that doc explains the files, not the screen.
+  Then re-render: `skills/Roadmap/`, the root `Roadmap/` (`render-ways-of-working.mjs` in both, the root template
+  `cmp`-equal to the skills one) and the kit skeleton (`build-kit.mjs`). The three `SESSION-KICKOFFS.md` copies change
+  the same lines the same way (the option names and the "Park it" phrase); their other differences are left alone.
+- **D11 — Records and the product are untouched.** No `apps/web` change, no migration, no flag, no new state, no new
+  step. File values, keys, folders and script names stay.
+- **D12 — Release.** S1 ships plugin + kit **0.35.0**, S2 **0.36.0**, each with its `CHANGELOG.md` section
+  (`skills/RELEASING.md`); the template and skeleton copies ride in the same release.
+- **D13 — The "groom run on a fixture seed".** No harness drives a skill end to end in CI. Each PR records a builder
+  walk in a scratch repo with a fixture seed (and, in S2, fixture strategy files): the gates as printed, and for Park it
+  the seed's `status:` and `git status` before and after. The interactive walkthrough stays owed to Daniel.
+- **D14 — Routing.** Low risk, prose-heavy, one builder: the architect (Claude) builds both sprints in place (the only
+  session in this checkout), stacked `feat/gates-in-plain-agile` → `-s2`. Review per PR through
+  `review-route.mjs --builder claude`.
 
 ## What already exists (reuse, don't rebuild)
 - `skills/plugins/golden-frijoles/skills/groom/SKILL.md` (Stages 7 and 8), `groom/references/funding.md` (the Bet
