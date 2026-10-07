@@ -64,7 +64,8 @@ test('the guard bans exactly the words this module retired', () => {
 // The inventory takes no runtime import, so its nav labels are literals; this is what keeps them the module's words.
 test('the nav labels are the settled words', async () => {
   const { PROJECT_ROUTE_INVENTORY } = await import('./project-route-inventory.ts')
-  const label = (segment: string) => PROJECT_ROUTE_INVENTORY.find((row) => row.routeSegment === segment)?.label
+  const label = (segment: string) =>
+    PROJECT_ROUTE_INVENTORY.find((row) => row.routeSegment === segment)?.label
   assert.equal(label('flags'), SCREEN_WORDS.flags)
   assert.equal(label('experiments'), SCREEN_WORDS.abTests)
   assert.equal(label('tasks'), SCREEN_WORDS.agentQueue)

@@ -5,7 +5,7 @@
 
 # Build order — the six stages
 
-> **Generated 2026-10-06 — do not hand-edit.** One stage per initiative, decided in one place
+> **Generated 2026-10-07 — do not hand-edit.** One stage per initiative, decided in one place
 > (`scripts/lib/stage.mjs`): To groom · Grooming · Ready to build · Building · QA · Shipped.
 > This committed file reads the docs alone, so **Building and QA are not here** — they are facts git
 > and GitHub hold. For the live board run `node scripts/build-order.mjs --live`, or open the Hub board.
@@ -33,7 +33,7 @@ _a pitch is waiting at the approval gate._
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
 - [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #63 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
-- [One header and one name per thing](../02-commercial/one-header-one-name/README.md) — #64 · 02 Commercial · 0/6 stories · risk: Low · appetite M · _docs: status in-progress_
+- [One header and one name per thing](../02-commercial/one-header-one-name/README.md) — #64 · 02 Commercial · 3/6 stories · risk: Low · appetite M · _docs: status in-progress_
 - [The result record](../02-commercial/result-record/README.md) — #65 · 02 Commercial · 0/6 stories · risk: Low · appetite M · _docs: status scaffolded_
 - [One epic page](../02-commercial/one-epic-page/README.md) — #66 · 02 Commercial · 0/6 stories · risk: Low · appetite M · _docs: status scaffolded_
 - [Outcome report v2](../02-commercial/outcome-report-v2/README.md) — #67 · 02 Commercial · 0/6 stories · risk: Low · appetite M · _docs: status scaffolded_
