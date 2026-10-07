@@ -182,6 +182,9 @@ const roadmapRowSchema = z
       .regex(/^[a-z][a-z0-9_.-]{0,127}$/, {
         message: 'flag_key must be a flag key (a-z first, then a-z 0-9 _ . -)',
       })
+      // The STRING "null" fits the grammar but means "no flag" in the frontmatter — the extract already sends it as null
+      // (`flagFields`); a hand-written push saying it is refused rather than drawn as "Flag null not found" (codex, #297).
+      .refine((key) => key !== 'null', { message: 'flag_key: write null, not the string "null"' })
       .nullish(),
     flag_note: z.string().max(300).nullish(),
   })

@@ -354,7 +354,7 @@ test('a push carrying flag_key and flag_note stores them; null and absent both p
 })
 
 test('a flag_key that is not a flag key is refused, naming the field', () => {
-  for (const bad of ['Auth.Enabled', '2fa_enabled', 'has space', '']) {
+  for (const bad of ['Auth.Enabled', '2fa_enabled', 'has space', '', 'null']) {
     const res = parseRoadmapPush(push({ items: [row({ flag_key: bad } as unknown as Partial<RoadmapRow>)] }))
     assert.equal(res.ok, false, bad)
     if (!res.ok) assert.match(JSON.stringify(res.issues), /flag_key/)
