@@ -12,25 +12,25 @@ stories:
     i_want: "every gate to have the same shape"
     so_that: "I always know what to read and what I'm deciding"
     risk: low
-    status: planned
+    status: done
   - id: S1.2
     title: "The Plan gate, in plain words"
     as_a: "a founder approving a plan"
     i_want: "the gate in plain words with the bet in it"
     so_that: "I approve without learning ours"
     risk: low
-    status: planned
+    status: done
   - id: S1.3
     title: "The Build gate"
     as_a: "a founder who just approved"
     i_want: "to be told what was created and the one command to start"
     so_that: "I start building without reading docs"
     risk: low
-    status: planned
+    status: done
 ---
 # Gates in plain agile — Sprint 1: The Plan and Build gates
 
-**Status:** ⬜ not started
+**Status:** 🟡 in review — #302
 
 ## Build contract (locked by the architect before the builder started)
 Cites README D1–D5, D8, D11–D14; it restates none of them.
@@ -46,7 +46,7 @@ Cites README D1–D5, D8, D11–D14; it restates none of them.
 <!-- Keep the heading shape `### Story 1.M — <title>`. When a story ships, append ✅ + its commit ref.
      The epic README frontmatter `status:` is the AUTHORITATIVE epic status. -->
 
-### Story 1.1 — One shape for every gate
+### Story 1.1 — One shape for every gate ✅ d35df58
 **As** a founder, **I want** every gate to have the same shape, **so that** I always know what to read and what I'm
 deciding.
 `groom/references/gates.md`, the one home of the shape: where to read it (a path, and the console link when signed
@@ -55,10 +55,11 @@ the screen-word table: what a person reads (Epic, Sprint, User story, Approve, P
 Disproven · Unclear, Flag) next to the file value it maps to (`underwritten_by`, `status: agreed`, `fund.mjs`, …).
 Other skills point to it; none restate it.
 **Acceptance:**
-- The reference exists and the groom, setup and coach skills point to it.
+- The reference exists and the groom skill points to it; setup and the coaches point to it with the Strategy gate
+  in sprint 2 (lock D1, D6, D7: their pointer lands where their gate does).
 **Risk:** low
 
-### Story 1.2 — The Plan gate, in plain words
+### Story 1.2 — The Plan gate, in plain words ✅ 11915bf
 **As** a founder approving a plan, **I want** the gate in plain words with the bet in it, **so that** I approve
 without learning ours.
 Groom Stage 7 and `references/funding.md` render the canvas PlanGate: the plan's path; "We bet that …"; Moves · Target
@@ -71,7 +72,7 @@ unchanged.
 - No fund, scaffold, underwritten, displaced, cycle or position on screen.
 **Risk:** low
 
-### Story 1.3 — The Build gate
+### Story 1.3 — The Build gate ✅ efc1a5c
 **As** a founder who just approved, **I want** to be told what was created and the one command to start, **so that**
 I start building without reading docs.
 After the scaffold (Stage 8), the canvas Approved shape: "Plan approved: <title>", what was created (its sprints,

@@ -87,11 +87,12 @@ holds as `board.hubUrl` (`null` by default). A North Star input carries its even
   test. The gate shows the line only when `target_metric` is such an input; otherwise it is left out. This is the
   epic's one script change in S1.
 - **D5 — The Build gate is the canvas Approved, with two corrections.** "✓ Plan approved: <title>", its sprints and
-  user stories in `<epic dir>`, committed; **Flag: "planned: <key> (one user story creates it, off)"** — not "created"
-  (groom creates no flag, D11). "Start building whenever you're ready: `/build <slug>`" (Claude Code with the plugin;
+  user stories in `<epic dir>`, committed; **Flag: "planned: <key>, on | off when it ships. One user story creates it"** — not
+  "created" (groom creates no flag, D11), and on or off from Stage 6b's polarity: a kill switch ships on, an enablement
+  flag off (*amended at review of #302: the lock said "off", which is false for a kill switch*). "Start building whenever you're ready: `/build <slug>`" (Claude Code with the plugin;
   anywhere else the kit's `emit-epic-kickoff` command, as a command). "Follow it here: `<board.hubUrl>/epic/<slug>`"
-  only when `board.hubUrl` is set. Optional items **only when missing**, each detected by a command: gh (`gh auth
-  status`), Codex (`command -v codex`), Digest = **the Telegram report** (missing when `TELEGRAM_BOT_TOKEN` is in neither
+  only when `board.hubUrl` is set. Optional items **only when missing**, each detected by a command: gh (`command -v
+  gh` → not installed, `gh auth status` → not signed in), Codex (`command -v codex`), Digest = **the Telegram report** (missing when `TELEGRAM_BOT_TOKEN` is in neither
   the environment nor `.env.local`: a key-name check, never the value; the fix is setup's *Notify setup*), Claude app
   (only when the project is linked to Golden Frijoles: "the console's Setup has your link"; no detection, so it is a
   line, never an option). Options: **1 Start building now · 2 <the first missing item> · 3 Later**; nothing missing →
