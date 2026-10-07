@@ -66,7 +66,7 @@ const COMMANDS: Record<BoardCard['stage'], (card: BoardCard, product: string) =>
       // where it exists.
       {
         label: 'Resume a session that died',
-        text: `Resume the ${card.slug} epic in ${p} where its last session stopped`,
+        text: `Resume the ${card.slug} ${card.grain === 'Epic' ? 'epic' : 'work'} in ${p} where its last session stopped`,
         shorthand: 'Resume',
       },
       ...(card.grain === 'Epic' && n !== null
