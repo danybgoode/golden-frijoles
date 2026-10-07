@@ -40,10 +40,9 @@ test('the copies agree with the scripts: the day rule and the verdict words', ()
   assert.equal(READ_CAP_DAYS, constant(dates, 'READ_CAP_DAYS'))
   const m = source('roadmap-contract.mjs').match(/export const VERDICTS = \[([^\]]+)\]/)
   assert.ok(m, 'VERDICTS not found in scripts/lib/roadmap-contract.mjs')
-  assert.deepEqual(
-    [...ROADMAP_VERDICTS],
-    [...m[1].matchAll(/'([^']+)'/g)].map((x) => x[1])
-  )
+  const words = [...m[1].matchAll(/'([^']+)'/g)].map((x) => x[1])
+  assert.deepEqual([...ROADMAP_VERDICTS], words, 'the push schema')
+  assert.deepEqual([...RESULT_VERDICTS], words, 'the Hub reader')
 })
 
 test('a read verdict: the bean is the verdict, the line is from → actual (target)', () => {
