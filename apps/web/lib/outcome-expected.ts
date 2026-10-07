@@ -76,7 +76,9 @@ type Ramp = { start: number; end: number; delta: number }
 
 function rampOf(e: TargetedEpic): Ramp {
   const start = dayMs(e.shippedAt as string)
-  const read = isDay(e.readDate) ? dayMs(e.readDate) : dayMs(addDays(e.shippedAt as string, READ_FALLBACK_DAYS))
+  const read = isDay(e.readDate)
+    ? dayMs(e.readDate)
+    : dayMs(addDays(e.shippedAt as string, READ_FALLBACK_DAYS))
   return { start, end: Math.max(start, read), delta: (e.to as number) - (e.from as number) }
 }
 
@@ -92,10 +94,16 @@ function valueAt(base: number, ramps: Ramp[], t: number): number {
 const round = (n: number) => Math.round(n * 1000) / 1000
 
 /** One metric's line: its actual, its expected breakpoints and its pace. */
-export function metricLine(source: MetricSource, epics: readonly TargetedEpic[], allKeys: readonly string[]): MetricLine {
+export function metricLine(
+  source: MetricSource,
+  epics: readonly TargetedEpic[],
+  allKeys: readonly string[]
+): MetricLine {
   const grounded = epics
     .filter((e) => e.metric === source.key && isGrounded(e, allKeys))
-    .sort((a, b) => (a.shippedAt as string).localeCompare(b.shippedAt as string) || a.slug.localeCompare(b.slug))
+    .sort(
+      (a, b) => (a.shippedAt as string).localeCompare(b.shippedAt as string) || a.slug.localeCompare(b.slug)
+    )
   const actual = [...source.series].filter((p) => isDay(p.date) && Number.isFinite(p.value))
   actual.sort((a, b) => a.date.localeCompare(b.date))
 
@@ -141,7 +149,10 @@ export function metricLine(source: MetricSource, epics: readonly TargetedEpic[],
 }
 
 /** Every metric's line, the North Star first, then inputs by key. */
-export function expectedLines(sources: readonly MetricSource[], epics: readonly TargetedEpic[]): MetricLine[] {
+export function expectedLines(
+  sources: readonly MetricSource[],
+  epics: readonly TargetedEpic[]
+): MetricLine[] {
   const keys = sources.map((s) => s.key)
   return [...sources]
     .sort((a, b) => Number(b.isNorthStar) - Number(a.isNorthStar) || a.key.localeCompare(b.key))

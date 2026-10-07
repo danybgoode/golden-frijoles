@@ -24,9 +24,8 @@ type ResolveHook = (
   },
 })
 
-const { buildPayingOff, dollars, epicTableRows, gapMark, metricCell, spendVsQuote, unavailablePayingOff } = await import(
-  './outcome-figures.ts'
-)
+const { buildPayingOff, dollars, epicTableRows, gapMark, metricCell, spendVsQuote, unavailablePayingOff } =
+  await import('./outcome-figures.ts')
 import { epicResult } from './roadmap-result.ts'
 import { epicFinops } from './roadmap-finops.ts'
 
@@ -36,31 +35,70 @@ import { epicFinops } from './roadmap-finops.ts'
 const TODAY = '2026-11-10'
 const row = (over: Record<string, unknown>): OutcomeEpic => {
   const r: Record<string, unknown> = { grain: 'Epic', status: 'Shipped', ...over }
-  return { result: epicResult(r, { today: TODAY }), finops: epicFinops(r), shippedAt: (r.shipped_at as string) ?? null }
+  return {
+    result: epicResult(r, { today: TODAY }),
+    finops: epicFinops(r),
+    shippedAt: (r.shipped_at as string) ?? null,
+  }
 }
 
 const LEDGERLY: OutcomeEpic[] = [
   row({
-    slug: 'overdue-reminders', name: 'Overdue reminders', hypothesis: 'a reminder gets invoices paid on time',
-    shipped_at: '2026-09-01', target_metric: 'paid_on_time', target_from: 61, target_to: 70, read_date: '2026-10-01',
-    verdict: 'proven', verdict_actual: 72, verdict_at: '2026-10-02', actual_usd: 9.8, quote_low_usd: 7, quote_high_usd: 16,
+    slug: 'overdue-reminders',
+    name: 'Overdue reminders',
+    hypothesis: 'a reminder gets invoices paid on time',
+    shipped_at: '2026-09-01',
+    target_metric: 'paid_on_time',
+    target_from: 61,
+    target_to: 70,
+    read_date: '2026-10-01',
+    verdict: 'proven',
+    verdict_actual: 72,
+    verdict_at: '2026-10-02',
+    actual_usd: 9.8,
+    quote_low_usd: 7,
+    quote_high_usd: 16,
   }),
   row({
-    slug: 'smart-defaults', name: 'Smart defaults', hypothesis: 'sensible defaults finish setup',
-    shipped_at: '2026-09-10', target_metric: 'setup_completed', target_from: 44, target_to: 55, read_date: '2026-10-10',
-    verdict: 'disproven', verdict_actual: 43, verdict_at: '2026-10-11', actual_usd: 11.3, quote_low_usd: 5, quote_high_usd: 8,
+    slug: 'smart-defaults',
+    name: 'Smart defaults',
+    hypothesis: 'sensible defaults finish setup',
+    shipped_at: '2026-09-10',
+    target_metric: 'setup_completed',
+    target_from: 44,
+    target_to: 55,
+    read_date: '2026-10-10',
+    verdict: 'disproven',
+    verdict_actual: 43,
+    verdict_at: '2026-10-11',
+    actual_usd: 11.3,
+    quote_low_usd: 5,
+    quote_high_usd: 8,
   }),
   row({
-    slug: 'export-csv', name: 'Export CSV', hypothesis: 'teams that export come back weekly',
-    shipped_at: '2026-10-20', target_metric: 'weekly_teams', target_from: 120, target_to: 140, read_date: '2026-11-19',
-    actual_usd: 4.1, quote_low_usd: 3, quote_high_usd: 6,
+    slug: 'export-csv',
+    name: 'Export CSV',
+    hypothesis: 'teams that export come back weekly',
+    shipped_at: '2026-10-20',
+    target_metric: 'weekly_teams',
+    target_from: 120,
+    target_to: 140,
+    read_date: '2026-11-19',
+    actual_usd: 4.1,
+    quote_low_usd: 3,
+    quote_high_usd: 6,
   }),
   row({ slug: 'cli', name: 'The CLI', shipped_at: '2026-09-18', actual_usd: 207.81 }),
   row({ slug: 'unshipped-untargeted', name: 'Nothing yet', status: 'Building' }),
 ]
 
 const SOURCES = [
-  { key: 'paid_on_time', name: 'Paid on time', isNorthStar: false, series: [{ date: '2026-11-01', value: 72 }] },
+  {
+    key: 'paid_on_time',
+    name: 'Paid on time',
+    isNorthStar: false,
+    series: [{ date: '2026-11-01', value: 72 }],
+  },
   { key: 'setup_completed', name: 'Setup completed', isNorthStar: false, series: [] },
   { key: 'weekly_teams', name: 'Weekly active teams', isNorthStar: false, series: [] },
 ]

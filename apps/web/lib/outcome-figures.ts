@@ -102,7 +102,8 @@ export function targetedEpic(e: OutcomeEpic): TargetedEpic {
 function nowFigure(lines: MetricLine[]): FigureNow {
   const head = headlineLine(lines)
   const empty = { metric: null, name: null, actual: null, expected: null, gap: null }
-  if (!head) return { ...empty, none: 'No epic targets the North Star or its inputs yet, so nothing is expected.' }
+  if (!head)
+    return { ...empty, none: 'No epic targets the North Star or its inputs yet, so nothing is expected.' }
   if (!head.latest) {
     const actual = head.actual.at(-1)?.value ?? null
     return {
@@ -140,7 +141,15 @@ function spendFigure(epics: OutcomeEpic[]): FigureSpend {
   const quoted = measured.filter((e) => e.finops.quoteLow !== null && e.finops.quoteHigh !== null)
   const spent = cents(measured.reduce((s, e) => s + (e.finops.actualUsd as number), 0))
   if (quoted.length === 0) {
-    return { spent, measured: measured.length, quoteLow: null, quoteHigh: null, quotedSpent: null, over: null, unquoted: measured.length }
+    return {
+      spent,
+      measured: measured.length,
+      quoteLow: null,
+      quoteHigh: null,
+      quotedSpent: null,
+      over: null,
+      unquoted: measured.length,
+    }
   }
   const quoteLow = cents(quoted.reduce((s, e) => s + (e.finops.quoteLow as number), 0))
   const quoteHigh = cents(quoted.reduce((s, e) => s + (e.finops.quoteHigh as number), 0))
@@ -159,8 +168,13 @@ function spendFigure(epics: OutcomeEpic[]): FigureSpend {
 /** The table's rows (D4): every epic with a target or a verdict, and every shipped epic with a measured spend. */
 export function epicTableRows(epics: OutcomeEpic[], metricNames: Record<string, string>): EpicTableRow[] {
   return epics
-    .filter((e) => e.result.bean !== null || e.result.verdict !== null || (e.result.shipped && e.finops.actualUsd !== null) ||
-      (e.result.metric !== null && e.result.from !== null && e.result.to !== null))
+    .filter(
+      (e) =>
+        e.result.bean !== null ||
+        e.result.verdict !== null ||
+        (e.result.shipped && e.finops.actualUsd !== null) ||
+        (e.result.metric !== null && e.result.from !== null && e.result.to !== null)
+    )
     .map((e) => {
       const r = e.result
       return {
@@ -214,7 +228,10 @@ export function buildPayingOff({
       now: nowFigure(lines),
       paidOff: proven,
       spend,
-      costPerWin: { perWin: proven.proven > 0 ? cents(spend.spent / proven.proven) : null, proven: proven.proven },
+      costPerWin: {
+        perWin: proven.proven > 0 ? cents(spend.spent / proven.proven) : null,
+        proven: proven.proven,
+      },
     },
     epics: epicTableRows(epics, names),
   }
@@ -224,10 +241,20 @@ export function buildPayingOff({
 export function unavailablePayingOff(): PayingOffView {
   return {
     unavailable: true,
-    sentence: { kind: 'no_reading', text: "The plan couldn't be read just now, so we can't say if it's on pace." },
+    sentence: {
+      kind: 'no_reading',
+      text: "The plan couldn't be read just now, so we can't say if it's on pace.",
+    },
     lines: [],
     figures: {
-      now: { metric: null, name: null, actual: null, expected: null, gap: null, none: 'Could not be read just now.' },
+      now: {
+        metric: null,
+        name: null,
+        actual: null,
+        expected: null,
+        gap: null,
+        none: 'Could not be read just now.',
+      },
       paidOff: { proven: 0, read: 0, unread: 0 },
       spend: null,
       costPerWin: null,
@@ -263,7 +290,8 @@ export function spendVsQuote(spend: number | null, low: number | null, high: num
 export function metricCell(r: EpicTableRow): string {
   if (r.metric === null || r.from === null || r.to === null) return 'No target'
   const move = `${r.metricName} · ${fig(r.from)} → ${fig(r.to)}`
-  if (r.actual !== null) return `${move} · actual ${fig(r.actual)}${r.gap !== null ? ` (${gapMark(r.gap)})` : ''}`
+  if (r.actual !== null)
+    return `${move} · actual ${fig(r.actual)}${r.gap !== null ? ` (${gapMark(r.gap)})` : ''}`
   return `${move} · ${r.readDue ? 'read due' : 'not read yet'}`
 }
 

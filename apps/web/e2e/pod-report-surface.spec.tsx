@@ -78,18 +78,46 @@ const epicRow = (over: Record<string, unknown>): OutcomeEpic => {
 }
 const LEDGERLY_EPICS: OutcomeEpic[] = [
   epicRow({
-    slug: 'overdue-reminders', name: 'Overdue reminders', hypothesis: 'a reminder gets invoices paid on time',
-    shipped_at: '2026-09-01', target_metric: 'paid_on_time', target_from: 61, target_to: 70, read_date: '2026-10-01',
-    verdict: 'proven', verdict_actual: 72, verdict_at: '2026-10-02', actual_usd: 9.8, quote_low_usd: 7, quote_high_usd: 16,
+    slug: 'overdue-reminders',
+    name: 'Overdue reminders',
+    hypothesis: 'a reminder gets invoices paid on time',
+    shipped_at: '2026-09-01',
+    target_metric: 'paid_on_time',
+    target_from: 61,
+    target_to: 70,
+    read_date: '2026-10-01',
+    verdict: 'proven',
+    verdict_actual: 72,
+    verdict_at: '2026-10-02',
+    actual_usd: 9.8,
+    quote_low_usd: 7,
+    quote_high_usd: 16,
   }),
   epicRow({
-    slug: 'smart-defaults', name: 'Smart defaults', hypothesis: 'sensible defaults finish setup',
-    shipped_at: '2026-09-10', target_metric: 'paid_on_time', target_from: 70, target_to: 75, read_date: '2026-10-10',
-    verdict: 'disproven', verdict_actual: 70, verdict_at: '2026-10-11', actual_usd: 11.3, quote_low_usd: 5, quote_high_usd: 8,
+    slug: 'smart-defaults',
+    name: 'Smart defaults',
+    hypothesis: 'sensible defaults finish setup',
+    shipped_at: '2026-09-10',
+    target_metric: 'paid_on_time',
+    target_from: 70,
+    target_to: 75,
+    read_date: '2026-10-10',
+    verdict: 'disproven',
+    verdict_actual: 70,
+    verdict_at: '2026-10-11',
+    actual_usd: 11.3,
+    quote_low_usd: 5,
+    quote_high_usd: 8,
   }),
   epicRow({
-    slug: 'export-csv', name: 'Export CSV', hypothesis: 'teams that export come back weekly',
-    shipped_at: '2026-10-20', target_metric: 'paid_on_time', target_from: 75, target_to: 78, read_date: '2026-11-19',
+    slug: 'export-csv',
+    name: 'Export CSV',
+    hypothesis: 'teams that export come back weekly',
+    shipped_at: '2026-10-20',
+    target_metric: 'paid_on_time',
+    target_from: 75,
+    target_to: 78,
+    read_date: '2026-11-19',
   }),
   epicRow({ slug: 'the-cli', name: 'The CLI', shipped_at: '2026-09-18', actual_usd: 207.81 }),
 ]
@@ -398,10 +426,19 @@ test('S1.1: with no grounded epic, the chart shows the actual only and the page 
   const none = buildPayingOff({
     product: 'Ledgerly',
     epics: [LEDGERLY_EPICS[3]],
-    sources: [{ key: 'paid_on_time', name: 'Paid on time', isNorthStar: false, series: [{ date: '2026-10-25', value: 71 }] }],
+    sources: [
+      {
+        key: 'paid_on_time',
+        name: 'Paid on time',
+        isNorthStar: false,
+        series: [{ date: '2026-10-25', value: 71 }],
+      },
+    ],
   })
   const html = render(viewFor('team'), 'team', none)
-  expect(slice(html, 'paying-off-sentence', 200)).toContain("No targets yet, so we can't say if it's on pace.")
+  expect(slice(html, 'paying-off-sentence', 200)).toContain(
+    "No targets yet, so we can't say if it's on pace."
+  )
   const chart = slice(html, 'outcome-chart', 4000)
   expect(chart).toContain('data-line="actual"')
   expect(chart).not.toContain('data-line="expected"')

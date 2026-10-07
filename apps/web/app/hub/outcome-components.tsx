@@ -45,7 +45,14 @@ function scale(lines: SeriesPoint[][], markerDays: string[]) {
   y1 += pad
   const x = (d: string) => PAD.left + ((ms(d) - x0) / (x1 - x0)) * (W - PAD.left - PAD.right)
   const y = (v: number) => PAD.top + (1 - (v - y0) / (y1 - y0)) * (H - PAD.top - PAD.bottom)
-  return { x, y, y0, y1, first: new Date(x0).toISOString().slice(0, 10), last: new Date(x1).toISOString().slice(0, 10) }
+  return {
+    x,
+    y,
+    y0,
+    y1,
+    first: new Date(x0).toISOString().slice(0, 10),
+    last: new Date(x1).toISOString().slice(0, 10),
+  }
 }
 
 const path = (pts: SeriesPoint[], s: ReturnType<typeof scale>) =>
@@ -53,12 +60,21 @@ const path = (pts: SeriesPoint[], s: ReturnType<typeof scale>) =>
 
 /** One metric's chart: actual against expected, each grounded epic's bean where it shipped (D7). */
 export function OutcomeChart({ line }: { line: MetricLine }) {
-  const s = scale([line.actual, line.expected], line.markers.map((m) => m.date))
+  const s = scale(
+    [line.actual, line.expected],
+    line.markers.map((m) => m.date)
+  )
   const latest = line.actual.at(-1)
   return (
     <figure className="ds-outcome-chart" data-testid="outcome-chart" data-outcome-metric={line.metric}>
       <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-labelledby={`outcome-chart-${line.metric}`}>
-        <line className="ds-outcome-axis" x1={PAD.left} x2={W - PAD.right} y1={H - PAD.bottom} y2={H - PAD.bottom} />
+        <line
+          className="ds-outcome-axis"
+          x1={PAD.left}
+          x2={W - PAD.right}
+          y1={H - PAD.bottom}
+          y2={H - PAD.bottom}
+        />
         <text className="ds-outcome-tick" x={PAD.left - 6} y={s.y(s.y1) + 4} textAnchor="end">
           {figure(Math.round(s.y1))}
         </text>
@@ -74,7 +90,9 @@ export function OutcomeChart({ line }: { line: MetricLine }) {
         {line.expected.length > 0 && (
           <path className="ds-outcome-expected" d={path(line.expected, s)} data-line="expected" />
         )}
-        {line.actual.length > 0 && <path className="ds-outcome-actual" d={path(line.actual, s)} data-line="actual" />}
+        {line.actual.length > 0 && (
+          <path className="ds-outcome-actual" d={path(line.actual, s)} data-line="actual" />
+        )}
         {line.markers.map((m, i) => (
           <g
             key={`${m.date}-${i}`}
@@ -106,7 +124,17 @@ export function OutcomeChart({ line }: { line: MetricLine }) {
   )
 }
 
-function Figure({ value, label, line, testId }: { value: string; label: string; line: string; testId: string }) {
+function Figure({
+  value,
+  label,
+  line,
+  testId,
+}: {
+  value: string
+  label: string
+  line: string
+  testId: string
+}) {
   return (
     <div className="ds-outcome-figure" data-testid={testId}>
       <b className="ds-outcome-figure-value">{value}</b>
@@ -193,7 +221,9 @@ export function EpicsTable({
             <tr key={r.slug} data-epic={r.slug}>
               <th scope="row">
                 {showLinks ? (
-                  <a href={`/hub/${encodeURIComponent(projectSlug)}/epic/${encodeURIComponent(r.slug)}`}>{r.name}</a>
+                  <a href={`/hub/${encodeURIComponent(projectSlug)}/epic/${encodeURIComponent(r.slug)}`}>
+                    {r.name}
+                  </a>
                 ) : (
                   r.name
                 )}
@@ -239,13 +269,13 @@ export function PayingOffSection({
         Is it paying off
       </h2>
       <p className="ds-lede">
-        The North Star’s inputs as they actually moved, against the line the shipped epics’ own targets drew — so you can
-        see whether the work is landing where you planned.
+        The North Star’s inputs as they actually moved, against the line the shipped epics’ own targets drew —
+        so you can see whether the work is landing where you planned.
       </p>
       {payingOff.unavailable ? (
         <p className="ds-hint" data-testid="paying-off-unavailable">
-          <strong>The plan and its readings could not be read just now.</strong> This is a failure to reach them, not a
-          report that nothing was targeted.
+          <strong>The plan and its readings could not be read just now.</strong> This is a failure to reach
+          them, not a report that nothing was targeted.
         </p>
       ) : drawable.length === 0 ? (
         <p className="ds-hint" data-testid="paying-off-no-lines">

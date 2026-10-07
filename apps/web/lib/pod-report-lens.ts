@@ -251,7 +251,9 @@ export function applyPayingOffLens<T extends LensablePayingOff>(view: T, lens: P
     ...view,
     lines: view.lines.map((line) => ({
       ...line,
-      markers: policy.showJourney ? line.markers : line.markers.map((m) => ({ ...m, name: null, slug: null })),
+      markers: policy.showJourney
+        ? line.markers
+        : line.markers.map((m) => ({ ...m, name: null, slug: null })),
     })),
     figures: {
       now: view.figures.now,

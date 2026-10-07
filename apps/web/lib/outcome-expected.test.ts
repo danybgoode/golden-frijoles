@@ -85,7 +85,10 @@ test('one: the line moves from → to between ship and read, and the pace reads 
 test('several: deltas add, starting from the first epic’s from', () => {
   const line = metricLine(
     input([['2026-11-15', 80]]),
-    [epic(), epic({ slug: 'smart-defaults', shippedAt: '2026-10-01', from: 70, to: 75, readDate: '2026-10-31' })],
+    [
+      epic(),
+      epic({ slug: 'smart-defaults', shippedAt: '2026-10-01', from: 70, to: 75, readDate: '2026-10-31' }),
+    ],
     ['paid_on_time']
   )
   assert.equal(line.grounded, 2)
@@ -119,7 +122,10 @@ test('input vs North Star: an input epic moves only its input; a North Star epic
     input([['2026-09-16', 60]]),
     { key: 'payable_sellers', name: 'Payable sellers', isNorthStar: true, series: [] },
   ]
-  const lines = expectedLines(sources, [epic(), epic({ slug: 'ns-epic', metric: 'payable_sellers', from: 10, to: 20 })])
+  const lines = expectedLines(sources, [
+    epic(),
+    epic({ slug: 'ns-epic', metric: 'payable_sellers', from: 10, to: 20 }),
+  ])
   assert.equal(lines[0].metric, 'payable_sellers', 'the North Star leads')
   assert.equal(lines[0].grounded, 1)
   assert.deepEqual(lines[0].actual, [])
@@ -135,6 +141,9 @@ test('mixed paces name each metric', () => {
     [input([['2026-09-16', 60]]), input([['2026-09-16', 80]], { key: 'setup', name: 'Setup completed' })],
     [epic(), epic({ slug: 'b', metric: 'setup', from: 60, to: 70 })]
   )
-  assert.equal(paceSentence('Ledgerly', lines).text, 'Mixed: ahead on Setup completed; behind on Paid on time.')
+  assert.equal(
+    paceSentence('Ledgerly', lines).text,
+    'Mixed: ahead on Setup completed; behind on Paid on time.'
+  )
   assert.equal(headlineLine(lines)?.metric, 'paid_on_time', 'ties go by key')
 })

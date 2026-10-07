@@ -185,7 +185,12 @@ test('the investor lens hides the rows entirely, so it cannot make either claim'
 function payingOff() {
   return {
     sentence: { kind: 'behind', text: 'Ledgerly is behind the pace you planned.' },
-    lines: [{ metric: 'paid_on_time', markers: [{ slug: 'overdue-reminders', name: 'Overdue reminders', date: '2026-09-01' }] }],
+    lines: [
+      {
+        metric: 'paid_on_time',
+        markers: [{ slug: 'overdue-reminders', name: 'Overdue reminders', date: '2026-09-01' }],
+      },
+    ],
     figures: {
       now: { name: 'Paid on time', actual: 60, expected: 65, gap: -5 },
       paidOff: { proven: 1, read: 2, unread: 3 },
