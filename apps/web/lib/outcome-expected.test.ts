@@ -147,3 +147,45 @@ test('mixed paces name each metric', () => {
   )
   assert.equal(headlineLine(lines)?.metric, 'paid_on_time', 'ties go by key')
 })
+
+// ── Fresh review + codex, PR #299 ────────────────────────────────────────────────────────────────────────────────
+
+test('an impossible ship or read day is no day: excluded, and nothing throws', () => {
+  assert.equal(isGrounded(epic({ shippedAt: '2026-13-01' }), ['paid_on_time']), false)
+  assert.equal(isGrounded(epic({ shippedAt: '2026-02-30' }), ['paid_on_time']), false)
+  const line = metricLine(
+    input([['2026-09-16', 60]]),
+    [epic({ shippedAt: '2026-13-01' }), epic({ slug: 'b', readDate: '2026-02-30' })],
+    ['paid_on_time']
+  )
+  assert.equal(line.grounded, 1)
+  // The impossible read day falls back to 30 days after shipping.
+  assert.deepEqual(line.expected.at(-1), { date: '2026-10-01', value: 70 })
+})
+
+test('a metric stored as a fraction can be behind: the tolerance scales with the metric', () => {
+  const line = metricLine(
+    input([['2026-10-05', 0.01]], { key: 'rate', name: 'Rate' }),
+    [epic({ metric: 'rate', from: 0.1, to: 0.2 })],
+    ['rate']
+  )
+  assert.equal(line.pace, 'behind')
+})
+
+test('a targeted metric with no reading yet is named, not folded into "all agree"', () => {
+  const lines = expectedLines(
+    [input([['2026-10-20', 75]]), input([], { key: 'setup', name: 'Setup completed' })],
+    [epic(), epic({ slug: 'b', metric: 'setup', from: 60, to: 70 })]
+  )
+  assert.equal(
+    paceSentence('Ledgerly', lines).text,
+    'Ledgerly is ahead of the pace you planned on Paid on time. Setup completed has no reading yet.'
+  )
+})
+
+test('no North Star registered says so, rather than "no targets"', () => {
+  assert.equal(
+    paceSentence('Ledgerly', []).text,
+    "No North Star is registered yet, so we can't say if it's on pace."
+  )
+})

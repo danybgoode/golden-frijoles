@@ -111,7 +111,9 @@ quote. Its North Star is `payable_sellers` with ONE input, `setup_guide_completi
   read date (`readDate`, already derived by the pusher at +30 d), flat after. No grounded epic on a metric → no line
   for it, ever (no flat invented line). Direction = sign of the summed deltas (lower-is-better targets work).
 - **D2 — Pace and the sentence.** Per metric with both lines: compare the latest actual point to the expected value on
-  that day. `on` when |gap| ≤ 5% of |expected| (min 0.5), else `ahead`/`behind` by direction. Overall: no metric with
+  that day. `on` when |gap| ≤ max(5% of |expected|, 10% of the planned move Σ(to − from)), else `ahead`/`behind` by
+  direction. *(Amended at review, #299: the lock's absolute "min 0.5" floor made every 0–1 fraction metric "on
+  pace" forever.)* A targeted metric with no reading is named in the sentence; no North Star registered says so. Overall: no metric with
   both → "No targets yet, so we can't say if it's on pace" (or "…no reading yet…" when targets exist but no actual);
   all agree → "<product> is ahead of / on / behind the pace you planned."; mixed → "Mixed: ahead on X, behind on Y."
   The headline metric (figure 1) = the metric with the most grounded epics, ties by key.

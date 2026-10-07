@@ -1,6 +1,7 @@
 import type { EpicResult } from './roadmap-result'
 import type { EpicFinops } from './roadmap-finops'
 import {
+  isDay,
   expectedLines,
   headlineLine,
   paceSentence,
@@ -80,7 +81,6 @@ export type PayingOffView = {
   epics: EpicTableRow[]
 }
 
-const DAY = /^\d{4}-\d{2}-\d{2}$/
 const cents = (n: number) => Math.round(n * 100) / 100
 
 export function targetedEpic(e: OutcomeEpic): TargetedEpic {
@@ -88,7 +88,7 @@ export function targetedEpic(e: OutcomeEpic): TargetedEpic {
   return {
     slug: r.slug,
     name: r.name,
-    shippedAt: e.shippedAt && DAY.test(e.shippedAt) ? e.shippedAt : null,
+    shippedAt: isDay(e.shippedAt) ? e.shippedAt : null,
     shipped: r.shipped,
     metric: r.metric,
     from: r.from,
@@ -189,7 +189,7 @@ export function epicTableRows(epics: OutcomeEpic[], metricNames: Record<string, 
         gap: r.actual !== null && r.to !== null ? cents(r.actual - r.to) : null,
         readDue: r.readDue,
         bean: r.bean,
-        shippedAt: e.shippedAt && DAY.test(e.shippedAt) ? e.shippedAt : null,
+        shippedAt: isDay(e.shippedAt) ? e.shippedAt : null,
         spend: e.finops.actualUsd,
         quoteLow: e.finops.quoteLow,
         quoteHigh: e.finops.quoteHigh,

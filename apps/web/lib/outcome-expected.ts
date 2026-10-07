@@ -50,12 +50,24 @@ export type MetricLine = {
 
 /** ⚠️ Mirrors `READ_DEFAULT_DAYS` in lib/roadmap-result.ts — restated so this module stays import-free; pinned by spec. */
 export const READ_FALLBACK_DAYS = 30
-/** Within this share of the expected value (never under `ON_PACE_MIN_ABS`), the metric is on pace. */
+/**
+ * Within this share of the expected value, or of the planned move (Σ to − from) when that is larger, the metric is on
+ * pace. Both scale with the metric: an absolute floor made every metric stored as a 0–1 fraction "on pace" forever
+ * (fresh review, PR #299 — 0.01 against an expected 0.20 read as on pace).
+ */
 export const ON_PACE_SHARE = 0.05
-export const ON_PACE_MIN_ABS = 0.5
+export const ON_PACE_MOVE_SHARE = 0.1
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/
-const isDay = (v: string | null): v is string => typeof v === 'string' && DAY.test(v)
+/**
+ * A real calendar day only — the shape alone lets `2026-02-30` through, and `2026-13-01` makes `toISOString()` throw
+ * (codex + fresh review, #299). Restated from `roadmap-result.ts`'s `day()` so this module stays import-free.
+ */
+export const isDay = (v: string | null | undefined): v is string => {
+  if (typeof v !== 'string' || !DAY.test(v)) return false
+  const t = new Date(`${v}T00:00:00Z`)
+  return !Number.isNaN(t.getTime()) && t.toISOString().slice(0, 10) === v
+}
 const dayMs = (d: string) => Date.parse(`${d}T00:00:00Z`)
 const addDays = (d: string, n: number) => new Date(dayMs(d) + n * 86_400_000).toISOString().slice(0, 10)
 
@@ -128,8 +140,9 @@ export function metricLine(
     if (last && last.date >= (grounded[0].shippedAt as string)) {
       const expected = round(valueAt(start, ramps, dayMs(last.date)))
       const gap = round(last.value - expected)
-      const direction = Math.sign(ramps.reduce((s, r) => s + r.delta, 0)) || 1
-      const tolerance = Math.max(Math.abs(expected) * ON_PACE_SHARE, ON_PACE_MIN_ABS)
+      const move = ramps.reduce((s, r) => s + r.delta, 0)
+      const direction = Math.sign(move) || 1
+      const tolerance = Math.max(Math.abs(expected) * ON_PACE_SHARE, Math.abs(move) * ON_PACE_MOVE_SHARE)
       latest = { date: last.date, actual: last.value, expected, gap }
       pace = Math.abs(gap) <= tolerance ? 'on' : gap * direction > 0 ? 'ahead' : 'behind'
     }
@@ -175,6 +188,9 @@ const PACE_WORDS: Record<Pace, string> = { ahead: 'ahead of', on: 'on', behind: 
 
 /** The one sentence the report opens with (D2). */
 export function paceSentence(product: string, lines: readonly MetricLine[]): PaceSentence {
+  if (lines.length === 0) {
+    return { kind: 'no_targets', text: "No North Star is registered yet, so we can't say if it's on pace." }
+  }
   if (!lines.some((l) => l.grounded > 0)) {
     return { kind: 'no_targets', text: "No targets yet, so we can't say if it's on pace." }
   }
@@ -185,10 +201,18 @@ export function paceSentence(product: string, lines: readonly MetricLine[]): Pac
       text: `${product} has targets, but no reading since they shipped, so we can't say if it's on pace yet.`,
     }
   }
+  // A targeted metric with no reading yet is named, never folded into "all agree" (fresh review, #299).
+  const unread = lines.filter((l) => l.grounded > 0 && l.pace === null).map((l) => l.name)
+  const tail =
+    unread.length > 0 ? ` ${unread.join(', ')} ${unread.length === 1 ? 'has' : 'have'} no reading yet.` : ''
   const paces = new Set(read.map((l) => l.pace as Pace))
   if (paces.size === 1) {
     const pace = read[0].pace as Pace
-    return { kind: pace, text: `${product} is ${PACE_WORDS[pace]} the pace you planned.` }
+    const subject =
+      unread.length > 0
+        ? `${product} is ${PACE_WORDS[pace]} the pace you planned on ${read.map((l) => l.name).join(', ')}.`
+        : `${product} is ${PACE_WORDS[pace]} the pace you planned.`
+    return { kind: pace, text: subject + tail }
   }
   const named = (p: Pace) =>
     read
@@ -198,5 +222,5 @@ export function paceSentence(product: string, lines: readonly MetricLine[]): Pac
   const parts = (['ahead', 'on', 'behind'] as const)
     .filter((p) => paces.has(p))
     .map((p) => (p === 'on' ? `on pace for ${named(p)}` : `${p} on ${named(p)}`))
-  return { kind: 'mixed', text: `Mixed: ${parts.join('; ')}.` }
+  return { kind: 'mixed', text: `Mixed: ${parts.join('; ')}.${tail}` }
 }

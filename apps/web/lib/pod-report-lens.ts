@@ -235,6 +235,8 @@ export const PAYING_OFF_INVARIANT_FIELDS = ['sentence', 'lines', 'figures.now', 
 
 /** Structurally what `buildPayingOff` (lib/outcome-figures.ts) returns — kept loose so this file stays import-free. */
 export type LensablePayingOff = {
+  unavailable: boolean
+  sentence: unknown
   lines: Array<{ markers: Array<{ slug: string | null; name: string | null }> }>
   figures: { now: unknown; paidOff: unknown; spend: unknown; costPerWin: unknown }
   epics: unknown[]
@@ -247,8 +249,11 @@ export type LensablePayingOff = {
  */
 export function applyPayingOffLens<T extends LensablePayingOff>(view: T, lens: PodReportLens): T {
   const policy = POLICIES[lens]
+  // An explicit field list, never `...view`: a field added to the view later reaches no lens until it is named here
+  // (fresh review, #299).
   return {
-    ...view,
+    unavailable: view.unavailable,
+    sentence: view.sentence,
     lines: view.lines.map((line) => ({
       ...line,
       markers: policy.showJourney
@@ -262,5 +267,5 @@ export function applyPayingOffLens<T extends LensablePayingOff>(view: T, lens: P
       costPerWin: policy.showSpend ? view.figures.costPerWin : null,
     },
     epics: policy.showEpicsTable ? view.epics : [],
-  }
+  } as T
 }
