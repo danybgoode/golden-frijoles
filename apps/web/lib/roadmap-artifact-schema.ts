@@ -172,6 +172,14 @@ const roadmapRowSchema = z
     verdict_evidence: z.string().max(500).nullish(),
     verdict_at: isoDay.nullish(),
     read_late: z.boolean().nullish(),
+    // one-epic-page · Story 2.3 (D11) — the epic's flag, decided at grooming, and the README's own line on it. Nullish:
+    // an older pusher never sends them, and absent is "no flag". The key is held to the SDK's grammar here too, so a
+    // malformed key is a 400 naming the field rather than a lookup the epic page makes against the registry.
+    flag_key: z
+      .string()
+      .regex(/^[a-z][a-z0-9_.-]{0,127}$/, { message: 'flag_key must be a flag key (a-z first, then a-z 0-9 _ . -)' })
+      .nullish(),
+    flag_note: z.string().max(300).nullish(),
   })
   .passthrough()
 
