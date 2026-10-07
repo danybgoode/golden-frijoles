@@ -93,10 +93,12 @@ routes; no `tabs` line — the hub tabs are the frame's nav, outside the measure
 this repo; the card is a page state at `?card=`, not an overlay). The product owner approved those corrections and
 asked the architect to record the lines on 2026-10-02.
 
+*Retired 2026-10-07 by `one-epic-page` (lock D4):* `hub-board-card` — the card view it pictured is gone; `?card=` now redirects to the
+epic page, so the state is unreachable and its file and line are removed together (a line for a missing file fails the gate).
+
 | State | File | SHA-256 (first 16) | Approved by | Approved |
 |---|---|---|---|---|
 | hub-board | `surfaces/hub-board.surface` | `ab51f60a6cefbbd0` | Daniel (recorded by the architect at his instruction) | 2026-10-02 |
-| hub-board-card | `surfaces/hub-board-card.surface` | `06d5e165f22f2be7` | Daniel (recorded by the architect at his instruction) | 2026-10-02 |
 | hub-board-empty | `surfaces/hub-board-empty.surface` | `8c2f5f0b8892e590` | Daniel (recorded by the architect at his instruction) | 2026-10-02 |
 | hub-roadmap-areas | `surfaces/hub-roadmap-areas.surface` | `4f2a3fc2d45bc950` | Daniel (recorded by the architect at his instruction) | 2026-10-02 |
 | hub-workspace-board | `surfaces/hub-workspace-board.surface` | `816bc514e4a22105` | Daniel (recorded by the architect at his instruction) | 2026-10-02 |

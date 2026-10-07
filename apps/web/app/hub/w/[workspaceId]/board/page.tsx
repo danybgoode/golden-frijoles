@@ -114,7 +114,7 @@ export default async function WorkspaceBoardPage({
           ]}
           carry={carry}
           cardHref={(card: BoardCard) =>
-            `/hub/${encodeURIComponent(card.project ?? '')}/board?card=${encodeURIComponent(card.slug)}`
+            `/hub/${encodeURIComponent(card.project ?? '')}/epic/${encodeURIComponent(card.slug)}`
           }
           note={
             projects.length === 0 ? (

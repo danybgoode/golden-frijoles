@@ -5553,3 +5553,155 @@
   color: var(--crema);
   font-weight: 600;
 }
+
+/* one-epic-page · Sprint 1 (lock D6, D8) — the epic page: chips instead of tiles, a seven-step track, the Now panel.
+   Stage is never colour alone: every chip and step says it in words, and the current step carries `aria-current`. */
+.ds .ds-epic-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.ds .ds-epic-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--dim);
+  background: var(--card);
+}
+
+.ds .ds-epic-chip--stage {
+  border-color: var(--gold-deep);
+  color: var(--crema);
+  font-weight: 600;
+}
+
+.ds .ds-epic-chip[data-risk='high'] {
+  border-color: var(--red-deep);
+  color: var(--red);
+}
+
+.ds .ds-epic-track {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  margin: 4px 0 2px;
+  padding: 0;
+  list-style: none;
+}
+
+.ds .ds-epic-track li {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--dim-2);
+}
+
+.ds .ds-epic-track li span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ds .ds-epic-track i {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--card-3);
+}
+
+.ds .ds-epic-track li[data-state='done'] i {
+  background: var(--gold-deep);
+}
+
+.ds .ds-epic-track li[data-state='current'] i {
+  background: var(--gold-hot);
+}
+
+.ds .ds-epic-track li[data-state='current'] {
+  color: var(--crema);
+  font-weight: 600;
+}
+
+.ds .ds-epic-now {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--roast-2);
+}
+
+.ds .ds-epic-now-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 13px;
+}
+
+.ds .ds-epic-now-icon {
+  display: inline-flex;
+  color: var(--gold);
+}
+
+.ds .ds-epic-now-when {
+  color: var(--dim-2);
+  font-size: 12px;
+}
+
+.ds .ds-epic-now-line {
+  margin: 0;
+  color: var(--crema);
+}
+
+.ds .ds-epic-command {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.ds .ds-epic-command code {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: var(--r);
+  background: var(--card);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+}
+
+.ds .ds-epic-command + .ds-epic-command {
+  margin-top: 8px;
+}
+
+.ds .ds-epic-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ds .ds-epic-docs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+
+@media (max-width: 640px) {
+  .ds .ds-epic-track li span {
+    font-size: 10.5px;
+  }
+}

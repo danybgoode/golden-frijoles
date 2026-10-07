@@ -64,9 +64,10 @@ target (`hypothesis`/`target_*` are null on all 67 Epic rows).
   renders the board's empty state ("push again"), never a page that guesses — live: 0 projects affected. FinOps keys
   ride on the card raw (`FINOPS_ROW_KEYS`, pinned by spec like `RESULT_ROW_KEYS`) and are read only through
   `epicFinops`; result keys through `epicResult`. `hub-board.ts` stays import-free.
-- **D2 — `getHubRoadmap` also returns the project it resolved (`{ id, name }`).** The page needs the product's name for
-  the plain lines (D7) and its id for the flag read (D12); the id comes from the same server-side lookup the read
-  already does after `requireDashboardAccess`, never from the URL a second time.
+- **D2 — `getHubRoadmap` also returns the project id it resolved.** The page needs it for the flag read (D12); it comes
+  from the same server-side lookup the read already does after `requireDashboardAccess`, never from the URL a second
+  time. ⚠️ *Corrected at build (2026-10-07):* the lock said `{ id, name }`, but `projects` has **no name column** — a
+  product is its slug everywhere (switcher, `gf`, URLs). The plain lines (D7) name the product by its slug.
 - **D3 — `?card=` redirects, filters ride along.** `/hub/<p>/board?card=<e>[&type=…&risk=high]` → `redirect()` to
   `/hub/<p>/epic/<e>[?type=…&risk=high]`, after the access gate. The epic page's Back link is
   `/hub/<p>/board` + `boardQuery(parseBoardFilters(query))`, so only the two whitelisted filters can ever reach it (no
@@ -93,7 +94,7 @@ target (`hypothesis`/`target_*` are null on all 67 Epic rows).
   returns keys; the component labels them). Freshness: "Every number comes from the epic's README and git · updated
   <age>" from `formatFreshness`.
 - **D7 — Plain lines (S1.3).** `stageCommands(card, product)` returns `{ text, shorthand, label }[]`, primary first.
-  Each `text` names the step, the epic (its slug, which is what every script takes) and the product (its name), and
+  Each `text` names the step, the epic (its slug, which is what every script takes) and the product (its slug, D2), and
   **begins with the shorthand's own verb**, so the `SESSION-KICKOFFS.md` table still matches it: "Groom the <e> idea in
   <P>", "Build the <e> epic in <P>", "Resume building the <e> epic in <P>", "Wrap sprint 2 of the <e> epic in <P>",
   "Review pull request #42 for the <e> epic in <P>", "Close the <e> epic in <P>". The two `node scripts/…` lines stay

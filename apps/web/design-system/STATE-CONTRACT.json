@@ -984,43 +984,6 @@
       "unknown": [],
       "source": "spec"
     },
-    "hub-board-card": {
-      "missing": false,
-      "blocks": [
-        {
-          "kind": "head",
-          "action": "copy kickoff prompt"
-        },
-        {
-          "kind": "answer"
-        },
-        {
-          "kind": "summary",
-          "count": 7
-        },
-        {
-          "kind": "steps"
-        },
-        {
-          "kind": "list",
-          "columns": [
-            "doc",
-            "link"
-          ]
-        },
-        {
-          "kind": "list",
-          "columns": [
-            "command",
-            "copy"
-          ]
-        }
-      ],
-      "disclosures": 0,
-      "annotations": 0,
-      "unknown": [],
-      "source": "spec"
-    },
     "hub-board-empty": {
       "missing": false,
       "blocks": [

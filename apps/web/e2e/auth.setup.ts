@@ -981,7 +981,13 @@ async function seedRoadmapFixture(db: SupabaseClient, projectId: string) {
         },
         {
           ...epic('fixture-mockups', 'The mockups, as built', 'in-progress', 3, '02-commercial'),
-          ...card('Building'),
+          // one-epic-page S1.3 — a Building card with its sprints, so the Now panel has a sprint to name and a Wrap.
+          ...card('Building', {
+            sprints: [
+              { n: 1, title: 'The first sprint', done: 3, total: 3 },
+              { n: 2, title: 'The second sprint', done: 1, total: 3 },
+            ],
+          }),
         },
         // ⚠️ No `build_order_num` — the design draws the sentence about exactly this row.
         {

@@ -1,31 +1,20 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { requireDashboardAccess } from '@/lib/dashboard-auth'
 import { getHubRoadmap } from '@/lib/hub-query'
 import { formatFreshness } from '@/lib/hub-freshness'
-import {
-  boardQuery,
-  buildBoard,
-  findCard,
-  hasStages,
-  parseBoardFilters,
-  type BoardCard,
-} from '@/lib/hub-board'
+import { boardQuery, buildBoard, hasStages, parseBoardFilters } from '@/lib/hub-board'
 import { HubShell } from '../../hub-shell'
-import { BoardView, CardView, EmptyBoard } from './board-components'
+import { BoardView, EmptyBoard } from './board-components'
 
 export const dynamic = 'force-dynamic'
 
-// board-sinks-and-scrumban · Sprint 2 — `/hub/<slug>/board`: every initiative on the six stages (S2.2), a card's own
-// view at `?card=<slug>` (S2.3) and the type/risk filters in the URL (S2.4).
+// board-sinks-and-scrumban · Sprint 2 — `/hub/<slug>/board`: every initiative on the six stages (S2.2) and the type/risk
+// filters in the URL (S2.4). A card opens its epic page (one-epic-page D3); an old `?card=<slug>` link redirects there.
 //
 // The Hub never computes a stage (lock D19): `lib/hub-board.ts` groups the rows the push already resolved, and this
 // page renders what it returns. Gating is the other hub pages' (`requireDashboardAccess`): a member reads it, and the
 // demo project — this repo's own self-tenant, `golden-beans-demo` — is public by design (AGENTS rule #2, lock C2).
 // A share link does not reach it in v1 (lock C10).
-//
-// ⚠️ The card view is a PAGE state, not an overlay. The approved `hub-board-card` surface is a full block sequence
-// (head → answer → summary → steps → list → list), and the visual gate refuses to measure `<main>` under an overlay —
-// so `?card=` renders the card in place of the board, with the way back in its lede. Corrected out loud at the lock.
 export default async function HubBoardPage({
   params,
   searchParams,
@@ -36,6 +25,16 @@ export default async function HubBoardPage({
   const { projectSlug } = await params
   const query = await searchParams
   await requireDashboardAccess(projectSlug)
+
+  // one-epic-page D3 — `?card=` is in shared links (and the build view's), so it redirects rather than breaks; the
+  // filters ride along so the epic page's Back returns to the same board. After the access gate, so the redirect
+  // confirms nothing to a viewer the board would refuse; the epic page gates again on its own.
+  const cardSlug = Array.isArray(query.card) ? query.card[0] : query.card
+  if (cardSlug) {
+    redirect(
+      `/hub/${encodeURIComponent(projectSlug)}/epic/${encodeURIComponent(cardSlug)}${boardQuery(parseBoardFilters(query))}`
+    )
+  }
 
   const result = await getHubRoadmap(projectSlug)
   if (!result.ok) {
@@ -66,18 +65,6 @@ export default async function HubBoardPage({
   ).board
   const freshness = formatFreshness(artifact.generatedAt, new Date(), artifact.sourceCommit)
   const base = `/hub/${encodeURIComponent(projectSlug)}/board`
-
-  const cardSlug = Array.isArray(query.card) ? query.card[0] : query.card
-  if (cardSlug) {
-    // Filters do not hide an opened card: a shared `?card=` link opens whatever is set.
-    const card: BoardCard | null = findCard(items, cardSlug)
-    if (!card) notFound()
-    return (
-      <HubShell projectSlug={projectSlug} tab="board">
-        <CardView card={card} back={`${base}${boardQuery(filters)}`} repo={boardBlock?.repo ?? null} />
-      </HubShell>
-    )
-  }
 
   const board = buildBoard(items, { filters, wip: boardBlock?.wip ?? null })
   return (

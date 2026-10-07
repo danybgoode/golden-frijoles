@@ -45,7 +45,7 @@ function Cell({
         <a
           key={item.slug}
           className="ds-areas-item"
-          href={`/hub/${encodeURIComponent(projectSlug)}/board?card=${encodeURIComponent(item.slug)}`}
+          href={`/hub/${encodeURIComponent(projectSlug)}/epic/${encodeURIComponent(item.slug)}`}
         >
           {item.name}
           {!shipped && item.stage !== 'Ready to build' ? (

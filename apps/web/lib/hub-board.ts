@@ -57,6 +57,11 @@ export type BoardCard = {
    * module stays import-free so `node --test` loads it with no resolver.
    */
   result: Record<string, unknown> | null
+  /**
+   * one-epic-page D1 — the row's FinOps fields, as pushed (an Epic only). Raw for the same reason as `result`: the page
+   * reads them through `lib/roadmap-finops.ts`'s `epicFinops`, the ONE derivation of a quote and an actual.
+   */
+  finops: Record<string, unknown> | null
 }
 
 /** The row fields `epicResult` reads. ⚠️ Kept in step with `lib/roadmap-result.ts` by `hub-board.test.ts`. */
@@ -75,6 +80,20 @@ export const RESULT_ROW_KEYS = [
   'verdict_evidence',
   'verdict_at',
   'read_late',
+] as const
+
+/** The row fields `epicFinops` reads. ⚠️ Kept in step with `lib/roadmap-finops.ts` by `hub-board.test.ts`. */
+export const FINOPS_ROW_KEYS = [
+  'slug',
+  'name',
+  'appetite',
+  'status',
+  'quote_low_usd',
+  'quote_high_usd',
+  'quote_basis',
+  'actual_usd',
+  'actual_mtok',
+  'actual_basis',
 ] as const
 
 export type WipState = { limit: number; count: number; over: boolean; at: boolean }
@@ -150,6 +169,7 @@ export function toCard(row: RoadmapRow, project: string | null = null): BoardCar
     kickoff: (r.kickoff as string | null | undefined) ?? null,
     shippedAt: (r.shipped_at as string | null | undefined) ?? null,
     result: row.grain === 'Epic' ? Object.fromEntries(RESULT_ROW_KEYS.map((k) => [k, r[k] ?? null])) : null,
+    finops: row.grain === 'Epic' ? Object.fromEntries(FINOPS_ROW_KEYS.map((k) => [k, r[k] ?? null])) : null,
   }
 }
 
@@ -259,7 +279,10 @@ export function answerLine(
   return `${flow}${pull}${over}`
 }
 
-/** The card a `?card=<slug>` link opens, after filters are ignored — a shared card link must open whatever is set. */
+/**
+ * The card an epic page opens (one-epic-page D1) — an Epic or a Seed, whatever the board's filters or Shipped window
+ * would hide. A Sprint row or a stage-less (archived) row is no card, so the page 404s.
+ */
 export function findCard(items: RoadmapRow[], slug: string): BoardCard | null {
   for (const row of items) {
     if (row.slug !== slug) continue
