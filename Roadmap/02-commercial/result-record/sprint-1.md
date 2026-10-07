@@ -3,7 +3,7 @@ epic: result-record
 sprint: 1
 title: "The target, set at grooming"
 risk: low
-phase: Shaping
+phase: Building
 stories_total: 3
 stories:
   - id: S1.1
