@@ -5495,3 +5495,61 @@
     justify-self: center;
   }
 }
+
+/* result-record · Story 2.3 (D11) — the Bean. Gold ONLY on proven: gold is what "it paid off" means, so nothing else
+   may wear it here. Red (night garden's Ember stand-in) only on disproven. Growing is a live green outline — not yet
+   a result; unclear is dim. Every kind is the same shape, so the word always travels with it (`bean.tsx`). */
+.ds .ds-bean {
+  display: inline-block;
+  flex: none;
+  vertical-align: -0.2em;
+}
+.ds .ds-bean-body {
+  stroke-width: 1.6;
+}
+.ds .ds-bean-crease {
+  fill: none;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+}
+.ds .ds-bean[data-kind='proven'] .ds-bean-body {
+  fill: var(--gold);
+  stroke: var(--gold-deep);
+}
+.ds .ds-bean[data-kind='proven'] .ds-bean-crease {
+  stroke: var(--gold-deep);
+}
+.ds .ds-bean[data-kind='disproven'] .ds-bean-body {
+  fill: var(--red-deep);
+  stroke: var(--red);
+}
+.ds .ds-bean[data-kind='disproven'] .ds-bean-crease {
+  stroke: var(--red);
+}
+.ds .ds-bean[data-kind='growing'] .ds-bean-body {
+  fill: none;
+  stroke: var(--green);
+}
+.ds .ds-bean[data-kind='growing'] .ds-bean-crease {
+  stroke: var(--green);
+}
+.ds .ds-bean[data-kind='unclear'] .ds-bean-body {
+  fill: var(--card-3);
+  stroke: var(--dim-2);
+}
+.ds .ds-bean[data-kind='unclear'] .ds-bean-crease {
+  stroke: var(--dim-2);
+}
+/* The result line on a shipped board card: the bean, its word, then `from → actual (target)`. */
+.ds .ds-board-card-result {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--dim);
+}
+.ds .ds-board-card-result b {
+  color: var(--crema);
+  font-weight: 600;
+}

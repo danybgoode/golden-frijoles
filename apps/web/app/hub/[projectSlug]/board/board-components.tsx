@@ -6,6 +6,8 @@ import type { Freshness } from '@/lib/hub-freshness'
 import { BOARD_TYPES, boardQuery, type Board, type BoardCard, type BoardFilters } from '@/lib/hub-board'
 import { stageCommands } from '@/lib/stage-commands'
 import { stageLabel } from '@/lib/screen-words'
+import { BEAN_WORDS, epicResult, resultLine } from '@/lib/roadmap-result'
+import { Bean } from '@/design-system/bean'
 import {
   Answer,
   Col,
@@ -34,6 +36,24 @@ const TYPE_LABEL: Record<(typeof BOARD_TYPES)[number], string> = {
   spike: 'Spike',
   bug: 'Bug',
   chore: 'Chore',
+}
+
+/**
+ * result-record D11 — a shipped epic's result under its name: the Bean, its word, and `from → actual (target)`. Only
+ * an epic that carries a target shows one (growing until read), so the 54 epics shipped before the record show none.
+ */
+export function CardResult({ card }: { card: BoardCard }) {
+  if (!card.result) return null
+  const r = epicResult(card.result)
+  if (!r.bean) return null
+  const line = resultLine(r)
+  return (
+    <span className="ds-board-card-result">
+      <Bean kind={r.bean} decorative />
+      <b>{BEAN_WORDS[r.bean]}</b>
+      {line ? <span>{line}</span> : null}
+    </span>
+  )
 }
 
 function cardMeta(card: BoardCard): string {
@@ -141,6 +161,7 @@ export function BoardView({
                         {card.project ? `${card.project} · ` : ''}
                         {cardMeta(card)}
                       </span>
+                      <CardResult card={card} />
                     </a>
                   </li>
                 ))}

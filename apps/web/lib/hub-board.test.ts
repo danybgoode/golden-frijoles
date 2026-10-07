@@ -4,7 +4,16 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { ROADMAP_STAGES, type RoadmapRow } from './roadmap-artifact-schema.ts'
-import { BOARD_STAGES, boardQuery, buildBoard, findCard, hasStages, parseBoardFilters } from './hub-board.ts'
+import {
+  BOARD_STAGES,
+  RESULT_ROW_KEYS,
+  boardQuery,
+  buildBoard,
+  findCard,
+  hasStages,
+  parseBoardFilters,
+  toCard,
+} from './hub-board.ts'
 
 // board-sinks-and-scrumban · Sprint 2, Story 2.1 — the board's arithmetic, over a fixture artifact.
 
@@ -197,4 +206,34 @@ test('a card names its project only from the caller, never from a field of the p
   assert.equal(own.columns.flatMap((c) => c.cards)[0].project, null)
   const ws = buildBoard([row], { projectOf: () => 'real' })
   assert.equal(ws.columns.flatMap((c) => c.cards)[0].project, 'real')
+})
+
+// result-record · Story 2.3 (D11) — an epic card carries its result fields; the page derives the bean from them.
+
+test('toCard carries an epic’s result fields raw, and a seed none', () => {
+  const epicCard = toCard(
+    row({
+      name: 'Reminders',
+      slug: 'reminders',
+      stage: 'Shipped',
+      status: 'Shipped',
+      target_metric: 'invoices_paid_on_time',
+      target_from: 61,
+      target_to: 70,
+      verdict: 'proven',
+      verdict_actual: 72,
+    } as Partial<RoadmapRow>)
+  )
+  assert.equal(epicCard?.result?.verdict, 'proven')
+  assert.equal(epicCard?.result?.target_to, 70)
+  assert.equal(epicCard?.result?.read_date, null, 'absent is null, never invented')
+  const seedCard = toCard(row({ name: 'Idea', slug: 'idea', grain: 'Seed', stage: 'To groom' }))
+  assert.equal(seedCard?.result, null)
+})
+
+test('RESULT_ROW_KEYS covers every row field roadmap-result reads', () => {
+  const here = dirname(fileURLToPath(import.meta.url))
+  const src = readFileSync(join(here, 'roadmap-result.ts'), 'utf8')
+  const read = new Set([...src.matchAll(/\brow\.([a-z_]+)/g)].map((m) => m[1]))
+  for (const key of read) assert.ok((RESULT_ROW_KEYS as readonly string[]).includes(key), key)
 })
