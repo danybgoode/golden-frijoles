@@ -146,30 +146,35 @@ async function readInputSeries(
     // ⚠️ PAGED, in order (fresh review, #293). PostgREST caps a select at `max_rows` (1000 here), so an unbounded select
     // past that returned an ARBITRARY subset and the daily series — and the `latest` an agent writes into a verdict —
     // was silently wrong. Past the hard bound the read FAILS rather than returning a partial series as if it were whole.
-    const events: { event: string; created_at: string }[] = []
-    for (let from = 0; ; from += EVENT_PAGE) {
-      if (from >= EVENT_READ_BOUND) {
-        console.error(
-          `[north-star-query] ${sourceEvent}: more than ${EVENT_READ_BOUND} events — refusing a partial series`
-        )
-        return { ok: false }
-      }
+    const page = (from: number, to: number) => {
       let query = supabase
         .from('events')
         .select('event, created_at')
         .eq('project_id', projectId)
         .eq('event', sourceEvent)
       if (featureKey !== undefined) query = query.eq('feature_id', featureKey)
-      const { data, error: eventsError } = await query
-        .order('created_at', { ascending: true })
-        .order('id', { ascending: true })
-        .range(from, from + EVENT_PAGE - 1)
+      return query.order('created_at', { ascending: true }).order('id', { ascending: true }).range(from, to)
+    }
+    const events: { event: string; created_at: string }[] = []
+    for (;;) {
+      const { data, error: eventsError } = await page(events.length, events.length + EVENT_PAGE - 1)
       if (eventsError) {
         console.error('[north-star-query] events query failed:', eventsError)
         return { ok: false }
       }
       events.push(...((data ?? []) as { event: string; created_at: string }[]))
       if ((data ?? []).length < EVENT_PAGE) break
+      if (events.length >= EVENT_READ_BOUND) {
+        // At the bound exactly is still whole (codex, #293): refuse only when one MORE row proves it was exceeded.
+        const { data: more, error: moreError } = await page(events.length, events.length)
+        if (moreError || (more ?? []).length > 0) {
+          console.error(
+            `[north-star-query] ${sourceEvent}: more than ${EVENT_READ_BOUND} events — refusing a partial series`
+          )
+          return { ok: false }
+        }
+        break
+      }
     }
     return {
       ok: true,
