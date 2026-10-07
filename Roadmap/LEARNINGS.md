@@ -2161,6 +2161,13 @@ one-liner + why + date shape.
 - **Answer a reviewer's repeated false positive with a spec, not a second comment.** Codex twice read the reads-due
   check as never seeing the derived date; a spec building the row through the extract's own function settled it and
   now guards the path.
+- **A grooming no-go that blocks the feature's core claim is a question for the product owner, not a scope
+  correction.** "No new API" made the lock ship `epic-read` with the owner typing the number — the opposite of the value
+  proposition ("the agent fetches it") — and cost a third sprint after the close. The lock disproves scope out loud;
+  when what it would cut is the point of the feature, it asks.
+- **An unbounded PostgREST select is a silent sample past `max_rows`.** The telemetry series read had no `.range()` or
+  order, so past 1,000 events it summed an arbitrary subset. Page in a stable order and refuse past a hard bound;
+  never return a partial aggregate as if it were whole.
 - **A "half" value the contract accepts is a silent failure downstream.** From/to with no metric passed validation
   and then never came due, because every reader keyed off the metric. When readers agree on what makes a record
   "complete", the contract must refuse anything less.

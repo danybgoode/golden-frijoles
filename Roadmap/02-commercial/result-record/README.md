@@ -1,6 +1,6 @@
 ---
-status: in-progress  # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Building      # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+status: shipped      # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+phase: Shipped       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
 locked_at: "2026-10-07T01:50:48Z"
 slug: result-record
@@ -17,12 +17,12 @@ quote_basis: "M, n=8, p25–p75"
 build_order: 65      # integer position in the ONE global build sequence — the SSOT once the epic
                      # exists (the seed's value is only a fallback). Fill it in at the betting
                      # table; plain integers, no "#2a" suffixes. See 00-ideas/README.md → Ordering.
-actual_usd: 26.78
-actual_mtok: 92.3
+actual_usd: 42.44
+actual_mtok: 154
 actual_basis: "this machine · 2026-10-07 · 1 session · prices 2026-10-02"
 ---
 
-# Epic: The result record
+# Epic: The result record ✅
 
 > **Area:** 02-commercial · **Risk:** low · **Class:** Feature · **Scope seed:** [`00-ideas/seeds/result-record.md`](../../00-ideas/seeds/result-record.md)
 <!-- Class (above) is the Stage-2 classification: Feature, Spike, Bug, or Chore — see SKILL.md's
@@ -263,12 +263,12 @@ the Hub read. Sprint 2: the kit script, then the reminders and the board card. M
 release follows `skills/RELEASING.md`.
 
 ## Definition of Done (epic)
-- [ ] All sprints merged to `main` + smoke-tested (gaps stated — `node scripts/owed-ledger.mjs` counts what is still owed)
-- [ ] Each `sprint-N.md` has its smoke walkthrough (real URLs)
-- [ ] This README marked ✅; every sprint status ticked with commit refs
+- [x] All sprints merged to `main` + smoke-tested (gaps stated — `node scripts/owed-ledger.mjs` counts what is still owed)
+- [x] Each `sprint-N.md` has its smoke walkthrough (real URLs)
+- [x] This README marked ✅; every sprint status ticked with commit refs
 - [x] `RETROSPECTIVE.md` written
 - [x] Product poster (`Roadmap/README.md`) updated
 - [x] Team memory + `MEMORY.md` index updated
 - [x] Durable learnings promoted to `Roadmap/LEARNINGS.md` (dedupe — sharpen, don't append)
 - [x] **Kill-switch:** n/a — none was planned at grooming (risk low, no flag; rollback is a revert).
-- [ ] Feature branch deleted; **this README's frontmatter `status: shipped`** (the SSOT — the board & Notion derive from it; run `node scripts/build-order.mjs`)
+- [x] Feature branch deleted; **this README's frontmatter `status: shipped`** (the SSOT — the board & Notion derive from it; run `node scripts/build-order.mjs`)

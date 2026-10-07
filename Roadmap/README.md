@@ -349,12 +349,14 @@ independently shippable slice of value.
   stored keys untouched and a guard that fails if an old name comes back. **Owed to Daniel:** both walkthroughs signed
   in, re-approving the board surfaces' words, and a follow-up list of in-page nouns.
 - ✅ [The result record](02-commercial/result-record/README.md) (launch epic 4) — **shipped and live 2026-10-07**
-  (#290, #291; plugin + kit 0.31.0–0.32.0). Every newly groomed epic says which number it should move, from what to
-  what, and when it is read: groom asks at Stage 1.5, offering your North Star inputs. On the read date
-  `epic-read` drafts Proven, Disproven or Unclear with its evidence, and writes it only when you approve. A due read
+  (#290, #291, #293; plugin + kit 0.31.0–0.33.0, CLI 0.6.0). Every newly groomed epic says which number it should
+  move, from what to what, and when it is read: groom asks at Stage 1.5, offering your North Star inputs. On the read
+  date `epic-read` **fetches the number itself** through `gf` (`gf north-star readings`, `gf experiments decision`; the
+  connector has the same two reads), drafts Proven, Disproven or Unclear with the evidence pointer filled in, and
+  writes it only when you approve. A due read
   shows in the session's opening lines and on Today; shipped board cards show the result as a **Bean** (gold only on
   Proven). The record lives in the epic file and reaches the Hub with the roadmap push, ready for the epic page and
-  the Outcome report (epics 5 and 6). **Owed to Daniel:** the grooming and end-to-end read walkthroughs.
+  the Outcome report (epics 5 and 6). **Owed to Daniel:** the CLI 0.6.0 npm publish, then the grooming and end-to-end read walkthroughs.
 - ✅ [Connect: start where you are](02-commercial/connect-page/README.md) (Daniel's feedback on the epic above) —
   **shipped and live 2026-10-06** (#284). Signup — password or Google — lands on **Connect**, not on an onboarding page
   that pushed a one-time API key; the connector URL a new account is handed can already change flags as its owner.
@@ -500,7 +502,8 @@ independently shippable slice of value.
 
 ## Recent highlights
 
-- **2026-10-07**: `result-record` **shipped**: two sprints, two PRs, ≈$26.78 against a $22–34 quote.
+- **2026-10-07**: `result-record` **shipped**: three sprints, three PRs, ≈$42.44 against a $22–34 quote (S3 added
+  after the close: the agent fetches the number — verified end to end on production).
   - An epic now carries what it should move and gets an evidenced verdict you approve on its read date. The lock
     corrected two premises out loud (epic 1's Bean didn't exist, so it was built here; `gf` can't fetch evidence, so
     the owner supplies the actual), and the live data set the default: no read date for epics shipped without a target.
