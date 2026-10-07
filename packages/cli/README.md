@@ -95,6 +95,19 @@ already exists **moves** to this metric. The dry run says so before anything is 
 reuse its key. The server validates the block and prints its `issues` on a 400. A file that still has the template's
 `<…>` placeholders is refused before anything is sent.
 
+## Reading a result: `gf north-star readings`, `gf experiments decision`
+
+An agent reading an epic's result (the plugin's `epic-read`) fetches the number itself through these two reads. Any
+project member can run them; `--json` prints the body the agent parses.
+
+```bash
+gf north-star readings grounded_bets_share --to 2026-11-04 --json   # the input's readings; `latest` is the number
+gf experiments decision smart-defaults --json                        # the experiment's decision record
+```
+
+`latest` is the last reading on or before `--to`; an input with no reading yet says so rather than reporting zero.
+Cite them as `north-star:<input>@<latest.date>` and `ab:<experiment>`.
+
 ## Exit codes
 
 | Code | Name | Means |

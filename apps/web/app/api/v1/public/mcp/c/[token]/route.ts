@@ -1,6 +1,8 @@
 import 'server-only'
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
+import { inputReadings, isReadingsCut } from '@/lib/input-readings'
+import { getExperimentDecisionByKey } from '@/lib/experiment-decision-query'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
 import {
@@ -25,7 +27,7 @@ import { makerMayWrite } from '@/lib/connector-maker'
 import { DEMO_PROJECT_SLUG } from '@/lib/public-demo'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { getFeatureFunnelByProjectId } from '@/lib/tars-query'
-import { getFeatureImpactByProjectId } from '@/lib/north-star-query'
+import { getFeatureImpactByProjectId, getInputSeriesByKey } from '@/lib/north-star-query'
 import { getExperimentComparisonByProjectId } from '@/lib/ab-query'
 import { parseJourneyCohortRequest } from '@/lib/journey-cohort-request'
 import { getJourneyCohortByProjectId } from '@/lib/journey-query'
@@ -159,6 +161,75 @@ function buildMcpServer(
             text: JSON.stringify({
               ...result,
               note: 'Basic lift only — % difference in conversion rate vs a baseline variant. No statistical-significance engine.',
+            }),
+          },
+        ],
+      }
+    }
+  )
+
+  // result-record · Story 3.2 (D18) — the two reads an agent fetches an epic's result through, the same two the CLI has
+  // (`gf north-star readings`, `gf experiments decision`) on the same lib reads, scoped to this token's project.
+  server.registerTool(
+    'get_input_readings',
+    {
+      description:
+        "Read one of this project's North Star inputs by key: its readings and the latest on or before `to`. Cite it as north-star:<input>@<latest.date>.",
+      inputSchema: {
+        inputKey: z.string().min(1).max(200).describe('The North Star input key, e.g. grounded_bets_share'),
+        to: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional()
+          .describe('Cut the readings at this day, YYYY-MM-DD'),
+      },
+    },
+    async ({ inputKey, to }) => {
+      if (!isReadingsCut(to)) {
+        return {
+          content: [{ type: 'text', text: JSON.stringify({ ok: false, reason: 'invalid_request' }) }],
+          isError: true,
+        }
+      }
+      const result = await getInputSeriesByKey(projectId, inputKey)
+      const view = result.ok ? inputReadings([result.input], inputKey, to) : null
+      if (!result.ok || !view) {
+        const reason = result.ok ? 'query_failed' : result.reason
+        return { content: [{ type: 'text', text: JSON.stringify({ ok: false, reason }) }], isError: true }
+      }
+      return {
+        content: [{ type: 'text', text: JSON.stringify({ ok: true, project: projectSlug, ...view }) }],
+      }
+    }
+  )
+
+  server.registerTool(
+    'get_experiment_decision',
+    {
+      description:
+        "Read this project's A/B experiment decision record by key (the latest version unless `version`). Cite it as ab:<key>.",
+      inputSchema: {
+        experimentKey: z
+          .string()
+          .max(64)
+          .regex(/^[a-z][a-z0-9_-]{0,63}$/),
+        version: z.number().int().positive().max(1_000_000).optional(),
+      },
+    },
+    async ({ experimentKey, version }) => {
+      const result = await getExperimentDecisionByKey(projectId, experimentKey, version)
+      if (!result.ok) {
+        return { content: [{ type: 'text', text: JSON.stringify(result) }], isError: true }
+      }
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              ok: true,
+              project: projectSlug,
+              ...result.experiment,
+              decisions: result.decisions,
             }),
           },
         ],

@@ -1,0 +1,20 @@
+gf experiments decision — an experiment's decision record (the latest version unless --version)
+
+Usage
+  gf experiments decision <key> [--version <n>] [--project <slug>] [--json]
+
+What was decided about an A/B test, from the experiment's append-only decision ledger.
+  An agent reading an epic's result cites it as `ab:<key>`.
+
+Flags
+  --version <n>     the definition version (default: the latest)
+  --project <slug>  the project (default: the remembered one)
+
+Exit codes
+  0  ok         it worked
+  1  usage      the command is wrong — nothing was sent
+  2  auth       the credential is not accepted — run `gf login`
+  3  not-found  no such thing, or not yours
+  4  conflict   someone else changed it — re-read and retry
+  5  partial    some environments changed and some did not
+  6  server     the server or the network is unwell — retry

@@ -99,6 +99,9 @@ test.describe('POST /api/v1/public/mcp/c/:token', () => {
     const expected = [
       'compare_experiment',
       'get_experiment_analysis',
+      // result-record S3.2 (D18) — the two result reads, unconditional like the flag reads (read-only, token-scoped).
+      'get_experiment_decision',
+      'get_input_readings',
       'get_journey_cohort',
       'get_north_star',
       'get_tars_funnel',
@@ -118,6 +121,27 @@ test.describe('POST /api/v1/public/mcp/c/:token', () => {
       'list_flags',
     ].sort()
     expect(names).toEqual(expected)
+  })
+
+  test('result reads on the demo token answer for the demo project only — an unknown key is not_found', async ({
+    request,
+  }) => {
+    const token = await demoToken()
+    const readings = await rpc(request, token, 'tools/call', {
+      name: 'get_input_readings',
+      arguments: { inputKey: 'no_such_input_on_the_demo' },
+    })
+    expect(readings.status()).toBe(200)
+    const r = await readings.json()
+    expect(r.result.isError).toBe(true)
+    expect(JSON.parse(r.result.content[0].text)).toEqual({ ok: false, reason: 'input_not_found' })
+    const decision = await rpc(request, token, 'tools/call', {
+      name: 'get_experiment_decision',
+      arguments: { experimentKey: 'no-such-experiment' },
+    })
+    const d = await decision.json()
+    expect(d.result.isError).toBe(true)
+    expect(JSON.parse(d.result.content[0].text)).toEqual({ ok: false, reason: 'experiment_not_found' })
   })
 
   test('get_tars_funnel on the live demo token → real numbers matching the seed', async ({ request }) => {

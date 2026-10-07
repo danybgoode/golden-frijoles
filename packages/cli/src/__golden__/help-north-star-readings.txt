@@ -1,0 +1,21 @@
+gf north-star readings — one North Star input's readings, and the latest on or before a day
+
+Usage
+  gf north-star readings <input> [--to <YYYY-MM-DD>] [--project <slug>] [--json]
+
+An agent reading an epic's result calls this: `latest` is the number it reports, and
+  `north-star:<input>@<latest.date>` is the evidence it writes. Nothing is invented: an input
+  with no reading on or before --to says so, rather than reporting zero.
+
+Flags
+  --to <YYYY-MM-DD>  cut the readings at this day (default: all of them)
+  --project <slug>   the project (default: the remembered one)
+
+Exit codes
+  0  ok         it worked
+  1  usage      the command is wrong — nothing was sent
+  2  auth       the credential is not accepted — run `gf login`
+  3  not-found  no such thing, or not yours
+  4  conflict   someone else changed it — re-read and retry
+  5  partial    some environments changed and some did not
+  6  server     the server or the network is unwell — retry
