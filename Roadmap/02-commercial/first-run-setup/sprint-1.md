@@ -3,7 +3,7 @@ epic: first-run-setup
 sprint: 1
 title: "Setup starts"
 risk: low
-phase: Shaping
+phase: Building
 stories_total: 3
 stories:
   - id: S1.1
@@ -31,6 +31,13 @@ stories:
 # First run: setup starts — Sprint 1: Setup starts
 
 **Status:** ⬜ not started
+
+## Build contract (locked by the architect before the builder started)
+Cites the epic README's D1–D13; nothing here restates them.
+- **S1.1** — setup SKILL.md Stage 2 opens with D2 then D3 (`read-repo.mjs --look`), then D4's Q1. Q2 retires (D4).
+- **S1.2** — `groom/read-repo.mjs` (D1, D5–D9) + `read-repo.test.mjs`, and setup's This-repo route (D10).
+- **S1.3** — setup's new-idea route (D11); groom SKILL.md's not-grounded seed line; `gates.md` Plan gate Moves rule.
+- Release (D12) in the same PR. Specs observed failing once by mutation before merge.
 
 ## Stories
 <!-- Keep the heading shape `### Story 1.M — <title>`. When a story ships, append ✅ + its commit ref.
