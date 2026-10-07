@@ -3,7 +3,7 @@ epic: result-record
 sprint: 3
 title: "The agent fetches the number"
 risk: high
-phase: In review
+phase: Shipped
 stories_total: 3
 stories:
   - id: S3.1
@@ -30,7 +30,7 @@ stories:
 ---
 # The result record — Sprint 3: The agent fetches the number
 
-**Status:** 🟦 In review
+**Status:** ✅ Shipped — #293, merged 08316f0 2026-10-07, deployed to production and verified end to end
 
 Amendment (Daniel, 2026-10-07): fetching the number is the value proposition; the CLI is the agent's surface. Lock
 D14–D20 in the [epic README](README.md#amendment--sprint-3-the-agent-fetches-the-number-daniel-2026-10-07).
@@ -38,7 +38,7 @@ D14–D20 in the [epic README](README.md#amendment--sprint-3-the-agent-fetches-t
 ## Stories
 <!-- Keep the heading shape `### Story 3.M — <title>`. When a story ships, append ✅ + its commit ref. -->
 
-### Story 3.1 — The engine answers an agent: an input's readings, an experiment's decision
+### Story 3.1 — The engine answers an agent: an input's readings, an experiment's decision ✅ 9973909
 **As** a founder's agent, **I want** to read a North Star input's readings and an experiment's decision record for my
 project, **so that** I can bring the evidence instead of asking for it.
 `GET /api/v1/cli/north-star/readings` and `GET /api/v1/cli/experiments/decision`, member-gated through
@@ -48,7 +48,7 @@ project, **so that** I can bring the evidence instead of asking for it.
 - A non-member gets 404; an unknown input or experiment is `not_found`.
 **Risk:** high (a new request-path read; single project, membership-gated)
 
-### Story 3.2 — gf reads them, and so does the connector
+### Story 3.2 — gf reads them, and so does the connector ✅ 75ea95c
 **As** a founder's agent, **I want** gf commands and connector tools for those two reads, **so that** any agent, in the
 terminal or the Claude app, can fetch the number.
 `gf north-star readings <input>`, `gf experiments decision <key>` (D16); connector tools `get_input_readings`,
@@ -58,7 +58,7 @@ terminal or the Claude app, can fetch the number.
 - Both tools return the same body as the routes, scoped to the token's project.
 **Risk:** low
 
-### Story 3.3 — epic-read fetches the number itself
+### Story 3.3 — epic-read fetches the number itself ✅ e4d86b4
 **As** a founder, **I want** the read to arrive with the actual and its evidence already filled in, **so that** all I
 do is approve.
 `epic-read` runs `gf north-star readings` (and `gf experiments decision` with `--experiment`), takes the latest reading
@@ -89,3 +89,13 @@ Env: production · https://goldenfrijoles.com
    → the README carries the verdict and its fetched evidence; the bean shows on the board.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+### Smoke run (2026-10-07, production)
+- ✅ Merged #293 → `08316f0`, production deployment `success`; kit + plugin **0.33.0** published.
+- ✅ `gf` 0.6.0 (repo build) signed in to production: `gf north-star readings` returns a real input's readings
+  (`golden-beans-demo` · `setup_guide_completions`, latest 35 on 16 Jul); unknown input / experiment → `not_found`.
+- ✅ **End to end:** the published kit's `epic-read` (`GF_BIN` = the 0.6.0 build) on a throwaway epic targeting
+  `setup_guide_completions` 20 → 30 fetched 35, drafted **Proven** with `north-star:setup_guide_completions@2026-07-16`,
+  and `--write` stamped exactly that. With no history the same run correctly refused a reading older than the ship date.
+- ⏳ **Owed to Daniel:** `npm publish` of `@golden-frijoles/cli` 0.6.0 (2FA). Until then a stranger's `gf` 0.5.0 lacks the
+  two commands and `epic-read` falls back to asking, with the reason. Then this sprint's walkthrough on a real epic.

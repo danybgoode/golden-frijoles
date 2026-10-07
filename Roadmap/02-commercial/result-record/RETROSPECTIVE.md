@@ -5,7 +5,7 @@ _Intent: (owed — Daniel's one word after the walkthroughs)_
 <!-- Did we build what the product owner meant? One word, THEIR answer: yes, mostly or no. Required by `epic-dod` only
      when the epic's seed or README carries a numeric `intent_match:` (intent-match D17); the calibration learns from
      it. Keep the line and leave exactly one of the three words between `_Intent: ` and the closing underscore. -->
-_Quote vs actual: $22–34 (M, n=8, p25–p75) → ≈$26.78 (−21% vs the quote's top; inside it; Claude only, reviewers not measured)_
+_Quote vs actual: $22–34 (M, n=8, p25–p75) → ≈$42.44 (+25% vs the quote's top: S1–S2 ≈$26.78 inside it; S3 was added after the close by Daniel's amendment; Claude only, reviewers not measured)_
 
 ## What shipped
 - **Sprint 1 · The target, set at grooming:** PR #290, merge `d33772b`, plugin + kit 0.31.0.
@@ -26,7 +26,17 @@ _Quote vs actual: $22–34 (M, n=8, p25–p75) → ≈$26.78 (−21% vs the quot
   - Today lists due reads under *Waiting on you*. They are derived from the pushed roadmap, not tasks.
   - The **Bean** was built here to night-garden S2.1's spec (Daniel's call). It shows on shipped board cards with a
     target, next to its word and `from → actual (target)`.
-- Both sprints are deployed to production and checked there:
+- **Sprint 3 · The agent fetches the number:** PR #293, merge `08316f0`, kit + plugin 0.33.0, CLI 0.6.0 (publish owed).
+  Added after the close at Daniel's word: fetching the number is the value proposition, and the CLI is the agent's
+  surface.
+  - Two member-gated reads, `GET /api/v1/cli/north-star/readings` and `/api/v1/cli/experiments/decision` (the second on
+    the existing governance gate), `gf north-star readings` / `gf experiments decision`, and two connector tools.
+  - `epic-read` fetches through `gf` and drafts with the pointer filled in; the owner only approves. The owner's own
+    flags still win, and every failure falls back with its reason.
+  - Found on the way: the telemetry series read stopped at PostgREST's 1,000-row cap with no order; it now pages in
+    order and refuses past a bound rather than return a partial series (this also fixes the North Star page).
+  - Verified end to end on production: the published kit fetched a real reading, drafted Proven and stamped it.
+- All three sprints are deployed to production and checked there:
   - Both production roadmap pushes were accepted with the new fields.
   - The published kit runs `epic-read`.
   - The board returns 200 signed out.
@@ -57,11 +67,15 @@ _Quote vs actual: $22–34 (M, n=8, p25–p75) → ≈$26.78 (−21% vs the quot
 - **Prettier's changed-files gate checks *new* files, and a new file can slip past a local run that only checks
   modified files.** `result-dates.mjs` and a test file each turned CI red once.
 
+- **The no-go that cost a sprint.** "No new API" was written at grooming and the lock treated it as fixed, so S1–S2
+  shipped with the owner typing the actual — the opposite of the value proposition. When a lock finds that a no-go
+  blocks the feature's core claim, put it to the product owner as a question, not a scope correction.
+
 ## Gaps / follow-ups
 - **Owed to Daniel:** sprint 1's grooming walkthrough (steps 1–2) and sprint 2's end-to-end read (ship a tiny epic
   with today's read date → session line → Today → `epic-read` → approve → push → bean). Then the `_Intent_` word.
-- **Fetching evidence:** a key-authed read route for an input's readings and an experiment's decision record would
-  let `epic-read` fill the actual itself. That's new API, so it needs its own bet.
+- **CLI 0.6.0 npm publish** (Daniel's 2FA) — the fetch needs it on strangers' machines.
+- Today's "Read due" line could show the drafted verdict (fetched) — not built.
 - **night-garden S2.1** now re-skins the existing Bean and adds the specimen (the note is in its README).
 - The visual gate has no fixture epic with a target, so no route renders a bean in CI; the render spec covers the
   markup. A fixture with one would close that.
