@@ -357,6 +357,14 @@ independently shippable slice of value.
   shows in the session's opening lines and on Today; shipped board cards show the result as a **Bean** (gold only on
   Proven). The record lives in the epic file and reaches the Hub with the roadmap push, ready for the epic page and
   the Outcome report (epics 5 and 6). **Owed to Daniel:** the CLI 0.6.0 npm publish, then the grooming and end-to-end read walkthroughs.
+- ✅ [Gates in plain agile](02-commercial/gates-in-plain-agile/README.md) (launch epic 7) — **shipped and published
+  2026-10-07** (#302, #303; plugin + kit 0.35.0, 0.36.0). Every decision a founder makes with the agent has one shape:
+  where to read it, what's decided for you, two or three decisions, then numbered options. The words are plain agile:
+  the Strategy gate (**Approve the strategy · Change something · Coach me through it**), the Plan gate ("We bet that …",
+  Moves · Target · Read date · Size · Flag · Measured by, **Approve the plan · Park it · Change something**) and the
+  Build gate (what was created, `/build <slug>`, only the setup that's missing). One home, groom's
+  `references/gates.md`; a CI check keeps fund, scaffold, cycle, kickoff, agreed and draft off the screen in every
+  copy. Files and their values are unchanged. **Owed:** Daniel's terminal walkthrough from setup to `/build`.
 - ✅ [Outcome report v2](02-commercial/outcome-report-v2/README.md) (launch epic 6) — **shipped and live 2026-10-07**
   (#299, #300). The Outcome report opens by saying whether the product is on the pace its epics planned, then a chart
   of each North Star input against the line the shipped epics' targets draw, four figures each against expected, and
@@ -517,6 +525,11 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-07**: `gates-in-plain-agile` **shipped**: two sprints, two PRs, ≈$14.63 against a $22–34 quote. The
+  terminal's gates now read in plain agile and share one shape. Reading the private canvas before the lock caught four
+  things it drew that the system doesn't do (a flag made at grooming, an email digest, one-pagers, a renamed folder).
+  Review then found real ambiguities in the gate text: a kill switch shown as "off", and a reply of "1" that meant two
+  things.
 - **2026-10-07**: `outcome-report-v2` **shipped**: two sprints, two PRs, ≈$14.59 against a $22–34 quote. The report
   answers "is it paying off?" first, from the epics' own targets — no invented number: the lock found the North Star
   itself has no recorded level, so the chart plots its inputs. Review found and fixed a one-bad-date crash that took

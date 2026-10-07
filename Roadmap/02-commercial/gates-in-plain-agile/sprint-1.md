@@ -3,7 +3,7 @@ epic: gates-in-plain-agile
 sprint: 1
 title: "The Plan and Build gates"
 risk: low
-phase: Building
+phase: Shipped
 stories_total: 3
 stories:
   - id: S1.1
@@ -30,7 +30,7 @@ stories:
 ---
 # Gates in plain agile — Sprint 1: The Plan and Build gates
 
-**Status:** 🟡 in review — #302
+**Status:** ✅ shipped and live 2026-10-07 (#302, merge `a4a4118`, plugin + kit 0.35.0 published)
 
 ## Build contract (locked by the architect before the builder started)
 Cites README D1–D5, D8, D11–D14; it restates none of them.
@@ -102,3 +102,7 @@ Env: a scratch repo with the plugin installed from this branch
    → None of fund, scaffold, underwritten, displaced, kickoff, epic mode.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+### Builder's walk (2026-10-07, recorded in #302)
+A fixture seed in a scratch repo: the Plan gate printed with every line filled from the seed and `strategy.mjs` (Measured by = `invoice_paid`); **Park it** left the seed `ready`, `underwritten_by: null`, `git status` empty; **Approve the plan** ran `fund.mjs` then `scaffold-epic.mjs` unchanged; the Build gate showed only the missing item (the digest). The published kit 0.35.0's skeleton says "Park it", never "don't fund".
+**Owed to Daniel:** the interactive walkthrough above, in a scratch repo with the plugin installed from `main`.
