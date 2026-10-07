@@ -176,7 +176,8 @@ export async function CommandCenter({ project }: { project: CommandCenterProject
           <Band title="Waiting on you" who="you" sub="Decisions nothing else is allowed to make.">
             <TaskList>
               <ReadDueLines reads={dueReads} />
-              {bands.open.length === 0 && dueReads.length > 0 ? null : bands.open.length === 0 ? (
+              {/* A FAILED queue read keeps its sentence even beside due reads (fresh review, #291). */}
+              {tasks !== null && bands.open.length === 0 && dueReads.length > 0 ? null : bands.open.length === 0 ? (
                 <BandEmpty
                   head="Nothing is waiting on you"
                   body={
