@@ -3,7 +3,7 @@ epic: result-record
 sprint: 1
 title: "The target, set at grooming"
 risk: low
-phase: Shaping
+phase: In review
 stories_total: 3
 stories:
   - id: S1.1
@@ -12,25 +12,25 @@ stories:
     i_want: "every epic to carry its hypothesis, target and read date"
     so_that: "what it should move is written down before it's built"
     risk: low
-    status: planned
+    status: done
   - id: S1.2
     title: "Groom asks which number, by how much, by when"
     as_a: "a founder grooming"
     i_want: "to be asked which number, by how much and by when, with my North Star inputs offered"
     so_that: "the epic is grounded"
     risk: low
-    status: planned
+    status: done
   - id: S1.3
     title: "The target and verdict reach the Hub"
     as_a: "a founder"
     i_want: "the target and the verdict to reach the Hub"
     so_that: "every page can show expected against actual"
     risk: low
-    status: planned
+    status: done
 ---
 # The result record — Sprint 1: The target, set at grooming
 
-**Status:** ⬜ not started
+**Status:** 🟦 In review
 
 ## Stories
 <!-- Keep the heading shape `### Story 1.M — <title>`. When a story ships, append ✅ + its commit ref.
@@ -84,9 +84,13 @@ Env: production · https://goldenfrijoles.com   (or the preview URL while testin
    → Groom asks which number, by how much and by when, and offers your North Star inputs.
 2. Approve it
    → The new epic README carries hypothesis, target and read date.
-3. Run `node scripts/roadmap-push.mjs`
-   → The push succeeds.
-4. Go to https://goldenfrijoles.com/hub/<your-project>/board and open the epic's card
-   → Nothing new is shown yet (epics 5 and 6 show it); the push response lists the fields as received.
+3. Run `node scripts/roadmap-extract.mjs --docs-only | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).find(r=>r.slug==="<slug>")))'`
+   → The epic's row carries `hypothesis`, `target_metric`, `target_from`, `target_to` and `read_date` (null until
+     shipped when you left it blank; once shipped, 30 days later with `read_date_derived: true`).
+4. Run `node scripts/roadmap-push.mjs`
+   → "pushed" (or "unchanged"): the Hub accepted a payload carrying the fields. (Corrected at the lock: the push
+     response does not echo fields, so step 3 is where you see them.)
+5. Go to https://goldenfrijoles.com/hub/<your-project>/board and open the epic's card
+   → Nothing new is shown yet: the bean is sprint 2, the epic page and Outcome report are epics 5 and 6.
 
 If any step fails, note the step number + what you saw — that's the bug report.
