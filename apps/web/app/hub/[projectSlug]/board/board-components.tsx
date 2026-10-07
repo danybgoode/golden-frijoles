@@ -4,29 +4,14 @@ import type { ReactNode } from 'react'
 // react-dom/server refuses to render) — the same line, for the same reason, as `report-components.tsx`.
 import type { Freshness } from '@/lib/hub-freshness'
 import { BOARD_TYPES, boardQuery, type Board, type BoardCard, type BoardFilters } from '@/lib/hub-board'
-import { stageCommands } from '@/lib/stage-commands'
 import { stageLabel } from '@/lib/screen-words'
 import { BEAN_WORDS, epicResult, resultLine } from '@/lib/roadmap-result'
 import { Bean } from '@/design-system/bean'
-import {
-  Answer,
-  Col,
-  Empty,
-  ListCard,
-  ListHead,
-  PageHead,
-  Row,
-  RowMain,
-  Stat,
-  Step,
-  Steps,
-  Summary,
-} from '@/design-system/primitives'
-import { CopyButton } from '../../copy-button'
+import { Answer, Empty, PageHead } from '@/design-system/primitives'
 
-// board-sinks-and-scrumban · Sprint 2 — the board's three approved states, as components:
+// board-sinks-and-scrumban · Sprint 2 — the board's approved states, as components (the third, `hub-board-card`, retired
+// with the card view into the epic page — one-epic-page D4):
 //   hub-board        head → answer → toolbar → tiles (6) → note
-//   hub-board-card   head (+ Copy kickoff prompt) → answer → summary (7) → steps → list (Doc | Link) → list (Command | Copy)
 //   hub-board-empty  head → empty
 // Every block is a DIRECT child of `<main>`, because that is what the visual gate reads (state-contract-core.mjs:
 // "direct children only"); a label lives inside its block (`ListCard`'s `label`), never between blocks.
@@ -96,7 +81,7 @@ export function BoardView({
   leadingChips?: ReactNode
   /** Query kept on every chip and card link (the workspace board's `project`). */
   carry?: Record<string, string>
-  /** Where a card opens — the project board's own `?card=` unless the caller says otherwise. */
+  /** Where a card opens — its epic page on this project (one-epic-page D3) unless the caller says otherwise. */
   cardHref?: (card: BoardCard) => string
   /** The closing note, replacing the project board's provenance sentence (the workspace board has one per project). */
   note?: ReactNode
@@ -113,8 +98,11 @@ export function BoardView({
       {label}
     </a>
   )
+  // The filters ride along so the epic page's Back returns to this board as it was (one-epic-page D3).
   const href =
-    cardHref ?? ((card: BoardCard) => `${base}${boardQuery(filters, { ...carry, card: card.slug })}`)
+    cardHref ??
+    ((card: BoardCard) =>
+      `${base.replace(/\/board$/, '')}/epic/${encodeURIComponent(card.slug)}${boardQuery(filters)}`)
   return (
     <>
       <PageHead title={title} lede={lede} actions={action} />
@@ -192,119 +180,6 @@ export function BoardView({
             : ''}
         </p>
       )}
-    </>
-  )
-}
-
-function docRows(card: BoardCard): { label: string; path: string }[] {
-  return [
-    card.links.readme ? { label: 'Epic README', path: card.links.readme } : null,
-    card.links.seed ? { label: 'Seed (the pitch)', path: card.links.seed } : null,
-    ...card.links.sprints.map((path, i) => ({ label: `Sprint ${card.sprints[i]?.n ?? i + 1}`, path })),
-    card.links.retro ? { label: 'Retrospective', path: card.links.retro } : null,
-  ].filter((d): d is { label: string; path: string } => d !== null)
-}
-
-export function CardView({ card, back, repo }: { card: BoardCard; back: string; repo: string | null }) {
-  const commands = [
-    ...(card.kickoff ? [{ label: 'kickoff prompt', text: card.kickoff, kickoff: true }] : []),
-    ...stageCommands(card).map((c) => ({ ...c, kickoff: false })),
-  ]
-  const docs = docRows(card)
-  return (
-    <>
-      <PageHead
-        title={card.name}
-        lede={
-          <>
-            {stageLabel(card.stage)}
-            {card.stageSource ? <> — read from {card.stageSource}</> : null}.{' '}
-            <a href={back}>Back to the board</a>
-          </>
-        }
-        actions={
-          card.kickoff ? (
-            <CopyButton primary value={card.kickoff} label="Copy the kickoff prompt">
-              Copy kickoff prompt
-            </CopyButton>
-          ) : undefined
-        }
-      />
-      <Answer>
-        {card.goal ?? 'No goal is written for this initiative yet — its README has no Why paragraph.'}
-      </Answer>
-
-      <Summary>
-        <Stat label="Stage" value={stageLabel(card.stage)} />
-        <Stat label="Area" value={card.area ?? '—'} />
-        <Stat label="Build order" value={card.buildOrder !== null ? `#${card.buildOrder}` : '—'} />
-        <Stat label="Type" value={card.type ?? '—'} />
-        <Stat label="Risk" value={card.risk ?? '—'} />
-        <Stat label="Appetite" value={card.appetite ?? '—'} />
-        <Stat label="Bet" value={card.bet ? `bet: ${card.bet}` : 'not bet'} />
-      </Summary>
-
-      <Steps>
-        {card.sprints.length > 0 ? (
-          card.sprints.map((sprint) => (
-            <Step key={sprint.n} note={`${sprint.done} of ${sprint.total} stories`}>
-              Sprint {sprint.n}
-              {sprint.title ? ` — ${sprint.title}` : ''}
-            </Step>
-          ))
-        ) : (
-          <Step note="A seed is sliced into sprints when it is groomed and scaffolded.">No sprints yet</Step>
-        )}
-      </Steps>
-
-      <ListCard label="Docs">
-        <ListHead>
-          <Col header>Doc</Col>
-          <Col header width="meta">
-            Link
-          </Col>
-        </ListHead>
-        {docs.map((doc) => (
-          <Row key={doc.path}>
-            <RowMain title={doc.label} description={doc.path} mono={false} />
-            <Col width="meta">
-              {/* The pushed repo base is validated https at ingest; without one the path is shown, never guessed. */}
-              {repo ? <a href={`${repo}${doc.path}`}>Open</a> : <span>{doc.path}</span>}
-            </Col>
-          </Row>
-        ))}
-      </ListCard>
-
-      <ListCard label="Commands for this stage">
-        <ListHead>
-          <Col header>Command</Col>
-          <Col header width="act">
-            Copy
-          </Col>
-        </ListHead>
-        {commands.length === 0 ? (
-          <Row>
-            <RowMain title="Nothing is owed — it shipped." mono={false} />
-            <Col width="act">{null}</Col>
-          </Row>
-        ) : (
-          commands.map((command) => (
-            <Row key={command.label}>
-              <RowMain
-                title={command.kickoff ? 'The kickoff prompt' : command.text}
-                description={command.kickoff ? command.text.split('\n')[0] : command.label}
-                mono={!command.kickoff}
-              />
-              <Col width="act">
-                <CopyButton
-                  value={command.text}
-                  label={`Copy: ${command.kickoff ? command.label : command.text}`}
-                />
-              </Col>
-            </Row>
-          ))
-        )}
-      </ListCard>
     </>
   )
 }

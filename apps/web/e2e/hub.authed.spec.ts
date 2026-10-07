@@ -71,12 +71,12 @@ test('the roadmap board renders as a real page, from a real pushed artifact', as
   await expect(page.getByTestId('hub-empty-state')).toHaveCount(0)
   // board-sinks-and-scrumban S4.1 — the Roadmap tab is areas × Shipped · Now · Next · Later now (the journey track and
   // its four tiles retired; "you are here" lives in the Board's answer line). Its three halves: the answer naming what
-  // is Now, one row per area, and every name a link to its card on the Board.
+  // is Now, one row per area, and every name a link to its epic page (one-epic-page D3).
   await expect(page.locator('main .ds-answer')).toContainText('epics have shipped')
   await expect(page.locator('main .ds-answer')).toContainText('Now: The mockups, as built (Building).')
   // The fixture's epics sit in 02-commercial and 01-platform, its seeds in 00-ideas: three areas.
   await expect(page.locator('main .ds-areas-row')).toHaveCount(3)
-  await expect(page.locator('main .ds-areas-item').first()).toHaveAttribute('href', /\/board\?card=/)
+  await expect(page.locator('main .ds-areas-item').first()).toHaveAttribute('href', /\/epic\//)
   // The closing note carries the provenance, so the board still says how stale it is.
   await expect(page.locator('main p.ds-hint[data-freshness-tone]')).toContainText('Pushed')
 })

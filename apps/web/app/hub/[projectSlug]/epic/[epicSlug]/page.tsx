@@ -2,153 +2,103 @@ import { notFound } from 'next/navigation'
 import { requireDashboardAccess } from '@/lib/dashboard-auth'
 import { getHubRoadmap } from '@/lib/hub-query'
 import { formatFreshness } from '@/lib/hub-freshness'
-import { isRoadmapStatusShipped } from '@/lib/roadmap-artifact-schema'
+import { boardQuery, findCard, hasStages, parseBoardFilters } from '@/lib/hub-board'
 import { epicFinops, quoteActualLine } from '@/lib/roadmap-finops'
-import { EmptyHubState, HubProvenance } from '../../../hub-components'
+import { Answer, Crumb, Crumbs } from '@/design-system/primitives'
 import { HubShell } from '../../../hub-shell'
-import { Answer, Callout, Crumbs, Crumb, PageHead, Pill, Tag, Tile, Tiles } from '@/design-system/primitives'
+import { EmptyBoard } from '../../board/board-components'
+import { EpicDocs, EpicFreshness, EpicHead, EpicSprints, EpicTrack, NowPanel } from './epic-components'
 
 export const dynamic = 'force-dynamic'
 
-// pod-report · Sprint 1, Story 1.2 — the epic drill-down: one epic's sprints and their story
-// progress, ticks for shipped, and the risk tier. Reads the SAME summarized artifact the journey
-// view does (lib/hub-query.ts), so an epic that renders here is exactly the epic the journey view
-// linked to.
+// one-epic-page — ONE page per epic (audit decision 4; dogfood F44). The Board's card view (`?card=`) and the Hub's
+// epic drill-down showed the same epic with different content; this page is both, and `?card=` now redirects here
+// (lock D3). It reads the pushed row as a `BoardCard` (D1) — the same object the board draws its card from — so the
+// board and the page cannot disagree about a field, and a seed (Backlog, Grooming) gets a page too.
 //
-// design-system-rails · Sprint 6, Story 6.3 — reference state `hub-epic`. The `agent-win` device
-// gives way to the approved breadcrumb, page head, four tiles and the sprint list; every number
-// still comes from the artifact's own frontmatter, which is the only reason this page can be
-// trusted about work nobody is watching.
-export default async function HubEpicDrilldownPage({
+// Gating is every hub page's (`requireDashboardAccess`): a member reads it, the demo project is public by design
+// (AGENTS rule #2). Workspace-board cards link here through the card's OWN project, so access stays that project's.
+export default async function HubEpicPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ projectSlug: string; epicSlug: string }>
+  searchParams: Promise<{ type?: string | string[]; risk?: string | string[] }>
 }) {
   const { projectSlug, epicSlug } = await params
+  const query = await searchParams
   await requireDashboardAccess(projectSlug)
 
-  const hubHref = `/hub/${encodeURIComponent(projectSlug)}`
+  // D3 — Back returns to the board with the filters it was opened from. Only the two whitelisted filters survive
+  // `parseBoardFilters`, so nothing a link carries is ever reflected into the href.
+  const back = {
+    href: `/hub/${encodeURIComponent(projectSlug)}/board${boardQuery(parseBoardFilters(query))}`,
+    label: 'Board',
+  }
 
   const result = await getHubRoadmap(projectSlug)
   if (!result.ok) {
     if (result.reason === 'query_failed') throw new Error('Roadmap artifact lookup failed')
     if (result.reason === 'project_not_found') notFound()
-
-    // 'no_artifact': an unpushed tenant has no epic to drill into either. The same friendly empty
-    // state as the journey view, not a bare 404 — a 404 here would read as "this epic doesn't
-    // exist", when the real story is "nothing has been pushed at all".
+    // 'no_artifact': nothing has been pushed, so there is no epic to open — the board's own empty state says how to
+    // push, rather than a 404 that reads as "this epic does not exist".
     return (
-      <HubShell projectSlug={projectSlug} tab="roadmap">
-        <Crumbs back={{ href: hubHref, label: 'Roadmap' }}>
+      <HubShell projectSlug={projectSlug} tab="board">
+        <Crumbs back={back}>
           <Crumb mono>{epicSlug}</Crumb>
         </Crumbs>
-        <EmptyHubState projectSlug={projectSlug} />
+        <EmptyBoard />
       </HubShell>
     )
   }
 
-  const { artifact, summary } = result
-  const epic = summary.epics.find((e) => e.slug === epicSlug)
-  if (!epic) notFound()
+  const { artifact } = result
+  const items = Array.isArray(artifact.payload?.items) ? artifact.payload.items : []
+  // A push from before stages carries none: the page would have to guess where an epic is, and the Hub never computes
+  // a stage (board lock D19). Same empty state as the board. Live at the lock: no project's push is stage-less.
+  if (!hasStages(items)) {
+    return (
+      <HubShell projectSlug={projectSlug} tab="board">
+        <Crumbs back={back}>
+          <Crumb mono>{epicSlug}</Crumb>
+        </Crumbs>
+        <EmptyBoard />
+      </HubShell>
+    )
+  }
 
+  const card = findCard(items, epicSlug)
+  if (!card) notFound()
+
+  const repo = (artifact.payload as { board?: { repo?: string } }).board?.repo ?? null
+  const spend = card.finops ? quoteActualLine(epicFinops(card.finops)) : null
   const freshness = formatFreshness(artifact.generatedAt, new Date(), artifact.sourceCommit)
-  const risk = epic.risk ? String(epic.risk).trim() : null
-  const shippedSprints = epic.sprints.filter((sprint) => isRoadmapStatusShipped(sprint.status)).length
-  // finops 3.2 — the epic's quote and actual off the same artifact, or nothing at all when it carries neither.
-  const finopsLine = quoteActualLine(epicFinops(epic))
 
   return (
-    <HubShell projectSlug={projectSlug} tab="roadmap">
-      <Crumbs back={{ href: hubHref, label: 'Roadmap' }}>
-        <Crumb mono>{epic.slug}</Crumb>
+    <HubShell projectSlug={projectSlug} tab="board">
+      <Crumbs back={back}>
+        <Crumb mono>{card.slug}</Crumb>
       </Crumbs>
-
-      <PageHead
-        title={epic.name}
-        lede={epic.area}
-        actions={epic.shipped ? <Pill state="on">Shipped</Pill> : <Tag tone="unclassified">In progress</Tag>}
-      />
-      <HubProvenance
-        freshness={freshness}
-        from={`${epic.sprints.length} sprint${epic.sprints.length === 1 ? '' : 's'}`}
-        version={artifact.version}
-      />
-      {finopsLine ? (
+      <EpicHead card={card} />
+      <EpicTrack card={card} />
+      <NowPanel card={card} product={projectSlug} />
+      <Answer>
+        {card.goal ??
+          (card.grain === 'Seed'
+            ? 'The idea is in its seed, below.'
+            : 'No goal is written for this epic yet — its README has no Why paragraph.')}
+      </Answer>
+      {/* A seed never has a target, goal or no goal (fresh review, #295: most seeds carry a goal). */}
+      {card.grain === 'Seed' ? <p className="ds-hint">No target yet: that comes with grooming.</p> : null}
+      {/* Spend stays on the page between the two sprints (fresh review, #295) — S2 draws it as a bar (D13). */}
+      {spend ? (
         <p className="ds-hint" data-testid="epic-finops">
-          {finopsLine} <span className="ds-mono">≈ API $</span>
+          {spend} <span className="ds-mono">≈ API $</span>
         </p>
       ) : null}
-
-      <Answer>
-        <b>
-          {shippedSprints} of {epic.sprints.length} sprints have shipped.
-        </b>{' '}
-        {epic.shipped
-          ? 'The epic is closed, with a retrospective.'
-          : epic.sprints.length === 0
-            ? 'Nothing has been built yet — the docs exist so the next betting table is a three-line decision rather than a fresh groom.'
-            : 'The epic closes when every sprint is merged and its retrospective lands.'}
-      </Answer>
-
-      <Tiles>
-        <Tile
-          label="Build order"
-          value={
-            epic.build_order_num === null || epic.build_order_num === undefined
-              ? null
-              : String(epic.build_order_num)
-          }
-          // ⚠️ Not `—`. An epic with no build-order number is not at position zero and is not
-          // "unknown": it has never been placed in the sequence, and the roadmap page says the same
-          // thing about the same epics rather than padding the track to make the arithmetic look
-          // right (the prototype's own note on this screen's sibling).
-          absent="Never placed in the sequence"
-          detail="in the one sequence"
-        />
-        <Tile label="Area" value={epic.area} detail="macro-section" />
-        <Tile
-          label="Risk"
-          value={risk}
-          absent="Not classified"
-          detail={risk?.toLowerCase() === 'high' ? 'the product owner merges' : 'builder may merge'}
-          tone={risk?.toLowerCase() === 'high' ? 'warn' : undefined}
-        />
-        <Tile label="Sprints" value={`${shippedSprints}/${epic.sprints.length}`} detail="shipped / planned" />
-      </Tiles>
-
-      <span className="ds-label">Sprints</span>
-      {epic.sprints.length === 0 ? (
-        <p className="ds-hint">No sprints recorded for this epic yet.</p>
-      ) : (
-        <div className="ds-sprints">
-          {epic.sprints.map((sprint, index) => {
-            const shipped = isRoadmapStatusShipped(sprint.status)
-            return (
-              <div key={sprint.slug} className="ds-sprintrow">
-                <span className="ds-sprintrow-n">S{index + 1}</span>
-                <span className="ds-sprintrow-name">{sprint.name}</span>
-                {/* The bar is the one thing here that is not read from a number: `sprint_progress`
-                    is free text from the generator ("3/3 stories"), so the bar shows SHIPPED-or-not
-                    rather than parsing a string into a percentage. A progress bar computed from a
-                    string nobody validates is a number the page invented. */}
-                <span className="ds-sprintrow-bar" aria-hidden="true">
-                  <i data-width={shipped ? 'full' : 'none'} />
-                </span>
-                <span className="ds-sprintrow-count">{sprint.sprint_progress ?? '—'}</span>
-                <span className="ds-epic-state">
-                  {shipped ? <Pill state="on">shipped</Pill> : <Pill state="never">{sprint.status}</Pill>}
-                </span>
-              </div>
-            )
-          })}
-        </div>
-      )}
-
-      <Callout>
-        Every number here comes from the epic&apos;s own <span className="ds-mono">README.md</span>{' '}
-        frontmatter and its sprint files. Nothing on this page is ticked by hand — which is the only reason it
-        can be trusted about work nobody is watching.
-      </Callout>
+      <EpicSprints card={card} />
+      <EpicDocs card={card} repo={repo} />
+      <EpicFreshness freshness={freshness} />
     </HubShell>
   )
 }

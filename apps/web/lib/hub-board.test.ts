@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { ROADMAP_STAGES, type RoadmapRow } from './roadmap-artifact-schema.ts'
 import {
   BOARD_STAGES,
+  FINOPS_ROW_KEYS,
   RESULT_ROW_KEYS,
   boardQuery,
   buildBoard,
@@ -236,4 +237,29 @@ test('RESULT_ROW_KEYS covers every row field roadmap-result reads', () => {
   const src = readFileSync(join(here, 'roadmap-result.ts'), 'utf8')
   const read = new Set([...src.matchAll(/\brow\.([a-z_]+)/g)].map((m) => m[1]))
   for (const key of read) assert.ok((RESULT_ROW_KEYS as readonly string[]).includes(key), key)
+})
+
+// one-epic-page D1 — the epic page reads spend off the card, so the card must carry every field epicFinops reads.
+test('FINOPS_ROW_KEYS covers every row field roadmap-finops reads; an Epic carries them, a Seed carries none', () => {
+  const here = dirname(fileURLToPath(import.meta.url))
+  const src = readFileSync(join(here, 'roadmap-finops.ts'), 'utf8')
+  const read = new Set([...src.matchAll(/\brow\.([a-z_]+)/g)].map((m) => m[1]))
+  assert.ok(
+    read.size >= 6,
+    `expected epicFinops to read its fields as row.<key>, found ${[...read].join(', ')}`
+  )
+  for (const key of read) assert.ok((FINOPS_ROW_KEYS as readonly string[]).includes(key), key)
+  const epicCard = toCard(
+    row({
+      name: 'Spend',
+      slug: 'spend',
+      stage: 'Building',
+      quote_low_usd: 22,
+      actual_usd: 6.1,
+    } as Partial<RoadmapRow>)
+  )
+  assert.equal(epicCard?.finops?.quote_low_usd, 22)
+  assert.equal(epicCard?.finops?.actual_usd, 6.1)
+  assert.equal(epicCard?.finops?.quote_high_usd, null, 'absent is null, never invented')
+  assert.equal(toCard(row({ name: 'Idea', slug: 'idea', grain: 'Seed', stage: 'To groom' }))?.finops, null)
 })

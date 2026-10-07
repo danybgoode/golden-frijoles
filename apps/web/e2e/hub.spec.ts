@@ -148,35 +148,47 @@ test('the Roadmap tab shows areas × Shipped · Now · Next · Later, with a fre
   expect(html).toContain(`Shipped ${unique}`)
   // The answer names what is Now, with its stage — the journey track's "you are here", where the question is asked.
   expect(html).toContain(`Now: Building ${unique} (Building).`)
-  // Every name links to its card on the Board.
-  expect(html).toContain(`/board?card=${unique}-next`)
+  // Every name links to its epic page (one-epic-page D3).
+  expect(html).toContain(`/epic/${unique}-next`)
   // The freshness stamp is a required design element, not fine print — in the closing note, with its tone.
   expect(html).toMatch(/as of abc1234/)
   expect(html).toContain('data-freshness-tone="fresh"')
   expect(html).not.toContain('ds-track')
 })
 
-test('an epic drill-down renders its sprints, and an unknown slug 404s', async ({ request }) => {
+test('an epic page renders its sprints from the pushed row, and an unknown slug 404s', async ({
+  request,
+}) => {
   const unique = `spec-drill-${Date.now()}`
   await pushRoadmap(request, [
-    epicRow({ slug: unique, name: `Drill ${unique}`, status: 'Shipped' }),
-    {
-      ...epicRow({ slug: `${unique}--s1`, grain: 'Sprint', name: `Drill ${unique} — S1: the slice` }),
-      epic_slug: unique,
-      sprint_progress: '3/3 stories',
+    epicRow({
+      slug: unique,
+      name: `Drill ${unique}`,
       status: 'Shipped',
-    },
+      stage: 'Shipped',
+      sprints: [{ n: 1, title: 'the slice', done: 3, total: 3 }],
+    }),
   ])
 
   const ok = await request.get(`/hub/${DEMO_SLUG}/epic/${unique}`)
   expect(ok.status()).toBe(200)
   const html = await ok.text()
-  expect(html).toContain('S1: the slice')
-  expect(html).toContain('3/3 stories')
+  expect(html).toContain('Sprint 1 — the slice')
+  expect(html).toContain('3 of 3 stories')
 
   // A slug absent from the artifact is a 404, not an empty page pretending to be an epic.
   const missing = await request.get(`/hub/${DEMO_SLUG}/epic/no-such-epic-anywhere`)
   expect(missing.status()).toBe(404)
+})
+
+test('an epic page on a push from before stages is the board’s empty state, never a guessed stage', async ({
+  request,
+}) => {
+  const unique = `pre-stage-epic-${Date.now()}`
+  await pushRoadmap(request, [epicRow({ slug: unique, name: 'Pushed before the board' })])
+  const res = await request.get(`/hub/${DEMO_SLUG}/epic/${unique}`)
+  expect(res.status()).toBe(200)
+  expect(await res.text()).toContain('Nothing on the board yet.')
 })
 
 test('the roadmap never computes a stage: a stage-less push is the empty state, a pushed stage is where a row lands', async ({
@@ -348,8 +360,8 @@ test('the board renders the six stages in order, and ?type=spike keeps only spik
   expect(html).toContain(`Spike ${unique}`)
   expect(html).not.toContain(`Ready ${unique}`)
   expect(html).not.toContain(`QA ${unique}`)
-  // Cards are initiatives: every card on the filtered board links to its own view, in the same filter.
-  expect(html).toContain(`?type=spike&amp;card=${unique}-spike`)
+  // Cards are initiatives: every card on the filtered board opens its epic page, carrying the filter (one-epic-page D3).
+  expect(html).toContain(`/epic/${unique}-spike?type=spike`)
 })
 
 test('a payload pushed before the board (no stages) gets the board’s empty state, not six empty columns', async ({

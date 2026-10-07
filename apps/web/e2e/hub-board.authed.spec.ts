@@ -20,9 +20,9 @@ import { EmptyBoard } from '../app/hub/[projectSlug]/board/board-components'
 // board-sinks-and-scrumban · Sprint 2 — the Board tab, signed in, against its approved surfaces.
 //
 // The visual gate (`console-visual.authed.spec.ts`) measures the ROUTE against `hub-board` — one state per manifest
-// row. The route has two more approved states, and this file measures them with the gate's own functions: the card
-// view (`?card=`, `hub-board-card`) and the empty board (`hub-board-empty`). It also presses every copy button the
-// card view has and reads the clipboard back, because "copies the exact text" is S2.3's whole acceptance.
+// row. The route has one more approved state, the empty board (`hub-board-empty`), measured here with the gate's own
+// functions. The card view (`hub-board-card`) retired into the epic page (one-epic-page D4); its copy-button check
+// moved with it, below, because "copies the exact text" is still the acceptance.
 
 const CONTRACT = JSON.parse(
   readFileSync(join(__dirname, '..', 'design-system', 'STATE-CONTRACT.json'), 'utf8')
@@ -67,29 +67,70 @@ test('the board: six columns in order, the answer names the next pull, filters l
     expect(meta).toContain('Feature')
 })
 
-test('the card view matches the approved hub-board-card state', async ({ page }) => {
-  await page.goto(`/hub/${slug()}/board?card=fixture-unbet`)
-  const built = await page.evaluate(extractSignature, signatureArgs('product'))
-  const differences = diffSignature(CONTRACT.states['hub-board-card'], built)
-  expect(differences, differences.join('\n')).toEqual([])
+// ── one-epic-page · Sprint 1 — every card opens ONE epic page (lock D1, D3, D4) ─────────────────────────────────────
+
+test('an old ?card= link lands on the epic page, and Back returns to the filtered board (S1.1)', async ({
+  page,
+}) => {
+  await page.goto(`/hub/${slug()}/board?card=fixture-unbet&type=feature&risk=high`)
+  await expect(page).toHaveURL(new RegExp(`/hub/${slug()}/epic/fixture-unbet\\?type=feature&risk=high$`))
+  await expect(page.locator('main h1')).toHaveText('An idea nobody has bet on yet')
+  await expect(page.locator('nav[aria-label="Breadcrumb"] a')).toHaveAttribute(
+    'href',
+    `/hub/${slug()}/board?type=feature&risk=high`
+  )
+  // Without filters, the bare board — and a filter that is not one of the two is dropped, never reflected.
+  await page.goto(`/hub/${slug()}/board?card=fixture-unbet&type=%22%3E%3Cscript%3E`)
+  await expect(page).toHaveURL(new RegExp(`/hub/${slug()}/epic/fixture-unbet$`))
+  await expect(page.locator('nav[aria-label="Breadcrumb"] a')).toHaveAttribute('href', `/hub/${slug()}/board`)
 })
 
-test('every copy button on a card copies its exact text', async ({ page, context }) => {
+test('a board card opens the epic page, carrying the filters (S1.1)', async ({ page }) => {
+  await page.goto(`/hub/${slug()}/board?type=feature`)
+  const card = page.locator('.ds-board-card', { hasText: 'An idea nobody has bet on yet' })
+  await expect(card).toHaveAttribute('href', `/hub/${slug()}/epic/fixture-unbet?type=feature`)
+})
+
+test('the epic page: chips not tiles, the track lit at its stage, one command in the Now panel (S1.2, S1.3)', async ({
+  page,
+}) => {
+  await page.goto(`/hub/${slug()}/epic/fixture-unbet`)
+  await expect(page.locator('main .ds-epic-chip--stage')).toHaveText('Ready')
+  // Risk high says who merges; no tiles and no stats remain.
+  await expect(page.locator('main .ds-epic-chip[data-risk="high"]')).toHaveText('Risk high · you merge')
+  await expect(page.locator('main .ds-tile, main .ds-summary')).toHaveCount(0)
+  // Seven steps, the current one named by aria-current, and its stored key kept beside the word.
+  const steps = page.locator('main .ds-epic-track li')
+  await expect(steps).toHaveText(['Backlog', 'Grooming', 'Ready', 'Building', 'QA', 'Shipped', 'Read'])
+  await expect(page.locator('main .ds-epic-track li[aria-current="step"]')).toHaveAttribute(
+    'data-step',
+    'Ready to build'
+  )
+  // Exactly one command outside More, in plain words naming the step, the epic and the product.
+  const now = page.getByRole('region', { name: 'Now' })
+  await expect(now.locator(':scope > .ds-epic-command')).toHaveCount(1)
+  await expect(now.locator(':scope > .ds-epic-command code')).toHaveText(
+    `Build the fixture-unbet epic in ${slug()}`
+  )
+  await expect(page.locator('main')).toContainText('Every number comes from the epic')
+})
+
+test('every copy button on the epic page copies its exact text', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
-  await page.goto(`/hub/${slug()}/board?card=fixture-unbet`)
+  await page.goto(`/hub/${slug()}/epic/fixture-unbet`)
   const read = () => page.evaluate(() => navigator.clipboard.readText())
   // The fixture's kickoff, byte for byte (auth.setup.ts seeds exactly this).
   const KICKOFF =
     'Start by pushing the epic branch, before anything else — it is what moves this card to Building on the board:\n' +
     '`git switch -c feat/fixture-unbet origin/main && git push -u origin feat/fixture-unbet`'
+  const build = `Build the fixture-unbet epic in ${slug()}`
   const expected: Record<string, string> = {
     'Copy the kickoff prompt': KICKOFF,
-    'Copy: kickoff prompt': KICKOFF,
-    'Copy: Build epic fixture-unbet': 'Build epic fixture-unbet',
+    [`Copy: ${build}`]: build,
   }
   const buttons = page.locator('main button[aria-label^="Copy"]')
   const names = await buttons.evaluateAll((els) => els.map((el) => el.getAttribute('aria-label') ?? ''))
-  // EVERY copy button on the card is pressed — and every one is accounted for, so a new button cannot slip past.
+  // EVERY copy button on the page is pressed — and every one is accounted for, so a new button cannot slip past.
   expect(names.sort()).toEqual(Object.keys(expected).sort())
   for (const name of names) {
     await page.getByRole('button', { name, exact: true }).click()
@@ -97,9 +138,42 @@ test('every copy button on a card copies its exact text', async ({ page, context
   }
 })
 
-test('an unknown card is a 404, never an empty card', async ({ page }) => {
-  const response = await page.goto(`/hub/${slug()}/board?card=no-such-initiative`)
-  expect(response?.status()).toBe(404)
+test('a Building epic: Resume now, the Wrap under More (S1.3)', async ({ page }) => {
+  await page.goto(`/hub/${slug()}/epic/fixture-mockups`)
+  const now = page.getByRole('region', { name: 'Now' })
+  await expect(now).toContainText('Sprint 2 of 2: The second sprint · 1 of 3 stories done.')
+  await expect(now.locator(':scope > .ds-epic-command code')).toHaveText(
+    `Resume the fixture-mockups epic in ${slug()} where its last session stopped`
+  )
+  await now.getByText('More', { exact: true }).click()
+  await expect(now.locator('details .ds-epic-command code')).toHaveText([
+    `Wrap sprint 2 of the fixture-mockups epic in ${slug()}`,
+  ])
+  await expect(now.locator('details')).toContainText('Resume · Wrap S2')
+})
+
+test("a seed's page: the idea, no target yet, no sprints (S1.1)", async ({ page }) => {
+  await page.goto(`/hub/${slug()}/epic/fixture-seed-alerts`)
+  await expect(page.locator('main h1')).toHaveText('Alerting on a signal that has stopped arriving')
+  await expect(page.locator('main .ds-epic-track li[aria-current="step"]')).toHaveAttribute(
+    'data-step',
+    'To groom'
+  )
+  await expect(page.locator('main')).toContainText('No target yet: that comes with grooming')
+  await expect(page.locator('main')).toContainText("Sprints appear once it's groomed")
+})
+
+test('a seed with a goal still says it has no target yet (fresh review, #295)', async ({ page }) => {
+  await page.goto(`/hub/${slug()}/epic/fixture-seed-digest`)
+  await expect(page.locator('main .ds-answer')).toHaveText(
+    'So that a founder hears about the week without opening anything.'
+  )
+  await expect(page.locator('main')).toContainText('No target yet: that comes with grooming')
+})
+
+test('an unknown epic is a 404, by its own URL and by an old ?card= link', async ({ page }) => {
+  expect((await page.goto(`/hub/${slug()}/epic/no-such-initiative`))?.status()).toBe(404)
+  expect((await page.goto(`/hub/${slug()}/board?card=no-such-initiative`))?.status()).toBe(404)
 })
 
 test('the empty board matches the approved hub-board-empty state', async ({ page }) => {
@@ -143,10 +217,10 @@ test('the workspace board matches the approved hub-workspace-board state and sho
   const built = await page.evaluate(extractSignature, signatureArgs('product'))
   const differences = diffSignature(CONTRACT.states['hub-workspace-board'], built)
   expect(differences, differences.join('\n')).toEqual([])
-  // Every card names its project and opens on THAT project's board.
+  // Every card names its project and opens THAT project's epic page (one-epic-page D3).
   const first = page.locator('.ds-board-card').first()
   await expect(first).toContainText(slug())
-  await expect(first).toHaveAttribute('href', new RegExp(`^/hub/${slug()}/board\\?card=`))
+  await expect(first).toHaveAttribute('href', new RegExp(`^/hub/${slug()}/epic/`))
   // The project filter is the viewer's projects, and it carries in the URL.
   await page.getByRole('link', { name: slug(), exact: true }).click()
   await expect(page).toHaveURL(new RegExp(`/hub/w/${ws}/board\\?project=${slug()}$`))

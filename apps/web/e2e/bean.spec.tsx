@@ -34,6 +34,7 @@ const card = (result: Record<string, unknown> | null): BoardCard => ({
   kickoff: null,
   shippedAt: '2026-10-04',
   result,
+  finops: null,
 })
 
 const shipped = {
