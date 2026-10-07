@@ -5940,3 +5940,68 @@
   align-items: center;
   gap: 6px;
 }
+
+/* outcome-report-v2 · Sprint 2 (D8–D10) — How fast's deltas, the Steps of AI Adoption, and the section links. Deltas
+   are neutral ink: the arrow is the direction, never a verdict. */
+.ds .ds-outcome-delta {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--dim-2);
+}
+
+.ds .ds-outcome-links {
+  margin: 0 0 12px;
+  font-size: 13px;
+}
+
+.ds .ds-outcome-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+
+.ds .ds-outcome-steps li {
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.ds .ds-outcome-steps li[data-here] {
+  border-color: var(--blue);
+}
+
+.ds .ds-outcome-steps li[data-next] {
+  border-style: dashed;
+}
+
+.ds .ds-outcome-step-n {
+  font-family: var(--mono);
+  color: var(--dim-2);
+}
+
+.ds .ds-outcome-step-tag {
+  font-weight: 500;
+}
+
+.ds .ds-outcome-next p {
+  margin: 0 0 8px;
+}
+
+.ds .ds-outcome-prompt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 16px;
+}
+
+.ds .ds-outcome-prompt code {
+  flex: 1 1 280px;
+  white-space: normal;
+}

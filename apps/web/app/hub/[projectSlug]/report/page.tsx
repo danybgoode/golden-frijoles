@@ -63,7 +63,7 @@ export default async function HubPodReportPage({ params }: { params: Promise<{ p
   const visitorId = (await cookies()).get(VISITOR_COOKIE)?.value
   if (visitorId) after(() => trackSelfEvent(REPORT_VIEWED_EVENT, visitorId))
 
-  const { artifact, view, outcome, payingOff, lens } = result
+  const { artifact, view, outcome, payingOff, history, lens } = result
   const freshness = formatFreshness(artifact.generatedAt, new Date(), artifact.sourceCommit)
 
   return (
@@ -76,6 +76,7 @@ export default async function HubPodReportPage({ params }: { params: Promise<{ p
         view={view}
         outcome={outcome}
         payingOff={payingOff}
+        history={history}
         lens={lens}
         artifactVersion={artifact.version}
         freshness={freshness}
