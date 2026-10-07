@@ -67,6 +67,14 @@ epic, Sprints, Retrospective.
 - Every document link opens.
 **Risk:** low
 
+## Build contract (locked by the architect before the builder started)
+Cites the epic README's lock; nothing here restates it.
+- **2.1:** D9 — through `epicResult` only. **2.2:** D10 — SVG bars, `--blue`/`--green`.
+- **2.3:** D11 (`flag_key`/`flag_note` through seed → scaffold → extract → contract → schema; template is the source,
+  copies rendered; plugin + kit 0.34.0), D12 (the registry seam, this project only, production headline), D13, D14.
+- Specs: extract + contract + schema tests for both fields, the scaffold test, an authed spec for flag found, not
+  found and none (fixture flags created in the fixture project).
+
 ## Sprint QA
 - **api spec(s):** S2.1 and S2.2 → the visual gate for a seed, a building epic and a read epic; S2.3 → extract and push
   tests for `flag_key`, the scaffold test, an authed spec for flag found, not found and none.

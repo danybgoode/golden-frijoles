@@ -3,7 +3,7 @@ epic: one-epic-page
 sprint: 1
 title: "One page"
 risk: low
-phase: Shaping
+phase: Building
 stories_total: 3
 stories:
   - id: S1.1
@@ -71,6 +71,16 @@ Ledgerly", "Review pull request #42 for the overdue-reminders epic in Ledgerly".
 - Every plain line, pasted into Claude Code with the plugin, starts the same step its shorthand does
   (`SESSION-KICKOFFS.md`); the builder records each try in the PR.
 **Risk:** low
+
+## Build contract (locked by the architect before the builder started)
+Cites the epic README's lock; nothing here restates it.
+- **1.1:** D1 (the page reads `findCard`), D2 (`getHubRoadmap` returns `{ id, name }`), D3 (redirect + Back, every
+  link site), D4 (`CardView` and `hub-board-card` retire). Specs: `hub-board.test.ts` (FinOps keys pinned), an authed
+  spec on the redirect with and without filters, a seed page, a 404.
+- **1.2:** D6 — `lib/epic-page.ts` + `epic-page.test.ts` (one case per stage, Read lit only with a verdict).
+- **1.3:** D7, D8 — `stage-commands.test.ts`: one primary per stage, every line names step, epic and product and
+  begins with its shorthand's verb; the paste-into-an-agent trial recorded in the PR.
+- D5: no approved surface is added or edited; the page's blocks are asserted by name in the authed spec.
 
 ## Sprint QA
 - **api spec(s):** S1.1 → `hub-board.test.ts` and an authed spec on the redirect; S1.2 → a pure-logic spec on the track
