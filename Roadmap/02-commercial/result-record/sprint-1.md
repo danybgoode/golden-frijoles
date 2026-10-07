@@ -3,7 +3,7 @@ epic: result-record
 sprint: 1
 title: "The target, set at grooming"
 risk: low
-phase: In review
+phase: Shipped
 stories_total: 3
 stories:
   - id: S1.1
@@ -30,13 +30,13 @@ stories:
 ---
 # The result record — Sprint 1: The target, set at grooming
 
-**Status:** 🟦 In review
+**Status:** ✅ Shipped — #290, merged d33772b 2026-10-07, deployed to production and verified
 
 ## Stories
 <!-- Keep the heading shape `### Story 1.M — <title>`. When a story ships, append ✅ + its commit ref.
      The epic README frontmatter `status:` is the AUTHORITATIVE epic status. -->
 
-### Story 1.1 — Every epic carries its hypothesis, target and read date
+### Story 1.1 — Every epic carries its hypothesis, target and read date ✅ 3bdae8d
 **As** a founder, **I want** every epic to carry its hypothesis, target and read date, **so that** what it should move
 is written down before it's built.
 Seed and epic README templates gain `hypothesis`, `target_metric`, `target_from`, `target_to`, `read_date`, and the
@@ -48,7 +48,7 @@ dates as YYYY-MM-DD). `scaffold-epic.mjs` copies the target from the seed, as it
 - `verdict: provn` fails the contract; a missing target is allowed (shown as "no target"), never an error.
 **Risk:** low
 
-### Story 1.2 — Groom asks which number, by how much, by when
+### Story 1.2 — Groom asks which number, by how much, by when ✅ 7194eb6
 **As** a founder grooming, **I want** to be asked which number, by how much and by when, with my North Star inputs
 offered, **so that** the epic is grounded.
 Groom Stage 1.5 adds the question; the choices come from `strategy.mjs`'s agreed inputs when there are any, free text
@@ -59,7 +59,7 @@ target and read date.
 - With a North Star, its inputs are offered by name; without one, free text works.
 **Risk:** low
 
-### Story 1.3 — The target and verdict reach the Hub
+### Story 1.3 — The target and verdict reach the Hub ✅ 4638321
 **As** a founder, **I want** the target and the verdict to reach the Hub, **so that** every page can show expected
 against actual.
 `roadmap-extract.mjs` reads the fields (beside `finopsFields`) and derives the default read date from `shipped_at`
@@ -94,3 +94,13 @@ Env: production · https://goldenfrijoles.com   (or the preview URL while testin
    → Nothing new is shown yet: the bean is sprint 2, the epic page and Outcome report are epics 5 and 6.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+### Smoke run (2026-10-07, production)
+- ✅ Merged #290 → `d33772b`, production deployment `success`; plugin + kit **0.31.0** published (npm + `v0.31.0`).
+- ✅ This repo's own roadmap push on merge carried the new fields for 261 rows and was accepted (`roadmap pushed`,
+  version 310), and again after S2's deploy (`30743f2`): an older-shape payload and the new fields both pass.
+- ✅ Steps 3–4 by CLI: the extract rows carry `hypothesis`…`read_date` (all null here, no epic has a target yet).
+- ⏳ **Owed to Daniel:** steps 1–2 — groom a tiny idea and see the Stage 1.5 question and the README fields
+  (interactive; the agent cannot answer its own grooming question).
+- Not run live: a deliberately bad verdict against production (a 400 writes nothing, but it needs the project key);
+  the schema spec covers it.
