@@ -15,6 +15,11 @@ export type MetricRow = {
   label: string
   /** Formatted for display, or null when there is no data. Null renders as "not measured", never 0. */
   value: string | null
+  /**
+   * outcome-report-v2 D8 — the number behind `value`, in its own unit (hours, days, per week, a 0–1 share), for the
+   * deltas against earlier months. Null exactly when `value` is.
+   */
+  raw?: number | null
   /** The honest reading — what the number does and does not mean. Always present when value is. */
   interpretation?: string
   /** Set when the figure is a stand-in for something we cannot measure directly. */
@@ -57,6 +62,11 @@ export type MaturitySection = {
   } | null
   rows: MaturityRow[]
   notInstrumented: NotInstrumentedRow[]
+  /**
+   * outcome-report-v2 D9 — the next step and how many of its criteria are met. Set by the read path from the rows
+   * BEFORE a lens hides them (lib/adoption-steps.ts `nextStepOf`), so it is an aggregate every lens may show.
+   */
+  next?: { step: number; label: string; met: number; total: number } | null
 }
 
 export type PodReportView = {
@@ -124,6 +134,7 @@ export function buildPodReportView(payload: unknown): PodReportView {
       key: 'review_latency',
       label: 'Pull-request review latency (median)',
       value: hours(num(cycle.medianHours)),
+      raw: num(cycle.medianHours),
       // Carried verbatim from the computation. This row's whole reason for existing honestly is
       // that it is NOT a delivery speed, and the computation is where that was established.
       interpretation: str(cycle.interpretation),
@@ -134,6 +145,7 @@ export function buildPodReportView(payload: unknown): PodReportView {
       key: 'epic_lead_time',
       label: 'Epic lead time (median)',
       value: days(num(lead.medianDays)),
+      raw: num(lead.medianDays),
       interpretation: str(lead.interpretation),
       benchmarkId: 'dora-2025',
     },
@@ -141,6 +153,7 @@ export function buildPodReportView(payload: unknown): PodReportView {
       key: 'deploy_frequency',
       label: 'Deploy frequency',
       value: num(freq.perWeek) === null ? null : `${num(freq.perWeek)} / week`,
+      raw: num(freq.perWeek),
       interpretation: str(freq.proxyNote),
       isProxy: freq.isProxy === true,
       benchmarkId: 'dora-2025',
@@ -149,6 +162,7 @@ export function buildPodReportView(payload: unknown): PodReportView {
       key: 'epic_throughput',
       label: 'Epic throughput',
       value: num(through.perWeek) === null ? null : `${num(through.perWeek)} / week`,
+      raw: num(through.perWeek),
       benchmarkId: 'linearb-2026',
     },
   ]
@@ -161,6 +175,7 @@ export function buildPodReportView(payload: unknown): PodReportView {
       key: `authorship_${String(row.month ?? 'unknown')}`,
       label: `Agent-co-authored commits — ${String(row.month ?? 'unknown')}`,
       value: share === null ? null : `${Math.round(share * 100)}%`,
+      raw: share,
       // A composition fact, never a productivity claim. The trailer records who co-authored; it does
       // not record who wrote the value, and the page must not let a reader slide from one to the other.
       interpretation:

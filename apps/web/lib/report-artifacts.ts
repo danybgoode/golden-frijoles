@@ -67,3 +67,43 @@ export async function getLatestArtifact<T = unknown>(
     createdAt: data.created_at,
   }
 }
+
+/**
+ * outcome-report-v2 D8 — the latest artifact of `kind` generated strictly before `beforeIso`, or null when there is
+ * none. The same project scoping and the same throw-on-failure contract as `getLatestArtifact`; How fast reads the
+ * latest version of each of the two previous months through it.
+ */
+export async function getLatestArtifactBefore<T = unknown>(
+  projectId: string,
+  kind: ReportArtifactKind,
+  beforeIso: string
+): Promise<ReportArtifact<T> | null> {
+  const supabase = getSupabaseServiceClient()
+  const { data, error } = await supabase
+    .from('report_artifacts')
+    .select('id, version, schema_version, payload, source_commit, source_ref, generated_at, created_at')
+    .eq('project_id', projectId)
+    .eq('kind', kind)
+    .lt('generated_at', beforeIso)
+    .order('generated_at', { ascending: false })
+    .order('version', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (error) {
+    console.error('[report-artifacts] earlier read failed:', error)
+    throw new Error('Failed to read an earlier report artifact')
+  }
+  if (!data) return null
+
+  return {
+    id: data.id,
+    version: data.version,
+    schemaVersion: data.schema_version,
+    payload: data.payload as T,
+    sourceCommit: data.source_commit,
+    sourceRef: data.source_ref,
+    generatedAt: data.generated_at,
+    createdAt: data.created_at,
+  }
+}
