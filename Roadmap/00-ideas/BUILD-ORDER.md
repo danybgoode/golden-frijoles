@@ -33,7 +33,7 @@ _a pitch is waiting at the approval gate._
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
 - [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #63 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
-- [The result record](../02-commercial/result-record/README.md) — #65 · 02 Commercial · 0/6 stories · risk: Low · appetite M · _docs: status scaffolded_
+- [The result record](../02-commercial/result-record/README.md) — #65 · 02 Commercial · 0/6 stories · risk: Low · appetite M · _docs: status in-progress_
 - [One epic page](../02-commercial/one-epic-page/README.md) — #66 · 02 Commercial · 0/6 stories · risk: Low · appetite M · _docs: status scaffolded_
 - [Outcome report v2](../02-commercial/outcome-report-v2/README.md) — #67 · 02 Commercial · 0/6 stories · risk: Low · appetite M · _docs: status scaffolded_
 - [Gates in plain agile](../02-commercial/gates-in-plain-agile/README.md) — #68 · 02 Commercial · 0/5 stories · risk: Low · appetite M · _docs: status scaffolded_
