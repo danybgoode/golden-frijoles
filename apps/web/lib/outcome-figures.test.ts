@@ -110,7 +110,10 @@ test('figure 1: the headline metric now against expected, with the gap', () => {
   assert.equal(v.figures.now.expected, 70)
   assert.equal(v.figures.now.gap, 2)
   assert.equal(v.figures.now.none, null)
-  assert.equal(v.sentence.text, 'Ledgerly is on the pace you planned.')
+  assert.equal(
+    v.sentence.text,
+    'Ledgerly is on the pace you planned on Paid on time. Setup completed, Weekly active teams have no reading yet.'
+  )
 })
 
 test('figure 1 says there is no expected value when nothing is targeted', () => {

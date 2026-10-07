@@ -184,6 +184,7 @@ test('the investor lens hides the rows entirely, so it cannot make either claim'
 
 function payingOff() {
   return {
+    unavailable: false,
     sentence: { kind: 'behind', text: 'Ledgerly is behind the pace you planned.' },
     lines: [
       {
@@ -228,4 +229,11 @@ test('the chart names its epics for team and client, and only says where they la
 
 test('the paying-off invariant list names the honesty parts', () => {
   assert.deepEqual([...PAYING_OFF_INVARIANT_FIELDS], ['sentence', 'lines', 'figures.now', 'figures.paidOff'])
+})
+
+test('a field the paying-off lens does not name reaches no lens (fresh review, #299)', () => {
+  const withExtra = { ...payingOff(), leak: 'internal' }
+  for (const lens of POD_REPORT_LENSES) {
+    assert.equal((applyPayingOffLens(withExtra, lens) as Record<string, unknown>).leak, undefined, lens)
+  }
 })

@@ -48,7 +48,7 @@ sentence above it: ahead of, on, or behind the pace you planned, or "No targets 
 - With none, it shows the actual only and says it can't tell yet; no invented line.
 **Risk:** low
 
-### Story 1.2 — Four figures, each against expected ✅
+### Story 1.2 — Four figures, each against expected ✅ `3a2ac95`
 **As** a founder, **I want** four figures, each against what I expected, **so that** I see the summary in one look.
 North Star now against expected (with the gap) · epics that paid off, of those read (with how many aren't read yet) ·
 spend against the summed quote (within, or "▲ … over …", neutral) · cost per epic that paid off. Each figure has one
@@ -58,7 +58,7 @@ line on what it is. Spend figures are team-only in v1.
 - A client or investor share link shows the first two figures only, and still counts unread epics.
 **Risk:** low
 
-### Story 1.3 — The epics table ✅
+### Story 1.3 — The epics table ✅ `b42610b`
 **As** a founder, **I want** every epic's bet, expected and actual, result and spend in one table, **so that** I see
 which paid off and what each cost.
 Columns: Epic · what we bet (hypothesis under the name) | Metric · expected → actual (metric name in the column, gap) |

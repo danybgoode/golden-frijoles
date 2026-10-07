@@ -166,12 +166,18 @@ async function getEarlierWindows(
  * roadmap has no epics: that IS "no targets yet".
  */
 async function getPayingOff(projectId: string, projectSlug: string): Promise<PayingOffView> {
-  let roadmap
+  // The whole half is one try (codex + fresh review, #299): a rejected North Star read, or a tenant-pushed row the
+  // builders cannot handle, must cost this section — never the report, and never every share link of the project.
   try {
-    roadmap = await getLatestArtifact(projectId, 'roadmap')
-  } catch {
+    return await readPayingOff(projectId, projectSlug)
+  } catch (error) {
+    console.error('[pod-report-query] paying-off read failed:', error)
     return unavailablePayingOff()
   }
+}
+
+async function readPayingOff(projectId: string, projectSlug: string): Promise<PayingOffView> {
+  const roadmap = await getLatestArtifact(projectId, 'roadmap')
   const northStar = await getProjectNorthStarByProjectId(projectId, projectSlug)
   if (!northStar.ok) return unavailablePayingOff()
 
