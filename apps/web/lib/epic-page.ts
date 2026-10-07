@@ -32,3 +32,38 @@ export function epicTrack(stage: RoadmapStage, hasVerdict: boolean): TrackStep[]
   const at = TRACK_STEPS.indexOf(current)
   return TRACK_STEPS.map((key, i) => ({ key, state: i < at ? 'done' : i === at ? 'current' : 'todo' }))
 }
+
+// one-epic-page · Sprint 2 (lock D10, D13) — the two bars, as numbers the page draws. Inline `style` is forbidden by the
+// drift guard, so the page draws SVG `<rect width>` from these percentages.
+
+export type SprintBar = { pct: number; state: 'done' | 'progress' | 'todo' }
+
+/** One sprint's bar: done/total as a whole percent, clamped; a sprint with no stories counted is to do, never done. */
+export function sprintBar(done: number, total: number): SprintBar {
+  if (!(total > 0) || !(done > 0)) return { pct: 0, state: 'todo' }
+  const pct = Math.min(100, Math.round((done / total) * 100))
+  return { pct, state: done >= total ? 'done' : 'progress' }
+}
+
+export type SpendBar = { actualPct: number; lowPct: number; highPct: number; over: boolean }
+
+/**
+ * Spend against the quote: the scale is the larger of the quote's top and the actual, so an over-quote actual still
+ * fits and reads as past the band. Null when either side is missing — "not measured yet" is said in words, not drawn.
+ */
+export function spendBar(f: {
+  quoteLow: number | null
+  quoteHigh: number | null
+  actualUsd: number | null
+}): SpendBar | null {
+  if (f.quoteLow === null || f.quoteHigh === null || f.actualUsd === null) return null
+  const max = Math.max(f.quoteHigh, f.actualUsd)
+  if (!(max > 0)) return null
+  const pct = (n: number) => Math.round((n / max) * 100)
+  return {
+    actualPct: pct(f.actualUsd),
+    lowPct: pct(f.quoteLow),
+    highPct: pct(f.quoteHigh),
+    over: f.actualUsd > f.quoteHigh,
+  }
+}

@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { BOARD_STAGES, type BoardCard } from './hub-board.ts'
-import { TRACK_STEPS, epicTrack } from './epic-page.ts'
+import { TRACK_STEPS, epicTrack, sprintBar, spendBar } from './epic-page.ts'
 import { currentSprint, nowLine, stageWhen } from './stage-commands.ts'
 
 // one-epic-page · Sprint 1, Story 1.2 — the track marks the right step for each of the seven.
@@ -63,6 +63,8 @@ const card = (over: Partial<BoardCard>): BoardCard => ({
   shippedAt: null,
   result: null,
   finops: null,
+  flagKey: null,
+  flagNote: null,
   ...over,
 })
 
@@ -85,4 +87,29 @@ test('the "when" drops the pusher machine timestamp and prefers a PR or a ship d
   const pr = { number: 42, url: 'https://github.com/o/r/pull/42', state: 'OPEN', draft: true }
   assert.equal(stageWhen(card({ pr })), 'pull request #42 · draft')
   assert.equal(stageWhen(card({ stageSource: null })), null)
+})
+
+// one-epic-page · Sprint 2 — the bars match the numbers (S2.2) and spend sits against the quote (S2.3).
+
+test('a sprint bar is done/total, done only when every story is, and an empty sprint is to do', () => {
+  assert.deepEqual(sprintBar(3, 3), { pct: 100, state: 'done' })
+  assert.deepEqual(sprintBar(1, 3), { pct: 33, state: 'progress' })
+  assert.deepEqual(sprintBar(0, 3), { pct: 0, state: 'todo' })
+  assert.deepEqual(sprintBar(0, 0), { pct: 0, state: 'todo' })
+  assert.deepEqual(sprintBar(4, 3), { pct: 100, state: 'done' }, 'clamped, never past the end')
+})
+
+test('spend: actual against the quote band, on a scale that fits an over-quote actual; missing side → null', () => {
+  assert.deepEqual(spendBar({ quoteLow: 22, quoteHigh: 34, actualUsd: 17 }), {
+    actualPct: 50,
+    lowPct: 65,
+    highPct: 100,
+    over: false,
+  })
+  const over = spendBar({ quoteLow: 22, quoteHigh: 34, actualUsd: 42.44 })
+  assert.equal(over?.actualPct, 100)
+  assert.equal(over?.highPct, 80)
+  assert.equal(over?.over, true)
+  assert.equal(spendBar({ quoteLow: 22, quoteHigh: 34, actualUsd: null }), null)
+  assert.equal(spendBar({ quoteLow: null, quoteHigh: null, actualUsd: 5 }), null)
 })

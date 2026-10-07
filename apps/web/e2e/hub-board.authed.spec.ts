@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { readTenantRecord } from './helpers/authed-fixture'
+import { ACTIVITY_FIXTURE_FLAG_KEY, SIBLING_ONLY_FLAG_KEY, readTenantRecord } from './helpers/authed-fixture'
 import {
   extractSignature,
   signatureArgs,
@@ -160,15 +160,129 @@ test("a seed's page: the idea, no target yet, no sprints (S1.1)", async ({ page 
     'To groom'
   )
   await expect(page.locator('main')).toContainText('No target yet: that comes with grooming')
-  await expect(page.locator('main')).toContainText("Sprints appear once it's groomed")
+  await expect(page.locator('main')).toContainText("Sprints appear once it's groomed.")
 })
 
 test('a seed with a goal still says it has no target yet (fresh review, #295)', async ({ page }) => {
   await page.goto(`/hub/${slug()}/epic/fixture-seed-digest`)
-  await expect(page.locator('main .ds-answer')).toHaveText(
+  await expect(page.getByRole('region', { name: 'The idea' })).toContainText(
     'So that a founder hears about the week without opening anything.'
   )
   await expect(page.locator('main')).toContainText('No target yet: that comes with grooming')
+})
+
+// ── one-epic-page · Sprint 2 — why, progress, flag and spend ───────────────────────────────────────────────────────
+
+test('a Building epic: why (hypothesis, target, read date), one bar per sprint, spend against quote (S2.1–S2.3)', async ({
+  page,
+}) => {
+  await page.goto(`/hub/${slug()}/epic/fixture-mockups`)
+  const why = page.getByRole('region', { name: "Why we're building this" })
+  await expect(why).toContainText('The mockups, as built, close the gap between design and product')
+  await expect(why.getByTestId('epic-target')).toContainText('routes_matching_mockups 10 → 22')
+  await expect(why.getByTestId('epic-target')).toContainText('read 1 Dec')
+  await expect(why.getByTestId('epic-read')).toHaveCount(0)
+  // One row per sprint; each bar's width IS its done/total, and the state says done or in progress.
+  const bars = page.locator('main .ds-epic-bars li')
+  await expect(bars).toHaveCount(2)
+  await expect(bars.nth(0)).toHaveAttribute('data-state', 'done')
+  await expect(bars.nth(0).locator('.ds-epic-bar-fill')).toHaveAttribute('width', '100')
+  await expect(bars.nth(1)).toHaveAttribute('data-state', 'progress')
+  await expect(bars.nth(1).locator('.ds-epic-bar-fill')).toHaveAttribute('width', '33')
+  await expect(bars.nth(1)).toContainText('1/3')
+  const spend = page.getByTestId('epic-finops')
+  await expect(spend).toContainText('Quote $22–34 · Actual ≈$17')
+  await expect(spend.getByRole('link', { name: 'FinOps' })).toHaveAttribute(
+    'href',
+    `/app/finops/${slug()}#epic-fixture-mockups`
+  )
+})
+
+test("an epic's flag: found shows its state and opens it in Ship; a missing key says not found; none says so (S2.3)", async ({
+  page,
+}) => {
+  await page.goto(`/hub/${slug()}/epic/fixture-mockups`)
+  const found = page.locator('main [data-flag="found"]')
+  await expect(found).toContainText(`Flag ${ACTIVITY_FIXTURE_FLAG_KEY}`)
+  // The activity fixture's flag has versions and no activation anywhere: "never activated", in words, per environment.
+  await expect(found.locator('[data-env="production"]')).toHaveText('production: never activated')
+  // D12 — production is the headline: first, before the other environments.
+  await expect(found.locator('[data-env]').first()).toHaveAttribute('data-env', 'production')
+  const ship = found.getByRole('link', { name: 'Open in Ship' })
+  await expect(ship).toHaveAttribute('href', `/app/flags/${slug()}/${ACTIVITY_FIXTURE_FLAG_KEY}`)
+  await ship.click()
+  await expect(page).toHaveURL(new RegExp(`/app/flags/${slug()}/${ACTIVITY_FIXTURE_FLAG_KEY}$`))
+
+  // Tenancy (D12): the key exists in a SIBLING project of the viewer's own workspace — one the viewer owns too — and is
+  // still "not found" here, because the page reads this project's registry only. A read that ignored the
+  // project id would find it; mutating the project scope turns this red (fresh review, #297).
+  const db = serviceDb()
+  const { data: sibling, error } = await db
+    .from('projects')
+    .insert({ workspace_id: await fixtureWorkspaceId(), slug: `flag-sibling-${Date.now()}` })
+    .select('id')
+    .single()
+  if (error || !sibling) throw new Error(`could not create a sibling project: ${error?.message}`)
+  try {
+    // The viewer OWNS the sibling too (the flag RPC requires ownership) — the strongest case: even a project the viewer
+    // can open does not lend its flags to this project's page.
+    const { error: memberErr } = await db
+      .from('project_members')
+      .insert({ project_id: sibling.id, user_id: readTenantRecord()!.userId, role: 'owner' })
+    if (memberErr) throw new Error(`could not make the viewer the sibling's owner: ${memberErr.message}`)
+    const { error: flagErr } = await db.rpc('create_flag_definition_version', {
+      p_project_id: sibling.id,
+      p_flag_key: SIBLING_ONLY_FLAG_KEY,
+      p_definition: {
+        valueType: 'boolean',
+        description: 'Exists only in a sibling project.',
+        defaultVariantKey: 'off',
+        variants: [
+          { key: 'off', value: false },
+          { key: 'on', value: true },
+        ],
+        rules: [],
+      },
+      p_reason: 'one-epic-page tenancy fixture',
+      p_actor_user_id: readTenantRecord()!.userId,
+    })
+    if (flagErr) throw new Error(`could not create the sibling's flag: ${flagErr.message}`)
+    await page.goto(`/hub/${slug()}/epic/fixture-design-rails`)
+    await expect(page.locator('main [data-flag="not_found"]')).toHaveText(
+      `Flag ${SIBLING_ONLY_FLAG_KEY} not found`
+    )
+    await expect(page.locator('main [data-flag] a')).toHaveCount(0)
+  } finally {
+    const { error: dp } = await db.from('projects').delete().eq('id', sibling.id)
+    if (dp) throw new Error(`cleanup failed: ${dp.message}`)
+  }
+
+  await page.goto(`/hub/${slug()}/epic/fixture-unbet`)
+  await expect(page.locator('main [data-flag="none"]')).toHaveText(
+    'No flagnone. Risk low. Rollback is a revert.'
+  )
+  // A seed has no flag line at all.
+  await page.goto(`/hub/${slug()}/epic/fixture-seed-alerts`)
+  await expect(page.locator('main [data-flag]')).toHaveCount(0)
+  await expect(page.getByTestId('epic-finops')).toHaveCount(0)
+})
+
+test('a read epic shows the bean, the actual and what the target was (S2.1)', async ({ page }) => {
+  await page.goto(`/hub/${slug()}/epic/fixture-design-rails`)
+  const read = page.getByTestId('epic-read')
+  await expect(read).toContainText('Proven')
+  await expect(read).toContainText('actual 29')
+  await expect(read).toContainText('target was 27')
+  await expect(read.locator('svg')).toHaveCount(1)
+  await expect(page.locator('main .ds-epic-track li[aria-current="step"]')).toHaveAttribute(
+    'data-step',
+    'Read'
+  )
+})
+
+test('an epic with no target says so (S2.1)', async ({ page }) => {
+  await page.goto(`/hub/${slug()}/epic/fixture-unbet`)
+  await expect(page.getByRole('region', { name: "Why we're building this" })).toContainText('No target set.')
 })
 
 test('an unknown epic is a 404, by its own URL and by an old ?card= link', async ({ page }) => {

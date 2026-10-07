@@ -97,7 +97,7 @@ export default async function FinopsPage({ params }: { params: Promise<{ project
                 </Row>
               ) : (
                 view.epics.map((e) => (
-                  <Row key={e.slug}>
+                  <Row key={e.slug} id={`epic-${e.slug}`}>
                     <RowMain title={e.name} description={e.slug} mono={false} />
                     <Col width="meta">
                       {e.appetite} · {e.quote}

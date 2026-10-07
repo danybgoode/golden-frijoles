@@ -737,9 +737,10 @@ export function RowGroup({ children }: { children: ReactNode }) {
 }
 
 /** One row of a list card. */
-export function Row({ children }: { children: ReactNode }) {
+/** `id` makes the row a link target — the epic page's "FinOps" opens its own row (one-epic-page D13). */
+export function Row({ children, id }: { children: ReactNode; id?: string }) {
   return (
-    <div className="ds-row" role="row">
+    <div className="ds-row" role="row" id={id}>
       {children}
     </div>
   )

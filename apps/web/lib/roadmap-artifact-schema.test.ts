@@ -304,7 +304,9 @@ test('a push carrying the result fields stores them; a push without them still p
     assert.equal(full.value.items[0].read_date_derived, true)
   }
   assert.equal(parseRoadmapPush(push()).ok, true, 'an older pusher that sends none of them')
-  const nulls = parseRoadmapPush(push({ items: [row({ verdict: null, read_date: null } as Partial<RoadmapRow>)] }))
+  const nulls = parseRoadmapPush(
+    push({ items: [row({ verdict: null, read_date: null } as Partial<RoadmapRow>)] })
+  )
   assert.equal(nulls.ok, true)
 })
 
@@ -325,5 +327,36 @@ test('result dates are days, and the numbers are finite numbers', () => {
     { target_from: '61%' },
     { verdict_evidence: 'x'.repeat(501) },
   ])
-    assert.equal(parseRoadmapPush(push({ items: [row(bad as unknown as Partial<RoadmapRow>)] })).ok, false, JSON.stringify(bad).slice(0, 40))
+    assert.equal(
+      parseRoadmapPush(push({ items: [row(bad as unknown as Partial<RoadmapRow>)] })).ok,
+      false,
+      JSON.stringify(bad).slice(0, 40)
+    )
+})
+
+// one-epic-page · Story 2.3 (D11) — the epic's flag rides the push, nullish, and a malformed key is a 400.
+
+test('a push carrying flag_key and flag_note stores them; null and absent both parse', () => {
+  const full = parseRoadmapPush(
+    push({
+      items: [
+        row({
+          flag_key: 'auth.terminal_sign_in_enabled',
+          flag_note: 'none. Risk low. Rollback is a revert.',
+        } as Partial<RoadmapRow>),
+      ],
+    })
+  )
+  assert.equal(full.ok, true)
+  if (full.ok) assert.equal(full.value.items[0].flag_key, 'auth.terminal_sign_in_enabled')
+  assert.equal(parseRoadmapPush(push({ items: [row({ flag_key: null } as Partial<RoadmapRow>)] })).ok, true)
+  assert.equal(parseRoadmapPush(push()).ok, true, 'an older pusher that sends neither')
+})
+
+test('a flag_key that is not a flag key is refused, naming the field', () => {
+  for (const bad of ['Auth.Enabled', '2fa_enabled', 'has space', '', 'null']) {
+    const res = parseRoadmapPush(push({ items: [row({ flag_key: bad } as unknown as Partial<RoadmapRow>)] }))
+    assert.equal(res.ok, false, bad)
+    if (!res.ok) assert.match(JSON.stringify(res.issues), /flag_key/)
+  }
 })

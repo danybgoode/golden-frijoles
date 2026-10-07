@@ -166,12 +166,27 @@ const roadmapRowSchema = z
     // The message names the field: flattened issues drop the path, and "Invalid enum value" alone leaves a pusher
     // guessing which of a row's forty fields was wrong.
     verdict: z
-      .enum(ROADMAP_VERDICTS, { errorMap: () => ({ message: `verdict must be one of ${ROADMAP_VERDICTS.join(' | ')}` }) })
+      .enum(ROADMAP_VERDICTS, {
+        errorMap: () => ({ message: `verdict must be one of ${ROADMAP_VERDICTS.join(' | ')}` }),
+      })
       .nullish(),
     verdict_actual: z.number().finite().nullish(),
     verdict_evidence: z.string().max(500).nullish(),
     verdict_at: isoDay.nullish(),
     read_late: z.boolean().nullish(),
+    // one-epic-page · Story 2.3 (D11) — the epic's flag, decided at grooming, and the README's own line on it. Nullish:
+    // an older pusher never sends them, and absent is "no flag". The key is held to the SDK's grammar here too, so a
+    // malformed key is a 400 naming the field rather than a lookup the epic page makes against the registry.
+    flag_key: z
+      .string()
+      .regex(/^[a-z][a-z0-9_.-]{0,127}$/, {
+        message: 'flag_key must be a flag key (a-z first, then a-z 0-9 _ . -)',
+      })
+      // The STRING "null" fits the grammar but means "no flag" in the frontmatter — the extract already sends it as null
+      // (`flagFields`); a hand-written push saying it is refused rather than drawn as "Flag null not found" (codex, #297).
+      .refine((key) => key !== 'null', { message: 'flag_key: write null, not the string "null"' })
+      .nullish(),
+    flag_note: z.string().max(300).nullish(),
   })
   .passthrough()
 

@@ -62,6 +62,10 @@ export type BoardCard = {
    * reads them through `lib/roadmap-finops.ts`'s `epicFinops`, the ONE derivation of a quote and an actual.
    */
   finops: Record<string, unknown> | null
+  /** one-epic-page D11 — the epic's flag key as pushed (the push schema holds it to the SDK grammar); null = no flag. */
+  flagKey: string | null
+  /** The README's own `**Flag:** …` line — where an epic with no flag says why. */
+  flagNote: string | null
 }
 
 /** The row fields `epicResult` reads. ⚠️ Kept in step with `lib/roadmap-result.ts` by `hub-board.test.ts`. */
@@ -170,6 +174,9 @@ export function toCard(row: RoadmapRow, project: string | null = null): BoardCar
     shippedAt: (r.shipped_at as string | null | undefined) ?? null,
     result: row.grain === 'Epic' ? Object.fromEntries(RESULT_ROW_KEYS.map((k) => [k, r[k] ?? null])) : null,
     finops: row.grain === 'Epic' ? Object.fromEntries(FINOPS_ROW_KEYS.map((k) => [k, r[k] ?? null])) : null,
+    // A seed never carries a flag (no flag, no line: S1.1), whatever a hand-pushed row says.
+    flagKey: row.grain === 'Epic' && typeof r.flag_key === 'string' ? r.flag_key : null,
+    flagNote: row.grain === 'Epic' && typeof r.flag_note === 'string' ? r.flag_note : null,
   }
 }
 

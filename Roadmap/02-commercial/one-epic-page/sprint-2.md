@@ -3,7 +3,7 @@ epic: one-epic-page
 sprint: 2
 title: "Why, progress, flag and spend"
 risk: low
-phase: Shaping
+phase: In review
 stories_total: 3
 stories:
   - id: S2.1
@@ -12,31 +12,31 @@ stories:
     i_want: "the page to say why we're building it"
     so_that: "the bet is in front of me"
     risk: low
-    status: planned
+    status: done
   - id: S2.2
     title: "Progress, one bar per sprint"
     as_a: "a founder"
     i_want: "progress as one bar per sprint"
     so_that: "I see it without reading"
     risk: low
-    status: planned
+    status: done
   - id: S2.3
     title: "Flag, spend and documents"
     as_a: "a founder"
     i_want: "the epic's flag, spend and documents on the page"
     so_that: "nothing about it lives somewhere I forget"
     risk: low
-    status: planned
+    status: done
 ---
 # One epic page — Sprint 2: Why, progress, flag and spend
 
-**Status:** ⬜ not started
+**Status:** 🟦 In review
 
 ## Stories
 <!-- Keep the heading shape `### Story 2.M — <title>`. When a story ships, append ✅ + its commit ref.
      The epic README frontmatter `status:` is the AUTHORITATIVE epic status. -->
 
-### Story 2.1 — Why we're building this
+### Story 2.1 — Why we're building this ✅ e388099
 **As** a founder, **I want** the page to say why we're building it, **so that** the bet is in front of me.
 The README's Why (the pushed `goal`), the hypothesis, the target metric from → to, and the read date (derived dates
 labelled), from launch epic 4. Once read: the bean, the actual and "target was …". With no target: "No target set"
@@ -45,7 +45,7 @@ for an epic, "No target yet: that comes with grooming" for a seed.
 - A building epic shows hypothesis, target and read date; a read epic adds the bean and the actual; gold only on Proven.
 **Risk:** low
 
-### Story 2.2 — Progress, one bar per sprint
+### Story 2.2 — Progress, one bar per sprint ✅ bbe3bbc
 **As** a founder, **I want** progress as one bar per sprint, **so that** I see it without reading.
 One row per sprint: number, title, done/total and a bar (Moonlight in progress, Sprout done), replacing the sprint
 list and the card's steps.
@@ -53,7 +53,7 @@ list and the card's steps.
 - Bars match each sprint's done/total; a seed shows "Sprints appear once it's groomed".
 **Risk:** low
 
-### Story 2.3 — Flag, spend and documents
+### Story 2.3 — Flag, spend and documents ✅ 8799b11, f50bcd0
 **As** a founder, **I want** the epic's flag, spend and documents on the page, **so that** nothing about it lives
 somewhere I forget.
 `flag_key` is written at grooming Stage 6b when a flag is decided, copied by `scaffold-epic`, extracted and pushed

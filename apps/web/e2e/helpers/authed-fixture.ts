@@ -97,6 +97,12 @@ export function readTenantRecord(): TenantRecord | null {
  * the last and the spec can assert that the rows on it belong to neither.
  */
 export const ACTIVITY_FIXTURE_FLAG_KEY = 'gb_e2e_activity_history'
+/**
+ * one-epic-page S2.3 — a flag key the fixture's roadmap names but only a SIBLING project in the same workspace holds
+ * (created by `hub-board.authed.spec.ts`). The epic page reads its own project's registry only, so it must say "not
+ * found"; a read that crossed projects would find it.
+ */
+export const SIBLING_ONLY_FLAG_KEY = 'gb_e2e.sibling_only_flag'
 export const AUDIT_FIXTURE_ROWS = 28
 
 export const IMPACT_FEATURE_KEY = 'gb-e2e-impact-feature'
