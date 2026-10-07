@@ -357,6 +357,13 @@ independently shippable slice of value.
   shows in the session's opening lines and on Today; shipped board cards show the result as a **Bean** (gold only on
   Proven). The record lives in the epic file and reaches the Hub with the roadmap push, ready for the epic page and
   the Outcome report (epics 5 and 6). **Owed to Daniel:** the CLI 0.6.0 npm publish, then the grooming and end-to-end read walkthroughs.
+- ✅ [Outcome report v2](02-commercial/outcome-report-v2/README.md) (launch epic 6) — **shipped and live 2026-10-07**
+  (#299, #300). The Outcome report opens by saying whether the product is on the pace its epics planned, then a chart
+  of each North Star input against the line the shipped epics' targets draw, four figures each against expected, and
+  an epics table (bet, metric expected → actual, Bean, spend vs quote; overspend neutral). How fast compares with the
+  last two months; the Steps of AI Adoption say where you are, what the next step needs and hand you a prompt for your
+  agent; every section has a line and a link. Share links keep spend, the table and console links team-only.
+  **Owed:** signed-in walkthroughs and a client share link opened signed out.
 - ✅ [One epic page](02-commercial/one-epic-page/README.md) (launch epic 5) — **shipped and live 2026-10-07** (#295,
   #297; plugin + kit 0.34.0). Every card, Roadmap row, workspace card and ⌘K epic opens one page,
   `/hub/<p>/epic/<e>`; old `?card=` links redirect there with their filters. It shows where the epic is (chips and a
@@ -510,6 +517,10 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-07**: `outcome-report-v2` **shipped**: two sprints, two PRs, ≈$14.59 against a $22–34 quote. The report
+  answers "is it paying off?" first, from the epics' own targets — no invented number: the lock found the North Star
+  itself has no recorded level, so the chart plots its inputs. Review found and fixed a one-bad-date crash that took
+  down every share link and a pace floor that made fraction metrics always "on pace".
 - **2026-10-07**: `one-epic-page` **shipped**: two sprints, two PRs, ≈$31.17 against a $22–34 quote. One page per epic
   replaces the Board's card view and the Hub's drill-down; commands read as plain lines, proven by pasting each into an
   agent (one wording failed and was changed). The lock's live-data check found the roadmap and the flags in different

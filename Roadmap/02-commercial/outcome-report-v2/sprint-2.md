@@ -3,7 +3,7 @@ epic: outcome-report-v2
 sprint: 2
 title: "How it got there"
 risk: low
-phase: Building
+phase: Shipped
 stories_total: 3
 stories:
   - id: S2.1
@@ -30,7 +30,7 @@ stories:
 ---
 # Outcome report v2 — Sprint 2: How it got there
 
-**Status:** 🔨 built, in review
+**Status:** ✅ shipped and live 2026-10-07 (#300, merge `075ff8e`)
 
 ## Stories
 <!-- Keep the heading shape `### Story 2.M — <title>`. When a story ships, append ✅ + its commit ref.
@@ -88,7 +88,7 @@ against" links. Links that need a sign-in are left off share links.
 ## Sprint 2 — Smoke walkthrough (do these in order)
 Env: production · https://goldenfrijoles.com   (or the preview URL while testing pre-merge)
 
-1. Signed in, go to https://goldenfrijoles.com/hub/<your-project>/report and scroll to How fast
+1. Signed in, go to https://goldenfrijoles.com/hub/golden-beans-demo/report and scroll to How fast
    → A subtitle and arrows against the last two months (or a line saying how many months it has).
 2. Scroll to the Steps of AI Adoption
    → Five steps, you are here, the next step's criteria; Copy prompt.
@@ -100,3 +100,10 @@ Env: production · https://goldenfrijoles.com   (or the preview URL while testin
    → Each section has its line; no link asks for a sign-in.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+### Verified live (signed out, 2026-10-07, after `075ff8e` deployed)
+How fast: the subtitle, and deltas from prod's own versions — throughput "▲ 1.47 vs Sep · ▲ 1.66 vs Aug" (v263 against
+v191 and v99), lead time and deploy frequency "±0", review latency "no comparison" (null since the monorepo move).
+Steps: "1 Assisted you are here", "2 Parallel next", "To reach Parallel: 1 of 6 of its criteria met, 5 not
+instrumented." Signed out: no `/app/` link and no Copy prompt. **Owed to Daniel:** steps 1–4 signed in (incl. pasting
+the prompt into Claude Code) and step 5 through a client share link.
