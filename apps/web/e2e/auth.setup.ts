@@ -1017,7 +1017,8 @@ async function seedRoadmapFixture(db: SupabaseClient, projectId: string) {
         },
         {
           ...seed('fixture-seed-digest', 'A weekly digest nobody has to open the console for'),
-          ...card('Grooming'),
+          // one-epic-page — a seed WITH a goal, so "No target yet" is proven not to depend on a missing goal (#295).
+          ...card('Grooming', { goal: 'So that a founder hears about the week without opening anything.' }),
         },
       ],
       board: {

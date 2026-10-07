@@ -2901,7 +2901,7 @@
   flex-direction: column;
   gap: 8px;
 }
-/* A card is a link to its own view (`?card=<slug>`). Stage is never colour alone: the column says it in words. */
+/* A card is a link to its epic page (`/hub/<p>/epic/<slug>`; one-epic-page D3). Stage is never colour alone: the column says it in words. */
 .ds .ds-board-card {
   display: block;
   padding: 9px 10px;
