@@ -198,44 +198,58 @@ function buildMcpServer(
         return { content: [{ type: 'text', text: JSON.stringify({ ok: false, reason }) }], isError: true }
       }
       return {
-        content: [{ type: 'text', text: JSON.stringify({ ok: true, project: projectSlug, ...view }) }],
-      }
-    }
-  )
-
-  server.registerTool(
-    'get_experiment_decision',
-    {
-      description:
-        "Read this project's A/B experiment decision record by key (the latest version unless `version`). Cite it as ab:<key>.",
-      inputSchema: {
-        experimentKey: z
-          .string()
-          .max(64)
-          .regex(/^[a-z][a-z0-9_-]{0,63}$/),
-        version: z.number().int().positive().max(1_000_000).optional(),
-      },
-    },
-    async ({ experimentKey, version }) => {
-      const result = await getExperimentDecisionByKey(projectId, experimentKey, version)
-      if (!result.ok) {
-        return { content: [{ type: 'text', text: JSON.stringify(result) }], isError: true }
-      }
-      return {
         content: [
           {
             type: 'text',
             text: JSON.stringify({
               ok: true,
               project: projectSlug,
-              ...result.experiment,
-              decisions: result.decisions,
+              metric: result.input.metricKey || null,
+              ...view,
             }),
           },
         ],
       }
     }
   )
+
+  // The decision ledger is governed: this tool registers only when its governance gate is on, like
+  // `get_experiment_analysis` below (fresh review, #293).
+  if (isExperimentGovernanceMcpToolEnabled()) {
+    server.registerTool(
+      'get_experiment_decision',
+      {
+        description:
+          "Read this project's A/B experiment decision record by key (the latest version unless `version`). Cite it as ab:<key>.",
+        inputSchema: {
+          experimentKey: z
+            .string()
+            .max(64)
+            .regex(/^[a-z][a-z0-9_-]{0,63}$/),
+          version: z.number().int().positive().max(1_000_000).optional(),
+        },
+      },
+      async ({ experimentKey, version }) => {
+        const result = await getExperimentDecisionByKey(projectId, experimentKey, version)
+        if (!result.ok) {
+          return { content: [{ type: 'text', text: JSON.stringify(result) }], isError: true }
+        }
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                ok: true,
+                project: projectSlug,
+                ...result.experiment,
+                decisions: result.decisions,
+              }),
+            },
+          ],
+        }
+      }
+    )
+  }
 
   // Governed analysis is a separate, born-OFF tool. The legacy compare_experiment contract above
   // stays unchanged while this extension is dark, and every enabled call remains scoped to the

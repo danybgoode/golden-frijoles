@@ -31,8 +31,8 @@ test('the /install page renders a live connector URL that actually round-trips',
     [
       'compare_experiment',
       ...(isExperimentGovernanceEnabled() ? ['get_experiment_analysis'] : []),
-      // result-record S3.2 (D18) — the two result reads, unconditional.
-      'get_experiment_decision',
+      // result-record S3.2 (D18) — the decision read is governed like the analysis above; the readings read is not.
+      ...(isExperimentGovernanceEnabled() ? ['get_experiment_decision'] : []),
       'get_input_readings',
       ...(isJourneyProjectionsEnabled() ? ['get_journey_cohort'] : []),
       'get_north_star',

@@ -99,7 +99,8 @@ test.describe('POST /api/v1/public/mcp/c/:token', () => {
     const expected = [
       'compare_experiment',
       'get_experiment_analysis',
-      // result-record S3.2 (D18) — the two result reads, unconditional like the flag reads (read-only, token-scoped).
+      // result-record S3.2 (D18) — the two result reads (token-scoped); the decision one rides the governance gate like
+      // get_experiment_analysis, which this lit server has on.
       'get_experiment_decision',
       'get_input_readings',
       'get_journey_cohort',
