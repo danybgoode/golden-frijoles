@@ -68,6 +68,11 @@ No data is involved: this is the design system only. The system of record for th
   Moonlight #8db7e0 (text #a9cdee) · Sprout #93c58a (chip #2c4029/#b5dcae) · Ember #e07a6a (light #f0a497) ·
   Gold #e6b84a. Fonts: Newsreader, Hanken Grotesk, IBM Plex Mono.
 
+> **Note (2026-10-07, result-record D11):** the Bean already exists — `apps/web/design-system/bean.tsx`, built by
+> result-record S2.3 to S2.1's spec (four kinds, three sizes, its word, gold only on proven) in today's tokens, and
+> placed on shipped board cards. S2.1 here re-skins it with night-garden values and adds the specimen; it does not
+> build a second one.
+
 ## Scope — stories
 | Sprint | Story | Risk |
 |---|---|---|

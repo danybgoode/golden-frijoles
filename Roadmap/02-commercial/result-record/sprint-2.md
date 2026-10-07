@@ -3,7 +3,7 @@ epic: result-record
 sprint: 2
 title: "The read"
 risk: low
-phase: Shaping
+phase: In review
 stories_total: 3
 stories:
   - id: S2.1
@@ -12,25 +12,25 @@ stories:
     i_want: "my agent to draft the verdict with its evidence on the read date, and me to approve it"
     so_that: "the result is evidenced and mine"
     risk: low
-    status: planned
+    status: done
   - id: S2.2
     title: "Read due, in the terminal and on Today"
     as_a: "a founder"
     i_want: "to be told when a read is due"
     so_that: "I don't have to remember"
     risk: low
-    status: planned
+    status: done
   - id: S2.3
     title: "The result as a bean on the board card"
     as_a: "a founder"
     i_want: "the result as a bean on the board card"
     so_that: "I see what paid off at a glance"
     risk: low
-    status: planned
+    status: done
 ---
 # The result record — Sprint 2: The read
 
-**Status:** ⬜ not started
+**Status:** 🟦 In review
 
 ## Stories
 <!-- Keep the heading shape `### Story 2.M — <title>`. When a story ships, append ✅ + its commit ref.
@@ -70,9 +70,13 @@ Shipped cards show epic 1's Bean: Growing until read, then Proven (gold), Dispro
 **Risk:** low
 
 ## Sprint QA
-- **api spec(s):** S2.1 → pure-logic specs on the evidence rule, the default read date and the 90-day mark; fixture
-  runs with and without `gf`; S2.2 → the `session-resume` test and `today-bands.test.ts`; S2.3 → the board spec and
-  the visual gate.
+- **api spec(s):** S2.1 → `epic-read.test.mjs` (the draft rule, before-date stop, never writes without `--write`,
+  evidence refused, late, owner verdict, CLI runs with no key and with a stubbed engine; `gf` cannot fetch evidence,
+  see the lock); S2.2 → `session-resume.test.mjs` (`decideReadsDue`, the gap) and `readsDue` in
+  `roadmap-result.test.ts` (the lock put Today's derivation there rather than in `today-bands.test.ts`, which is the
+  task queue's); S2.3 → `hub-board.test.ts` (`toCard`, the key pin), `design-system/bean.test.ts` (gold only on
+  proven) and `e2e/bean.spec.tsx` (each kind, each size, its word; the card line). The visual gate is unchanged: no
+  fixture epic carries a target, so no route renders a bean yet (said out loud, not hidden).
 - **browser smoke owed:** yes, to Daniel: the walkthrough below.
 - **deterministic gate:** `tsc --noEmit` + `npm run build` + Playwright `api` green before merge. Low risk: merge on green.
 
