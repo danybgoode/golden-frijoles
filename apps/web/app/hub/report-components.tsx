@@ -7,7 +7,10 @@ import { lensPolicy, type PodReportLens } from '@/lib/pod-report-lens'
 import type { ReactNode } from 'react'
 import type { OutcomeSection } from '@/lib/pod-outcome'
 import type { PayingOffView } from '@/lib/outcome-figures'
-import { PayingOffSection } from './outcome-components'
+import { PayingOffSection, SectionLinks, sectionHrefs } from './outcome-components'
+import { deltaWords, historyNote, type SpeedDelta, type SpeedHistory } from '@/lib/outcome-history'
+import { agentPrompt, GUIDE_LINE, nextStepWords, STEP_LABELS } from '@/lib/adoption-steps'
+import { CopyButton } from './copy-button'
 import type { Freshness } from '@/lib/hub-freshness'
 import { HubProvenance } from './hub-components'
 import { Answer, Callout, Empty, PageHead } from '@/design-system/primitives'
@@ -192,10 +195,13 @@ export function MetricTable({
   caption,
   rows,
   benchmarks,
+  deltas,
 }: {
   caption: string
   rows: MetricRow[]
   benchmarks: PodReportView['benchmarks']
+  /** outcome-report-v2 S2.1 — each row's move against the earlier months, newest first. */
+  deltas?: Record<string, SpeedDelta[]>
 }) {
   return (
     <div className={styles.tableWrap}>
@@ -217,6 +223,11 @@ export function MetricTable({
               </th>
               <td className={row.value === null ? styles.metricNull : styles.metricValue}>
                 {row.value ?? 'not measured'}
+                {deltas?.[row.key]?.length ? (
+                  <span className="ds-outcome-delta" data-deltas={row.key}>
+                    {deltas[row.key].map(deltaWords).join(' · ')}
+                  </span>
+                ) : null}
               </td>
               <td className={styles.metricRead}>
                 {row.interpretation ? (
@@ -332,24 +343,64 @@ export function MaturityLadder({
   maturity,
   repo,
   showRows,
+  product,
+  showAgentPrompt = false,
 }: {
   maturity: NonNullable<PodReportView['maturity']>
   repo?: string
   showRows: boolean
+  /** outcome-report-v2 S2.2 — the product the agent prompt names. */
+  product?: string
+  /** The Copy-prompt button: the team's, for its own agents (lens D5). */
+  showAgentPrompt?: boolean
 }) {
   const { verdict, ladder, rows, notInstrumented } = maturity
 
   return (
     <section className="ds-report-section" aria-labelledby="maturity-heading">
       <h2 className="ds-report-heading" id="maturity-heading">
-        Where this pod sits on the ladder
+        Where you are on the Steps of AI Adoption
       </h2>
       <p className="ds-lede">
-        Scored criterion by criterion against a published external scale, from this repository’s own git and
-        pull-request history. No self-declared answers: what cannot be derived is marked not instrumented
-        rather than assumed.
+        {GUIDE_LINE} Scored criterion by criterion from this repository’s own git and pull-request history;
+        what cannot be derived is marked not instrumented rather than assumed.
       </p>
-
+      {/* outcome-report-v2 S2.2 — the five steps, named by the scorer (lib/adoption-steps.ts, pinned to
+          maturity-lens.mjs), with "you are here" and "next". */}
+      {verdict && (
+        <ol className="ds-outcome-steps" data-testid="adoption-steps">
+          {Object.entries(STEP_LABELS).map(([n, label]) => {
+            const step = Number(n)
+            const here = step === verdict.step
+            const next = maturity.next?.step === step
+            return (
+              <li key={n} data-step={step} data-here={here || undefined} data-next={next || undefined}>
+                <span className="ds-outcome-step-n">{step}</span> {label}
+                {here && <b className="ds-outcome-step-tag"> you are here</b>}
+                {next && <b className="ds-outcome-step-tag"> next</b>}
+              </li>
+            )
+          })}
+        </ol>
+      )}
+      {maturity.next && (
+        <div className="ds-outcome-next" data-testid="adoption-next">
+          <p>
+            {nextStepWords(maturity.next)}
+            {showRows && maturity.next.total > 0
+              ? ` They are the step ${maturity.next.step} rows in the table below.`
+              : ''}
+          </p>
+          {showAgentPrompt && product && (
+            <div className="ds-outcome-prompt" data-testid="adoption-prompt">
+              <code className="ds-mono">{agentPrompt(product, maturity.next)}</code>
+              <CopyButton value={agentPrompt(product, maturity.next)} label="Copy the prompt for your agent">
+                Copy prompt for your agent
+              </CopyButton>
+            </div>
+          )}
+        </div>
+      )}
       {verdict && (
         <div className={styles.verdictCard} data-testid="maturity-verdict">
           <div className={styles.verdictRow}>
@@ -586,6 +637,38 @@ function sourceSummary(view: PodReportView, policy: ReturnType<typeof lensPolicy
 }
 
 /**
+ * outcome-report-v2 S2.3 — "Who did the work" as one bar and one line: the latest month's agent co-author share. The
+ * month-by-month table it replaces said the same thing at length; the line carries the computation's own reading,
+ * verbatim, so the number still never arrives without it.
+ */
+export function WhoDidTheWork({ rows }: { rows: MetricRow[] }) {
+  const latest = [...rows].reverse().find((r) => typeof r.raw === 'number')
+  if (!latest) return null
+  const pct = Math.round((latest.raw as number) * 100)
+  const month = latest.label.replace(/^.*— /, '')
+  return (
+    <section
+      className="ds-report-section"
+      aria-labelledby="composition-heading"
+      data-testid="who-did-the-work"
+    >
+      <h2 className="ds-report-heading" id="composition-heading">
+        Who did the work
+      </h2>
+      <svg className="ds-epic-bar" viewBox="0 0 100 6" preserveAspectRatio="none" aria-hidden="true">
+        <rect className="ds-epic-bar-track" x="0" y="0" width="100" height="6" rx="3" />
+        <rect className="ds-epic-bar-fill" x="0" y="0" width={pct} height="6" rx="3" data-pct={pct} />
+      </svg>
+      <p className="ds-hint">
+        <b>{pct}%</b> in {month}.{' '}
+        {latest.interpretation ??
+          'A composition fact about how the work was produced, not a productivity claim.'}
+      </p>
+    </section>
+  )
+}
+
+/**
  * The Pod Report body — the single component allowed to put a number on this surface.
  *
  * Order is load-bearing, not aesthetic:
@@ -601,6 +684,8 @@ export function PodReportBody({
   view,
   outcome,
   payingOff,
+  history,
+  signedIn = true,
   lens,
   artifactVersion,
   freshness,
@@ -612,6 +697,14 @@ export function PodReportBody({
   outcome: OutcomeSection
   /** outcome-report-v2 — "is it paying off", already lensed by getPodReport. The report opens with its sentence. */
   payingOff: PayingOffView
+  /** outcome-report-v2 S2.1 — How fast against the two previous months. Speed is never lensed, so neither is this. */
+  history: SpeedHistory
+  /**
+   * Whether the reader has a session. The team lens also serves the anonymous demo report (`requireDashboardAccess`),
+   * and a signed-out reader is handed no `/app/` link and no agent prompt (fresh review, #300). Default true: the share
+   * route never reaches the team lens, and its lenses already show no links.
+   */
+  signedIn?: boolean
   lens: PodReportLens
   artifactVersion: number
   freshness: Freshness
@@ -712,7 +805,12 @@ export function PodReportBody({
           </div>
         )}
 
-        <PayingOffSection payingOff={payingOff} projectSlug={projectSlug} showLinks={policy.showLinks} />
+        <PayingOffSection
+          payingOff={payingOff}
+          projectSlug={projectSlug}
+          showLinks={policy.showLinks}
+          signedIn={signedIn}
+        />
         {view.empty ? (
           <p className="ds-hint" data-testid="pod-report-no-delivery">
             The latest pushed artifact carries no delivery section, so there are no delivery numbers to
@@ -726,18 +824,33 @@ export function PodReportBody({
               qualifies it entering the viewport at the same time. */}
             <section className="ds-report-section" aria-labelledby="speed-heading">
               <h2 className="ds-report-heading" id="speed-heading">
-                How fast — and what that does <em>not</em> tell you
+                How fast
               </h2>
-              <p className="ds-lede">
-                Every number here is computed from this repository’s own git and pull-request history. Nothing
-                is estimated, and nothing on the right-hand side is an apology: those are the questions this
-                dataset cannot answer, each with the guardrail that would close it.
+              <p className="ds-lede" data-testid="speed-subtitle">
+                From groomed to shipped, and how that compares with the last two months.
               </p>
+              <p className="ds-hint">
+                Why it matters: speed is only worth having if the work above is paying off — read these beside
+                it, and beside what they cannot tell you on the right.
+                {historyNote(history) ? (
+                  <>
+                    {' '}
+                    <span data-testid="speed-history-note">{historyNote(history)}</span>
+                  </>
+                ) : null}
+              </p>
+              <SectionLinks
+                show={policy.showLinks}
+                links={[sectionHrefs(projectSlug).board]}
+                testId="links-speed"
+                signedIn={signedIn}
+              />
               <div className="ds-pairing">
                 <MetricTable
                   caption="Delivery — computed, not claimed"
                   rows={view.speed}
                   benchmarks={view.benchmarks}
+                  deltas={history.byKey}
                 />
                 <NotInstrumentedPanel
                   testId="delivery-not-instrumented"
@@ -748,22 +861,7 @@ export function PodReportBody({
               </div>
             </section>
 
-            {policy.showComposition && view.composition.length > 0 && (
-              <section className="ds-report-section" aria-labelledby="composition-heading">
-                <h2 className="ds-report-heading" id="composition-heading">
-                  Who wrote it
-                </h2>
-                <p className="ds-lede">
-                  A composition fact about how the work was produced. It is not a productivity claim and
-                  cannot be read as one — a co-author trailer records participation, never contribution.
-                </p>
-                <MetricTable
-                  caption="Agent co-authorship by month"
-                  rows={view.composition}
-                  benchmarks={view.benchmarks}
-                />
-              </section>
-            )}
+            {policy.showComposition && <WhoDidTheWork rows={view.composition} />}
           </>
         )}
 
@@ -772,6 +870,8 @@ export function PodReportBody({
             maturity={view.maturity}
             repo={view.source.repo}
             showRows={policy.showMaturityRows}
+            product={projectSlug}
+            showAgentPrompt={policy.showAgentPrompt && signedIn}
           />
         )}
 
@@ -780,11 +880,11 @@ export function PodReportBody({
         {view.benchmarks.length > 0 && (
           <section className="ds-report-section" aria-labelledby="benchmarks-heading">
             <h2 className="ds-report-heading" id="benchmarks-heading">
-              The benchmarks these numbers are read against
+              Read against
             </h2>
             <p className="ds-lede">
-              Our side is computed, not claimed. Their side is cited and linked, never republished wholesale —
-              follow the link for the published figures.
+              The published benchmarks these numbers can fairly be compared with — cited and linked, never
+              republished.
             </p>
             <ul className="ds-benchlist" data-testid="pod-report-benchmarks">
               {view.benchmarks.map((b) => (

@@ -12,6 +12,8 @@ import { applyLens, applyPayingOffLens, type PodReportLens } from '@/lib/pod-rep
 import { buildPayingOff, type OutcomeEpic, type PayingOffView } from '@/lib/outcome-figures'
 import { epicResult } from '@/lib/roadmap-result'
 import { epicFinops } from '@/lib/roadmap-finops'
+import { speedHistory, type SpeedHistory } from '@/lib/outcome-history'
+import { nextStepOf, STEP_LABELS } from '@/lib/adoption-steps'
 import { buildOutcomeSection } from '@/lib/pod-outcome'
 import { formatFreshness } from '@/lib/hub-freshness'
 import { PodReportBody, evidenceHref } from '../app/hub/report-components'
@@ -138,7 +140,24 @@ const PAYING_OFF_TEAM = buildPayingOff({
 })
 const payingOffFor = (lens: PodReportLens): PayingOffView => applyPayingOffLens(PAYING_OFF_TEAM, lens)
 
-function render(view: PodReportView, lens: PodReportLens = 'team', payingOff = payingOffFor(lens)): string {
+// outcome-report-v2 S2.1 — two earlier months, built the way the read path builds them (from each artifact's speed).
+const SPEED_NOW = buildPodReportView(ARTIFACT).speed.map((r) => ({ key: r.key, raw: r.raw ?? null }))
+const HISTORY: SpeedHistory = speedHistory(SPEED_NOW, [
+  {
+    id: 'sep',
+    version: 191,
+    generatedAt: '2026-09-30T23:29:37Z',
+    speed: SPEED_NOW.map((r) => ({ key: r.key, raw: r.raw === null ? null : r.raw - 1 })),
+  },
+  { id: 'aug', version: 99, generatedAt: '2026-08-31T20:02:35Z', speed: SPEED_NOW },
+])
+
+function render(
+  view: PodReportView,
+  lens: PodReportLens = 'team',
+  payingOff = payingOffFor(lens),
+  history = HISTORY
+): string {
   return decodeEntities(
     renderToStaticMarkup(
       <PodReportBody
@@ -146,6 +165,7 @@ function render(view: PodReportView, lens: PodReportLens = 'team', payingOff = p
         view={view}
         outcome={OUTCOME}
         payingOff={payingOff}
+        history={history}
         lens={lens}
         artifactVersion={3}
         freshness={FRESHNESS}
@@ -155,7 +175,10 @@ function render(view: PodReportView, lens: PodReportLens = 'team', payingOff = p
 }
 
 function viewFor(lens: PodReportLens): PodReportView {
-  return applyLens(buildPodReportView(ARTIFACT), lens)
+  // As the read path does (D9): the next step is counted from the rows before the lens may hide them.
+  const built = buildPodReportView(ARTIFACT)
+  if (built.maturity) built.maturity.next = nextStepOf(built.maturity.verdict, built.maturity.rows)
+  return applyLens(built, lens)
 }
 
 /** The rendered markup of one element and its subtree, located by a `data-testid`. */
@@ -267,7 +290,8 @@ test('every metric row renders its interpretation with the number, never on hove
   const view = viewFor('team')
   const html = render(view)
 
-  for (const row of [...view.speed, ...view.composition]) {
+  // "Who did the work" shows the latest month only (outcome-report-v2 S2.3) — that row keeps its reading.
+  for (const row of [...view.speed, view.composition.at(-1)!]) {
     if (row.interpretation) {
       expect(html, `${row.key} lost its interpretation`).toContain(row.interpretation)
     } else if (row.value !== null) {
@@ -375,6 +399,7 @@ test('a tenant with no registered features renders not-instrumented, never zeros
         view={viewFor('team')}
         outcome={empty}
         payingOff={payingOffFor('team')}
+        history={HISTORY}
         lens="team"
         artifactVersion={1}
         freshness={FRESHNESS}
@@ -485,4 +510,87 @@ test('S1.3: the epics table — column names, the bet under the name, every row 
   // Overspend is a marker, never Ember: no red class anywhere in this half.
   const half = html.slice(html.indexOf('data-testid="paying-off"'))
   expect(half.slice(0, half.indexOf('</section>'))).not.toMatch(/class="[^"]*(red|ember|danger|NotMet)/i)
+})
+
+// ── outcome-report-v2 · Sprint 2 ───────────────────────────────────────────────────────────────────────────────────
+
+test('S2.1: How fast has its subtitle and a delta per metric against the last two months', () => {
+  const html = render(viewFor('team'))
+  expect(slice(html, 'speed-subtitle', 200)).toContain(
+    'From groomed to shipped, and how that compares with the last two months.'
+  )
+  const lead = html.slice(html.indexOf('data-deltas="epic_lead_time"'))
+  expect(lead.slice(0, 200)).toContain('▲ 1 vs Sep · ±0 vs Aug')
+  expect(html).not.toContain('data-testid="speed-history-note"')
+})
+
+test('S2.1: fewer than two earlier months says how many — and a failed read says so', () => {
+  const one = render(viewFor('team'), 'team', payingOffFor('team'), speedHistory(SPEED_NOW, [null, null]))
+  expect(slice(one, 'speed-history-note', 200)).toContain('first month')
+  expect(one).not.toContain('data-deltas=')
+  const failed = render(viewFor('team'), 'team', payingOffFor('team'), speedHistory(SPEED_NOW, null))
+  expect(slice(failed, 'speed-history-note', 200)).toContain('could not be read')
+})
+
+test('S2.2: the five steps, named by the scorer, with you are here, next, the next step’s count and the prompt', () => {
+  const view = viewFor('team')
+  const html = render(view)
+  const steps = slice(html, 'adoption-steps', 1500)
+  for (const label of Object.values(STEP_LABELS)) expect(steps).toContain(label)
+  const here = view.maturity!.verdict!.step
+  expect(steps).toMatch(new RegExp(`data-step="${here}" data-here="true"`))
+  const next = view.maturity!.next!
+  expect(steps).toMatch(new RegExp(`data-step="${next.step}" data-next="true"`))
+  expect(slice(html, 'adoption-next', 300)).toContain(`${next.met} of ${next.total} of its criteria met`)
+  expect(slice(html, 'adoption-prompt', 400)).toContain(
+    `Read the golden-beans-demo outcome report and the Steps of AI Adoption, then suggest what we change to reach ${next.label}`
+  )
+})
+
+test('S2.2: an investor still sees the step and the next step’s count, but not the rows or the prompt', () => {
+  const html = render(viewFor('investor'), 'investor')
+  expect(html).toContain('data-testid="adoption-steps"')
+  expect(html).toContain('data-testid="adoption-next"')
+  expect(html).not.toContain('data-testid="adoption-prompt"')
+  expect(html).not.toContain('data-criterion=')
+})
+
+test('S2.3: every section has its line; the team gets its links, a share link gets none a visitor cannot open', () => {
+  const team = render(viewFor('team'))
+  for (const id of ['links-paying-off', 'links-figures', 'links-speed'])
+    expect(team).toContain(`data-testid="${id}"`)
+  expect(team).toContain('href="/app/north-star/golden-beans-demo"')
+  expect(team).toContain('href="/app/finops/golden-beans-demo"')
+  expect(team).toContain('href="/hub/golden-beans-demo/board"')
+  expect(team).toContain('id="benchmarks-heading">Read against<')
+  expect(slice(team, 'who-did-the-work', 900)).toContain('91%')
+  for (const lens of ['client', 'investor'] as const) {
+    const html = render(viewFor(lens), lens)
+    expect(html, lens).not.toMatch(/href="\/(app|hub)\//)
+    // Every section still says what it is.
+    expect(html, lens).toContain('data-testid="speed-subtitle"')
+  }
+})
+
+test('S2.3 (#300 review): a signed-out reader of the demo report gets no /app/ link and no agent prompt', () => {
+  const html = decodeEntities(
+    renderToStaticMarkup(
+      <PodReportBody
+        projectSlug="golden-beans-demo"
+        view={viewFor('team')}
+        outcome={OUTCOME}
+        payingOff={payingOffFor('team')}
+        history={HISTORY}
+        signedIn={false}
+        lens="team"
+        artifactVersion={3}
+        freshness={FRESHNESS}
+      />
+    )
+  )
+  expect(html).not.toContain('href="/app/')
+  expect(html).not.toContain('data-testid="adoption-prompt"')
+  // The hub pages it can open still link: the Board and the epic pages read anonymously for the demo.
+  expect(html).toContain('href="/hub/golden-beans-demo/board"')
+  expect(html).toContain('href="/hub/golden-beans-demo/epic/overdue-reminders"')
 })

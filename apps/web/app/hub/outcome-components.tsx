@@ -252,15 +252,58 @@ export function EpicsTable({
   )
 }
 
+/**
+ * outcome-report-v2 S2.3 (D10) — the links under a section's line. Console pages need a sign-in, so under a share lens
+ * (`show` false) nothing renders: a visitor is never handed a link that asks them to log in.
+ */
+export function SectionLinks({
+  show,
+  links,
+  testId,
+  signedIn = true,
+}: {
+  show: boolean
+  links: Array<{ href: string; label: string }>
+  testId: string
+  /** Signed out, the `/app/` pages would only ask for a sign-in — they are left off. */
+  signedIn?: boolean
+}) {
+  links = signedIn ? links : links.filter((l) => !l.href.startsWith('/app/'))
+  if (!show || links.length === 0) return null
+  return (
+    <p className="ds-outcome-links" data-testid={testId}>
+      Open{' '}
+      {links.map((l, i) => (
+        <span key={l.href}>
+          {i > 0 ? ' · ' : ''}
+          <a href={l.href}>{l.label}</a>
+        </span>
+      ))}
+    </p>
+  )
+}
+
+/** Console URLs for a project's report sections — one place, so the team view and its spec agree. */
+export function sectionHrefs(projectSlug: string) {
+  const p = encodeURIComponent(projectSlug)
+  return {
+    northStar: { href: `/app/north-star/${p}`, label: 'North Star' },
+    finops: { href: `/app/finops/${p}`, label: 'FinOps' },
+    board: { href: `/hub/${p}/board`, label: 'Board' },
+  }
+}
+
 /** Sprint 1's half of the document: the chart(s), the figures and the table, under one heading. */
 export function PayingOffSection({
   payingOff,
   projectSlug,
   showLinks,
+  signedIn = true,
 }: {
   payingOff: PayingOffView
   projectSlug: string
   showLinks: boolean
+  signedIn?: boolean
 }) {
   const drawable = payingOff.lines.filter((l) => l.actual.length > 0 || l.expected.length > 0)
   return (
@@ -272,6 +315,12 @@ export function PayingOffSection({
         The North Star’s inputs as they actually moved, against the line the shipped epics’ own targets drew —
         so you can see whether the work is landing where you planned.
       </p>
+      <SectionLinks
+        show={showLinks}
+        signedIn={signedIn}
+        links={[sectionHrefs(projectSlug).northStar]}
+        testId="links-paying-off"
+      />
       {payingOff.unavailable ? (
         <p className="ds-hint" data-testid="paying-off-unavailable">
           <strong>The plan and its readings could not be read just now.</strong> This is a failure to reach
@@ -288,6 +337,12 @@ export function PayingOffSection({
       )}
       {/* An unread plan has no figures to show — "0 of 0 paid off" would be the outage speaking as a fact. */}
       {!payingOff.unavailable && <OutcomeFigures figures={payingOff.figures} />}
+      <SectionLinks
+        show={showLinks}
+        signedIn={signedIn}
+        links={[sectionHrefs(projectSlug).finops, sectionHrefs(projectSlug).board]}
+        testId="links-figures"
+      />
       <EpicsTable rows={payingOff.epics} projectSlug={projectSlug} showLinks={showLinks} />
     </section>
   )

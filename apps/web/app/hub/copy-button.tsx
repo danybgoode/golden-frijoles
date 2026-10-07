@@ -1,3 +1,5 @@
+/** @jsxImportSource react */
+// Pragma: a no-op under Next; the test rail renders this inside the Outcome report (see report-components.tsx).
 'use client'
 
 import { useState } from 'react'

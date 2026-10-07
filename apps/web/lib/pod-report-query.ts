@@ -1,6 +1,8 @@
 import 'server-only'
 import { getSupabaseServiceClient } from './supabase'
-import { getLatestArtifact, type ReportArtifact } from './report-artifacts'
+import { getLatestArtifact, getLatestArtifactBefore, type ReportArtifact } from './report-artifacts'
+import { speedHistory, windowCutoffs, type EarlierWindow, type SpeedHistory } from './outcome-history'
+import { nextStepOf } from './adoption-steps'
 import { getFeatureFunnelByProjectId } from './tars-query'
 import { buildPodReportView, type PodReportView } from './pod-report-view'
 import { buildOutcomeSection, type OutcomeSection } from './pod-outcome'
@@ -33,6 +35,8 @@ export type PodReportResult =
       outcome: OutcomeSection
       /** outcome-report-v2 — "is it paying off": the sentence, the lines, the figures, the epics table. Lensed. */
       payingOff: PayingOffView
+      /** outcome-report-v2 D8 — How fast against the latest version of each of the two previous months. */
+      history: SpeedHistory
       lens: PodReportLens
     }
   // 'project_not_found' → notFound(); 'no_artifact' → the deliberate empty state; 'query_failed' →
@@ -98,13 +102,58 @@ export async function getPodReportByProjectId(
   }
   if (!artifact) return { ok: false, reason: 'no_artifact' }
 
-  const view = applyLens(buildPodReportView(artifact.payload), lens)
-  const [outcome, payingOff] = await Promise.all([
+  const built = buildPodReportView(artifact.payload)
+  // D9: the next step's count is taken from the rows BEFORE the lens may hide them — an aggregate, like the verdict.
+  if (built.maturity) built.maturity.next = nextStepOf(built.maturity.verdict, built.maturity.rows)
+  const view = applyLens(built, lens)
+  const [outcome, payingOff, earlier] = await Promise.all([
     getProjectOutcome(projectId, projectSlug),
     getPayingOff(projectId, projectSlug),
+    getEarlierWindows(projectId, artifact.generatedAt),
   ])
 
-  return { ok: true, artifact, view, outcome, payingOff: applyPayingOffLens(payingOff, lens), lens }
+  return {
+    ok: true,
+    artifact,
+    view,
+    outcome,
+    payingOff: applyPayingOffLens(payingOff, lens),
+    // Speed is never narrowed by a lens (pod-report-lens.ts), so neither are its deltas.
+    history: speedHistory(
+      built.speed.map((r) => ({ key: r.key, raw: r.raw ?? null })),
+      earlier
+    ),
+    lens,
+  }
+}
+
+/**
+ * The latest version of each of the two months before the current artifact's (D8), or null when the read failed —
+ * which the page says, rather than rendering an outage as "the first month".
+ */
+async function getEarlierWindows(
+  projectId: string,
+  generatedAt: string
+): Promise<Array<EarlierWindow | null> | null> {
+  const cutoffs = windowCutoffs(generatedAt)
+  if (!cutoffs) return []
+  try {
+    const found = await Promise.all(
+      cutoffs.map((before) => getLatestArtifactBefore(projectId, 'pod_report', before))
+    )
+    return found.map((a) =>
+      a
+        ? {
+            id: a.id,
+            version: a.version,
+            generatedAt: a.generatedAt,
+            speed: buildPodReportView(a.payload).speed.map((r) => ({ key: r.key, raw: r.raw ?? null })),
+          }
+        : null
+    )
+  } catch {
+    return null
+  }
 }
 
 /**
