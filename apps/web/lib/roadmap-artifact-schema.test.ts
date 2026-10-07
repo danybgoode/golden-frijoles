@@ -304,7 +304,9 @@ test('a push carrying the result fields stores them; a push without them still p
     assert.equal(full.value.items[0].read_date_derived, true)
   }
   assert.equal(parseRoadmapPush(push()).ok, true, 'an older pusher that sends none of them')
-  const nulls = parseRoadmapPush(push({ items: [row({ verdict: null, read_date: null } as Partial<RoadmapRow>)] }))
+  const nulls = parseRoadmapPush(
+    push({ items: [row({ verdict: null, read_date: null } as Partial<RoadmapRow>)] })
+  )
   assert.equal(nulls.ok, true)
 })
 
@@ -325,7 +327,11 @@ test('result dates are days, and the numbers are finite numbers', () => {
     { target_from: '61%' },
     { verdict_evidence: 'x'.repeat(501) },
   ])
-    assert.equal(parseRoadmapPush(push({ items: [row(bad as unknown as Partial<RoadmapRow>)] })).ok, false, JSON.stringify(bad).slice(0, 40))
+    assert.equal(
+      parseRoadmapPush(push({ items: [row(bad as unknown as Partial<RoadmapRow>)] })).ok,
+      false,
+      JSON.stringify(bad).slice(0, 40)
+    )
 })
 
 // one-epic-page · Story 2.3 (D11) — the epic's flag rides the push, nullish, and a malformed key is a 400.
