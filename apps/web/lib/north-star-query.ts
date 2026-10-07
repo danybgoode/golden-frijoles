@@ -126,6 +126,11 @@ export async function getFeatureImpactByProjectId(
  * matching the input's source event across the project. Narrowing the project read to one feature
  * would silently under-count the metric's own inputs.
  */
+/** PostgREST's `max_rows` (apps/web/supabase/config.toml): one page of a paged read. */
+const EVENT_PAGE = 1000
+/** The most source events one series read will page through before it refuses rather than returning a partial series. */
+const EVENT_READ_BOUND = 200_000
+
 async function readInputSeries(
   projectId: string,
   inputId: string,
@@ -138,21 +143,43 @@ async function readInputSeries(
   // TypeScript can't see that correlation across a nullable DB column, so guard it here.
   if (input.value_source === 'telemetry_event' && input.source_event) {
     const sourceEvent = input.source_event
-    let query = supabase
-      .from('events')
-      .select('event, created_at')
-      .eq('project_id', projectId)
-      .eq('event', sourceEvent)
-    if (featureKey !== undefined) query = query.eq('feature_id', featureKey)
-    const { data: events, error: eventsError } = await query
-    if (eventsError) {
-      console.error('[north-star-query] events query failed:', eventsError)
-      return { ok: false }
+    // ⚠️ PAGED, in order (fresh review, #293). PostgREST caps a select at `max_rows` (1000 here), so an unbounded select
+    // past that returned an ARBITRARY subset and the daily series — and the `latest` an agent writes into a verdict —
+    // was silently wrong. Past the hard bound the read FAILS rather than returning a partial series as if it were whole.
+    const page = (from: number, to: number) => {
+      let query = supabase
+        .from('events')
+        .select('event, created_at')
+        .eq('project_id', projectId)
+        .eq('event', sourceEvent)
+      if (featureKey !== undefined) query = query.eq('feature_id', featureKey)
+      return query.order('created_at', { ascending: true }).order('id', { ascending: true }).range(from, to)
+    }
+    const events: { event: string; created_at: string }[] = []
+    for (;;) {
+      const { data, error: eventsError } = await page(events.length, events.length + EVENT_PAGE - 1)
+      if (eventsError) {
+        console.error('[north-star-query] events query failed:', eventsError)
+        return { ok: false }
+      }
+      events.push(...((data ?? []) as { event: string; created_at: string }[]))
+      if ((data ?? []).length < EVENT_PAGE) break
+      if (events.length >= EVENT_READ_BOUND) {
+        // At the bound exactly is still whole (codex, #293): refuse only when one MORE row proves it was exceeded.
+        const { data: more, error: moreError } = await page(events.length, events.length)
+        if (moreError || (more ?? []).length > 0) {
+          console.error(
+            `[north-star-query] ${sourceEvent}: more than ${EVENT_READ_BOUND} events — refusing a partial series`
+          )
+          return { ok: false }
+        }
+        break
+      }
     }
     return {
       ok: true,
       series: computeDailySeries(
-        (events ?? []).map((e) => ({ event: e.event, createdAt: e.created_at })),
+        events.map((e) => ({ event: e.event, createdAt: e.created_at })),
         sourceEvent
       ),
     }
@@ -238,5 +265,65 @@ export async function getProjectNorthStarByProjectId(
     project: { slug: projectSlug },
     metricKey: (metric?.key as string | undefined) ?? null,
     inputs,
+  }
+}
+
+export type InputSeriesByKeyResult =
+  | {
+      ok: true
+      input: {
+        key: string
+        name: string
+        metricKey: string
+        valueSource: 'telemetry_event' | 'external_push'
+        series: DailySeriesPoint[]
+      }
+    }
+  | { ok: false; reason: 'input_not_found' | 'query_failed' }
+
+/**
+ * result-record D14 — ONE input's series by its key, for an agent reading a result (`gf north-star readings`).
+ *
+ * Reads only that input (unique per project and key, the same lookup `POST /api/v1/inputs/[key]/values` makes) and its
+ * series through `readInputSeries`, so it cannot disagree with the North Star page about what an input's series is.
+ * It does not go through `getProjectNorthStarByProjectId`: that read assumes one metric per project and fails once a
+ * project has two (found by the S3 spec), and an agent asking for one input should not pay for every input.
+ */
+export async function getInputSeriesByKey(
+  projectId: string,
+  inputKey: string
+): Promise<InputSeriesByKeyResult> {
+  const supabase = getSupabaseServiceClient()
+  const { data: row, error } = await supabase
+    .from('leading_inputs')
+    .select('id, key, name, value_source, source_event, north_star_metrics(key)')
+    .eq('project_id', projectId)
+    .eq('key', inputKey)
+    .maybeSingle()
+  if (error) {
+    console.error('[north-star-query] leading_inputs lookup by key failed:', error)
+    return { ok: false, reason: 'query_failed' }
+  }
+  if (!row) return { ok: false, reason: 'input_not_found' }
+  // The same loose-typing cast the two reads above make for the joined relation.
+  const joined = row as unknown as {
+    id: string
+    key: string
+    name: string
+    value_source: 'telemetry_event' | 'external_push'
+    source_event: string | null
+    north_star_metrics: { key: string } | null
+  }
+  const read = await readInputSeries(projectId, joined.id, joined)
+  if (!read.ok) return { ok: false, reason: 'query_failed' }
+  return {
+    ok: true,
+    input: {
+      key: joined.key,
+      name: joined.name,
+      metricKey: joined.north_star_metrics?.key ?? '',
+      valueSource: joined.value_source,
+      series: read.series,
+    },
   }
 }

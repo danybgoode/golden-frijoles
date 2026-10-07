@@ -824,3 +824,99 @@ test('gf whoami still works against a server too old to send workspaces — it j
   assert.equal(code, EXIT.OK)
   assert.equal(out.join('\n').includes('workspace:'), false)
 })
+
+// ── result-record S3.2 (D16) — the two reads an agent fetches an epic's result through ───────────────────────────
+test('gf north-star readings: the body under --json, with --to passed through', async () => {
+  const { writer, out } = capture()
+  const seen: Array<{ method: string; url: string; body: unknown }> = []
+  const body = {
+    ok: true,
+    project: 'acme',
+    metric: 'proven_bets',
+    input: { key: 'grounded_bets_share', name: 'Grounded bets', valueSource: 'external_push' },
+    readings: [{ date: '2026-11-01', value: 0.68 }],
+    latest: { date: '2026-11-01', value: 0.68 },
+  }
+  const code = await run({
+    argv: [
+      'north-star',
+      'readings',
+      'grounded_bets_share',
+      '--to',
+      '2026-11-04',
+      '--project',
+      'acme',
+      '--json',
+    ],
+    writer,
+    env: sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN }),
+    fetchImpl: stubFetch({ '/api/v1/cli/north-star/readings': { body } }, seen),
+  })
+  assert.equal(code, EXIT.OK)
+  assert.equal(
+    seen[0].url,
+    '/api/v1/cli/north-star/readings?project=acme&input=grounded_bets_share&to=2026-11-04'
+  )
+  const doc = JSON.parse(out[0])
+  assert.deepEqual(doc.latest, { date: '2026-11-01', value: 0.68 })
+  assert.equal(doc.input.key, 'grounded_bets_share')
+})
+
+test('gf north-star readings: an unknown input is the route’s not_found and exit code; a bad --to never sends', async () => {
+  const { writer } = capture()
+  const code = await run({
+    argv: ['north-star', 'readings', 'nope', '--project', 'acme', '--json'],
+    writer,
+    env: sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN }),
+    fetchImpl: stubFetch({
+      '/api/v1/cli/north-star/readings': {
+        status: 404,
+        body: { ok: false, code: 'not_found', error: 'No North Star input "nope" in acme.' },
+      },
+    }),
+  })
+  assert.equal(code, exitForServerCode('not_found'))
+  const bad = await run({
+    argv: ['north-star', 'readings', 'x', '--to', '4-Nov', '--project', 'acme'],
+    writer: capture().writer,
+    env: sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN }),
+    fetchImpl: noNetworkFetch,
+  })
+  assert.equal(bad, EXIT.USAGE)
+})
+
+test('gf experiments decision: the decision record under --json; the human line names the outcome', async () => {
+  const body = {
+    ok: true,
+    project: 'acme',
+    key: 'smart-defaults',
+    version: 2,
+    lifecycle: 'decided',
+    decisions: {
+      state: 'decided',
+      current: { outcome: 'keep_control', chosenVariantKey: 'control', rationale: 'No lift.' },
+      history: [],
+    },
+  }
+  const json = capture()
+  assert.equal(
+    await run({
+      argv: ['experiments', 'decision', 'smart-defaults', '--project', 'acme', '--json'],
+      writer: json.writer,
+      env: sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN }),
+      fetchImpl: stubFetch({
+        '/api/v1/cli/experiments/decision?project=acme&experiment=smart-defaults': { body },
+      }),
+    }),
+    EXIT.OK
+  )
+  assert.equal(JSON.parse(json.out[0]).decisions.current.outcome, 'keep_control')
+  const human = capture()
+  await run({
+    argv: ['experiments', 'decision', 'smart-defaults', '--project', 'acme'],
+    writer: human.writer,
+    env: sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN }),
+    fetchImpl: stubFetch({ '/api/v1/cli/experiments/decision': { body } }),
+  })
+  assert.match(human.all(), /smart-defaults v2 \(decided\) — decided: keep_control \(control\)/)
+})

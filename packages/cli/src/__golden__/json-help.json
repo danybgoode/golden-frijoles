@@ -430,6 +430,42 @@
         ]
       },
       {
+        "command": "north-star readings",
+        "summary": "one North Star input's readings, and the latest on or before a day",
+        "usage": "gf north-star readings <input> [--to <YYYY-MM-DD>] [--project <slug>] [--json]",
+        "needsAuth": true,
+        "flags": [
+          {
+            "flag": "--to",
+            "takesValue": true,
+            "describe": "cut the readings at this day (default: all of them)"
+          },
+          {
+            "flag": "--project",
+            "takesValue": true,
+            "describe": "the project (default: the remembered one)"
+          }
+        ]
+      },
+      {
+        "command": "experiments decision",
+        "summary": "an experiment's decision record (the latest version unless --version)",
+        "usage": "gf experiments decision <key> [--version <n>] [--project <slug>] [--json]",
+        "needsAuth": true,
+        "flags": [
+          {
+            "flag": "--version",
+            "takesValue": true,
+            "describe": "the definition version (default: the latest)"
+          },
+          {
+            "flag": "--project",
+            "takesValue": true,
+            "describe": "the project (default: the remembered one)"
+          }
+        ]
+      },
+      {
         "command": "keys ls",
         "summary": "every credential that can reach this project",
         "usage": "gf keys ls [--project <slug>] [--json]",
