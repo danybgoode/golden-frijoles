@@ -240,3 +240,54 @@ export async function getProjectNorthStarByProjectId(
     inputs,
   }
 }
+
+export type InputSeriesByKeyResult =
+  | {
+      ok: true
+      input: { key: string; name: string; metricKey: string; valueSource: 'telemetry_event' | 'external_push'; series: DailySeriesPoint[] }
+    }
+  | { ok: false; reason: 'input_not_found' | 'query_failed' }
+
+/**
+ * result-record D14 — ONE input's series by its key, for an agent reading a result (`gf north-star readings`).
+ *
+ * Reads only that input (unique per project and key, the same lookup `POST /api/v1/inputs/[key]/values` makes) and its
+ * series through `readInputSeries`, so it cannot disagree with the North Star page about what an input's series is.
+ * It does not go through `getProjectNorthStarByProjectId`: that read assumes one metric per project and fails once a
+ * project has two (found by the S3 spec), and an agent asking for one input should not pay for every input.
+ */
+export async function getInputSeriesByKey(projectId: string, inputKey: string): Promise<InputSeriesByKeyResult> {
+  const supabase = getSupabaseServiceClient()
+  const { data: row, error } = await supabase
+    .from('leading_inputs')
+    .select('id, key, name, value_source, source_event, north_star_metrics(key)')
+    .eq('project_id', projectId)
+    .eq('key', inputKey)
+    .maybeSingle()
+  if (error) {
+    console.error('[north-star-query] leading_inputs lookup by key failed:', error)
+    return { ok: false, reason: 'query_failed' }
+  }
+  if (!row) return { ok: false, reason: 'input_not_found' }
+  // The same loose-typing cast the two reads above make for the joined relation.
+  const joined = row as unknown as {
+    id: string
+    key: string
+    name: string
+    value_source: 'telemetry_event' | 'external_push'
+    source_event: string | null
+    north_star_metrics: { key: string } | null
+  }
+  const read = await readInputSeries(projectId, joined.id, joined)
+  if (!read.ok) return { ok: false, reason: 'query_failed' }
+  return {
+    ok: true,
+    input: {
+      key: joined.key,
+      name: joined.name,
+      metricKey: joined.north_star_metrics?.key ?? '',
+      valueSource: joined.value_source,
+      series: read.series,
+    },
+  }
+}

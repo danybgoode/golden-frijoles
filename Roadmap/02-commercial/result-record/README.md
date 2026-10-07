@@ -218,7 +218,9 @@ under `/api/v1/cli/*` authenticate a `gf login` token and gate on membership thr
 `compare_experiment` (lift), neither of which answers "this input's value on this day" or "this experiment's decision".
 
 - **D14 · `GET /api/v1/cli/north-star/readings?project=&input=&to=`** — member-gated (`requireCliMember`), one project
-  resolved server-side. Reads through `getProjectNorthStarByProjectId` (no new query), returns the one input (`key`,
+  resolved server-side. **Deviation, found by the S3 spec:** `getProjectNorthStarByProjectId` reads the metric with
+  `maybeSingle()` and 500s once a project has two metrics, so the route reads ONE input through a new
+  `getInputSeriesByKey` built on the same `readInputSeries` (one series rule, no second query). Returns the one input (`key`,
   `name`, `valueSource`) and its readings up to `to` (default: all), plus `latest` — the last reading on or before
   `to`. An unknown input is `not_found` (that is also "not grounded").
 - **D15 · `GET /api/v1/cli/experiments/decision?project=&experiment=&version=`** — member-gated. A new resolver in
