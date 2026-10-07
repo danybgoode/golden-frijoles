@@ -36,7 +36,7 @@ stories:
 <!-- Keep the heading shape `### Story 1.M — <title>`. When a story ships, append ✅ + its commit ref.
      The epic README frontmatter `status:` is the AUTHORITATIVE epic status. -->
 
-### Story 1.1 — Every card opens one epic page ✅
+### Story 1.1 — Every card opens one epic page ✅ 9c9f042
 **As** a founder, **I want** every card to open one epic page, **so that** I never see two versions of an epic.
 `/hub/<p>/board?card=<e>` redirects to `/hub/<p>/epic/<e>`, with the board's filters kept in the page's back link.
 `CardView`'s parts (stage, stats, commands, kickoff copy, docs) move to the epic page, and `CardView` goes. The
