@@ -16,7 +16,8 @@ import { ROADMAP_VERDICTS } from './roadmap-artifact-schema.ts'
 // App code does not import `scripts/` (lock D19's precedent, `hub-board.test.ts`), so the pins read the source.
 const scriptsLib = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'scripts', 'lib')
 const source = (file: string) => readFileSync(join(scriptsLib, file), 'utf8')
-const constant = (src: string, name: string) => Number(src.match(new RegExp(`export const ${name} = (\\d+);`))?.[1])
+const constant = (src: string, name: string) =>
+  Number(src.match(new RegExp(`export const ${name} = (\\d+);`))?.[1])
 
 // result-record · Story 1.3 (D7) — the target and verdict off the roadmap artifact.
 
@@ -38,7 +39,10 @@ test('the copies agree with the scripts: the day rule and the verdict words', ()
   assert.equal(READ_CAP_DAYS, constant(dates, 'READ_CAP_DAYS'))
   const m = source('roadmap-contract.mjs').match(/export const VERDICTS = \[([^\]]+)\]/)
   assert.ok(m, 'VERDICTS not found in scripts/lib/roadmap-contract.mjs')
-  assert.deepEqual([...ROADMAP_VERDICTS], [...m[1].matchAll(/'([^']+)'/g)].map((x) => x[1]))
+  assert.deepEqual(
+    [...ROADMAP_VERDICTS],
+    [...m[1].matchAll(/'([^']+)'/g)].map((x) => x[1])
+  )
 })
 
 test('a read verdict: the bean is the verdict, the line is from → actual (target)', () => {
@@ -54,7 +58,9 @@ test('a read verdict: the bean is the verdict, the line is from → actual (targ
   assert.equal(r.bean, 'proven')
   assert.equal(r.readDue, false)
   assert.equal(resultLine(r), '61 → 72 (target 70)')
-  const late = epicResult(epic({ verdict: 'disproven', verdict_actual: 43.5, verdict_at: '2027-02-01', read_late: true }))
+  const late = epicResult(
+    epic({ verdict: 'disproven', verdict_actual: 43.5, verdict_at: '2027-02-01', read_late: true })
+  )
   assert.equal(resultLine(late), '61 → 43.5 (target 70) · read late')
   const unclear = epicResult(epic({ verdict: 'unclear', verdict_evidence: 'traffic too low (n = 18)' }))
   assert.equal(resultLine(unclear), 'traffic too low (n = 18)')
