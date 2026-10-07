@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
   const account = await requireCliAccount(req)
   if (account instanceof NextResponse) return account
   try {
-    const projects = await cliUserProjects(account.userId)
+    const projects = await cliUserProjects(account)
     return cliOk({
       projects: projects
         .map((project) => ({ slug: project.slug, role: project.role }))
@@ -74,6 +74,19 @@ async function accountEmail(userId: string): Promise<string | null> {
 export async function POST(req: NextRequest) {
   const account = await requireCliAccount(req)
   if (account instanceof NextResponse) return account
+
+  // A token scoped to one product already names the project it may use; "make sure I have a project" is that
+  // one, and provisioning (which answers with the account's first membership) could name another.
+  if (account.scopeProjectId !== null) {
+    try {
+      const [scoped] = await cliUserProjects(account)
+      if (!scoped) return cliError('not_found', 'The product this credential was made for is not available.')
+      return cliOk({ created: false, slug: scoped.slug })
+    } catch (err) {
+      console.error('[cli/projects] scoped read failed:', err)
+      return cliError('server_error', 'Could not read your projects right now.')
+    }
+  }
 
   const email = await accountEmail(account.userId)
   // FAIL CLOSED on an unreadable account rather than provisioning with a placeholder address: the

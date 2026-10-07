@@ -6,7 +6,8 @@ import { getSessionUser } from '@/lib/supabase-auth'
 import { getSiteUrl } from '@/lib/site-url'
 import { isTerminalSignInEnabled } from '@/lib/terminal-sign-in-flag'
 import { viewDeviceCode } from '@/lib/cli-device-codes'
-import { normalizeUserCode } from '@/lib/cli-device-code-format'
+import { defaultProjectSlug, normalizeUserCode } from '@/lib/cli-device-code-format'
+import { getUserProjects } from '@/lib/membership'
 import { confirmDeviceCode, denyDeviceCode } from './actions'
 
 // account-from-the-terminal · Sprint 2, Story 2.2 — `/cli/connect?code=KQ7M-3RTX` (epic D8, the
@@ -19,8 +20,12 @@ export const dynamic = 'force-dynamic'
 
 const DONE_MESSAGES: Record<string, { title: string; body: string }> = {
   approved: {
-    title: 'You are signed in',
-    body: 'Your terminal will say who you are in a few seconds. You can close this page.',
+    title: 'Your agent is connected',
+    body: 'Your terminal will say who you are and which product in a few seconds. You can close this page.',
+  },
+  not_member: {
+    title: 'Nothing was signed in',
+    body: 'That product is not one of yours. Run `gf login` again and pick one you belong to.',
   },
   denied: { title: 'Nothing was signed in', body: 'The code was declined. You can close this page.' },
   expired: {
@@ -39,6 +44,11 @@ const DONE_MESSAGES: Record<string, { title: string; body: string }> = {
     title: 'Something went wrong',
     body: 'Nothing was signed in. Try again, or run `gf login` again.',
   },
+}
+
+/** Whole minutes since `iso`, for "Requested N minutes ago". A request-time read, outside the render body. */
+function minutesSince(iso: string): number {
+  return Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60_000))
 }
 
 export default async function CliConnectPage({
@@ -109,39 +119,66 @@ export default async function CliConnectPage({
   // ── Written against remote phishing (RFC 8628 §5.4; the security lens on PR #280) ─────────────
   // Anyone can start a `gf login` and send this link to someone signed in. Nothing in a device flow
   // can tell that apart from the real thing, so this page has to: the label is the requester's OWN
-  // words (shown as such, never as a fact), the request's age is shown, what confirming grants is
+  // words (shown as such, never as a fact), the request's age is shown, what allowing grants is
   // stated in full, and "if someone sent you this link" is said before the button, not after.
-  const minutesAgo = Math.max(0, Math.round((Date.now() - Date.parse(view.createdAt)) / 60_000))
+  //
+  // Since the 2026-10-05 amendment (canvas First run, frame 6) Allow binds the token to ONE product, picked
+  // from the person's own memberships; the repo name the terminal sent only pre-selects one.
+  const minutesAgo = minutesSince(view.createdAt)
+  const projects = [...(await getUserProjects(user.id))].sort((a, b) => a.slug.localeCompare(b.slug))
+  const preselected = defaultProjectSlug(projects, view.repoHint)
   return (
     <Frame variant="door" brandHref="/">
-      <h1>Same code as your terminal?</h1>
+      <h1>Let your agent work on your product?</h1>
       <p className="ds-doorlede">
-        Only confirm if you just ran <span className="ds-mono">gf login</span> yourself and your terminal
-        shows <span className="ds-mono">{code}</span>. Confirming signs that terminal in as{' '}
-        <b>{user.email ?? 'you'}</b>, with access to every project you can open, until you revoke it under
-        Setup › CLI access.
+        Your coding agent and <span className="ds-mono">gf</span>, on the terminal that calls itself “
+        {view.label}” (its own name, not something we checked), showing{' '}
+        <span className="ds-mono">{code}</span>. Requested{' '}
+        {minutesAgo === 0 ? 'less than a minute' : `${minutesAgo} minute${minutesAgo === 1 ? '' : 's'}`} ago,
+        as <b>{user.email ?? 'you'}</b>.
       </p>
-      <div className="ds-doorform">
+      <form action={confirmDeviceCode} className="ds-doorform">
+        <input type="hidden" name="code" value={code} />
+        {projects.length > 0 ? (
+          <div className="ds-field">
+            <label className="ds-label" htmlFor="cli-connect-product">
+              Product
+            </label>
+            <select
+              id="cli-connect-product"
+              name="product"
+              className="ds-input"
+              defaultValue={preselected ?? ''}
+            >
+              {projects.map((project) => (
+                <option key={project.id} value={project.slug}>
+                  {project.slug}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : (
+          <p className="ds-hint">
+            You have no product yet. Allow makes your first one, the way{' '}
+            <span className="ds-mono">gf init</span> does.
+          </p>
+        )}
         <p className="ds-hint">
-          Requested{' '}
-          {minutesAgo === 0 ? 'less than a minute' : `${minutesAgo} minute${minutesAgo === 1 ? '' : 's'}`}{' '}
-          ago. The terminal calls itself “{view.label}” — that name is its own claim, not something we
-          checked.
+          It will be able to: plan, flag and measure for that product — read and change its feature flags,
+          record A/B decisions and North Star readings, and, if you own it, make keys for your app&apos;s
+          events. Only that product: not your others. Your code never comes here.
         </p>
-        <form action={confirmDeviceCode}>
-          <input type="hidden" name="code" value={code} />
-          <Button type="submit" variant="primary">
-            Yes, sign my terminal in
-          </Button>
-        </form>
-        <form action={denyDeviceCode}>
-          <input type="hidden" name="code" value={code} />
-          <Button type="submit">No, this isn&apos;t mine</Button>
-        </form>
-      </div>
+        <Button type="submit" variant="primary">
+          Allow
+        </Button>
+      </form>
+      <form action={denyDeviceCode} className="ds-doorform">
+        <input type="hidden" name="code" value={code} />
+        <Button type="submit">Cancel</Button>
+      </form>
       <div className="ds-doornote">
-        <b>If someone sent you this link, choose No.</b> Didn&apos;t start this from your terminal? Close this
-        page. Nothing happens.
+        <b>If someone sent you this link, choose Cancel.</b> Didn&apos;t start this from your terminal? Close
+        this page. Nothing happens. Disconnect it any time in Setup › CLI access.
       </div>
     </Frame>
   )

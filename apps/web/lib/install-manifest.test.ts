@@ -95,9 +95,34 @@ test('the four sections the story names, in order', () => {
   const headings = page.match(/^## .+$/gm) ?? []
   assert.deepEqual(headings, [
     '## What installs',
+    '## This release',
     '## How, per agent',
     '## What changes on this machine',
     '## Which services it contacts',
+    '## Security review',
     '## How to remove it',
   ])
+})
+
+test('it names the release and lists a SHA-256 for every plugin file, from the release itself', async () => {
+  const { PLUGIN_SHA256SUMS, PLUGIN_VERSION, CLI_VERSION } = await import('./plugin-release.generated.ts')
+  assert.ok(page.includes(`plugin v${PLUGIN_VERSION}`))
+  assert.ok(page.includes(`--branch v${PLUGIN_VERSION}`))
+  assert.ok(page.includes(`@golden-frijoles/cli@${CLI_VERSION}`))
+  const lines = PLUGIN_SHA256SUMS.split('\n').filter(Boolean)
+  assert.ok(lines.length > 0)
+  for (const line of lines) assert.ok(page.includes(`${line}\n`), `install.md is missing ${line}`)
+})
+
+test('every security claim is on the page, under the security review', async () => {
+  const { securityClaims } = await import('./install-security-claims.ts')
+  const review = page.slice(page.indexOf('## Security review'), page.indexOf('## How to remove it'))
+  for (const claim of securityClaims(SITE)) assert.ok(review.includes(claim.text), claim.id)
+  for (const choice of [
+    'Review it before installing',
+    'Also ask a second model (Codex), if installed',
+    'Install it now',
+    'Not now',
+  ])
+    assert.ok(review.includes(choice), choice)
 })

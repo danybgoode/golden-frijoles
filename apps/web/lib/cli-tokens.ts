@@ -48,7 +48,9 @@ export type CliTokenRow = {
 }
 
 export type CliTokenResolution =
-  | { ok: true; userId: string; tokenId: string; label: string }
+  // `projectId` null = account-wide; set = this token reaches that one project only (account-from-the-terminal
+  // S2.2, the approve page). `lib/cli-auth.ts` enforces it; nothing else may read it as a grant.
+  | { ok: true; userId: string; tokenId: string; label: string; projectId: string | null }
   // ONE reason for every rejection at the route: a caller must not be able to tell a revoked token
   // from an expired one from a wrong guess. `query_failed` is separate so a database outage never
   // renders as "your credential is dead" — those deserve different responses, and an agent that
@@ -72,7 +74,7 @@ export async function resolveCliToken(token: string): Promise<CliTokenResolution
   const supabase = getSupabaseServiceClient()
   const { data, error } = await supabase
     .from('active_cli_tokens')
-    .select('id, user_id, label')
+    .select('id, user_id, label, project_id')
     .eq('token_hash', hashCredential(token))
     .maybeSingle()
 
@@ -82,7 +84,13 @@ export async function resolveCliToken(token: string): Promise<CliTokenResolution
   }
   if (!data) return { ok: false, reason: 'not_found' }
 
-  return { ok: true, userId: data.user_id as string, tokenId: data.id as string, label: data.label as string }
+  return {
+    ok: true,
+    userId: data.user_id as string,
+    tokenId: data.id as string,
+    label: data.label as string,
+    projectId: (data.project_id as string | null) ?? null,
+  }
 }
 
 /**
@@ -120,6 +128,8 @@ export async function mintCliToken(input: {
   userId: string
   label: string
   expiresAt?: Date | null
+  /** Bind the token to one project (the caller has checked membership). Omitted = account-wide. */
+  projectId?: string | null
 }): Promise<{ ok: true; id: string; plaintext: string } | { ok: false; error: string }> {
   const plaintext = generateCliToken()
   const label = input.label.trim() || 'cli'
@@ -131,6 +141,7 @@ export async function mintCliToken(input: {
       token_hash: hashCredential(plaintext),
       label: label.slice(0, 120),
       expires_at: input.expiresAt ? input.expiresAt.toISOString() : null,
+      project_id: input.projectId ?? null,
     })
     .select('id')
     .single()

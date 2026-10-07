@@ -5,8 +5,9 @@
 // before the person is involved — a server that predates these routes, the flag killed, no network —
 // returns `fallback`, and `gf login` asks for a pasted token exactly as it always did.
 
-import { spawn } from 'node:child_process'
+import { execFileSync, spawn } from 'node:child_process'
 import { hostname, platform } from 'node:os'
+import { basename } from 'node:path'
 import { createApiClient } from '../api'
 import type { CommandContext } from '../command'
 import { VERSION } from '../version'
@@ -66,6 +67,25 @@ function positiveOr(value: unknown, fallback: number): number {
   return Number.isFinite(n) && n >= 0 ? Math.max(1, n) : fallback
 }
 
+/**
+ * The repo's name — the git top level's folder, else this folder's — so the approve page can pre-select the
+ * product named after it. A suggestion only: the person picks among their own products.
+ */
+export function repoName(cwd: string): string {
+  try {
+    const top = execFileSync('git', ['rev-parse', '--show-toplevel'], {
+      cwd,
+      stdio: ['ignore', 'pipe', 'ignore'],
+    })
+      .toString()
+      .trim()
+    if (top) return basename(top)
+  } catch {
+    // not a git repo, or no git: the folder name is the next best guess
+  }
+  return basename(cwd)
+}
+
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export async function deviceLogin(context: CommandContext, apiUrl: string): Promise<DeviceLoginResult> {
@@ -78,7 +98,7 @@ export async function deviceLogin(context: CommandContext, apiUrl: string): Prom
   })
 
   const label = `${hostname()} (${platform()})`.slice(0, 80)
-  const started = await client.post<StartBody>('api/v1/cli/device', { label })
+  const started = await client.post<StartBody>('api/v1/cli/device', { label, repo: repoName(context.cwd) })
   if (started.kind === 'network') return { kind: 'fallback', why: started.message }
   if (started.kind === 'error') {
     // 404 (`disabled`, `not_found`): an older server, or the kill switch. Anything else from the

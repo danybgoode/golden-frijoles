@@ -50,6 +50,11 @@ connector URL made by a person acts as that person. Launch epic 2 of
 [`audits/ux-ui-audit-2026-10.md`](../../00-ideas/audits/ux-ui-audit-2026-10.md), dogfood F38, F39, F40.
 Moves: proving_workspaces · Tests: Value proposition (the landing's one line).
 
+**Amended 2026-10-05:** three gaps against the canvas First run flow closed in place, no new stories: checksums in
+`install.md` (S1.1, frame 2), the security review the agent runs (S1.2, frames 2–3), and the approve page that names
+the device, the product and what the agent can do (S2.2, frame 6). Appetite stays L; if it runs short, sprint 3 is cut
+first, as before.
+
 **Signal:** Daniel, on a clean machine with a fresh Google account, on production: copy the prompt, the agent
 summarises `install.md` and waits, installs, setup asks "sign in now?", the browser opens once, the code matches, the
 terminal prints who he is; then one URL pasted into the Claude app turns a flag off, recorded as him.

@@ -69,12 +69,26 @@ SignIn frame) signs the person in if needed and asks "Same code as your terminal
 token with `mintCliToken` labelled with the device; the CLI polls, saves through `credentials.ts`, prints `whoami`.
 Codes live 10 minutes, work once, and both endpoints are rate-limited. `gf login --token` and stdin keep working; with
 the flag killed or an older server, `gf login` falls back to the paste prompt.
+*Amended 2026-10-05 (canvas First run, frame 6):* after the code matches, the page asks "Let your agent work on your
+product?": which agent and device ("Your coding agent and gf, on this Mac", from the CLI's device label); the product,
+new and named after the repo (editable) or one you already belong to; "It will be able to": plan, flag and measure for
+that product, get a key for your app's events when an epic needs measuring, send you links that open already signed
+in; "Your code never comes here"; Allow · Cancel; "Disconnect it any time in Setup". Allow mints the token for that
+product, creating it the way `gf init` does (idempotent); Cancel mints nothing. Only products the person belongs to
+can be picked.
+*As built (2026-10-07, Daniel's calls):* the token is **scoped to the picked product** (`cli_tokens.project_id`,
+enforced in `lib/cli-auth.ts` and the connector's write actor; console-minted tokens stay account-wide). The picker
+offers **existing products only**, pre-selecting the one named after the repo the CLI reports; a "new product per repo"
+would break `projects_one_per_creator_idx`, so a person with no product gets their first one on Allow, the `gf init`
+way. "Send you links that open already signed in" is not on the page: no such capability exists yet.
 **Acceptance:**
 - `gf login` with no token opens the browser, the code matches the terminal, and on confirm the terminal prints who
   you are within a few seconds.
 - An expired or used code is refused, and says so in both places.
 - "Didn't start this from your terminal? Close this page. Nothing happens." is true: no token is minted without confirm.
 - `gf login --token`, piping and `GOLDEN_FRIJOLES_TOKEN` behave as today.
+- The approve page names the device, the product (new from the repo name, or an existing one of yours) and what the
+  agent will be able to do; Cancel mints nothing; a product you don't belong to can't be chosen.
 **Risk:** high
 
 ### Story 2.3 — The account question, as the Account screen ✅ 851f840
@@ -110,8 +124,10 @@ Env: production · https://goldenfrijoles.com   (or the preview URL while testin
 4. (auth — owed to Daniel) In a terminal on a clean machine, run `npx @golden-frijoles/cli login`
    → The terminal shows a code and opens https://goldenfrijoles.com/cli/connect with the same code.
 5. Confirm the code in the browser
-   → The terminal prints who you are. The page says you can close it.
-6. Run `gf login` again and close the browser without confirming; wait 10 minutes
+   → "Let your agent work on your product?", with this Mac, the product named after the repo and what it will be able to do.
+6. Click Allow
+   → The terminal prints who you are and the product. The page says you can close it.
+7. Run `gf login` again and close the browser without confirming; wait 10 minutes
    → The terminal says the code expired. Nothing was signed in.
 
 If any step fails, note the step number + what you saw — that's the bug report.

@@ -123,19 +123,14 @@ export const loginCommand: Command = {
     }
 
     const existing = readCredentials(context.env)
-    const path = writeCredentials(
-      {
-        token,
-        apiUrl,
-        // Keep the active project only if it is still one this account can reach. A token swapped
-        // for a different account would otherwise leave `gf flags ls` pointed at a project the new
-        // credential 404s on, and the error would name the flag rather than the stale selection.
-        activeProject: probe.body.projects.some((project) => project.slug === existing?.activeProject)
-          ? existing?.activeProject
-          : probe.body.projects[0]?.slug,
-      },
-      context.env
-    )
+    // Keep the active project only if it is still one this account can reach. A token swapped
+    // for a different account would otherwise leave `gf flags ls` pointed at a project the new
+    // credential 404s on, and the error would name the flag rather than the stale selection. A token made
+    // for one product (the browser's approve page) reaches only that one, so it becomes the active one.
+    const activeProject = probe.body.projects.some((project) => project.slug === existing?.activeProject)
+      ? existing?.activeProject
+      : probe.body.projects[0]?.slug
+    const path = writeCredentials({ token, apiUrl, activeProject }, context.env)
 
     context.emit.ok(
       {
@@ -145,6 +140,7 @@ export const loginCommand: Command = {
         projects: probe.body.projects,
       },
       `Signed in as ${probe.body.account.email ?? probe.body.account.userId} on ${apiUrl}.\n` +
+        (activeProject ? `Product: ${activeProject}.\n` : '') +
         `Saved to ${path} (mode 0600).`
     )
     return EXIT.OK

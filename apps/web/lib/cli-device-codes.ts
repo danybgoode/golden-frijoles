@@ -9,6 +9,7 @@ import {
   deviceCodeFromBytes,
   normalizeUserCode,
   sanitizeDeviceLabel,
+  sanitizeRepoHint,
   userCodeFromBytes,
 } from './cli-device-code-format'
 
@@ -29,14 +30,20 @@ export type StartedDeviceCode = { deviceCode: string; userCode: string; expiresA
  * Create a pairing. Retries on the (vanishingly rare) user-code collision rather than surfacing it:
  * a unique violation on 40 bits of code space is bad luck, not a client error.
  */
-export async function startDeviceCode(label: unknown): Promise<StartedDeviceCode | null> {
+export async function startDeviceCode(label: unknown, repo?: unknown): Promise<StartedDeviceCode | null> {
   const safeLabel = sanitizeDeviceLabel(label)
+  const repoHint = sanitizeRepoHint(repo)
   for (let attempt = 0; attempt < 3; attempt += 1) {
     const deviceCode = deviceCodeFromBytes(randomBytes(32))
     const userCode = userCodeFromBytes(randomBytes(8))
     const { data, error } = await getSupabaseServiceClient()
       .from('cli_device_codes')
-      .insert({ device_code_hash: hashCredential(deviceCode), user_code: userCode, label: safeLabel })
+      .insert({
+        device_code_hash: hashCredential(deviceCode),
+        user_code: userCode,
+        label: safeLabel,
+        repo_hint: repoHint,
+      })
       .select('expires_at')
       .single()
     if (!error && data) return { deviceCode, userCode, expiresAt: data.expires_at as string }
@@ -52,6 +59,8 @@ export async function startDeviceCode(label: unknown): Promise<StartedDeviceCode
 export type DeviceCodeView = {
   userCode: string
   label: string
+  /** The terminal's own word for its repo: pre-selects a product, decides nothing. */
+  repoHint: string | null
   createdAt: string
   /** What the confirm page should show: only `pending` is actionable. */
   state: 'pending' | 'expired' | 'used'
@@ -63,7 +72,7 @@ export async function viewDeviceCode(rawUserCode: unknown): Promise<DeviceCodeVi
   if (!userCode) return null
   const { data, error } = await getSupabaseServiceClient()
     .from('cli_device_codes')
-    .select('user_code, label, status, created_at, expires_at')
+    .select('user_code, label, repo_hint, status, created_at, expires_at')
     .eq('user_code', userCode)
     .maybeSingle()
   if (error) {
@@ -80,29 +89,31 @@ export async function viewDeviceCode(rawUserCode: unknown): Promise<DeviceCodeVi
   return {
     userCode: data.user_code as string,
     label: data.label as string,
+    repoHint: (data.repo_hint as string | null) ?? null,
     createdAt: data.created_at as string,
     state,
   }
 }
 
-export type DecideOutcome = 'approved' | 'denied' | 'expired' | 'used' | 'unknown' | 'error'
+export type DecideOutcome = 'approved' | 'denied' | 'expired' | 'used' | 'unknown' | 'not_member' | 'error'
 
 /**
- * Approve or deny on behalf of `userId`, which the caller takes from `getSessionUser()` — never from
- * the request. The display state above may be stale by the time the person clicks; the SQL function
- * re-checks status and expiry in the same statement that writes.
+ * Approve (for `projectId`) or deny on behalf of `userId`, which the caller takes from `getSessionUser()` —
+ * never from the request. `projectId` comes from the person's own membership (`getMembership`); the SQL
+ * function re-checks that membership, and status and expiry, in the same statement that writes.
  */
 export async function decideDeviceCode(
   rawUserCode: unknown,
   userId: string,
-  approve: boolean
+  decision: { approve: true; projectId: string } | { approve: false }
 ): Promise<DecideOutcome> {
   const userCode = normalizeUserCode(rawUserCode)
   if (!userCode) return 'unknown'
   const { data, error } = await getSupabaseServiceClient().rpc('decide_cli_device_code', {
     p_user_code: userCode,
     p_user_id: userId,
-    p_approve: approve,
+    p_approve: decision.approve,
+    p_project_id: decision.approve ? decision.projectId : null,
   })
   if (error) {
     console.error('[cli-device-codes] decide failed:', { code: error.code ?? 'unknown' })
@@ -117,7 +128,8 @@ function isDecideOutcome(value: unknown): value is Exclude<DecideOutcome, 'error
     value === 'denied' ||
     value === 'expired' ||
     value === 'used' ||
-    value === 'unknown'
+    value === 'unknown' ||
+    value === 'not_member'
   )
 }
 
@@ -144,7 +156,7 @@ export async function collectDeviceCode(deviceCode: unknown): Promise<CollectOut
     return { kind: 'error' }
   }
   const row = (Array.isArray(data) ? data[0] : data) as
-    { outcome?: unknown; user_id?: unknown; label?: unknown } | undefined
+    { outcome?: unknown; user_id?: unknown; label?: unknown; project_id?: unknown } | undefined
   switch (row?.outcome) {
     case 'pending':
       return { kind: 'pending' }
@@ -155,17 +167,21 @@ export async function collectDeviceCode(deviceCode: unknown): Promise<CollectOut
       return { kind: 'refused', reason: row.outcome }
     case 'approved': {
       if (typeof row.user_id !== 'string') return { kind: 'error' }
+      // The product picked on the approve page. A code decided by the old 3-argument function has none, and
+      // mints the account-wide token it was approved as.
+      const projectId = typeof row.project_id === 'string' ? row.project_id : null
       const minted = await mintCliToken({
         userId: row.user_id,
         label: `gf login · ${typeof row.label === 'string' ? row.label : 'a terminal'}`,
+        projectId,
       })
       if (!minted.ok) return { kind: 'error' }
       // The same trail the console mint leaves (fresh reviewer, PR #280): the device path is the more
-      // phishable one, so it is the last one that may mint without a record. `projectId: null` —
-      // a CLI token belongs to an account, not a project. Never the token itself.
+      // phishable one, so it is the last one that may mint without a record. `projectId` is the product the
+      // token is bound to (null for an account-wide one). Never the token itself.
       await recordAudit({
         action: 'cli_token_minted',
-        projectId: null,
+        projectId,
         actorUserId: row.user_id,
         metadata: {
           tokenId: minted.id,
