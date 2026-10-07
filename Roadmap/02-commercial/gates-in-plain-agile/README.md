@@ -124,6 +124,10 @@ holds as `board.hubUrl` (`null` by default). A North Star input carries its even
   `plugins/`, `template/Roadmap/`, `kit/dist/skeleton/` and `skills/Roadmap/`; `--also <path>` adds the root repo's
   `Roadmap/WAYS-OF-WORKING.md`, `WAYS-OF-WORKING.template.md` and `SESSION-KICKOFFS.md`. Wired into
   `skills/.github/workflows/ci.yml` (then `node scripts/render-skills-ci.mjs`) and the root `ci.yml` static gate.
+  *Corrected at build:* `kit/dist/` is gitignored and built from `template/`, so `template/Roadmap/` covers the
+  skeleton. In `skills/Roadmap/`, the five copies of the gate wording are scanned by name rather than the whole folder,
+  because its epic history quotes the old options. A `<a | b>` inside a gate lists literal alternatives and is checked;
+  only a placeholder with no `|` is exempt (review of #303).
 - **D10 — The copies.** The WAYS-OF-WORKING template says "Approve the plan" and "Park it" where it names the options;
   the records it explains (the cycle row, `underwritten_by`) stay, because that doc explains the files, not the screen.
   Then re-render: `skills/Roadmap/`, the root `Roadmap/` (`render-ways-of-working.mjs` in both, the root template
