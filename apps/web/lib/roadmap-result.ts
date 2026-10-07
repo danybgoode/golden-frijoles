@@ -27,6 +27,11 @@ export type EpicResult = {
   verdict: ResultVerdict | null
   actual: number | null
   evidence: string | null
+  /**
+   * The evidence as a link a page may render — only an `https://` URL, else null. A reader that wants a link uses this
+   * and never `evidence`, which is the owner's free text (a reason, or a `north-star:`/`ab:` pointer).
+   */
+  evidenceHref: string | null
   verdictAt: string | null
   /** The verdict came more than 90 days after shipping: kept, and not counted for the North Star. */
   late: boolean
@@ -41,7 +46,23 @@ const DAY = /^\d{4}-\d{2}-\d{2}$/
 
 const num = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? v : null)
 const str = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v : null)
-const day = (v: unknown): string | null => (typeof v === 'string' && DAY.test(v) ? v : null)
+// A real calendar day only (codex review, #290) — the shape alone lets `2026-02-30` through. Restated, not imported:
+// this module stays import-free; `roadmap-result.test.ts` holds both to the same cases.
+const day = (v: unknown): string | null => {
+  if (typeof v !== 'string' || !DAY.test(v)) return null
+  const t = new Date(`${v}T00:00:00Z`)
+  return !Number.isNaN(t.getTime()) && t.toISOString().slice(0, 10) === v ? v : null
+}
+
+/** An `https://` URL that parses, else null — never a `javascript:` or `http:` link (security lens, #290). */
+function httpsHref(v: unknown): string | null {
+  if (typeof v !== 'string') return null
+  try {
+    return new URL(v).protocol === 'https:' ? v : null
+  } catch {
+    return null
+  }
+}
 
 /** Today in UTC, `YYYY-MM-DD` — the same day the pusher's scripts use. */
 export function todayUtc(now: Date = new Date()): string {
@@ -71,6 +92,7 @@ export function epicResult(
     verdict,
     actual: verdict ? num(row.verdict_actual) : null,
     evidence: verdict ? str(row.verdict_evidence) : null,
+    evidenceHref: verdict ? httpsHref(row.verdict_evidence) : null,
     verdictAt: verdict ? day(row.verdict_at) : null,
     late: verdict !== null && row.read_late === true,
     grounded: metric && opts.inputKeys ? opts.inputKeys.includes(metric) : null,

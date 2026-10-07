@@ -63,8 +63,18 @@ const docPath = z
 export const ROADMAP_VERDICTS = ['proven', 'disproven', 'unclear'] as const
 export type RoadmapVerdict = (typeof ROADMAP_VERDICTS)[number]
 
-// A calendar day, `YYYY-MM-DD` — the result record's dates. Shape only; the pusher's contract checks it is a real day.
-const isoDay = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'must be a day written YYYY-MM-DD')
+// A calendar day, `YYYY-MM-DD` — the result record's dates. A REAL day (codex review, #290): `2026-02-30` has the shape,
+// and would otherwise be stored, rendered as "30 Feb" and fall due. Same rule as the contract's `isDay`.
+const isoDay = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'must be a day written YYYY-MM-DD')
+  .refine((d) => isRealDay(d), 'must be a real calendar day')
+
+/** Whether `YYYY-MM-DD` names a day that exists, in UTC. */
+export function isRealDay(d: string): boolean {
+  const t = new Date(`${d}T00:00:00Z`)
+  return !Number.isNaN(t.getTime()) && t.toISOString().slice(0, 10) === d
+}
 
 // Rows are validated structurally but NOT exhaustively: `.passthrough()` keeps unknown fields.
 // That is deliberate. The extract gains columns as the roadmap tooling grows, and a strict schema
