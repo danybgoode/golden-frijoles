@@ -3,7 +3,7 @@ epic: first-run-setup
 sprint: 1
 title: "Setup starts"
 risk: low
-phase: Shaping
+phase: In review
 stories_total: 3
 stories:
   - id: S1.1
@@ -12,31 +12,38 @@ stories:
     i_want: "setup to say what happened and what it found before asking anything"
     so_that: "the first question makes sense"
     risk: low
-    status: planned
+    status: done
   - id: S1.2
     title: "An existing project, read into the roadmap"
     as_a: "a founder with an existing product"
     i_want: "my history, pull requests and issues read into my roadmap"
     so_that: "the board starts with my real product"
     risk: low
-    status: planned
+    status: done
   - id: S1.3
     title: "A new idea, in a sentence"
     as_a: "a founder with a new idea"
     i_want: "to say it in a sentence and choose strategy first or a first epic now"
     so_that: "I know what being grounded means"
     risk: low
-    status: planned
+    status: done
 ---
 # First run: setup starts — Sprint 1: Setup starts
 
-**Status:** ⬜ not started
+**Status:** 🟦 In review
+
+## Build contract (locked by the architect before the builder started)
+Cites the epic README's D1–D13; nothing here restates them.
+- **S1.1** — setup SKILL.md Stage 2 opens with D2 then D3 (`read-repo.mjs --look`), then D4's Q1. Q2 retires (D4).
+- **S1.2** — `groom/read-repo.mjs` (D1, D5–D9) + `read-repo.test.mjs`, and setup's This-repo route (D10).
+- **S1.3** — setup's new-idea route (D11); groom SKILL.md's not-grounded seed line; `gates.md` Plan gate Moves rule.
+- Release (D12) in the same PR. Specs observed failing once by mutation before merge.
 
 ## Stories
 <!-- Keep the heading shape `### Story 1.M — <title>`. When a story ships, append ✅ + its commit ref.
      The epic README frontmatter `status:` is the AUTHORITATIVE epic status. -->
 
-### Story 1.1 — Setup says what happened and what it found
+### Story 1.1 — Setup says what happened and what it found ✅ `b9583a8`
 **As** a founder who just signed in, **I want** setup to say what happened and what it found before asking anything,
 **so that** the first question makes sense.
 Canvas frame 7. After `gf login`: "Signed in as <email> (new account)", "gf signed in on this machine, for the product
@@ -49,7 +56,7 @@ account, the first block is skipped.
 - `project.mode` is written exactly as today.
 **Risk:** low
 
-### Story 1.2 — An existing project, read into the roadmap
+### Story 1.2 — An existing project, read into the roadmap ✅ `f7d60d8`
 **As** a founder with an existing product, **I want** my history, pull requests and issues read into my roadmap,
 **so that** the board starts with my real product.
 Canvas frame 8a. A read script (dry run by default, `--write` on approval) reads the README, `docs/`, the manifest,
@@ -65,7 +72,7 @@ touched. Then: "Review the strategy (about 10 minutes) · Later: help me plan a 
 - Without `gh`, it reads git only and says pull requests and issues were skipped.
 **Risk:** low
 
-### Story 1.3 — A new idea, in a sentence
+### Story 1.3 — A new idea, in a sentence ✅ `c88ce8b`
 **As** a founder with a new idea, **I want** to say it in a sentence and choose strategy first or a first epic now,
 **so that** I know what being grounded means.
 Canvas frame 8b. "A new idea. In a sentence or two: what is it, and who is it for?", then "1 Strategy first (about 45
@@ -100,3 +107,17 @@ Env: Claude Code with the plugin from this branch
    → Groom starts with your sentence; the epic is marked not grounded.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+### Builder's run (2026-10-07, plugin from this branch; the interactive walkthrough above is owed to Daniel)
+- **Step 1, scripted half:** `npx -y @golden-frijoles/cli@0.7.0 whoami --json` signed in → `account.email`,
+  `activeProject: golden-beans` (the two lines setup prints); signed out (empty `HOME`) → exit 2, so the block is left
+  out. `read-repo.mjs --look` on a clone of `sindresorhus/ky` → "Roadmap/ not here yet · Node.js · 549 commits · 0
+  open pull requests"; on an empty folder → "This folder .... empty: nothing built yet".
+- **Steps 2–3 on a real repo** (`sindresorhus/ky`, cloned into a scratch folder, never pushed): dry run → "20 shipped,
+  from the pull requests · 0 Building · 2 issues grouped into 2 ideas · Left out: 196 groups older than 12 months · 38
+  smaller groups past the 20 largest", nothing written. `--write` → 20 shipped epics + 2 ideas; `git status` lists
+  only `Roadmap/`; `build-order` regenerates (To groom 2 · Shipped 20); `doc-format` → zero findings. Found on that
+  run and fixed: Express (a dev-only test server) reported as the stack; a header linking a seed that never existed.
+- **This repo:** the dry run reads 281 merged PRs into 154 groups (20 kept, 8 bot PRs left out) and refuses to write
+  ("first run only": 68 epics already here).
+- **Steps 4–5** are skill text (no script to run): owed to Daniel in a real session.
