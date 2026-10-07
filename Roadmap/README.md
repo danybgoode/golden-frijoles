@@ -1,4 +1,4 @@
-# Golden Beans — Product Roadmap & Feature Poster
+# Golden Frijoles — Product Roadmap & Feature Poster
 
 > **Mission:** Give a product team one primitive set — telemetry ingest, an SDK, a TARS funnel, a
 > North Star metric, and A/B experiments — to run growth and experimentation without stitching
@@ -36,7 +36,7 @@ independently shippable slice of value.
 | # | Macro-section | Covers |
 |---|---|---|
 | 01 | Growth Engine | Telemetry ingest, SDK, TARS funnel (Targeted/Adopted/Retained), North Star metric, A/B bucketing — the core engine. |
-| 02 | Commercial | The public offer: landing page (end-state-driven, backfilled by every epic), waitlist, connector install page, tenancy/pricing, pod reports — Golden Beans as a product, not just an engine. |
+| 02 | Commercial | The public offer: landing page (end-state-driven, backfilled by every epic), waitlist, connector install page, tenancy/pricing, outcome reports — Golden Frijoles as a product, not just an engine. |
 | 09 | Platform & Infra | Engineering/observability work that isn't a user-facing product domain — deploy pipeline, dev tooling, cross-cutting process (this convention — reserving `09` for platform/infra — is a deliberate carry-over from the origin project; keep the number stable so tooling that reads it doesn't need per-project config). |
 
 ---
@@ -63,7 +63,7 @@ independently shippable slice of value.
   exercise and manual/automatic protective transitions are evidenced, and all three proof-only gates
   are back OFF. The authenticated browser walkthrough was unavailable to this session; HTTP
   auth-boundary proof is recorded.
-- ✅ [Experiments for humans](01-growth-engine/experiments-for-humans/README.md) (five-question
+- ✅ [A/B tests for humans](01-growth-engine/experiments-for-humans/README.md) (five-question
   builder · served experiment bindings · decision-first readout · decide in chips + roll out with
   undo · JSON authoring retired) — **live in production** (2026-09-25, PRs #167, #169, #170, #172).
   An owner plans, starts, reads and decides an experiment without writing JSON; the page leads with
@@ -217,7 +217,7 @@ independently shippable slice of value.
   because the ring is part of the character.
 - ✅ [Landing redesign v2](02-commercial/landing-redesign-v2/README.md) (the decision-first
   narrative · mobile heuristics as site-wide rails · `/northstar-self-serve.md` · proof that carries
-  both the Pod Report and a live engine read) — **live in production 2026-08-12** (PR #92, `4553767`).
+  both the Outcome report and a live engine read) — **live in production 2026-08-12** (PR #92, `4553767`).
   The landing sold an *engine* — "The growth engine your agent operates" — which accurately described
   what was built and poorly described who buys it: it opened on the primitive set for a reader who
   had not yet been told what primitives are *for*. It now opens on the problem a PM already has, and
@@ -225,7 +225,7 @@ independently shippable slice of value.
   is the second section:** a prompt a stranger can paste into their own ChatGPT or Claude, which
   sends it to two public routes and runs a real North Star workshop with them — no account, no
   connector, nothing to install. §6 is the only section with numbers, and it carries **both** proofs:
-  the Pod Report computed from this repo's own git history, and a live read of the demo tenant that
+  the Outcome report computed from this repo's own git history, and a live read of the demo tenant that
   reconciles exactly with the `/api/v1/public/north-star` the page invites you to curl (verified in
   production: `value: 35, wow: 0.409` both ways). Every other framed surface is labelled an
   illustration, and **a spec checks that it is** — because the footer's ledger claimed the hero was
@@ -246,7 +246,7 @@ independently shippable slice of value.
   measuring (including the Medusa-truth revenue boundary) so "where's my revenue number?" is answered
   with a reason rather than a plausible figure. No migration, no new query, **no new dependency**:
   the nav renders the inventory `project-route-inventory.ts` already carried, and the stat strip
-  reuses the same `getProjectOutcome` the client-facing Pod Report reads, so an owner's numbers and a
+  reuses the same `getProjectOutcome` the client-facing Outcome report reads, so an owner's numbers and a
   client's cannot drift. The rail is **dark in production** behind `AGENT_RAIL_ENABLED`, born OFF —
   and the var does not exist in Vercel yet, which is the one item owed.
 - ✅ [The flag console a human can operate](01-growth-engine/flags-console-parity/README.md)
@@ -348,7 +348,7 @@ independently shippable slice of value.
   and your signed-in machines. The two-card grouping was accepted by Daniel. **Owed to Daniel:** the walkthrough.
 - ✅ [One stage, every client](02-commercial/board-sinks-and-scrumban/README.md) (a six-stage board on the Hub, the CLI
   mod and every sink) — **shipped and live 2026-10-02** (PRs #224–#228, plugin + kit 0.20.0/0.21.0). Every client now
-  reads ONE stage: To groom · Grooming · Ready to build · Building · QA · Shipped, decided once by
+  reads ONE stage: Backlog · Grooming · Ready · Building · QA · Shipped, decided once by
   `scripts/lib/stage.mjs` from the docs plus git/GitHub facts (a live branch, an open or merged PR) and carried in the
   push. The Hub has a **Board** (`/hub/<slug>/board`: six columns, a card view with the copyable kickoff, filters in the
   URL, WIP as advice), the **Roadmap** tab is areas × Shipped · Now · Next · Later, and a **workspace board**
@@ -356,10 +356,10 @@ independently shippable slice of value.
   kit's `roadmap-extract --sink terminal|hub|notion` and Notion's `Stage` column read the same row, and
   `roadmap-push.yml` re-pushes on the event that moved a card. The Hub never computes a stage. **Owed to Daniel:** the
   `Stage` select on the Notion DB; the signed-in workspace-board walkthrough.
-- ✅ [Pod Report + Roadmap Hub](02-commercial/pod-report/README.md) (benchmarks/ROI + live
+- ✅ [Outcome report + Roadmap Hub](02-commercial/pod-report/README.md) (benchmarks/ROI + live
   roadmap-vs-end-state views · scoped share links) — **shipped and live in production 2026-07-26**
   (PRs #30/#32/#33/#34). The report-rendering primitive became an engine primitive with two consumers
-  at birth: a **Pod Report** whose every figure is computed from a repository's own git and
+  at birth: an **Outcome report** (renamed from its first name by `one-header-one-name`) whose every figure is computed from a repository's own git and
   pull-request history, and a **Roadmap Hub** (journey · epic drill-down · horizon) rendering a
   tenant's own pushed roadmap artifact. What makes it a product rather than a dashboard is the
   honesty, and it is structural: speed is never rendered without its gaps beside it, the ladder
@@ -785,7 +785,7 @@ independently shippable slice of value.
   spec failing on accumulated fixture data. And "less code", the Sweeper prior, was measured and is
   simply **false** for table conversions (136→135, 152→163) — the acceptance that survives is *same
   behaviour, no regressions*, which is falsifiable.
-- **2026-07-26** — `pod-report` **epic shipped & LIVE** (PRs #30/#32/#33/#34): the Pod Report and the
+- **2026-07-26** — `pod-report` **epic shipped & LIVE** (PRs #30/#32/#33/#34): the Outcome report and the
   Roadmap Hub, both rendered from the same versioned immutable artifact primitive. Sprint 2 had
   computed every number and shipped none of the surface — a re-derivation against production found
   `--push` exiting 0 without storing anything and an outcome module with zero callers, so a Sprint 2.5
