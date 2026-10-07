@@ -6,6 +6,8 @@ import { isHonest, type MetricRow, type NotInstrumentedRow, type PodReportView }
 import { lensPolicy, type PodReportLens } from '@/lib/pod-report-lens'
 import type { ReactNode } from 'react'
 import type { OutcomeSection } from '@/lib/pod-outcome'
+import type { PayingOffView } from '@/lib/outcome-figures'
+import { PayingOffSection } from './outcome-components'
 import type { Freshness } from '@/lib/hub-freshness'
 import { HubProvenance } from './hub-components'
 import { Answer, Callout, Empty, PageHead } from '@/design-system/primitives'
@@ -598,6 +600,7 @@ export function PodReportBody({
   projectSlug,
   view,
   outcome,
+  payingOff,
   lens,
   artifactVersion,
   freshness,
@@ -607,6 +610,8 @@ export function PodReportBody({
   projectSlug: string
   view: PodReportView
   outcome: OutcomeSection
+  /** outcome-report-v2 — "is it paying off", already lensed by getPodReport. The report opens with its sentence. */
+  payingOff: PayingOffView
   lens: PodReportLens
   artifactVersion: number
   freshness: Freshness
@@ -676,6 +681,10 @@ export function PodReportBody({
           closed rather than extended, which is what Story 4.4 asks for. */}
       <div className="ds-doc">
         <Answer>
+          {/* outcome-report-v2 S1.1 — the report opens by saying whether it is paying off, before anything else. */}
+          <span data-testid="paying-off-sentence">
+            <b>{payingOff.sentence.text}</b>
+          </span>{' '}
           <span data-testid="agent-headline">
             {verdict ? (
               <>
@@ -703,6 +712,7 @@ export function PodReportBody({
           </div>
         )}
 
+        <PayingOffSection payingOff={payingOff} projectSlug={projectSlug} showLinks={policy.showLinks} />
         {view.empty ? (
           <p className="ds-hint" data-testid="pod-report-no-delivery">
             The latest pushed artifact carries no delivery section, so there are no delivery numbers to

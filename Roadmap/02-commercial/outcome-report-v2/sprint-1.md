@@ -3,7 +3,7 @@ epic: outcome-report-v2
 sprint: 1
 title: "Is it paying off"
 risk: low
-phase: Shaping
+phase: Building
 stories_total: 3
 stories:
   - id: S1.1
@@ -12,31 +12,31 @@ stories:
     i_want: "the report to open by saying whether the product is paying off"
     so_that: "I know before I read anything else"
     risk: low
-    status: planned
+    status: done
   - id: S1.2
     title: "Four figures, each against expected"
     as_a: "a founder"
     i_want: "four figures, each against what I expected"
     so_that: "I see the summary in one look"
     risk: low
-    status: planned
+    status: done
   - id: S1.3
     title: "The epics table"
     as_a: "a founder"
     i_want: "every epic's bet, expected and actual, result and spend in one table"
     so_that: "I see which paid off and what each cost"
     risk: low
-    status: planned
+    status: done
 ---
 # Outcome report v2 — Sprint 1: Is it paying off
 
-**Status:** ⬜ not started
+**Status:** 🔨 built, in review
 
 ## Stories
 <!-- Keep the heading shape `### Story 1.M — <title>`. When a story ships, append ✅ + its commit ref.
      The epic README frontmatter `status:` is the AUTHORITATIVE epic status. -->
 
-### Story 1.1 — Is it paying off: the sentence and the chart
+### Story 1.1 — Is it paying off: the sentence and the chart ✅ `bf2b144`
 **As** a founder, **I want** the report to open by saying whether the product is paying off, **so that** I know before
 I read anything else.
 A pure module builds the expected series from shipped epics' targets: an epic targeting the North Star moves its
@@ -48,7 +48,7 @@ sentence above it: ahead of, on, or behind the pace you planned, or "No targets 
 - With none, it shows the actual only and says it can't tell yet; no invented line.
 **Risk:** low
 
-### Story 1.2 — Four figures, each against expected
+### Story 1.2 — Four figures, each against expected ✅ `3a2ac95`
 **As** a founder, **I want** four figures, each against what I expected, **so that** I see the summary in one look.
 North Star now against expected (with the gap) · epics that paid off, of those read (with how many aren't read yet) ·
 spend against the summed quote (within, or "▲ … over …", neutral) · cost per epic that paid off. Each figure has one
@@ -58,7 +58,7 @@ line on what it is. Spend figures are team-only in v1.
 - A client or investor share link shows the first two figures only, and still counts unread epics.
 **Risk:** low
 
-### Story 1.3 — The epics table
+### Story 1.3 — The epics table ✅ `b42610b`
 **As** a founder, **I want** every epic's bet, expected and actual, result and spend in one table, **so that** I see
 which paid off and what each cost.
 Columns: Epic · what we bet (hypothesis under the name) | Metric · expected → actual (metric name in the column, gap) |
@@ -67,6 +67,18 @@ Result (bean) | Spend · vs quote (gap; overspend neutral). Each row links to it
 - Column names show; every row links to its epic page; overspend is not red.
 - The table is absent on client and investor share links; the lens test proves it.
 **Risk:** low
+
+## Built (against the README's lock)
+- `lib/outcome-expected.ts` (D1, D2) — grounded epics only, per metric; no line without a grounded epic; pace ±5%.
+- `lib/outcome-figures.ts` (D3, D4) — the four figures and the table rows, read through `epicResult`/`epicFinops`.
+- `lib/pod-report-lens.ts` (D5) — `showSpend`, `showEpicsTable`, `showLinks`, `showAgentPrompt` (team only);
+  `applyPayingOffLens` copies the sentence, lines, figure 1 and figure 2 (with its unread count) first.
+- `lib/pod-report-query.ts` (D6) — `getPodReportByProjectId` reads the roadmap and the North Star; a failed read is
+  `payingOff.unavailable`. `app/hub/outcome-components.tsx` (D7) renders it inside the document, after the caveats.
+- **Deviation, said out loud:** the Answer keeps the ladder headline after the new sentence (the verdict + its
+  not-instrumented count stay on the first screen, `pod-report-surface.spec.tsx`'s pairing test); S2.2 moves the
+  ladder's explanation into its own section.
+- Mutation check: opening the epics table to the client lens fails both `pod-report-lens.test.ts` and the surface spec.
 
 ## Sprint QA
 - **api spec(s):** S1.1 → pure-logic specs on the expected series (none, one, several; input vs North Star); S1.2 →

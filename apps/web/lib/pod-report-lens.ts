@@ -58,6 +58,17 @@ export type LensPolicy = {
    * and it is the one that reads as progress-against-a-destination rather than as a backlog.
    */
   showHorizon: boolean
+  /**
+   * outcome-report-v2 D5 — the spend figures (spend vs quote, cost per epic that paid off). Team-only in v1: what an
+   * epic cost is internal until a lens decision opens it.
+   */
+  showSpend: boolean
+  /** The per-epic table (bet, expected → actual, result, spend). Team-only in v1, like the spend it carries. */
+  showEpicsTable: boolean
+  /** Links into the console (North Star, FinOps, Board, epic pages). A share visitor can open none of them. */
+  showLinks: boolean
+  /** The "copy a prompt for your agent" button under the Steps of AI Adoption. For the team running the agents. */
+  showAgentPrompt: boolean
   /** A short line naming who this view was prepared for, rendered on the page. */
   audienceNote: string
 }
@@ -70,6 +81,10 @@ const POLICIES: Record<PodReportLens, LensPolicy> = {
     showSourceCounts: true,
     showJourney: true,
     showHorizon: true,
+    showSpend: true,
+    showEpicsTable: true,
+    showLinks: true,
+    showAgentPrompt: true,
     audienceNote: 'Team view — every row, every evidence pointer, nothing withheld.',
   },
   client: {
@@ -82,6 +97,10 @@ const POLICIES: Record<PodReportLens, LensPolicy> = {
     showSourceCounts: true,
     showJourney: true,
     showHorizon: true,
+    showSpend: false,
+    showEpicsTable: false,
+    showLinks: false,
+    showAgentPrompt: false,
     audienceNote: 'Client view — your pod, measured. Internal PR references are omitted.',
   },
   investor: {
@@ -95,6 +114,10 @@ const POLICIES: Record<PodReportLens, LensPolicy> = {
     // internals Decision 3 keeps out of this lens. The horizon carries the momentum instead.
     showJourney: false,
     showHorizon: true,
+    showSpend: false,
+    showEpicsTable: false,
+    showLinks: false,
+    showAgentPrompt: false,
     audienceNote: 'Investor view — portfolio shape and momentum, without per-story internals.',
   },
 }
@@ -199,4 +222,50 @@ function stripEvidence(row: Record<string, unknown>): Record<string, unknown> {
   // look better than it is, to the audience least able to check.
   const hadEvidence = evidence !== null && evidence !== undefined
   return { ...rest, evidence: null, ...(hadEvidence ? { evidenceWithheld: true } : {}) }
+}
+
+// ── outcome-report-v2 D5 — the "is it paying off" half ─────────────────────────────────────────────────────────────
+
+/**
+ * The parts of the paying-off view no lens may drop: the sentence, the lines it reads, figure 1 and figure 2 — which
+ * carries the count of epics NOT read yet. An investor told "1 of 2 paid off" without "1 not read yet" has been shown
+ * the flattering subset (the seed's "honesty survives every lens").
+ */
+export const PAYING_OFF_INVARIANT_FIELDS = ['sentence', 'lines', 'figures.now', 'figures.paidOff'] as const
+
+/** Structurally what `buildPayingOff` (lib/outcome-figures.ts) returns — kept loose so this file stays import-free. */
+export type LensablePayingOff = {
+  unavailable: boolean
+  sentence: unknown
+  lines: Array<{ markers: Array<{ slug: string | null; name: string | null }> }>
+  figures: { now: unknown; paidOff: unknown; spend: unknown; costPerWin: unknown }
+  epics: unknown[]
+}
+
+/**
+ * Narrow the paying-off view for a lens. Spend figures and the epics table are team-only; epic names on the chart's
+ * markers follow `showJourney` (an investor sees where epics landed, not which). Everything else — the sentence, the
+ * lines, figure 1 and figure 2 with its unread count — is copied unconditionally, first.
+ */
+export function applyPayingOffLens<T extends LensablePayingOff>(view: T, lens: PodReportLens): T {
+  const policy = POLICIES[lens]
+  // An explicit field list, never `...view`: a field added to the view later reaches no lens until it is named here
+  // (fresh review, #299).
+  return {
+    unavailable: view.unavailable,
+    sentence: view.sentence,
+    lines: view.lines.map((line) => ({
+      ...line,
+      markers: policy.showJourney
+        ? line.markers
+        : line.markers.map((m) => ({ ...m, name: null, slug: null })),
+    })),
+    figures: {
+      now: view.figures.now,
+      paidOff: view.figures.paidOff,
+      spend: policy.showSpend ? view.figures.spend : null,
+      costPerWin: policy.showSpend ? view.figures.costPerWin : null,
+    },
+    epics: policy.showEpicsTable ? view.epics : [],
+  } as T
 }

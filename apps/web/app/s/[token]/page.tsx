@@ -126,6 +126,7 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
           projectSlug={projectSlug}
           view={report.view}
           outcome={report.outcome}
+          payingOff={report.payingOff}
           lens={lens}
           artifactVersion={report.artifact.version}
           freshness={formatFreshness(report.artifact.generatedAt, new Date(), report.artifact.sourceCommit)}

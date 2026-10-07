@@ -8,7 +8,10 @@ import { join } from 'node:path'
 import { test, expect } from '@playwright/test'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { buildPodReportView, type PodReportView } from '@/lib/pod-report-view'
-import { applyLens, type PodReportLens } from '@/lib/pod-report-lens'
+import { applyLens, applyPayingOffLens, type PodReportLens } from '@/lib/pod-report-lens'
+import { buildPayingOff, type OutcomeEpic, type PayingOffView } from '@/lib/outcome-figures'
+import { epicResult } from '@/lib/roadmap-result'
+import { epicFinops } from '@/lib/roadmap-finops'
 import { buildOutcomeSection } from '@/lib/pod-outcome'
 import { formatFreshness } from '@/lib/hub-freshness'
 import { PodReportBody, evidenceHref } from '../app/hub/report-components'
@@ -63,13 +66,86 @@ function decodeEntities(html: string): string {
     .replace(/&amp;/g, '&')
 }
 
-function render(view: PodReportView, lens: PodReportLens = 'team'): string {
+// outcome-report-v2 — the "is it paying off" half, built through the real readers and the real lens, from a Ledgerly
+// roadmap shaped like the seed's table: one Proven, one Disproven (overspent), one Growing, one spend-only.
+const epicRow = (over: Record<string, unknown>): OutcomeEpic => {
+  const r: Record<string, unknown> = { grain: 'Epic', status: 'Shipped', ...over }
+  return {
+    result: epicResult(r, { today: '2026-11-10' }),
+    finops: epicFinops(r),
+    shippedAt: (r.shipped_at as string | undefined) ?? null,
+  }
+}
+const LEDGERLY_EPICS: OutcomeEpic[] = [
+  epicRow({
+    slug: 'overdue-reminders',
+    name: 'Overdue reminders',
+    hypothesis: 'a reminder gets invoices paid on time',
+    shipped_at: '2026-09-01',
+    target_metric: 'paid_on_time',
+    target_from: 61,
+    target_to: 70,
+    read_date: '2026-10-01',
+    verdict: 'proven',
+    verdict_actual: 72,
+    verdict_at: '2026-10-02',
+    actual_usd: 9.8,
+    quote_low_usd: 7,
+    quote_high_usd: 16,
+  }),
+  epicRow({
+    slug: 'smart-defaults',
+    name: 'Smart defaults',
+    hypothesis: 'sensible defaults finish setup',
+    shipped_at: '2026-09-10',
+    target_metric: 'paid_on_time',
+    target_from: 70,
+    target_to: 75,
+    read_date: '2026-10-10',
+    verdict: 'disproven',
+    verdict_actual: 70,
+    verdict_at: '2026-10-11',
+    actual_usd: 11.3,
+    quote_low_usd: 5,
+    quote_high_usd: 8,
+  }),
+  epicRow({
+    slug: 'export-csv',
+    name: 'Export CSV',
+    hypothesis: 'teams that export come back weekly',
+    shipped_at: '2026-10-20',
+    target_metric: 'paid_on_time',
+    target_from: 75,
+    target_to: 78,
+    read_date: '2026-11-19',
+  }),
+  epicRow({ slug: 'the-cli', name: 'The CLI', shipped_at: '2026-09-18', actual_usd: 207.81 }),
+]
+const PAYING_OFF_TEAM = buildPayingOff({
+  product: 'Ledgerly',
+  epics: LEDGERLY_EPICS,
+  sources: [
+    {
+      key: 'paid_on_time',
+      name: 'Paid on time',
+      isNorthStar: false,
+      series: [
+        { date: '2026-08-20', value: 60 },
+        { date: '2026-10-25', value: 71 },
+      ],
+    },
+  ],
+})
+const payingOffFor = (lens: PodReportLens): PayingOffView => applyPayingOffLens(PAYING_OFF_TEAM, lens)
+
+function render(view: PodReportView, lens: PodReportLens = 'team', payingOff = payingOffFor(lens)): string {
   return decodeEntities(
     renderToStaticMarkup(
       <PodReportBody
         projectSlug="golden-beans-demo"
         view={view}
         outcome={OUTCOME}
+        payingOff={payingOff}
         lens={lens}
         artifactVersion={3}
         freshness={FRESHNESS}
@@ -298,6 +374,7 @@ test('a tenant with no registered features renders not-instrumented, never zeros
         projectSlug="fresh-tenant"
         view={viewFor('team')}
         outcome={empty}
+        payingOff={payingOffFor('team')}
         lens="team"
         artifactVersion={1}
         freshness={FRESHNESS}
@@ -327,4 +404,85 @@ test('an empty artifact renders a friendly no-delivery notice, not a refusal and
   expect(html).toContain('data-testid="pod-report-no-delivery"')
   expect(html).not.toContain('data-testid="pod-report-refused"')
   expect(html).not.toContain('data-metric=')
+})
+
+// ── outcome-report-v2 · Sprint 1 ───────────────────────────────────────────────────────────────────────────────────
+
+test('S1.1: the report opens with whether it is paying off, before the ladder headline and every number', () => {
+  const html = render(viewFor('team'))
+  const sentence = html.indexOf('data-testid="paying-off-sentence"')
+  expect(sentence).toBeGreaterThan(-1)
+  expect(sentence).toBeLessThan(html.indexOf('data-testid="agent-headline"'))
+  expect(sentence).toBeLessThan(html.indexOf('data-metric='))
+  // Expected 75.5 on 25 Oct (61 + 9 + 5, then 3 × 5/30 of export-csv), actual 71: behind.
+  expect(slice(html, 'paying-off-sentence', 200)).toContain('Ledgerly is behind the pace you planned.')
+  const chart = slice(html, 'outcome-chart', 4000)
+  expect(chart).toContain('data-line="actual"')
+  expect(chart).toContain('data-line="expected"')
+  expect(chart).toContain('data-marker="overdue-reminders"')
+})
+
+test('S1.1: with no grounded epic, the chart shows the actual only and the page says it cannot tell yet', () => {
+  const none = buildPayingOff({
+    product: 'Ledgerly',
+    epics: [LEDGERLY_EPICS[3]],
+    sources: [
+      {
+        key: 'paid_on_time',
+        name: 'Paid on time',
+        isNorthStar: false,
+        series: [{ date: '2026-10-25', value: 71 }],
+      },
+    ],
+  })
+  const html = render(viewFor('team'), 'team', none)
+  expect(slice(html, 'paying-off-sentence', 200)).toContain(
+    "No targets yet, so we can't say if it's on pace."
+  )
+  const chart = slice(html, 'outcome-chart', 4000)
+  expect(chart).toContain('data-line="actual"')
+  expect(chart).not.toContain('data-line="expected"')
+  expect(slice(html, 'figure-now', 400)).toContain('nothing is expected')
+})
+
+test('S1.2: four figures for the team, each with its expected value or saying there is none', () => {
+  const html = render(viewFor('team'))
+  expect(slice(html, 'figure-now', 400)).toContain('expected')
+  expect(slice(html, 'figure-paid-off', 400)).toContain('1 of 2')
+  expect(slice(html, 'figure-paid-off', 400)).toContain('1 not read yet')
+  expect(slice(html, 'figure-spend', 500)).toContain('$229')
+  expect(slice(html, 'figure-spend', 500)).toContain('$21.10 of it within $12–24 · 1 not quoted')
+  expect(slice(html, 'figure-cost-per-win', 400)).toContain('$229')
+})
+
+test('S1.2 + S1.3: a client or investor link shows two figures, no spend, no table — and still counts the unread', () => {
+  for (const lens of ['client', 'investor'] as const) {
+    const html = render(viewFor(lens), lens)
+    expect(html, lens).toContain('data-testid="figure-now"')
+    expect(slice(html, 'figure-paid-off', 400), lens).toContain('1 not read yet')
+    expect(html, lens).not.toContain('data-testid="figure-spend"')
+    expect(html, lens).not.toContain('data-testid="figure-cost-per-win"')
+    expect(html, lens).not.toContain('data-testid="outcome-epics-table"')
+    expect(html, lens).not.toContain('$207')
+    expect(html, lens).not.toContain('/epic/')
+  }
+  // An investor sees where epics landed, not which.
+  expect(render(viewFor('investor'), 'investor')).not.toContain('Overdue reminders')
+})
+
+test('S1.3: the epics table — column names, the bet under the name, every row links to its epic page, overspend neutral', () => {
+  const html = render(viewFor('team'))
+  const table = slice(html, 'outcome-epics-table', 9000)
+  for (const col of ['Epic · what we bet', 'Metric · expected → actual', 'Result', 'Spend · vs quote']) {
+    expect(table).toContain(`<th scope="col">${col}</th>`)
+  }
+  expect(table).toContain('a reminder gets invoices paid on time')
+  expect(table).toContain('Paid on time · 61 → 70 · actual 72 (▲ 2)')
+  expect(table).toContain('▲ $3.30 over $5–8')
+  for (const slug of ['overdue-reminders', 'smart-defaults', 'export-csv', 'the-cli']) {
+    expect(table).toContain(`href="/hub/golden-beans-demo/epic/${slug}"`)
+  }
+  // Overspend is a marker, never Ember: no red class anywhere in this half.
+  const half = html.slice(html.indexOf('data-testid="paying-off"'))
+  expect(half.slice(0, half.indexOf('</section>'))).not.toMatch(/class="[^"]*(red|ember|danger|NotMet)/i)
 })
