@@ -17,7 +17,10 @@ function dbClient() {
 
 test('missing Authorization header → 401 on both sync and list', async ({ request }) => {
   const sync = await request.post('/api/v1/north-star/sync', {
-    data: { metric: { key: 'm', name: 'M' }, inputs: [{ key: 'i', name: 'I', valueSource: 'external_push' }] },
+    data: {
+      metric: { key: 'm', name: 'M' },
+      inputs: [{ key: 'i', name: 'I', valueSource: 'external_push' }],
+    },
   })
   expect(sync.status()).toBe(401)
 
@@ -36,13 +39,20 @@ test('telemetry_event input missing sourceEvent → 400', async ({ request }) =>
   expect(res.status()).toBe(400)
 })
 
-test('external_push input WITH a sourceEvent → 400 (must be omitted for pushed inputs)', async ({ request }) => {
+test('external_push input WITH a sourceEvent → 400 (must be omitted for pushed inputs)', async ({
+  request,
+}) => {
   const res = await request.post('/api/v1/north-star/sync', {
     headers: { Authorization: `Bearer ${PROJECT_ONE_KEY}` },
     data: {
       metric: { key: `spec-metric-${Date.now()}`, name: 'Spec Metric' },
       inputs: [
-        { key: 'spec_input', name: 'Spec Input', valueSource: 'external_push', sourceEvent: 'should_not_be_here' },
+        {
+          key: 'spec_input',
+          name: 'Spec Input',
+          valueSource: 'external_push',
+          sourceEvent: 'should_not_be_here',
+        },
       ],
     },
   })
@@ -113,7 +123,14 @@ test('valid sync defines a metric with both a telemetry_event and an external_pu
     headers: { Authorization: `Bearer ${PROJECT_ONE_KEY}` },
     data: {
       metric: { key: metricKey, name: 'Payable Sellers (renamed)' },
-      inputs: [{ key: telemetryInputKey, name: 'Setup Guide Shares', valueSource: 'telemetry_event', sourceEvent: 'setup_guide_share_tapped' }],
+      inputs: [
+        {
+          key: telemetryInputKey,
+          name: 'Setup Guide Shares',
+          valueSource: 'telemetry_event',
+          sourceEvent: 'setup_guide_share_tapped',
+        },
+      ],
     },
   })
   expect(resync.status()).toBe(200)
@@ -124,7 +141,7 @@ test('valid sync defines a metric with both a telemetry_event and an external_pu
   expect(metricRows?.[0]?.name).toBe('Payable Sellers (renamed)')
 })
 
-test("re-syncing an existing input with a DIFFERENT valueSource → 400 (would silently orphan its stored series)", async ({
+test('re-syncing an existing input with a DIFFERENT valueSource → 400 (would silently orphan its stored series)', async ({
   request,
 }) => {
   const metricKey = `spec-value-source-guard-metric-${Date.now()}`
@@ -155,7 +172,7 @@ test("re-syncing an existing input with a DIFFERENT valueSource → 400 (would s
   expect(rows?.[0]?.value_source).toBe('external_push') // unchanged
 })
 
-test('tenant isolation: project-two sees its own metric but not project-one\'s', async ({ request }) => {
+test("tenant isolation: project-two sees its own metric but not project-one's", async ({ request }) => {
   // A positive check on project-two's OWN data, not just an absence check on project-one's key —
   // an endpoint that always returned an empty list would wrongly "pass" an absence-only test.
   const projectOneKey = `spec-isolation-one-${Date.now()}`

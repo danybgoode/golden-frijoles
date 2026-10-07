@@ -18,6 +18,7 @@ import { ProductShell } from '@/components/product/ProductShell'
 import { Callout, Empty, PageHead, Table, TableCell, TableHead, TableRow } from '@/design-system/primitives'
 import { LoopControl } from './loop-control'
 import { LoadingTable, PORTFOLIO_COLUMNS } from './loading-table'
+import { SCREEN_WORDS } from '@/lib/screen-words'
 
 // portfolio-view · Sprint 2, Story 2.1 (Roadmap/02-commercial/portfolio-view — the Architecture lock, D1, D2, D6, D12).
 //
@@ -69,10 +70,10 @@ export default async function PortfolioPage({
       <main>
         {held < PORTFOLIO_MIN_PRODUCTS ? (
           <div data-portfolio-state="empty">
-            <PageHead title="Your workspace" lede={workspace.name} />
+            <PageHead title={SCREEN_WORDS.portfolio} lede={workspace.name} />
             <Empty
               title={
-                held === 1 ? 'Your workspace has one product.' : 'You have no product in this workspace yet.'
+                held === 1 ? 'This workspace has one product.' : 'You have no product in this workspace yet.'
               }
               body="The portfolio appears when you add a second."
             />
@@ -80,7 +81,7 @@ export default async function PortfolioPage({
         ) : (
           <>
             <PageHead
-              title="Your workspace"
+              title={SCREEN_WORDS.portfolio}
               lede={`${workspace.name} — every product you belong to, placed on the Consider · Operate · Exit loop.`}
               actions={
                 <a className="ds-btn ds-btn--secondary" href={todayHrefFor(mine[0].slug)}>

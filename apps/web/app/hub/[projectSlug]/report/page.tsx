@@ -8,6 +8,7 @@ import { formatFreshness } from '@/lib/hub-freshness'
 import { EmptyPodReportState, PodReportBody } from '../../report-components'
 import { HubShell } from '../../hub-shell'
 import { PageHead } from '@/design-system/primitives'
+import { SCREEN_WORDS } from '@/lib/screen-words'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,12 +39,15 @@ export default async function HubPodReportPage({ params }: { params: Promise<{ p
     // A broken database must never render like "nothing pushed yet" — that turns an outage into a
     // page that quietly claims a tenant has no report (Roadmap/LEARNINGS.md, the zero that pages
     // nobody). Throwing here surfaces it as a 500, which is what it is.
-    if (result.reason === 'query_failed') throw new Error('Pod report artifact lookup failed')
+    if (result.reason === 'query_failed') throw new Error('Outcome report artifact lookup failed')
     if (result.reason === 'project_not_found') notFound()
 
     return (
       <HubShell projectSlug={projectSlug} tab="report">
-        <PageHead title="Pod report" lede={`What the ${projectSlug} pod shipped, and whether it mattered.`} />
+        <PageHead
+          title={SCREEN_WORDS.outcomeReport}
+          lede={`What the ${projectSlug} pod shipped, and whether it mattered.`}
+        />
         <EmptyPodReportState projectSlug={projectSlug} />
       </HubShell>
     )

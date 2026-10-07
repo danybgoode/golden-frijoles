@@ -314,16 +314,16 @@ export default async function DesignSystemSpecimen({
           >
             <nav className="ds-rail ds-specimen-rail">
               <RailItem icon="flag" href="#rail" current>
-                Features
+                Flags
               </RailItem>
               <RailItem icon="flask" href="#rail">
-                Experiments
+                A/B tests
               </RailItem>
               <RailItem icon="calendar-clock" href="#rail">
                 Scheduled changes
               </RailItem>
               <RailItem icon="activity" href="#rail">
-                Activity
+                Flag history
               </RailItem>
             </nav>
           </Section>
@@ -480,7 +480,7 @@ export default async function DesignSystemSpecimen({
             title="Breadcrumbs — where you came from"
             note="A real link, never a history.back() button: a page reached from a shared URL has no history to go back to, and a control that does nothing on a shareable page is worse than no control. The trail after it is plain text — a key, a tab name — because a breadcrumb that is all links invites the reader to guess which one is the way out."
           >
-            <Crumbs back={{ href: '#crumbs', label: 'Features' }}>
+            <Crumbs back={{ href: '#crumbs', label: 'Flags' }}>
               <Crumb mono>checkout.stripe_enabled</Crumb>
               <Crumb>Funnel</Crumb>
             </Crumbs>
@@ -492,7 +492,7 @@ export default async function DesignSystemSpecimen({
             note="23/700 title, 13.5/400 lede, and the actions pushed to the right edge by a spacer rather than by a justify rule — the head's children are a title block plus any number of controls, and only one gap in that row is the flexible one."
           >
             <PageHead
-              title="Features"
+              title="Flags"
               lede="Everything this project can switch, and what production is doing with it."
               actions={
                 <>
@@ -506,11 +506,11 @@ export default async function DesignSystemSpecimen({
           <Section
             id="summary"
             title="The summary strip"
-            note="Four counts, each a link that filters the list to itself. `aria-current` paints the selected tile AND announces it — one attribute, so the two cannot disagree. A ZERO is dimmed in every tone: a green 0 beside “On in production” reads at a glance as a healthy number."
+            note="Four counts, each a link that filters the list to itself. `aria-current` paints the selected tile AND announces it — one attribute, so the two cannot disagree. A ZERO is dimmed in every tone: a green 0 beside “Flags on” reads at a glance as a healthy number."
           >
             <Summary>
               <StatLink value={42} label="All features" href="#summary" tone="all" current />
-              <StatLink value={3} label="On in production" href="#summary" tone="on" />
+              <StatLink value={3} label="Flags on" href="#summary" tone="on" />
               <StatLink value={0} label="Turned off here" href="#summary" tone="off" />
               <StatLink value={39} label={SPECIMEN_WORDS.neverActivated} href="#summary" tone="never" />
             </Summary>
@@ -521,7 +521,7 @@ export default async function DesignSystemSpecimen({
             title="The list card — header row, rows, a group banner, and one line replacing forty"
             note="Every row is 71px, which is the contract's measurement. The state detail is clamped to one line and carries its full sentence on `title`: the copy that separates “never turned on here” from “switched off” is long on purpose, and left to wrap it made the row 90px in the state 39 of 42 production flags are in."
           >
-            <ListCard label="Features specimen">
+            <ListCard label="Flags specimen">
               <ListHead>
                 <Col header>Feature</Col>
                 <Col header width="state">

@@ -72,10 +72,7 @@ test('duplicate submit → still 200, still exactly one row', async ({ request }
   expect(second.status()).toBe(200)
 
   const db = dbClient()
-  const { data, count } = await db
-    .from('waitlist')
-    .select('id', { count: 'exact' })
-    .eq('email', email)
+  const { data, count } = await db.from('waitlist').select('id', { count: 'exact' }).eq('email', email)
   expect(count).toBe(1)
   expect(data?.length).toBe(1)
 })
@@ -106,8 +103,8 @@ test('12 genuinely concurrent requests from the same IP → exactly max (5) succ
       request.post('/api/v1/public/waitlist', {
         headers,
         data: { email: `spec-concurrent-${Date.now()}-${i}@example.com` },
-      }),
-    ),
+      })
+    )
   )
   const succeeded = responses.filter((r) => r.status() === 200).length
   const rateLimited = responses.filter((r) => r.status() === 429).length

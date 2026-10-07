@@ -286,13 +286,11 @@ async function throwawayTenant() {
     .single()
   if (error || !project) throw new Error(`fixture project: ${error?.message}`)
   const key = `gb_key_spec_${randomBytes(24).toString('base64url')}`
-  await db
-    .from('api_keys')
-    .insert({
-      project_id: project.id,
-      key_hash: createHash('sha256').update(key).digest('hex'),
-      label: 'finops push spec',
-    })
+  await db.from('api_keys').insert({
+    project_id: project.id,
+    key_hash: createHash('sha256').update(key).digest('hex'),
+    label: 'finops push spec',
+  })
   return { db, projectId: project.id as string, key }
 }
 

@@ -60,6 +60,7 @@ import {
 } from '@/design-system/primitives'
 import { FlagSwitch } from './[flagKey]/flag-switch'
 import { CRITICALITY_LABEL, FLAG_STATE_PRESENTATION, TYPE_LABEL, summaryCardLabels } from './flag-vocabulary'
+import { SCREEN_WORDS } from '@/lib/screen-words'
 
 /**
  * Production is the default view.
@@ -323,7 +324,7 @@ export function FlagConsole({
           restore it are carried by the primitives (`ListCard`, `Row`, `Col`), so a page cannot
           forget one. */}
       <div data-feature-list>
-        <ListCard label="Features">
+        <ListCard label={SCREEN_WORDS.flags}>
           <ListHead>
             <Col header>Feature</Col>
             <Col header width="state">

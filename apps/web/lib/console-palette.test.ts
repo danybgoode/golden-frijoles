@@ -69,11 +69,12 @@ test('the palette indexes exactly the entitled surfaces — no more, no fewer', 
 })
 
 test('every entry carries its section in the words the header uses', () => {
-  // The row says "Destinations · Setup", not "Destinations · setup". One vocabulary across the
+  // The row says "Webhooks · Setup", not "Webhooks · setup". One vocabulary across the
   // header, the rail and the palette, from CONSOLE_SECTIONS — never a second copy of the labels.
-  const destinations = entries.find((entry) => entry.label === 'Destinations')
-  assert.equal(destinations?.hint, 'Setup')
-  assert.equal(entries.find((entry) => entry.label === 'Features')?.hint, 'Ship')
+  // (one-header-one-name D8: Setup's Destinations is called Webhooks, and Features is called Flags.)
+  const webhooks = entries.find((entry) => entry.label === 'Webhooks')
+  assert.equal(webhooks?.hint, 'Setup')
+  assert.equal(entries.find((entry) => entry.label === 'Flags')?.hint, 'Ship')
   for (const entry of entries) {
     assert.ok(
       ['Today', 'Plan', 'Ship', 'Measure', 'Setup'].includes(entry.hint),
@@ -89,7 +90,7 @@ test('a member’s palette cannot contain an owner-only surface', () => {
   const memberEntries = buildPaletteEntries(
     getProjectSurfaceLinks({ projectSlug: 'miyagisanchez', role: 'member', gates: allGatesOpen })
   )
-  for (const owned of ['Keys', 'Destinations', 'Share links']) {
+  for (const owned of ['Keys', 'Webhooks', 'Share links']) {
     assert.equal(
       memberEntries.some((entry) => entry.label === owned),
       false,
@@ -108,10 +109,10 @@ test('NO feature keys are indexed in this sprint — every entry is a surface', 
 // ── Matching ───────────────────────────────────────────────────────────────────────────────────
 
 test('typing part of a label narrows to it', () => {
-  const found = filterPaletteEntries(entries, 'dest')
+  const found = filterPaletteEntries(entries, 'webh')
   assert.deepEqual(
     found.map((entry) => entry.label),
-    ['Destinations']
+    ['Webhooks']
   )
 })
 
@@ -121,15 +122,15 @@ test('typing a SECTION name lists everything in that section', () => {
   const found = filterPaletteEntries(entries, 'setup')
   assert.deepEqual(
     found.map((entry) => entry.label),
-    ['Connect', 'CLI access', 'Keys', 'Destinations', 'Share links']
+    ['Connect', 'CLI access', 'Keys', 'Webhooks', 'Share links']
   )
 })
 
 test('matching ignores case and surrounding whitespace', () => {
-  for (const query of ['DEST', '  dest  ', 'Dest']) {
+  for (const query of ['WEBH', '  webh  ', 'Webh']) {
     assert.deepEqual(
       filterPaletteEntries(entries, query).map((entry) => entry.label),
-      ['Destinations'],
+      ['Webhooks'],
       `query ${JSON.stringify(query)} did not match`
     )
   }
@@ -149,7 +150,7 @@ test('a query that matches nothing returns an empty list rather than everything'
 
 test('filtering does not mutate the source list', () => {
   const before = entries.length
-  filterPaletteEntries(entries, 'dest')
+  filterPaletteEntries(entries, 'webh')
   filterPaletteEntries(entries, '')
   assert.equal(entries.length, before)
 })
@@ -266,7 +267,7 @@ test('surfaces are still reachable once features are in the list', () => {
   // The regression this guards is a merge that pushed 42 features in front of 13 surfaces and left
   // no way to reach a surface by name.
   const all = [...buildFeatureEntries(projectFeatureIndex(registryFlags), 'miyagisanchez'), ...entries]
-  const flagsSurface = filterPaletteEntries(all, 'Activity')
+  const flagsSurface = filterPaletteEntries(all, 'Flag history')
   assert.equal(flagsSurface.length, 1)
   assert.equal(flagsSurface[0].kind, 'surface')
 })

@@ -4,6 +4,7 @@ import { requireDashboardAccess } from '@/lib/dashboard-auth'
 import { ProductShell } from '@/components/product/ProductShell'
 import { Answer, Crumb, Crumbs, PageHead } from '@/design-system/primitives'
 import { FunnelPane } from '@/app/app/flags/[projectSlug]/[flagKey]/feature-panes'
+import { SCREEN_WORDS } from '@/lib/screen-words'
 
 // Growth Engine v1 · Sprint 2, Story 2.3 — the funnel page for a registered feature
 // (v1's headline case: /app/funnel/miyagisanchez/setup_guide). Behind per-tenant authorization
@@ -43,7 +44,7 @@ export default async function FunnelPage({
   return (
     <ProductShell projectSlug={projectSlug} section="ship" railActive={'flags'}>
       <main>
-        <Crumbs back={{ href: `/app/flags/${projectSlug}`, label: 'Features' }}>
+        <Crumbs back={{ href: `/app/flags/${projectSlug}`, label: SCREEN_WORDS.flags }}>
           <Crumb mono>{featureKey}</Crumb>
           <Crumb>Funnel</Crumb>
         </Crumbs>

@@ -647,10 +647,11 @@ test.describe('the console shell', () => {
     await openPalette(page)
     const palette = page.locator('.command-palette')
 
-    await page.keyboard.type('dest')
+    // one-header-one-name D8 — Setup's Destinations is called Webhooks on screen (audit decision 2).
+    await page.keyboard.type('webh')
     const options = palette.locator('[role="option"]')
     await expect(options).toHaveCount(1)
-    await expect(options.first()).toContainText('Destinations')
+    await expect(options.first()).toContainText('Webhooks')
     // The row states its section, which is what makes the list readable at 13 entries.
     await expect(options.first()).toContainText('Setup')
 
@@ -709,7 +710,9 @@ test.describe('the console shell', () => {
     // first and went red against that design, which is the ordering comment doing its job.
     await page.goto('/app')
     await openPalette(page)
-    await page.keyboard.type('Activity')
+    // one-header-one-name D8 — the surface is called Flag history now; `history` still collides with the seeded
+    // `gb_e2e_activity_history` feature, which is the crowded case this test is for.
+    await page.keyboard.type('history')
     const options = page.locator('.command-palette [role="option"]')
     // The collision is real, so the assertion below is made under the crowded condition this test is
     // named for rather than on a fixture where the surface was the only match.

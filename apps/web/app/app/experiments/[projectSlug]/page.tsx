@@ -18,6 +18,7 @@ import { ExperimentRows } from './experiment-rows'
 import { ProductShell } from '@/components/product/ProductShell'
 import { Answer, Button, PageHead } from '@/design-system/primitives'
 import { ExperimentBuilder } from './experiment-builder'
+import { SCREEN_WORDS } from '@/lib/screen-words'
 
 // design-system-rails · Sprint 5, Story 5.4 — reference state `ship-experiments`.
 //
@@ -80,7 +81,7 @@ export default async function ExperimentsPage({ params }: { params: Promise<{ pr
     <ProductShell projectSlug={projectSlug} section="ship" railActive={'experiments'}>
       <main>
         <PageHead
-          title="Experiments"
+          title={SCREEN_WORDS.abTests}
           lede="A change shown to some people and not others, so the difference is the change and not the week."
           actions={
             builderEnabled && builderData ? (

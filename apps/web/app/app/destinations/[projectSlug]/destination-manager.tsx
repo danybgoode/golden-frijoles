@@ -32,6 +32,7 @@ import {
   replayDeliveryAction,
   deleteDestinationAction,
 } from './actions'
+import { SCREEN_WORDS } from '@/lib/screen-words'
 
 // event-destination-router · Sprint 2, Story 2.1 — create / test / enable / rotate / disable UI.
 // The list renders from the `destinations` prop (refreshed by router.refresh() after each mutation,
@@ -381,7 +382,7 @@ export function DestinationManager({
   return (
     <>
       <PageHead
-        title="Destinations"
+        title={SCREEN_WORDS.webhooks}
         lede="Where this project sends what happens, so another tool can act on it. Every matching event is POSTed to your URL and signed, so your receiver can verify it came from Golden Frijoles."
         actions={
           <>
@@ -479,7 +480,7 @@ export function DestinationManager({
           />
         </div>
       ) : (
-        <ListCard label="Destinations" wideActions>
+        <ListCard label={SCREEN_WORDS.webhooks} wideActions>
           <ListHead>
             <Col header>Destination</Col>
             <Col header width="state">

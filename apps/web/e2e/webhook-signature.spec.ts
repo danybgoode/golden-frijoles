@@ -42,7 +42,10 @@ test('a stale timestamp is rejected even with an OTHERWISE-VALID signature — b
   // the timestamp is part of the signed material.
   const header = signWebhookPayload(SECRET, BODY, T)
   const wayLater = T + SIGNATURE_TOLERANCE_SECONDS + 1
-  expect(verifyWebhookSignature(SECRET, BODY, header, wayLater)).toEqual({ ok: false, reason: 'stale_timestamp' })
+  expect(verifyWebhookSignature(SECRET, BODY, header, wayLater)).toEqual({
+    ok: false,
+    reason: 'stale_timestamp',
+  })
 
   // Just inside the window still verifies.
   const justInside = T + SIGNATURE_TOLERANCE_SECONDS - 1

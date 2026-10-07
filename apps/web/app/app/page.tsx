@@ -122,7 +122,7 @@ export default async function AppHome({
               }
             />
             <Empty
-              title="Your workspace has no projects yet."
+              title="This workspace has no projects yet."
               body="Nothing on this page can be shown until there is a project to show it for. Ask an owner to add you to theirs, or create your own."
             />
           </>

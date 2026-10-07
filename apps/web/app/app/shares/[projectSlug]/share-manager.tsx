@@ -344,7 +344,7 @@ export function ShareManager({
         <div className="ds-listcard">
           <Empty
             title="No share links yet"
-            body="A share link renders this project's Pod Report at a public URL, through one audience lens — so somebody with no account here can read it. Create one when you have a conversation that needs it."
+            body="A share link renders this project's Outcome report at a public URL, through one audience lens — so somebody with no account here can read it. Create one when you have a conversation that needs it."
           />
         </div>
       ) : (

@@ -5,6 +5,7 @@ import { ProductShell } from '@/components/product/ProductShell'
 import { Answer, Card, Crumb, Crumbs, PageHead } from '@/design-system/primitives'
 import { HeroFigure, Plot, seriesAbsence } from '@/design-system/charts'
 import { ImpactPane } from '@/app/app/flags/[projectSlug]/[flagKey]/feature-panes'
+import { SCREEN_WORDS } from '@/lib/screen-words'
 
 // Growth Engine v1 · Sprint 3, Story 3.4 — the per-feature input-impact report. Behind per-tenant
 // authorization (multi-tenant-activation Story 1.2) — same gate as /app/funnel: demo is anonymous,
@@ -56,7 +57,7 @@ export default async function ImpactPage({
   return (
     <ProductShell projectSlug={projectSlug} section="measure" railActive={null}>
       <main>
-        <Crumbs back={{ href: `/app/flags/${projectSlug}`, label: 'Features' }}>
+        <Crumbs back={{ href: `/app/flags/${projectSlug}`, label: SCREEN_WORDS.flags }}>
           <Crumb mono>{featureKey}</Crumb>
           <Crumb>Impact</Crumb>
         </Crumbs>

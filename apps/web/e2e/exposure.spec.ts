@@ -1,10 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { createClient } from '@supabase/supabase-js'
 import { createGrowthEngineClient } from '@golden-frijoles/sdk'
-import {
-  requireLocalSupabaseApiUrl,
-  requireTestDatabaseUrl,
-} from './helpers/test-db-cleanup'
+import { requireLocalSupabaseApiUrl, requireTestDatabaseUrl } from './helpers/test-db-cleanup'
 
 // Story 4.2 (Roadmap/01-growth-engine/growth-engine-v1/sprint-4.md) — an exposure event fired
 // when a user is bucketed, queryable alongside Sprint 1's event stream. trackExposure() is a thin
@@ -22,7 +19,9 @@ function dbClient() {
   return createClient(url, key, { auth: { persistSession: false } })
 }
 
-test('trackExposure() persists an experiment_exposed event with the assigned variant', async ({ baseURL }) => {
+test('trackExposure() persists an experiment_exposed event with the assigned variant', async ({
+  baseURL,
+}) => {
   const userId = `exposure-spec-user-${Date.now()}`
   const growth = createGrowthEngineClient({ baseUrl: baseURL!, apiKey: PROJECT_ONE_KEY, userId })
 
@@ -48,7 +47,9 @@ test('trackExposure() persists an experiment_exposed event with the assigned var
   expect((row?.tags as Record<string, unknown> | null)?.variant).toBe(bucketResult.variant)
 })
 
-test('trackExposure() merges caller-supplied tags with the variant, not overwrite them', async ({ baseURL }) => {
+test('trackExposure() merges caller-supplied tags with the variant, not overwrite them', async ({
+  baseURL,
+}) => {
   const userId = `exposure-spec-user-tags-${Date.now()}`
   const growth = createGrowthEngineClient({ baseUrl: baseURL!, apiKey: PROJECT_ONE_KEY, userId })
 
@@ -66,7 +67,7 @@ test('trackExposure() merges caller-supplied tags with the variant, not overwrit
   expect(tags?.region).toBe('mx')
 })
 
-test('exposure events are queryable alongside Sprint 1\'s event stream by feature_id', async ({ baseURL }) => {
+test("exposure events are queryable alongside Sprint 1's event stream by feature_id", async ({ baseURL }) => {
   const experimentKey = `exposure-spec-stream-${Date.now()}`
   const growth = createGrowthEngineClient({
     baseUrl: baseURL!,
@@ -88,7 +89,9 @@ test('exposure events are queryable alongside Sprint 1\'s event stream by featur
   expect(rows?.map((r) => r.event)).toEqual(['experiment_exposed', 'exposure_spec_conversion'])
 })
 
-test('governed exposure round-trips definition version and assignment subject through canonical ingest', async ({ baseURL }) => {
+test('governed exposure round-trips definition version and assignment subject through canonical ingest', async ({
+  baseURL,
+}) => {
   const growth = createGrowthEngineClient({
     baseUrl: baseURL!,
     apiKey: PROJECT_ONE_KEY,
@@ -99,7 +102,7 @@ test('governed exposure round-trips definition version and assignment subject th
     'founding-message-v2',
     'new-copy',
     { tags: { source: 'sdk-spec' } },
-    { definitionVersion: 3, assignmentEntity: subject },
+    { definitionVersion: 3, assignmentEntity: subject }
   )
   expect(result.ok).toBe(true)
   if (!result.ok) return

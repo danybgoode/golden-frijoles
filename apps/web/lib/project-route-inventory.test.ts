@@ -138,7 +138,7 @@ test('members see every live member surface but never owner-only or flow-only ro
       // link SHAPE, so a field added to `ProjectSurfaceLink` and not carried through
       // `getProjectSurfaceLinks`' mapper fails here rather than rendering as undefined.
       iconKey: 'flag',
-      label: 'Features',
+      label: 'Flags', // one-header-one-name D8 (audit decision 2): Features → Flags
       status: 'gated',
       section: 'ship',
       href: '/app/flags/project-one',

@@ -165,9 +165,7 @@ test('the framework is credited by name, once, and the credit is not repeated', 
   expect(body).toContain('](https://amplitude.com/resources/north-star-playbook)')
 })
 
-test('the close runs the greenfield test first and names every part of the hand-off', async ({
-  request,
-}) => {
+test('the close runs the greenfield test first and names every part of the hand-off', async ({ request }) => {
   const body = await (await request.get('/northstar-self-serve.md')).text()
 
   // Story 1.3: the greenfield test runs BEFORE the summary. A summary the agent has already been
@@ -182,7 +180,14 @@ test('the close runs the greenfield test first and names every part of the hand-
   // The close writes back exactly one shape, and every part of it is load-bearing: guardrails stop
   // the metric being gamed, assumptions are what the first tests attack, and the game is what the
   // whole thing was chosen against.
-  for (const part of ['**The game:**', '**North Star:**', '**Inputs:**', '**Guardrails:**', '**Assumptions:**', '**First tests:**']) {
+  for (const part of [
+    '**The game:**',
+    '**North Star:**',
+    '**Inputs:**',
+    '**Guardrails:**',
+    '**Assumptions:**',
+    '**First tests:**',
+  ]) {
     expect(body, `the close is missing ${part}`).toContain(part)
   }
 })

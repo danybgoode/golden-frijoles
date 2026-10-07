@@ -41,7 +41,9 @@ test('linking to an unknown input → 404', async ({ request }) => {
   expect(res.status()).toBe(404)
 })
 
-test('links a feature to a defined input, idempotently (no duplicate row on re-link)', async ({ request }) => {
+test('links a feature to a defined input, idempotently (no duplicate row on re-link)', async ({
+  request,
+}) => {
   const inputKey = `link-spec-input-${Date.now()}`
   const featureKey = `link-spec-feature-${Date.now()}`
   await defineInput(request, inputKey)

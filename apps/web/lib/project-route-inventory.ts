@@ -166,6 +166,9 @@ export type ProjectSurfaceLink = Pick<
 //
 // Measure (Journeys · Scenarios) and Setup (Connect · Keys · Destinations · Share links) were
 // already in approved order; both were checked at the same time rather than assumed.
+// one-header-one-name D8 — the nav labels below are audit decision 2's names (Flags, A/B tests, Agent queue, Flag
+// history, Webhooks, Outcome report). They are LITERALS here because this module takes no runtime import (the unit
+// layer loads it bare); `lib/screen-words.test.ts` welds each one to `SCREEN_WORDS`, so they cannot drift apart.
 export const PROJECT_ROUTE_INVENTORY = [
   // ── RETIRED — design-system-rails · Sprint 4, Story 4.5 ──────────────────────────────────────
   //
@@ -291,7 +294,7 @@ export const PROJECT_ROUTE_INVENTORY = [
     // Features · Experiments · Scheduled changes · Activity, and the page's own `h1` has said
     // "Features" since Story 4.1. The rail was the last place still saying "Flags", so the nav and
     // the destination it leads to disagreed about what they were called.
-    label: 'Features',
+    label: 'Flags',
     href: (slug: string) => `/app/flags/${slug}`,
     description: (role) => (role === 'owner' ? 'define and operate' : 'read-only'),
   },
@@ -306,7 +309,7 @@ export const PROJECT_ROUTE_INVENTORY = [
     // `Experiments`, per the approved rail. "Experiment governance" named the SUBSYSTEM — the
     // registry, the lifecycle, the ledger — which is `design-system/vocabulary.ts`' STORAGE_WORDS
     // rule applied to a nav label: it tells the reader about the machinery, not about the thing.
-    label: 'Experiments',
+    label: 'A/B tests',
     href: (slug: string) => `/app/experiments/${slug}`,
     description: (role) => (role === 'owner' ? 'plan and operate' : 'read-only'),
   },
@@ -318,7 +321,7 @@ export const PROJECT_ROUTE_INVENTORY = [
     status: 'gated',
     topLevelProjectRoute: true,
     section: 'today',
-    label: 'Tasks',
+    label: 'Agent queue',
     href: (slug: string) => `/app/tasks/${slug}`,
     description: () => 'review your evidence-backed queue',
   },
@@ -458,7 +461,7 @@ export const PROJECT_ROUTE_INVENTORY = [
     // shipped doc asserting a property the code did not have, which is CODE-QUALITY #3 one layer
     // out. "Flag audit" named the TABLE the rows come from; a person opening this is asking what
     // happened.
-    label: 'Activity',
+    label: 'Flag history',
     href: (slug: string) => `/app/flag-audit/${slug}`,
     description: () => 'who changed which flag, and why',
   },
@@ -470,7 +473,7 @@ export const PROJECT_ROUTE_INVENTORY = [
     status: 'linked',
     topLevelProjectRoute: true,
     section: 'setup',
-    label: 'Destinations',
+    label: 'Webhooks',
     href: (slug: string) => `/app/destinations/${slug}`,
     description: () => 'signed webhook delivery',
   },

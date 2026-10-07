@@ -10,6 +10,7 @@ import type { Freshness } from '@/lib/hub-freshness'
 import { HubProvenance } from './hub-components'
 import { Answer, Callout, Empty, PageHead } from '@/design-system/primitives'
 import styles from './hub.module.css'
+import { SCREEN_WORDS } from '@/lib/screen-words'
 
 // pod-report · Sprint 2.5c — everything the Pod Report surface renders, kept OUT of page.tsx.
 //
@@ -106,7 +107,7 @@ export function EmptyPodReportState({ projectSlug }: { projectSlug: string }) {
   return (
     <div className="ds-listcard" data-testid="pod-report-empty-state">
       <Empty
-        title="No pod report pushed yet"
+        title="No outcome report pushed yet"
         body={
           <>
             <code className="ds-mono">{projectSlug}</code> has never pushed a{' '}
@@ -648,7 +649,7 @@ export function PodReportBody({
           told what is not measured. */}
       {withHead ? (
         <PageHead
-          title="Pod report"
+          title={SCREEN_WORDS.outcomeReport}
           lede={`How the ${projectSlug} pod is actually performing, read from its own git and pull-request history.`}
         />
       ) : null}

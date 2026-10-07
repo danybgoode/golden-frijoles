@@ -282,6 +282,60 @@ export const CONTROL_PLANE_WINS: readonly { design: string; product: string; why
 ]
 
 /** Every word `STORAGE_WORDS` bans, lowercased, for a scanner. */
+/**
+ * one-header-one-name · Sprint 2, Story 2.2 (epic README D9) — screen names that were RETIRED, so they stay gone.
+ *
+ * Audit decision 2 gave each thing one name; these are the names it replaced. The replacements live in
+ * `lib/screen-words.ts`, and `lib/screen-words.test.ts` welds the two lists. `vocabulary.test.ts` scans the console,
+ * Hub and share-page sources for them, and HOW it matches depends on what kind of word it is:
+ *
+ *   · `phrase` — a multi-word name. Fails anywhere in a rendered string or JSX text, in the case it is written
+ *                ("On in Production", not "turned on in production"); `anyCase` widens that for a name with no
+ *                innocent lowercase reading ("pod report").
+ *   · `label`  — a single common word ("Features", "Activity"). Fails only as a WHOLE label: a string literal or a JSX
+ *                text node that is exactly the word. "the features this project has" in a sentence stays legal.
+ *   · `stage`  — a board stage. It is also the stored KEY (`ROADMAP_STAGES`), legal in a comparison like
+ *                `stage === 'Ready to build'`, so it fails only as JSX text: words a person reads.
+ *
+ * Not here: Horizon's "destinations" (a different thing from Setup's Destinations, and kept).
+ */
+export const RETIRED_SCREEN_WORDS: readonly {
+  word: string
+  insteadSay: string
+  match: 'phrase' | 'label' | 'stage'
+  anyCase?: true
+}[] = [
+  { word: 'Features', insteadSay: 'Flags', match: 'label' },
+  { word: 'On in Production', insteadSay: 'Flags on', match: 'phrase' },
+  { word: 'Experiments', insteadSay: 'A/B tests', match: 'label' },
+  { word: 'Pod report', insteadSay: 'Outcome report', match: 'phrase', anyCase: true },
+  { word: 'Report', insteadSay: 'Outcome report', match: 'label' },
+  { word: 'Destinations', insteadSay: 'Webhooks', match: 'label' },
+  { word: 'Your workspace', insteadSay: 'Portfolio', match: 'phrase' },
+  { word: 'Tasks', insteadSay: 'Agent queue', match: 'label' },
+  { word: 'Activity', insteadSay: 'Flag history', match: 'label' },
+  { word: 'To groom', insteadSay: 'Backlog', match: 'stage' },
+  { word: 'Ready to build', insteadSay: 'Ready', match: 'stage' },
+]
+
+/**
+ * Where a retired screen word is found in `source` (comments already stripped), or `null`. Pure, so the guard's own
+ * test can prove each rule fires on the shape it is written for — a scanner that matches nothing passes everything.
+ */
+export function findRetiredScreenWord(
+  source: string,
+  entry: (typeof RETIRED_SCREEN_WORDS)[number]
+): string | null {
+  const word = entry.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const pattern =
+    entry.match === 'phrase'
+      ? new RegExp(`[>"'\`][^<>"'\`]*\\b${word}\\b`, entry.anyCase ? 'i' : '')
+      : entry.match === 'label'
+        ? new RegExp(`(["'\`])\\s*${word}\\s*\\1|>\\s*${word}\\s*<`)
+        : new RegExp(`[>}][^<>{}]*\\b${word}\\b[^<>{}]*[<{]`)
+  return pattern.exec(source)?.[0] ?? null
+}
+
 export function bannedWords(): string[] {
   return STORAGE_WORDS.map((entry) => entry.word.toLowerCase())
 }

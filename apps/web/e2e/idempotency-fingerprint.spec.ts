@@ -54,11 +54,14 @@ test('changing any meaningful field changes the fingerprint', () => {
   expect(computePayloadFingerprint({ ...base, userId: 'u2' })).not.toBe(original)
   expect(computePayloadFingerprint({ ...base, featureId: 'checkout' })).not.toBe(original)
   expect(computePayloadFingerprint({ ...base, tags: { source: 'mobile', amount: 42 } })).not.toBe(original)
+  expect(computePayloadFingerprint({ ...base, context: { ...base.context, subject_id: 'o2' } })).not.toBe(
+    original
+  )
   expect(
-    computePayloadFingerprint({ ...base, context: { ...base.context, subject_id: 'o2' } }),
-  ).not.toBe(original)
-  expect(
-    computePayloadFingerprint({ ...base, context: { ...base.context, occurred_at: '2026-07-22T11:00:00.000Z' } }),
+    computePayloadFingerprint({
+      ...base,
+      context: { ...base.context, occurred_at: '2026-07-22T11:00:00.000Z' },
+    })
   ).not.toBe(original)
 })
 
