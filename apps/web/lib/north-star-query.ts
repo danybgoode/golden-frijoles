@@ -126,6 +126,11 @@ export async function getFeatureImpactByProjectId(
  * matching the input's source event across the project. Narrowing the project read to one feature
  * would silently under-count the metric's own inputs.
  */
+/** PostgREST's `max_rows` (apps/web/supabase/config.toml): one page of a paged read. */
+const EVENT_PAGE = 1000
+/** The most source events one series read will page through before it refuses rather than returning a partial series. */
+const EVENT_READ_BOUND = 200_000
+
 async function readInputSeries(
   projectId: string,
   inputId: string,
@@ -138,21 +143,38 @@ async function readInputSeries(
   // TypeScript can't see that correlation across a nullable DB column, so guard it here.
   if (input.value_source === 'telemetry_event' && input.source_event) {
     const sourceEvent = input.source_event
-    let query = supabase
-      .from('events')
-      .select('event, created_at')
-      .eq('project_id', projectId)
-      .eq('event', sourceEvent)
-    if (featureKey !== undefined) query = query.eq('feature_id', featureKey)
-    const { data: events, error: eventsError } = await query
-    if (eventsError) {
-      console.error('[north-star-query] events query failed:', eventsError)
-      return { ok: false }
+    // ⚠️ PAGED, in order (fresh review, #293). PostgREST caps a select at `max_rows` (1000 here), so an unbounded select
+    // past that returned an ARBITRARY subset and the daily series — and the `latest` an agent writes into a verdict —
+    // was silently wrong. Past the hard bound the read FAILS rather than returning a partial series as if it were whole.
+    const events: { event: string; created_at: string }[] = []
+    for (let from = 0; ; from += EVENT_PAGE) {
+      if (from >= EVENT_READ_BOUND) {
+        console.error(
+          `[north-star-query] ${sourceEvent}: more than ${EVENT_READ_BOUND} events — refusing a partial series`
+        )
+        return { ok: false }
+      }
+      let query = supabase
+        .from('events')
+        .select('event, created_at')
+        .eq('project_id', projectId)
+        .eq('event', sourceEvent)
+      if (featureKey !== undefined) query = query.eq('feature_id', featureKey)
+      const { data, error: eventsError } = await query
+        .order('created_at', { ascending: true })
+        .order('id', { ascending: true })
+        .range(from, from + EVENT_PAGE - 1)
+      if (eventsError) {
+        console.error('[north-star-query] events query failed:', eventsError)
+        return { ok: false }
+      }
+      events.push(...((data ?? []) as { event: string; created_at: string }[]))
+      if ((data ?? []).length < EVENT_PAGE) break
     }
     return {
       ok: true,
       series: computeDailySeries(
-        (events ?? []).map((e) => ({ event: e.event, createdAt: e.created_at })),
+        events.map((e) => ({ event: e.event, createdAt: e.created_at })),
         sourceEvent
       ),
     }
@@ -244,7 +266,13 @@ export async function getProjectNorthStarByProjectId(
 export type InputSeriesByKeyResult =
   | {
       ok: true
-      input: { key: string; name: string; metricKey: string; valueSource: 'telemetry_event' | 'external_push'; series: DailySeriesPoint[] }
+      input: {
+        key: string
+        name: string
+        metricKey: string
+        valueSource: 'telemetry_event' | 'external_push'
+        series: DailySeriesPoint[]
+      }
     }
   | { ok: false; reason: 'input_not_found' | 'query_failed' }
 
@@ -256,7 +284,10 @@ export type InputSeriesByKeyResult =
  * It does not go through `getProjectNorthStarByProjectId`: that read assumes one metric per project and fails once a
  * project has two (found by the S3 spec), and an agent asking for one input should not pay for every input.
  */
-export async function getInputSeriesByKey(projectId: string, inputKey: string): Promise<InputSeriesByKeyResult> {
+export async function getInputSeriesByKey(
+  projectId: string,
+  inputKey: string
+): Promise<InputSeriesByKeyResult> {
   const supabase = getSupabaseServiceClient()
   const { data: row, error } = await supabase
     .from('leading_inputs')

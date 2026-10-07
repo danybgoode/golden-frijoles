@@ -239,7 +239,9 @@ under `/api/v1/cli/*` authenticate a `gf login` token and gate on membership thr
   and the S2 behaviour (ask the owner). The project-key `groundedCheck` is **removed** (CLI-first; no key in `.env`):
   grounded is now "the readings route knows this input".
 - **D18 · Two connector tools, `get_input_readings` and `get_experiment_decision`**, on the same two lib reads,
-  scoped to the connector token's project, born on (standing no-flag rule; the connector's own two gates apply).
+  scoped to the connector token's project, no new flag (standing rule). **Review correction (#293):** the decision
+  route and tool ride the EXISTING `EXPERIMENT_GOVERNANCE_ENABLED` gate like every other governed ledger read (404
+  `disabled` before auth), so D19 holds with the gate off. The readings read has no such gate.
 - **D19 · Risk HIGH for S3.1** (new request-path reads = authorization boundary): the security lens runs on that PR.
   Single project per request, no multi-project read, nothing returned the caller's membership does not already show
   in the console.
@@ -253,7 +255,7 @@ under `/api/v1/cli/*` authenticate a `gf login` token and gate on membership thr
 3. D18 connector tools + the MCP connector spec.
 4. D17 `epic-read` with an injected spawn: fetches and drafts, pre-ship reading refused, `--actual` wins, every
    failure path falls back with its reason; mutation-checked.
-5. D20 kit 0.33.0 + CHANGELOG; CLI 0.6.0 + its CHANGELOG; D13 parity.
+5. D20 kit 0.33.0 + CHANGELOG; CLI 0.6.0 (the CLI keeps no CHANGELOG — its README documents the commands); D13 parity.
 
 ## Deploy order
 Sprint 1: the contract and templates, then extract and the push schema (nullish, so older pushers keep working), then

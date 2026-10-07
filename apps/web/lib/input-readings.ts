@@ -1,8 +1,8 @@
 // result-record D14 — one North Star input's readings, as an agent asks for them. FRAMEWORK-FREE (no runtime imports),
 // so the CLI route, the connector tool and a unit spec read the SAME rule.
 //
-// The series comes from `getProjectNorthStarByProjectId` (`lib/north-star-query.ts`) — pushed values or daily telemetry
-// counts — and this module only picks the input, cuts at `to` and names the latest reading. It never invents one: an
+// The series comes from `getInputSeriesByKey` (`lib/north-star-query.ts`) — pushed values or daily telemetry counts —
+// and this module only picks the input, cuts at `to` and names the latest reading. It never invents one: an
 // input with no reading on or before `to` has `latest: null`, which is "nothing to read", not a zero.
 
 export type InputReading = { date: string; value: number }

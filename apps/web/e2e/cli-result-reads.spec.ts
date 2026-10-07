@@ -10,11 +10,49 @@ import { specWorkspaceId } from './helpers/spec-workspace'
 //
 // New request-path reads on an auth boundary, so this spec is about WHO reads WHICH project: a member reads their own,
 // a member of one project gets 404 on another (never 403), and what is read is the same data the platform already
-// holds — readings pushed through the ingest-key route, a decision recorded through the ledger's own RPC.
+// holds — readings pushed through the ingest-key route, a decision recorded through the ledger's own RPCs.
 
 const PROJECT_ONE_KEY = 'local-test-key-do-not-use-in-prod'
 const sha256 = (v: string) => createHash('sha256').update(v).digest('hex')
 const unique = () => randomBytes(4).toString('hex')
+
+// The ledger's own analysis snapshot shape (experiment-decisions.spec.ts), for recording a real decision.
+const ANALYSIS = {
+  window: {
+    startAt: '2026-07-01T00:00:00.000Z',
+    endAt: '2026-08-01T00:00:00.000Z',
+    asOf: '2026-08-01T00:00:00.000Z',
+  },
+  decisionReady: true,
+  integrityReady: true,
+  sampleStatus: 'met',
+  blockers: [],
+  variants: [
+    { key: 'control', observedSubjects: 10, expectedSubjects: 10, minimumSampleStatus: 'met' },
+    { key: 'new-copy', observedSubjects: 10, expectedSubjects: 10, minimumSampleStatus: 'met' },
+  ],
+  primaryMetric: {
+    event: 'spec_completed',
+    direction: 'increase',
+    variants: [],
+    absoluteDelta: 0.1,
+    relativeLift: 0.2,
+    directionalStatus: 'favorable',
+  },
+  guardrailMetrics: [],
+  diagnostics: {
+    srm: { status: 'clear', alpha: 0.01, chiSquare: 0, pValue: 1 },
+    integrity: [],
+    validExposureSubjects: 20,
+  },
+  freshness: {
+    latestEffectiveFactAt: '2026-07-31T00:00:00.000Z',
+    latestReceiptAt: '2026-07-31T00:00:01.000Z',
+    staleAfterHours: 24,
+    isStale: false,
+  },
+  segment: { status: 'not_requested' },
+}
 
 function db(): SupabaseClient {
   const url = process.env.SUPABASE_URL
@@ -184,6 +222,44 @@ test.describe('the CLI result reads', () => {
       expect(read.body).toMatchObject({ ok: true, project: project.slug, key, version: 1 })
       expect(read.body.decisions.state).toBe('undecided')
 
+      // Record a decision through the ledger's own RPCs (running → stopped → decided), then read it back by key.
+      const row = created.data[0] as { experiment_id: string; version_id: string }
+      for (const target of ['running', 'stopped']) {
+        const moved = await client.rpc('transition_experiment_version', {
+          p_project_id: project.id,
+          p_experiment_id: row.experiment_id,
+          p_version_id: row.version_id,
+          p_target_status: target,
+          p_actor_user_id: userId,
+        })
+        if (moved.error) throw new Error(`could not move the version to ${target}: ${moved.error.message}`)
+      }
+      const recorded = await client.rpc('record_experiment_decision', {
+        p_project_id: project.id,
+        p_experiment_id: row.experiment_id,
+        p_version_id: row.version_id,
+        p_record_kind: 'decision',
+        p_outcome: 'keep_control',
+        p_chosen_variant_key: 'control',
+        p_rationale: 'No lift on the primary metric.',
+        p_analysis_snapshot: ANALYSIS,
+        p_actor_user_id: userId,
+        p_idempotency_key: crypto.randomUUID(),
+        p_supersedes_record_id: null,
+      })
+      if (recorded.error) throw new Error(`could not record the decision: ${recorded.error.message}`)
+      const decided = await get(
+        request,
+        token,
+        `/api/v1/cli/experiments/decision?project=${project.slug}&experiment=${key}`
+      )
+      expect(decided.status).toBe(200)
+      expect(decided.body.decisions.state).toBe('decided')
+      expect(decided.body.decisions.current).toMatchObject({
+        outcome: 'keep_control',
+        chosenVariantKey: 'control',
+      })
+
       const missing = await get(
         request,
         token,
@@ -207,13 +283,80 @@ test.describe('the CLI result reads', () => {
       const postgres = new PgClient({ connectionString: requireTestDatabaseUrl() })
       await postgres.connect()
       try {
+        await postgres.query('BEGIN')
+        await postgres.query('DELETE FROM public.projects WHERE id = $1', [project.id])
+        await postgres.query('DELETE FROM public.experiment_decision_records WHERE project_id = $1', [
+          project.id,
+        ])
         await postgres.query('DELETE FROM public.experiment_lifecycle_audit WHERE project_id = $1', [
           project.id,
         ])
-        await postgres.query('DELETE FROM public.projects WHERE id = $1', [project.id])
+        await postgres.query('COMMIT')
       } finally {
         await postgres.end()
       }
+      await client.from('project_members').delete().eq('user_id', userId)
+      await client.auth.admin.deleteUser(userId)
+    }
+  })
+
+  test('readings: a telemetry input past 1,000 events counts EVERY event (the paged read, fresh review #293)', async ({
+    request,
+  }) => {
+    const client = db()
+    const { userId, token } = await seedUser()
+    const { data: project, error } = await client
+      .from('projects')
+      .insert({
+        workspace_id: await specWorkspaceId(client),
+        slug: `cli-result-tel-${unique()}`,
+        api_key_hash: `h-${crypto.randomUUID()}`,
+      })
+      .select('id, slug')
+      .single()
+    if (error || !project) throw new Error(`could not create project fixture: ${error?.message}`)
+    try {
+      await addMember(userId, project.id, 'owner')
+      const synced = await request.post('/api/v1/cli/north-star', {
+        headers: { authorization: `Bearer ${token}` },
+        data: {
+          project: project.slug,
+          sync: {
+            metric: { key: 'spec_tel', name: 'Spec' },
+            inputs: [
+              {
+                key: 'spec_tel_input',
+                name: 'Spec telemetry',
+                valueSource: 'telemetry_event',
+                sourceEvent: 'spec_tel_evt',
+              },
+            ],
+          },
+        },
+      })
+      expect(synced.status()).toBe(200)
+      // 1,500 events over two days (900, then 600): more than one PostgREST page of 1,000.
+      const rows = Array.from({ length: 1500 }, (_, i) => ({
+        project_id: project.id,
+        user_id: `u${i}`,
+        event: 'spec_tel_evt',
+        created_at: i < 900 ? '2026-10-01T12:00:00Z' : '2026-10-02T12:00:00Z',
+      }))
+      for (let i = 0; i < rows.length; i += 500) {
+        const { error: insertError } = await client.from('events').insert(rows.slice(i, i + 500))
+        if (insertError) throw new Error(`could not seed events: ${insertError.message}`)
+      }
+      const read = await get(
+        request,
+        token,
+        `/api/v1/cli/north-star/readings?project=${project.slug}&input=spec_tel_input&to=2026-10-02`
+      )
+      expect(read.status).toBe(200)
+      const total = read.body.readings.reduce((sum: number, r: { value: number }) => sum + r.value, 0)
+      expect(total).toBe(1500)
+      expect(read.body.latest).toEqual({ date: '2026-10-02', value: 600 })
+    } finally {
+      await client.from('projects').delete().eq('id', project.id)
       await client.from('project_members').delete().eq('user_id', userId)
       await client.auth.admin.deleteUser(userId)
     }

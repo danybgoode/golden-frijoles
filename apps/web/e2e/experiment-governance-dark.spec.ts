@@ -18,6 +18,10 @@ test('governance management is nonexistent while OFF and legacy experiments rema
   expect((await request.get(
     '/api/v1/experiments/legacy-experiment/compare?version=1',
   )).status()).toBe(404)
+  // result-record S3 (fresh review, #293): the CLI's decision read is a governed seam too — gone before authentication.
+  const decision = await request.get('/api/v1/cli/experiments/decision?project=golden-beans-demo&experiment=x')
+  expect(decision.status()).toBe(404)
+  expect((await decision.json()).code).toBe('disabled')
   const local = createGrowthEngineClient({
     baseUrl: 'http://unused.invalid',
     apiKey: 'unused',
