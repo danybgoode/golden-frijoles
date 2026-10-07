@@ -3,7 +3,7 @@ epic: result-record
 sprint: 3
 title: "The agent fetches the number"
 risk: high
-phase: Building
+phase: In review
 stories_total: 3
 stories:
   - id: S3.1
@@ -12,25 +12,25 @@ stories:
     i_want: "to read a North Star input's readings and an experiment's decision record for my project"
     so_that: "I can bring the evidence instead of asking for it"
     risk: high
-    status: planned
+    status: done
   - id: S3.2
     title: "gf reads them, and so does the connector"
     as_a: "a founder's agent"
     i_want: "gf commands and connector tools for those two reads"
     so_that: "any agent, in the terminal or the Claude app, can fetch the number"
     risk: low
-    status: planned
+    status: done
   - id: S3.3
     title: "epic-read fetches the number itself"
     as_a: "a founder"
     i_want: "the read to arrive with the actual and its evidence already filled in"
     so_that: "all I do is approve"
     risk: low
-    status: planned
+    status: done
 ---
 # The result record — Sprint 3: The agent fetches the number
 
-**Status:** 🏗 In progress
+**Status:** 🟦 In review
 
 Amendment (Daniel, 2026-10-07): fetching the number is the value proposition; the CLI is the agent's surface. Lock
 D14–D20 in the [epic README](README.md#amendment--sprint-3-the-agent-fetches-the-number-daniel-2026-10-07).
