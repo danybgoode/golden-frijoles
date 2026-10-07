@@ -2130,3 +2130,19 @@ one-liner + why + date shape.
   measures block sequence, so a reordered page with the same skeleton still "matches". When contents move under an
   unchanged contract, say so where the row is pinned and put the re-approval to the product owner — a green gate is
   not an approval of the new picture.
+
+### Renaming on screen, and the guards around it (one-header-one-name, 2026-10-07)
+- **Rename the label, never the key, and assert both.** The board's stage names are stored values; renaming
+  `'To groom'` would have emptied a column silently. Route every display through one label function, keep the key in a
+  `data-` attribute, and have the spec assert the label and the key side by side, so neither can drift unseen.
+- **A source-scanning word guard has a shape; pin its blind spots as tests.** A regex over source can't see text
+  assembled at runtime, attribute strings or template literals. Recording each miss as an asserted `null` in the
+  guard's self-test makes widening it a decision rather than a discovery.
+- **A fallback that only some viewers see needs a blocking-gate test per viewer class.** The demo Hub's tab row (for
+  an anonymous visitor and a signed-in non-member) was first tested only in the browser project, which CI doesn't run.
+- **Format the files you edited, by name — never a glob or `git diff --name-only`.** Twice in one sprint a broad
+  `prettier --write` dragged 22 untouched specs into the diff, the second time re-formatting files just restored
+  (a restore makes them "changed"). The bloated diff pushed the PR past agy's input budget and its first review was
+  empty.
+- **Grep the mutated file before trusting a green mutation run.** The first "put the old name back" mutation edited
+  nothing (prettier had reflowed the line), and the guard's green meant nothing.

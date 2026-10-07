@@ -28,12 +28,11 @@ _a pitch is waiting at the approval gate._
 - [Analytics visualization — the charting-dependency decision (spike), then the layer](seeds/analytics-visualization-layer.md) — #14 · 01 Growth Engine · seed · Spike · risk: Low · appetite S · _docs: status ready_
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
 
-## Ready to build (14)
+## Ready to build (13)
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
 - [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #63 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
-- [One header and one name per thing](../02-commercial/one-header-one-name/README.md) — #64 · 02 Commercial · 3/6 stories · risk: Low · appetite M · _docs: status in-progress_
 - [The result record](../02-commercial/result-record/README.md) — #65 · 02 Commercial · 0/6 stories · risk: Low · appetite M · _docs: status scaffolded_
 - [One epic page](../02-commercial/one-epic-page/README.md) — #66 · 02 Commercial · 0/6 stories · risk: Low · appetite M · _docs: status scaffolded_
 - [Outcome report v2](../02-commercial/outcome-report-v2/README.md) — #67 · 02 Commercial · 0/6 stories · risk: Low · appetite M · _docs: status scaffolded_
@@ -55,10 +54,11 @@ _a work branch is on origin. Not in this committed file: `node scripts/build-ord
 
 _a PR is ready for review, or merged and waiting for its close-out. Not in this committed file: `node scripts/build-order.mjs --live` or the Hub board._
 
-## Shipped (58)
+## Shipped (59)
 
 _merged, deployed and closed._
 
+- [One header and one name per thing ✅](../02-commercial/one-header-one-name/README.md) — #64 · 02 Commercial · 6/6 stories · risk: Low · appetite M · _docs: status shipped_
 - [Account from the terminal ✅](../02-commercial/account-from-the-terminal/README.md) — #62 · 02 Commercial · 8/8 stories · risk: High · appetite L · _docs: status shipped_
 - [Connect: start where you are ✅](../02-commercial/connect-page/README.md) — #61 · 02 Commercial · 6/6 stories · risk: High · appetite M · _docs: status shipped_
 - [Fund at approval: the approval gate is the betting table](../09-platform-infra/fund-at-approval/README.md) — #60 · 09 Platform Infra · 6/6 stories · risk: Low · appetite S · _docs: status shipped_
