@@ -977,12 +977,38 @@ async function seedRoadmapFixture(db: SupabaseClient, projectId: string) {
         },
         {
           ...epic('fixture-design-rails', 'One design system, every surface', 'shipped', 2, '02-commercial'),
-          ...card('Shipped', { shipped_at: today }),
+          // one-epic-page S2 — a READ epic (the bean, the actual, "target was") whose flag key this project does not
+          // hold, so the page must say "not found" rather than borrow anyone else's flag.
+          ...card('Shipped', {
+            shipped_at: today,
+            hypothesis: 'One design system makes every surface feel like one product',
+            target_metric: 'surfaces_on_system',
+            target_from: 2,
+            target_to: 27,
+            read_date: today,
+            verdict: 'proven',
+            verdict_actual: 27,
+            verdict_evidence: 'https://example.com/design-coverage',
+            verdict_at: today,
+            flag_key: 'gb_e2e.no_such_flag',
+          }),
         },
         {
           ...epic('fixture-mockups', 'The mockups, as built', 'in-progress', 3, '02-commercial'),
           // one-epic-page S1.3 — a Building card with its sprints, so the Now panel has a sprint to name and a Wrap.
           ...card('Building', {
+            // one-epic-page S2 — a Building epic with a target, a quote and an actual, and a flag that EXISTS in this
+            // project's registry (the activity fixture's, never activated), so the page shows its state.
+            hypothesis: 'The mockups, as built, close the gap between design and product',
+            target_metric: 'routes_matching_mockups',
+            target_from: 10,
+            target_to: 22,
+            read_date: '2026-12-01',
+            quote_low_usd: 22,
+            quote_high_usd: 34,
+            quote_basis: 'M, n=8, p25–p75',
+            actual_usd: 17,
+            flag_key: ACTIVITY_FIXTURE_FLAG_KEY,
             sprints: [
               { n: 1, title: 'The first sprint', done: 3, total: 3 },
               { n: 2, title: 'The second sprint', done: 1, total: 3 },
@@ -994,6 +1020,7 @@ async function seedRoadmapFixture(db: SupabaseClient, projectId: string) {
           ...epic('fixture-unbet', 'An idea nobody has bet on yet', 'scaffolded', null, '01-platform'),
           ...card('Ready to build', {
             goal: 'So that the board has a Ready-to-build card with a kickoff to copy.',
+            flag_note: 'none. Risk low. Rollback is a revert.',
             sprints: [{ n: 1, title: 'The one sprint', done: 0, total: 2 }],
             links: {
               readme: 'Roadmap/01-platform/fixture-unbet/README.md',

@@ -33,6 +33,8 @@ const card = (over: Partial<BoardCard>): BoardCard => ({
   shippedAt: null,
   result: null,
   finops: null,
+  flagKey: null,
+  flagNote: null,
   ...over,
 })
 const texts = (c: BoardCard) => stageCommands(c, 'ledgerly').map((x) => x.text)
