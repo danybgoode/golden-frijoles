@@ -97,8 +97,11 @@ function rampOf(e: TargetedEpic): Ramp {
 function valueAt(base: number, ramps: Ramp[], t: number): number {
   let v = base
   for (const r of ramps) {
-    if (t <= r.start) continue
-    v += t >= r.end || r.end === r.start ? r.delta : (r.delta * (t - r.start)) / (r.end - r.start)
+    if (t < r.start) continue
+    // A zero-length ramp (read day on or before the ship day) is a step: the whole move lands on the ship day itself
+    // (codex round 2, #299 — skipping `t === start` left such a line stuck at `from`).
+    if (r.end === r.start || t >= r.end) v += r.delta
+    else v += (r.delta * (t - r.start)) / (r.end - r.start)
   }
   return v
 }

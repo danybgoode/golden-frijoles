@@ -189,3 +189,10 @@ test('no North Star registered says so, rather than "no targets"', () => {
     "No North Star is registered yet, so we can't say if it's on pace."
   )
 })
+
+test('a read day on or before the ship day is a step: the line reaches `to` on the ship day (codex round 2, #299)', () => {
+  for (const readDate of ['2026-09-01', '2026-08-15']) {
+    const line = metricLine(input([]), [epic({ readDate })], ['paid_on_time'])
+    assert.deepEqual(line.expected, [{ date: '2026-09-01', value: 70 }], readDate)
+  }
+})
