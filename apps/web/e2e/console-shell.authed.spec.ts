@@ -710,6 +710,28 @@ test.describe('the console shell', () => {
     await page.waitForURL(new RegExp(`/app/flags/${slug}/gb.e2e.owner`))
   })
 
+  // one-header-one-name S2.1 (D7) — ⌘K finds an EPIC of the active project by its name. The fixture's roadmap pushes
+  // "The mockups, as built" at stage Building; the row says so with its kind and stage, and ↵ opens the epic page.
+  test('⌘K finds an EPIC by its name, labelled "Epic · <stage>", and opens it', async ({ page }) => {
+    const slug = tenantSlug()
+    await page.goto('/app')
+    const epicsLanded = page.waitForResponse(
+      (response) => response.url().includes('/api/internal/epic-index/'),
+      {
+        timeout: 15_000,
+      }
+    )
+    await openPalette(page)
+    await epicsLanded
+    await page.keyboard.type('the mockups')
+    const option = page.locator('.command-palette [role="option"]', { hasText: 'The mockups, as built' })
+    await expect(option).toHaveCount(1)
+    await expect(option.locator('.command-palette__kind')).toHaveText('Epic')
+    await expect(option.locator('small')).toHaveText('Building')
+    await option.click()
+    await page.waitForURL(new RegExp(`/hub/${slug}/epic/fixture-mockups$`))
+  })
+
   test('⌘K still finds a SURFACE once features are in the list', async ({ page }) => {
     // The regression this guards is a merge that put 42 features in front of 13 surfaces and left no
     // way to reach a surface by name. Asserted through the browser because the ORDER is decided in
@@ -865,6 +887,30 @@ test.describe('the console shell', () => {
 // A DISPOSABLE signed-in person (helpers/disposable-session.ts), never the shared fixture user: handing that user a
 // second project would change what every other authed spec running in parallel sees on `/app` (fresh reviewer, #221).
 test.describe('the grouped project switcher', () => {
+  // one-header-one-name S2.1 (D7) — ⌘K finds another PRODUCT by name, from the switcher's own membership list, and
+  // switches to it. The disposable person holds two projects; a project they do not belong to never appears.
+  test('⌘K finds another product, labelled "Product", and ↵ switches to it', async ({ browser }) => {
+    const session = await disposableSession(browser, 'owner')
+    try {
+      const { page } = session
+      const other = await session.addProject('member', 'palette product')
+      await page.goto('/app')
+      await openPalette(page)
+      await page.keyboard.type(other.slug)
+      const option = page.locator('.command-palette [role="option"]', { hasText: other.slug })
+      await expect(option).toHaveCount(1)
+      await expect(option.locator('.command-palette__kind')).toHaveText('Product')
+      await page.keyboard.press('Enter')
+      await page.waitForURL(new RegExp(`/app\\?project=${other.slug}$`))
+      // The shared fixture tenant is not this person's: it must never be offered.
+      await openPalette(page)
+      await page.keyboard.type(tenantSlug())
+      await expect(page.locator('.command-palette [role="option"]', { hasText: 'Product' })).toHaveCount(0)
+    } finally {
+      await session.cleanup()
+    }
+  })
+
   test('two projects in two workspaces render as two named groups, each row "Project | Role", one link per project', async ({
     browser,
   }) => {

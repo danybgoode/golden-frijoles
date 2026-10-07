@@ -36,8 +36,12 @@ registerHooks({
 })
 
 const {
+  PALETTE_KIND_LABEL,
+  buildEpicEntries,
   buildFeatureEntries,
   buildPaletteEntries,
+  buildProductEntries,
+  projectEpicIndex,
   filterPaletteEntries,
   movePaletteCursor,
   projectFeatureIndex,
@@ -270,4 +274,88 @@ test('surfaces are still reachable once features are in the list', () => {
   const flagsSurface = filterPaletteEntries(all, 'Flag history')
   assert.equal(flagsSurface.length, 1)
   assert.equal(flagsSurface[0].kind, 'surface')
+})
+
+// ── one-header-one-name · Sprint 2, Story 2.1 (epic README D7) — epics and products ───────────────────────────────
+
+const roadmapRows = [
+  { grain: 'Epic', slug: 'overdue-reminders', name: 'Overdue reminders', stage: 'Building' },
+  {
+    grain: 'Sprint',
+    slug: 'overdue-reminders--s1',
+    name: 'S1',
+    stage: 'Building',
+    epic_slug: 'overdue-reminders',
+  },
+  { grain: 'Seed', slug: 'dark-mode', name: 'Dark mode', stage: 'To groom' },
+  { grain: 'Epic', slug: 'cms-integration', name: 'CMS integration', stage: 'Ready to build' },
+  { grain: 'Epic', slug: 'pre-stage', name: 'Pushed before stages', stage: null },
+] as unknown as Parameters<typeof projectEpicIndex>[0]
+
+test('the epic index is the Epic grain only — sprints and seeds are not epics', () => {
+  assert.deepEqual(
+    projectEpicIndex(roadmapRows).map((epic) => epic.slug),
+    ['overdue-reminders', 'cms-integration', 'pre-stage']
+  )
+})
+
+test('an epic row reads "Epic · <stage>" in the SCREEN word, and opens the epic page', () => {
+  const [building, ready, unstaged] = buildEpicEntries(projectEpicIndex(roadmapRows), 'ledgerly')
+  assert.equal(PALETTE_KIND_LABEL[building.kind], 'Epic')
+  assert.equal(building.label, 'Overdue reminders')
+  assert.equal(building.hint, 'Building')
+  assert.equal(building.href, '/hub/ledgerly/epic/overdue-reminders')
+  // The stored key is `Ready to build`; the screen says Ready (D8).
+  assert.equal(ready.hint, 'Ready')
+  // A roadmap pushed before stages existed has no stage to show, and says nothing rather than "null".
+  assert.equal(unstaged.hint, '')
+})
+
+test('typing part of an epic’s name finds it, beside a flag that shares the word', () => {
+  const entries = [
+    ...buildFeatureEntries([{ key: 'overdue_reminders_enabled', description: '' }], 'ledgerly'),
+    ...buildEpicEntries(projectEpicIndex(roadmapRows), 'ledgerly'),
+  ]
+  assert.deepEqual(
+    filterPaletteEntries(entries, 'overdue rem').map((entry) => entry.kind),
+    ['epic']
+  )
+  assert.deepEqual(
+    filterPaletteEntries(entries, 'overdue').map((entry) => entry.kind),
+    ['feature', 'epic']
+  )
+})
+
+test('products are the switcher’s list minus the one you are in, each opening that product’s Today', () => {
+  const products = buildProductEntries([
+    { slug: 'ledgerly', href: '/app?project=ledgerly', current: true },
+    { slug: 'invoicely', href: '/app?project=invoicely', current: false },
+  ])
+  assert.deepEqual(products, [
+    {
+      kind: 'product',
+      id: 'product:invoicely',
+      label: 'invoicely',
+      hint: '',
+      href: '/app?project=invoicely',
+    },
+  ])
+  assert.equal(PALETTE_KIND_LABEL.product, 'Product')
+})
+
+// Tenancy, as a property of the function: it can only ever list what the shell handed it — the viewer's own
+// memberships (`getUserProjects`, workspace-filtered). There is no read in it to widen.
+test('no product appears that the membership list did not contain', () => {
+  assert.deepEqual(buildProductEntries([]), [])
+  const given = [{ slug: 'mine', href: '/app?project=mine', current: false }]
+  assert.deepEqual(
+    buildProductEntries(given).map((entry) => entry.label),
+    ['mine']
+  )
+})
+
+test('every kind has a word of its own, so the four can be told apart', () => {
+  const words = Object.values(PALETTE_KIND_LABEL)
+  assert.equal(new Set(words).size, words.length)
+  assert.deepEqual(Object.keys(PALETTE_KIND_LABEL).sort(), ['epic', 'feature', 'product', 'surface'])
 })
