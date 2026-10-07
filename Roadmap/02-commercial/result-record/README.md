@@ -110,7 +110,8 @@ shipped epic would raise 54 "read due" lines on day one: that is the bulk backfi
   (finite numbers, either sign), `read_date` (`YYYY-MM-DD`), `verdict` ∈ `VERDICTS` = proven · disproven · unclear,
   `verdict_actual` (finite number), `verdict_evidence` (string), `verdict_at` (`YYYY-MM-DD`). `validateResultFields(fm)`
   reports `contract-result-invalid` and is called from `validateEpicFrontmatter`, beside `validateFinopsFields`. All
-  absent is fine (no target). Also refused: one of `target_from`/`target_to` without the other; a from equal to its
+  absent is fine (no target). **A target is `target_metric` + `target_from` + `target_to` together** (fresh review,
+  #290: a partial one would never come due); `read_date` only with them. Also refused: a from equal to its
   to; a date that is not a real calendar day; any `verdict_*` field without a `verdict`; a `verdict` without
   `verdict_at` and `verdict_evidence`; proven or disproven without a numeric `verdict_actual` and a pointer (D2).
 - **D2 · The evidence pointer, offline, is a grammar.** `EVIDENCE_POINTER_RE` (in the contract): an `https://` URL,
