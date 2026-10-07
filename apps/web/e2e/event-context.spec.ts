@@ -566,12 +566,14 @@ test('the DB CHECK constraints enforce the contract for a NON-route writer too',
   expect(noVersion.error).not.toBeNull()
 
   // A control character in an id.
-  const ctrl = await db.from('events').insert({
-    ...base,
-    context_version: 1,
-    subject_type: 'merchant',
-    subject_id: `m${String.fromCharCode(7)}bell`,
-  })
+  const ctrl = await db
+    .from('events')
+    .insert({
+      ...base,
+      context_version: 1,
+      subject_type: 'merchant',
+      subject_id: `m${String.fromCharCode(7)}bell`,
+    })
   expect(ctrl.error).not.toBeNull()
 
   // The valid shape still inserts — the constraints reject bad data, not all data.

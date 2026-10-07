@@ -5,12 +5,7 @@ import { test, expect } from '@playwright/test'
 // events via /v1/track, then asserts both the JSON endpoint and the SSR page's HTML.
 const PROJECT_ONE_KEY = 'local-test-key-do-not-use-in-prod'
 
-async function track(
-  request: import('@playwright/test').APIRequestContext,
-  userId: string,
-  event: string,
-  featureId: string
-) {
+async function track(request: import('@playwright/test').APIRequestContext, userId: string, event: string, featureId: string) {
   const res = await request.post('/api/v1/track', {
     headers: { Authorization: `Bearer ${PROJECT_ONE_KEY}` },
     data: { userId, event, featureId },
@@ -69,9 +64,7 @@ test('funnel endpoint + page reflect a real event sequence for a registered feat
   expect(pageRes.headers()['location']).toContain('/login')
 })
 
-test('the demo funnel page 404s for an unregistered feature (anonymous carve-out still resolves)', async ({
-  request,
-}) => {
+test('the demo funnel page 404s for an unregistered feature (anonymous carve-out still resolves)', async ({ request }) => {
   // The demo project renders anonymously, so a missing feature reaches notFound() (404) rather than
   // the /login bounce a non-demo slug would get — proving both the carve-out and the 404 path.
   const res = await request.get(`/app/funnel/golden-beans-demo/spec-unregistered-page-${Date.now()}`, {

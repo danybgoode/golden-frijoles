@@ -62,21 +62,18 @@ function row(overrides: Partial<ExperimentDecisionRow> = {}): ExperimentDecision
 }
 
 test('human command parser closes lifecycle, correction-chain, and chosen-variant states', () => {
-  const initial = parseExperimentDecisionCommand(
-    {
-      recordKind: 'decision',
-      outcome: 'ship_treatment',
-      chosenVariantKey: 'new-copy',
-      rationale: '  Primary improved and trust checks are clear.  ',
-      supersedesRecordId: null,
-      idempotencyKey: crypto.randomUUID(),
-    },
-    {
-      definition: DEFINITION,
-      lifecycle: 'stopped',
-      currentDecisionId: null,
-    }
-  )
+  const initial = parseExperimentDecisionCommand({
+    recordKind: 'decision',
+    outcome: 'ship_treatment',
+    chosenVariantKey: 'new-copy',
+    rationale: '  Primary improved and trust checks are clear.  ',
+    supersedesRecordId: null,
+    idempotencyKey: crypto.randomUUID(),
+  }, {
+    definition: DEFINITION,
+    lifecycle: 'stopped',
+    currentDecisionId: null,
+  })
   expect(initial).toMatchObject({
     ok: true,
     command: {
@@ -88,60 +85,45 @@ test('human command parser closes lifecycle, correction-chain, and chosen-varian
     },
   })
 
-  expect(
-    parseExperimentDecisionCommand(
-      {
-        recordKind: 'decision',
-        outcome: 'ship_treatment',
-        chosenVariantKey: 'control',
-        rationale: 'Control is not a treatment.',
-        supersedesRecordId: null,
-        idempotencyKey: crypto.randomUUID(),
-      },
-      {
-        definition: DEFINITION,
-        lifecycle: 'stopped',
-        currentDecisionId: null,
-      }
-    ).ok
-  ).toBe(false)
+  expect(parseExperimentDecisionCommand({
+    recordKind: 'decision',
+    outcome: 'ship_treatment',
+    chosenVariantKey: 'control',
+    rationale: 'Control is not a treatment.',
+    supersedesRecordId: null,
+    idempotencyKey: crypto.randomUUID(),
+  }, {
+    definition: DEFINITION,
+    lifecycle: 'stopped',
+    currentDecisionId: null,
+  }).ok).toBe(false)
 
   const current = crypto.randomUUID()
-  expect(
-    parseExperimentDecisionCommand(
-      {
-        recordKind: 'correction',
-        outcome: 'inconclusive',
-        chosenVariantKey: null,
-        rationale: 'Late-arriving evidence changed the interpretation.',
-        supersedesRecordId: crypto.randomUUID(),
-        idempotencyKey: crypto.randomUUID(),
-      },
-      {
-        definition: DEFINITION,
-        lifecycle: 'decided',
-        currentDecisionId: current,
-      }
-    ).ok
-  ).toBe(false)
+  expect(parseExperimentDecisionCommand({
+    recordKind: 'correction',
+    outcome: 'inconclusive',
+    chosenVariantKey: null,
+    rationale: 'Late-arriving evidence changed the interpretation.',
+    supersedesRecordId: crypto.randomUUID(),
+    idempotencyKey: crypto.randomUUID(),
+  }, {
+    definition: DEFINITION,
+    lifecycle: 'decided',
+    currentDecisionId: current,
+  }).ok).toBe(false)
 
-  expect(
-    parseExperimentDecisionCommand(
-      {
-        recordKind: 'correction',
-        outcome: 'inconclusive',
-        chosenVariantKey: null,
-        rationale: 'Late-arriving evidence changed the interpretation.',
-        supersedesRecordId: current,
-        idempotencyKey: crypto.randomUUID(),
-      },
-      {
-        definition: DEFINITION,
-        lifecycle: 'decided',
-        currentDecisionId: current,
-      }
-    ).ok
-  ).toBe(true)
+  expect(parseExperimentDecisionCommand({
+    recordKind: 'correction',
+    outcome: 'inconclusive',
+    chosenVariantKey: null,
+    rationale: 'Late-arriving evidence changed the interpretation.',
+    supersedesRecordId: current,
+    idempotencyKey: crypto.randomUUID(),
+  }, {
+    definition: DEFINITION,
+    lifecycle: 'decided',
+    currentDecisionId: current,
+  }).ok).toBe(true)
 })
 
 test('server snapshot boundary rejects raw subject/tag payloads and oversized evidence', () => {
@@ -152,33 +134,20 @@ test('server snapshot boundary rejects raw subject/tag payloads and oversized ev
     decisionReady: true,
     integrityReady: true,
   })
-  expect(() =>
-    prepareExperimentDecisionSnapshot(
-      {
-        ...SNAPSHOT,
-        leaked: { subjectId: 'merchant-123' },
-      } as unknown as ExperimentAnalysisResult,
-      capturedAt
-    )
-  ).toThrow(/raw event identity/)
-  expect(() =>
-    prepareExperimentDecisionSnapshot(
-      {
-        ...SNAPSHOT,
-        leaked: { tags: { contact_email: 'private@example.test' } },
-      } as unknown as ExperimentAnalysisResult,
-      capturedAt
-    )
-  ).toThrow(/raw event identity/)
-  expect(() =>
-    prepareExperimentDecisionSnapshot(
-      {
-        ...SNAPSHOT,
-        oversized: 'x'.repeat(256 * 1024),
-      } as unknown as ExperimentAnalysisResult,
-      capturedAt
-    )
-  ).toThrow(ExperimentDecisionResourceLimitError)
+  expect(() => prepareExperimentDecisionSnapshot({
+    ...SNAPSHOT,
+    leaked: { subjectId: 'merchant-123' },
+  } as unknown as ExperimentAnalysisResult, capturedAt)).toThrow(/raw event identity/)
+  expect(() => prepareExperimentDecisionSnapshot({
+    ...SNAPSHOT,
+    leaked: { tags: { contact_email: 'private@example.test' } },
+  } as unknown as ExperimentAnalysisResult, capturedAt)).toThrow(/raw event identity/)
+  expect(() => prepareExperimentDecisionSnapshot({
+    ...SNAPSHOT,
+    oversized: 'x'.repeat(256 * 1024),
+  } as unknown as ExperimentAnalysisResult, capturedAt)).toThrow(
+    ExperimentDecisionResourceLimitError,
+  )
 })
 
 test('shared read model exposes actor/time and current correction without idempotency or raw facts', () => {
@@ -216,16 +185,14 @@ test('shared read model exposes actor/time and current correction without idempo
 
 test('shared read model fails closed before serializing cumulative decision evidence over its bound', () => {
   const payload = 'x'.repeat(235_000)
-  const rows = Array.from({ length: 21 }, (_, index) =>
-    row({
-      id: crypto.randomUUID(),
-      ordinal: index + 1,
-      record_kind: index === 0 ? 'decision' : 'correction',
-      outcome: 'inconclusive',
-      chosen_variant_key: null,
-      supersedes_record_id: index === 0 ? null : '00000000-0000-4000-8000-000000000001',
-      analysis_snapshot: { ...SNAPSHOT, boundedPayload: payload },
-    })
-  )
+  const rows = Array.from({ length: 21 }, (_, index) => row({
+    id: crypto.randomUUID(),
+    ordinal: index + 1,
+    record_kind: index === 0 ? 'decision' : 'correction',
+    outcome: 'inconclusive',
+    chosen_variant_key: null,
+    supersedes_record_id: index === 0 ? null : '00000000-0000-4000-8000-000000000001',
+    analysis_snapshot: { ...SNAPSHOT, boundedPayload: payload },
+  }))
   expect(() => mapExperimentDecisionRows(rows)).toThrow(ExperimentDecisionResourceLimitError)
 })

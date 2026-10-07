@@ -7,12 +7,7 @@ import { test, expect } from '@playwright/test'
 // then asserts both the JSON endpoint and the SSR page reflect the resulting series.
 const PROJECT_ONE_KEY = 'local-test-key-do-not-use-in-prod'
 
-async function track(
-  request: import('@playwright/test').APIRequestContext,
-  userId: string,
-  event: string,
-  featureId: string
-) {
+async function track(request: import('@playwright/test').APIRequestContext, userId: string, event: string, featureId: string) {
   const res = await request.post('/api/v1/track', {
     headers: { Authorization: `Bearer ${PROJECT_ONE_KEY}` },
     data: { userId, event, featureId },
@@ -41,12 +36,7 @@ test('impact endpoint + page reflect real telemetry AND real pushed-revenue seri
     data: {
       metric: { key: `spec-impact-metric-${suffix}`, name: 'Payable Sellers (spec)' },
       inputs: [
-        {
-          key: telemetryInputKey,
-          name: 'Shares',
-          valueSource: 'telemetry_event',
-          sourceEvent: telemetryEvent,
-        },
+        { key: telemetryInputKey, name: 'Shares', valueSource: 'telemetry_event', sourceEvent: telemetryEvent },
         { key: revenueInputKey, name: 'Revenue', valueSource: 'external_push' },
       ],
     },
@@ -104,9 +94,7 @@ test('impact endpoint + page reflect real telemetry AND real pushed-revenue seri
   expect(pageRes.headers()['location']).toContain('/login')
 })
 
-test('the demo impact page 404s for a feature with no linked inputs (anonymous carve-out still resolves)', async ({
-  request,
-}) => {
+test('the demo impact page 404s for a feature with no linked inputs (anonymous carve-out still resolves)', async ({ request }) => {
   const res = await request.get(`/app/impact/golden-beans-demo/spec-unlinked-page-${Date.now()}`, {
     maxRedirects: 0,
   })

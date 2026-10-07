@@ -19,7 +19,7 @@ function dbClient() {
 async function defineInput(
   request: import('@playwright/test').APIRequestContext,
   inputKey: string,
-  valueSource: 'external_push' | 'telemetry_event'
+  valueSource: 'external_push' | 'telemetry_event',
 ) {
   const res = await request.post('/api/v1/north-star/sync', {
     headers: { Authorization: `Bearer ${PROJECT_ONE_KEY}` },
@@ -70,9 +70,7 @@ test('pushing to an unknown input → 404', async ({ request }) => {
   expect(res.status()).toBe(404)
 })
 
-test('pushing to a telemetry_event-sourced input → 400 (those are computed, never pushed)', async ({
-  request,
-}) => {
+test('pushing to a telemetry_event-sourced input → 400 (those are computed, never pushed)', async ({ request }) => {
   const inputKey = `values-spec-telemetry-${Date.now()}`
   await defineInput(request, inputKey, 'telemetry_event')
   const res = await request.post(`/api/v1/inputs/${inputKey}/values`, {

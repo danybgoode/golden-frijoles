@@ -6,7 +6,10 @@ import {
   postgresJsonbTextByteLength,
   type JourneyCreateCommandDependencies,
 } from '@/lib/journey-create-command'
-import { canActivateJourneyVersion, type JourneyRegistryView } from '@/lib/journey-registry-view'
+import {
+  canActivateJourneyVersion,
+  type JourneyRegistryView,
+} from '@/lib/journey-registry-view'
 
 // entity-journeys-projections · PR #17 review fixes.
 // These are pure command/display checks: no Next runtime, session fixture or brittle source-text
@@ -44,9 +47,8 @@ test('non-owners cannot distinguish valid from malformed journey create payloads
     [null, null],
   ]
   for (const [key, definition] of payloads) {
-    await expect(createJourneyVersionAfterGate('project-one', key, definition, dependencies)).rejects.toBe(
-      denied
-    )
+    await expect(createJourneyVersionAfterGate('project-one', key, definition, dependencies))
+      .rejects.toBe(denied)
   }
   expect(ownershipChecks).toBe(payloads.length)
   expect(creates).toBe(0)
@@ -71,16 +73,12 @@ test('an authorized owner reaches validation and the resolved identity scopes cr
     error: 'Journey key must be lower_snake_case (1-64 characters).',
   })
 
-  expect(
-    (
-      await createJourneyVersionAfterGate(
-        'project-one',
-        'merchant_activation',
-        '🚀'.repeat(MAX_JOURNEY_DEFINITION_BYTES),
-        dependencies
-      )
-    ).result
-  ).toEqual({
+  expect((await createJourneyVersionAfterGate(
+    'project-one',
+    'merchant_activation',
+    '🚀'.repeat(MAX_JOURNEY_DEFINITION_BYTES),
+    dependencies,
+  )).result).toEqual({
     ok: false,
     error: 'Definition is too large (maximum 32 KiB).',
   })
@@ -106,47 +104,38 @@ test('an authorized owner reaches validation and the resolved identity scopes cr
   })
   expect(Buffer.byteLength(nearLimit, 'utf8')).toBeLessThanOrEqual(MAX_JOURNEY_DEFINITION_BYTES)
   expect(postgresJsonbTextByteLength(JSON.parse(nearLimit))).toBeGreaterThan(MAX_JOURNEY_DEFINITION_BYTES)
-  expect(
-    (await createJourneyVersionAfterGate('project-one', 'merchant_activation', nearLimit, dependencies))
-      .result
-  ).toEqual({
+  expect((await createJourneyVersionAfterGate(
+    'project-one',
+    'merchant_activation',
+    nearLimit,
+    dependencies,
+  )).result).toEqual({
     ok: false,
     error: 'Definition is too large (maximum 32 KiB).',
   })
 
   for (const invalidKey of [null, undefined, 42, {}]) {
-    expect(
-      (await createJourneyVersionAfterGate('project-one', invalidKey, VALID_DEFINITION, dependencies)).result
-    ).toEqual({ ok: false, error: 'Journey key must be lower_snake_case (1-64 characters).' })
+    expect((await createJourneyVersionAfterGate('project-one', invalidKey, VALID_DEFINITION, dependencies)).result)
+      .toEqual({ ok: false, error: 'Journey key must be lower_snake_case (1-64 characters).' })
   }
   for (const invalidDefinition of [null, undefined, 42, {}]) {
-    expect(
-      (
-        await createJourneyVersionAfterGate(
-          'project-one',
-          'merchant_activation',
-          invalidDefinition,
-          dependencies
-        )
-      ).result
-    ).toEqual({ ok: false, error: 'Definition must be a JSON string.' })
+    expect((await createJourneyVersionAfterGate('project-one', 'merchant_activation', invalidDefinition, dependencies)).result)
+      .toEqual({ ok: false, error: 'Definition must be a JSON string.' })
   }
 
   const created = await createJourneyVersionAfterGate(
     'project-one',
     'merchant_activation',
     VALID_DEFINITION,
-    dependencies
+    dependencies,
   )
   expect(created.result).toMatchObject({ ok: true, version: 1 })
-  expect(calls).toEqual([
-    [
-      'project-1',
-      'merchant_activation',
-      { entityType: 'merchant', stages: [{ key: 'signed_up', event: 'merchant_signed_up' }] },
-      'owner-1',
-    ],
-  ])
+  expect(calls).toEqual([[
+    'project-1',
+    'merchant_activation',
+    { entityType: 'merchant', stages: [{ key: 'signed_up', event: 'merchant_signed_up' }] },
+    'owner-1',
+  ]])
 })
 
 test('only drafts newer than the active journey version remain actionable', () => {
@@ -158,36 +147,9 @@ test('only drafts newer than the active journey version remain actionable', () =
     createdBy: 'owner-1',
     createdAt: '2026-07-22T00:00:00.000Z',
     versions: [
-      {
-        id: 'version-4',
-        version: 4,
-        definition,
-        createdBy: 'owner-1',
-        createdAt: '2026-07-22T04:00:00.000Z',
-        activatedBy: null,
-        activatedAt: null,
-        state: 'draft',
-      },
-      {
-        id: 'version-3',
-        version: 3,
-        definition,
-        createdBy: 'owner-1',
-        createdAt: '2026-07-22T03:00:00.000Z',
-        activatedBy: 'owner-1',
-        activatedAt: '2026-07-22T03:30:00.000Z',
-        state: 'active',
-      },
-      {
-        id: 'version-2',
-        version: 2,
-        definition,
-        createdBy: 'owner-1',
-        createdAt: '2026-07-22T02:00:00.000Z',
-        activatedBy: null,
-        activatedAt: null,
-        state: 'draft',
-      },
+      { id: 'version-4', version: 4, definition, createdBy: 'owner-1', createdAt: '2026-07-22T04:00:00.000Z', activatedBy: null, activatedAt: null, state: 'draft' },
+      { id: 'version-3', version: 3, definition, createdBy: 'owner-1', createdAt: '2026-07-22T03:00:00.000Z', activatedBy: 'owner-1', activatedAt: '2026-07-22T03:30:00.000Z', state: 'active' },
+      { id: 'version-2', version: 2, definition, createdBy: 'owner-1', createdAt: '2026-07-22T02:00:00.000Z', activatedBy: null, activatedAt: null, state: 'draft' },
     ],
   }
   expect(canActivateJourneyVersion(registry, registry.versions[0])).toBe(true)

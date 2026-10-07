@@ -36,7 +36,11 @@ test.describe('test database cleanup guard', () => {
   })
 
   test('also refuses a mixed environment whose service-role API target is not local Supabase', () => {
-    for (const url of ['http://127.0.0.1:54321', 'http://localhost:54321/', 'http://[::1]:54321']) {
+    for (const url of [
+      'http://127.0.0.1:54321',
+      'http://localhost:54321/',
+      'http://[::1]:54321',
+    ]) {
       expect(requireLocalSupabaseApiUrl({ SUPABASE_URL: url })).toBe(url)
     }
 

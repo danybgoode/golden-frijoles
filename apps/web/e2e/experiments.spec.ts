@@ -14,12 +14,7 @@ async function expose(request: APIRequestContext, userId: string, experimentKey:
   expect(res.status()).toBe(201)
 }
 
-async function convert(
-  request: APIRequestContext,
-  userId: string,
-  experimentKey: string,
-  metricEvent: string
-) {
+async function convert(request: APIRequestContext, userId: string, experimentKey: string, metricEvent: string) {
   const res = await request.post('/api/v1/track', {
     headers: { Authorization: `Bearer ${PROJECT_ONE_KEY}` },
     data: { userId, event: metricEvent, featureId: experimentKey },
@@ -48,9 +43,7 @@ test('GET /v1/experiments/:key/compare without metricEvent → 400', async ({ re
   expect(body.ok).toBe(false)
 })
 
-test('an experiment key with no exposure events → 200, honest empty state (not a 404)', async ({
-  request,
-}) => {
+test('an experiment key with no exposure events → 200, honest empty state (not a 404)', async ({ request }) => {
   const experimentKey = `spec-experiment-empty-${Date.now()}`
   const res = await request.get(`/api/v1/experiments/${experimentKey}/compare?metricEvent=spec_conversion`, {
     headers: { Authorization: `Bearer ${PROJECT_ONE_KEY}` },
@@ -65,15 +58,13 @@ test('an experiment key with no exposure events → 200, honest empty state (not
   // /login. The endpoint above already asserts the honest empty state at the api level.
   const pageRes = await request.get(
     `/app/experiments/project-one/${experimentKey}?metricEvent=spec_conversion`,
-    { maxRedirects: 0 }
+    { maxRedirects: 0 },
   )
   expect([302, 307]).toContain(pageRes.status())
   expect(pageRes.headers()['location']).toContain('/login')
 })
 
-test('comparison endpoint + page compute basic lift from real exposure + conversion events', async ({
-  request,
-}) => {
+test('comparison endpoint + page compute basic lift from real exposure + conversion events', async ({ request }) => {
   const experimentKey = `spec-experiment-lift-${Date.now()}`
   const metricEvent = 'spec_conversion'
 
@@ -106,15 +97,13 @@ test('comparison endpoint + page compute basic lift from real exposure + convers
   // Daniel — a non-demo project's page bounces to /login when unauthed.
   const pageRes = await request.get(
     `/app/experiments/project-one/${experimentKey}?metricEvent=${metricEvent}`,
-    { maxRedirects: 0 }
+    { maxRedirects: 0 },
   )
   expect([302, 307]).toContain(pageRes.status())
   expect(pageRes.headers()['location']).toContain('/login')
 })
 
-test('conversions are counted even when the metric event carries no featureId at all', async ({
-  request,
-}) => {
+test('conversions are counted even when the metric event carries no featureId at all', async ({ request }) => {
   const experimentKey = `spec-experiment-untagged-${Date.now()}`
   const metricEvent = `spec_untagged_conversion_${Date.now()}`
 

@@ -7,8 +7,7 @@ import {
   TIENDAS_FUNDADORAS_DEFINITION,
 } from './_fixtures/tiendas-fundadoras-experiment'
 
-const PII_FIELD =
-  /^(?:name|full_?name|email|phone|telephone|whatsapp|address|contact|contact_?form|form_?data|notes?)$/i
+const PII_FIELD = /^(?:name|full_?name|email|phone|telephone|whatsapp|address|contact|contact_?form|form_?data|notes?)$/i
 const EMAIL_VALUE = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i
 const PHONE_VALUE = /(?:\+\d{1,3}[\s.-]?)?(?:\(?\d{2,4}\)?[\s.-]?)\d{3,4}[\s.-]?\d{4}\b/
 
@@ -44,13 +43,17 @@ test('Tiendas Fundadoras fixtures preserve local assignment and canonical untagg
     const applicationEvents = fixture.facts.filter((fact) => fact.event !== 'experiment_exposed')
 
     for (const fact of exposures) {
-      const assignment = sdk.bucket(TIENDAS_FUNDADORAS_CONTRACT.experimentKey, variants, {
-        definitionVersion: TIENDAS_FUNDADORAS_CONTRACT.definitionVersion,
-        assignmentEntity: {
-          type: TIENDAS_FUNDADORAS_CONTRACT.assignmentEntityType,
-          id: fact.subjectId!,
+      const assignment = sdk.bucket(
+        TIENDAS_FUNDADORAS_CONTRACT.experimentKey,
+        variants,
+        {
+          definitionVersion: TIENDAS_FUNDADORAS_CONTRACT.definitionVersion,
+          assignmentEntity: {
+            type: TIENDAS_FUNDADORAS_CONTRACT.assignmentEntityType,
+            id: fact.subjectId!,
+          },
         },
-      })
+      )
       expect(assignment).toEqual({ ok: true, variant: fact.tags?.variant })
     }
     expect(applicationEvents.length).toBeGreaterThan(0)
