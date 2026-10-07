@@ -58,7 +58,7 @@ independently shippable slice of value.
 - ✅ [Flag control plane + Miyagi migration + resilience/SecOps](01-growth-engine/flag-serving-and-prd-g/README.md)
   (typed/versioned flag registry · local snapshot provider · complete 40-key Miyagi cutover · closed
   resilience/security scenarios · policy-bound circuit breakers · generic project catalog sync ·
-  discoverable Flags/Tasks) — Golden authority is live in both Miyagi services on snapshot `47`; the
+  discoverable Flags/Agent queue) — Golden authority is live in both Miyagi services on snapshot `47`; the
   owned-shop feature remains ON behind its normal Golden-managed killswitch, the internal production
   exercise and manual/automatic protective transitions are evidenced, and all three proof-only gates
   are back OFF. The authenticated browser walkthrough was unavailable to this session; HTTP
@@ -108,7 +108,7 @@ independently shippable slice of value.
   committed floor that fails a PR which lowers it. Every disclosure on a rebuilt surface is gone and
   **no capability went with them** (journey create+activate, experiment create/transition/bind,
   scenario launch+stop and delivery replay all still work, from the approved wizard shape as a modal).
-  Two screens that never existed were built — a **North Star** Measure surface and **Activity's**
+  Two screens that never existed were built — a **North Star** Measure surface and **Flag history's**
   pagination — and `CONSOLE_SHELL_ENABLED` is deleted from the repository and every Vercel
   environment. **Live in production** (2026-09-10) — walked through signed-in on goldenfrijoles.com,
   including every `+ New …` opening the approved wizard shape as a modal (PR #140).

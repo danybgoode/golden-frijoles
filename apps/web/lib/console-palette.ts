@@ -42,7 +42,7 @@ export type PaletteEntry = {
 /** The word each row's kind shows, so a reader can tell the Flags PAGE from a flag, an epic and a product apart. */
 export const PALETTE_KIND_LABEL: Record<PaletteEntry['kind'], string> = {
   surface: 'Go to',
-  feature: 'Feature',
+  feature: 'Flag', // one-header-one-name D8: Features → Flags
   epic: 'Epic',
   product: 'Product',
 }

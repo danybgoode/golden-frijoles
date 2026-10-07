@@ -146,7 +146,7 @@ Builders cite these; they are not restated in the sprint files. Each was read of
   the stage words fail only as JSX text, because they are legal as keys in comparisons. A mutation check (put
   "Pod report" back) is run and recorded.
 - **D10 — Approved surfaces are not edited.** `design-system/surfaces/hub-board*.surface` still say "To groom …
-  Ready to build" in their tiles line. The gate measures block kinds and counts, not words
+  Ready to build" in their tiles line, and `hub-roadmap-areas.surface` in its note line (fresh reviewer, #288). The gate measures block kinds and counts, not words
   (`STATE-CONTRACT.json` → `hub-board`: `tiles count 6`), so the rename stays green without touching an approved hash.
   Per LEARNINGS (connect-page: *a structural contract can be satisfied by a different page*), the words drifting
   under an unchanged contract is said here and put to Daniel at close: re-approving the six board surfaces with the

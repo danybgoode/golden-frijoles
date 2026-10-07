@@ -40,10 +40,13 @@ import type { ProjectSurfaceLink } from '@/lib/project-route-inventory'
  * registry's 5 round trips and ~16 KB on every signed-in page load to serve a control most sessions
  * never press. **`/app` route load cost is unchanged: zero added queries, zero added bytes.**
  */
+// A module constant, not `[]` in the signature: a fresh array each render would defeat the `useMemo` below.
+const NO_PRODUCTS: readonly { slug: string; href: string; current: boolean }[] = []
+
 export function CommandPalette({
   links,
   projectSlug,
-  products = [],
+  products = NO_PRODUCTS,
 }: {
   links: readonly ProjectSurfaceLink[]
   /**

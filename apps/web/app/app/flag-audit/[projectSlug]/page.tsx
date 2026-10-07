@@ -67,7 +67,8 @@ export default async function FlagAuditPage({
       <main>
         {/* ── reference state `ship-activity` ─────────────────────────────────────────────────
             ⚠️ **The heading is "History", which is what the approved state DRAWS** — the rail item
-            says "Activity" and the `<h1>` says "History", and they are allowed to differ: the rail
+            says "Flag history" (one-header-one-name D8; it said "Activity" before) and the `<h1>` says "History", and
+            they are allowed to differ: the rail
             names a place, the page names what is on it. `design-system-rails` Story 4.3 renamed the
             page to "Activity" reasoning that it was "the word the rail says and the word the design
             uses"; half of that was right and the other half was never checked against the picture.

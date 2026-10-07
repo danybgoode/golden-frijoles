@@ -696,12 +696,13 @@ test.describe('the console shell', () => {
 
     // Labelled by kind — Story 3.4's acceptance. Without it a reader cannot tell "the Flags page"
     // from "a feature called flags".
-    await expect(options.first()).toContainText('Feature')
+    // one-header-one-name D8 — the kind word is "Flag" now (Features → Flags).
+    await expect(options.first().locator('.command-palette__kind')).toHaveText('Flag')
     const key = (await options
       .first()
       .locator('.command-palette__kind')
       .evaluate((el) => {
-        return el.parentElement?.textContent?.replace('Feature', '').trim() ?? ''
+        return el.parentElement?.textContent?.replace('Flag', '').trim() ?? ''
       })) as string
     expect(key.startsWith('gb.e2e.owner')).toBe(true)
 

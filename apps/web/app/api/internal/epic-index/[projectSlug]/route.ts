@@ -17,12 +17,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ pro
   // (`getHubRoadmapByProjectId`'s own note on why a re-derived slug is the wrong key).
   const membership = await requireProjectMembership(projectSlug)
   const result = await getHubRoadmapByProjectId(membership.projectId)
-  if (!result.ok && result.reason === 'query_failed') {
-    return NextResponse.json(
-      { error: 'epic_index_unavailable' },
-      { status: 503, headers: { 'Cache-Control': 'private, no-store' } }
-    )
-  }
+  // No `query_failed` branch: `getLatestArtifact` THROWS on a database error, so that is a 500 the palette treats as a
+  // failed index ("Epics could not be listed"); `no_artifact` is an honest empty list.
   const items =
     result.ok && Array.isArray(result.artifact.payload?.items) ? result.artifact.payload.items : []
   return NextResponse.json(

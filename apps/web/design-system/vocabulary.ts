@@ -281,7 +281,6 @@ export const CONTROL_PLANE_WINS: readonly { design: string; product: string; why
   },
 ]
 
-/** Every word `STORAGE_WORDS` bans, lowercased, for a scanner. */
 /**
  * one-header-one-name · Sprint 2, Story 2.2 (epic README D9) — screen names that were RETIRED, so they stay gone.
  *
@@ -298,6 +297,13 @@ export const CONTROL_PLANE_WINS: readonly { design: string; product: string; why
  *                `stage === 'Ready to build'`, so it fails only as JSX text: words a person reads.
  *
  * Not here: Horizon's "destinations" (a different thing from Setup's Destinations, and kept).
+ *
+ * ⚠️ **What it cannot see, said rather than implied** (fresh reviewer, PR #288). It reads SOURCE, so a word assembled
+ * at runtime (`{column.stage}`, a template literal like `` `On in ${environment}` ``) is invisible — the board's
+ * columns are held by the e2e assertions on their labels instead. A stage word in an attribute or prop string
+ * (`label="Ready to build"`) also passes, because the stage rule reads JSX text only, so that a key in a comparison
+ * stays legal. A `label` word followed by more JSX (`<a>Features{' '}</a>`) passes too. The self-test in
+ * `vocabulary.test.ts` records each of these shapes as a known miss, so widening a rule is a visible decision.
  */
 export const RETIRED_SCREEN_WORDS: readonly {
   word: string
@@ -336,6 +342,7 @@ export function findRetiredScreenWord(
   return pattern.exec(source)?.[0] ?? null
 }
 
+/** Every word `STORAGE_WORDS` bans, lowercased, for a scanner. */
 export function bannedWords(): string[] {
   return STORAGE_WORDS.map((entry) => entry.word.toLowerCase())
 }

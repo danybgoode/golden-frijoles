@@ -443,6 +443,10 @@ test('each retired-word rule fires on the shape it is written for, and only that
   // …including a run of text that ends at an expression, the shape the Roadmap's hint had.
   assert.ok(findRetiredScreenWord(`<p>Later is To groom. {fresh ? 'x' : null}</p>`, rule('To groom')))
   assert.equal(findRetiredScreenWord(`if (stage === 'Ready to build') {}`, rule('Ready to build')), null)
+  // KNOWN MISSES, recorded so that widening a rule is a decision someone can see (see the D9 doc comment).
+  assert.equal(findRetiredScreenWord(`<Pill label="Ready to build" />`, rule('Ready to build')), null)
+  assert.equal(findRetiredScreenWord(`<a>Features{' '}</a>`, rule('Features')), null)
+  assert.equal(findRetiredScreenWord('label={`On in ${environment}`}', rule('On in Production')), null)
   // Horizon keeps its own word.
   assert.equal(findRetiredScreenWord(`<h2>End-state destinations</h2>`, rule('Destinations')), null)
 })

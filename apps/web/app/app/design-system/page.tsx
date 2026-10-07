@@ -506,11 +506,11 @@ export default async function DesignSystemSpecimen({
           <Section
             id="summary"
             title="The summary strip"
-            note="Four counts, each a link that filters the list to itself. `aria-current` paints the selected tile AND announces it — one attribute, so the two cannot disagree. A ZERO is dimmed in every tone: a green 0 beside “Flags on” reads at a glance as a healthy number."
+            note="Four counts, each a link that filters the list to itself. `aria-current` paints the selected tile AND announces it — one attribute, so the two cannot disagree. A ZERO is dimmed in every tone: a green 0 beside “On in production” reads at a glance as a healthy number."
           >
             <Summary>
               <StatLink value={42} label="All features" href="#summary" tone="all" current />
-              <StatLink value={3} label="Flags on" href="#summary" tone="on" />
+              <StatLink value={3} label="On in production" href="#summary" tone="on" />
               <StatLink value={0} label="Turned off here" href="#summary" tone="off" />
               <StatLink value={39} label={SPECIMEN_WORDS.neverActivated} href="#summary" tone="never" />
             </Summary>
