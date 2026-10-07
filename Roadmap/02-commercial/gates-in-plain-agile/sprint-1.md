@@ -3,7 +3,7 @@ epic: gates-in-plain-agile
 sprint: 1
 title: "The Plan and Build gates"
 risk: low
-phase: Shaping
+phase: Building
 stories_total: 3
 stories:
   - id: S1.1
@@ -32,7 +32,17 @@ stories:
 
 **Status:** ⬜ not started
 
-## Stories
+## Build contract (locked by the architect before the builder started)
+Cites README D1–D5, D8, D11–D14; it restates none of them.
+- New `skills/plugins/golden-frijoles/skills/groom/references/gates.md` (D1, D8): the shape, the two tables, the
+  `gate plan` and `gate build` blocks (the `gate strategy` block lands in S2).
+- Groom `SKILL.md` Stage 7.1 and Stage 8 point to it; the Bet block leaves `SKILL.md` and `funding.md` (D2, D3, D5).
+  Prose budget ≤ 210 (the skills CI step).
+- `groom/strategy.mjs` keeps `sourceEvent` and prints it; `strategy.test.mjs` covers it (D4).
+- Templates: the WAYS-OF-WORKING template's option words (D10, the Plan gate half), re-rendered everywhere; the three
+  `SESSION-KICKOFFS.md` copies.
+- Release 0.35.0 (D12). Done = skills CI + root CI green, the D13 walk in the PR.
+
 <!-- Keep the heading shape `### Story 1.M — <title>`. When a story ships, append ✅ + its commit ref.
      The epic README frontmatter `status:` is the AUTHORITATIVE epic status. -->
 
