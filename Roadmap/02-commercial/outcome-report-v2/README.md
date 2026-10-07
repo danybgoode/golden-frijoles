@@ -1,6 +1,6 @@
 ---
-status: in-progress  # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Building                   # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+status: shipped  # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+phase: Shipped                   # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
 locked_at: "2026-10-07T17:35:11Z"
 slug: outcome-report-v2
@@ -17,9 +17,12 @@ quote_basis: "M, n=8, p25–p75"
 build_order: 67      # integer position in the ONE global build sequence — the SSOT once the epic
                      # exists (the seed's value is only a fallback). Fill it in at the betting
                      # table; plain integers, no "#2a" suffixes. See 00-ideas/README.md → Ordering.
+actual_usd: 14.59
+actual_mtok: 42.4
+actual_basis: "this machine · 2026-10-07 · 1 session · prices 2026-10-02"
 ---
 
-# Epic: Outcome report v2
+# Epic: Outcome report v2 ✅
 
 > **Area:** 02-commercial · **Risk:** low · **Class:** Feature · **Scope seed:** [`00-ideas/seeds/outcome-report-v2.md`](../../00-ideas/seeds/outcome-report-v2.md)
 <!-- Class (above) is the Stage-2 classification: Feature, Spike, Bug, or Chore — see SKILL.md's
@@ -169,21 +172,36 @@ D8–D10. New: `getLatestArtifactBefore`, `speedDeltas` (+ spec with 0, 1, 2 ear
 `lib/adoption-steps.ts` (+ spec pinned to `maturity-lens.mjs`, prompt text), section ledes and links (+ surface spec:
 team has the links, client has none of `/app/` or `/hub/`).
 
+## Corrections at build (stated out loud)
+- **D2 amended at review (#299):** the lock's absolute "min 0.5" pace floor made every 0–1 fraction metric "on pace"
+  forever; tolerance is now max(5% of expected, 10% of the planned move). A targeted metric with no reading is named in
+  the sentence; no North Star registered says so instead of "no targets".
+- **D1 (#299):** ship and read days are calendar-validated (`2026-13-01` threw and took down the report and its share
+  links); a zero-length ramp is a step on the ship day (codex round 2 — my round-1 reply had claimed it already was).
+- **D9 (#300):** the next step's count carries its not-instrumented count ("1 of 6 met, 5 not instrumented" live);
+  step 0 says what entering Assisted takes instead of "0 of 0". `references/` is gitignored, so the pin is to the
+  scorer's citation, not the guide file.
+- **D10 (#300):** the team lens also serves the anonymous demo report, so the Hub page passes `signedIn` and a signed-out
+  reader gets no `/app/` link and no agent prompt.
+- **Review rounds:** #299 codex 3 rounds (2 → 1 → clean), fresh reviewer request-changes (2 Should-fix reproduced + 3
+  more, all fixed or answered); #300 codex 2 rounds (clean → clean), fresh reviewer 3 Should-fix (all fixed). Security
+  lens not triggered by paths on either.
+
 ## Deploy order
 Sprint 1 then sprint 2, one PR each, merge on green. The lens rules land with the parts they guard, in the same PR.
 
 ## Definition of Done (epic)
-- [ ] All sprints merged to `main` + smoke-tested (gaps stated — `node scripts/owed-ledger.mjs` counts what is still owed)
-- [ ] Each `sprint-N.md` has its smoke walkthrough (real URLs)
-- [ ] This README marked ✅; every sprint status ticked with commit refs
-- [ ] `RETROSPECTIVE.md` written
-- [ ] Product poster (`Roadmap/README.md`) updated
-- [ ] Team memory + `MEMORY.md` index updated
-- [ ] Durable learnings promoted to `Roadmap/LEARNINGS.md` (dedupe — sharpen, don't append)
-- [ ] **Kill-switch (only if one was planned at grooming — Stage 6b):** the flag slice shipped, the flag
+- [x] All sprints merged to `main` + smoke-tested (gaps stated — `node scripts/owed-ledger.mjs` counts what is still owed)
+- [x] Each `sprint-N.md` has its smoke walkthrough (real URLs)
+- [x] This README marked ✅; every sprint status ticked with commit refs
+- [x] `RETROSPECTIVE.md` written
+- [x] Product poster (`Roadmap/README.md`) updated
+- [x] Team memory + `MEMORY.md` index updated
+- [x] Durable learnings promoted to `Roadmap/LEARNINGS.md` (dedupe — sharpen, don't append)
+- [x] **Kill-switch (only if one was planned at grooming — Stage 6b):** the flag slice shipped, the flag
       exists **in Golden Frijoles, in every env**, with the stated polarity, **and is ACTIVATED there** —
       `gf flags get <key>` must not print `—` in its PRODUCTION row. Creating a definition is not
       turning it on, and a flag that is synced but never activated serves compile-time defaults while
       every dashboard says it exists. *Verify-only — not a new gate; whether a high-risk epic needs one
       is decided at grooming, not here.*
-- [ ] Feature branch deleted; **this README's frontmatter `status: shipped`** (the SSOT — the board & Notion derive from it; run `node scripts/build-order.mjs`)
+- [x] Feature branch deleted; **this README's frontmatter `status: shipped`** (the SSOT — the board & Notion derive from it; run `node scripts/build-order.mjs`)

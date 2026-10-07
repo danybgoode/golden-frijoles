@@ -3,7 +3,7 @@ epic: outcome-report-v2
 sprint: 1
 title: "Is it paying off"
 risk: low
-phase: Building
+phase: Shipped
 stories_total: 3
 stories:
   - id: S1.1
@@ -30,7 +30,7 @@ stories:
 ---
 # Outcome report v2 — Sprint 1: Is it paying off
 
-**Status:** 🔨 built, in review
+**Status:** ✅ shipped and live 2026-10-07 (#299, merge `08386f0`)
 
 ## Stories
 <!-- Keep the heading shape `### Story 1.M — <title>`. When a story ships, append ✅ + its commit ref.
@@ -90,7 +90,7 @@ Result (bean) | Spend · vs quote (gap; overspend neutral). Each row links to it
 ## Sprint 1 — Smoke walkthrough (do these in order)
 Env: production · https://goldenfrijoles.com   (or the preview URL while testing pre-merge)
 
-1. Signed in, go to https://goldenfrijoles.com/hub/<your-project>/report
+1. Signed in, go to https://goldenfrijoles.com/hub/golden-beans-demo/report
    → One sentence on whether it's paying off, then the chart with epics marked.
 2. Read the four figures
    → Each has its expected value or says there isn't one.
@@ -100,3 +100,10 @@ Env: production · https://goldenfrijoles.com   (or the preview URL while testin
    → The sentence, the chart and two figures; no spend, no epics table; unread epics still counted.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+### Verified live (signed out, 2026-10-07, after `075ff8e` deployed)
+`https://goldenfrijoles.com/hub/golden-beans-demo/report` → 200. Opens "No targets yet, so we can't say if it's on pace."
+(prod has 0 targeted epics), the `setup_guide_completions` chart (actual only), figure 1 says nothing is expected,
+"0 of 0 … 0 not read yet", "$891 spent on 22 epics · $270 of it within $245–445 · 12 not quoted", 22 table rows linking
+to `/hub/golden-beans-demo/epic/<slug>`. **Owed to Daniel:** steps 1–3 signed in, and step 4 (minting a client share
+link is a prod credential, so it's his).

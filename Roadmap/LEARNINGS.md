@@ -2164,6 +2164,15 @@ one-liner + why + date shape.
 - **Two prettier configs must both accept a file a parity check needs byte-identical.** Format with the root's, copy,
   then `prettier --check` it from `skills/` — otherwise parity and `format:changed` fight each other.
 
+### Expected against actual on one report (outcome-report-v2, 2026-10-07)
+- **A tolerance in a lock is a number with a unit.** "On pace within 5%, min 0.5" made every 0–1 rate "on pace" forever
+  (0.01 against an expected 0.20). Scale any threshold to the metric it judges and to the move that was planned.
+- **A lens is an audience, not a session.** The `team` lens also serves the anonymous demo report, so lens-gated links
+  still reached signed-out readers. Gate what needs a sign-in on the session; gate what an audience may see on the lens.
+- **Give each optional half of a page its own try.** A tenant-pushed `2026-13-01` passed the shape regex, threw in
+  `toISOString()`, and through an un-guarded `Promise.all` arm took down the report and every share link. Validate the
+  calendar, and let a half that can fail cost only itself (`unavailable`), never the page.
+
 ### Recording a result per epic (result-record, 2026-10-07)
 - **A zero-dependency file stays zero-dependency, even for a sibling import.** `roadmap-contract.mjs` importing a new
   `lib/result-dates.mjs` broke every consumer that copies the contract alone (the pre-commit fixture, copy-once
