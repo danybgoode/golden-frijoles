@@ -66,7 +66,7 @@ export type MaturitySection = {
    * outcome-report-v2 D9 — the next step and how many of its criteria are met. Set by the read path from the rows
    * BEFORE a lens hides them (lib/adoption-steps.ts `nextStepOf`), so it is an aggregate every lens may show.
    */
-  next?: { step: number; label: string; met: number; total: number } | null
+  next?: { step: number; label: string; met: number; notInstrumented: number; total: number } | null
 }
 
 export type PodReportView = {

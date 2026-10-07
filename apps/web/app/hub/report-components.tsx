@@ -9,7 +9,7 @@ import type { OutcomeSection } from '@/lib/pod-outcome'
 import type { PayingOffView } from '@/lib/outcome-figures'
 import { PayingOffSection, SectionLinks, sectionHrefs } from './outcome-components'
 import { deltaWords, historyNote, type SpeedDelta, type SpeedHistory } from '@/lib/outcome-history'
-import { agentPrompt, GUIDE_LINE, STEP_LABELS } from '@/lib/adoption-steps'
+import { agentPrompt, GUIDE_LINE, nextStepWords, STEP_LABELS } from '@/lib/adoption-steps'
 import { CopyButton } from './copy-button'
 import type { Freshness } from '@/lib/hub-freshness'
 import { HubProvenance } from './hub-components'
@@ -386,12 +386,10 @@ export function MaturityLadder({
       {maturity.next && (
         <div className="ds-outcome-next" data-testid="adoption-next">
           <p>
-            To reach <b>{maturity.next.label}</b>:{' '}
-            <b>
-              {maturity.next.met} of {maturity.next.total}
-            </b>{' '}
-            of its criteria met
-            {showRows ? ' — they are the step ' + maturity.next.step + ' rows in the table below.' : '.'}
+            {nextStepWords(maturity.next)}
+            {showRows && maturity.next.total > 0
+              ? ` They are the step ${maturity.next.step} rows in the table below.`
+              : ''}
           </p>
           {showAgentPrompt && product && (
             <div className="ds-outcome-prompt" data-testid="adoption-prompt">
@@ -687,6 +685,7 @@ export function PodReportBody({
   outcome,
   payingOff,
   history,
+  signedIn = true,
   lens,
   artifactVersion,
   freshness,
@@ -700,6 +699,12 @@ export function PodReportBody({
   payingOff: PayingOffView
   /** outcome-report-v2 S2.1 — How fast against the two previous months. Speed is never lensed, so neither is this. */
   history: SpeedHistory
+  /**
+   * Whether the reader has a session. The team lens also serves the anonymous demo report (`requireDashboardAccess`),
+   * and a signed-out reader is handed no `/app/` link and no agent prompt (fresh review, #300). Default true: the share
+   * route never reaches the team lens, and its lenses already show no links.
+   */
+  signedIn?: boolean
   lens: PodReportLens
   artifactVersion: number
   freshness: Freshness
@@ -800,7 +805,12 @@ export function PodReportBody({
           </div>
         )}
 
-        <PayingOffSection payingOff={payingOff} projectSlug={projectSlug} showLinks={policy.showLinks} />
+        <PayingOffSection
+          payingOff={payingOff}
+          projectSlug={projectSlug}
+          showLinks={policy.showLinks}
+          signedIn={signedIn}
+        />
         {view.empty ? (
           <p className="ds-hint" data-testid="pod-report-no-delivery">
             The latest pushed artifact carries no delivery section, so there are no delivery numbers to
@@ -833,6 +843,7 @@ export function PodReportBody({
                 show={policy.showLinks}
                 links={[sectionHrefs(projectSlug).board]}
                 testId="links-speed"
+                signedIn={signedIn}
               />
               <div className="ds-pairing">
                 <MetricTable
@@ -860,7 +871,7 @@ export function PodReportBody({
             repo={view.source.repo}
             showRows={policy.showMaturityRows}
             product={projectSlug}
-            showAgentPrompt={policy.showAgentPrompt}
+            showAgentPrompt={policy.showAgentPrompt && signedIn}
           />
         )}
 

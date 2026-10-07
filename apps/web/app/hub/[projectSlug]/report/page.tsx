@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { after } from 'next/server'
 import { cookies } from 'next/headers'
 import { requireDashboardAccess } from '@/lib/dashboard-auth'
+import { getSessionUser } from '@/lib/supabase-auth'
 import { trackSelfEvent, REPORT_VIEWED_EVENT, VISITOR_COOKIE } from '@/lib/self-track'
 import { getPodReport } from '@/lib/pod-report-query'
 import { formatFreshness } from '@/lib/hub-freshness'
@@ -64,6 +65,8 @@ export default async function HubPodReportPage({ params }: { params: Promise<{ p
   if (visitorId) after(() => trackSelfEvent(REPORT_VIEWED_EVENT, visitorId))
 
   const { artifact, view, outcome, payingOff, history, lens } = result
+  // The demo report is readable signed out; such a reader gets no `/app/` link and no agent prompt (#300).
+  const signedIn = Boolean(await getSessionUser())
   const freshness = formatFreshness(artifact.generatedAt, new Date(), artifact.sourceCommit)
 
   return (
@@ -77,6 +80,7 @@ export default async function HubPodReportPage({ params }: { params: Promise<{ p
         outcome={outcome}
         payingOff={payingOff}
         history={history}
+        signedIn={signedIn}
         lens={lens}
         artifactVersion={artifact.version}
         freshness={freshness}

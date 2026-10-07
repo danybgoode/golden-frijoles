@@ -3,7 +3,14 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { agentPrompt, GUIDE_SOURCE, LAST_STEP, nextStepOf, STEP_LABELS } from './adoption-steps.ts'
+import {
+  agentPrompt,
+  GUIDE_SOURCE,
+  LAST_STEP,
+  nextStepOf,
+  nextStepWords,
+  STEP_LABELS,
+} from './adoption-steps.ts'
 
 // outcome-report-v2 S2.2 (D9) — the step names come from the guide's scorer, never from the page. App code does not
 // import `scripts/` (roadmap-result.test.ts's precedent), so this reads maturity-lens.mjs's source and compares.
@@ -35,8 +42,20 @@ test('the next step and its criteria, from the rows the scorer wrote', () => {
     { ladderStep: 2, status: 'not_met' },
     { ladderStep: 3, status: 'met' },
   ]
-  assert.deepEqual(nextStepOf({ step: 1 }, rows), { step: 2, label: 'Parallel', met: 1, total: 3 })
-  assert.deepEqual(nextStepOf({ step: 2 }, rows), { step: 3, label: 'Supervised autonomy', met: 1, total: 1 })
+  assert.deepEqual(nextStepOf({ step: 1 }, rows), {
+    step: 2,
+    label: 'Parallel',
+    met: 1,
+    notInstrumented: 1,
+    total: 3,
+  })
+  assert.deepEqual(nextStepOf({ step: 2 }, rows), {
+    step: 3,
+    label: 'Supervised autonomy',
+    met: 1,
+    notInstrumented: 0,
+    total: 1,
+  })
   assert.equal(nextStepOf({ step: 4 }, rows), null, 'nothing past AI-native')
   assert.equal(nextStepOf(null, rows), null)
 })
@@ -46,4 +65,24 @@ test('the prompt names the product and the next step', () => {
     agentPrompt('golden-beans-demo', { label: 'Parallel' }),
     'Read the golden-beans-demo outcome report and the Steps of AI Adoption, then suggest what we change to reach Parallel'
   )
+})
+
+// ── Fresh review, #300 ───────────────────────────────────────────────────────────────────────────────────────────
+
+test('the next step’s count carries its not-instrumented count', () => {
+  const rows = [
+    { ladderStep: 2, status: 'met' },
+    { ladderStep: 2, status: 'not_instrumented' },
+    { ladderStep: 2, status: 'not_instrumented' },
+    { ladderStep: 2, status: 'not_met' },
+  ]
+  const next = nextStepOf({ step: 1 }, rows)!
+  assert.equal(next.notInstrumented, 2)
+  assert.equal(nextStepWords(next), 'To reach Parallel: 1 of 4 of its criteria met, 2 not instrumented.')
+})
+
+test('step 0: Assisted gates no criteria, so the page says what entering it takes — never "0 of 0"', () => {
+  const next = nextStepOf({ step: 0 }, [{ ladderStep: 2, status: 'not_met' }])!
+  assert.equal(next.total, 0)
+  assert.equal(nextStepWords(next), 'To reach Assisted: any one criterion met with evidence.')
 })

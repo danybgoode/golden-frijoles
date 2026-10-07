@@ -260,11 +260,15 @@ export function SectionLinks({
   show,
   links,
   testId,
+  signedIn = true,
 }: {
   show: boolean
   links: Array<{ href: string; label: string }>
   testId: string
+  /** Signed out, the `/app/` pages would only ask for a sign-in — they are left off. */
+  signedIn?: boolean
 }) {
+  links = signedIn ? links : links.filter((l) => !l.href.startsWith('/app/'))
   if (!show || links.length === 0) return null
   return (
     <p className="ds-outcome-links" data-testid={testId}>
@@ -294,10 +298,12 @@ export function PayingOffSection({
   payingOff,
   projectSlug,
   showLinks,
+  signedIn = true,
 }: {
   payingOff: PayingOffView
   projectSlug: string
   showLinks: boolean
+  signedIn?: boolean
 }) {
   const drawable = payingOff.lines.filter((l) => l.actual.length > 0 || l.expected.length > 0)
   return (
@@ -311,6 +317,7 @@ export function PayingOffSection({
       </p>
       <SectionLinks
         show={showLinks}
+        signedIn={signedIn}
         links={[sectionHrefs(projectSlug).northStar]}
         testId="links-paying-off"
       />
@@ -332,6 +339,7 @@ export function PayingOffSection({
       {!payingOff.unavailable && <OutcomeFigures figures={payingOff.figures} />}
       <SectionLinks
         show={showLinks}
+        signedIn={signedIn}
         links={[sectionHrefs(projectSlug).finops, sectionHrefs(projectSlug).board]}
         testId="links-figures"
       />

@@ -541,7 +541,7 @@ test('S2.2: the five steps, named by the scorer, with you are here, next, the ne
   expect(steps).toMatch(new RegExp(`data-step="${here}" data-here="true"`))
   const next = view.maturity!.next!
   expect(steps).toMatch(new RegExp(`data-step="${next.step}" data-next="true"`))
-  expect(slice(html, 'adoption-next', 300)).toContain(`${next.met} of ${next.total}`)
+  expect(slice(html, 'adoption-next', 300)).toContain(`${next.met} of ${next.total} of its criteria met`)
   expect(slice(html, 'adoption-prompt', 400)).toContain(
     `Read the golden-beans-demo outcome report and the Steps of AI Adoption, then suggest what we change to reach ${next.label}`
   )
@@ -570,4 +570,27 @@ test('S2.3: every section has its line; the team gets its links, a share link ge
     // Every section still says what it is.
     expect(html, lens).toContain('data-testid="speed-subtitle"')
   }
+})
+
+test('S2.3 (#300 review): a signed-out reader of the demo report gets no /app/ link and no agent prompt', () => {
+  const html = decodeEntities(
+    renderToStaticMarkup(
+      <PodReportBody
+        projectSlug="golden-beans-demo"
+        view={viewFor('team')}
+        outcome={OUTCOME}
+        payingOff={payingOffFor('team')}
+        history={HISTORY}
+        signedIn={false}
+        lens="team"
+        artifactVersion={3}
+        freshness={FRESHNESS}
+      />
+    )
+  )
+  expect(html).not.toContain('href="/app/')
+  expect(html).not.toContain('data-testid="adoption-prompt"')
+  // The hub pages it can open still link: the Board and the epic pages read anonymously for the demo.
+  expect(html).toContain('href="/hub/golden-beans-demo/board"')
+  expect(html).toContain('href="/hub/golden-beans-demo/epic/overdue-reminders"')
 })

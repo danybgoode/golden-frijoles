@@ -3,7 +3,7 @@ epic: outcome-report-v2
 sprint: 2
 title: "How it got there"
 risk: low
-phase: Shaping
+phase: Building
 stories_total: 3
 stories:
   - id: S2.1
