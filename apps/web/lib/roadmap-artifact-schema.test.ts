@@ -320,6 +320,7 @@ test('a bad verdict is refused with a readable 400 that names the field', () => 
 test('result dates are days, and the numbers are finite numbers', () => {
   for (const bad of [
     { read_date: '4 Nov' },
+    { read_date: '2026-02-30' },
     { verdict_at: '2026-11-04T10:00:00Z' },
     { target_from: '61%' },
     { verdict_evidence: 'x'.repeat(501) },

@@ -107,3 +107,19 @@ test('readsDue lists only due epics, oldest read date first', () => {
     ['a', 'b']
   )
 })
+
+test('impossible days are absent, not due (codex review, #290)', () => {
+  const r = epicResult(epic({ read_date: '2026-02-30' }), { today: '2026-12-01' })
+  assert.equal(r.readDate, null)
+  assert.equal(r.readDue, false)
+})
+
+test('evidence becomes a link only when it is an https URL (security lens, #290)', () => {
+  const read = (verdict_evidence: string) =>
+    epicResult(epic({ verdict: 'proven', verdict_actual: 72, verdict_evidence })).evidenceHref
+  assert.equal(read('https://example.com/r/12'), 'https://example.com/r/12')
+  assert.equal(read('javascript:alert(1)'), null)
+  assert.equal(read('http://example.com'), null)
+  assert.equal(read('north-star:x@2026-11-04'), null)
+  assert.equal(read('https://'), null)
+})
