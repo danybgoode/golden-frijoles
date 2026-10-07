@@ -3,7 +3,7 @@ epic: one-epic-page
 sprint: 1
 title: "One page"
 risk: low
-phase: In review
+phase: Shipped
 stories_total: 3
 stories:
   - id: S1.1
@@ -30,7 +30,7 @@ stories:
 ---
 # One epic page — Sprint 1: One page
 
-**Status:** 🟦 In review
+**Status:** ✅ Shipped — #295, merged 9ea3029 2026-10-07, deployed to production and verified
 
 ## Stories
 <!-- Keep the heading shape `### Story 1.M — <title>`. When a story ships, append ✅ + its commit ref.
@@ -103,5 +103,11 @@ Env: production · https://goldenfrijoles.com   (or the preview URL while testin
    → It lands on the same epic page.
 6. Open a Backlog card
    → "The idea" and "No target yet: that comes with grooming".
+
+**Verified live 2026-10-07 (signed out, the public demo, by the builder):** `?card=one-epic-page&type=feature` → 307
+to `/hub/golden-beans-demo/epic/one-epic-page?type=feature`, Back keeps the filter (step 5); the page shows the
+Building chip, the small chips, the track with Building lit (2); the Now panel's one plain line and More (3–4, the
+paste trial is in #295's body); an idea's page says "No target yet" (6); an unknown slug 404s; board cards link to
+`/epic/`. **Owed to Daniel:** steps 1–6 signed in, and the paste in step 3 on his own machine.
 
 If any step fails, note the step number + what you saw — that's the bug report.

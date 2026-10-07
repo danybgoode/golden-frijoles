@@ -113,12 +113,9 @@ export function NowPanel({ card, product }: { card: BoardCard; product: string }
           <code>{primary.text}</code>
           <CopyButton value={primary.text} label={`Copy: ${primary.text}`} />
         </div>
-      ) : (
-        <p className="ds-hint">
-          {card.stage === 'Shipped'
-            ? 'Nothing is owed — it shipped.'
-            : 'Nothing to run from here at this stage.'}
-        </p>
+      ) : card.stage === 'Shipped' ? null : (
+        // A shipped epic's Now line already says nothing is owed (seen live: it said so twice).
+        <p className="ds-hint">Nothing to run from here at this stage.</p>
       )}
       {rest.length > 0 || shorthands.length > 0 ? (
         <details className="ds-disclosure">

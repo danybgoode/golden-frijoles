@@ -352,6 +352,9 @@ one-liner + why + date shape.
   "every project in the workspace" — the one mutation the invariant exists to forbid. A fresh reviewer found it. The
   spec that catches it seeds a sibling project in the viewer's OWN workspace, with a real pushed board, and the viewer
   not a member.
+  **The same holds for a "not found" assertion** (one-epic-page S2, 2026-10-07): a spec that a flag key reads "not found"
+  proves nothing about tenancy when the key exists in NO project. Put the key in a sibling the viewer even owns, and
+  mutate the read's project filter — that is the run that must go red.
 - **A guard written to satisfy a rule is not exempt from that rule — check WHAT refused the write,
   not just that something did.** A spec written because a migration's comment claimed "asserted by
   attempting the writes" passed a random `user_id`, so the forged INSERT failed on the FOREIGN KEY
@@ -2150,6 +2153,16 @@ one-liner + why + date shape.
   nothing (prettier had reflowed the line), and the guard's green meant nothing. The same holds for any scripted edit: a
   find-and-replace on a file prettier has reflowed silently misses — make the script assert its pattern matched
   (result-record hit it four times; the asserts caught each, and one unasserted edit left an unused import for lint).
+
+### One page per epic (one-epic-page, 2026-10-07)
+- **Paste a generated instruction into an agent; don't infer how it will be read.** Eight plain-line commands began
+  with their shorthand's verb and all "obviously" mapped; one ("Resume building the … epic") was read as Build epic
+  because of the second verb. A read-only trial (`claude -p --permission-mode plan "…say which step; don't do it"`)
+  costs cents and is the only evidence the acceptance asked for.
+- **A fixture missing a field hides the branch that keys off it.** "No target yet" passed only because the fixture seed
+  had no goal; 9 of 13 real seeds have one. Seed one fixture row WITH every optional field the view branches on.
+- **Two prettier configs must both accept a file a parity check needs byte-identical.** Format with the root's, copy,
+  then `prettier --check` it from `skills/` — otherwise parity and `format:changed` fight each other.
 
 ### Recording a result per epic (result-record, 2026-10-07)
 - **A zero-dependency file stays zero-dependency, even for a sibling import.** `roadmap-contract.mjs` importing a new
