@@ -181,6 +181,25 @@ test.describe('the console shell', () => {
     }
   })
 
+  // one-header-one-name D4 (fresh review, PR #287) — the no-rail fallback, in the CI gate. The fixture owner is not a
+  // member of the demo project, whose Hub `requireDashboardAccess` still opens to anyone: the header holds Today alone,
+  // there is no rail, and the Hub's four pages ride the fallback row so the visitor can still move between them.
+  test('a signed-in NON-member on the demo Hub gets Today alone plus the Hub’s own pages', async ({
+    page,
+  }) => {
+    const response = await page.goto('/hub/golden-beans-demo')
+    expect(response?.status()).toBe(200)
+    await expect(page.locator('.ds-shell-tabs:not([data-fallback-nav]) a')).toHaveText(['Today'])
+    await expect(page.locator('.console-rail')).toHaveCount(0)
+    await expect(page.locator('[data-fallback-nav] a')).toHaveText([
+      'Roadmap',
+      'Board',
+      'Horizon',
+      'Outcome report',
+    ])
+    await expect(page.locator('[data-fallback-nav] a[aria-current="page"]')).toHaveText('Roadmap')
+  })
+
   test('Today renders full width with no rail; Setup renders one', async ({ page }) => {
     await page.goto('/app')
     await expect(page.locator('.console-rail')).toHaveCount(0)

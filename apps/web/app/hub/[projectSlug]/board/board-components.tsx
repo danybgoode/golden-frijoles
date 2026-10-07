@@ -1,7 +1,7 @@
 /** @jsxImportSource react */
 import type { ReactNode } from 'react'
 // Pragma: a no-op under Next, load-bearing for the test rail (Playwright's transform pins its own jsx runtime, which
-// react-dom/server refuses to render) — the same line, for the same reason, as `hub-frame.tsx`.
+// react-dom/server refuses to render) — the same line, for the same reason, as `report-components.tsx`.
 import type { Freshness } from '@/lib/hub-freshness'
 import { BOARD_TYPES, boardQuery, type Board, type BoardCard, type BoardFilters } from '@/lib/hub-board'
 import { stageCommands } from '@/lib/stage-commands'

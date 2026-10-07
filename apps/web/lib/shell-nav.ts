@@ -166,7 +166,14 @@ export async function getShellNav(
    * ceremony; every authenticated page passes its own, and `ProductShell`'s prop is REQUIRED, so the
    * compiler is what makes each of the 18 call sites answer.
    */
-  activeSection: ShellSection = 'home'
+  activeSection: ShellSection = 'home',
+  /**
+   * one-header-one-name D5 (fresh review, PR #287) — `false` means "no slug is NOT the /app home": a missing slug
+   * yields no active project instead of the viewer's first one. The workspace board passes it, because its first
+   * project of THIS workspace can be absent and the first project overall may sit in another workspace — the chrome
+   * would then name a different workspace than the page.
+   */
+  options: { defaultToFirstProject?: boolean } = {}
 ): Promise<ShellNav> {
   // ⚠️ **`const gateOpen = isConsoleShellEnabled()` is GONE — mockups-as-built Story 3.3.** The
   // console is not behind a flag any more, so `header` is decided by the one condition that always
@@ -218,7 +225,11 @@ export async function getShellNav(
     //
     // No slug at all (the /app home) still defaults to the first project: there is nothing to
     // contradict there.
-    const activeProject = projectSlug ? (projects.find((p) => p.slug === projectSlug) ?? null) : projects[0]
+    const activeProject = projectSlug
+      ? (projects.find((p) => p.slug === projectSlug) ?? null)
+      : options.defaultToFirstProject === false
+        ? null
+        : projects[0]
     // A foreign slug yields no SECTIONS — unchanged, and the tenancy reason above is why. What it no
     // longer yields is the LEGACY chrome: with the console on, this now degrades to a console header
     // holding Today alone, the same honest shape a zero-project session gets. Two states that both

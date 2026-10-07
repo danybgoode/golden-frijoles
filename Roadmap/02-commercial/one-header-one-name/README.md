@@ -169,7 +169,7 @@ Builders cite these; they are not restated in the sprint files. Each was read of
 
 ## Deploy order
 Sprint 1 then sprint 2, one PR each, merge on green (low risk). No migration, no flag, no backend change. Preview
-walkthrough before each merge; production walkthrough at S2.3.
+cannot serve signed-in pages (D13), so each sprint's walkthrough runs on production after its merge; S2.3 runs both.
 
 ## Definition of Done (epic)
 - [ ] All sprints merged to `main` + smoke-tested (gaps stated — `node scripts/owed-ledger.mjs` counts what is still owed)

@@ -61,10 +61,9 @@ const AUTHED_MOBILE_ROUTES: readonly AuthedRoute[] = [
   // `CONSOLE_SHELL_ENABLED`, so the route is unconditional and so is the sweep of it. A route swept
   // only when a flag happens to be set is a route nothing sweeps on the run where it matters.
   { label: 'setup connect', path: (slug) => `/app/setup/connect/${slug}` },
-  // ── design-system-rails · Sprint 6 — the hub's four routes ───────────────────────────────────
-  // They render `Frame`'s `hub` variant, whose bar is a 54px non-wrapping flex row carrying the
-  // brand, the project scope, a spacer and a `nowrap` action — the exact shape of the two overflow
-  // defects this epic has already paid for. The tenant slug is the pressure: the fixture's is
+  // ── design-system-rails · Sprint 6 — the hub's routes ───────────────────────────────────────
+  // Swept since `Frame`'s `hub` variant drew them; one-header-one-name S1.2 moved them into the
+  // console shell, whose switcher carries the project slug. The tenant slug is the pressure: the fixture's is
   // `gb-e2e-authed-<timestamp>-<pid>`, far longer than `miyagisanchez`, which is what makes this
   // sweep worth more than a look at a real tenant.
   //

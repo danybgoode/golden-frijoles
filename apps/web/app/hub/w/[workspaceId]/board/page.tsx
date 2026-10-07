@@ -84,8 +84,14 @@ export default async function WorkspaceBoardPage({
     // one-header-one-name D5 — inside the console, Plan current. The shell names a project of THIS workspace (the
     // filter, else the first `getWorkspaceProjects` returned) so the header and rail describe where the viewer is; it is
     // a hint `getShellNav` matches against the viewer's own memberships, never an authorization input. No rail item is
-    // current: this board is no single project's.
-    <ProductShell projectSlug={firstProject ?? undefined} section="plan" railActive={null}>
+    // current: this board is no single project's. With no project of this workspace to name, it names NONE (Today alone,
+    // `defaultToFirstProject={false}`) rather than the viewer's first project, which may sit in another workspace.
+    <ProductShell
+      projectSlug={firstProject ?? undefined}
+      section="plan"
+      railActive={null}
+      defaultToFirstProject={false}
+    >
       <main>
         <BoardView
           board={board}
