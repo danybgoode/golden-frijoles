@@ -59,6 +59,13 @@ const docPath = z
   .regex(/^[A-Za-z0-9_][A-Za-z0-9_./-]*\.md$/, 'must be a repo-relative .md path')
   .refine((p) => !p.split('/').includes('..'), 'must not climb out of the repo')
 
+/** result-record D6 — the three verdicts, in the contract's order. ⚠️ A copy, pinned like `ROADMAP_STAGES`. */
+export const ROADMAP_VERDICTS = ['proven', 'disproven', 'unclear'] as const
+export type RoadmapVerdict = (typeof ROADMAP_VERDICTS)[number]
+
+// A calendar day, `YYYY-MM-DD` — the result record's dates. Shape only; the pusher's contract checks it is a real day.
+const isoDay = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'must be a day written YYYY-MM-DD')
+
 // Rows are validated structurally but NOT exhaustively: `.passthrough()` keeps unknown fields.
 // That is deliberate. The extract gains columns as the roadmap tooling grows, and a strict schema
 // would reject a NEWER, RICHER payload from a client who upgraded before we did — turning an
@@ -136,6 +143,25 @@ const roadmapRowSchema = z
     actual_usd: z.number().nonnegative().max(1e7).nullish(),
     actual_mtok: z.number().nonnegative().max(1e9).nullish(),
     actual_basis: z.string().max(300).nullish(),
+    // result-record · Story 1.3 (D6) — what the epic should move, and the verdict on it. Nullish for the same reason as
+    // FinOps: an older pusher that never sends them stays valid, and absent is "no target", never a zero. Declared so a
+    // bad value — a typo'd verdict above all — is a 400 naming the field, not a row the board renders. The verdict
+    // words are `VERDICTS` in `scripts/lib/roadmap-contract.mjs`; `roadmap-result.test.ts` pins this copy to it.
+    hypothesis: z.string().max(1000).nullish(),
+    target_metric: z.string().max(200).nullish(),
+    target_from: z.number().finite().nullish(),
+    target_to: z.number().finite().nullish(),
+    read_date: isoDay.nullish(),
+    read_date_derived: z.boolean().nullish(),
+    // The message names the field: flattened issues drop the path, and "Invalid enum value" alone leaves a pusher
+    // guessing which of a row's forty fields was wrong.
+    verdict: z
+      .enum(ROADMAP_VERDICTS, { errorMap: () => ({ message: `verdict must be one of ${ROADMAP_VERDICTS.join(' | ')}` }) })
+      .nullish(),
+    verdict_actual: z.number().finite().nullish(),
+    verdict_evidence: z.string().max(500).nullish(),
+    verdict_at: isoDay.nullish(),
+    read_late: z.boolean().nullish(),
   })
   .passthrough()
 

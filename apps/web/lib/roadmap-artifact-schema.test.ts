@@ -274,3 +274,55 @@ test('canonicalJson ignores key order, so a payload read back from jsonb compare
   )
   assert.ok(!isSameRoadmapPayload({ items: [] }, { items: [], board: { wip: { Building: 2 } } }))
 })
+
+// result-record · Story 1.3 (D6) — the target and the verdict ride the push, nullish.
+
+test('a push carrying the result fields stores them; a push without them still parses', () => {
+  const full = parseRoadmapPush(
+    push({
+      items: [
+        row({
+          hypothesis: 'Reminders get invoices paid on time',
+          target_metric: 'invoices_paid_on_time',
+          target_from: 61,
+          target_to: 70,
+          read_date: '2026-11-03',
+          read_date_derived: true,
+          verdict: 'proven',
+          verdict_actual: 72.5,
+          verdict_evidence: 'north-star:invoices_paid_on_time@2026-11-04',
+          verdict_at: '2026-11-04',
+          read_late: false,
+        } as Partial<RoadmapRow>),
+      ],
+    })
+  )
+  assert.equal(full.ok, true)
+  if (full.ok) {
+    assert.equal(full.value.items[0].verdict, 'proven')
+    assert.equal(full.value.items[0].target_to, 70)
+    assert.equal(full.value.items[0].read_date_derived, true)
+  }
+  assert.equal(parseRoadmapPush(push()).ok, true, 'an older pusher that sends none of them')
+  const nulls = parseRoadmapPush(push({ items: [row({ verdict: null, read_date: null } as Partial<RoadmapRow>)] }))
+  assert.equal(nulls.ok, true)
+})
+
+test('a bad verdict is refused with a readable 400 that names the field', () => {
+  const res = parseRoadmapPush(push({ items: [row({ verdict: 'provn' } as unknown as Partial<RoadmapRow>)] }))
+  assert.equal(res.ok, false)
+  if (!res.ok) {
+    assert.equal(res.error, 'Malformed roadmap payload')
+    assert.match(JSON.stringify(res.issues), /verdict/)
+  }
+})
+
+test('result dates are days, and the numbers are finite numbers', () => {
+  for (const bad of [
+    { read_date: '4 Nov' },
+    { verdict_at: '2026-11-04T10:00:00Z' },
+    { target_from: '61%' },
+    { verdict_evidence: 'x'.repeat(501) },
+  ])
+    assert.equal(parseRoadmapPush(push({ items: [row(bad as unknown as Partial<RoadmapRow>)] })).ok, false, JSON.stringify(bad).slice(0, 40))
+})
