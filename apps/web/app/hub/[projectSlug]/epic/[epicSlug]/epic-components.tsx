@@ -4,11 +4,15 @@
 import type { BoardCard } from '@/lib/hub-board'
 import type { Freshness } from '@/lib/hub-freshness'
 import type { IconName } from '@/components/ui/icon-names'
-import { epicTrack, type TrackKey } from '@/lib/epic-page'
+import { epicTrack, spendBar, sprintBar, type TrackKey } from '@/lib/epic-page'
+import type { EpicFlag as EpicFlagView } from '@/lib/epic-flag'
+import { BEAN_WORDS, epicResult, shortDay } from '@/lib/roadmap-result'
+import { quoteActualLine, type EpicFinops } from '@/lib/roadmap-finops'
+import { Bean } from '@/design-system/bean'
 import { nowLine, stageCommands, stageWhen } from '@/lib/stage-commands'
 import { stageLabel } from '@/lib/screen-words'
 import { Icon } from '@/components/ui/Icon'
-import { PageHead, Step, Steps } from '@/design-system/primitives'
+import { PageHead } from '@/design-system/primitives'
 import { CopyButton } from '../../../copy-button'
 
 // one-epic-page · Sprint 1 — the epic page's parts (lock D4: `CardView`'s parts, moved here; the card view is gone).
@@ -138,22 +142,199 @@ export function NowPanel({ card, product }: { card: BoardCard; product: string }
   )
 }
 
-/** The sprints, as the card listed them (moved with `CardView`, D4). Sprint 2 draws them as bars (S2.2). */
-export function EpicSprints({ card }: { card: BoardCard }) {
+const figure = (n: number) => (Number.isInteger(n) ? String(n) : String(Math.round(n * 100) / 100))
+
+/**
+ * S2.1 (D9) — why we're building it: the README's Why, then the bet — hypothesis, target from → to, read date — and,
+ * once read, the Bean, the actual and what the target was. Every field through `epicResult`, the one derivation the
+ * board's bean also reads. Gold is the Bean's own `proven` kind, never this component's choice.
+ */
+export function EpicWhy({ card }: { card: BoardCard }) {
+  const seed = card.grain === 'Seed'
+  const r = card.result ? epicResult(card.result) : null
+  const target = r && r.metric !== null && r.from !== null && r.to !== null ? r : null
   return (
-    <Steps>
-      {card.sprints.length > 0 ? (
-        card.sprints.map((sprint) => (
-          <Step key={sprint.n} note={`${sprint.done} of ${sprint.total} stories`}>
-            {`Sprint ${sprint.n}${sprint.title ? ` — ${sprint.title}` : ''}`}
-          </Step>
-        ))
+    <section className="ds-epic-section" aria-label={seed ? 'The idea' : "Why we're building this"}>
+      <h2 className="ds-label">{seed ? 'The idea' : "Why we're building this"}</h2>
+      <p className="ds-epic-why-goal">
+        {card.goal ??
+          (seed
+            ? 'The idea is in its seed, below.'
+            : 'No goal is written for this epic yet — its README has no Why paragraph.')}
+      </p>
+      {r?.hypothesis ? <p className="ds-epic-why-line">{r.hypothesis}</p> : null}
+      {seed ? (
+        <p className="ds-hint">No target yet: that comes with grooming.</p>
+      ) : !target ? (
+        <p className="ds-hint">No target set.</p>
       ) : (
-        <Step note="A seed is sliced into sprints when it is groomed and scaffolded.">
-          {card.grain === 'Seed' ? "Sprints appear once it's groomed" : 'No sprints recorded yet'}
-        </Step>
+        <p className="ds-epic-why-target" data-testid="epic-target">
+          <span className="ds-mono">{target.metric}</span> {figure(target.from!)} → {figure(target.to!)}
+          {target.readDate ? (
+            <span className="ds-epic-now-when">
+              {' '}
+              · read {shortDay(target.readDate)}
+              {target.readDateDerived ? ' (30 days after shipping)' : ''}
+              {target.readDue ? ' · due' : ''}
+            </span>
+          ) : null}
+        </p>
       )}
-    </Steps>
+      {r?.verdict && r.bean ? (
+        <p className="ds-epic-why-read" data-testid="epic-read">
+          <Bean kind={r.bean} decorative />
+          <b>{BEAN_WORDS[r.bean]}</b>
+          {r.actual !== null ? <span>actual {figure(r.actual)}</span> : null}
+          {r.to !== null ? <span className="ds-epic-now-when">target was {figure(r.to)}</span> : null}
+          {r.evidenceHref ? (
+            <a href={r.evidenceHref} rel="noreferrer">
+              evidence
+            </a>
+          ) : r.evidence ? (
+            <span className="ds-epic-now-when">{r.evidence}</span>
+          ) : null}
+          {r.late ? <span className="ds-epic-now-when">read late</span> : null}
+        </p>
+      ) : null}
+    </section>
+  )
+}
+
+/** A bar as SVG: inline `style` is forbidden by the drift guard, so the width is an attribute (D10). */
+function Bar({ pct, state, band }: { pct: number; state: string; band?: { low: number; high: number } }) {
+  return (
+    <svg
+      className="ds-epic-bar"
+      viewBox="0 0 100 6"
+      preserveAspectRatio="none"
+      aria-hidden="true"
+      data-state={state}
+    >
+      <rect className="ds-epic-bar-track" x="0" y="0" width="100" height="6" rx="3" />
+      {band ? (
+        <rect
+          className="ds-epic-bar-band"
+          x={band.low}
+          y="0"
+          width={Math.max(0, band.high - band.low)}
+          height="6"
+        />
+      ) : null}
+      <rect className="ds-epic-bar-fill" x="0" y="0" width={pct} height="6" rx="3" data-pct={pct} />
+    </svg>
+  )
+}
+
+/** S2.2 (D10) — one row per sprint: number, title, done/total and a bar. */
+export function EpicBars({ card }: { card: BoardCard }) {
+  if (card.sprints.length === 0)
+    return (
+      <p className="ds-hint">
+        {card.grain === 'Seed'
+          ? "Sprints appear once it's groomed."
+          : 'No sprints recorded for this epic yet.'}
+      </p>
+    )
+  return (
+    <ol className="ds-epic-bars" aria-label="Progress by sprint">
+      {card.sprints.map((sprint) => {
+        const bar = sprintBar(sprint.done, sprint.total)
+        return (
+          <li key={sprint.n} data-state={bar.state}>
+            <span className="ds-epic-bars-n">S{sprint.n}</span>
+            <span className="ds-epic-bars-title">{sprint.title ?? `Sprint ${sprint.n}`}</span>
+            <Bar pct={bar.pct} state={bar.state} />
+            <span className="ds-epic-bars-count">{`${sprint.done}/${sprint.total}`}</span>
+          </li>
+        )
+      })}
+    </ol>
+  )
+}
+
+const ENV_WORD: Record<string, string> = { on: 'serving', off: 'switched off', never: 'never activated' }
+
+/** S2.3 (D12) — the flag's state, from this project's registry; changed in Ship, never here. */
+export function EpicFlag({ flag, projectSlug }: { flag: EpicFlagView; projectSlug: string }) {
+  if (flag.kind === 'none')
+    return (
+      <p className="ds-epic-row" data-flag="none">
+        <span className="ds-epic-row-icon">
+          <Icon name="flag" size={14} />
+        </span>
+        <b>No flag</b>
+        {flag.note ? <span className="ds-epic-now-when">{flag.note}</span> : null}
+      </p>
+    )
+  const href = `/app/flags/${encodeURIComponent(projectSlug)}/${encodeURIComponent(flag.key)}`
+  return (
+    <p className="ds-epic-row" data-flag={flag.kind}>
+      <span className="ds-epic-row-icon">
+        <Icon name="flag" size={14} />
+      </span>
+      {flag.kind === 'found' ? (
+        <>
+          <b>
+            Flag <span className="ds-mono">{flag.key}</span>
+          </b>
+          <span className="ds-epic-flag-envs">
+            {flag.environments.map((env) => (
+              <span key={env.environment} data-env={env.environment} data-state={env.state}>
+                {env.environment}: {ENV_WORD[env.state] ?? env.state}
+                {env.state === 'on' && env.serving !== null ? ` ${JSON.stringify(env.serving)}` : ''}
+              </span>
+            ))}
+          </span>
+          <a className="ds-epic-row-action" href={href}>
+            Open in Ship
+          </a>
+        </>
+      ) : flag.kind === 'not_found' ? (
+        <b>
+          Flag <span className="ds-mono">{flag.key}</span> not found
+        </b>
+      ) : (
+        <b>
+          Flag <span className="ds-mono">{flag.key}</span>: its state could not be read
+        </b>
+      )}
+    </p>
+  )
+}
+
+/** S2.3 (D13) — spend against the quote, with the way to its FinOps row. */
+export function EpicSpend({
+  finops,
+  projectSlug,
+  slug,
+}: {
+  finops: EpicFinops
+  projectSlug: string
+  slug: string
+}) {
+  const bar = spendBar(finops)
+  const line = quoteActualLine(finops)
+  return (
+    <p className="ds-epic-row" data-testid="epic-finops">
+      <span className="ds-epic-row-icon">
+        <Icon name="gauge" size={14} />
+      </span>
+      <b>Spend</b>
+      {bar ? (
+        <Bar
+          pct={bar.actualPct}
+          state={bar.over ? 'over' : 'progress'}
+          band={{ low: bar.lowPct, high: bar.highPct }}
+        />
+      ) : null}
+      <span className="ds-epic-now-when">{line ? `${line} ≈ API $` : 'Not quoted · not measured yet'}</span>
+      <a
+        className="ds-epic-row-action"
+        href={`/app/finops/${encodeURIComponent(projectSlug)}#epic-${encodeURIComponent(slug)}`}
+      >
+        FinOps
+      </a>
+    </p>
   )
 }
 

@@ -156,7 +156,7 @@ test('the Roadmap tab shows areas × Shipped · Now · Next · Later, with a fre
   expect(html).not.toContain('ds-track')
 })
 
-test('an epic page renders its sprints from the pushed row, and an unknown slug 404s', async ({
+test('an epic page renders its sprint bars from the pushed row, and an unknown slug 404s', async ({
   request,
 }) => {
   const unique = `spec-drill-${Date.now()}`
@@ -173,8 +173,10 @@ test('an epic page renders its sprints from the pushed row, and an unknown slug 
   const ok = await request.get(`/hub/${DEMO_SLUG}/epic/${unique}`)
   expect(ok.status()).toBe(200)
   const html = await ok.text()
-  expect(html).toContain('Sprint 1 — the slice')
-  expect(html).toContain('3 of 3 stories')
+  // one-epic-page S2.2 — one bar per sprint: its title, done/total, and a bar as wide as the fraction.
+  expect(html).toContain('the slice')
+  expect(html).toContain('3/3')
+  expect(html).toMatch(/class="ds-epic-bar-fill"[^>]*width="100"/)
 
   // A slug absent from the artifact is a 404, not an empty page pretending to be an epic.
   const missing = await request.get(`/hub/${DEMO_SLUG}/epic/no-such-epic-anywhere`)
