@@ -163,6 +163,14 @@ test("a seed's page: the idea, no target yet, no sprints (S1.1)", async ({ page 
   await expect(page.locator('main')).toContainText("Sprints appear once it's groomed")
 })
 
+test('a seed with a goal still says it has no target yet (fresh review, #295)', async ({ page }) => {
+  await page.goto(`/hub/${slug()}/epic/fixture-seed-digest`)
+  await expect(page.locator('main .ds-answer')).toHaveText(
+    'So that a founder hears about the week without opening anything.'
+  )
+  await expect(page.locator('main')).toContainText('No target yet: that comes with grooming')
+})
+
 test('an unknown epic is a 404, by its own URL and by an old ?card= link', async ({ page }) => {
   expect((await page.goto(`/hub/${slug()}/epic/no-such-initiative`))?.status()).toBe(404)
   expect((await page.goto(`/hub/${slug()}/board?card=no-such-initiative`))?.status()).toBe(404)

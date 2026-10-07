@@ -72,6 +72,8 @@ Cites the epic README's lock; nothing here restates it.
 - **2.1:** D9 — through `epicResult` only. **2.2:** D10 — SVG bars, `--blue`/`--green`.
 - **2.3:** D11 (`flag_key`/`flag_note` through seed → scaffold → extract → contract → schema; template is the source,
   copies rendered; plugin + kit 0.34.0), D12 (the registry seam, this project only, production headline), D13, D14.
+- D7's template copy of the `SESSION-KICKOFFS.md` plain-lines note ships here, inside the 0.34.0 skills release (S1
+  changed only this project's copy; fresh review, #295).
 - Specs: extract + contract + schema tests for both fields, the scaffold test, an authed spec for flag found, not
   found and none (fixture flags created in the fixture project).
 

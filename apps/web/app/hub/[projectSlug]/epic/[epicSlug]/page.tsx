@@ -3,6 +3,7 @@ import { requireDashboardAccess } from '@/lib/dashboard-auth'
 import { getHubRoadmap } from '@/lib/hub-query'
 import { formatFreshness } from '@/lib/hub-freshness'
 import { boardQuery, findCard, hasStages, parseBoardFilters } from '@/lib/hub-board'
+import { epicFinops, quoteActualLine } from '@/lib/roadmap-finops'
 import { Answer, Crumb, Crumbs } from '@/design-system/primitives'
 import { HubShell } from '../../../hub-shell'
 import { EmptyBoard } from '../../board/board-components'
@@ -70,6 +71,7 @@ export default async function HubEpicPage({
   if (!card) notFound()
 
   const repo = (artifact.payload as { board?: { repo?: string } }).board?.repo ?? null
+  const spend = card.finops ? quoteActualLine(epicFinops(card.finops)) : null
   const freshness = formatFreshness(artifact.generatedAt, new Date(), artifact.sourceCommit)
 
   return (
@@ -83,9 +85,17 @@ export default async function HubEpicPage({
       <Answer>
         {card.goal ??
           (card.grain === 'Seed'
-            ? 'The idea is in its seed, below. No target yet: that comes with grooming.'
+            ? 'The idea is in its seed, below.'
             : 'No goal is written for this epic yet — its README has no Why paragraph.')}
       </Answer>
+      {/* A seed never has a target, goal or no goal (fresh review, #295: most seeds carry a goal). */}
+      {card.grain === 'Seed' ? <p className="ds-hint">No target yet: that comes with grooming.</p> : null}
+      {/* Spend stays on the page between the two sprints (fresh review, #295) — S2 draws it as a bar (D13). */}
+      {spend ? (
+        <p className="ds-hint" data-testid="epic-finops">
+          {spend} <span className="ds-mono">≈ API $</span>
+        </p>
+      ) : null}
       <EpicSprints card={card} />
       <EpicDocs card={card} repo={repo} />
       <EpicFreshness freshness={freshness} />
