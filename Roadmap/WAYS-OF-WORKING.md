@@ -208,7 +208,7 @@ retrospective, no leftover branch) — **and** the judgment items below are true
 - [ ] **Each sprint has a smoke walkthrough** a person can follow blind, with real URLs; money/auth steps
       are flagged by name as owed to the product owner.
 - [ ] **Team memory** (and its index, if your tooling keeps one) records the epic.
-- [ ] **Kill-switch — only if one was planned at grooming:** the flag exists with the polarity the scope doc stated (the rule: `groom/references/kill-switch.md`). This verifies planned work; it is not a new build-time gate.
+- [ ] **Kill-switch — only if one was planned at refining:** the flag exists with the polarity the scope doc stated (the rule: `refine/references/kill-switch.md`). This verifies planned work; it is not a new build-time gate.
 
 ## Automated QA
 
@@ -341,12 +341,12 @@ either channel. The guard still labels its model and blocks known unsupported cl
   the poster rule: the public page never claims ✅ for unshipped work, and never lags a shipped
   one.
 - **Grooming cadence (updated 2026-07-14):** with a strong planning model (Fable-class), the
-  default is a **single-session groom** — one deep Definition-of-Ready groom for the front-of-queue
+  default is a **single-session refinement** — one deep Definition-of-Ready refinement for the front-of-queue
   epic *plus* a portfolio pass that seeds/resequences the rest of the funnel — rather than one seed
-  per session. The groom skill's discipline is **one deep ask per approval gate; keep going while the
+  per session. The refine skill's discipline is **one deep ask per approval gate; keep going while the
   budget line says so** (updated 2026-09-30, session-budget): each ask stops at its own scope-doc gate,
   and the line printed there says keep going, checkpoint or hand off. What batches besides is the funnel
-  bookkeeping. Deep-groom later epics only when they reach
+  bookkeeping. Deep-refine later epics only when they reach
   the front. Build sprints stay session-sized — versions may supersede in the immediately-next
   sprint, so keep per-sprint kickoffs thin and let the epic docs carry state.
 
