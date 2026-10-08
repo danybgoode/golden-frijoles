@@ -141,7 +141,9 @@ the poster and the code once per session.
 **D9 · Private strategy.** `template/scripts/strategy-private.mjs ensure` (kit-carried) runs before a coach's first write:
 on a repo that is public or whose visibility can't be read, with nothing under `Roadmap/00-strategy/` tracked and the
 folder not already ignored, it appends `Roadmap/00-strategy/` to `.gitignore` and prints one line saying so and how to
-opt in (delete that line). A private repo, a tracked file or an existing ignore: no change, one line saying why. Pure
+opt in (delete that line, or change it to `!Roadmap/00-strategy/`; any `!` rule git honours, in any `.gitignore`,
+counts, and a later coach never undoes it; git runs without a hook's GIT_DIR/GIT_WORK_TREE: *amended at review of
+#315*). A private repo, a tracked file or an existing ignore: no change, one line saying why. Pure
 decision function, specced.
 
 **D10 · One-pagers.** `template/scripts/one-pagers.mjs` (kit-carried, `gf-kit one-pagers`) renders a business model
