@@ -23,7 +23,7 @@ stories:
 ---
 # Coaches v2 — Sprint 1: Cold read and compare
 
-**Status:** ⬜ not started
+**Status:** 🔨 in review (PR pending, 0.41.0)
 
 ## Stories
 
