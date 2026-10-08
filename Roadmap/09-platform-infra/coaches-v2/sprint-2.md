@@ -69,11 +69,11 @@ stories:
 ## Sprint 2 — Smoke walkthrough (do these in order)
 Env: a local repo with the plugin installed from this branch's release
 
-1. Run `/golden-frijoles:narrative`
+1. Run `/golden-frijoles:pmf-narrative`
    → the first message says "Step 1 of 8" and offers options to choose from.
-2. Stop after step 3 and open `strategy/narrative.md`
+2. Stop after step 3 and open `Roadmap/00-strategy/pmf-narrative.md`
    → steps 1–3 are saved as a draft.
 3. Run `git status` on a public repo
-   → the strategy folder isn't listed.
+   → the strategy folder isn't listed (`.gitignore` gained `Roadmap/00-strategy/` and a line saying how to opt in).
 
 If any step fails, note the step number + what you saw — that's the bug report.
