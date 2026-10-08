@@ -38,4 +38,3 @@ export async function gate(gate: Gate): Promise<boolean> {
   if (override !== undefined) return override
   return resolveGate(gate, await catalog(), process.env)
 }
-
