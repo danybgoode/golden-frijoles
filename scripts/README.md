@@ -75,7 +75,7 @@ re-check before "unifying" it.
 - **`standup-report.mjs`** — a LOCAL, git-derived prose report (writer + guard, `--post`), run by a person
   or the report daemon. The template's `standup.mjs` is a ROUTINE-driven, multi-repo PR/CI/board delta
   report. Different inputs, different trigger, different reader; both now use the one shared prose
-  writer and guard. The plugin's `standup-post` skill runs the template one.
+  writer and guard. The plugin's `report` skill (daily chapter) runs the template one.
 - **`commit-report.mjs` + `report-new-commits.mjs` + `report-main-daemon.mjs`** (and `launchd/`) — the
   merge-report rail, which *originated here*. It posts to Telegram **and Slack**, checkpoints
   exactly-once **per channel**, and retries from a launchd daemon because the prose writers have no
