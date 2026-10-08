@@ -40,8 +40,8 @@ default to the same project, **so that** the landing, Hub, connector, CI pushes 
 **Acceptance:**
 - `lib/public-demo.ts` defaults to `golden-frijoles`. `lib/self-track.ts` defaults to `DEMO_PROJECT_SLUG` (one project).
 - `golden-beans` and `golden-beans-demo` are reserved, so nobody can sign up with them.
-- `/hub/golden-beans-demo/*`, `/app/<section>/golden-beans-demo/*` and the `golden-beans` equivalents redirect (308)
-  to `golden-frijoles`.
+- `/hub/golden-beans-demo/*` and `/app/<section>/golden-beans-demo/*` redirect (308) to `golden-frijoles`.
+  `golden-beans` does not redirect: it stays, archived, with its flag history readable (README, Build contract — S1).
 - `golden-frijoles.config.json → hubUrl`, the seed scripts, fixtures, surfaces and specs all use the new slug.
 - Rule #2 specs: only `golden-frijoles` is public. `golden-beans` and `golden-beans-demo` no longer exist as projects
   in CI.
