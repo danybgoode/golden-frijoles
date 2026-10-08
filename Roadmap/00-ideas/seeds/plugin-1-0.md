@@ -12,7 +12,7 @@ build_order: 73
 updated: 2026-10-08
 intent_ask: verbatim   # verbatim = the product owner's own words below · proxy = reconstructed after the fact
 hypothesis: "We believe that a plugin with five plainly named skills and a CLI no shell alias can shadow, for founders installing Golden Frijoles for the first time, will let more of them reach a first approved plan, because today the first command silently runs git fetch on oh-my-zsh machines and the skill list reads like our own toolbox."
-target_metric: proving_workspaces
+target_metric: null    # no target: proving_workspaces has no recorded value yet (pushed from outside, never pushed); read by the stranger walkthrough
 target_from: null      # no value recorded yet: the input is pushed from outside and has never been pushed
 target_to: null
 read_date: null        # 30 days after shipping

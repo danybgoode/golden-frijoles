@@ -14,7 +14,7 @@ quote_low_usd: 55    # ≈ API $ — copied from the seed's `quote:` by scaffold
 quote_high_usd: 111
 quote_basis: "L, n=4, p25–p75"
 hypothesis: "We believe that a plugin with five plainly named skills and a CLI no shell alias can shadow, for founders installing Golden Frijoles for the first time, will let more of them reach a first approved plan, because today the first command silently runs git fetch on oh-my-zsh machines and the skill list reads like our own toolbox."   # the result record — copied from the seed by scaffold-epic; null = no target (never an error)
-target_metric: "proving_workspaces"   # which number: a North Star input key (grounded) or free text (not grounded)
+target_metric: null    # no target: proving_workspaces has no recorded value yet; read by the stranger walkthrough
 target_from: null   # from what, a number
 target_to: null       # to what, a number
 read_date: null       # YYYY-MM-DD; null = 30 days after shipping, derived by the extract and never written back
