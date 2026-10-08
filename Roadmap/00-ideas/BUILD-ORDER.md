@@ -28,11 +28,10 @@ _a pitch is waiting at the approval gate._
 - [Analytics visualization — the charting-dependency decision (spike), then the layer](seeds/analytics-visualization-layer.md) — #14 · 01 Growth Engine · seed · Spike · risk: Low · appetite S · _docs: status ready_
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
 
-## Ready to build (8)
+## Ready to build (7)
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
-- [One product project, and every flag in it](../09-platform-infra/one-product-project/README.md) — #63 · 09 Platform Infra · 0/9 stories · risk: High · appetite L · _docs: status in-progress_
 - [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #71 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
 - [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #73 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
 - [Scenarios made PM-operable — define, launch, and kill a scenario from the UI](../01-growth-engine/scenarios-pm-operable/README.md) — #74 · 01 Growth Engine · 10/10 stories · risk: High · appetite M · _docs: status in-progress_
@@ -49,7 +48,7 @@ _a work branch is on origin. Not in this committed file: `node scripts/build-ord
 
 _a PR is ready for review, or merged and waiting for its close-out. Not in this committed file: `node scripts/build-order.mjs --live` or the Hub board._
 
-## Shipped (66)
+## Shipped (67)
 
 _merged, deployed and closed._
 
@@ -61,6 +60,7 @@ _merged, deployed and closed._
 - [One epic page ✅](../02-commercial/one-epic-page/README.md) — #66 · 02 Commercial · 6/6 stories · risk: Low · appetite M · _docs: status shipped_
 - [The result record ✅](../02-commercial/result-record/README.md) — #65 · 02 Commercial · 9/9 stories · risk: Low · appetite M · _docs: status shipped_
 - [One header and one name per thing ✅](../02-commercial/one-header-one-name/README.md) — #64 · 02 Commercial · 6/6 stories · risk: Low · appetite M · _docs: status shipped_
+- [One product project, and every flag in it](../09-platform-infra/one-product-project/README.md) — #63 · 09 Platform Infra · 9/9 stories · risk: High · appetite L · _docs: status shipped_
 - [Account from the terminal ✅](../02-commercial/account-from-the-terminal/README.md) — #62 · 02 Commercial · 8/8 stories · risk: High · appetite L · _docs: status shipped_
 - [Connect: start where you are ✅](../02-commercial/connect-page/README.md) — #61 · 02 Commercial · 6/6 stories · risk: High · appetite M · _docs: status shipped_
 - [Fund at approval: the approval gate is the betting table](../09-platform-infra/fund-at-approval/README.md) — #60 · 09 Platform Infra · 6/6 stories · risk: Low · appetite S · _docs: status shipped_

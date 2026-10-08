@@ -3,7 +3,7 @@ epic: one-product-project
 sprint: 3
 title: "Move the flags and delete the env vars"
 risk: high
-phase: Verifying
+phase: Shipped
 stories_total: 3
 stories:
   - id: S3.1
@@ -19,7 +19,7 @@ stories:
     i_want: "zero *_ENABLED vars in Vercel"
     so_that: "there is one source of truth"
     risk: high
-    status: planned
+    status: done
   - id: S3.3
     title: "The docs say the catalog is the gate"
     as_a: "an agent"
@@ -30,7 +30,7 @@ stories:
 ---
 # One product project, and every flag in it — Sprint 3: Move the flags and delete the env vars
 
-**Status:** 🟡 built and reviewed; merge + prod step owed to Daniel (README → Cutover runbook)
+**Status:** ✅ shipped 2026-10-08 (#318 `f5e4c2c`, #319 `26a1fd3`, #320)
 
 ## Stories
 

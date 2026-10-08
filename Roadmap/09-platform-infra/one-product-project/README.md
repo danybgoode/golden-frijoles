@@ -1,6 +1,6 @@
 ---
-status: in-progress   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Building                   # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+status: shipped   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+phase: Shipped                   # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
 locked_at: "2026-10-08T12:21:43Z"
 slug: one-product-project
@@ -202,19 +202,23 @@ Owed. HIGH-risk PRs are merged by Daniel (WAYS-OF-WORKING → *Review & merge*; 
    changes nothing). Then check that `/hub/golden-frijoles`
    renders, `/hub/golden-beans-demo` redirects to it, and `/app/north-star/golden-frijoles` reads Proven bets. The
    public demo routes 404 for the minute between deploy and rename.
-2. **Merge #319 (S2)** (base retargets to `main` once #318 is in). Its deploy reads every gate from the catalog.
+2. ✅ **Merge #319 (S2)** — `26a1fd3`, deployed; every probe answered as before (snapshot 401; scenarios, security,
+   breakers 404; signup, install, login, hub 200; connector 401; no `[gates]` errors in the logs). (Original step:) (base retargets to `main` once #318 is in). Its deploy reads every gate from the catalog.
    Every gate's fallback is its production value, so nothing visible changes. Verify with the S3.1 probes:
    `GET /api/v1/flags/snapshot` → 401, `GET /api/v1/scenarios/snapshot` → 404, `POST /api/v1/breakers/automatic` →
    404, `/signup` renders, `/install` renders.
-3. **Kill test (S3.2), while `AGENT_RAIL_ENABLED=true` is still set in Vercel** (fresh review of #319, S5: no test
+3. ✅ **Kill test done 2026-10-08 on `auth.signup_enabled`** (visible signed out, `SIGNUP_ENABLED=true` still in Vercel):
+   `/signup` went 404 32 s after `gf flags kill`, and back to 200 31 s after `gf flags set --value true` (v2 → v3).
+   (Original step, on the rail, signed in:) **Kill test (S3.2), while `AGENT_RAIL_ENABLED=true` is still set in Vercel** (fresh review of #319, S5: no test
    resolves a gate from a real catalog row, and this one step proves the whole chain plus `VERCEL=1` at runtime):
    `gf flags kill console.agent_rail_enabled --env production --project golden-frijoles`, reload `/app` (signed in):
    within a minute the rail is gone, although the env var says on. `gf flags set console.agent_rail_enabled on …`: it returns.
-4. **Delete the env vars (S3.2)**, only after step 2 is verified. Production: the 18 `*_ENABLED` names in the gate table,
+4. ✅ **Env vars deleted** — 18 production, 6 preview, 4 development; `vercel env ls <env> | grep _ENABLED` is empty
+   in all three. (Original step:) **Delete the env vars (S3.2)**, only after step 2 is verified. Production: the 18 `*_ENABLED` names in the gate table,
    `FLAG_SERVING_ENABLED` included. Preview: `AGENT_RAIL_ENABLED`, `EXPERIMENT_BUILDER_ENABLED`, `FLAG_CONSOLE_ENABLED`,
    `FLAG_RULE_BUILDER_ENABLED`, `SCENARIO_AUTHORING_ENABLED`. Then `vercel env ls production | grep _ENABLED` should
    print only Vercel's own `TURBO_DOWNLOAD_LOCAL_ENABLED`.
-5. **Merge #320 (S3 docs).**
+5. ✅ **Merge #320 (S3 docs).**
 
 ## Definition of Done (epic)
 - [ ] All sprints merged to `main` + smoke-tested (gaps stated — `node scripts/owed-ledger.mjs` counts what is still owed)
