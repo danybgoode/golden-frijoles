@@ -9,16 +9,26 @@
 /** What a hidden field reads as. */
 export const HIDDEN_ON_PUBLIC_CONNECTOR = 'hidden on the public connector'
 
-// Field names that carry a person: an actor, a user id, a claimant, a maker — and targeting rules, which may name
-// a user id or an email verbatim.
-const PERSON_FIELD = /^(actor|actor_?user_?id|user_?id|claimed_?by|created_?by|decided_?by|maker|email|rules)$/i
+// Field names that carry a person: an actor, a user/subject/visitor id, a claimant, a maker, an email. Also a
+// journey drilldown's paging cursor, which encodes its last subject id (lib/journey-cohort.ts), so an anonymous
+// reader gets the cohort's numbers but no page of who is in it (round 3).
+const PERSON_FIELD =
+  /^(actor|actor_?(user_?)?id|external_?actor_?id|user_?ids?|subject_?ids?|visitor_?ids?|distinct_?ids?|owner_?id|claimed_?by|created_?by|decided_?by|maker|email|next_?cursor)$/i
+// Targeting rules may name a user id or an email verbatim. An empty list names nobody and keeps its type.
+const RULES_FIELD = /^rules$/i
+
+function hides(key: string, field: unknown): boolean {
+  if (field === null) return false
+  if (RULES_FIELD.test(key)) return !(Array.isArray(field) && field.length === 0)
+  return PERSON_FIELD.test(key)
+}
 
 export function scrubForPublicReader(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(scrubForPublicReader)
   if (value === null || typeof value !== 'object') return value
   const out: Record<string, unknown> = {}
   for (const [key, field] of Object.entries(value)) {
-    out[key] = PERSON_FIELD.test(key) && field !== null ? HIDDEN_ON_PUBLIC_CONNECTOR : scrubForPublicReader(field)
+    out[key] = hides(key, field) ? HIDDEN_ON_PUBLIC_CONNECTOR : scrubForPublicReader(field)
   }
   return out
 }

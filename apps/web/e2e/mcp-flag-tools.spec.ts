@@ -112,14 +112,20 @@ test.describe('MCP flag write tools', () => {
 
       // one-product-project S1.1 (fresh review of #318): the public project's URL is on /install for anyone. An
       // anonymous reader sees the flag, but the audit names no user id — the owner just wrote one into it.
-      const anonymous = await rpc(request, connector, null, 'tools/call', { name: 'get_flag', arguments: { key } })
+      const anonymous = await rpc(request, connector, null, 'tools/call', {
+        name: 'get_flag',
+        arguments: { key },
+      })
       const read = JSON.parse(anonymous.result.content[0].text)
       expect(read.ok).toBe(true)
       expect(read.flag.audit.length).toBeGreaterThan(0)
       for (const row of read.flag.audit) expect(row.actor).toBe('hidden on the public connector') // lib/public-connector-scrub.ts
       expect(anonymous.result.content[0].text).not.toContain(owner.userId)
       // …and the condition is not a constant: the owner's own bearer, on the same URL, still sees their id.
-      const asOwner = await rpc(request, connector, owner.token, 'tools/call', { name: 'get_flag', arguments: { key } })
+      const asOwner = await rpc(request, connector, owner.token, 'tools/call', {
+        name: 'get_flag',
+        arguments: { key },
+      })
       expect(asOwner.result.content[0].text).toContain(owner.userId)
     } finally {
       await owner.cleanup()

@@ -96,7 +96,9 @@ function scrubRepliesForPublicReader(server: McpServer): void {
         ...reply,
         content: (reply.content ?? []).map((part) => {
           const item = part as { type?: string; text?: string }
-          return item.type === 'text' && typeof item.text === 'string' ? { ...item, text: scrubToolText(item.text) } : part
+          return item.type === 'text' && typeof item.text === 'string'
+            ? { ...item, text: scrubToolText(item.text) }
+            : part
         }),
       }
     })
