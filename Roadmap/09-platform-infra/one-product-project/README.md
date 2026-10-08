@@ -1,7 +1,8 @@
 ---
-status: scaffolded   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Shaping       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+status: in-progress   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+phase: Building                   # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
+locked_at: "2026-10-08T12:21:43Z"
 slug: one-product-project
 title: "One product project, and every flag in it"
 area: 09-platform-infra
@@ -77,23 +78,64 @@ table and no migration.
 | `SIGNUP_ENABLED` | `auth.signup_enabled` | true | true |
 | `CONNECTOR_ENABLED` | `connector.mcp_enabled` | true | true |
 | `CONNECTOR_WRITES_ENABLED` | `connector.writes_enabled` | true | true |
-| `DESTINATION_DELIVERY_ENABLED` | `delivery.destinations_enabled` | masked → S3.1 | S3.1 |
+| `DESTINATION_DELIVERY_ENABLED` | `delivery.destinations_enabled` | **false** (read live: the daily cron ran 2026-10-08 06:20, 0 attempts since 2026-07-22, 320 pending) | false |
 | `JOURNEY_PROJECTIONS_ENABLED` | `journeys.projections_enabled` | true | true |
 | `EXPERIMENT_GOVERNANCE_ENABLED` | `experiments.governance_enabled` | true | true |
 | `EXPERIMENT_BUILDER_ENABLED` | `experiments.builder_enabled` | true | true |
 | `REPORT_SHARES_ENABLED` | `reports.shares_enabled` | true | true |
 | `SIGNALS_ENABLED` | `signals.loop_enabled` | true | true |
 | `FLAG_DEFINITION_SYNC_ENABLED` | `flags.definition_sync_enabled` | true | true |
-| `FLAG_RULE_BUILDER_ENABLED` | `flags.rule_builder_enabled` | masked → S3.1 | S3.1 |
+| `FLAG_RULE_BUILDER_ENABLED` | `flags.rule_builder_enabled` | true (recorded live 2026-08-10; signed-in page only, re-confirmed in S3's smoke) | true |
 | `FLAG_CONSOLE_ENABLED` | `flags.console_enabled` | true | true |
-| `RESILIENCE_SCENARIOS_ENABLED` | `ops.resilience_scenarios_enabled` | masked → S3.1 | S3.1 |
-| `SECURITY_SIMULATIONS_ENABLED` | `ops.security_simulations_enabled` | masked → S3.1 | **false** |
-| `AUTOMATIC_CIRCUIT_BREAKERS_ENABLED` | `ops.automatic_circuit_breakers_enabled` | masked → S3.1 | **false** |
-| `SCENARIO_AUTHORING_ENABLED` | `ops.scenario_authoring_enabled` | false | **false** |
+| `RESILIENCE_SCENARIOS_ENABLED` | `ops.resilience_scenarios_enabled` | **false** (read live: `GET /api/v1/scenarios/snapshot` → 404) | false |
+| `SECURITY_SIMULATIONS_ENABLED` | `ops.security_simulations_enabled` | **false** (read live: `POST /api/v1/scenarios/security` → 404) | false |
+| `AUTOMATIC_CIRCUIT_BREAKERS_ENABLED` | `ops.automatic_circuit_breakers_enabled` | **false** (read live: `POST /api/v1/breakers/automatic` → 404) | false |
+| `SCENARIO_AUTHORING_ENABLED` | `ops.scenario_authoring_enabled` | false | false |
 | `AGENT_RAIL_ENABLED` | `console.agent_rail_enabled` | true | true |
-| `FLAG_SERVING_ENABLED` | — retired: always on (D2) | masked → S3.1 must read ON | — |
+| `FLAG_SERVING_ENABLED` | — retired: always on (D2) | true (read live: `GET /api/v1/flags/snapshot` → 401, not 404) | — |
 | `CLI_WRITE_API_ENABLED` | — retired: always on (D2) | unset = on | — |
 | *(already a flag)* | `auth.terminal_sign_in_enabled` | as in `golden-beans` | true |
+
+### Lock findings (2026-10-08, against live code and prod)
+- **The masked values were read from prod behaviour** (table above). Four gates are OFF in production: delivery,
+  resilience scenarios, security simulations and automatic breakers. **`ci/gates.on.env` says CI mirrors production
+  with three of them ON, and that is false.** CI keeps testing them ON (that is coverage). Only the comment's claim is
+  corrected, in S3.3. The migration preserves prod: those flags are activated `false`.
+- **D5 amended by the reads:** each fallback is now the prod value, so every OFF gate falls back OFF. No gate needs an
+  exception any more.
+- **`gf flags kill` serves `false` and clears the rules** (`packages/cli/src/__golden__/help.txt`). A gate reads
+  `false` as off and any other served boolean as its value. A row that is not readable (never activated, or
+  deactivated) serves the fallback (`isTerminalSignInOn`'s rule, generalised).
+- **No new migration.** The data moves are row UPDATEs. `flag_definition_versions` and `journey_definition_versions`
+  have immutability triggers, which is why the flag is recreated and the journey proof rows stay.
+- **`golden-beans` keeps its slug** (archived: no live key or token). Its slug and `golden-beans-demo` are reserved.
+
+### Build contract — S1 (locked by the architect before the builder started)
+- `DEMO_PROJECT_SLUG` default → `golden-frijoles`. `SELF_PROJECT_SLUG` default → `DEMO_PROJECT_SLUG`, still
+  env-overridable. Neither var is set in Vercel production, so the default IS prod.
+- `RESERVED_SLUGS` gains `golden-beans-demo` and `golden-frijoles`. `golden-beans` is already there.
+- `next.config` redirects (permanent): `/hub/golden-beans-demo/:path*`, `/hub/golden-beans-demo`, and
+  `/app/:section/golden-beans-demo/:path*` → `golden-frijoles`. The same for `golden-beans` under `/app/:section/`.
+- Every literal `golden-beans-demo` in code, specs, fixtures, surfaces and seed scripts becomes `golden-frijoles`.
+  `Roadmap/` history is not rewritten.
+- The prod SQL (S1.2) runs in ONE transaction, after S1's deploy is Ready, with the backup taken first.
+
+### Build contract — S2
+- `lib/gates-decision.ts` (pure, no imports): `GATES` (key, envVar, fallback), `resolveGate(rows, env, gate, envOverride,
+  onVercel)`. `lib/gates.ts` (server-only): one registry read per 30 s per process for `golden-frijoles`
+  (`DEMO_PROJECT_SLUG`), returning a map. `isXEnabled()` keep their names and become `async`.
+- Off Vercel (`process.env.VERCEL !== '1'`), a set env var (`'true'`/anything else) wins. On Vercel, env is never read.
+- `isFlagServingEnabled`/`isCliWriteApiEnabled` are deleted, along with their checks. The always-on paths stay.
+- Guard spec: no `process.env.<X>_ENABLED` in `apps/web/{app,lib,components}` outside `lib/gates*.ts`.
+
+### Build contract — S3
+- Flags are created with `gf flags create <key> --kill-switch|--enablement --all-envs` (polarity = prod value: true →
+  kill-switch, false → enablement), then `gf flags get` per key. The env vars are removed with `vercel env rm` only
+  after S2's deploy is verified gate by gate.
+
+## Routing
+Architect and builder in place (one session, Opus 5.5). Reviews go through `scripts/review-route.mjs`, and a fresh
+`pr-reviewer` runs on every PR (high risk).
 
 ## What already exists (reuse, don't rebuild)
 - `apps/web/lib/terminal-sign-in-flag.ts` + `terminal-sign-in-flag-decision.ts`: the in-process catalog read, its

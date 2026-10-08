@@ -3,7 +3,7 @@ epic: one-product-project
 sprint: 1
 title: "One project"
 risk: high
-phase: Shaping
+phase: Building
 stories_total: 3
 stories:
   - id: S1.1
