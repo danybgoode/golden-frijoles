@@ -372,8 +372,8 @@ independently shippable slice of value.
   requests grouped by branch, last 12 months, the 20 largest, marked "backfilled, no target"), Building epics from
   open pull requests, and open issues grouped into backlog ideas. It writes only new files under `Roadmap/`, through
   groom's generators, and only reads GitHub. **A new idea** takes one sentence, then strategy first or a first epic
-  now. With no strategy, a pitch and its Plan gate say "not grounded". **Owed:** Daniel's terminal walkthrough, and a
-  CLI release so `gf config` stops asking the retired Q2.
+  now. With no strategy, a pitch and its Plan gate say "not grounded". `gf setup` (CLI 0.8.0, #309–#310) asks the same
+  Q1 and hands This repo to the read. **Owed:** Daniel's terminal walkthrough.
 - ✅ [Outcome report v2](02-commercial/outcome-report-v2/README.md) (launch epic 6) — **shipped and live 2026-10-07**
   (#299, #300). The Outcome report opens by saying whether the product is on the pace its epics planned, then a chart
   of each North Star input against the line the shipped epics' targets draw, four figures each against expected, and

@@ -35,8 +35,9 @@ _Quote vs actual: $22–34 (M, n=8, p25–p75) → ≈$13.45 (−60% vs the quot
 ## Gaps / follow-ups
 - **Owed to Daniel:** the terminal walkthrough in `sprint-1.md` (setup in a real session, steps 1–5), and the
   `_Intent_` answer above.
-- **CLI follow-up:** `gf config`'s setup still asks the retired Q2, and its `nextSteps()` sends `building` to
-  `live-smoke`. Retire Q2 in the registry and point it at the skill's read, in one CLI release (D4 amendment).
+- ~~**CLI follow-up**~~ **done 2026-10-08** (#309 kit 0.38.0, #310 CLI 0.8.0 + plugin/kit 0.39.0): `gf setup` asks
+  Q1 and the account question only and sends This repo to the skill's read; the skill's setup also runs on an empty
+  skeleton. Verified live: `npx @golden-frijoles/cli@0.8.0 setup --yes` and `/install` naming 0.8.0.
 - **Limit (D6):** an open PR on a branch with capitals, `_` or `.` gets an epic the live board won't match, so it
   shows Ready to build, not Building.
 - **Not verified:** `build-order --live` turning a backfilled open-PR epic into Building against a real origin. The
