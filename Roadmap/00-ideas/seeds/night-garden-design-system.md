@@ -8,7 +8,7 @@ appetite: M
 underwritten_by: wave-2026-10
 risk: low
 epic: "02-commercial/night-garden-design-system"
-build_order: 73
+build_order: 74
 updated: 2026-10-05
 intent_ask: verbatim   # verbatim = the product owner's own words below · proxy = reconstructed after the fact
 intent_match: null     # 2026-10-05: could not look, jev unreachable (F28). Written by `node scripts/intent-match.mjs <this seed> --write` (groom Stage 3.5) — advisory
