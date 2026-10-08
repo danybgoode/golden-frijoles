@@ -40,14 +40,15 @@ export const SCREEN_RENAMES: readonly { retired: string; now: string }[] = [
   { retired: 'Tasks', now: SCREEN_WORDS.agentQueue },
   { retired: 'Activity', now: SCREEN_WORDS.flagHistory },
   { retired: 'To groom', now: 'Backlog' },
+  { retired: 'Grooming', now: 'Refining' },
   { retired: 'Ready to build', now: 'Ready' },
 ]
 
 // A `Record` over the CLOSED stage union, so a seventh stage is a compile error here rather than a column that shows
-// its raw key. Only two differ from their key.
+// its raw key. Three differ from their key (plain agile: Backlog → Refining → Ready; plugin-1-0 D6).
 const STAGE_LABEL: Record<RoadmapStage, string> = {
   'To groom': 'Backlog',
-  Grooming: 'Grooming',
+  Grooming: 'Refining',
   'Ready to build': 'Ready',
   Building: 'Building',
   QA: 'QA',

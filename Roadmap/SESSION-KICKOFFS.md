@@ -16,7 +16,7 @@ every kickoff below sits in one of three stages — say which one you're in and 
 
 | Stage | Question it answers | Kickoffs |
 |---|---|---|
-| **Shape** | *What is this worth, and what's the smallest thing that delivers it?* | §1 (groom → a pitch), §3 (spike), §10 (re-shape after a breaker) |
+| **Shape** | *What is this worth, and what's the smallest thing that delivers it?* | §1 (refine → a pitch), §3 (spike), §10 (re-shape after a breaker) |
 | **Bet** | *What are we funding this wave, and what does it displace?* | §9 (the betting table) |
 | **Build** | *Execute the approved plan.* | §2, §4, §6, §7, §8 |
 
@@ -41,14 +41,14 @@ Pleasantries are fine and cost nothing — the leverage is the defined verb, not
 
 | Say this | Expands to |
 |---|---|
-| **Groom: \<ask\>** / **Shape: \<ask\>** | §1 — groom a raw ask into a shaped pitch (synonyms; "Shape" just names the stage) |
+| **Refine: \<ask\>** / **Shape: \<ask\>** | §1 — refine a raw ask into a shaped pitch (synonyms; "Shape" just names the stage) |
 | **Bet** / **Bet the wave** | §9 — run the betting table at a wave boundary, write `Roadmap/bets/<wave>.md` |
 | **Re-shape \<slug\>** | §10 — an M/L bet hit its circuit breaker; back to shaping, never extended in flight |
 | **Build epic \<epic\>** | §2 — build a WHOLE epic in one orchestrated run (**the default**). Start it: `/build <slug>` (without the plugin's mod: `npx -y @golden-frijoles/kit emit-epic-kickoff --epic <slug>` from the project root) |
 | **Build S\<N\> of \<epic\>** | §2 — build a single sprint (the exception: one-sprint epic, or the next sprint's scope genuinely isn't knowable yet) |
 | **Spike \<name\>** | §3 — run a spike |
-| **Review PR #\<N\>** | §4 — route it: `node scripts/review-route.mjs --builder <who> <N>` → one external general pass + the fresh `pr-reviewer` subagent (+ a security lens when the paths trigger it) |
-| **Cross-review PR #\<N\>** | §4 — synonym. Always route it; hand-picking `--agent` is how a family reviews its own diff. The fresh `pr-reviewer` subagent runs on **every** non-trivial PR here |
+| **Review PR #\<N\>** | §4 — route it: `node scripts/review-route.mjs --builder <who> <N>` → one external general pass + the fresh `verifier` subagent (+ a security lens when the paths trigger it) |
+| **Cross-review PR #\<N\>** | §4 — synonym. Always route it; hand-picking `--agent` is how a family reviews its own diff. The fresh `verifier` subagent runs on **every** non-trivial PR here |
 | **Skip \<family\>** | a reviewer family is capped — re-route past it: `node scripts/review-route.mjs --builder <who> <N> --exclude <family>` (there is no refund pause) |
 | **Panel: \<scope-doc \| ask\>** | advisory second opinion on a *plan* — `node scripts/cross-panel.mjs <doc> --lens both --agent codex\|antigravity` (single-pass, print-only, never gates; on demand only) |
 | **Wrap S\<N\>** | tick the sprint doc status + emit the §7 sprint-wrap terminal summary |
@@ -64,12 +64,12 @@ ledgerly" is **Review PR #42**. Same step, either spelling.
 
 ---
 
-## 1 · Groom a raw ask into a shaped pitch — strong model *(the Shape stage)*
+## 1 · Refine a raw ask into a shaped pitch — strong model *(the Shape stage)*
 ```
-Groom: <ask>.
+Refine: <ask>.
 Read <AGENTS-path> (Start here) + Roadmap/LEARNINGS.md; skim team memory, Roadmap/00-ideas/BUILD-ORDER.md
 and the latest Roadmap/bets/ wave file (what's already funded, and what it displaced).
-Use the groom skill — planning only, no code. Orient → SET THE APPETITE BEFORE ANY SOLUTIONING → classify
+Use the refine skill — planning only, no code. Orient → SET THE APPETITE BEFORE ANY SOLUTIONING → classify
 class + lane → "can we already do this?" → disambiguate → platform-primitives-first reframe → bill of
 materials → slice into sprints. Land the pitch in Roadmap/00-ideas/seeds/ with appetite: set and
 underwritten_by: null. Never assume — validate at each gate.
@@ -79,15 +79,15 @@ designed; if the solution won't fit, narrow the problem or cut scope — never g
 mid-shaping. An agent will build anything if allowed to tokenmaxx; the appetite is what makes it
 stop and hammer scope instead.
 
-**Then the lane decides what happens next — say which one at the end of the groom:**
+**Then the lane decides what happens next — say which one at the end of refining:**
 
 | Lane | Tell | What follows |
 |---|---|---|
-| **Shaped bet** | genuinely-new / strategic | pitch is complete (problem · appetite · bill of materials · rabbit holes · no-gos) → stops at `status: ready`, waits for §9. **No scaffolding yet** — an unfunded epic is a plan nobody paid for. |
+| **Shaped bet** | genuinely-new / strategic | the plan is complete (problem · appetite · bill of materials · rabbit holes · no-gos) → the **Plan gate**: *Approve the plan* places it in the queue and sets up its epic and sprint docs in the same answer; *Park it* leaves it `status: ready` with nothing set up. |
 | **Fixed scope** | bug, chore, well-specified story | default `appetite: S`, **skip §9 entirely** → on my approval scaffold the epic + sprint docs (commit path-scoped) and emit the per-sprint kickoffs |
 | **Reactive / ops** | incident, launch support, can't wait | no shaping — do it, then log it against the current wave's budget so the economics stay visible |
 
-*Add for a shaped bet:* `"Stop at the pitch. Do not scaffold — this goes to the betting table."`
+*Add for a shaped bet:* `"Stop at the Plan gate and wait for my answer."`
 
 ## 2 · Build a sprint — plan on strong model → execute
 ```
@@ -108,7 +108,7 @@ Read <AGENTS-path> (Start here) + Roadmap/LEARNINGS.md, then <brief path>.
 Run the <name> spike: time-boxed, READ-ONLY investigation → a written DECISION appended to the brief. No
 branch, no code. Answer the brief's questions against the live codebase; sort each capability into
 already-possible / light-enhancement / genuinely-new; end with Go / No-go / Go-with-constraints.
-I sign off the decision before anything gets groomed.
+I sign off the decision before anything gets refined.
 ```
 
 ## 4 · Review a PR — one external pass (+ a security lens when triggered), routed (NOT the builder)
@@ -119,7 +119,7 @@ node scripts/review-route.mjs --builder <who-wrote-it> <N>
 
 It prints the exact commands: the **general pass** by the highest-preference family that did not build the
 diff, the **security lens** by the next family when a changed path matches `scripts/review-config.json` →
-`securityPaths` (or the body declares `risk: high`), and the **fresh `pr-reviewer` subagent**, which runs
+`securityPaths` (or the body declares `risk: high`), and the **fresh `verifier` subagent**, which runs
 on every non-trivial PR here.
 
 A capped family is routed past with `--exclude <family>` (order `codex → agy → vibe → claude`); there is no refund pause.
@@ -248,7 +248,7 @@ system working.
 
 ---
 
-*§1–§8 mirror what the `groom` skill emits (Stage 8) — keep the two in sync. §9–§10 mirror
+*§1–§8 mirror what the `refine` skill emits (Stage 8) — keep the two in sync. §9–§10 mirror
 WAYS-OF-WORKING → *Betting & appetite* (the SSOT for appetite tiers, lanes and the breaker; don't
 fork a second copy here). Conventions baked in: appetite before solution, own worktree + path-scoped
 commits, risk tier, single-pass review, strong-model planning.*

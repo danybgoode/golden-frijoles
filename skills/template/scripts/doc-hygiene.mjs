@@ -3,7 +3,7 @@
 // candidates in LEARNINGS.md + the README poster. ADVISORY ONLY: this script never edits any
 // Roadmap doc — it only reads them and (unless --check) writes ONE new dated report file under
 // Roadmap/00-ideas/. Every flagged candidate is a hint for a human/model to verify, not a verdict —
-// see the `doc-hygiene` skill (`golden-frijoles` plugin, golden-frijoles marketplace) for the
+// see Step 4 of scripts/routines/roadmap-hygiene.prompt.md for the
 // judgment pass this script's output feeds.
 //
 //   node scripts/doc-hygiene.mjs             # print the report + write Roadmap/00-ideas/DOC-HYGIENE-REPORT-<date>.md
@@ -211,12 +211,12 @@ function buildReport() {
   const date = new Date().toISOString().slice(0, 10);
   const lines = [];
   lines.push(
-    `<!-- Advisory artifact from the doc-hygiene skill (scripts/doc-hygiene.mjs). Findings are proposals`,
+    `<!-- Advisory artifact from the doc-hygiene pass (the roadmap-hygiene routine, step 4) (scripts/doc-hygiene.mjs). Findings are proposals`,
     `     only — no LEARNINGS.md/README.md content was changed by this script. -->`,
     '',
     `# Doc hygiene report — ${date}`,
     '',
-    '🧹 **doc-hygiene skill.** Advisory only — review by hand; nothing here gates or auto-edits.',
+    '🧹 **doc-hygiene pass (the roadmap-hygiene routine, step 4).** Advisory only — review by hand; nothing here gates or auto-edits.',
     '',
     '## Always-read set size',
     ''

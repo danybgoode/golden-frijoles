@@ -158,7 +158,7 @@ test('summarizeRoadmap never claims ✅ for a status it does not recognise', () 
   )
 })
 
-test('summarizeRoadmap orders epics by build order, and an ungroomed row never jumps the queue', () => {
+test('summarizeRoadmap orders epics by build order, and an unrefined row never jumps the queue', () => {
   const s = summarizeRoadmap([
     row({ slug: 'third', build_order_num: 3 }),
     row({ slug: 'nobody-groomed-me', build_order_num: null }),

@@ -86,7 +86,7 @@ edit.
 
 ## Sending a North Star: `frijoles north-star set`
 
-The `north-star` coach in the Golden Frijoles plugin leaves `Roadmap/00-strategy/north-star.md`, with the metric and
+The North Star chapter of the `strategy` skill (Golden Frijoles plugin) leaves `Roadmap/00-strategy/north-star.md`, with the metric and
 its inputs in one ```json block under `## Sync payload`. This command sends that block to your project:
 
 ```bash

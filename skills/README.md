@@ -2,15 +2,15 @@
 
 Paste this into your agent, in an empty repo or an existing one:
 
-> Set up Golden Frijoles in this project. 1. Read https://goldenfrijoles.com/install.md before installing anything. 2. Tell me in a few lines what it installs, what changes on this machine and which services it contacts. Offer me a security review, and wait for my go-ahead. 3. Install it the way install.md says for the agent you are. 4. Run the golden-frijoles skill and start its setup.
+> Set up Golden Frijoles in this project. 1. Read https://goldenfrijoles.com/install.md before installing anything. 2. Tell me in a few lines what it installs, what changes on this machine and which services it contacts. Offer me a security review, and wait for my go-ahead. 3. Install it the way install.md says for the agent you are. 4. Run the setup skill from the golden-frijoles plugin.
 
 That last skill — `golden-frijoles` — is the front door: it detects what's already here (is
 `Roadmap/` present, is the kit reachable, which channel you're on), offers `frijoles-kit init` to adopt a
 bare repo, and routes you to the right named skill below. Golden Frijoles is a planning-and-operating
-system for shipping software with an agent — shape a raw idea into sliced work (`groom`), verify what
-you built against a real rendered page (`live-smoke`), and run the operate rails (standups, weekly
-recaps, PMO reports, PR watch, doc hygiene, stale-preview cleanup) — without your project carrying any
-of that tooling itself. Two layers, built in strict order:
+system for shipping software with an agent — shape a raw idea into sliced work (`refine`), verify what
+you built against a real rendered page (`smoke`), set the strategy (`strategy`), and post reports
+(`report`: standups, weekly recaps, PMO reports), without your project carrying any of that tooling itself.
+Nightly operations (PR watch, board drift, doc hygiene, stale previews) are routines that run the kit's scripts. Two layers, built in strict order:
 
 1. **A Claude Code plugin marketplace** (`.claude-plugin/marketplace.json` + `plugins/golden-frijoles/`)
    — the *living* skills, listed below. Installed once per project, updated from this one place — an
@@ -32,21 +32,11 @@ list anywhere in this repo.
 
 | Skill | What it does |
 |---|---|
-| `babysit-pr` | Advisory PR watch — retries flaky CI and flags merge conflicts; never merges, never gates. |
-| `build-order-sync` | Regenerates BUILD-ORDER.md when it has drifted from the epic READMEs and opens a PR for it. |
-| `cold-read` | Runs a sealed, independent read of the product before the strategy coaches, then compares it with what they agreed. |
-| `doc-hygiene` | Measures the always-read session-start docs and writes a dated report of bloat and duplication. |
-| `golden-frijoles` | The umbrella skill: detects what's here, sets up a bare repo, and routes to the right named skill. |
-| `groom` | The planning front door: shapes a raw ask into a seed, an appetite, and a scaffolded epic. |
-| `live-smoke` | Verifies rendered behavior in a real headless browser, with a screenshot and a JSON report. |
-| `north-star` | Runs a North Star workshop and leaves Roadmap/00-strategy/north-star.md with a sync payload for the engine. |
-| `pmf-narrative` | Coaches the six dimensions of a PMF narrative and leaves Roadmap/00-strategy/pmf-narrative.md. |
-| `pmo-report` | Posts the weekly PMO report (throughput, DORA-style delivery, doc-ops) with optional deck links. |
-| `prose-draft` | Drafts internal close-out prose (retros, poster entries) with a foreign model, for human review. |
-| `risk-validation` | Finds the riskiest PMF dimension and one targeted test; leaves Roadmap/00-strategy/risk-validation.md. |
-| `standup-post` | Posts a delta-only daily standup of overnight PR, CI, smoke and board signals across the project's repos. |
-| `vercel-prune` | Reports stale Vercel preview deployments for a frontend project; dry-run by default. |
-| `weekly-recap` | Posts the weekly executive recap: merged PRs, deploys, shipped epics and their retro digests. |
+| `refine` | The planning front door: shapes a raw ask into a seed, an appetite, and a scaffolded epic. |
+| `report` | Posts a project report to your chat destination: a daily standup, a weekly recap, or the weekly PMO report and its monthly packet. |
+| `setup` | The front door: detects what's here, sets up a bare repo, and routes to refine, strategy, report or smoke. |
+| `smoke` | Verifies rendered behavior in a real headless browser, with a screenshot and a JSON report. |
+| `strategy` | The strategy coach: a sealed cold read, the PMF narrative, the North Star and risk validation, in Roadmap/00-strategy/. |
 
 <!-- skills:end -->
 
@@ -119,7 +109,7 @@ first time it detects that channel; don't assume parity with the Claude Code plu
 
 ### Adopt an existing repo — `frijoles-kit init`
 
-A repo with no `Roadmap/` yet has nowhere for `groom` to write. One command adds just that:
+A repo with no `Roadmap/` yet has nowhere for `refine` to write. One command adds just that:
 
 ```
 npx -y @golden-frijoles/kit@latest init
@@ -140,7 +130,7 @@ Everything above is **Claude Code's** mechanism. Cowork loads its own installed-
 desktop app and never reads a repo's `.claude/settings.json`, so a project can have this plugin
 enabled for months and Cowork will still not see it.
 
-That matters most for exactly one skill. `groom` is titled *"the planning front door (Cowork)"* and
+That matters most for exactly one skill. `refine` is titled *"the planning front door (Cowork)"* and
 states the role split **"Cowork plans, Claude Code builds"** — the one skill written for Cowork was
 the one Cowork could not load. Discovered 2026-08-06, after many sessions in which the Claude Code
 half worked fine and hid it.
@@ -150,7 +140,7 @@ which renders in chat with a **Save skill** button. Build them:
 
 ```
 node scripts/pack-skills.mjs                 # every skill -> dist/
-node scripts/pack-skills.mjs --skill groom   # just the one you need
+node scripts/pack-skills.mjs --skill refine   # just the one you need
 ```
 
 Then attach the `.skill` file in a Cowork session and click **Save skill**. Archives are
@@ -187,7 +177,7 @@ frijoles flags get <domain>.<feature>_enabled    # ← the ACTIVATION check: PRO
 frijoles flags kill <domain>.<feature>_enabled --env production
 ```
 
-**One provider, no parallel flag store.** `groom`'s Stage 6b plans every `risk: high` kill-switch
+**One provider, no parallel flag store.** `refine`'s Stage 6b plans every `risk: high` kill-switch
 against this mechanism, and `scripts/check-plugin-leaks.mjs` fails if a template or plugin file
 starts naming another one — which is exactly how this repo shipped one consumer's in-house flag
 table to every future project for months.
@@ -221,7 +211,7 @@ consuming project supply the value; the concrete values belong in *that* project
 
 Deliberate matches (provenance prose, the `author` fields) live in the script's `ALLOW` list, each
 with a written reason. A stale `ALLOW` entry fails too — the allowlist has to keep describing the
-repo as it actually is. CI also runs the groom generator's tests and renders a throwaway epic to
+repo as it actually is. CI also runs the refine generator's tests and renders a throwaway epic to
 prove the scaffolder templates still substitute.
 
 ## Guard — the skill/script contract

@@ -31,7 +31,7 @@
 //
 // ── Chapter 2 is "Design it" (epic D3) ────────────────────────────────────────────────────────
 // The rename reaches this content and the public landing, and stops there — `AGENTS.md`,
-// `Roadmap/WAYS-OF-WORKING.md` and the `groom` skill keep *Shape* as our internal operating
+// `Roadmap/WAYS-OF-WORKING.md` and the `refine` skill keep *Shape* as our internal operating
 // vocabulary. It is a copy pass, not a `sed`. Four lines needed real rewriting rather than a swap,
 // and each is marked at its call site below with what it used to say.
 //
@@ -149,7 +149,7 @@ export const METHODOLOGY_CHAPTERS: MethodologyChapter[] = [
         kind: 'work',
         variant: 'agent',
         // D3, rewritten rather than swapped: "Before shaping it, read the project agents…".
-        prompt: `Help me groom this ask:
+        prompt: `Help me refine this ask:
 
 [DESCRIBE WHAT YOU WANT TO MAKE, CHANGE, FIX, OR EXPLORE]
 
@@ -208,7 +208,7 @@ Before designing it, read the project agents and ways of working, review relevan
         kind: 'work',
         variant: 'do',
         body: [
-          { kind: 'prose', text: 'Continue Groom. Work through the questions that require judgment.' },
+          { kind: 'prose', text: 'Continue Refine. Work through the questions that require judgment.' },
           {
             kind: 'prose',
             text: 'By the end, the Bet candidate should make these things legible.',

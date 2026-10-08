@@ -530,13 +530,13 @@ const PROPOSED = {
   metric: {
     key: 'weekly_planned_seeds',
     name: 'Weekly planned seeds',
-    description: 'seeds groomed per week',
+    description: 'seeds refined per week',
   },
   inputs: [
     { key: 'activated_projects', name: 'Activated projects', valueSource: 'external_push' },
     {
       key: 'seeds_groomed',
-      name: 'Seeds groomed',
+      name: 'Seeds refined',
       valueSource: 'telemetry_event',
       sourceEvent: 'seed_groomed',
     },
@@ -751,7 +751,7 @@ test('north-star set: the dry run names what a sync cannot undo — an added met
   assert.match(text, /already has another North Star: payable_sellers/)
   assert.match(text, /ADDS this one beside it\. It never replaces or deletes/)
   assert.match(text, /activated_projects +Activated projects +moved from payable_sellers/)
-  assert.match(text, /seeds_groomed +Seeds groomed +new/)
+  assert.match(text, /seeds_groomed +Seeds refined +new/)
 })
 
 test('north-star set: an input whose value source would change is shown as refused before sending', async () => {
@@ -760,9 +760,9 @@ test('north-star set: an input whose value source would change is shown as refus
     {
       key: 'weekly_planned_seeds',
       name: 'Weekly planned seeds',
-      description: 'seeds groomed per week',
+      description: 'seeds refined per week',
       inputs: [
-        { key: 'seeds_groomed', name: 'Seeds groomed', valueSource: 'external_push', sourceEvent: null },
+        { key: 'seeds_groomed', name: 'Seeds refined', valueSource: 'external_push', sourceEvent: null },
       ],
     },
   ]
@@ -776,7 +776,7 @@ test('north-star set: an input whose value source would change is shown as refus
   })
   const text = out.join('\n')
   assert.match(text, /weekly_planned_seeds {2}"Weekly planned seeds" {2}unchanged/)
-  assert.match(text, /seeds_groomed +Seeds groomed +refused: value source is external_push/)
+  assert.match(text, /seeds_groomed +Seeds refined +refused: value source is external_push/)
 })
 
 test('north-star set: the dry run says when a metric or an input would be updated in place', async () => {
@@ -785,7 +785,7 @@ test('north-star set: the dry run says when a metric or an input would be update
     {
       key: 'weekly_planned_seeds',
       name: 'Weekly seeds (old name)',
-      description: 'seeds groomed per week',
+      description: 'seeds refined per week',
       inputs: [
         {
           key: 'activated_projects',
@@ -838,7 +838,7 @@ test("north-star set: a refused input turns the dry run's last line into a warni
       name: 'Other',
       description: null,
       inputs: [
-        { key: 'seeds_groomed', name: 'Seeds groomed', valueSource: 'external_push', sourceEvent: null },
+        { key: 'seeds_groomed', name: 'Seeds refined', valueSource: 'external_push', sourceEvent: null },
       ],
     },
   ]
@@ -884,7 +884,7 @@ const VERDICT_CASES: Array<{
         name: 'Other',
         description: null,
         inputs: [
-          { key: 'seeds_groomed', name: 'Seeds groomed', valueSource: 'external_push', sourceEvent: null },
+          { key: 'seeds_groomed', name: 'Seeds refined', valueSource: 'external_push', sourceEvent: null },
         ],
       },
     ],
@@ -898,7 +898,7 @@ const VERDICT_CASES: Array<{
     name: 'a file with both blockers',
     payload: {
       metric: { key: 'weekly_planned_seeds', name: 'Weekly planned seeds' },
-      inputs: [{ key: 'seeds_groomed', name: 'Seeds groomed', valueSource: '<value_source>' }],
+      inputs: [{ key: 'seeds_groomed', name: 'Seeds refined', valueSource: '<value_source>' }],
     },
     current: [
       {
@@ -906,7 +906,7 @@ const VERDICT_CASES: Array<{
         name: 'Weekly planned seeds',
         description: null,
         inputs: [
-          { key: 'seeds_groomed', name: 'Seeds groomed', valueSource: 'external_push', sourceEvent: null },
+          { key: 'seeds_groomed', name: 'Seeds refined', valueSource: 'external_push', sourceEvent: null },
         ],
       },
     ],

@@ -1286,7 +1286,7 @@ test('every row of the measured spec matches the built stylesheet', async ({ pag
 // repository that opens the approved design at all.
 //
 // ── What it compares, and why not the picture ────────────────────────────────────────────────
-// The epic scaffolded a screenshot diff against `reference/<state>.png` (D2 as groomed). Measured
+// The epic scaffolded a screenshot diff against `reference/<state>.png` (D2 as refined). Measured
 // before it was written, the route we know is CORRECT scored farther from its picture than the
 // route we know is WRONG — 6.9% against 6.4% on raw pixels, and off-by-2 against a PERFECT match on
 // a structural band count. The reference PNG is a picture of a different artifact: a content column

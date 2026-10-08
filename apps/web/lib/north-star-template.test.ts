@@ -5,14 +5,14 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { northStarSyncSchema } from './north-star-schema.ts'
 
-// think-skills D3: the `north-star` skill's template carries the sync payload a workshop leaves in
+// think-skills D3: the North Star chapter's template (the `strategy` skill) carries the sync payload a workshop leaves in
 // `Roadmap/00-strategy/north-star.md`. The engine validates that payload with `northStarSyncSchema`, and the plugin
 // lives in `skills/`, which is mirrored to a repo that cannot import this app. So the ONE check that the template's
 // example is something the engine would accept runs here, against the real schema, not a copy of it.
 
 const TEMPLATE = join(
   dirname(fileURLToPath(import.meta.url)),
-  '../../../skills/plugins/golden-frijoles/skills/north-star/templates/north-star.md'
+  '../../../skills/plugins/golden-frijoles/skills/strategy/templates/north-star.md'
 )
 
 function syncFences(markdown: string): string[] {

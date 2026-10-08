@@ -102,7 +102,7 @@ export const SURFACES = [
     ],
   },
   {
-    file: 'plugins/golden-frijoles/skills/golden-frijoles/SKILL.md',
+    file: 'plugins/golden-frijoles/skills/setup/SKILL.md',
     why: 'the umbrella skill: the first thing a stranger’s agent reads must carry the same install prompt it just ran',
     must: [INSTALL_PROMPT],
   },
@@ -125,7 +125,7 @@ export const SURFACES = [
     ],
   },
   {
-    file: 'plugins/golden-frijoles/skills/groom/references/kill-switch.md',
+    file: 'plugins/golden-frijoles/skills/refine/references/kill-switch.md',
     why: 'Stage 6b: the mechanism a kill-switch story is planned against',
     must: [
       `${CLI_BIN} flags create <domain>.<feature>_enabled --kill-switch --all-envs`,
@@ -274,16 +274,16 @@ function installPromptExecChecks() {
         `::warning::check-onboarding-parity --exec: \`npx skills --list\` SKIPPED — could not look: ` +
           `${(list.error?.message ?? output).slice(0, 200)}`
       );
-    } else if (!/^[│|\s]*golden-frijoles\s*$/m.test(withoutRepoArg)) {
-      // A whole list ENTRY, not a token: `\b` treats a hyphen as a boundary, so `golden-frijoles-renamed`, a path
+    } else if (!/^[│|\s]*setup\s*$/m.test(withoutRepoArg)) {
+      // A whole list ENTRY, not a token: `\b` treats a hyphen as a boundary, so `setup-renamed`, a path
       // or a description passed the looser test (caught by mutation in review, the builder's own class of bug).
       console.error(
-        `  ❌ npx skills add ${label} --list  →  "golden-frijoles" is not in the listed skills:\n` +
+        `  ❌ npx skills add ${label} --list  →  "setup" is not in the listed skills:\n` +
           `     ${output.trim().split('\n').slice(0, 8).join('\n     ')}`
       );
       failed = true;
     } else {
-      console.log(`  ✅ npx skills add ${label} --list  →  golden-frijoles listed`);
+      console.log(`  ✅ npx skills add ${label} --list  →  setup listed`);
     }
   }
 
@@ -353,7 +353,7 @@ function installPromptExecChecks() {
     );
     failed = true;
   } else {
-    console.log('  ✅ claude plugin marketplace add + install  →  golden-frijoles listed in the isolated config');
+    console.log('  ✅ claude plugin marketplace add + install  →  setup listed in the isolated config');
   }
 
   return failed ? 1 : 0;
@@ -370,7 +370,7 @@ function installPromptExecChecks() {
  * `~/.agents/skills/` (this CLI's own config lives there too). Asserts every skill directory this
  * repo actually declares (`listSkills()` — the same registry `check-skill-scripts.mjs` walks, never
  * a hand-typed pair) landed under `.agents/skills/<name>/SKILL.md` in the project dir — not just
- * `golden-frijoles` and `groom`, though those two are named explicitly in the failure message since
+ * `golden-frijoles` and `refine`, though those two are named explicitly in the failure message since
  * they are the ones a stranger's very first prompt depends on.
  */
 function installPromptCodexInstallCheck() {
@@ -416,7 +416,7 @@ function installPromptCodexInstallCheck() {
   // Named even though they're already covered by `missing` above — the failure message should say
   // outright whether the two surfaces a stranger's FIRST prompt depends on made it, not just "3 of
   // 11 missing" and leave the reader to go check which three.
-  const criticalMissing = ['golden-frijoles', 'groom'].filter((name) => missing.includes(name));
+  const criticalMissing = ['setup', 'refine'].filter((name) => missing.includes(name));
   if (missing.length) {
     console.error(
       `  ❌ npx skills add ${label} --skill '*' -a codex -y  →  missing under .agents/skills/: ${missing.join(', ')}` +
@@ -427,7 +427,7 @@ function installPromptCodexInstallCheck() {
   }
   console.log(
     `  ✅ npx skills add ${label} --skill '*' -a codex -y  →  all ${expected.length} skill(s) installed under ` +
-      '.agents/skills/, including golden-frijoles and groom'
+      '.agents/skills/, including setup and refine'
   );
   return 0;
 }

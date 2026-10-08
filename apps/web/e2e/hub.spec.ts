@@ -299,13 +299,13 @@ test('nothing claims ✅ for unshipped work — a near-miss status never lights 
 test('seeds render as the hazy horizon, explicitly marked not-promised', async ({ request }) => {
   await pushRoadmap(request, [
     epic('growth-engine-v1', 'Shipped'),
-    { ...epic('a-raw-idea', 'Raw'), grain: 'Seed', name: 'A raw idea nobody groomed' },
+    { ...epic('a-raw-idea', 'Raw'), grain: 'Seed', name: 'A raw idea nobody refined' },
   ])
   const html = await (await request.get(`/hub/${DEMO_SLUG}/horizon`)).text()
 
-  expect(html).toContain('A raw idea nobody groomed')
+  expect(html).toContain('A raw idea nobody refined')
   expect(html).toContain('horizon-seeds')
-  // An un-groomed idea rendered like a commitment is the dishonesty this view exists to avoid, so
+  // An unrefined idea rendered like a commitment is the dishonesty this view exists to avoid, so
   // the disclaimer is load-bearing content, not decoration.
   expect(html).toMatch(/not<\/strong>?\s*promised|not<\/strong> promised|not promised/i)
 })
@@ -349,7 +349,7 @@ test('the board renders the six stages in order, and ?type=spike keeps only spik
   const all = await (await request.get(`/hub/${DEMO_SLUG}/board`)).text()
   const labels = [...all.matchAll(/class="ds-tile-label">([^<]+)</g)].map((m) => m[1])
   // one-header-one-name D8 — screen words; the keys stay in `data-stage` (asserted next).
-  expect(labels).toEqual(['Backlog', 'Grooming', 'Ready', 'Building', 'QA', 'Shipped'])
+  expect(labels).toEqual(['Backlog', 'Refining', 'Ready', 'Building', 'QA', 'Shipped'])
   const keys = [...all.matchAll(/data-stage="([^"]+)"/g)].map((m) => m[1])
   expect(keys).toEqual(['To groom', 'Grooming', 'Ready to build', 'Building', 'QA', 'Shipped'])
   expect(all).toContain(`Ready ${unique}`)

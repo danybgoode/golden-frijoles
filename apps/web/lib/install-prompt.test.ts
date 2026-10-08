@@ -43,6 +43,6 @@ test('the plugin commands are the published names', () => {
   assert.equal(PLUGIN_MARKETPLACE_ADD, 'claude plugin marketplace add golden-frijoles/skills')
   assert.equal(PLUGIN_INSTALL, 'claude plugin install golden-frijoles@golden-frijoles')
   // Every skill, not just the umbrella: with `--skill golden-frijoles` alone only the umbrella installs and its
-  // hand-off to groom dead-ends (measured, golden-frijoles-plugin X12).
+  // hand-off to refine dead-ends (measured, golden-frijoles-plugin X12).
   assert.equal(SKILLS_ADD, "npx skills add golden-frijoles/skills --skill '*'")
 })

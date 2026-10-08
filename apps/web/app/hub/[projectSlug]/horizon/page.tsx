@@ -144,7 +144,7 @@ export default async function HubHorizonPage({ params }: { params: Promise<{ pro
         <section className="ds-haze" aria-label="Ideas on the horizon">
           <h2>Further out — on the horizon</h2>
           <p>
-            Un-groomed ideas, deliberately hazy. These are <strong>not promised</strong> and carry no date —
+            Unrefined ideas, deliberately hazy. These are <strong>not promised</strong> and carry no date —
             an idea rendered like a commitment is the one dishonesty this view exists to avoid.
           </p>
           <ul className="ds-hazelist" data-testid="horizon-seeds">

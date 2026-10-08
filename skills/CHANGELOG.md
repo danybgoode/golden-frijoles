@@ -7,6 +7,62 @@ newest heading are always the same number — `scripts/check-release.mjs` enforc
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-08
+
+**Golden Frijoles 1.0: five plain skills, the `frijoles` CLI, and Refining.** One breaking release, so a renamed
+command is found in one place. Everything below landed in 0.44.0–0.46.0 and ships together; nothing here is new
+behaviour.
+
+| You typed | Now |
+|---|---|
+| `gf …` | `frijoles …` (`gf` keeps working with a notice until 2026-12-31 or CLI 1.1.0) |
+| `gf-kit …` | `frijoles-kit …` (same window) |
+| `/golden-frijoles:golden-frijoles` | `/golden-frijoles:setup` |
+| `/golden-frijoles:groom` | `/golden-frijoles:refine` |
+| `/golden-frijoles:pmf-narrative`, `north-star`, `risk-validation`, `cold-read` | `/golden-frijoles:strategy` (it routes to the chapter) |
+| `/golden-frijoles:standup-post`, `weekly-recap`, `pmo-report` | `/golden-frijoles:report` (daily · weekly · pmo) |
+| `/golden-frijoles:live-smoke` | `/golden-frijoles:smoke` |
+| "use the pr-reviewer subagent" | "use the verifier" (add "security lens" for that pass) |
+| `build-order-sync`, `doc-hygiene`, `vercel-prune`, `babysit-pr`, `prose-draft` | the routines run their scripts; `frijoles-kit <name>` anywhere |
+| Board: To groom · Grooming · Ready to build | Backlog · Refining · Ready (stored stage keys unchanged) |
+
+Pin the previous release with `claude plugin marketplace add golden-frijoles/skills@v0.43.0`, and the CLI with
+`npm i -g @golden-frijoles/cli@0.8.0`.
+
+## [0.46.0] - 2026-10-08
+
+### Changed
+- **Five skills and one agent** (plugin-1-0 S3), down from fifteen and one:
+  | Now | Was |
+  |---|---|
+  | `setup` | `golden-frijoles` |
+  | `refine` | `groom` (0.45.0) |
+  | `strategy` (chapters: cold read · PMF narrative · North Star · risk validation) | `cold-read`, `pmf-narrative`, `north-star`, `risk-validation` |
+  | `report` (daily · weekly · pmo) | `standup-post`, `weekly-recap`, `pmo-report` |
+  | `smoke` | `live-smoke` |
+  | agent `verifier` (general or security lens) | agent `pr-reviewer` |
+  Asking for an old name by its words still reaches the right chapter: each router's description keeps the old
+  trigger phrases.
+- **The install prompt's last step** reads "Run the setup skill from the golden-frijoles plugin."
+
+### Removed
+- `build-order-sync`, `doc-hygiene`, `vercel-prune`, `babysit-pr` and `prose-draft` are no longer installed: they were
+  our own operations. Their scripts stay in the kit (`frijoles-kit build-order-sync`, …), and the template's routines
+  run them directly, with what each skill added written into the routine's steps.
+
+## [0.45.0] - 2026-10-08
+
+### Changed
+- **The planning skill is `refine`** (plugin-1-0 S2): `/golden-frijoles:refine`, formerly `groom`. It moves an idea from
+  Backlog through Refining to Ready, so it carries the stage's name. Every locator, reference and the vendored kickoff
+  follow; the installed path is `skills/refine/`.
+- **The screens say Backlog → Refining → Ready.** The board, the epic page, the build view's stage track and the
+  generated `BUILD-ORDER.md` headings; stored stage keys are unchanged. "Grooming" is retired: Scrum renamed it
+  refinement in 2013, and in UK and Australian English the word mostly means child abuse. `check-gate-words` bans
+  groom, grooming and groomed inside the gates; the console's vocabulary guard retires "Grooming" as a label.
+- **Plain agile in the last two places:** the L-bet question is now "Start the next part of `<slug>`? What waits for
+  it?", and the session kickoff's shaped-bet row describes the Plan gate.
+
 ## [0.44.0] - 2026-10-08
 
 ### Changed

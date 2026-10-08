@@ -92,7 +92,7 @@ export default async function FinopsPage({ params }: { params: Promise<{ project
               {view.epics.length === 0 ? (
                 <Row>
                   <Col colSpan={4}>
-                    No epic carries a quote or an actual yet — push the roadmap after the next groom.
+                    No epic carries a quote or an actual yet — push the roadmap after the next refine.
                   </Col>
                 </Row>
               ) : (

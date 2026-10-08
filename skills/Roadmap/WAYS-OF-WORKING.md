@@ -17,7 +17,7 @@ Everything is sliced into **user stories** — the smallest independently testab
 \<role\>, I want \<capability\>, so that \<outcome\>*, plus **acceptance checks the product owner can
 run**. Stories roll up into sprints, sprints into an epic, epics into a macro-section. Before building,
 check whether existing features plus communication already deliver the outcome — surface that lighter
-path first; `groom` gates on it (Stage 2.5).
+path first; `refine` gates on it (Stage 2.5).
 
 ## The cadence
 
@@ -97,13 +97,13 @@ and session context. Fixed appetite, variable scope.
 | **L** | a multi-wave epic | per-wave: each wave is re-bet at the boundary |
 
 Four rules: **an exhausted bet returns to shaping**, never extends in flight; **the approval gate is the
-betting table** — **Approve the plan** in `groom`'s Plan gate funds it in the same answer (`fund.mjs`: a row in
+betting table** — **Approve the plan** in `refine`'s Plan gate funds it in the same answer (`fund.mjs`: a row in
 the month's cycle file `Roadmap/bets/wave-YYYY-MM.md` recording what it displaced, `underwritten_by:`, and a
 build position), in the same commit as the scaffold, while **Park it** leaves it `ready` and scaffolds nothing
-(the gates' words: groom `references/gates.md`); **nothing scaffolded is unfunded** — `build-order.mjs` fails a
+(the gates' words: refine `references/gates.md`); **nothing scaffolded is unfunded** — `build-order.mjs` fails a
 live bet with no `underwritten_by:`;
 and **uphill work stays on the strongest model**. An L bet is re-bet at each wave boundary with one line
-when its builder stops there ("fund the next wave of `<slug>`? what does it displace?"; yes runs `fund.mjs`
+when its builder stops there ("Start the next part of `<slug>`? What waits for it?"; yes runs `fund.mjs`
 again, position kept). Fixed scope (appetite S) and reactive/ops work go through the same gate, straight to
 a builder. Why it works this way:
 [`references/shapeup/`](https://github.com/golden-frijoles/skills/blob/main/template/references/shapeup/README.md).
@@ -115,7 +115,7 @@ questions** — not more reviewers of the same kind.
 
 ```
 CI (deterministic gate)            — does it build, typecheck, pass the suite?   BLOCKS merge
-  → fresh pr-reviewer subagent     — context independence: did not hold the diff
+  → fresh verifier subagent        — context independence: did not hold the diff
   → one external cross-family pass — family independence: different blind spots
   → + a lean security lens         — when the diff touches a security path
   → the builder merges on green
@@ -238,7 +238,7 @@ derived views. **`Roadmap/bets/`** holds one file per wave; **`tasks/`** is the 
 - **Worker death is a normal case.** Each builder on its own worktree; a killed worker's uncommitted tree
   is evidence, not garbage; **verify by re-deriving repo state, never by trusting a completion report** —
   a rate-limited subagent still returns a plausible-sounding result. Checkpoint and hand
-  off when the budget line says so (Claude Code: under the prompt; groom: at each approval gate) —
+  off when the budget line says so (Claude Code: under the prompt; refine: at each approval gate) —
   not by sprint count. Where no line shows (function hooks off, or no figure yet), compact at
   sprint/PR boundaries.
 - Commit messages end with the `Co-Authored-By: Claude` trailer.
@@ -250,7 +250,7 @@ derived views. **`Roadmap/bets/`** holds one file per wave; **`tasks/`** is the 
   the kit and the template live in
   [`danybgoode/golden-frijoles` → `Roadmap/`](https://github.com/danybgoode/golden-frijoles/tree/main/Roadmap)
   (`09-platform-infra/`), moved there by `one-roadmap`. Where this document says `Roadmap/LEARNINGS.md`,
-  `Roadmap/00-ideas/` or `Roadmap/bets/`, read **that** repo's. Don't groom, scaffold or promote learnings here:
+  `Roadmap/00-ideas/` or `Roadmap/bets/`, read **that** repo's. Don't refine, scaffold or promote learnings here:
   `Roadmap/` in this repo keeps only the template sources CI renders and checks.
 
 ## Portability — this repo's own rules

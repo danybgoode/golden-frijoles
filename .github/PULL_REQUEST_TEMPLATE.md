@@ -39,7 +39,7 @@
 - [ ] **Cursor** (specialist/tie-breaker: SQL, boundary contracts, disagreement) — n/a unless used:
 
 ## Kill-switch
-<!-- If the epic was groomed with one (groom Stage 6b): name the flag and confirm its polarity —
+<!-- If the epic was refined with one (refine Stage 6b): name the flag and confirm its polarity —
      enablement gate ⇒ default false / born OFF; kill-switch ⇒ default true / born ON. -->
 
 ## Migrations

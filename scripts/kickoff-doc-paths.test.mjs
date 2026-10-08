@@ -1,14 +1,14 @@
-// kickoff-doc-paths.test.mjs — no shipped doc or generator names `node skills/groom/…` again
+// kickoff-doc-paths.test.mjs — no shipped doc or generator names `node skills/refine/…` again
 // (kickoff-generator-path S2.2, lock C6).
 //
-// `skills/groom/` exists only inside the plugin's own folder, so a doc that tells a reader to run
-// `node skills/groom/emit-epic-kickoff.mjs` hands them a MODULE_NOT_FOUND everywhere else. Nine docs did, and the
+// `skills/refine/` exists only inside the plugin's own folder, so a doc that tells a reader to run
+// `node skills/refine/emit-epic-kickoff.mjs` hands them a MODULE_NOT_FOUND everywhere else. Nine docs did, and the
 // generator's own one-sprint hint did too. The runnable forms are `/build <slug>` and
-// `npx -y @golden-frijoles/kit emit-epic-kickoff --epic <slug>`. This fixes the class: any `node skills/groom/` in
+// `npx -y @golden-frijoles/kit emit-epic-kickoff --epic <slug>`. This fixes the class: any `node skills/refine/` in
 // what a reader copies from goes red, whatever script it names.
 //
 // Exempt BY PATH, never by judgment: epic folders (`Roadmap/<NN-area>/<slug>/`, records of shipped work) and
-// `Roadmap/00-ideas/` (seeds quote the bug as evidence). Plugin-relative code paths (`../skills/groom/`, the mod's
+// `Roadmap/00-ideas/` (seeds quote the bug as evidence). Plugin-relative code paths (`../skills/refine/`, the mod's
 // bundled generator) are not the pattern, so they never match.
 //
 // A root spec, not a skills-ci one: the subtree split holds no root Roadmap/. It runs in `npm run test:unit`.
@@ -22,8 +22,8 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
-/** `node skills/groom/…`, `node "skills/groom/…`, `node ./skills/groom/…` — the plugin path run as if it were here. */
-export const FORBIDDEN = /\bnode\s+["']?(?:\.\/)?skills\/groom\//;
+/** `node skills/refine/…`, `node "skills/refine/…`, `node ./skills/refine/…` — the plugin path run as if it were here. */
+export const FORBIDDEN = /\bnode\s+["']?(?:\.\/)?skills\/refine\//;
 
 /** What a reader copies from: [directory, file filter]. */
 export const SCANNED = [
@@ -31,7 +31,7 @@ export const SCANNED = [
   ['skills/Roadmap', () => true],
   ['skills/template', () => true],
   // The plugin: its skills (docs and scripts) and every doc it ships. Code elsewhere in it holds plugin-relative
-  // paths (`../skills/groom/`), which the pattern does not match anyway.
+  // paths (`../skills/refine/`), which the pattern does not match anyway.
   ['skills/plugins/golden-frijoles/skills', () => true],
   ['skills/plugins/golden-frijoles', (rel) => rel.endsWith('.md')],
   // The kit's README rides in the tarball; the skills README is the mirror's front page.
@@ -83,7 +83,7 @@ function shippedFiles() {
   );
 }
 
-test('no shipped doc or generator names `node skills/groom/` (the tree, now)', () => {
+test('no shipped doc or generator names `node skills/refine/` (the tree, now)', () => {
   const files = shippedFiles();
   assert.ok(files.length > 50, `scanned only ${files.length} file(s) — a scan root moved?`);
   assert.ok(
@@ -95,8 +95,8 @@ test('no shipped doc or generator names `node skills/groom/` (the tree, now)', (
     'the generator source is scanned'
   );
   assert.ok(
-    files.some((f) => f.rel === 'skills/plugins/golden-frijoles/skills/groom/SKILL.md'),
-    'groom’s SKILL.md is scanned'
+    files.some((f) => f.rel === 'skills/plugins/golden-frijoles/skills/refine/SKILL.md'),
+    'refine’s SKILL.md is scanned'
   );
   assert.ok(
     files.some((f) => f.rel === 'skills/kit/README.md'),
@@ -111,10 +111,10 @@ test('no shipped doc or generator names `node skills/groom/` (the tree, now)', (
 
 test('the guard fires on the forms the docs used to carry', () => {
   for (const line of [
-    'Run `node skills/groom/emit-epic-kickoff.mjs --epic <slug>` to start.',
-    'node skills/groom/emit-kickoff.mjs --epic <epic-slug> --sprint <N>',
-    'node "skills/groom/emit-epic-kickoff.mjs" --epic x',
-    'node ./skills/groom/scaffold-epic.mjs --slug x',
+    'Run `node skills/refine/emit-epic-kickoff.mjs --epic <slug>` to start.',
+    'node skills/refine/emit-kickoff.mjs --epic <epic-slug> --sprint <N>',
+    'node "skills/refine/emit-epic-kickoff.mjs" --epic x',
+    'node ./skills/refine/scaffold-epic.mjs --slug x',
   ])
     assert.equal(
       findForbidden([{ rel: 'skills/template/Roadmap/SESSION-KICKOFFS.md', text: line }]).length,
@@ -125,7 +125,7 @@ test('the guard fires on the forms the docs used to carry', () => {
     findForbidden([
       {
         rel: 'skills/template/scripts/emit-epic-kickoff.mjs',
-        text: '`tool: node skills/groom/emit-kickoff.mjs --epic ${slug}`',
+        text: '`tool: node skills/refine/emit-kickoff.mjs --epic ${slug}`',
       },
     ]).length,
     1,
@@ -137,11 +137,11 @@ test('it does not fire on the plugin-relative path, the runnable forms, or exemp
   const quiet = [
     {
       rel: 'skills/plugins/golden-frijoles/hooks/build-view.mjs',
-      text: "new URL('../skills/groom/vendor/emit-epic-kickoff.mjs', import.meta.url)",
+      text: "new URL('../skills/refine/vendor/emit-epic-kickoff.mjs', import.meta.url)",
     },
     {
-      rel: 'skills/plugins/golden-frijoles/skills/groom/SKILL.md',
-      text: 'node "$GROOM/vendor/emit-epic-kickoff.mjs" --epic <epic-slug>',
+      rel: 'skills/plugins/golden-frijoles/skills/refine/SKILL.md',
+      text: 'node "$REFINE/vendor/emit-epic-kickoff.mjs" --epic <epic-slug>',
     },
     {
       rel: 'Roadmap/WAYS-OF-WORKING.md',
@@ -149,11 +149,11 @@ test('it does not fire on the plugin-relative path, the runnable forms, or exemp
     },
     {
       rel: 'Roadmap/09-platform-infra/kickoff-generator-path/README.md',
-      text: 'node skills/groom/emit-epic-kickoff.mjs',
+      text: 'node skills/refine/emit-epic-kickoff.mjs',
     },
     {
       rel: 'Roadmap/00-ideas/seeds/kickoff-generator-path.md',
-      text: 'node skills/groom/emit-epic-kickoff.mjs',
+      text: 'node skills/refine/emit-epic-kickoff.mjs',
     },
   ];
   assert.deepEqual(findForbidden(quiet), []);

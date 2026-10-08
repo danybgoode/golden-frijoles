@@ -17,7 +17,7 @@ Everything is sliced into **user stories** — the smallest independently testab
 \<role\>, I want \<capability\>, so that \<outcome\>*, plus **acceptance checks the product owner can
 run**. Stories roll up into sprints, sprints into an epic, epics into a macro-section. Before building,
 check whether existing features plus communication already deliver the outcome — surface that lighter
-path first; `groom` gates on it (Stage 2.5).
+path first; `refine` gates on it (Stage 2.5).
 
 ## The cadence
 
@@ -98,13 +98,13 @@ and session context. Fixed appetite, variable scope.
 | **L** | a multi-wave epic | per-wave: each wave is re-bet at the boundary |
 
 Four rules: **an exhausted bet returns to shaping**, never extends in flight; **the approval gate is the
-betting table** — **Approve the plan** in `groom`'s Plan gate funds it in the same answer (`fund.mjs`: a row in
+betting table** — **Approve the plan** in `refine`'s Plan gate funds it in the same answer (`fund.mjs`: a row in
 the month's cycle file `Roadmap/bets/wave-YYYY-MM.md` recording what it displaced, `underwritten_by:`, and a
 build position), in the same commit as the scaffold, while **Park it** leaves it `ready` and scaffolds nothing
-(the gates' words: groom `references/gates.md`); **nothing scaffolded is unfunded** — `build-order.mjs` fails a
+(the gates' words: refine `references/gates.md`); **nothing scaffolded is unfunded** — `build-order.mjs` fails a
 live bet with no `underwritten_by:`;
 and **uphill work stays on the strongest model**. An L bet is re-bet at each wave boundary with one line
-when its builder stops there ("fund the next wave of `<slug>`? what does it displace?"; yes runs `fund.mjs`
+when its builder stops there ("Start the next part of `<slug>`? What waits for it?"; yes runs `fund.mjs`
 again, position kept). Fixed scope (appetite S) and reactive/ops work go through the same gate, straight to
 a builder. Why it works this way:
 [`references/shapeup/`](https://github.com/golden-frijoles/skills/blob/main/template/references/shapeup/README.md).
@@ -116,7 +116,7 @@ questions** — not more reviewers of the same kind.
 
 ```
 CI (deterministic gate)            — does it build, typecheck, pass the suite?   BLOCKS merge
-  → fresh pr-reviewer subagent     — context independence: did not hold the diff
+  → fresh verifier subagent        — context independence: did not hold the diff
   → one external cross-family pass — family independence: different blind spots
   → + a lean security lens         — when the diff touches a security path
   → the builder merges on green
@@ -125,7 +125,7 @@ CI (deterministic gate)            — does it build, typecheck, pass the suite?
 **Which PRs**: `scripts/review-config.json` → `reviewScope` — `every-pr` (all non-trivial PRs;
 `--skip-trivial` drops docs-only and tiny diffs) or `security-paths-only`. The **security lens** is
 triggered by a `securityPaths` glob or a `risk: high` body in either scope — paths, not judgement, so a
-builder can add it but never skip it. **Here `reviewScope` is `every-pr`**: the fresh `pr-reviewer` and the external general pass run on every non-trivial PR.
+builder can add it but never skip it. **Here `reviewScope` is `every-pr`**: the fresh `verifier` and the external general pass run on every non-trivial PR.
 
 **Who reviews** is printed by `node scripts/review-route.mjs --builder <who> <PR#>`, never picked by hand:
 the highest-preference family that did **not** build the diff takes the general pass, the next takes the
@@ -208,7 +208,7 @@ retrospective, no leftover branch) — **and** the judgment items below are true
 - [ ] **Each sprint has a smoke walkthrough** a person can follow blind, with real URLs; money/auth steps
       are flagged by name as owed to the product owner.
 - [ ] **Team memory** (and its index, if your tooling keeps one) records the epic.
-- [ ] **Kill-switch — only if one was planned at grooming:** the flag exists with the polarity the scope doc stated (the rule: `groom/references/kill-switch.md`). This verifies planned work; it is not a new build-time gate.
+- [ ] **Kill-switch — only if one was planned at refining:** the flag exists with the polarity the scope doc stated (the rule: `refine/references/kill-switch.md`). This verifies planned work; it is not a new build-time gate.
 
 ## Automated QA
 
@@ -243,7 +243,7 @@ derived views. **`Roadmap/bets/`** holds one file per wave; **`tasks/`** is the 
 - **Worker death is a normal case.** Each builder on its own worktree; a killed worker's uncommitted tree
   is evidence, not garbage; **verify by re-deriving repo state, never by trusting a completion report** —
   a rate-limited subagent still returns a plausible-sounding result. Checkpoint and hand
-  off when the budget line says so (Claude Code: under the prompt; groom: at each approval gate) —
+  off when the budget line says so (Claude Code: under the prompt; refine: at each approval gate) —
   not by sprint count. Where no line shows (function hooks off, or no figure yet), compact at
   sprint/PR boundaries.
 - Commit messages end with the `Co-Authored-By: Claude` trailer.
@@ -286,7 +286,7 @@ is mechanical — not to use one tier for everything.
 | A well-specified story with a clear acceptance check | **Mid** (Sonnet-class subagent) | Bounded, verifiable, cheap to re-run. |
 | Read-only research / data-availability reports over a large or foreign codebase | **Mid**, background, parallel | Fan-out with no write conflicts. Ask for an explicit "NOT DERIVABLE" list — an honest gap beats an optimistic guess. |
 | Money · auth · migrations · tenancy · concurrency | **Strongest**, never delegated | Same tier that decides who merges. |
-| PR review — the judgment layers (CI is the gate; reviews authorize nothing) | **The routed external pass**, the fresh `pr-reviewer` and, when paths trigger it, the security lens | See *Review & merge*. Findings are resolved or answered before merge. |
+| PR review — the judgment layers (CI is the gate; reviews authorize nothing) | **The routed external pass**, the fresh `verifier` and, when paths trigger it, the security lens | See *Review & merge*. Findings are resolved or answered before merge. |
 | File-derived prose: retro, poster entry, sprint wrap, the merge report | **Devin — the dedicated prose writer**, with Agy `gpt-oss-120b-medium` as fallback | Devin owns prose so Codex/Agy quota stays free for review and building. **One** prose model, never a Gemini one — a model-level fallback between registers is what silently changed every report's voice (see `PROSE_MODEL`). **Always read the draft.** |
 
 ### Verifying delegated work — the rule that is not optional
@@ -341,12 +341,12 @@ either channel. The guard still labels its model and blocks known unsupported cl
   the poster rule: the public page never claims ✅ for unshipped work, and never lags a shipped
   one.
 - **Grooming cadence (updated 2026-07-14):** with a strong planning model (Fable-class), the
-  default is a **single-session groom** — one deep Definition-of-Ready groom for the front-of-queue
+  default is a **single-session refinement** — one deep Definition-of-Ready refinement for the front-of-queue
   epic *plus* a portfolio pass that seeds/resequences the rest of the funnel — rather than one seed
-  per session. The groom skill's discipline is **one deep ask per approval gate; keep going while the
+  per session. The refine skill's discipline is **one deep ask per approval gate; keep going while the
   budget line says so** (updated 2026-09-30, session-budget): each ask stops at its own scope-doc gate,
   and the line printed there says keep going, checkpoint or hand off. What batches besides is the funnel
-  bookkeeping. Deep-groom later epics only when they reach
+  bookkeeping. Deep-refine later epics only when they reach
   the front. Build sprints stay session-sized — versions may supersede in the immediately-next
   sprint, so keep per-sprint kickoffs thin and let the epic docs carry state.
 

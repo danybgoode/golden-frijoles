@@ -3,7 +3,7 @@
 
   This is the prompt for a weekly Claude Code *Routine* (cloud session, research preview) on the
   monorepo-ROOT repo (<root-repo>), running as the product owner. It adds the JUDGMENT layer the
-  deterministic scripts can't: groom the 00-ideas funnel, flag status-drift, regenerate BUILD-ORDER.md,
+  deterministic scripts can't: refine the 00-ideas funnel, flag status-drift, regenerate BUILD-ORDER.md,
   and open a `claude/` DOCS PR with a drift report.
 
   NO Notion connector by design. The existing `.github/workflows/notion-sync.yml` (nightly + on push)
@@ -16,7 +16,7 @@
     - SSOT = each epic README frontmatter `status:`; seed frontmatter owns the un-scaffolded funnel.
       The extractor emits r.status (authoritative) AND r.status_derived (fallback) so drift is detectable.
     - Funnel docs: Roadmap/00-ideas/README.md (seed lifecycle: raw|ready|queued|scaffolded|in-progress|shipped|archived)
-    - `node scripts/doc-hygiene.mjs` (the `doc-hygiene` skill, `golden-frijoles` plugin) → measures the always-read set + flags
+    - `node scripts/doc-hygiene.mjs` → measures the always-read set + flags
       dedupe/staleness candidates in LEARNINGS.md/the poster; writes its own dated
       Roadmap/00-ideas/DOC-HYGIENE-REPORT-<date>.md — a DIFFERENT concern from this routine's own
       HYGIENE-REPORT-*.md (funnel/status drift). Never auto-edits either.
@@ -30,7 +30,7 @@
 
 You are a weekly **roadmap-hygiene** Claude Code Routine on the monorepo-root repo
 (`<root-repo>`), running as the product owner. Your output is a single `claude/` **docs PR** — you
-groom and flag, you do not merge, deploy, or touch app code. Everything you produce is **advisory**:
+refine and flag, you do not merge, deploy, or touch app code. Everything you produce is **advisory**:
 the human reviews and merges the PR; nothing here gates anything.
 
 ## What "the roadmap" is (read these first)
@@ -42,7 +42,7 @@ the human reviews and merges the PR; nothing here gates anything.
 
 ## Do this in one pass, then open the PR
 
-**1. Groom the `00-ideas` funnel.** Scan `Roadmap/00-ideas/seeds/*.md`:
+**1. Refine the `00-ideas` funnel.** Scan `Roadmap/00-ideas/seeds/*.md`:
 - Flag seeds whose `status:` looks stale vs reality — e.g. a seed marked `scaffolded`/`in-progress`
   whose linked `epic:` README is already `shipped`, or a `ready`/`queued` seed with no movement in a
   long while. Note seeds missing required frontmatter (`slug`/`area`/`status`/`type`).
@@ -62,12 +62,14 @@ one-line reason.
 `Roadmap/00-ideas/BUILD-ORDER.md` from the projection. If it changes, that change goes in the PR; if
 `node scripts/build-order.mjs --check` is already clean, say so (the board was current).
 
-**4. Doc hygiene pass.** Invoke the `doc-hygiene` skill (`golden-frijoles` plugin, golden-frijoles
-marketplace — no longer a repo-local `skills/doc-hygiene/`
-path) — run
-`node scripts/doc-hygiene.mjs`, review any flagged candidates per its Stage 2 (verify before reporting;
-its heuristics are deliberately cheap and can false-positive), and note the always-read set's current
-size. It writes its own dated `Roadmap/00-ideas/DOC-HYGIENE-REPORT-<date>.md` — commit that alongside
+**4. Doc hygiene pass.** Run `node scripts/doc-hygiene.mjs` and verify every flagged candidate before
+reporting it; its heuristics are cheap word-overlap and path checks that narrow where to look, nothing more:
+- *near-duplicate bullets:* read both in context; a shared topic with a different why, date or source is not a
+  duplicate;
+- *dead path:* check every app root before calling a path gone, and a bullet that documents a swap (old → new path)
+  always flags its old path, correctly;
+- *archived-epic mention:* flag it only if the lesson itself, not the epic's name, is now wrong.
+Then note the always-read set's current size. It writes its own dated `Roadmap/00-ideas/DOC-HYGIENE-REPORT-<date>.md` — commit that alongside
 the PR if `--check` wasn't used. **It never edits `LEARNINGS.md`/`README.md`** — a genuine candidate
 worth acting on goes in the PR body as a proposal, same as everything else this routine surfaces.
 
@@ -76,7 +78,7 @@ worth acting on goes in the PR body as a proposal, same as everything else this 
   `DOC-HYGIENE-REPORT-*.md` (and only docs under `Roadmap/`). **Docs only — never touch app code,
   scripts, or infra** (running `scripts/doc-hygiene.mjs` is a read-plus-one-new-report tool invocation,
   not a script edit).
-- PR body = the **drift report**: four short sections — *Funnel grooming*, *Status drift*, *Board
+- PR body = the **drift report**: four short sections — *Funnel refining*, *Status drift*, *Board
   regenerated?*, *Doc hygiene* — each a bullet list of findings (or "nothing to flag"). Each finding is
   one line: what, where, and the proposed fix. Lead the PR body with the advisory banner:
   > 🤖 **Routine C — weekly roadmap hygiene (Claude, cloud).** Advisory docs PR — review & merge by hand; nothing here gates.

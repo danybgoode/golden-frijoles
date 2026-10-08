@@ -92,13 +92,13 @@ test('rollUp: skills and models from the breakdowns; an unpriced part makes the 
           'claude-opus-5-5': { tokens: tokens(10), usd: 1.5 },
           'claude-future-9': { tokens: tokens(5), usd: null },
         },
-        skill_breakdown: { 'golden-frijoles:groom': { tokens: tokens(15), usd: 1.5 } },
+        skill_breakdown: { 'golden-frijoles:refine': { tokens: tokens(15), usd: 1.5 } },
       }),
     ])
   )
   assert.equal(r.byModel['claude-future-9'].usdLowerBound, true)
   assert.equal(r.total.usdLowerBound, true)
-  assert.equal(r.bySkill['golden-frijoles:groom'].tokens, 45)
+  assert.equal(r.bySkill['golden-frijoles:refine'].tokens, 45)
   assert.equal(usdIsLowerBound(usage() as never), false)
 })
 

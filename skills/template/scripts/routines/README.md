@@ -138,9 +138,9 @@ restored.)
 1. **Install the Claude GitHub App** on `<root-repo>` (root repo).
 2. **Create the routine** from `roadmap-hygiene.prompt.md`.
 3. **Trigger:** Schedule, **weekly — Mon 14:00 UTC** (after the 08:00 nightly `notion-sync.yml`).
-4. **Env/connectors:** **No Notion connector** — no `.mcp.json`, no `NOTION_TOKEN`. The routine grooms
+4. **Env/connectors:** **No Notion connector** — no `.mcp.json`, no `NOTION_TOKEN`. The routine refines
    the `00-ideas` funnel, flags status-drift, runs `node scripts/build-order.mjs`, invokes the
-   `doc-hygiene` skill (`node scripts/doc-hygiene.mjs` — always-read-set size + LEARNINGS/poster
+   doc-hygiene script (`node scripts/doc-hygiene.mjs` — always-read-set size + LEARNINGS/poster
    dedupe-staleness candidates), and opens a `claude/` **docs PR** with the regenerated
    `BUILD-ORDER.md` + any new `DOC-HYGIENE-REPORT-*.md` + a drift report. Network = GitHub.
 5. **Propagation:** after the product owner merges the docs PR, the existing `notion-sync.yml` propagates
@@ -289,7 +289,7 @@ routine (cap-safe) — see the budget table below.
 Shipped by `ops-routines-reporting` (the origin project's `ops-routines-reporting` epic)
 S3 — a dedicated **weekly** routine (mirroring Routine C's precedent of a standalone weekly schedule,
 rather than a day-of-week-gated step folded into the nightly `ops-nightly` routine). One step: the
-`weekly-recap` skill (`scripts/weekly-recap.mjs`) gathers the week's merged PRs (every configured repo),
+`report` skill's weekly chapter (`scripts/weekly-recap.mjs`) gathers the week's merged PRs (every configured repo),
 shipped/closed epics (README frontmatter `status:` flips), a merges-to-main deploy count per app repo,
 and a short retro digest per shipped epic — then posts one Telegram message.
 
@@ -324,7 +324,7 @@ and a short retro digest per shipped epic — then posts one Telegram message.
 (reads `gh` + `git log` across every configured repo; posts to Telegram; writes `claude/pmo-reports-log`).
 
 Shipped by `pmo-operational-reports` (the origin project's `pmo-operational-reports` epic)
-S3. One step: the `pmo-report` skill (`scripts/pmo-report.mjs --weekly`) gathers scrum/DORA/doc-ops
+S3. One step: the `report` skill's PMO chapter (`scripts/pmo-report.mjs --weekly`) gathers scrum/DORA/doc-ops
 metrics, renders a story-deck URL, posts headline numbers plus the deck link to Telegram, and
 then advances the PMO window log.
 

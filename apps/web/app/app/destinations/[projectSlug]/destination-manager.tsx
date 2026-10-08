@@ -44,7 +44,7 @@ import { SCREEN_WORDS } from '@/lib/screen-words'
 //
 // app-component-kit-adoption · Sprint 3 — the two-click "Click again to confirm" on Remove is GONE,
 // converged onto `ConfirmDialog` (the corrected D5). It was the product's only pre-existing UI
-// confirmation and the grooming docs misattributed it to the agent rail, which has no controls at
+// confirmation and the refining docs misattributed it to the agent rail, which has no controls at
 // all. Two confirmation patterns for one job is what D5 was written to avoid; it just named the
 // wrong file. `window.confirm` stays banned for the reason recorded when the two-click was added:
 // it blocks the page and the automation harness, so the cancel path could never be spec'd.

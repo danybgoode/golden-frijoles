@@ -19,7 +19,7 @@ deploy_rail: |
   deliberate step** — applied through the Supabase MCP by an agent, or `supabase db push` by the product
   owner by hand; nothing migrates on merge.
 
-review_scope_note: "**Here `reviewScope` is `every-pr`**: the fresh `pr-reviewer` and the external general pass run on every non-trivial PR."
+review_scope_note: "**Here `reviewScope` is `every-pr`**: the fresh `verifier` and the external general pass run on every non-trivial PR."
 
 security_floor: |
   **A deterministic security floor runs underneath, free and without an LLM:** GitHub secret scanning with
@@ -27,7 +27,7 @@ security_floor: |
   a cross-project read, a lost update, authorization gated on the wrong thing; the scanners find known
   patterns and leaked credentials. Neither replaces the other.
 
-kill_switch_dod: "- [ ] **Kill-switch — only if one was planned at grooming:** the flag exists with the polarity the scope doc stated (the rule: `groom/references/kill-switch.md`). This verifies planned work; it is not a new build-time gate."
+kill_switch_dod: "- [ ] **Kill-switch — only if one was planned at refining:** the flag exists with the polarity the scope doc stated (the rule: `refine/references/kill-switch.md`). This verifies planned work; it is not a new build-time gate."
 
 language_policy: |
   - **Language.** Docs are written in **English** — everything under `Roadmap/`, `tasks/`, code
@@ -70,7 +70,7 @@ project_sections: |
   | A well-specified story with a clear acceptance check | **Mid** (Sonnet-class subagent) | Bounded, verifiable, cheap to re-run. |
   | Read-only research / data-availability reports over a large or foreign codebase | **Mid**, background, parallel | Fan-out with no write conflicts. Ask for an explicit "NOT DERIVABLE" list — an honest gap beats an optimistic guess. |
   | Money · auth · migrations · tenancy · concurrency | **Strongest**, never delegated | Same tier that decides who merges. |
-  | PR review — the judgment layers (CI is the gate; reviews authorize nothing) | **The routed external pass**, the fresh `pr-reviewer` and, when paths trigger it, the security lens | See *Review & merge*. Findings are resolved or answered before merge. |
+  | PR review — the judgment layers (CI is the gate; reviews authorize nothing) | **The routed external pass**, the fresh `verifier` and, when paths trigger it, the security lens | See *Review & merge*. Findings are resolved or answered before merge. |
   | File-derived prose: retro, poster entry, sprint wrap, the merge report | **Devin — the dedicated prose writer**, with Agy `gpt-oss-120b-medium` as fallback | Devin owns prose so Codex/Agy quota stays free for review and building. **One** prose model, never a Gemini one — a model-level fallback between registers is what silently changed every report's voice (see `PROSE_MODEL`). **Always read the draft.** |
 
   ### Verifying delegated work — the rule that is not optional
@@ -125,12 +125,12 @@ project_sections: |
     the poster rule: the public page never claims ✅ for unshipped work, and never lags a shipped
     one.
   - **Grooming cadence (updated 2026-07-14):** with a strong planning model (Fable-class), the
-    default is a **single-session groom** — one deep Definition-of-Ready groom for the front-of-queue
+    default is a **single-session refinement** — one deep Definition-of-Ready refinement for the front-of-queue
     epic *plus* a portfolio pass that seeds/resequences the rest of the funnel — rather than one seed
-    per session. The groom skill's discipline is **one deep ask per approval gate; keep going while the
+    per session. The refine skill's discipline is **one deep ask per approval gate; keep going while the
     budget line says so** (updated 2026-09-30, session-budget): each ask stops at its own scope-doc gate,
     and the line printed there says keep going, checkpoint or hand off. What batches besides is the funnel
-    bookkeeping. Deep-groom later epics only when they reach
+    bookkeeping. Deep-refine later epics only when they reach
     the front. Build sprints stay session-sized — versions may supersede in the immediately-next
     sprint, so keep per-sprint kickoffs thin and let the epic docs carry state.
 

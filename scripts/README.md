@@ -14,7 +14,7 @@ against the kit build before the deletion.
 |---|---|
 | `babysit-pr.mjs` (+ test) | `babysit-pr`, entirely |
 | `doc-hygiene.mjs` | `doc-hygiene`'s entry (`doc-format.mjs` stays: its contract test runs here) |
-| `preflight.mjs`, `lib/golden-onboarding.mjs` (+ test) | `groom`'s provider check. It still fails here, correctly; see the note below |
+| `preflight.mjs`, `lib/golden-onboarding.mjs` (+ test) | `refine`'s provider check. It still fails here, correctly; see the note below |
 
 `node <foundation>/scripts/check-skill-scripts.mjs --repo-root .` checks this split: a local script needs its
 whole closure, an absent one is served by the kit.
@@ -75,7 +75,7 @@ re-check before "unifying" it.
 - **`standup-report.mjs`** — a LOCAL, git-derived prose report (writer + guard, `--post`), run by a person
   or the report daemon. The template's `standup.mjs` is a ROUTINE-driven, multi-repo PR/CI/board delta
   report. Different inputs, different trigger, different reader; both now use the one shared prose
-  writer and guard. The plugin's `standup-post` skill runs the template one.
+  writer and guard. The plugin's `report` skill (daily chapter) runs the template one.
 - **`commit-report.mjs` + `report-new-commits.mjs` + `report-main-daemon.mjs`** (and `launchd/`) — the
   merge-report rail, which *originated here*. It posts to Telegram **and Slack**, checkpoints
   exactly-once **per channel**, and retries from a launchd daemon because the prose writers have no

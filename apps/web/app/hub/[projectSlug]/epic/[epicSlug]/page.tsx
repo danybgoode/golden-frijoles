@@ -96,7 +96,7 @@ export default async function HubEpicPage({
       <NowPanel card={card} product={projectSlug} />
       <EpicWhy card={card} />
       <EpicBars card={card} />
-      {/* A seed has no flag and no spend (S1.1): those come with grooming. */}
+      {/* A seed has no flag and no spend (S1.1): those come with refining. */}
       {card.grain === 'Epic' ? <EpicFlag flag={flag} projectSlug={projectSlug} /> : null}
       {card.grain === 'Epic' && card.finops ? (
         <EpicSpend finops={epicFinops(card.finops)} projectSlug={projectSlug} slug={card.slug} />

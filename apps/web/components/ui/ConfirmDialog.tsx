@@ -29,7 +29,7 @@ import { Icon } from './Icon'
 // credential it was bound to, possibly in another session. This component is a transient question
 // asked of the HUMAN at click time, and it authorizes nothing beyond the click. Different actor,
 // different lifetime. They are not two implementations of one idea and must not be merged.
-// (The grooming docs claimed the rail "already confirms". It has no interactive controls at all.)
+// (The refining docs claimed the rail "already confirms". It has no interactive controls at all.)
 
 export function ConfirmDialog({
   open,

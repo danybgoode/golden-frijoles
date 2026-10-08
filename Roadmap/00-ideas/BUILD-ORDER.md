@@ -6,11 +6,11 @@
 # Build order — the six stages
 
 > **Generated 2026-10-08 — do not hand-edit.** One stage per initiative, decided in one place
-> (`scripts/lib/stage.mjs`): To groom · Grooming · Ready to build · Building · QA · Shipped.
+> (`scripts/lib/stage.mjs`): Backlog · Refining · Ready · Building · QA · Shipped.
 > This committed file reads the docs alone, so **Building and QA are not here** — they are facts git
 > and GitHub hold. For the live board run `node scripts/build-order.mjs --live`, or open the Hub board.
 
-## To groom (6)
+## Backlog (6)
 
 _seeds with no pitch yet._
 
@@ -21,18 +21,18 @@ _seeds with no pitch yet._
 - [Template scripts run when invoked through a symlinked path](seeds/script-ismain-realpath.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
 - [This repo lints its template scripts the way its consumers do](seeds/foundation-lint-gate.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
 
-## Grooming (2)
+## Refining (2)
 
 _a pitch is waiting at the approval gate._
 
 - [Analytics visualization — the charting-dependency decision (spike), then the layer](seeds/analytics-visualization-layer.md) — #14 · 01 Growth Engine · seed · Spike · risk: Low · appetite S · _docs: status ready_
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
 
-## Ready to build (8)
+## Ready (8)
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
-- [Plugin 1.0: five plain skills, the frijoles CLI, and Refining](../09-platform-infra/plugin-1-0/README.md) — #73 · 09 Platform Infra · 3/12 stories · risk: High · appetite L · _docs: status scaffolded_
+- [Plugin 1.0: five plain skills, the frijoles CLI, and Refining](../09-platform-infra/plugin-1-0/README.md) — #73 · 09 Platform Infra · 11/12 stories · risk: High · appetite L · _docs: status scaffolded_
 - [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #74 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
 - [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #75 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
 - [Scenarios made PM-operable — define, launch, and kill a scenario from the UI](../01-growth-engine/scenarios-pm-operable/README.md) — #76 · 01 Growth Engine · 10/10 stories · risk: High · appetite M · _docs: status in-progress_
