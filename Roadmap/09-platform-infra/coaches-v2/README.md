@@ -96,13 +96,16 @@ Groomed 2026-10-04; ten epics shipped since. What the live system changed is cor
 skill is `cold-read`; new paths are `Roadmap/00-strategy/cold-read/` and `Roadmap/00-strategy/one-pagers/`. Renaming
 stays bet A's job, done once there.
 
-**D2 · Cold read = one skill + one kit script.** `skills/.../cold-read/SKILL.md` (+ `references/brief.md`: the
-exclusion list, the mandatory sections, the compare template) drives it; `template/scripts/cold-read.mjs` (byte-copied
+**D2 · Cold read = one skill + one kit script.** `skills/.../cold-read/SKILL.md` drives it; the brief (exclusion list,
+mandatory sections) is ONE kit file, `cold-read.prompt.md`, read by both `run` and `brief --out` (*amended at review of
+#314*: a `references/brief.md` would have been a second copy); `template/scripts/cold-read.mjs` (byte-copied
 to `scripts/`, kit-carried via `requires_scripts`) does the deterministic part: `brief` (prints the agent's prompt with
 the exclusion list) · `run` (Codex in a read-only sandbox when reachable; exit 3 + one line "no other family reachable"
 otherwise, and the skill runs a same-family subagent and records `family: claude (same family)`) · `seal <file>`
-(writes `<file>.sha256` in `shasum -a 256` format; refuses to re-seal a different hash) · `verify <file>` · `compare
-<file>` (verifies, then writes the compare skeleton). The read lives at `Roadmap/00-strategy/cold-read/<date>-cold-read.md`.
+(writes `<file>.sha256` in `shasum -a 256` format; refuses to re-seal a different hash, and refuses a read missing its
+reading log, contamination or riskiest assumption) · `verify <file>` · `compare <file> --expect <hash>` (verifies, checks
+the hash the maker was shown, since a sidecar seal can be replaced, then writes the compare skeleton). *Amended at
+review of #314.* The read lives at `Roadmap/00-strategy/cold-read/<date>-cold-read.md`.
 
 **D3 · Where it sits.** The cold read runs before coaching: the shared reference's opening offers it once when no sealed
 read exists and no strategy file is agreed; the facilitator never opens it until compare. The compare is offered when
@@ -135,7 +138,7 @@ decisions, and its Approve removes the line.
 Value proposition and each moat in Competitive advantage ends with `(true today)` or `(aspirational)`, checked against
 the poster and the code once per session.
 
-**D9 · Private strategy.** `template/scripts/strategy-folder.mjs ensure` (kit-carried) runs before a coach's first write:
+**D9 · Private strategy.** `template/scripts/strategy-private.mjs ensure` (kit-carried) runs before a coach's first write:
 on a repo that is public or whose visibility can't be read, with nothing under `Roadmap/00-strategy/` tracked and the
 folder not already ignored, it appends `Roadmap/00-strategy/` to `.gitignore` and prints one line saying so and how to
 opt in (delete that line). A private repo, a tracked file or an existing ignore: no change, one line saying why. Pure
@@ -168,12 +171,13 @@ migration, no flag, no production mutation. **Owed to the PO:** retire the claud
 
 ### Build contract — Sprint 1 (locked by the architect before the builder started)
 `cold-read` skill + `references/brief.md`; `template/scripts/cold-read.mjs` + `cold-read.test.mjs` (pure: `sealLine`,
-`parseSealLine`, `verifySeal`, `renderCompare`, `facilitatorAuthored`); byte copies in `scripts/`;
+`parseSealLine`, `verifySeal`, `renderCompare`, `missingSections`, `stampRead`, `deliveryTail`; the marker reader is
+`proposedSections` in `lib/strategy-files.mjs`); byte copies in `scripts/`;
 `requires_scripts` on `cold-read`; adverts re-rendered; 0.41.0. Cites D1–D4, D13.
 
 ### Build contract — Sprint 2
 `groom/references/coaching.md` (D5–D9, with worked examples incl. the three-anecdote ladder-up); the three coaches read
-it first and state X; `### Step` headings normalised; `template/scripts/strategy-folder.mjs` + test; specs pinning X,
+it first and state X; `### Step` headings normalised; `template/scripts/strategy-private.mjs` + test (renamed: `strategy-folder.test.mjs` already exists, think-skills D8); specs pinning X,
 the reference pointer, D7's marker, D8's labels; gates.md lists `proposed` sections as decisions and Approve clears the
 marker; 0.42.0. Cites D5–D9.
 

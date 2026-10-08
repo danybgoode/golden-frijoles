@@ -46,7 +46,7 @@ stories:
 Env: a local repo with the plugin installed from this branch's release
 
 1. In a repo with a Roadmap, run `/golden-frijoles:cold-read`
-   → a sealed file appears under `strategy/cold-read/` and its hash is printed.
+   → a sealed file appears under `Roadmap/00-strategy/cold-read/` and its hash is printed.
 2. Edit one character of the sealed file, then run the compare
    → it refuses and names the hash mismatch.
 
