@@ -80,7 +80,9 @@ No engine change beyond console labels through the existing `stageLabel()`; keys
 - **D7 — One break, one sitting.** `check-release.mjs` requires a version bump in every PR that touches `plugins/**`,
   and strangers track `main`, so each sprint merge is live. The four PRs are stacked and **merged in one sitting**
   after Sprint 4's walkthrough: 0.44–0.46 are tagged minutes apart and 1.0.0 lands with them. The CLI publish is
-  Daniel's 2FA step; the kit publishes itself (OIDC trusted publishing, `release.yml`).
+  Daniel's 2FA step; the kit publishes itself (OIDC trusted publishing, `release.yml`). **The CLI 1.0 publish comes
+  BEFORE the merge** (verifier, #324): the console's install page, Connect screens and finops copy teach `frijoles`
+  the moment they deploy, and `npm i -g @golden-frijoles/cli` must already give a CLI that has that bin.
 - **D8 — Every PR is HIGH** (shared infra, a breaking release): Daniel merges; the verifier (today `pr-reviewer`) plus
   the routed external passes on each.
 

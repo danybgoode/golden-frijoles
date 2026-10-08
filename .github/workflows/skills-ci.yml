@@ -145,7 +145,7 @@ jobs:
       # `claude plugin validate` needs NO API key, and it is the only thing that checks the hook module
       # against the real function-hooks contract: a malformed hooks.json, an unknown event name, or a `$`
       # used any way other than `$.noun.event(...)` all fail it. Written the way this repo's doctrine
-      # says to treat a network install (see the frijoles step below): an install that cannot happen SKIPS
+      # says to treat a network install (see the gf step below): an install that cannot happen SKIPS
       # loudly rather than redding the run, because a broken npm is not a broken plugin.
       - name: Claude plugin validate + test — the mod's hooks registration and behaviour
         run: |
@@ -172,8 +172,8 @@ jobs:
 
       # ── Presence is not execution ────────────────────────────────────────────────────────────
       # The check above proves every surface says the SAME thing. It cannot prove the thing is
-      # TRUE — and the first version of this epic welded `frijoles flags ls --env production` into five
-      # files, a command that exits 1 with a usage error because `frijoles flags ls` takes no `--env`.
+      # TRUE — and the first version of this epic welded `gf flags ls --env production` into five
+      # files, a command that exits 1 with a usage error because `gf flags ls` takes no `--env`.
       # Every surface agreed, perfectly, about something the CLI cannot do.
       #
       # So this step installs the REAL published CLI and runs each advertised command, asserting
@@ -186,10 +186,10 @@ jobs:
       # `claude plugin …` commands. Both binaries are installed here (best-effort, one not gating the
       # other) so the script's own internal skip logic — never the shell — decides what ran; each
       # missing binary prints its own `::warning::` rather than silently skipping the whole step.
-      - name: Advertised frijoles commands actually exist
+      - name: Advertised gf commands actually exist
         run: |
           npm i -g @golden-frijoles/cli --no-audit --no-fund \
-            || echo "::warning::could not install @golden-frijoles/cli — the frijoles probes were SKIPPED, not passed."
+            || echo "::warning::could not install @golden-frijoles/cli — the gf probes were SKIPPED, not passed."
           npm i -g @anthropic-ai/claude-code@2.1.288 --no-audit --no-fund \
             || echo "::warning::could not install @anthropic-ai/claude-code — the claude-plugin probe was SKIPPED, not passed."
           node scripts/check-onboarding-parity.mjs --exec

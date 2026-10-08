@@ -32,9 +32,13 @@ export const DEPRECATIONS = [
   },
 ];
 
-/** A typed old command: `gf <verb>` or `gf-kit <verb>`. Prose about the name itself ("the old name gf") does not match. */
+/**
+ * A typed old command: `gf <verb>` (any whitespace, also after a path such as `.bin/gf`) or `gf-kit <anything>` (the kit's
+ * verbs are its script names). Prose about the name itself ("the old name gf") does not match. A command wrapped across
+ * two lines is not caught: the guard reads lines.
+ */
 export const OLD_COMMAND =
-  /(?<![\w\-/.$])gf(?:-kit)? (?:login|logout|init|setup|flags|whoami|doctor|projects|keys|config|north-star|experiments|help|--version|--help|--list)\b/;
+  /(?<![\w\-.$])(?:gf\s+(?:login|logout|init|setup|flags|whoami|doctor|projects|keys|config|north-star|experiments|help|--version|--help)\b|gf-kit\s+[-a-z])/;
 
 /** Shipped text: where a reader meets a command. Roadmap history and the release notes are records, not instructions. */
 export const SHIPPED = [
@@ -43,11 +47,17 @@ export const SHIPPED = [
   'skills/kit',
   'skills/scripts',
   'skills/README.md',
+  'skills/RELEASING.md',
+  'skills/CONTRIBUTING.md',
+  'skills/.github',
   'apps/web',
   'packages',
   'scripts',
+  'ci',
+  '.github',
   'README.md',
   'CONTRIBUTING.md',
+  'CODE-QUALITY.md',
   'AGENTS.md',
 ];
 export const TEXT_ALLOWED = [
@@ -55,6 +65,10 @@ export const TEXT_ALLOWED = [
   /supabase\/migrations\//, // applied migrations are history; a COMMENT ON string is stored in the database
   /jev-eval(\.lint)?\.fixtures\.json:/, // replayed seed text with fixed baselines; rewriting it would move scores
   /^scripts\/check-deprecations(\.test)?\.mjs:/,
+  /\bis now frijoles(-kit)?\b/, // the deprecation notice itself, and the tests that pin it
+  // History: the defect check-onboarding-parity exists for was a command that did not exist, `gf flags ls --env`.
+  // Its quote (in that script and in the skills CI that runs it) stays as written; rewriting it would falsify it.
+  /`gf flags ls --env production`|`gf flags ls` (accepts only|takes no)/,
 ];
 
 /** `git grep -n` lines → the ones that still teach an old command. */

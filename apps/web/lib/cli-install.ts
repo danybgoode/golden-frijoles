@@ -15,7 +15,7 @@
 /** The published package. Asserted against `packages/cli/package.json`'s `name`. */
 export const CLI_PACKAGE = '@golden-frijoles/cli'
 
-/** The binary. Asserted against the single key of `packages/cli/package.json`'s `bin`. */
+/** The binary. Asserted against the FIRST key of `packages/cli/package.json`'s `bin` (any other is a dated alias). */
 export const CLI_BIN = 'frijoles'
 
 /**
