@@ -11,6 +11,10 @@ export function GoldenFrijolesLoader({ compact = false }: { compact?: boolean })
   // A random start is safe from hydration mismatches: this loader only mounts after a click or a submit
   // (NavigationLoader renders nothing at hydration), so it never renders on the server.
   const [phraseIndex, setPhraseIndex] = useState(() => pickLoaderPhraseIndex(lastPhraseIndex))
+  // Live regions announce a CHANGE, not the text they are created with, so the status text arrives just after mount.
+  const [announced, setAnnounced] = useState(false)
+
+  useEffect(() => setAnnounced(true), [])
 
   useEffect(() => {
     lastPhraseIndex = phraseIndex
@@ -23,13 +27,13 @@ export function GoldenFrijolesLoader({ compact = false }: { compact?: boolean })
     return () => window.clearInterval(timer)
   }, [])
 
-  // The rotating phrase is decoration: hidden from assistive tech, so a screen reader hears "Loading" once
-  // instead of a new word every 1.5 s.
+  // The rotating phrase is decoration, hidden from assistive tech: a screen reader gets the one status line below,
+  // not a new word every 1.5 s.
   return (
     <div className={`gb-loader${compact ? ' gb-loader--compact' : ''}`} role="status">
       <span className="gb-loader__dot" aria-hidden="true" />
       <p aria-hidden="true">{LOADER_PHRASES[phraseIndex]}</p>
-      <span className="sr-only">Loading Golden Frijoles</span>
+      <span className="sr-only">{announced ? 'Loading Golden Frijoles' : ''}</span>
     </div>
   )
 }
