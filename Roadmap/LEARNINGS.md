@@ -1132,6 +1132,12 @@ one-liner + why + date shape.
   the *migration* that does the same backfill was left untouched, and round 2 flagged it as Blocking.
   The fix is cheap at the time you're already in the mental model; it's a whole extra review cycle
   later. *(2026-07-20, multi-tenant-activation S1.)*
+  **A lock's "nothing reads X" is the same grep, across every package:** first-run-setup's D4 said nothing reads
+  `project.startPoint` after grepping skills/ and scripts/; `packages/cli` reads it through the kit's registry.
+  *(2026-10-07)*
+  **Run a generator on someone else's real repo before review.** Fixtures written by the code's author share its
+  blind spots: a clone of `sindresorhus/ky` found a dev-only test server reported as the stack and a header linking a
+  seed that never existed, both past every fixture. *(2026-10-07, first-run-setup.)*
   **A redirect on a front door is the same shape:** before changing what a URL does, grep every link TO it.
   portfolio-view made bare `/app` open the portfolio; the lock caught the switcher's `?project=` links, and the build
   found three more (the Today tab, two crumbs, and the switcher's fallback — the last one only by the fresh reviewer).
@@ -1934,6 +1940,10 @@ one-liner + why + date shape.
   answer (`"1"`, `true`, `null`) must fall back to the deterministic rule and **say so in the reason**. A
   coerced `Number(true)` became a model-decided PASS until review caught it. Only a probability in [0,1]
   counts as a verdict. *(2026-09-23)*
+  **A list is the same shape:** a failed `gh pr list` that leaves `[]` reads as "0 pull requests, nothing shipped".
+  Put every external list through ONE reader that names what it could not read (and uses limit + 1 to say when a list
+  was cut), and have the write refuse while any list is unread. first-run-setup's issues had the check; its pull
+  requests didn't, and two reviewers found the two halves. *(2026-10-07)*
 - **A shadow period can run on history, if the history is decision-shaped.** Replaying 655 posted reviews
   and 186 retrospectives through the same judge in shadow did in minutes what a calendar shadow does in
   weeks. Name the corpus bias (posted = accepted) and label the other direction on purpose. *(2026-09-23)*

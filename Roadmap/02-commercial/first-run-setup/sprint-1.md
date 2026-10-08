@@ -3,7 +3,7 @@ epic: first-run-setup
 sprint: 1
 title: "Setup starts"
 risk: low
-phase: In review
+phase: Shipped
 stories_total: 3
 stories:
   - id: S1.1
@@ -30,7 +30,7 @@ stories:
 ---
 # First run: setup starts — Sprint 1: Setup starts
 
-**Status:** 🟦 In review
+**Status:** ✅ shipped (#307, `66cffd6`)
 
 ## Build contract (locked by the architect before the builder started)
 Cites the epic README's D1–D13; nothing here restates them.
