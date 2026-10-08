@@ -160,7 +160,7 @@ revoke-confirm-dead cycle executed and noted.
 
 ## Sprint 3 — Smoke walkthrough (do these in order)
 
-Environment: production — `https://goldenfrijoles.com`. Steps 1–5 are already run and
+Environment: production — the Vercel deployment host (now `goldenfrijoles.com`). Steps 1–5 are already run and
 green (API-level, by the agent). Steps 6–9 are **owed to Daniel**: they need a browser, and step 6
 mints a production credential.
 

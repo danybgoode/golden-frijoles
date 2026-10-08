@@ -86,7 +86,7 @@ in the epic README.
 Env: preview URL pre-merge (no per-branch Vercel preview yet — golden-beans' Vercel project isn't
 provisioned, per `.github/workflows/ci.yml`'s own header comment; run locally against
 `npm run dev`/`npm run start` + `supabase start` until it is) · production
-`https://goldenfrijoles.com` post-merge, **after** running `npm run seed:demo` against
+the Vercel deployment host (now `goldenfrijoles.com`) post-merge, **after** running `npm run seed:demo` against
 prod once (owed to Daniel — needs the prod `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY`).
 
 1. Run `npm run seed:demo` (server + local Supabase already running).

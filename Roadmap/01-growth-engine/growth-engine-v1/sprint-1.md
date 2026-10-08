@@ -35,7 +35,7 @@ repos — golden-beans [#1](https://github.com/danybgoode/golden-beans/pull/1) (
 medusa-bonsai [#253](https://github.com/danybgoode/miyagisanchezcommerce/pull/253) (`6e8d912`),
 both squash-merged by Daniel (HIGH risk — both ship a DB migration, corrected from an initial LOW
 mislabel a fresh-reviewer pass caught). Infra live: Supabase project `golden-beans` (ref
-`slweidgffcfndnskcskc`) + Vercel project `golden-beans` (https://goldenfrijoles.com).
+`slweidgffcfndnskcskc`) + Vercel project `golden-beans` (the Vercel deployment host (now `goldenfrijoles.com`)).
 **Part B (the real browser flag-flip + live-UI-event smoke) is confirmed green by Daniel** — real
 `setup_guide_viewed` events landed in golden-beans with his actual Clerk user id, within seconds of
 his own live interaction. See the walkthrough below for the full story, including a real
@@ -135,7 +135,7 @@ project row + API key seeded directly into production for this purpose (`project
 'miyagisanchez'`) — the same credential Story 1.3's `GROWTH_ENGINE_API_KEY` env var (already set on
 medusa-bonsai's Vercel project, Production scope) uses.
 
-1. `curl https://goldenfrijoles.com/` → 200, renders the "Golden Beans — Growth Engine"
+1. `curl /` on the Vercel deployment host (now `goldenfrijoles.com`) → 200, renders the "Golden Beans — Growth Engine"
    placeholder page.
    → **Confirmed:** 200.
 2. `curl -X POST https://goldenfrijoles.com/api/v1/track` with no `Authorization` header.

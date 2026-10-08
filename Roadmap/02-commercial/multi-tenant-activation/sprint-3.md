@@ -31,7 +31,7 @@ stories:
 # Multi-tenant activation — Sprint 3: The flip (landing backfill + trials live)
 
 **Status:** ✅ 3.1 + 3.2 merged (PR #14 → `bbaffd2`). ✅ **3.3 — the gate is FLIPPED in production**
-(`SIGNUP_ENABLED=true`, 2026-07-21). Signup is live at `https://goldenfrijoles.com/signup`.
+(`SIGNUP_ENABLED=true`, 2026-07-21). Signup is live at `/signup` on the Vercel deployment host (now `goldenfrijoles.com`).
 
 > ### ✅ LAUNCHED — a real user activated fully self-serve (2026-07-21)
 > The Supabase Auth redirect allow-list was configured (Dashboard → Authentication → URL

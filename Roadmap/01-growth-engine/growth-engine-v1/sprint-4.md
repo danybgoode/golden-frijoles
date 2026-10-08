@@ -33,7 +33,7 @@ stories:
 **Status:** ✅ **Sprint 4 merged + deployed 2026-07-16.** PR
 [#5](https://github.com/danybgoode/golden-beans/pull/5) squash-merged (`94f0067`), deployed to
 production via `vercel --prod` (`dpl_3XbG9GfK3Q5WGSTTW21CM2jKAhy5`, live at
-`https://goldenfrijoles.com`). Agent-verified locally pre-merge (a fresh local Supabase +
+the Vercel deployment host (now `goldenfrijoles.com`)). Agent-verified locally pre-merge (a fresh local Supabase +
 a real `next build`/`next start` production build, 59 Playwright `api` cases green) and
 post-deploy at the plain-200 level. **The authenticated production round-trip (Part A/B below) is
 owed to Daniel** — no session held a plaintext production API key to run it as the agent (same

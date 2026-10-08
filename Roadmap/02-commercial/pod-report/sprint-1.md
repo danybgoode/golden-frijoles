@@ -91,7 +91,7 @@ unshipped work (poster rule); seeds render hazy (un-groomed ≠ promised).
 
 ## Sprint 1 — Smoke walkthrough (do these in order)
 
-Environment: production — `https://goldenfrijoles.com`. Steps 1–4 are already run and
+Environment: production — the Vercel deployment host (now `goldenfrijoles.com`). Steps 1–4 are already run and
 green (API-level, by the agent); steps 5–7 are **owed to Daniel** because they need a browser and a
 repo secret.
 

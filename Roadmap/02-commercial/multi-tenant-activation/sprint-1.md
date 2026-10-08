@@ -31,7 +31,7 @@ stories:
 # Multi-tenant activation — Sprint 1: The account boundary (auth hardening core)
 
 **Status:** ✅ **MERGED + LIVE IN PRODUCTION** (2026-07-21) — PR #13 squash-merged as `e032867`,
-deployed to `https://goldenfrijoles.com`. All 3 stories; deterministic gate green
+deployed to the Vercel deployment host (now `goldenfrijoles.com`). All 3 stories; deterministic gate green
 (tsc + build + Playwright `api`, **107 passed**). Commits: 1.1 `a33a316`, 1.2 `1c7ef9d`,
 1.3 `401c39b`; review fixes `77350bc` (round 1) + `151b025` (round 2).
 

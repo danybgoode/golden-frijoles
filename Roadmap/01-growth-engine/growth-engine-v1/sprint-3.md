@@ -119,7 +119,7 @@ once 3.3 has run at least once).
    production Supabase (ref `slweidgffcfndnskcskc`); merged code deployed via `vercel --prod` (this
    project has no Git-integration auto-deploy — same manual step as Sprints 1–2).
    → **Confirmed:** `supabase migration list` shows `20260716100000` synced;
-   `https://goldenfrijoles.com/` → 200.
+   the Vercel deployment host (now `goldenfrijoles.com`) → 200.
 2. Defined the `payable_sellers` North Star metric + both leading inputs (`setup_guide_shares`,
    `attributed_revenue`) for the real `miyagisanchez` project, and linked `setup_guide` to both — the
    same DB operations `POST /v1/north-star/sync` + `POST /v1/features/setup_guide/link-input`

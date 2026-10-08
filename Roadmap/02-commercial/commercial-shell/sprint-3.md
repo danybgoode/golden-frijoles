@@ -223,7 +223,7 @@ path wasn't.
 - **deterministic gate:** `tsc --noEmit` + `npm run build` + Playwright `api` green before merge
 
 ## Sprint 3 — Smoke walkthrough (do these in order)
-Env: production · `https://goldenfrijoles.com` (or the custom domain if 3.3 decides one)
+Env: production · the Vercel deployment host (now `goldenfrijoles.com`)
 
 1. Visit the landing in a private window, then join the waitlist with a disposable email.
    → Confirmation state.

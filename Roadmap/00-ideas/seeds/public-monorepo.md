@@ -40,7 +40,7 @@ Roadmap.
   guards, crons).
   - **81 of its `scripts/` are byte-identical copies** of dobby-foundation's `template/scripts/`, and 5 differ.
   - It has three absolute-path references to `/Users/cosmo/dobby/golden-beans`.
-- **Vercel team `danybgoodes-projects` is on the Hobby plan.** Vercel doesn't connect a Hobby team to an
+- **The Vercel team is on the Hobby plan.** Vercel doesn't connect a Hobby team to an
   **organization-owned** GitHub repo, so transferring this repo into `golden-frijoles` would cut the Git integration,
   and with it the "merge to `main` = deploy" pipeline (AGENTS rule #4). Hobby is also Vercel's non-commercial tier,
   and goldenfrijoles.com takes signups. **→ Decision 1 below.**
