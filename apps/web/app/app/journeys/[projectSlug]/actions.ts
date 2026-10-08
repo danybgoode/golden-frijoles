@@ -20,7 +20,7 @@ async function requireGate() {
 export async function createJourneyVersionAction(
   slug: unknown,
   journeyKey: unknown,
-  definitionJson: unknown,
+  definitionJson: unknown
 ) {
   await requireGate()
   const command = await createJourneyVersionAfterGate(slug, journeyKey, definitionJson, {
@@ -31,11 +31,7 @@ export async function createJourneyVersionAction(
   if (command.result.ok) revalidatePath(`/app/journeys/${command.slug}`)
   return command.result
 }
-export async function activateJourneyVersionAction(
-  slug: unknown,
-  journeyId: unknown,
-  versionId: unknown,
-) {
+export async function activateJourneyVersionAction(slug: unknown, journeyId: unknown, versionId: unknown) {
   await requireGate()
   const safeSlug = requireString(slug, 'project')
   // Resolve session ownership before validating action-specific identifiers so a non-owner cannot

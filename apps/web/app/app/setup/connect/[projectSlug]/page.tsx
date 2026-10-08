@@ -48,7 +48,7 @@ export default async function SetupConnectPage({ params }: { params: Promise<{ p
   // AGENTS rule #3: the connector is gated by TWO independent switches. With the env flag off we do
   // not even look for a token — there is nothing to offer, and a disabled-looking control would
   // imply the surface exists and is merely unavailable to you.
-  const connectorEnabled = (await isConnectorEnabled())
+  const connectorEnabled = await isConnectorEnabled()
   // ⚠️ Read the status EVEN WHEN the connector is switched off, so an existing token stays visible
   // and revocable. `actions.ts` says in words that revoke is deliberately ungated — "if
   // CONNECTOR_ENABLED were flipped off mid-incident, an owner must still be able to permanently kill

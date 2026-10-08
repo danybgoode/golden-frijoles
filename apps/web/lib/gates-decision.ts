@@ -55,7 +55,11 @@ export const GATES = {
     envVar: 'EXPERIMENT_GOVERNANCE_ENABLED',
     fallback: true,
   },
-  experimentBuilder: { key: 'experiments.builder_enabled', envVar: 'EXPERIMENT_BUILDER_ENABLED', fallback: true },
+  experimentBuilder: {
+    key: 'experiments.builder_enabled',
+    envVar: 'EXPERIMENT_BUILDER_ENABLED',
+    fallback: true,
+  },
   reportShares: { key: 'reports.shares_enabled', envVar: 'REPORT_SHARES_ENABLED', fallback: true },
   signals: { key: 'signals.loop_enabled', envVar: 'SIGNALS_ENABLED', fallback: true },
   flagDefinitionSync: {
@@ -103,7 +107,10 @@ export function isOnVercel(env: Readonly<Record<string, string | undefined>>): b
 }
 
 /** The off-Vercel override (D6): `undefined` when it does not apply, else the old `=== 'true'` reading. */
-export function envOverride(gate: Gate, env: Readonly<Record<string, string | undefined>>): boolean | undefined {
+export function envOverride(
+  gate: Gate,
+  env: Readonly<Record<string, string | undefined>>
+): boolean | undefined {
   if (isOnVercel(env) || gate.envVar === null) return undefined
   const raw = env[gate.envVar]
   return raw === undefined ? undefined : raw === 'true'

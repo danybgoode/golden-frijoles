@@ -20,7 +20,10 @@ export async function readServedCatalog(): Promise<ServedCatalog> {
       .eq('slug', DEMO_PROJECT_SLUG)
       .maybeSingle()
     if (error || !project) {
-      console.error('[gates] could not resolve the catalog project; every gate serves its fallback:', error?.message)
+      console.error(
+        '[gates] could not resolve the catalog project; every gate serves its fallback:',
+        error?.message
+      )
       return null
     }
     const registry = await getFlagRegistryView(project.id as string)

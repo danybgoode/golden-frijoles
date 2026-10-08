@@ -76,8 +76,8 @@ export async function AuthoritySection() {
   // making the same claim about the same two flags is two claims to keep in step; the first version
   // hardcoded this one and would have said "no drill can run" while one of them ran. Codex, PR #100.
   const gates = {
-    resilienceScenariosEnabled: (await isResilienceScenariosEnabled()),
-    securitySimulationsEnabled: (await isSecuritySimulationsEnabled()),
+    resilienceScenariosEnabled: await isResilienceScenariosEnabled(),
+    securitySimulationsEnabled: await isSecuritySimulationsEnabled(),
   }
   // Empty note = every drill can be started, so nothing needs qualifying.
   const drillsRunnable = gatedDrillNote(gates) === ''
@@ -88,7 +88,7 @@ export async function AuthoritySection() {
   // it — and this panel inherited the argument ("let agents move") without inheriting the gate that
   // made the claim checkable. A repositioning is exactly when this happens: the claim survives the
   // section that qualified it. Caught by Codex in cross-family review round 3 of PR #100.
-  const writesLive = (await isConnectorWritesEnabled())
+  const writesLive = await isConnectorWritesEnabled()
 
   return (
     <section className="band" id="authority">
@@ -99,9 +99,9 @@ export async function AuthoritySection() {
             version of this argument ends in an admin console someone administers full-time. Ours
             ends in the same property arriving as a default, because there is nobody to staff it. */}
         <p className="measure">
-          Your agents can investigate, propose and act. Golden Frijoles keeps the context, permissions,
-          staged changes and evidence visible, so autonomy can expand without the product becoming a black
-          box. Governance and control over what your agents may do, without a department to enforce it.
+          Your agents can investigate, propose and act. Golden Frijoles keeps the context, permissions, staged
+          changes and evidence visible, so autonomy can expand without the product becoming a black box.
+          Governance and control over what your agents may do, without a department to enforce it.
         </p>
 
         <div className="authority-grid section-lead">

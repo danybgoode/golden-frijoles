@@ -24,7 +24,7 @@ import { Icon } from '@/components/ui/Icon'
 // it; when the section that needed it stopped needing it, it went with it.
 export async function RunYourFirstBet({ className }: { className?: string }) {
   return (
-    <Button href={primaryCtaHref((await isSignupEnabled()))} className={className}>
+    <Button href={primaryCtaHref(await isSignupEnabled())} className={className}>
       Run your first Bet
       <Icon name="arrow-right" />
     </Button>

@@ -34,9 +34,9 @@ import { OpsTabs, type ResolvedSurface } from './OpsTabs'
 // resolves the gates per request. It does not write them down.
 export async function OpsSection() {
   const gates = {
-    resilienceScenariosEnabled: (await isResilienceScenariosEnabled()),
-    securitySimulationsEnabled: (await isSecuritySimulationsEnabled()),
-    destinationDeliveryEnabled: (await isDestinationDeliveryEnabled()),
+    resilienceScenariosEnabled: await isResilienceScenariosEnabled(),
+    securitySimulationsEnabled: await isSecuritySimulationsEnabled(),
+    destinationDeliveryEnabled: await isDestinationDeliveryEnabled(),
   }
 
   const surfaces: ResolvedSurface[] = MAKER_OPS_SURFACES.map((surface) => ({

@@ -675,7 +675,7 @@ async function resolveMakerActor(
     createdBy,
     projectSlug,
     demoProjectSlug: DEMO_PROJECT_SLUG,
-    connectorWritesEnabled: (await isConnectorWritesEnabled()),
+    connectorWritesEnabled: await isConnectorWritesEnabled(),
     cliWritesEnabled: true, // one-product-project D2: the CLI write API is always on
   }
   if (!makerMayWrite(facts)) return null

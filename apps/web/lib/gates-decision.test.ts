@@ -2,7 +2,15 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { GATES, envOverride, flagEnvironmentFor, resolveGate, servedValue, type Gate, type ServedCatalog } from './gates-decision.ts'
+import {
+  GATES,
+  envOverride,
+  flagEnvironmentFor,
+  resolveGate,
+  servedValue,
+  type Gate,
+  type ServedCatalog,
+} from './gates-decision.ts'
 
 const row = (environment: string, serving: unknown, readable = true) => ({ environment, serving, readable })
 const catalogOf = (key: string, rows: ReturnType<typeof row>[]): ServedCatalog => new Map([[key, rows]])
@@ -45,9 +53,21 @@ test('every other catalog state serves the fallback — an outage changes nothin
     assert.equal(servedValue(gate, null, 'production'), gate.fallback, 'catalog unreadable')
     assert.equal(servedValue(gate, new Map(), 'production'), gate.fallback, 'flag absent')
     assert.equal(servedValue(gate, catalogOf(gate.key, []), 'production'), gate.fallback, 'no environments')
-    assert.equal(servedValue(gate, catalogOf(gate.key, [row('production', null)]), 'production'), gate.fallback, 'serves nothing')
-    assert.equal(servedValue(gate, catalogOf(gate.key, [row('production', !gate.fallback, false)]), 'production'), gate.fallback, 'unreadable row')
-    assert.equal(servedValue(gate, catalogOf(gate.key, [row('production', 'false')]), 'production'), gate.fallback, 'not a boolean')
+    assert.equal(
+      servedValue(gate, catalogOf(gate.key, [row('production', null)]), 'production'),
+      gate.fallback,
+      'serves nothing'
+    )
+    assert.equal(
+      servedValue(gate, catalogOf(gate.key, [row('production', !gate.fallback, false)]), 'production'),
+      gate.fallback,
+      'unreadable row'
+    )
+    assert.equal(
+      servedValue(gate, catalogOf(gate.key, [row('production', 'false')]), 'production'),
+      gate.fallback,
+      'not a boolean'
+    )
   }
 })
 
@@ -65,11 +85,21 @@ test('VERCEL_ENV maps to the flag environment; anything else is development', ()
 })
 
 test("off Vercel a SET env var wins with the old exact === 'true' reading (D6)", () => {
-  for (const [raw, expected] of [['true', true], ['false', false], ['TRUE', false], ['1', false], ['true ', false], ['', false]] as const) {
+  for (const [raw, expected] of [
+    ['true', true],
+    ['false', false],
+    ['TRUE', false],
+    ['1', false],
+    ['true ', false],
+    ['', false],
+  ] as const) {
     assert.equal(envOverride(ON, { X_ON_ENABLED: raw }), expected, JSON.stringify(raw))
   }
   assert.equal(envOverride(ON, {}), undefined, 'unset: the catalog answers')
-  assert.equal(resolveGate(OFF, catalogOf(OFF.key, [row('development', true)]), { X_OFF_ENABLED: 'false' }), false)
+  assert.equal(
+    resolveGate(OFF, catalogOf(OFF.key, [row('development', true)]), { X_OFF_ENABLED: 'false' }),
+    false
+  )
 })
 
 test('ON Vercel the env is never read: a leftover Vercel variable cannot override the catalog', () => {

@@ -26,7 +26,7 @@ import { WaitlistForm } from './WaitlistForm'
 // per-tenant ceilings are data (`projects.monthly_event_quota`), not env and not copy.
 export async function PricingSection() {
   const section = getSection('pricing')
-  const signupEnabled = (await isSignupEnabled())
+  const signupEnabled = await isSignupEnabled()
 
   return (
     <>

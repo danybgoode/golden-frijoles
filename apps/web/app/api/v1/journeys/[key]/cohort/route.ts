@@ -18,7 +18,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ key:
   if (!validateJourneyKey(key)) {
     return NextResponse.json(
       { ok: false, error: 'journey key must be 1-64 characters of lower_snake_case' },
-      { status: 400 },
+      { status: 400 }
     )
   }
   const parsed = parseJourneyCohortRequest({
@@ -34,23 +34,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ key:
   })
   if (!parsed.ok) return NextResponse.json({ ok: false, error: parsed.error }, { status: 400 })
 
-  const result = await getJourneyCohortByProjectId(
-    auth.projectId,
-    key,
-    parsed.version,
-    parsed.options,
-  )
+  const result = await getJourneyCohortByProjectId(auth.projectId, key, parsed.version, parsed.options)
   if (!result.ok) {
     if (result.reason === 'invalid_request') {
       return NextResponse.json(
         { ok: false, error: 'drilldown is not valid for this journey definition' },
-        { status: 400 },
+        { status: 400 }
       )
     }
     if (result.reason === 'resource_limit') {
       return NextResponse.json(
         { ok: false, error: 'Journey cohort exceeds the query-time safety limit' },
-        { status: 422 },
+        { status: 422 }
       )
     }
     if (result.reason === 'query_failed') {
@@ -59,11 +54,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ key:
     return NextResponse.json(
       {
         ok: false,
-        error: result.reason === 'journey_not_found'
-          ? `Unknown journey: ${key}`
-          : `Unknown journey version: ${parsed.version}`,
+        error:
+          result.reason === 'journey_not_found'
+            ? `Unknown journey: ${key}`
+            : `Unknown journey version: ${parsed.version}`,
       },
-      { status: 404 },
+      { status: 404 }
     )
   }
   return NextResponse.json(result)

@@ -149,7 +149,7 @@ export async function POST(request: Request) {
       internalErrors,
       errored,
     },
-    { status },
+    { status }
   )
 }
 

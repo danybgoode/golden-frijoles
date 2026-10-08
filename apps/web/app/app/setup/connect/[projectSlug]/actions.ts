@@ -52,7 +52,7 @@ function requireString(value: unknown, field: string): string {
 // What remains here is only the wiring, and `setup-route-guards.test.ts` pins that BOTH values reach
 // the predicate — the one thing a source scan is actually good for.
 async function closedGate(): Promise<ConnectorGate> {
-  return closedConnectorGate({ connectorEnabled: (await isConnectorEnabled()) })
+  return closedConnectorGate({ connectorEnabled: await isConnectorEnabled() })
 }
 
 export async function mintConnectorAction(slug: unknown) {

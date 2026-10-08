@@ -38,7 +38,7 @@ const ACTIVITY_LIMIT = 12
 const PENDING_LIMIT = 5
 
 export async function AgentRail({ projectId, projectSlug }: { projectId: string; projectSlug: string }) {
-  if (!shouldRenderAgentRail({ enabled: (await isAgentRailEnabled()), projectId })) return null
+  if (!shouldRenderAgentRail({ enabled: await isAgentRailEnabled(), projectId })) return null
 
   // Both reads return null — never [] — when they fail, and that distinction is carried all the way
   // into the copy below. "We could not read this" and "nothing is happening" are opposite messages;

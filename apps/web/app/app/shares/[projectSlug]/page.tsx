@@ -28,7 +28,7 @@ export default async function SharesPage({ params }: { params: Promise<{ project
             said every lens keeps the report's caveats and its "not instrumented" rows — a promise
             about what a narrower lens does NOT hide — and it belongs where the lens is chosen. It is
             the hint on the audience field now. */}
-        <ShareManager slug={projectSlug} shares={shares} enabled={(await isReportSharesEnabled())} />
+        <ShareManager slug={projectSlug} shares={shares} enabled={await isReportSharesEnabled()} />
       </main>
     </ProductShell>
   )

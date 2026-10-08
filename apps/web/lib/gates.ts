@@ -11,7 +11,14 @@
 // `gf flags kill` takes to land. A failed read is cached too, as `null` (every gate serves its fallback), so an
 // outage costs one query per 30 s, not one per request.
 
-import { GATES, envOverride, resolveGate, type Gate, type GateName, type ServedCatalog } from './gates-decision'
+import {
+  GATES,
+  envOverride,
+  resolveGate,
+  type Gate,
+  type GateName,
+  type ServedCatalog,
+} from './gates-decision'
 
 const CACHE_MS = 30_000
 let cached: { at: number; catalog: Promise<ServedCatalog> } | null = null

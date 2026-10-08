@@ -39,7 +39,11 @@ const NOT_A_GATE: Record<string, string> = {
 
 test('no *_ENABLED env read outside the seam', () => {
   const found = files().flatMap((file) =>
-    [...code(readFileSync(file, 'utf8')).matchAll(/\benv\.([A-Z0-9_]+_ENABLED)\b|\benv\[['"]([A-Z0-9_]+_ENABLED)['"]\]/g)]
+    [
+      ...code(readFileSync(file, 'utf8')).matchAll(
+        /\benv\.([A-Z0-9_]+_ENABLED)\b|\benv\[['"]([A-Z0-9_]+_ENABLED)['"]\]/g
+      ),
+    ]
       .map((match) => [rel(file), match[1] ?? match[2]] as const)
       .filter(([path, name]) => !path.startsWith('lib/gates') && NOT_A_GATE[path] !== name)
   )
@@ -75,5 +79,8 @@ test('only lib/gates-decision.ts names a gate key', async () => {
     const source = code(readFileSync(file, 'utf8'))
     return keys.filter((key) => source.includes(`'${key}'`)).map((key) => `${rel(file)}: ${key}`)
   })
-  assert.deepEqual(readers.filter((line) => !line.startsWith('lib/gates-decision.ts')), [])
+  assert.deepEqual(
+    readers.filter((line) => !line.startsWith('lib/gates-decision.ts')),
+    []
+  )
 })

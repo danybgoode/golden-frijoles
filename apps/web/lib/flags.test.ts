@@ -13,7 +13,8 @@ import { GATES } from './gates-decision.ts'
 const source = readFileSync(new URL('./flags.ts', import.meta.url), 'utf8')
 
 function body(name: string): string {
-  const start = source.indexOf(`export function ${name}(`) + 1 || source.indexOf(`export async function ${name}(`) + 1
+  const start =
+    source.indexOf(`export function ${name}(`) + 1 || source.indexOf(`export async function ${name}(`) + 1
   assert.ok(start > 0, `${name} is exported`)
   return source.slice(start, source.indexOf('\n}\n', start))
 }

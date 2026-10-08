@@ -153,7 +153,8 @@ export async function startExperimentCommand(
   if (!(await deps.builderEnabled())) return { ok: false, error: BUILDER_PAUSED }
   if (typeof slug !== 'string' || typeof experimentKey !== 'string')
     return { ok: false, error: 'Invalid request.' }
-  if (!(await deps.servingEnabled())) return { ok: false, error: 'Flag serving is unavailable in this deployment.' }
+  if (!(await deps.servingEnabled()))
+    return { ok: false, error: 'Flag serving is unavailable in this deployment.' }
   const { projectId, userId } = await deps.requireOwnership(slug)
 
   const stored = await deps.io.loadDraft(projectId, experimentKey)
@@ -237,7 +238,8 @@ export async function retryServingCommand(
   if (!(await deps.builderEnabled())) return { ok: false, error: BUILDER_PAUSED }
   if (typeof slug !== 'string' || typeof experimentKey !== 'string')
     return { ok: false, error: 'Invalid request.' }
-  if (!(await deps.servingEnabled())) return { ok: false, error: 'Flag serving is unavailable in this deployment.' }
+  if (!(await deps.servingEnabled()))
+    return { ok: false, error: 'Flag serving is unavailable in this deployment.' }
   const { projectId, userId } = await deps.requireOwnership(slug)
   // The RUNNING version, not the latest: "Change the plan" may have added a draft after it (round 3).
   const latest = await deps.io.loadDraft(projectId, experimentKey)

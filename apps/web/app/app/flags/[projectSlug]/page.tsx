@@ -49,7 +49,7 @@ export default async function FlagsPage({
   const { projectSlug } = await params
   const membership = await requireProjectMembership(projectSlug)
   const canManage = isOwner({ projectId: membership.projectId, role: membership.role })
-  const consoleEnabled = (await isFlagConsoleEnabled())
+  const consoleEnabled = await isFlagConsoleEnabled()
   // Credential metadata is operationally sensitive. Definitions and audit are member-readable, but
   // only an owner may enumerate the keys they are allowed to mint or revoke.
   //
@@ -212,7 +212,7 @@ export default async function FlagsPage({
           syncKeys={syncKeys}
           canManage={canManage}
           servingEnabled
-          ruleBuilderEnabled={(await isFlagRuleBuilderEnabled())}
+          ruleBuilderEnabled={await isFlagRuleBuilderEnabled()}
           // The two free-key creation paths (the raw-JSON textarea and `RuleBuilder`'s own key
           // field) leave the console branch, and their replacement is the `<NewFeature>` control in
           // the head above. Both go in ONE prop because the product had TWO of them, and gating them

@@ -66,7 +66,7 @@ export async function CommandCenter({ project }: { project: CommandCenterProject
   // The page this replaced resolved the gate into a `gates` record and handed it down; the rewrite
   // dropped that, and the bands rendered unconditionally. Caught by a cross-family reviewer noticing
   // the `links` prop had gone (Mistral Vibe) — it reached the right defect from the wrong route.
-  const signals = (await isSignalsEnabled())
+  const signals = await isSignalsEnabled()
 
   // Read in parallel, and independently: one slow or failing layer must not take the others with it.
   // The queue is not read at all when its gate is dark — a dark capability is not a slow one.
@@ -177,7 +177,8 @@ export async function CommandCenter({ project }: { project: CommandCenterProject
             <TaskList>
               <ReadDueLines reads={dueReads} />
               {/* A FAILED queue read keeps its sentence even beside due reads (fresh review, #291). */}
-              {tasks !== null && bands.open.length === 0 && dueReads.length > 0 ? null : bands.open.length === 0 ? (
+              {tasks !== null && bands.open.length === 0 && dueReads.length > 0 ? null : bands.open.length ===
+                0 ? (
                 <BandEmpty
                   head="Nothing is waiting on you"
                   body={

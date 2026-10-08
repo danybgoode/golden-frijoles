@@ -39,8 +39,8 @@ export default async function ScenariosPage({ params }: { params: Promise<{ proj
   const membership = await requireProjectMembership(projectSlug)
   const view = await getScenarioDashboardView(membership.projectId)
   const capabilities = {
-    resilience: (await isResilienceScenariosEnabled()),
-    security: (await isSecuritySimulationsEnabled()),
+    resilience: await isResilienceScenariosEnabled(),
+    security: await isSecuritySimulationsEnabled(),
   }
   const canAuthor =
     membership.role === 'owner' &&

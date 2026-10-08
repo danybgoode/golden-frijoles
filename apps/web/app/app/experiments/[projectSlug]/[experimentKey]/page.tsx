@@ -257,7 +257,7 @@ export default async function ExperimentPage({
   const tab = scalar(raw.tab) === 'plan' ? 'plan' : 'results'
   // Only an owner may act; a member reads the same page without the controls (the actions would
   // refuse them server-side anyway — a button that can only fail is not drawn).
-  const writable = (await isExperimentBuilderWritable())
+  const writable = await isExperimentBuilderWritable()
   // A roll-out is drawn only where the server can do it (general pass, PR #172): the builder can write,
   // and Production serves THIS version's split — so not a JSON-made (unbound) version, not one whose
   // split another version or a feature edit replaced, and not after its own roll-out (the undo is the

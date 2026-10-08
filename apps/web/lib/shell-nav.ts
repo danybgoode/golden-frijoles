@@ -108,11 +108,11 @@ function emptyHeader(activeSection: ShellSection) {
  */
 export async function readGates(): Promise<ProjectSurfaceGates> {
   return {
-    'experiment-governance': (await isExperimentGovernanceEnabled()),
-    'flag-console': (await isFlagConsoleEnabled()),
+    'experiment-governance': await isExperimentGovernanceEnabled(),
+    'flag-console': await isFlagConsoleEnabled(),
     'flag-serving': true, // one-product-project D2: serving is no longer a gate
-    'journey-projections': (await isJourneyProjectionsEnabled()),
-    signals: (await isSignalsEnabled()),
+    'journey-projections': await isJourneyProjectionsEnabled(),
+    signals: await isSignalsEnabled(),
     // ⚠️ **`console-shell` is GONE — mockups-as-built Story 3.3 deleted the flag.** It gated Setup ›
     // Connect, which is now `gate: 'always'`. Two other derived gates (`legacy-keys`,
     // `legacy-flag-credentials`) were deleted before it for the same reason design-system-rails S4.5

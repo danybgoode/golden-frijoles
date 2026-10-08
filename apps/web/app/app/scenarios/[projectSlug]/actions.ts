@@ -28,8 +28,8 @@ function environment(value: unknown): Environment | null {
 
 async function capabilities(): Promise<ScenarioCapabilityGates> {
   return {
-    resilience: (await isResilienceScenariosEnabled()),
-    security: (await isSecuritySimulationsEnabled()),
+    resilience: await isResilienceScenariosEnabled(),
+    security: await isSecuritySimulationsEnabled(),
   }
 }
 

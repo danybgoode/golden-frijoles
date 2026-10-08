@@ -117,7 +117,7 @@ export default async function FlagDetailPage({
   const tab: Tab = TABS.includes(candidate as Tab) ? (candidate as Tab) : 'value'
 
   const canManage = isOwner({ projectId: membership.projectId, role: membership.role })
-  const ruleBuilderEnabled = (await isFlagRuleBuilderEnabled())
+  const ruleBuilderEnabled = await isFlagRuleBuilderEnabled()
   const servingEnabled = true // one-product-project D2: serving is no longer a gate
   const latest = flag.versions.reduce<(typeof flag.versions)[number] | undefined>(
     (best, row) => (best === undefined || row.version > best.version ? row : best),

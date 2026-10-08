@@ -25,7 +25,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ key:
   }
 
   const supabase = getSupabaseServiceClient()
-  const { data: project, error } = await supabase.from('projects').select('slug').eq('id', auth.projectId).single()
+  const { data: project, error } = await supabase
+    .from('projects')
+    .select('slug')
+    .eq('id', auth.projectId)
+    .single()
   if (error || !project) {
     console.error('[experiments/compare] project lookup failed:', error)
     return NextResponse.json({ ok: false, error: 'Project lookup failed' }, { status: 500 })
@@ -41,12 +45,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ key:
     if (!parsed.ok) {
       return NextResponse.json({ ok: false, error: parsed.error }, { status: 400 })
     }
-    const analysis = await getExperimentAnalysisByProjectId(
-      auth.projectId,
-      project.slug,
-      key,
-      parsed.request,
-    )
+    const analysis = await getExperimentAnalysisByProjectId(auth.projectId, project.slug, key, parsed.request)
     if (!analysis.ok) {
       if (analysis.reason === 'query_failed') {
         return NextResponse.json({ ok: false, error: 'Experiment analysis lookup failed' }, { status: 500 })
@@ -54,23 +53,24 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ key:
       if (analysis.reason === 'resource_limit') {
         return NextResponse.json(
           { ok: false, error: 'Experiment analysis exceeds the query-time safety limit' },
-          { status: 422 },
+          { status: 422 }
         )
       }
       if (analysis.reason === 'invalid_request' || analysis.reason === 'lifecycle_unavailable') {
         return NextResponse.json(
           { ok: false, error: 'Experiment version is not available for analysis at this snapshot' },
-          { status: 409 },
+          { status: 409 }
         )
       }
       return NextResponse.json(
         {
           ok: false,
-          error: analysis.reason === 'experiment_not_found'
-            ? `Unknown governed experiment: ${key}`
-            : `Unknown experiment version: ${parsed.request.version}`,
+          error:
+            analysis.reason === 'experiment_not_found'
+              ? `Unknown governed experiment: ${key}`
+              : `Unknown experiment version: ${parsed.request.version}`,
         },
-        { status: 404 },
+        { status: 404 }
       )
     }
     return NextResponse.json(analysis)
