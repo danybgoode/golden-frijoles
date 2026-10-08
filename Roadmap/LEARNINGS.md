@@ -2212,3 +2212,16 @@ one-liner + why + date shape.
 - **A "half" value the contract accepts is a silent failure downstream.** From/to with no metric passed validation
   and then never came due, because every reader keyed off the metric. When readers agree on what makes a record
   "complete", the contract must refuse anything less.
+
+### A mod's state, and the release files it ships with (build-view-upgrade, 2026-10-08)
+- **Read the engine's types before choosing where a mod draws.** `$.ui.status` is plain text, so a coloured line had
+  no home there; `PromptHint` lets a hook wrap the engine's own drawing (`next(e)`), and `$.ui.invalidate` exists for
+  countdowns. One grep of the type file settled what a mockup could not.
+- **What `$.state` keeps across a hot reload, the module must read back.** The row kept drawing old figures while the
+  module variable beside them reset to null, so the countdown froze and the next write erased them. Read the kept
+  value in `session.start`.
+- **Release files have an order: bump, `plugin-checksums`, then `render-plugin-release`.** The generated release file
+  embeds the checksums; rendered first, it turned the static gate red. Any plugin edit after that step repeats both.
+- **A refused command may be a deny-list glob, not a judgement.** `git add -u` is denied in `.claude/settings.json`;
+  the refusal of a release commit looked like a policy call and cost a question to the product owner. Read the deny
+  list first, and stage by name.
