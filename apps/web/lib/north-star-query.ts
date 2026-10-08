@@ -204,6 +204,33 @@ async function readInputSeries(
 }
 
 /**
+ * north-star-multi-metric-read · S1.1 — THE rule for which metric is a project's North Star, read by every reader.
+ *
+ * A project may hold several metrics (`gf north-star set` with a new key adds one beside the old; the schema allows it,
+ * `UNIQUE (project_id, key)`). **The most recently created one is the North Star, ties broken by `key`** (Daniel,
+ * 2026-10-04): a revision reuses its key, so its `created_at` doesn't move, and a new key is a deliberate new North
+ * Star. `order … limit 1`, never `.maybeSingle()`: that errors on two rows, and the page rendered a legitimate state
+ * as an outage (found live on golden-frijoles, 2026-10-08, after one-product-project moved a second metric in).
+ */
+export async function currentNorthStar(
+  projectId: string
+): Promise<{ ok: true; metric: { id: string; key: string } | null } | { ok: false }> {
+  const { data, error } = await getSupabaseServiceClient()
+    .from('north_star_metrics')
+    .select('id, key')
+    .eq('project_id', projectId)
+    .order('created_at', { ascending: false })
+    .order('key', { ascending: true })
+    .limit(1)
+  if (error) {
+    console.error('[north-star-query] north_star_metrics lookup failed:', error)
+    return { ok: false }
+  }
+  const row = data?.[0] as { id: string; key: string } | undefined
+  return { ok: true, metric: row ? { id: row.id, key: row.key } : null }
+}
+
+/**
  * Everything the `measure-north-star` state needs, for a project rather than a feature.
  *
  * ⚠️ **A registered metric with no inputs and an unregistered metric are DIFFERENT answers**, and so
@@ -217,20 +244,17 @@ export async function getProjectNorthStarByProjectId(
 ): Promise<ProjectNorthStarResult> {
   const supabase = getSupabaseServiceClient()
 
-  const { data: metric, error: metricError } = await supabase
-    .from('north_star_metrics')
-    .select('key')
-    .eq('project_id', projectId)
-    .maybeSingle()
-  if (metricError) {
-    console.error('[north-star-query] north_star_metrics lookup failed:', metricError)
-    return { ok: false, reason: 'query_failed' }
-  }
+  const current = await currentNorthStar(projectId)
+  if (!current.ok) return { ok: false, reason: 'query_failed' }
+  const metric = current.metric
+  if (!metric) return { ok: true, project: { slug: projectSlug }, metricKey: null, inputs: [] }
 
+  // Only THIS metric's inputs: another metric's inputs beside them would chart a North Star the page doesn't name.
   const { data: rows, error: inputsError } = await supabase
     .from('leading_inputs')
     .select('id, key, name, value_source, source_event, north_star_metrics(key)')
     .eq('project_id', projectId)
+    .eq('metric_id', metric.id)
     .order('key')
   if (inputsError) {
     console.error('[north-star-query] leading_inputs lookup failed:', inputsError)
@@ -263,7 +287,7 @@ export async function getProjectNorthStarByProjectId(
   return {
     ok: true,
     project: { slug: projectSlug },
-    metricKey: (metric?.key as string | undefined) ?? null,
+    metricKey: metric.key,
     inputs,
   }
 }

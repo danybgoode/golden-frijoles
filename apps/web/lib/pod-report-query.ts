@@ -4,6 +4,7 @@ import { getLatestArtifact, getLatestArtifactBefore, type ReportArtifact } from 
 import { speedHistory, windowCutoffs, type EarlierWindow, type SpeedHistory } from './outcome-history'
 import { nextStepOf } from './adoption-steps'
 import { getFeatureFunnelByProjectId } from './tars-query'
+import { currentNorthStar } from './north-star-query'
 import { buildPodReportView, type PodReportView } from './pod-report-view'
 import { buildOutcomeSection, type OutcomeSection } from './pod-outcome'
 import { applyLens, applyPayingOffLens, type PodReportLens } from './pod-report-lens'
@@ -292,17 +293,15 @@ async function readNorthStar(projectId: string): Promise<{
 } | null> {
   const supabase = getSupabaseServiceClient()
 
-  const { data: metric, error } = await supabase
-    .from('north_star_metrics')
-    .select('key')
-    .eq('project_id', projectId)
-    .maybeSingle()
-  if (error) {
+  // The ONE rule every reader shares (north-star-multi-metric-read): the newest metric, never `.maybeSingle()`.
+  const current = await currentNorthStar(projectId)
+  const metric = current.ok ? current.metric : null
+  if (!current.ok) {
     // NOT `return null`. Cross-review round 2 (Agy): null means "no metric is registered", so
     // collapsing an error into it renders a database failure as a truthful-sounding absence — the
     // same defect fixed one round earlier in getProjectOutcome, in its sibling function. Hardening one
     // instance and leaving the other is precisely what a later review round finds.
-    console.error('[pod-report-query] north-star lookup failed:', error)
+    console.error('[pod-report-query] north-star lookup failed')
     return { metric: null, inputCount: null, latestValue: null, unavailable: true }
   }
   if (!metric) return null // genuinely none registered — a truthful answer, not a failure
@@ -311,10 +310,11 @@ async function readNorthStar(projectId: string): Promise<{
     .from('leading_inputs')
     .select('key', { count: 'exact', head: true })
     .eq('project_id', projectId)
+    .eq('metric_id', metric.id) // that metric's inputs only, so the report and the page count the same ones
   if (countError) console.error('[pod-report-query] leading_inputs count failed:', countError)
 
   // `count ?? null`, never `?? 0`. Cross-review (Agy, PR #33): a failed count resolves to null, and
   // coercing that to 0 asserts "no leading inputs are registered" on the strength of a query that
   // never answered. Same not-zero rule the rest of this file follows.
-  return { metric: metric.key as string, inputCount: count ?? null, latestValue: null }
+  return { metric: metric.key, inputCount: count ?? null, latestValue: null }
 }
