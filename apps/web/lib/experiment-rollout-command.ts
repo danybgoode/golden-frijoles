@@ -28,12 +28,13 @@ export async function rolloutExperimentCommand(
   variantKey: unknown,
   deps: BuilderDependencies
 ): Promise<RolloutResult> {
-  if (!deps.builderEnabled()) return { ok: false, error: BUILDER_PAUSED }
+  if (!(await deps.builderEnabled())) return { ok: false, error: BUILDER_PAUSED }
   if (typeof slug !== 'string' || typeof experimentKey !== 'string' || typeof variantKey !== 'string')
     return { ok: false, error: 'Invalid request.' }
   if (typeof version !== 'number' || !Number.isSafeInteger(version) || version < 1)
     return { ok: false, error: 'Invalid version.' }
-  if (!deps.servingEnabled()) return { ok: false, error: 'Flag serving is unavailable in this deployment.' }
+  if (!(await deps.servingEnabled()))
+    return { ok: false, error: 'Flag serving is unavailable in this deployment.' }
   const { projectId, userId } = await deps.requireOwnership(slug)
 
   // The version that was DECIDED — not necessarily the latest ("Change the plan" may have added a draft).
@@ -121,8 +122,9 @@ export async function undoRolloutCommand(
   rolloutVersionId: unknown,
   deps: BuilderDependencies
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  if (!deps.builderEnabled()) return { ok: false, error: BUILDER_PAUSED }
-  if (!deps.servingEnabled()) return { ok: false, error: 'Flag serving is unavailable in this deployment.' }
+  if (!(await deps.builderEnabled())) return { ok: false, error: BUILDER_PAUSED }
+  if (!(await deps.servingEnabled()))
+    return { ok: false, error: 'Flag serving is unavailable in this deployment.' }
   if (
     typeof slug !== 'string' ||
     typeof experimentKey !== 'string' ||

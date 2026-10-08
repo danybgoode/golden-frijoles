@@ -145,8 +145,8 @@ function deps(
   servingEnabled = true
 ): BuilderDependencies {
   return {
-    builderEnabled: () => enabled,
-    servingEnabled: () => servingEnabled,
+    builderEnabled: async () => enabled,
+    servingEnabled: async () => servingEnabled,
     requireOwnership: async () => ({ projectId: fx.projectId, userId: fx.owner }),
     io,
   }

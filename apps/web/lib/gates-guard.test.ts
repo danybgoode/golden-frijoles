@@ -50,20 +50,23 @@ test('no *_ENABLED env read outside the seam', () => {
   assert.deepEqual(found, [], 'a gate belongs in the catalog: add it to lib/gates-decision.ts → GATES')
 })
 
-const GATE_CALL = /\b(is[A-Z]\w*Enabled|isExperimentBuilderWritable)\(\)/g
+// Any call that LOOKS like a gate, direct or through a field — `isXEnabled()`, `deps.builderEnabled()`,
+// `isExperimentBuilderWritable()`. The first version matched only literal `isX()` calls and missed a gate passed as
+// a dependency and called through `deps.` (fresh review of #319: the rollout command's kill switch never closed).
+const GATE_SHAPED_CALL = /((?:[A-Za-z_$][\w$]*\.)*)([A-Za-z_$][\w$]*(?:Enabled|Writable))\(\)/g
 
-test('every gate call is awaited', () => {
-  const gates = new Set(
-    [...readFileSync(join(WEB, 'lib/flags.ts'), 'utf8').matchAll(/export (?:async )?function (\w+)\(/g)]
-      .map((match) => match[1])
-      .concat('isTerminalSignInEnabled')
-  )
-  assert.ok(gates.size >= 23, `found only ${gates.size} gate functions — the scan is wrong`)
+// Gate-shaped names that are genuinely synchronous, each with its reason.
+const SYNC: Record<string, string> = {
+  isTaskAlertEnabled:
+    'lib/notify-policy.ts — a notification setting read from an env object passed in, not a gate',
+}
+
+test('every gate-shaped call is awaited, direct or through a dependency field', () => {
   const unawaited = files().flatMap((file) => {
     const source = code(readFileSync(file, 'utf8'))
-    return [...source.matchAll(GATE_CALL)]
-      .filter((match) => gates.has(match[1]))
-      .filter((match) => !/await\s+$/.test(source.slice(Math.max(0, match.index - 12), match.index)))
+    return [...source.matchAll(GATE_SHAPED_CALL)]
+      .filter((match) => !(match[2] in SYNC))
+      .filter((match) => !/await\s*\(?\s*$/.test(source.slice(Math.max(0, match.index - 12), match.index)))
       .filter((match) => !/function\s+$/.test(source.slice(Math.max(0, match.index - 20), match.index)))
       .map((match) => `${rel(file)}: ${match[0]}`)
   })

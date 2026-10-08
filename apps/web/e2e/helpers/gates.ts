@@ -2,7 +2,8 @@
 // process so a spec can decide which branch to assert. Same names as lib/flags.ts, which is async now.
 //
 // The test process never reads the catalog: it answers exactly as the server does off Vercel, which is where every
-// e2e server runs — the env override first (ci/gates.*.env set every gate, D6), else the gate's fallback.
+// e2e server runs — the env override first (ci/gates.*.env set every gate that was an env var, D6), else the gate's
+// fallback. Terminal sign-in was never an env var, so it always answers from its fallback here.
 import { GATES, envOverride, type Gate } from '../../lib/gates-decision'
 
 const on = (gate: Gate): boolean => envOverride(gate, process.env) ?? gate.fallback
