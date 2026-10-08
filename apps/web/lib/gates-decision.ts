@@ -146,3 +146,12 @@ export function resolveGate(
 ): boolean {
   return envOverride(gate, env) ?? servedValue(gate, catalog, flagEnvironmentFor(env.VERCEL_ENV))
 }
+
+/**
+ * Whether a catalog read that STARTED at `startedAt` may replace the one kept from `keptStartedAt`. Reads can finish
+ * out of order (one stalls past its timeout and answers later); an older read must never overwrite a newer one, or a
+ * kill that already landed would quietly turn back on (fresh review of #319, round 3).
+ */
+export function mayReplaceCatalog(startedAt: number, keptStartedAt: number): boolean {
+  return startedAt >= keptStartedAt
+}

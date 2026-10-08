@@ -5,6 +5,7 @@ import assert from 'node:assert/strict'
 import {
   GATES,
   GATE_CATALOG_PROJECT_SLUG,
+  mayReplaceCatalog,
   envOverride,
   flagEnvironmentFor,
   resolveGate,
@@ -127,4 +128,11 @@ test('ON Vercel the env is never read: a leftover Vercel variable cannot overrid
 
 test('a gate that was never an env var has no override anywhere', () => {
   assert.equal(envOverride(GATES.terminalSignIn, { 'auth.terminal_sign_in_enabled': 'false' }), undefined)
+})
+
+test('reads finishing out of order: an older read never replaces a newer one (round 3)', () => {
+  assert.equal(mayReplaceCatalog(20, 10), true, 'newer replaces older')
+  assert.equal(mayReplaceCatalog(10, 20), false, 'a stalled older read answering late is dropped')
+  assert.equal(mayReplaceCatalog(10, 10), true, 'the same read, stored by both handlers')
+  assert.equal(mayReplaceCatalog(0, -Infinity), true, 'the first read always lands')
 })

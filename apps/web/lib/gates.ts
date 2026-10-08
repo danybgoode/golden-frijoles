@@ -11,7 +11,7 @@
 // `gf flags kill` takes to land. A failed read is cached too (serving the last good catalog), so an outage costs one
 // query per 30 s, not one per request.
 
-import { envOverride, resolveGate, type Gate, type ServedCatalog } from './gates-decision'
+import { envOverride, mayReplaceCatalog, resolveGate, type Gate, type ServedCatalog } from './gates-decision'
 
 const CACHE_MS = 30_000
 // A catalog read that has not answered in this long counts as failed. An env var could never hang a request; a
@@ -22,6 +22,14 @@ let cached: { at: number; catalog: Promise<ServedCatalog> } | null = null
 // fallback, so one bad read cannot re-open a gate an operator killed (fresh review of #319). The fallbacks answer
 // only before any read has succeeded in this process.
 let lastGood: ServedCatalog = null
+let lastGoodStartedAt = -Infinity
+
+function keep(served: ServedCatalog, startedAt: number): boolean {
+  if (!served || !mayReplaceCatalog(startedAt, lastGoodStartedAt)) return false
+  lastGood = served
+  lastGoodStartedAt = startedAt
+  return true
+}
 
 function timeout(): Promise<ServedCatalog> {
   return new Promise((resolve) => setTimeout(() => resolve(null), READ_TIMEOUT_MS).unref?.())
@@ -29,6 +37,7 @@ function timeout(): Promise<ServedCatalog> {
 
 function catalog(): Promise<ServedCatalog> {
   if (cached && Date.now() - cached.at < CACHE_MS) return cached.catalog
+  const startedAt = Date.now()
   // readServedCatalog never throws; the catch covers the import itself failing, so a gate always answers.
   const fresh = import('./gates-catalog')
     .then((module) => module.readServedCatalog())
@@ -36,20 +45,17 @@ function catalog(): Promise<ServedCatalog> {
       console.error('[gates] catalog reader failed to load:', err)
       return null
     })
-  // A read that answers AFTER the timeout still lands: it becomes the last good catalog and the cached answer, so a
-  // slow database delays a kill by one request, not by the whole 30 s window (fresh review of #319, round 2).
+  // A read that answers AFTER the timeout still lands — unless a newer read already did (`mayReplaceCatalog`).
   void fresh.then((served) => {
-    if (!served) return
-    lastGood = served
-    cached = { at: Date.now(), catalog: Promise.resolve(served) }
+    if (keep(served, startedAt)) cached = { at: Date.now(), catalog: Promise.resolve(served) }
   })
   const read = Promise.race([fresh, timeout()]).then((served) => {
-    if (served) lastGood = served
-    else
+    if (!keep(served, startedAt)) {
       console.error(
-        '[gates] catalog read failed or timed out; serving the last good catalog or the fallbacks'
+        '[gates] catalog read failed, timed out or was stale; serving the last good catalog or the fallbacks'
       )
-    return served ?? lastGood
+    }
+    return lastGood
   })
   cached = { at: Date.now(), catalog: read }
   return read
