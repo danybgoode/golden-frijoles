@@ -39,7 +39,7 @@ export async function run(options: RunOptions): Promise<ExitCode> {
   // machine with no credential, no network and a typo in the command.
   //
   // ⚠️ **`args.path.length === 0` used to be part of this condition, and that made `--help`'s
-  // "global flags" section false** (cross-family review, Codex, PR #149). `gf whoami --version`
+  // "global flags" section false** (cross-family review, Codex, PR #149). `frijoles whoami --version`
   // entered `whoami`, demanded a credential and then made a network call — for a question about the
   // binary. A flag documented as global is honoured globally, as `git --version` and `npm --version`
   // are; the alternative is a help text an agent cannot trust, which is the whole of D5.
@@ -54,13 +54,13 @@ export async function run(options: RunOptions): Promise<ExitCode> {
       const found = matchCommand(commands, target)
       if (!found) return unknownCommand(target, emit)
       // Through the EMITTER, not `writer.out`. Writing help directly bypassed `--json` entirely, so
-      // `gf --json help <verb>` emitted prose on the stdout an agent was parsing (Codex, round 2).
+      // `frijoles --json help <verb>` emitted prose on the stdout an agent was parsing (Codex, round 2).
       emit.ok({ help: commandAsData(found.command) }, renderCommandHelp(found.command))
       return EXIT.OK
     }
     emit.ok({ help: helpAsData(commands) }, renderRootHelp(commands))
-    // `gf` with no arguments prints help and exits 0 — it is what a person types to find out what
-    // this is, and answering their question is not an error. `gf nonsense` is (see below).
+    // `frijoles` with no arguments prints help and exits 0 — it is what a person types to find out what
+    // this is, and answering their question is not an error. `frijoles nonsense` is (see below).
     return EXIT.OK
   }
 
@@ -73,7 +73,7 @@ export async function run(options: RunOptions): Promise<ExitCode> {
     return EXIT.OK
   }
 
-  // Leftover path words become positionals. `gf flags get checkout.demo` matches `['flags','get']`
+  // Leftover path words become positionals. `frijoles flags get checkout.demo` matches `['flags','get']`
   // and leaves `checkout.demo`, which is how a verb receives its subject without the parser needing
   // to know the arity of every command.
   const withPositionals = { ...args, positionals: [...rest, ...args.positionals] }
@@ -88,14 +88,14 @@ export async function run(options: RunOptions): Promise<ExitCode> {
   if (unknown.length > 0) {
     emit.fail(
       'invalid',
-      `Unknown flag${unknown.length === 1 ? '' : 's'} for \`gf ${command.path.join(' ')}\`: ` +
-        `${unknown.map((name) => `--${name}`).join(', ')}. Run \`gf ${command.path.join(' ')} --help\`.`
+      `Unknown flag${unknown.length === 1 ? '' : 's'} for \`frijoles ${command.path.join(' ')}\`: ` +
+        `${unknown.map((name) => `--${name}`).join(', ')}. Run \`frijoles ${command.path.join(' ')} --help\`.`
     )
     return EXIT.USAGE
   }
 
   // ⚠️ **A flag supplied with an EMPTY value is a usage error — for every flag, not one** (cross-family
-  // review, Codex, round 6). `gf init --project "$UNSET_VAR"` expands to `--project ""`, and every
+  // review, Codex, round 6). `frijoles init --project "$UNSET_VAR"` expands to `--project ""`, and every
   // resolver here is written `flagValue(...)?.trim() || <default>`, so the empty string is falsy and
   // silently FELL BACK to the remembered project — minting a credential for a tenant the caller
   // did not name, having visibly tried to name one. The reviewer found it on `--project`; the same
@@ -134,7 +134,7 @@ export async function run(options: RunOptions): Promise<ExitCode> {
     // ONE sentence, in one place, rather than every verb re-checking and phrasing it differently.
     emit.fail(
       'unauthorized',
-      'Not signed in. Run `gf login`, or set GOLDEN_FRIJOLES_TOKEN. `gf doctor` explains what it found.'
+      'Not signed in. Run `frijoles login`, or set GOLDEN_FRIJOLES_TOKEN. `frijoles doctor` explains what it found.'
     )
     return EXIT.AUTH
   }
@@ -158,13 +158,13 @@ export async function run(options: RunOptions): Promise<ExitCode> {
     // caller cannot act on. EXIT.SERVER because the remedy — retry, then report — is the same.
     emit.fail(
       'server_error',
-      `\`gf ${command.path.join(' ')}\` failed unexpectedly: ${err instanceof Error ? err.message : String(err)}`
+      `\`frijoles ${command.path.join(' ')}\` failed unexpectedly: ${err instanceof Error ? err.message : String(err)}`
     )
     return EXIT.SERVER
   }
 }
 
 function unknownCommand(path: readonly string[], emit: ReturnType<typeof createEmitter>): ExitCode {
-  emit.fail('invalid', `Unknown command \`gf ${path.join(' ')}\`. Run \`gf --help\` for the list.`)
+  emit.fail('invalid', `Unknown command \`frijoles ${path.join(' ')}\`. Run \`frijoles --help\` for the list.`)
   return EXIT.USAGE
 }

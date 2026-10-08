@@ -1,4 +1,4 @@
-// golden-frijoles-plugin · S5.2 — `gf config list|get|set` and `gf setup`.
+// golden-frijoles-plugin · S5.2 — `frijoles config list|get|set` and `frijoles setup`.
 //
 // ── A thin front end over the kit's config core (D10) ─────────────────────────────────────────
 // Every rule — which file wins, what counts as a secret, where the project root is — lives in
@@ -46,7 +46,7 @@ export const configListCommand: Command = {
   path: ['config', 'list'],
   summary:
     'every setting in golden-frijoles.config.json and the legacy files, and which files each section came from',
-  usage: 'gf config list [--json]',
+  usage: 'frijoles config list [--json]',
   needsAuth: false,
   detail: `Reads the project's golden-frijoles.config.json and any legacy config files
   (review-config.json, jev.config.json, …). Where both set a section, the new file wins.`,
@@ -55,7 +55,7 @@ export const configListCommand: Command = {
     if (context.args.positionals.length > 0) {
       context.emit.fail(
         'invalid',
-        'Usage: `gf config list` takes no arguments. For one setting: `gf config get <key>`.'
+        'Usage: `frijoles config list` takes no arguments. For one setting: `frijoles config get <key>`.'
       )
       return EXIT.USAGE
     }
@@ -73,7 +73,7 @@ export const configListCommand: Command = {
                 JSON.stringify(config.sections[name], null, 2).replace(/^/gm, '  ')
             )
             .join('\n')
-        : `No settings yet: no ${core.CONFIG_FILENAME} and no legacy config files. Run \`gf setup\`.`
+        : `No settings yet: no ${core.CONFIG_FILENAME} and no legacy config files. Run \`frijoles setup\`.`
       context.emit.ok({ root, ...config }, human)
       return EXIT.OK
     } catch (err) {
@@ -85,13 +85,13 @@ export const configListCommand: Command = {
 export const configGetCommand: Command = {
   path: ['config', 'get'],
   summary: "one setting's effective value (or its default when nothing sets it)",
-  usage: 'gf config get <key> [--json]',
+  usage: 'frijoles config get <key> [--json]',
   needsAuth: false,
   flags: [],
   async run(context): Promise<ExitCode> {
     const [key, ...extra] = context.args.positionals
     if (!key || extra.length > 0) {
-      context.emit.fail('invalid', 'Usage: `gf config get <key>`, e.g. `gf config get review.reviewScope`.')
+      context.emit.fail('invalid', 'Usage: `frijoles config get <key>`, e.g. `frijoles config get review.reviewScope`.')
       return EXIT.USAGE
     }
     const loaded = await coreOrFail(context)
@@ -110,7 +110,7 @@ export const configGetCommand: Command = {
 export const configSetCommand: Command = {
   path: ['config', 'set'],
   summary: 'change one setting in golden-frijoles.config.json',
-  usage: 'gf config set <key> <value> [--json]',
+  usage: 'frijoles config set <key> <value> [--json]',
   needsAuth: false,
   detail: `<value> is read as JSON when it is valid JSON (true, 3, ["codex","claude"]), otherwise
   as text. Refuses anything that looks like a secret: keep keys and tokens in .env.local.
@@ -121,7 +121,7 @@ export const configSetCommand: Command = {
     if (!key || words.length === 0) {
       context.emit.fail(
         'invalid',
-        'Usage: `gf config set <key> <value>`, e.g. `gf config set review.reviewScope every-pr`.'
+        'Usage: `frijoles config set <key> <value>`, e.g. `frijoles config set review.reviewScope every-pr`.'
       )
       return EXIT.USAGE
     }
@@ -139,7 +139,7 @@ export const configSetCommand: Command = {
   },
 }
 
-// ── gf setup ──────────────────────────────────────────────────────────────────────────────────
+// ── frijoles setup ──────────────────────────────────────────────────────────────────────────────────
 
 /** Pure — the next cursor position for one keypress, or a final answer. Exported for the unit tests. */
 export function stepChoice(
@@ -201,24 +201,24 @@ export const setupIo: { isInteractive: () => boolean; chooser: (context: Command
 export const setupCommand: Command = {
   path: ['setup'],
   summary: 'answer the setup questions (each has a default; only the first is required)',
-  usage: 'gf setup [--yes] [--json]',
+  usage: 'frijoles setup [--yes] [--json]',
   needsAuth: false,
   detail: `Asks what you are working on and whether to connect an account now — arrow keys to
   choose, Esc to take the default. --yes takes every default without asking. Answers go to
-  golden-frijoles.config.json; an account is connected with \`gf login\` and \`gf init\`, which
+  golden-frijoles.config.json; an account is connected with \`frijoles login\` and \`frijoles init\`, which
   write .env.local, never the config file.`,
   flags: [{ name: 'yes', describe: 'take every default without asking (required when not on a terminal)' }],
   async run(context): Promise<ExitCode> {
     const yes = boolFlag(context.args, 'yes')
     if (context.args.positionals.length > 0) {
-      context.emit.fail('invalid', 'Usage: `gf setup [--yes]` takes no arguments.')
+      context.emit.fail('invalid', 'Usage: `frijoles setup [--yes]` takes no arguments.')
       return EXIT.USAGE
     }
     if (!yes && !setupIo.isInteractive()) {
       context.emit.fail(
         'invalid',
-        '`gf setup` asks questions on a terminal. Not on one: pass --yes for the defaults, or set each ' +
-          'answer with `gf config set <key> <value>`.'
+        '`frijoles setup` asks questions on a terminal. Not on one: pass --yes for the defaults, or set each ' +
+          'answer with `frijoles config set <key> <value>`.'
       )
       return EXIT.USAGE
     }
@@ -238,7 +238,7 @@ export const setupCommand: Command = {
           return EXIT.USAGE
         }
         answers[entry.key] = answer
-        // `store: 'env'` answers are not settings: connecting an account is `gf login` + `gf init`.
+        // `store: 'env'` answers are not settings: connecting an account is `frijoles login` + `frijoles init`.
         if (entry.store !== 'env') core.setKey(entry.key, answer, { root })
       }
     } catch (err) {
@@ -254,14 +254,14 @@ export const setupCommand: Command = {
         `Saved to ${core.CONFIG_FILENAME} in ${root}${yes ? ' (--yes: every default)' : ''}:`,
         ...saved.map(([key, value]) => `  ${key} = ${show(value)}`),
         ...(notSaved.length
-          ? ['Not saved (an account lives in .env.local, via `gf login` + `gf init`):']
+          ? ['Not saved (an account lives in .env.local, via `frijoles login` + `frijoles init`):']
           : []),
         ...notSaved.map(([key, value]) => `  ${key} = ${show(value)}`),
         '',
         'Next:',
         ...next.map((step) => `  ${step}`),
         '',
-        'Change any answer later with `gf config set <key> <value>`.',
+        'Change any answer later with `frijoles config set <key> <value>`.',
       ].join('\n')
     )
     return EXIT.OK
@@ -276,7 +276,7 @@ export const setupCommand: Command = {
 export function nextSteps(answers: Record<string, unknown>, kit: string | null): string[] {
   const steps: string[] = []
   const mode = answers['project.mode']
-  if (answers['project.account'] === 'now') steps.push('Connect your account: `gf login`, then `gf init`.')
+  if (answers['project.account'] === 'now') steps.push('Connect your account: `frijoles login`, then `frijoles init`.')
   if (mode === 'existing' || mode === 'new')
     steps.push(
       `Add the Roadmap/ skeleton: \`npx -y @golden-frijoles/kit${kit ? `@${kit}` : ''} init\` (it never overwrites anything).`

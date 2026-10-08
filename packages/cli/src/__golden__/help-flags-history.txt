@@ -1,7 +1,7 @@
-gf flags history — every version of a flag, and who changed what
+frijoles flags history — every version of a flag, and who changed what
 
 Usage
-  gf flags history <key> [--project <slug>] [--json]
+  frijoles flags history <key> [--project <slug>] [--json]
 
 Read-only: it creates no version, touches no activation and writes no audit row.
 
@@ -15,7 +15,7 @@ Flags
 Exit codes
   0  ok         it worked
   1  usage      the command is wrong — nothing was sent
-  2  auth       the credential is not accepted — run `gf login`
+  2  auth       the credential is not accepted — run `frijoles login`
   3  not-found  no such thing, or not yours
   4  conflict   someone else changed it — re-read and retry
   5  partial    some environments changed and some did not

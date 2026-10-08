@@ -1,8 +1,8 @@
 // golden-frijoles-cli · D5 — the agent-facing contract, as bytes.
 //
 // ── Why a golden file and not "assert the help mentions --json" ───────────────────────────────
-// An agent handed `gf --help` reads it to learn what this tool can do, and an agent handed
-// `gf … --json` parses the shape it gets. Both are contracts, and a contract that a copy edit can
+// An agent handed `frijoles --help` reads it to learn what this tool can do, and an agent handed
+// `frijoles … --json` parses the shape it gets. Both are contracts, and a contract that a copy edit can
 // change silently is a contract with no teeth (the epic's words). A spot-check assertion moves with
 // the text it checks; a byte diff does not.
 //
@@ -83,13 +83,13 @@ function golden(name: string, actual: string) {
   )
 }
 
-test('gf --help is byte-identical to its golden file', () => {
+test('frijoles --help is byte-identical to its golden file', () => {
   golden('help.txt', renderRootHelp(COMMANDS))
 })
 
 for (const command of COMMANDS) {
   const name = command.path.join('-')
-  test(`gf ${command.path.join(' ')} --help is byte-identical to its golden file`, () => {
+  test(`frijoles ${command.path.join(' ')} --help is byte-identical to its golden file`, () => {
     golden(`help-${name}.txt`, renderCommandHelp(command))
   })
 }
@@ -175,7 +175,7 @@ const FLAGS = {
   environments: [{ environment: 'production', snapshotVersion: 7, updatedAt: '2026-09-17T00:00:00.000Z' }],
 }
 
-test('gf --json --help has the recorded MACHINE-READABLE shape', async () => {
+test('frijoles --json --help has the recorded MACHINE-READABLE shape', async () => {
   // Added in review round 2, with the fix that made `--json --help` emit JSON at all. It is a
   // contract for the same reason the text form is: an agent reads it to learn the verbs, so a
   // renamed field breaks every agent that already scrapes the old one.
@@ -185,7 +185,7 @@ test('gf --json --help has the recorded MACHINE-READABLE shape', async () => {
   golden('json-help.json', out.join('\n'))
 })
 
-test('gf whoami --json has the recorded shape', async () => {
+test('frijoles whoami --json has the recorded shape', async () => {
   const { writer, out } = capture()
   const code = await run({
     argv: ['whoami', '--json'],
@@ -197,7 +197,7 @@ test('gf whoami --json has the recorded shape', async () => {
   golden('json-whoami.json', out.join('\n'))
 })
 
-test('gf projects ls --json has the recorded shape', async () => {
+test('frijoles projects ls --json has the recorded shape', async () => {
   const { writer, out } = capture()
   const code = await run({
     argv: ['projects', 'ls', '--json'],
@@ -209,7 +209,7 @@ test('gf projects ls --json has the recorded shape', async () => {
   golden('json-projects-ls.json', out.join('\n'))
 })
 
-test('gf flags ls --json has the recorded shape', async () => {
+test('frijoles flags ls --json has the recorded shape', async () => {
   const { writer, out } = capture()
   const code = await run({
     argv: ['flags', 'ls', '--project', 'acme', '--json'],

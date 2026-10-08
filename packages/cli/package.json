@@ -4,6 +4,7 @@
   "version": "0.8.0",
   "description": "The Golden Frijoles CLI — create, roll out and kill feature flags from a terminal, or from an agent.",
   "bin": {
+    "frijoles": "./dist/bin.js",
     "gf": "./dist/bin.js"
   },
   "main": "./dist/index.js",

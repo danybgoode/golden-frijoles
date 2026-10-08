@@ -1,4 +1,4 @@
-// golden-frijoles-cli · Sprint 2, Story 2.6 — `gf keys ls | create | revoke`.
+// golden-frijoles-cli · Sprint 2, Story 2.6 — `frijoles keys ls | create | revoke`.
 //
 // ── The three kinds are NOT flattened, and the CLI is where that is easiest to get wrong ──────
 // `lib/credential-inventory.ts` models three blast radii and the seed says the CLI must not
@@ -10,7 +10,7 @@
 //
 // ── The plaintext is printed ONCE and never saved ─────────────────────────────────────────────
 // It goes to stdout and nowhere else. It is not written to the credentials file, not echoed by
-// `gf doctor`, not returned by `gf keys ls`. Only the hash was stored, so there is nothing to
+// `frijoles doctor`, not returned by `frijoles keys ls`. Only the hash was stored, so there is nothing to
 // re-show and the CLI says so rather than implying it could.
 
 import { flagValue } from '../args'
@@ -34,7 +34,7 @@ type KeyRow = {
 export const keysLsCommand: Command = {
   path: ['keys', 'ls'],
   summary: 'every credential that can reach this project',
-  usage: 'gf keys ls [--project <slug>] [--json]',
+  usage: 'frijoles keys ls [--project <slug>] [--json]',
   needsAuth: true,
   detail: `Owner-only, exactly as the console's Keys page is — an ordinary member can read the
   dashboards but must not enumerate the credentials production runs on.
@@ -83,7 +83,7 @@ export const keysLsCommand: Command = {
 export const keysCreateCommand: Command = {
   path: ['keys', 'create'],
   summary: 'mint a credential — the kind is required, never guessed',
-  usage: 'gf keys create --type flag_read --env production --label "my app"',
+  usage: 'frijoles keys create --type flag_read --env production --label "my app"',
   needsAuth: true,
   detail: `--type is required and has no default:
 
@@ -171,7 +171,7 @@ export const keysCreateCommand: Command = {
 export const keysRevokeCommand: Command = {
   path: ['keys', 'revoke'],
   summary: 'kill a credential, immediately and permanently',
-  usage: 'gf keys revoke <id> --type ingest',
+  usage: 'frijoles keys revoke <id> --type ingest',
   needsAuth: true,
   detail: `--type is required, and it is not bureaucracy: each kind is revoked through its own
   path so the audit trail records what actually happened. A trail whose label can be chosen
@@ -191,7 +191,7 @@ export const keysRevokeCommand: Command = {
     const id = context.args.positionals[0]
     const type = flagValue(context.args, 'type')
     if (!id || !type || !(KEY_TYPES as readonly string[]).includes(type)) {
-      context.emit.fail('invalid', `Usage: \`gf keys revoke <id> --type ${KEY_TYPES.join('|')}\`.`)
+      context.emit.fail('invalid', `Usage: \`frijoles keys revoke <id> --type ${KEY_TYPES.join('|')}\`.`)
       return EXIT.USAGE
     }
 

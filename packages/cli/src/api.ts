@@ -9,7 +9,7 @@
 // ── A network failure is NOT a 500 and must not read like one ─────────────────────────────────
 // `fetch` rejecting (DNS, a dropped connection, a timeout) produces `kind: 'network'`, separate
 // from a server that answered badly. The remedy differs: one is "check your connection or the URL",
-// the other is "the deployment is unwell". `gf doctor`'s whole job is telling those apart, and it
+// the other is "the deployment is unwell". `frijoles doctor`'s whole job is telling those apart, and it
 // cannot if the client has already collapsed them.
 //
 // ── A non-JSON body is a failure, not an empty success ────────────────────────────────────────

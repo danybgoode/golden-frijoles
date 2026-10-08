@@ -99,7 +99,7 @@ test('an expired or declined code is refused, with the server’s own sentence',
           ok: false,
           code: 'not_found',
           reason: 'expired',
-          error: 'That sign-in code expired. Run `gf login` again.',
+          error: 'That sign-in code expired. Run `frijoles login` again.',
         },
       },
     ],
@@ -108,7 +108,7 @@ test('an expired or declined code is refused, with the server’s own sentence',
   assert.deepEqual(result, {
     kind: 'refused',
     code: 'not_found',
-    message: 'That sign-in code expired. Run `gf login` again.',
+    message: 'That sign-in code expired. Run `frijoles login` again.',
   })
 })
 

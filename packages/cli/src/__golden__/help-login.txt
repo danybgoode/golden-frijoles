@@ -1,7 +1,7 @@
-gf login — sign this machine in (browser), or save a CLI token
+frijoles login — sign this machine in (browser), or save a CLI token
 
 Usage
-  gf login [--token <token>] [--api <url>]
+  frijoles login [--token <token>] [--api <url>]
 
 At a terminal, opens your browser: confirm the code it shows and this machine
   is signed in. If browser sign-in is not available, it asks for a token instead — mint
@@ -18,7 +18,7 @@ Flags
 Exit codes
   0  ok         it worked
   1  usage      the command is wrong — nothing was sent
-  2  auth       the credential is not accepted — run `gf login`
+  2  auth       the credential is not accepted — run `frijoles login`
   3  not-found  no such thing, or not yours
   4  conflict   someone else changed it — re-read and retry
   5  partial    some environments changed and some did not

@@ -519,7 +519,7 @@ test('diff describes a rollout change in PERCENT, using the console’s own diff
   )
 })
 
-// ── think-skills S3 · `gf north-star set` (D6) ─────────────────────────────────────────────────────────────────────
+// ── think-skills S3 · `frijoles north-star set` (D6) ─────────────────────────────────────────────────────────────────────
 // The route's MEANING is asserted in apps/web/e2e/cli-north-star.spec.ts. Here: what is sent, how many times, what
 // is refused locally, and which exit code comes out.
 

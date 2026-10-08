@@ -39,12 +39,12 @@ export type CommandContext = {
    * dispatcher refuses first, with EXIT.AUTH and one sentence — so handlers do not each re-check.
    */
   api: ApiClient | null
-  /** Build a client against an arbitrary token. `gf login` needs one before a token is saved. */
+  /** Build a client against an arbitrary token. `frijoles login` needs one before a token is saved. */
   clientFor(token: string): ApiClient
   /**
    * The `fetch` this run should use, for the ONE call that is not to this deployment's API.
    *
-   * ⚠️ Only `gf doctor`'s npm-registry check needs it, and it exists because the alternative was a
+   * ⚠️ Only `frijoles doctor`'s npm-registry check needs it, and it exists because the alternative was a
    * bare global `fetch` — which is how `packages/cli` grew a second HTTP path twice in one sprint
    * (`probeFlagReadKey` was the other). A direct global call skips the injected stub, so
    * `npm run test:unit` made a REAL network request to registry.npmjs.org on every doctor test, and
@@ -71,7 +71,7 @@ export type Command = {
    * the tool useless exactly when it is needed.
    */
   needsAuth: boolean
-  /** Longer prose for `gf <verb> --help`. Optional; the summary carries most verbs. */
+  /** Longer prose for `frijoles <verb> --help`. Optional; the summary carries most verbs. */
   detail?: string
   run(context: CommandContext): Promise<ExitCode>
 }
@@ -82,7 +82,7 @@ export type Command = {
  * Longest-first so `flags create` wins over a hypothetical bare `flags`, and so adding a
  * sub-verb later cannot shadow an existing one by accident.
  *
- * Returns the leftover words as `positionals` — `gf flags get checkout.demo` matches
+ * Returns the leftover words as `positionals` — `frijoles flags get checkout.demo` matches
  * `['flags','get']` and leaves `['checkout.demo']`, which is how a verb receives its subject
  * without the parser having to know the arity of every command.
  */

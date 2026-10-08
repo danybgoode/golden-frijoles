@@ -1,7 +1,7 @@
-gf config set — change one setting in golden-frijoles.config.json
+frijoles config set — change one setting in golden-frijoles.config.json
 
 Usage
-  gf config set <key> <value> [--json]
+  frijoles config set <key> <value> [--json]
 
 <value> is read as JSON when it is valid JSON (true, 3, ["codex","claude"]), otherwise
   as text. Refuses anything that looks like a secret: keep keys and tokens in .env.local.
@@ -10,7 +10,7 @@ Usage
 Exit codes
   0  ok         it worked
   1  usage      the command is wrong — nothing was sent
-  2  auth       the credential is not accepted — run `gf login`
+  2  auth       the credential is not accepted — run `frijoles login`
   3  not-found  no such thing, or not yours
   4  conflict   someone else changed it — re-read and retry
   5  partial    some environments changed and some did not

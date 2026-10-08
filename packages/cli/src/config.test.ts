@@ -1,4 +1,4 @@
-// golden-frijoles-plugin · S5.2 / S5.3 — `gf config`, `gf setup` and doctor's module lines, driven in-process.
+// golden-frijoles-plugin · S5.2 / S5.3 — `frijoles config`, `frijoles setup` and doctor's module lines, driven in-process.
 //
 // Every test runs the REAL dispatcher against the REAL kit config core (@golden-frijoles/kit, D10) in a
 // throwaway project named by GF_PROJECT_ROOT, with a throwaway HOME. Nothing touches the network.
@@ -66,7 +66,7 @@ function project(files: Record<string, string> = {}) {
   return { root, env: { HOME: home, XDG_CONFIG_HOME: join(home, '.config'), GF_PROJECT_ROOT: root } }
 }
 
-async function gf(argv: string[], env: NodeJS.ProcessEnv) {
+async function frijoles(argv: string[], env: NodeJS.ProcessEnv) {
   const { writer, out, err } = capture()
   const code = await run({ argv, writer, env, fetchImpl: noNetworkFetch })
   return { code, out: out.join('\n'), err: err.join('\n') }
@@ -79,41 +79,41 @@ function golden(name: string, actual: string) {
   assert.equal(actual.endsWith('\n') ? actual : `${actual}\n`, readFileSync(path, 'utf8'), `${name} changed.`)
 }
 
-// ── gf config ─────────────────────────────────────────────────────────────────────────────────
+// ── frijoles config ─────────────────────────────────────────────────────────────────────────────────
 
-test('gf config set writes golden-frijoles.config.json through the kit core, and get reads it back', async () => {
+test('frijoles config set writes golden-frijoles.config.json through the kit core, and get reads it back', async () => {
   const { root, env } = project()
-  const set = await gf(['config', 'set', 'review.reviewScope', 'every-pr', '--json'], env)
+  const set = await frijoles(['config', 'set', 'review.reviewScope', 'every-pr', '--json'], env)
   assert.equal(set.code, EXIT.OK)
   assert.deepEqual(JSON.parse(set.out), { ok: true, key: 'review.reviewScope', value: 'every-pr' })
   assert.equal(JSON.parse(readFileSync(join(root, CONFIG), 'utf8')).review.reviewScope, 'every-pr')
 
-  const get = await gf(['config', 'get', 'review.reviewScope'], env)
+  const get = await frijoles(['config', 'get', 'review.reviewScope'], env)
   assert.equal(get.code, EXIT.OK)
   assert.equal(get.out, 'every-pr')
 })
 
-test('gf config set reads a JSON value as JSON, and text as text', async () => {
+test('frijoles config set reads a JSON value as JSON, and text as text', async () => {
   const { root, env } = project()
-  await gf(['config', 'set', 'jev.egress', 'false'], env)
-  await gf(['config', 'set', 'review.families', '["codex","claude"]'], env)
+  await frijoles(['config', 'set', 'jev.egress', 'false'], env)
+  await frijoles(['config', 'set', 'review.families', '["codex","claude"]'], env)
   const written = JSON.parse(readFileSync(join(root, CONFIG), 'utf8'))
   assert.equal(written.jev.egress, false)
   assert.deepEqual(written.review.families, ['codex', 'claude'])
 })
 
-test('gf config get falls back to the registry default when nothing sets the key', async () => {
+test('frijoles config get falls back to the registry default when nothing sets the key', async () => {
   const { env } = project()
-  const get = await gf(['config', 'get', 'smoke.defaultEnv', '--json'], env)
+  const get = await frijoles(['config', 'get', 'smoke.defaultEnv', '--json'], env)
   assert.equal(get.code, EXIT.OK)
   assert.equal(JSON.parse(get.out).value, 'local')
 })
 
-test('⚠️ gf config set refuses a secret (EXIT.USAGE) and writes nothing', async () => {
+test('⚠️ frijoles config set refuses a secret (EXIT.USAGE) and writes nothing', async () => {
   const { root, env } = project()
-  // Golden Frijoles' own CLI credential first: the one a `gf` user is most likely to paste by mistake.
+  // Golden Frijoles' own CLI credential first: the one a `frijoles` user is most likely to paste by mistake.
   for (const token of [`gf_pat_${'a'.repeat(32)}`, `ghp_${'a'.repeat(36)}`, 'postgres://u:pa55word@db/x']) {
-    const set = await gf(['config', 'set', 'reporting.destination', token, '--json'], env)
+    const set = await frijoles(['config', 'set', 'reporting.destination', token, '--json'], env)
     assert.equal(set.code, EXIT.USAGE, token)
     assert.equal(JSON.parse(set.out).code, 'invalid')
     assert.equal(existsSync(join(root, CONFIG)), false)
@@ -122,17 +122,17 @@ test('⚠️ gf config set refuses a secret (EXIT.USAGE) and writes nothing', as
 
 test('a malformed golden-frijoles.config.json is a usage error naming the file, not a crash', async () => {
   const { env } = project({ [CONFIG]: '{ not json' })
-  const list = await gf(['config', 'list', '--json'], env)
+  const list = await frijoles(['config', 'list', '--json'], env)
   assert.equal(list.code, EXIT.USAGE)
   assert.match(JSON.parse(list.out).error, /golden-frijoles\.config\.json/)
 })
 
-test('gf config list shows each section and where it came from, the new file winning over a legacy one', async () => {
+test('frijoles config list shows each section and where it came from, the new file winning over a legacy one', async () => {
   const { env } = project({
     'scripts/review-config.json': JSON.stringify({ reviewScope: 'security-paths-only', families: ['codex'] }),
     [CONFIG]: JSON.stringify({ review: { reviewScope: 'every-pr' } }),
   })
-  const list = await gf(['config', 'list', '--json'], env)
+  const list = await frijoles(['config', 'list', '--json'], env)
   assert.equal(list.code, EXIT.OK)
   const body = JSON.parse(list.out)
   assert.equal(body.sections.review.reviewScope, 'every-pr')
@@ -140,27 +140,27 @@ test('gf config list shows each section and where it came from, the new file win
   assert.ok(body.duplicates.includes('review.reviewScope'))
 })
 
-test('gf config needs no credential and no network', async () => {
+test('frijoles config needs no credential and no network', async () => {
   const { env } = project()
-  const list = await gf(['config', 'list'], env)
+  const list = await frijoles(['config', 'list'], env)
   assert.equal(list.code, EXIT.OK)
   assert.match(list.out, /No settings yet/)
 })
 
-test('gf config get / set without their arguments are usage errors', async () => {
+test('frijoles config get / set without their arguments are usage errors', async () => {
   const { env } = project()
-  assert.equal((await gf(['config', 'get'], env)).code, EXIT.USAGE)
-  assert.equal((await gf(['config', 'set', 'review.reviewScope'], env)).code, EXIT.USAGE)
+  assert.equal((await frijoles(['config', 'get'], env)).code, EXIT.USAGE)
+  assert.equal((await frijoles(['config', 'set', 'review.reviewScope'], env)).code, EXIT.USAGE)
 })
 
-// ── gf setup ──────────────────────────────────────────────────────────────────────────────────
+// ── frijoles setup ──────────────────────────────────────────────────────────────────────────────────
 
-test('gf setup off a terminal without --yes is a usage error and writes nothing', async () => {
+test('frijoles setup off a terminal without --yes is a usage error and writes nothing', async () => {
   const { root, env } = project()
   const was = setupIo.isInteractive
   setupIo.isInteractive = () => false
   try {
-    const setup = await gf(['setup', '--json'], env)
+    const setup = await frijoles(['setup', '--json'], env)
     assert.equal(setup.code, EXIT.USAGE)
     assert.match(JSON.parse(setup.out).error, /--yes/)
     assert.equal(existsSync(join(root, CONFIG)), false)
@@ -169,16 +169,16 @@ test('gf setup off a terminal without --yes is a usage error and writes nothing'
   }
 })
 
-test('after gf setup --yes, Plan reads configured: settings with a real default are not "missing"', async () => {
+test('after frijoles setup --yes, Plan reads configured: settings with a real default are not "missing"', async () => {
   const { env } = project()
-  assert.equal((await gf(['setup', '--yes'], env)).code, EXIT.OK)
+  assert.equal((await frijoles(['setup', '--yes'], env)).code, EXIT.OK)
   const { modules } = await doctorModules(env)
   assert.equal(modules.find((line) => line.module === 'Plan')!.state, 'configured')
 })
 
-test('gf setup --yes saves the defaults, never the account answer, and says what is next', async () => {
+test('frijoles setup --yes saves the defaults, never the account answer, and says what is next', async () => {
   const { root, env } = project()
-  const setup = await gf(['setup', '--yes', '--json'], env)
+  const setup = await frijoles(['setup', '--yes', '--json'], env)
   assert.equal(setup.code, EXIT.OK)
   const body = JSON.parse(setup.out)
   assert.deepEqual(body.answers, {
@@ -191,7 +191,7 @@ test('gf setup --yes saves the defaults, never the account answer, and says what
   assert.ok(!body.next.some((step: string) => /live-smoke/.test(step)))
 })
 
-test('gf setup asks Q1 then the account question (never "where are you starting"), and Q1 decides the next steps', async () => {
+test('frijoles setup asks Q1 then the account question (never "where are you starting"), and Q1 decides the next steps', async () => {
   const { root, env } = project()
   const asked: string[] = []
   const was = { ...setupIo }
@@ -205,11 +205,11 @@ test('gf setup asks Q1 then the account question (never "where are you starting"
     return picks[entry.key]
   }
   try {
-    const setup = await gf(['setup', '--json'], env)
+    const setup = await frijoles(['setup', '--json'], env)
     assert.equal(setup.code, EXIT.OK)
     assert.deepEqual(asked, ['project.mode', 'project.account'])
     const body = JSON.parse(setup.out)
-    assert.ok(body.next.some((step: string) => /gf login/.test(step)))
+    assert.ok(body.next.some((step: string) => /frijoles login/.test(step)))
     assert.ok(!body.next.some((step: string) => /kit.* init/.test(step)), 'planning-only never adds Roadmap/')
     assert.ok(body.next.some((step: string) => /`groom` skill/.test(step)), 'just planning goes to groom')
     assert.equal(JSON.parse(readFileSync(join(root, CONFIG), 'utf8')).project.mode, 'planning-only')
@@ -218,13 +218,13 @@ test('gf setup asks Q1 then the account question (never "where are you starting"
   }
 })
 
-test('gf setup stopped mid-way (Ctrl-C) is a usage error and keeps what was already answered', async () => {
+test('frijoles setup stopped mid-way (Ctrl-C) is a usage error and keeps what was already answered', async () => {
   const { root, env } = project()
   const was = { ...setupIo }
   setupIo.isInteractive = () => true
   setupIo.chooser = () => async (entry) => (entry.key === 'project.mode' ? 'new' : undefined)
   try {
-    const setup = await gf(['setup', '--json'], env)
+    const setup = await frijoles(['setup', '--json'], env)
     assert.equal(setup.code, EXIT.USAGE)
     assert.equal(JSON.parse(readFileSync(join(root, CONFIG), 'utf8')).project.mode, 'new')
   } finally {
@@ -257,12 +257,12 @@ test('nextSteps pins the kit version it prints', () => {
   )
 })
 
-// ── gf doctor's module lines (S5.3, D13) ──────────────────────────────────────────────────────
+// ── frijoles doctor's module lines (S5.3, D13) ──────────────────────────────────────────────────────
 
 type Doctor = { modules: Array<{ module: string; state: string; detail: string; fix: string | null }> }
 
 async function doctorModules(env: NodeJS.ProcessEnv) {
-  const doctor = await gf(['doctor', '--json'], env)
+  const doctor = await frijoles(['doctor', '--json'], env)
   return { code: doctor.code, modules: (JSON.parse(doctor.out) as Doctor).modules }
 }
 
@@ -277,7 +277,7 @@ test('doctor: a fresh project — every askable module is not configured, each w
     assert.ok(line.fix, `${line.module}: not configured must name its fix`)
   const plan = modules.find((line) => line.module === 'Plan')!
   assert.equal(plan.state, 'not-configured')
-  assert.match(plan.fix!, /gf setup/)
+  assert.match(plan.fix!, /frijoles setup/)
   const build = modules.find((line) => line.module === 'Build')!
   assert.match(build.fix!, /jev\.egress/, 'the egress question is named until it is answered (D12)')
   golden('json-doctor-modules-not-configured.json', JSON.stringify(modules, null, 2))
@@ -342,30 +342,30 @@ test('moduleLines: no core is could not look, with the reason', async () => {
   assert.ok((await loadConfigCore()).REGISTRY.length > 0)
 })
 
-test('gf config list and gf setup refuse stray arguments, writing nothing (cross-review of #164)', async () => {
+test('frijoles config list and frijoles setup refuse stray arguments, writing nothing (cross-review of #164)', async () => {
   const { root, env } = project()
-  assert.equal((await gf(['config', 'list', 'review'], env)).code, EXIT.USAGE)
-  assert.equal((await gf(['setup', 'now', '--yes'], env)).code, EXIT.USAGE)
+  assert.equal((await frijoles(['config', 'list', 'review'], env)).code, EXIT.USAGE)
+  assert.equal((await frijoles(['setup', 'now', '--yes'], env)).code, EXIT.USAGE)
   assert.equal(existsSync(join(root, CONFIG)), false)
 })
 
-test('gf config set refuses a token hidden behind whitespace (security lens on #164; kit 0.5.1)', async () => {
+test('frijoles config set refuses a token hidden behind whitespace (security lens on #164; kit 0.5.1)', async () => {
   const { root, env } = project()
-  const set = await gf(['config', 'set', 'reporting.destination', ` sk-${'a'.repeat(20)}`], env)
+  const set = await frijoles(['config', 'set', 'reporting.destination', ` sk-${'a'.repeat(20)}`], env)
   assert.equal(set.code, EXIT.USAGE)
   assert.equal(existsSync(join(root, CONFIG)), false)
 })
 
-test('gf config list and get redact a secret a legacy file still holds (kit 0.5.2)', async () => {
+test('frijoles config list and get redact a secret a legacy file still holds (kit 0.5.2)', async () => {
   const token = `123456789:${'A'.repeat(35)}`
   const { env } = project({
     'reporting.config.json': JSON.stringify({ telegram: { botToken: token, chatId: '42' } }),
   })
-  const list = await gf(['config', 'list', '--json'], env)
+  const list = await frijoles(['config', 'list', '--json'], env)
   assert.equal(list.code, EXIT.OK)
   assert.ok(!list.out.includes(token))
   assert.equal(JSON.parse(list.out).sections.reporting.telegram.chatId, '42', 'non-secrets still print')
-  const get = await gf(['config', 'get', 'reporting.telegram.botToken', '--json'], env)
+  const get = await frijoles(['config', 'get', 'reporting.telegram.botToken', '--json'], env)
   assert.equal(get.code, EXIT.OK)
   assert.match(JSON.parse(get.out).value, /^<redacted/)
   assert.ok(!get.out.includes(token))

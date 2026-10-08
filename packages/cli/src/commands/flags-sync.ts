@@ -1,4 +1,4 @@
-// golden-frijoles-cli · Sprint 2, Story 2.5 — `gf flags sync`, the catalog bridge.
+// golden-frijoles-cli · Sprint 2, Story 2.5 — `frijoles flags sync`, the catalog bridge.
 //
 // ── It uses a DIFFERENT credential, and that is the whole design of this verb ─────────────────
 // Every other write verb rides the CLI's PAT. This one rides a `flag_sync` key, because the thing
@@ -31,13 +31,13 @@ import { table } from '../output'
 export const flagsSyncCommand: Command = {
   path: ['flags', 'sync'],
   summary: 'publish a flag catalog from source control',
-  usage: 'gf flags sync --file flags.json [--dry-run]',
+  usage: 'frijoles flags sync --file flags.json [--dry-run]',
   needsAuth: false,
   detail: `Uses a flag_sync key — NOT your CLI token — from --sync-key or
   GOLDEN_FRIJOLES_FLAG_SYNC_KEY. There is deliberately no fallback to the CLI token: a
   pipeline that forgot to set the narrow credential must fail, not quietly get the wide one.
 
-  Mint one with: gf keys create --type flag_sync --source <name> --label <text>
+  Mint one with: frijoles keys create --type flag_sync --source <name> --label <text>
 
   ⚠️ Sync NEVER activates, deactivates or deletes a flag. It creates immutable definition
   versions. A key that already exists with an identical definition reports created: false;
@@ -51,7 +51,7 @@ export const flagsSyncCommand: Command = {
   async run(context): Promise<ExitCode> {
     const path = flagValue(context.args, 'file')
     if (!path) {
-      context.emit.fail('invalid', 'Usage: `gf flags sync --file flags.json`.')
+      context.emit.fail('invalid', 'Usage: `frijoles flags sync --file flags.json`.')
       return EXIT.USAGE
     }
 
@@ -148,7 +148,7 @@ export const flagsSyncCommand: Command = {
         '',
         // Said every time, not only when something changed. The absence of this line is how someone
         // concludes a sync turned a flag on.
-        'Sync creates definitions only. Nothing was activated — use `gf flags set` or `gf flags create --all-envs` for that.',
+        'Sync creates definitions only. Nothing was activated — use `frijoles flags set` or `frijoles flags create --all-envs` for that.',
       ].join('\n')
     )
     return EXIT.OK

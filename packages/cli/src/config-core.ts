@@ -1,8 +1,8 @@
 // golden-frijoles-plugin · S5.2 (D10) — the ONE config core, loaded from `@golden-frijoles/kit`.
 //
 // ── Why this CLI does not have its own config code ────────────────────────────────────────────
-// `gf config`, `gf setup` and `gf doctor`'s module lines read and write the same
-// golden-frijoles.config.json the kit's `gf-kit config` does, and an agent's skill writes it too.
+// `frijoles config`, `frijoles setup` and `frijoles doctor`'s module lines read and write the same
+// golden-frijoles.config.json the kit's `frijoles-kit config` does, and an agent's skill writes it too.
 // Two implementations of "which file wins, what counts as a secret, where the project root is"
 // would drift, and the drift would show up as a setting one front end saved and the other ignored.
 // So every rule lives in the kit (`@golden-frijoles/kit/config`), and this file only loads it.
@@ -88,7 +88,7 @@ export function loadConfigCore(): Promise<ConfigCore> {
   return cached
 }
 
-/** Pure — a command-line value: JSON when it parses (true, 3, ["a"], null), otherwise the literal string. Same rule as `gf-kit config set`. */
+/** Pure — a command-line value: JSON when it parses (true, 3, ["a"], null), otherwise the literal string. Same rule as `frijoles-kit config set`. */
 export function parseValue(text: string): unknown {
   try {
     return JSON.parse(text)

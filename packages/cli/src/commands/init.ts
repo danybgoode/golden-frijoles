@@ -1,4 +1,4 @@
-// golden-frijoles-cli · Sprint 1, Story 1.4 — `gf init`. The whole onboarding in one verb.
+// golden-frijoles-cli · Sprint 1, Story 1.4 — `frijoles init`. The whole onboarding in one verb.
 //
 // ── What it does, in order, and why that order ────────────────────────────────────────────────
 //   1. make sure the account has a project (idempotent — D9)
@@ -26,7 +26,7 @@ import { flagValue } from '../args'
 import type { Command, CommandContext } from '../command'
 import { EXIT, exitForServerCode, type ExitCode } from '../exit-codes'
 
-/** The env-var names `gf init` writes AND the snippet reads. One definition (D6). */
+/** The env-var names `frijoles init` writes AND the snippet reads. One definition (D6). */
 export const ENV_KEYS = {
   url: 'GOLDEN_FRIJOLES_URL',
   flagRead: 'GOLDEN_FRIJOLES_FLAG_READ_KEY',
@@ -49,7 +49,7 @@ export function gitignoreCovers(contents: string): boolean {
  *
  * ⚠️ **The LAST assignment wins, and this returned the FIRST** (cross-family review, Codex,
  * round 3). `dotenv` assigns in file order, so a later line overrides an earlier one — which meant
- * `gf init` could probe and rewrite one key while the generated app actually resolved a different
+ * `frijoles init` could probe and rewrite one key while the generated app actually resolved a different
  * one. Two duplicate lines is not exotic: it is what a hand-edit plus a re-run produces.
  */
 export function readEnvValue(contents: string, name: string): string | null {
@@ -93,7 +93,7 @@ export function upsertEnvValue(contents: string, name: string, value: string): s
 export function snippetFor(environment: string): string {
   // ⚠️ **`environment` is READ from the variable, not inlined as a literal** — and the first version
   // of this function inlined it, which the "every name it writes is read" test caught immediately.
-  // An inlined literal means `gf init` writes GOLDEN_FRIJOLES_ENVIRONMENT into the file and then
+  // An inlined literal means `frijoles init` writes GOLDEN_FRIJOLES_ENVIRONMENT into the file and then
   // hands over code that ignores it: change the file, and the app keeps resolving the old
   // environment with nothing to say so. That is precisely the file-and-its-reader drift D6 exists
   // to prevent, so the snippet reads every variable the file carries.
@@ -117,7 +117,7 @@ const enabled = flags.resolveBooleanEvaluation('checkout.demo_enabled', false, {
 export const initCommand: Command = {
   path: ['init'],
   summary: 'project, key, .env.local and the snippet — in one verb',
-  usage: 'gf init [--env <environment>] [--json] [--yes]',
+  usage: 'frijoles init [--env <environment>] [--json] [--yes]',
   needsAuth: true,
   detail: `Idempotent. Re-running it does not mint a second key when ${ENV_FILE} already
   carries one; it says so and leaves the file alone.
@@ -183,7 +183,7 @@ export const initCommand: Command = {
 
     // ⚠️ **"There is a key" is not "the key works", and treating them as the same shipped a real
     // defect** (cross-family review, Codex, PR #149). `flag_read` keys are minted with an expiry and
-    // can be revoked from the console, so a rerun of `gf init` after either event reported
+    // can be revoked from the console, so a rerun of `frijoles init` after either event reported
     // `reusedExistingKey: true` and left the project unable to read a flag — the CLI cheerfully
     // confirming a setup that no longer works, which is worse than not checking at all.
     //
@@ -217,7 +217,7 @@ export const initCommand: Command = {
     // with nothing written. The class is unrepresentable rather than patched (CODE-QUALITY #2).
     //
     // The cost is stated, not hidden: on a deployment with flag serving switched off, a re-run of
-    // `gf init` refuses instead of passing. That is the honest answer — it cannot check — and the
+    // `frijoles init` refuses instead of passing. That is the honest answer — it cannot check — and the
     // message says how to proceed.
     if (existingKeyState === 'unverified') {
       context.emit.fail(
@@ -232,7 +232,7 @@ export const initCommand: Command = {
     if (existingKey === null || existingKeyState === 'dead' || existingKeyState === 'wrong-environment') {
       const result = await context.api!.post<{ id: string; key: string; expiresAt: string | null }>(
         'api/v1/cli/keys',
-        { project, type: 'flag_read', label: `gf init (${environment})`, environment }
+        { project, type: 'flag_read', label: `frijoles init (${environment})`, environment }
       )
       if (result.kind === 'network') {
         context.emit.fail('server_error', result.message)
@@ -303,7 +303,7 @@ export const initCommand: Command = {
  * the only thing that answers the question. A mode check would be a guess about the filesystem, the
  * process's user, ACLs and mount options, and the guess is wrong exactly where it matters.
  *
- * Creating an empty file as a side effect is harmless: `gf init` is about to write this path
+ * Creating an empty file as a side effect is harmless: `frijoles init` is about to write this path
  * anyway, and an empty `.env.local` in a directory where init failed is not a hazard. A minted
  * credential nobody holds is.
  */
@@ -335,7 +335,7 @@ function ensureWritable(envPath: string, context: CommandContext): ExitCode | nu
  * very thing being checked for.
  *
  * Refused rather than resolved-and-re-checked. Following the link to check the target would work,
- * and then `gf init` would be a verb that writes credentials to a path the caller did not name —
+ * and then `frijoles init` would be a verb that writes credentials to a path the caller did not name —
  * a worse property than the one it fixed.
  */
 function refuseSymlink(envPath: string, context: CommandContext): ExitCode | null {
@@ -360,7 +360,7 @@ function refuseSymlink(envPath: string, context: CommandContext): ExitCode | nul
  *
  * ⚠️ **A line in `.gitignore` does not mean a file is ignored** (fresh reviewer, PR #149). A
  * `.env.local` that is ALREADY TRACKED ignores `.gitignore` entirely, and a later `!.env.local`
- * negation overrides an earlier match. `gf init` printed "ignored by git" on the strength of having
+ * negation overrides an earlier match. `frijoles init` printed "ignored by git" on the strength of having
  * appended a line — a checkable claim, asserted rather than checked, on the one property that stops
  * a live credential reaching a public repository.
  *
@@ -429,7 +429,7 @@ async function probeFlagReadKey(
   if (result.kind === 'ok') {
     // ⚠️ **A live key is not necessarily the RIGHT key** (cross-family review, Codex, round 4). A
     // `flag_read` credential is scoped to ONE environment, and the snapshot names which — so a
-    // rerun as `gf init --env production` over a file holding a working DEVELOPMENT key found it
+    // rerun as `frijoles init --env production` over a file holding a working DEVELOPMENT key found it
     // live, kept it, and then wrote `GOLDEN_FRIJOLES_ENVIRONMENT=production` beside it. The result
     // is an app that believes it is reading production flags and is reading development's, with
     // nothing anywhere saying so. That is the worst shape a flag bug has.
@@ -458,7 +458,7 @@ function ensureIgnored(gitignorePath: string, context: CommandContext): ExitCode
     // ⚠️ **The READ is inside the try too, and it was not.** `existsSync` is true for a directory
     // named `.gitignore`, and for a file the process cannot read — `readFileSync` then throws out of
     // the handler, `run()` catches it as an unexpected failure, and the caller gets EXIT.SERVER and
-    // "gf init failed unexpectedly" for a condition this verb has a precise refusal for. Found by
+    // "frijoles init failed unexpectedly" for a condition this verb has a precise refusal for. Found by
     // the test that makes `.gitignore` a directory.
     context.emit.fail(
       'invalid',

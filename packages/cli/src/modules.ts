@@ -1,4 +1,4 @@
-// golden-frijoles-plugin · S5.3 (D13) — one line per product module, for `gf doctor`.
+// golden-frijoles-plugin · S5.3 (D13) — one line per product module, for `frijoles doctor`.
 //
 // ── Three states, never two ───────────────────────────────────────────────────────────────────
 // *configured*, *not configured* (with the command that fixes it) and *could not look*. The last is
@@ -13,7 +13,7 @@
 //
 // ── Never changes doctor's exit code (D13) ────────────────────────────────────────────────────
 // Doctor's exit code answers "can this CLI reach your project". An unanswered setting is normal on a
-// fresh repo; a CI step running `gf doctor` must not start failing because nobody chose reviewers.
+// fresh repo; a CI step running `frijoles doctor` must not start failing because nobody chose reviewers.
 
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -39,7 +39,7 @@ export const MODULE_ORDER: readonly RegistryEntry['module'][] = [
   'Operate',
 ]
 
-/** `.env.local` carries a Golden Frijoles project (what `gf init` writes). Where a `store: 'env'` answer lives. */
+/** `.env.local` carries a Golden Frijoles project (what `frijoles init` writes). Where a `store: 'env'` answer lives. */
 function accountConnected(root: string, hasCredential: boolean): boolean {
   if (hasCredential) return true
   const path = join(root, '.env.local')
@@ -48,9 +48,9 @@ function accountConnected(root: string, hasCredential: boolean): boolean {
 }
 
 function fixFor(entry: RegistryEntry): string {
-  if (entry.store === 'env') return '`gf login`, then `gf init`'
-  if (entry.askWhen === 'setup') return '`gf setup`'
-  return `\`gf config set ${entry.key} <value>\``
+  if (entry.store === 'env') return '`frijoles login`, then `frijoles init`'
+  if (entry.askWhen === 'setup') return '`frijoles setup`'
+  return `\`frijoles config set ${entry.key} <value>\``
 }
 
 /**

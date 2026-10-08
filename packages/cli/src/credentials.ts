@@ -4,7 +4,7 @@
 // This file holds a credential that signs its holder in to every project they belong to. The
 // shaping named the failure: "key material on disk — 0600, never in the repo, never echoed by
 // doctor". The mode is applied at WRITE time on every write, not only at creation, so a file whose
-// permissions were loosened by hand is tightened the next time `gf login` runs.
+// permissions were loosened by hand is tightened the next time `frijoles login` runs.
 //
 // ── Precedence: env var, then flag, then file ─────────────────────────────────────────────────
 // `GOLDEN_FRIJOLES_TOKEN` wins, because CI has no credentials file and must not be made to write
@@ -12,7 +12,7 @@
 // is the interactive path.
 //
 // ⚠️ `--token` on the command line is accepted and deliberately NOT documented as the way to log
-// in: `argv` is visible to every process on the machine and lands in shell history. `gf login` with
+// in: `argv` is visible to every process on the machine and lands in shell history. `frijoles login` with
 // no flag reads stdin instead, which does neither.
 
 import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -27,12 +27,12 @@ export const DEFAULT_API_URL = 'https://goldenfrijoles.com'
  * ⚠️ **A SECOND copy of a regex that also lives in `apps/web/lib/cli-tokens.ts`, and the duplication
  * is deliberate.** This package is published to npm and cannot import from the app; the alternative
  * — no local check at all — costs a network round-trip to tell someone their paste was truncated,
- * which is `gf doctor`'s single most useful answer.
+ * which is `frijoles doctor`'s single most useful answer.
  *
  * It is safe to duplicate because of what it is used FOR on each side. Here it is a HINT: a
  * malformed token is reported early, and a token this rejects would have been rejected by the
  * server anyway. There it is the lookup's own shape guard. The failure mode of drift is that this
- * copy becomes stricter than the server (a valid token refused locally, which `gf --token` bypasses
+ * copy becomes stricter than the server (a valid token refused locally, which `frijoles --token` bypasses
  * and `doctor` names) — never that an invalid one is accepted, because this side grants nothing.
  */
 export const CLI_TOKEN_FORMAT = /^gf_pat_[A-Za-z0-9_-]{20,64}$/
@@ -41,7 +41,7 @@ export type Credentials = {
   token: string
   /** The deployment this token belongs to. A token is not portable between deployments. */
   apiUrl: string
-  /** `gf projects use` writes this. Absent until someone chooses. */
+  /** `frijoles projects use` writes this. Absent until someone chooses. */
   activeProject?: string
 }
 
@@ -69,7 +69,7 @@ export function readCredentials(env: NodeJS.ProcessEnv = process.env): Credentia
       activeProject: typeof parsed.activeProject === 'string' ? parsed.activeProject : undefined,
     }
   } catch {
-    // A corrupt file reads as "not logged in" rather than throwing. `gf doctor` is the verb that
+    // A corrupt file reads as "not logged in" rather than throwing. `frijoles doctor` is the verb that
     // explains WHY — it re-reads the file itself and reports it as unreadable — so the ordinary
     // commands can treat every "no usable credential" the same way and print one remedy.
     return null
@@ -91,7 +91,7 @@ export type ResolvedAuth = {
   token: string | null
   apiUrl: string
   activeProject: string | null
-  /** Where the token came from — `gf doctor` and `gf whoami` say so, and never print the token. */
+  /** Where the token came from — `frijoles doctor` and `frijoles whoami` say so, and never print the token. */
   source: 'env' | 'flag' | 'file' | 'none'
 }
 
@@ -99,7 +99,7 @@ export type ResolvedAuth = {
  * The single resolution every command uses.
  *
  * Returns `token: null` rather than throwing, because "not logged in" is a normal state with its own
- * exit code and its own sentence — and because `gf doctor` has to be able to describe it rather than
+ * exit code and its own sentence — and because `frijoles doctor` has to be able to describe it rather than
  * die of it.
  */
 export function resolveAuth(options: {
