@@ -155,3 +155,54 @@ export function resolveGate(
 export function mayReplaceCatalog(startedAt: number, keptStartedAt: number): boolean {
   return startedAt >= keptStartedAt
 }
+
+export type CatalogCacheOptions = {
+  /** How long one read answers every gate. Bounds how long `gf flags kill` takes to land. */
+  cacheMs?: number
+  /** A read that has not answered in this long counts as failed: an env var could never hang a request, and a stalled
+   * database must not either (fresh review of #319). */
+  timeoutMs?: number
+  now?: () => number
+  onMiss?: () => void
+}
+
+/**
+ * One read of the whole catalog per `cacheMs`, shared by every gate. A failed, slow or stale read keeps serving the
+ * LAST GOOD catalog (so one bad read cannot re-open a killed gate); a read that answers after its timeout still lands
+ * for the next request; an older read never replaces a newer one (`mayReplaceCatalog`). The fallbacks answer only
+ * before any read has succeeded. Pure: the reader and the clock are injected (cross-family review of #319, Codex).
+ */
+export function createCatalogCache(
+  read: () => Promise<ServedCatalog>,
+  { cacheMs = 30_000, timeoutMs = 1_500, now = Date.now, onMiss = () => {} }: CatalogCacheOptions = {}
+): () => Promise<ServedCatalog> {
+  let cached: { at: number; catalog: Promise<ServedCatalog> } | null = null
+  let lastGood: ServedCatalog = null
+  let lastGoodStartedAt = -Infinity
+
+  const keep = (served: ServedCatalog, startedAt: number): boolean => {
+    if (!served || !mayReplaceCatalog(startedAt, lastGoodStartedAt)) return false
+    lastGood = served
+    lastGoodStartedAt = startedAt
+    return true
+  }
+
+  return () => {
+    if (cached && now() - cached.at < cacheMs) return cached.catalog
+    const startedAt = now()
+    const fresh = read().catch((): ServedCatalog => null)
+    void fresh.then((served) => {
+      if (keep(served, startedAt)) cached = { at: now(), catalog: Promise.resolve(served) }
+    })
+    const timeout = new Promise<ServedCatalog>((resolve) => {
+      const timer = setTimeout(() => resolve(null), timeoutMs) as { unref?: () => void }
+      timer.unref?.()
+    })
+    const answer = Promise.race([fresh, timeout]).then((served) => {
+      if (!keep(served, startedAt)) onMiss()
+      return lastGood
+    })
+    cached = { at: now(), catalog: answer }
+    return answer
+  }
+}

@@ -11,55 +11,26 @@
 // `gf flags kill` takes to land. A failed read is cached too (serving the last good catalog), so an outage costs one
 // query per 30 s, not one per request.
 
-import { envOverride, mayReplaceCatalog, resolveGate, type Gate, type ServedCatalog } from './gates-decision'
+import { createCatalogCache, envOverride, resolveGate, type Gate, type ServedCatalog } from './gates-decision'
 
-const CACHE_MS = 30_000
-// A catalog read that has not answered in this long counts as failed. An env var could never hang a request; a
-// stalled database must not either (fresh review of #319).
-const READ_TIMEOUT_MS = 1_500
-let cached: { at: number; catalog: Promise<ServedCatalog> } | null = null
-// The last catalog that WAS read. A failed or slow read keeps serving it rather than dropping every gate to its
-// fallback, so one bad read cannot re-open a gate an operator killed (fresh review of #319). The fallbacks answer
-// only before any read has succeeded in this process.
-let lastGood: ServedCatalog = null
-let lastGoodStartedAt = -Infinity
-
-function keep(served: ServedCatalog, startedAt: number): boolean {
-  if (!served || !mayReplaceCatalog(startedAt, lastGoodStartedAt)) return false
-  lastGood = served
-  lastGoodStartedAt = startedAt
-  return true
-}
-
-function timeout(): Promise<ServedCatalog> {
-  return new Promise((resolve) => setTimeout(() => resolve(null), READ_TIMEOUT_MS).unref?.())
-}
-
-function catalog(): Promise<ServedCatalog> {
-  if (cached && Date.now() - cached.at < CACHE_MS) return cached.catalog
-  const startedAt = Date.now()
-  // readServedCatalog never throws; the catch covers the import itself failing, so a gate always answers.
-  const fresh = import('./gates-catalog')
-    .then((module) => module.readServedCatalog())
-    .catch((err: unknown): ServedCatalog => {
-      console.error('[gates] catalog reader failed to load:', err)
-      return null
-    })
-  // A read that answers AFTER the timeout still lands — unless a newer read already did (`mayReplaceCatalog`).
-  void fresh.then((served) => {
-    if (keep(served, startedAt)) cached = { at: Date.now(), catalog: Promise.resolve(served) }
-  })
-  const read = Promise.race([fresh, timeout()]).then((served) => {
-    if (!keep(served, startedAt)) {
+// The cache's rules (30 s, a 1.5 s bound, keep the last good catalog, an older read never wins) live in the pure
+// `createCatalogCache` so they are unit-tested; this file only supplies the database reader.
+const catalog = createCatalogCache(
+  () =>
+    // readServedCatalog never throws; the catch covers the import itself failing, so a gate always answers.
+    import('./gates-catalog')
+      .then((module) => module.readServedCatalog())
+      .catch((err: unknown): ServedCatalog => {
+        console.error('[gates] catalog reader failed to load:', err)
+        return null
+      }),
+  {
+    onMiss: () =>
       console.error(
         '[gates] catalog read failed, timed out or was stale; serving the last good catalog or the fallbacks'
-      )
-    }
-    return lastGood
-  })
-  cached = { at: Date.now(), catalog: read }
-  return read
-}
+      ),
+  }
+)
 
 export async function gate(gate: Gate): Promise<boolean> {
   // The override answers without a database round-trip — the CI and local path (D6).
@@ -68,7 +39,3 @@ export async function gate(gate: Gate): Promise<boolean> {
   return resolveGate(gate, await catalog(), process.env)
 }
 
-/** Test seam: forget the cached catalog. */
-export function resetGateCacheForTests(): void {
-  cached = null
-}
