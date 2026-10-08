@@ -87,7 +87,7 @@ test.describe('/app/finops (finops 3.3)', () => {
         epic: 'finops',
         branch: 'feat/finops-s3',
         model_breakdown: { 'claude-opus-5-5': { tokens: tok, usd: 0.3 } },
-        skill_breakdown: { 'golden-frijoles:groom': { tokens: tok, usd: 0.3 } },
+        skill_breakdown: { 'golden-frijoles:refine': { tokens: tok, usd: 0.3 } },
         tokens_by_kind: tok,
         usd_estimate: 0.3,
         price_table_date: '2026-10-02',
@@ -116,7 +116,7 @@ test.describe('/app/finops (finops 3.3)', () => {
       await expect(epics.getByRole('row', { name: /Workspaces/ })).toContainText('$24–35')
       await expect(epics.getByRole('row', { name: /Workspaces/ })).toContainText('≈$33')
       await expect(epics.getByRole('row', { name: /FinOps/ })).toContainText('so far')
-      await expect(main.getByRole('table', { name: 'By skill' })).toContainText('golden-frijoles:groom')
+      await expect(main.getByRole('table', { name: 'By skill' })).toContainText('golden-frijoles:refine')
       await expect(main.getByRole('table', { name: 'By model' })).toContainText('claude-opus-5-5')
       await expect(main.getByRole('button', { name: 'Export CSV' })).toBeVisible()
       await expect(page.getByText(/≈ API \$ is a list-price equivalent/)).toBeVisible()

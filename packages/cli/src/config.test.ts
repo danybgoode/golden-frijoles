@@ -211,7 +211,7 @@ test('frijoles setup asks Q1 then the account question (never "where are you sta
     const body = JSON.parse(setup.out)
     assert.ok(body.next.some((step: string) => /frijoles login/.test(step)))
     assert.ok(!body.next.some((step: string) => /kit.* init/.test(step)), 'planning-only never adds Roadmap/')
-    assert.ok(body.next.some((step: string) => /`groom` skill/.test(step)), 'just planning goes to groom')
+    assert.ok(body.next.some((step: string) => /`refine` skill/.test(step)), 'just planning goes to refine')
     assert.equal(JSON.parse(readFileSync(join(root, CONFIG), 'utf8')).project.mode, 'planning-only')
   } finally {
     Object.assign(setupIo, was)
@@ -241,11 +241,11 @@ test('stepChoice: arrows wrap, Enter chooses, Esc takes the default, Ctrl-C abor
   assert.equal(stepChoice(1, 3, { name: 'x' }).done, undefined)
 })
 
-test('nextSteps routes by Q1: this repo → the read, a new idea → the skill with a sentence, just planning → groom', () => {
+test('nextSteps routes by Q1: this repo → the read, a new idea → the skill with a sentence, just planning → refine', () => {
   const last = (mode: string) => nextSteps({ 'project.mode': mode }, '0.38.0').at(-1)!
   assert.match(last('existing'), /`golden-frijoles` skill: it reads this repo into your roadmap/)
   assert.match(last('new'), /`golden-frijoles` skill and tell it your idea/)
-  assert.match(last('planning-only'), /`groom` skill/)
+  assert.match(last('planning-only'), /`refine` skill/)
   assert.ok(!nextSteps({ 'project.mode': 'existing', 'project.startPoint': 'building' }, null).some((s) => /live-smoke/.test(s)))
 })
 

@@ -5,7 +5,7 @@ import type { BoardCard } from './hub-board'
 //
 // ONE map keyed by stage. Each line names the step, the epic (its slug — what every script and skill takes) and the
 // product (its slug: a project has no other name), and BEGINS WITH THE VERB of its `Roadmap/SESSION-KICKOFFS.md`
-// shorthand (Groom, Bet, Build, Resume, Wrap, Review, Close), so an agent that knows the table still lands on the same
+// shorthand (Refine, Bet, Build, Resume, Wrap, Review, Close), so an agent that knows the table still lands on the same
 // step and one that does not can read the sentence. The shorthand rides along on every entry and stays valid. The two
 // `node scripts/…` lines stay commands (a spec holds each to the template). The Hub only SHOWS them to copy — it runs
 // nothing (board D8). Pure and import-free at runtime (a type import is erased), so `node --test` loads it directly.
@@ -27,13 +27,13 @@ function epicKey(card: BoardCard): string | null {
 
 const COMMANDS: Record<BoardCard['stage'], (card: BoardCard, product: string) => StageCommand[]> = {
   'To groom': (card, p) => [
-    { label: 'Groom it', text: `Groom the ${card.slug} idea in ${p}`, shorthand: `Groom: ${card.name}` },
+    { label: 'Refine it', text: `Refine the ${card.slug} idea in ${p}`, shorthand: `Refine: ${card.name}` },
   ],
   Grooming: (card, p) => [
     {
-      label: 'Resume the groom at its approval gate',
-      text: `Groom the ${card.slug} idea in ${p}, resuming at its approval gate`,
-      shorthand: `Groom: ${card.slug}`,
+      label: 'Resume refining at its approval gate',
+      text: `Refine the ${card.slug} idea in ${p}, resuming at its approval gate`,
+      shorthand: `Refine: ${card.slug}`,
     },
     {
       label: 'Bet it at the wave boundary',

@@ -287,6 +287,6 @@ export function nextSteps(answers: Record<string, unknown>, kit: string | null):
     )
   else if (mode === 'new')
     steps.push('Ask your agent to run the `golden-frijoles` skill and tell it your idea in a sentence or two.')
-  else steps.push('Ask your agent to run the `groom` skill on your first idea.')
+  else steps.push('Ask your agent to run the `refine` skill on your first idea.')
   return steps
 }

@@ -131,8 +131,8 @@ claimTest('kit-pinned', () => {
 })
 
 claimTest('status-line', () => {
-  // The status line is hooks/ plus the scripts it runs: the vendored resolver beside it and groom's kickoff bundle.
-  const reach = [join(PLUGIN, 'hooks'), join(PLUGIN, 'skills', 'groom', 'vendor')]
+  // The status line is hooks/ plus the scripts it runs: the vendored resolver beside it and refine's kickoff bundle.
+  const reach = [join(PLUGIN, 'hooks'), join(PLUGIN, 'skills', 'refine', 'vendor')]
   const reachable = reach.flatMap((dir) => files(dir, (path) => /\.(m?js|tsx?)$/.test(path) && shipped(path)))
   const network = reachable
     .filter((path) => /\b(fetch|fetchImpl|fetchFn)\(/.test(code(path)))
@@ -141,7 +141,7 @@ claimTest('status-line', () => {
   assert.deepEqual(network, [
     'hooks/vendor/epic-actuals.mjs',
     'hooks/vendor/roadmap-push.mjs',
-    'skills/groom/vendor/roadmap-push.mjs',
+    'skills/refine/vendor/roadmap-push.mjs',
   ])
   // The usage push is behind spend.telemetry, and its target is the engine URL you set.
   const actuals = code(join(PLUGIN, 'hooks', 'vendor', 'epic-actuals.mjs'))

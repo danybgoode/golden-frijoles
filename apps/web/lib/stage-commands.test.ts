@@ -43,18 +43,18 @@ const shorthands = (c: BoardCard) => stageCommands(c, 'ledgerly').map((x) => x.s
 // one-epic-page · Sprint 1, Story 1.3 (lock D7) — plain lines that name the step, the epic and the product, and begin
 // with the verb of the SESSION-KICKOFFS shorthand they expand from (which rides along, still valid).
 
-test('To groom and Grooming: Groom and Bet, in plain words', () => {
+test('To groom and Grooming: Refine and Bet, in plain words', () => {
   assert.deepEqual(texts(card({ stage: 'To groom', grain: 'Seed', name: 'An idea' })), [
-    'Groom the demo idea in ledgerly',
+    'Refine the demo idea in ledgerly',
   ])
   assert.deepEqual(shorthands(card({ stage: 'To groom', grain: 'Seed', name: 'An idea' })), [
-    'Groom: An idea',
+    'Refine: An idea',
   ])
   assert.deepEqual(texts(card({ stage: 'Grooming', grain: 'Seed' })), [
-    'Groom the demo idea in ledgerly, resuming at its approval gate',
+    'Refine the demo idea in ledgerly, resuming at its approval gate',
     'Bet the demo idea at the wave boundary in ledgerly',
   ])
-  assert.deepEqual(shorthands(card({ stage: 'Grooming', grain: 'Seed' })), ['Groom: demo', 'Bet the wave'])
+  assert.deepEqual(shorthands(card({ stage: 'Grooming', grain: 'Seed' })), ['Refine: demo', 'Bet the wave'])
 })
 
 test("Ready to build: an epic offers Build (the kickoff is the page's own action); a fixed-scope seed offers Build", () => {

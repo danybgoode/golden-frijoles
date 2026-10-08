@@ -42,7 +42,7 @@ export function installPrompt(siteUrl: string): string {
 
 export const PLUGIN_MARKETPLACE_ADD = 'claude plugin marketplace add golden-frijoles/skills'
 export const PLUGIN_INSTALL = 'claude plugin install golden-frijoles@golden-frijoles'
-/** Every skill, not just the umbrella: with `--skill golden-frijoles` alone groom's hand-off dead-ends (X12). */
+/** Every skill, not just the umbrella: with `--skill golden-frijoles` alone refine's hand-off dead-ends (X12). */
 export const SKILLS_ADD = "npx skills add golden-frijoles/skills --skill '*'"
 export const PLUGIN_REMOVE = 'claude plugin uninstall golden-frijoles@golden-frijoles'
 /** `uninstall` leaves the marketplace registered, and it keeps auto-updating — this removes it. */

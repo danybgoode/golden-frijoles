@@ -1,4 +1,4 @@
-# Docs → Notion projection, hands-free (drift prevention — added 2026-07-15, E3 groom session).
+# Docs → Notion projection, hands-free (drift prevention — added 2026-07-15, E3 refine session).
 # Every merge to main that touches the Roadmap (or the projector itself) rebuilds the Notion
 # "Golden Frijoles — Marketplace Roadmap" board via scripts/roadmap-to-notion.mjs --sync.
 # ONE-WAY: docs are the SSOT, the board is a rebuilt projection — same contract as BUILD-ORDER.md.

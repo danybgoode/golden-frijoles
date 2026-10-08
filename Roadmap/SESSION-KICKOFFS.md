@@ -16,7 +16,7 @@ every kickoff below sits in one of three stages — say which one you're in and 
 
 | Stage | Question it answers | Kickoffs |
 |---|---|---|
-| **Shape** | *What is this worth, and what's the smallest thing that delivers it?* | §1 (groom → a pitch), §3 (spike), §10 (re-shape after a breaker) |
+| **Shape** | *What is this worth, and what's the smallest thing that delivers it?* | §1 (refine → a pitch), §3 (spike), §10 (re-shape after a breaker) |
 | **Bet** | *What are we funding this wave, and what does it displace?* | §9 (the betting table) |
 | **Build** | *Execute the approved plan.* | §2, §4, §6, §7, §8 |
 
@@ -41,7 +41,7 @@ Pleasantries are fine and cost nothing — the leverage is the defined verb, not
 
 | Say this | Expands to |
 |---|---|
-| **Groom: \<ask\>** / **Shape: \<ask\>** | §1 — groom a raw ask into a shaped pitch (synonyms; "Shape" just names the stage) |
+| **Refine: \<ask\>** / **Shape: \<ask\>** | §1 — refine a raw ask into a shaped pitch (synonyms; "Shape" just names the stage) |
 | **Bet** / **Bet the wave** | §9 — run the betting table at a wave boundary, write `Roadmap/bets/<wave>.md` |
 | **Re-shape \<slug\>** | §10 — an M/L bet hit its circuit breaker; back to shaping, never extended in flight |
 | **Build epic \<epic\>** | §2 — build a WHOLE epic in one orchestrated run (**the default**). Start it: `/build <slug>` (without the plugin's mod: `npx -y @golden-frijoles/kit emit-epic-kickoff --epic <slug>` from the project root) |
@@ -64,12 +64,12 @@ ledgerly" is **Review PR #42**. Same step, either spelling.
 
 ---
 
-## 1 · Groom a raw ask into a shaped pitch — strong model *(the Shape stage)*
+## 1 · Refine a raw ask into a shaped pitch — strong model *(the Shape stage)*
 ```
-Groom: <ask>.
+Refine: <ask>.
 Read <AGENTS-path> (Start here) + Roadmap/LEARNINGS.md; skim team memory, Roadmap/00-ideas/BUILD-ORDER.md
 and the latest Roadmap/bets/ wave file (what's already funded, and what it displaced).
-Use the groom skill — planning only, no code. Orient → SET THE APPETITE BEFORE ANY SOLUTIONING → classify
+Use the refine skill — planning only, no code. Orient → SET THE APPETITE BEFORE ANY SOLUTIONING → classify
 class + lane → "can we already do this?" → disambiguate → platform-primitives-first reframe → bill of
 materials → slice into sprints. Land the pitch in Roadmap/00-ideas/seeds/ with appetite: set and
 underwritten_by: null. Never assume — validate at each gate.
@@ -79,7 +79,7 @@ designed; if the solution won't fit, narrow the problem or cut scope — never g
 mid-shaping. An agent will build anything if allowed to tokenmaxx; the appetite is what makes it
 stop and hammer scope instead.
 
-**Then the lane decides what happens next — say which one at the end of the groom:**
+**Then the lane decides what happens next — say which one at the end of refining:**
 
 | Lane | Tell | What follows |
 |---|---|---|
@@ -248,7 +248,7 @@ system working.
 
 ---
 
-*§1–§8 mirror what the `groom` skill emits (Stage 8) — keep the two in sync. §9–§10 mirror
+*§1–§8 mirror what the `refine` skill emits (Stage 8) — keep the two in sync. §9–§10 mirror
 WAYS-OF-WORKING → *Betting & appetite* (the SSOT for appetite tiers, lanes and the breaker; don't
 fork a second copy here). Conventions baked in: appetite before solution, own worktree + path-scoped
 commits, risk tier, single-pass review, strong-model planning.*

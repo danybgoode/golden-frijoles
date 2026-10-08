@@ -42,7 +42,7 @@ export function securityClaims(siteUrl: string): SecurityClaim[] {
       id: 'kit-pinned',
       text:
         `The skills run the kit through \`npx\`, pinned to this release: \`npx -y ${KIT_PACKAGE}@${PLUGIN_VERSION}\`. ` +
-        '(Hand-off commands groom prints for you to copy name the kit without a version.)',
+        '(Hand-off commands refine prints for you to copy name the kit without a version.)',
     },
     {
       id: 'status-line',

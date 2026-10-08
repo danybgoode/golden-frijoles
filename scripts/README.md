@@ -14,7 +14,7 @@ against the kit build before the deletion.
 |---|---|
 | `babysit-pr.mjs` (+ test) | `babysit-pr`, entirely |
 | `doc-hygiene.mjs` | `doc-hygiene`'s entry (`doc-format.mjs` stays: its contract test runs here) |
-| `preflight.mjs`, `lib/golden-onboarding.mjs` (+ test) | `groom`'s provider check. It still fails here, correctly; see the note below |
+| `preflight.mjs`, `lib/golden-onboarding.mjs` (+ test) | `refine`'s provider check. It still fails here, correctly; see the note below |
 
 `node <foundation>/scripts/check-skill-scripts.mjs --repo-root .` checks this split: a local script needs its
 whole closure, an absent one is served by the kit.
