@@ -119,8 +119,9 @@ an explicit `--macro 01-product` creates the macro folder; `fund.mjs` funds an e
   The registry's `project.mode` question takes the same words, in every copy. **Amended at review (#307):** "nothing
   reads `startPoint`" was wrong (the grep missed `packages/cli`). `gf config`'s own terminal setup reads the registry
   from the kit, so it still asks Q2 (`askWhen: 'setup'`, unchanged here) and its `nextSteps()` sends `building` to
-  `live-smoke`. **Known gap, follow-up:** retire Q2 in the registry and point `nextSteps()` at the golden-frijoles skill's
-  read, in one CLI release (npm publish is Daniel's step). The skill path, which this epic is about, is right today.
+  `live-smoke`. **Closed 2026-10-08:** #309 retired Q2 in the registry (kit 0.38.0); #310 moved the CLI onto it
+  (CLI 0.8.0, published by Daniel; `nextSteps()` routes by Q1) and made the skill's Stage 2 also run on an empty
+  skeleton, so the CLI's hand-off reaches the read (plugin + kit 0.39.0).
 - **D5 · Shipped work.** Merged, non-bot pull requests (`gh`), grouped into epics by their head branch: the
   `work-branch.mjs` reading (`feat/x-s2` → `x`), else the longest proper prefix that is another branch's slug
   (`docs/x-close` → `x`), else the branch slugified, else the title. Without `gh`: first-parent merge commits
