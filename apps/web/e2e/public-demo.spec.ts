@@ -70,3 +70,18 @@ test.describe('GET /v1/public/experiments', () => {
     expect(body.comparison.variants.length).toBeGreaterThan(0)
   })
 })
+
+// one-product-project S1.1 — `golden-beans-demo` became `golden-frijoles`. A link shared under the old slug
+// must still land, permanently, on the same page of the renamed project (next.config.ts redirects).
+test('old golden-beans-demo links redirect permanently to golden-frijoles', async ({ request }) => {
+  for (const [from, to] of [
+    ['/hub/golden-beans-demo', '/hub/golden-frijoles'],
+    ['/hub/golden-beans-demo/board', '/hub/golden-frijoles/board'],
+    ['/app/funnel/golden-beans-demo/setup_guide', '/app/funnel/golden-frijoles/setup_guide'],
+    ['/app/north-star/golden-beans-demo', '/app/north-star/golden-frijoles'],
+  ]) {
+    const res = await request.get(from, { maxRedirects: 0 })
+    expect(res.status(), from).toBe(308)
+    expect(new URL(res.headers()['location'], 'http://x').pathname, from).toBe(to)
+  }
+})
