@@ -36,6 +36,13 @@ function catalog(): Promise<ServedCatalog> {
       console.error('[gates] catalog reader failed to load:', err)
       return null
     })
+  // A read that answers AFTER the timeout still lands: it becomes the last good catalog and the cached answer, so a
+  // slow database delays a kill by one request, not by the whole 30 s window (fresh review of #319, round 2).
+  void fresh.then((served) => {
+    if (!served) return
+    lastGood = served
+    cached = { at: Date.now(), catalog: Promise.resolve(served) }
+  })
   const read = Promise.race([fresh, timeout()]).then((served) => {
     if (served) lastGood = served
     else

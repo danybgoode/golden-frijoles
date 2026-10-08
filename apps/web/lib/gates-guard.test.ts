@@ -53,7 +53,12 @@ test('no *_ENABLED env read outside the seam', () => {
 // Any call that LOOKS like a gate, direct or through a field — `isXEnabled()`, `deps.builderEnabled()`,
 // `isExperimentBuilderWritable()`. The first version matched only literal `isX()` calls and missed a gate passed as
 // a dependency and called through `deps.` (fresh review of #319: the rollout command's kill switch never closed).
-const GATE_SHAPED_CALL = /((?:[A-Za-z_$][\w$]*\.)*)([A-Za-z_$][\w$]*(?:Enabled|Writable))\(\)/g
+//
+// What it cannot see (round 2), none of which exists today: an alias not ending in Enabled/Writable
+// (`const on = deps.builderEnabled; on()`), bracket access, an optional call `x?.()`, an aliased import. Write a gate
+// call plainly. The four async helpers whose names are not gate-shaped are matched by name in the pattern below.
+const GATE_SHAPED_CALL =
+  /((?:[A-Za-z_$][\w$]*\.)*)([A-Za-z_$][\w$]*(?:Enabled|Writable)|requireGate|closedGate|capabilities|readGates)\(\)/g
 
 // Gate-shaped names that are genuinely synchronous, each with its reason.
 const SYNC: Record<string, string> = {

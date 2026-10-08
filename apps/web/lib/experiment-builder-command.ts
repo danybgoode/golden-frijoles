@@ -16,8 +16,9 @@ import type { BuilderIo } from './experiment-builder-io'
 // rebuilt by the planner on the server, from the CURRENT served feature and catalog.
 
 export type BuilderDependencies = {
-  // Async ONLY, never `boolean | Promise<boolean>`: a union let an un-awaited call compile and the gate silently
-  // stay open (fresh review of #319). Every gate is a catalog read now.
+  // Async ONLY, never `boolean | Promise<boolean>` (fresh review of #319): the union let a SYNC fake stand in for a
+  // gate. It does NOT make tsc catch `!deps.builderEnabled()` — a negated Promise compiles — so that shape is held by
+  // lib/gates-guard.test.ts, not by this type.
   builderEnabled: () => Promise<boolean>
   servingEnabled: () => Promise<boolean>
   requireOwnership: (slug: string) => Promise<{ projectId: string; userId: string }>
