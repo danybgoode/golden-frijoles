@@ -106,12 +106,12 @@ own", **so that** I never think I've stopped something I haven't.
   merges.**
 
 ## Sprint 2 — Smoke walkthrough (do these in order)
-Env: preview (pre-merge) · then production · https://golden-beans-gamma.vercel.app
+Env: preview (pre-merge) · then production · https://goldenfrijoles.com
 
 > **Synthetic cohort only.** Use a test project and a verified synthetic target. This walkthrough
 > injects real faults — do not run it against a target anyone depends on.
 
-1. Go to https://golden-beans-gamma.vercel.app/app/scenarios/<testProjectSlug> with
+1. Go to https://goldenfrijoles.com/app/scenarios/<testProjectSlug> with
    `SCENARIO_AUTHORING_ENABLED=true`, and open the synthetic `delay` scenario from Sprint 1.
    → A launch control is visible.
 2. Try to select an **unverified** target.

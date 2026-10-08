@@ -17,7 +17,7 @@ export function Footer() {
           <Link className="icon-link" href="/methodology">
             <Icon name="book" /> Methodology
           </Link>
-          <a className="icon-link" href="https://github.com/danybgoode">
+          <a className="icon-link" href="https://github.com/danybgoode/golden-frijoles">
             <Icon name="external" /> GitHub
           </a>
           <span className="footer__agent-manifest">

@@ -35,7 +35,7 @@ repos — golden-beans [#1](https://github.com/danybgoode/golden-beans/pull/1) (
 medusa-bonsai [#253](https://github.com/danybgoode/miyagisanchezcommerce/pull/253) (`6e8d912`),
 both squash-merged by Daniel (HIGH risk — both ship a DB migration, corrected from an initial LOW
 mislabel a fresh-reviewer pass caught). Infra live: Supabase project `golden-beans` (ref
-`slweidgffcfndnskcskc`) + Vercel project `golden-beans` (https://golden-beans-gamma.vercel.app).
+`slweidgffcfndnskcskc`) + Vercel project `golden-beans` (the Vercel deployment host (now `goldenfrijoles.com`)).
 **Part B (the real browser flag-flip + live-UI-event smoke) is confirmed green by Daniel** — real
 `setup_guide_viewed` events landed in golden-beans with his actual Clerk user id, within seconds of
 his own live interaction. See the walkthrough below for the full story, including a real
@@ -126,7 +126,7 @@ existing GTM call touched. **Shipped to medusa-bonsai's `main` as `6e8d912`.**
   cleanup on both sides.
 
 ## Sprint 1 — Smoke walkthrough (do these in order)
-Env: production · golden-beans: https://golden-beans-gamma.vercel.app · Miyagi:
+Env: production · golden-beans: https://goldenfrijoles.com · Miyagi:
 https://miyagisanchez.com
 
 ### Part A — Engine-only, API-level (✅ agent-verified 2026-07-14, no UI, no Miyagi involvement)
@@ -135,10 +135,10 @@ project row + API key seeded directly into production for this purpose (`project
 'miyagisanchez'`) — the same credential Story 1.3's `GROWTH_ENGINE_API_KEY` env var (already set on
 medusa-bonsai's Vercel project, Production scope) uses.
 
-1. `curl https://golden-beans-gamma.vercel.app/` → 200, renders the "Golden Beans — Growth Engine"
+1. `curl /` on the Vercel deployment host (now `goldenfrijoles.com`) → 200, renders the "Golden Beans — Growth Engine"
    placeholder page.
    → **Confirmed:** 200.
-2. `curl -X POST https://golden-beans-gamma.vercel.app/api/v1/track` with no `Authorization` header.
+2. `curl -X POST https://goldenfrijoles.com/api/v1/track` with no `Authorization` header.
    → **Confirmed:** 401 `{"ok":false,"error":"Missing or malformed Authorization header"}`.
 3. `curl -X POST .../api/v1/track` with a valid `miyagisanchez` API key and a well-formed body
    (`{"userId":"smoke-test-user","event":"provisioning_smoke_test","featureId":"setup_guide"}`).

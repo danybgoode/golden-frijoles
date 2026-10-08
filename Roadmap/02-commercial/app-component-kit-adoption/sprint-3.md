@@ -152,12 +152,12 @@ exist; the ones below are the ones a human can fire from a converted surface.*
   `check:design-drift` green before merge.
 
 ## Sprint 3 — Smoke walkthrough (do these in order)
-Env: preview (pre-merge) · then production · https://golden-beans-gamma.vercel.app
+Env: preview (pre-merge) · then production · https://goldenfrijoles.com
 
 > Use a **disposable test project and test credentials** for every step below — these actions are
 > irreversible by definition. Clean up afterwards (revoke any test tokens created).
 
-1. Go to https://golden-beans-gamma.vercel.app/app/keys/<testProjectSlug> and create a throwaway key.
+1. Go to https://goldenfrijoles.com/app/keys/<testProjectSlug> and create a throwaway key.
    → The key appears in the list.
 2. Click revoke on it.
    → A dialog opens naming **that key** and saying, in a sentence, what will stop working.
@@ -165,10 +165,10 @@ Env: preview (pre-merge) · then production · https://golden-beans-gamma.vercel
    → The dialog closes and the key is **still listed and still active**.
 4. Click revoke again and confirm.
    → The key is revoked, exactly as it was before this sprint.
-5. Go to https://golden-beans-gamma.vercel.app/app/destinations/<testProjectSlug> and deactivate a
+5. Go to https://goldenfrijoles.com/app/destinations/<testProjectSlug> and deactivate a
    test destination.
    → Same shape of dialog, same position, same wording pattern as step 2.
-6. Go to https://golden-beans-gamma.vercel.app/app and open the agent rail.
+6. Go to https://goldenfrijoles.com/app and open the agent rail.
    → It still **reads only** — a list of staged proposals with no buttons, unchanged by this epic.
      Corrected D5: there was never a rail confirmation to preserve. The one pre-existing UI
      confirmation (destinations' two-click Remove) has been converged onto `ConfirmDialog` in step 5,

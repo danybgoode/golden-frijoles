@@ -112,7 +112,7 @@ deliberately-introduced `#ff0000` in a `components/ui` file fails the guard.
   confirm red, revert, re-verify clean. A spec that can't fail is worse than no spec.
 
 ## Sprint 1 — Smoke walkthrough (do these in order)
-Env: the branch preview (pre-merge) · production `https://golden-beans-gamma.vercel.app` once merged
+Env: the branch preview (pre-merge) · production `https://goldenfrijoles.com` once merged
 
 1. Sign in and go to `/app`.
    → The header shows the full section nav, not just *Projects · Connect · Agent notes*.

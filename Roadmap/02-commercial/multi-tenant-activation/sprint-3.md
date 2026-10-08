@@ -31,7 +31,7 @@ stories:
 # Multi-tenant activation — Sprint 3: The flip (landing backfill + trials live)
 
 **Status:** ✅ 3.1 + 3.2 merged (PR #14 → `bbaffd2`). ✅ **3.3 — the gate is FLIPPED in production**
-(`SIGNUP_ENABLED=true`, 2026-07-21). Signup is live at `https://golden-beans-gamma.vercel.app/signup`.
+(`SIGNUP_ENABLED=true`, 2026-07-21). Signup is live at `/signup` on the Vercel deployment host (now `goldenfrijoles.com`).
 
 > ### ✅ LAUNCHED — a real user activated fully self-serve (2026-07-21)
 > The Supabase Auth redirect allow-list was configured (Dashboard → Authentication → URL
@@ -115,7 +115,7 @@ engine; at least one pod-trial tenant activated fully self-serve.
 - **deterministic gate:** `tsc --noEmit` + `npm run build` + Playwright `api` green before merge
 
 ## Sprint 3 — Smoke walkthrough (do these in order)
-Env: production `https://golden-beans-gamma.vercel.app` (this sprint is the flip)
+Env: production `https://goldenfrijoles.com` (this sprint is the flip)
 
 1. Before the flip, open `/` in a private window.
    → Hero shows the waitlist; §7 shows "hand-provisioned pilots".

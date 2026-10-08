@@ -81,7 +81,7 @@ jobs:
       # and PR event rather than once per deploy.
       - name: Push the roadmap artifact
         env:
-          GROWTH_ENGINE_URL: ${{ vars.SITE_URL || 'https://golden-beans-gamma.vercel.app' }}
+          GROWTH_ENGINE_URL: ${{ vars.SITE_URL || 'https://goldenfrijoles.com' }}
           SELF_PROJECT_API_KEY: ${{ secrets.SELF_PROJECT_API_KEY }}
           GH_TOKEN: ${{ github.token }}
         run: node scripts/roadmap-push.mjs

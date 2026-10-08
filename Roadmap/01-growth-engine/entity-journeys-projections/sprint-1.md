@@ -139,19 +139,19 @@ cannot use malformed action arguments as a management-seam oracle.
 
 ## Sprint 1 — Smoke walkthrough (do these in order)
 
-Env: production · https://golden-beans-gamma.vercel.app
+Env: production · https://goldenfrijoles.com
 
 1. ✅ With `JOURNEY_PROJECTIONS_ENABLED` OFF, open the disposable project's journey-management URL,
    call the subject endpoint without authorization, then open `/llms.txt`.
    → Both new journey seams return 404 (the API does so before auth, never 401) while the existing
    agent manifest returns 200. Confirmed in production on deployed SHA `ed6397c`.
 2. **Deferred until enablement:** redeploy with the gate ON, sign in as the disposable project owner and open
-   `https://golden-beans-gamma.vercel.app/app/journeys/<project-slug>`.
+   `https://goldenfrijoles.com/app/journeys/<project-slug>`.
    → “Create journey” appears for that project.
 3. **Deferred until enablement:** create `merchant_activation` with three ordered smoke stages, then activate version 1.
    → The definition displays one active version and immutable activation history.
 4. **Deferred until enablement:** send the three subject events out of order, with one duplicate, then request
-   `https://golden-beans-gamma.vercel.app/api/v1/journeys/merchant_activation/subject?subjectId=merchant-smoke-journey-001&version=1`
+   `https://goldenfrijoles.com/api/v1/journeys/merchant_activation/subject?subjectId=merchant-smoke-journey-001&version=1`
    using the disposable API key.
    → One subject returns the correct current stage, first-entered timestamps and version 1.
 5. **Deferred until enablement:** try to mutate the definition as a member and through another project's identity.

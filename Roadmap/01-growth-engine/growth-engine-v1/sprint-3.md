@@ -119,7 +119,7 @@ once 3.3 has run at least once).
    production Supabase (ref `slweidgffcfndnskcskc`); merged code deployed via `vercel --prod` (this
    project has no Git-integration auto-deploy — same manual step as Sprints 1–2).
    → **Confirmed:** `supabase migration list` shows `20260716100000` synced;
-   `https://golden-beans-gamma.vercel.app/` → 200.
+   the Vercel deployment host (now `goldenfrijoles.com`) → 200.
 2. Defined the `payable_sellers` North Star metric + both leading inputs (`setup_guide_shares`,
    `attributed_revenue`) for the real `miyagisanchez` project, and linked `setup_guide` to both — the
    same DB operations `POST /v1/north-star/sync` + `POST /v1/features/setup_guide/link-input`
@@ -130,7 +130,7 @@ once 3.3 has run at least once).
    `setup_guide_viewed` (3) — no `setup_guide_step_completed`/`setup_guide_share_tapped` yet (matches
    Sprint 2's close — nobody has completed a step or shared since Daniel's initial view).
    → **Confirmed** via direct query.
-4. `curl https://golden-beans-gamma.vercel.app/impact/miyagisanchez/setup_guide`.
+4. `curl https://goldenfrijoles.com/impact/miyagisanchez/setup_guide`.
    → **Confirmed:** renders `Impact — setup_guide (miyagisanchez)`, both `Attributed Revenue`
    (`external_push`) and `Setup Guide Shares` (`telemetry_event`) correctly show **"No data yet"** —
    honest given the real state: no revenue has been pushed, and no `setup_guide_share_tapped` event
@@ -164,7 +164,7 @@ in order — both are now durable lessons in `Roadmap/LEARNINGS.md`.
 3. **Cleanup, confirmed complete:** the Cloud Run Job, all 6 of its built container image versions,
    and the temporary `GROWTH_ENGINE_API_KEY` IAM grant on `medusa-run` were all deleted/reverted —
    no standing resources or permissions left behind beyond the original state.
-4. `curl https://golden-beans-gamma.vercel.app/impact/miyagisanchez/setup_guide`.
+4. `curl https://goldenfrijoles.com/impact/miyagisanchez/setup_guide`.
    → **Confirmed:** `Attributed Revenue` now shows a real row — `2026-07-06`, value `0` (the one real
    `financial_event` revenue row found sums to $0 — reported honestly, not a bug). `Setup Guide
    Shares` still shows "No data yet" — correct, since nobody has tapped share from the setup guide

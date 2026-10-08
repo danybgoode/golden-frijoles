@@ -69,15 +69,15 @@ release. `createFlagProvider().metadata.name` is now `golden-frijoles`, and
 `createScenarioProvider().metadata.name` is now `golden-frijoles-scenarios`. Consumers that assert
 provider identity must update those expectations when moving to `@golden-frijoles/sdk@0.4.0`.
 
-The `GOLDEN_BEANS_FLAG_READ_KEY` and `GOLDEN_BEANS_FLAG_SYNC_KEY` names below are deliberately
-retained integration addresses used by existing consumers. They are caller-owned environment
+Older integrations read `GROWTH_ENGINE_URL`, `GOLDEN_BEANS_FLAG_READ_KEY` and `GOLDEN_BEANS_FLAG_SYNC_KEY`; those
+names stay valid for existing consumers. They are caller-owned environment
 variable names, not SDK lookups or provider identities; renaming them is not required to adopt 0.4.0.
 
 ## Environment variable names for a NEW project
 
 This SDK reads **no** environment variable — `createFlagProvider` takes `flagReadKey` as an
-argument, and every name in this document is one the *caller* chose. That is why the legacy names
-above stay valid: nothing in shipped code resolves either of them.
+argument, and every name in this document is one the *caller* chose. That is why the older names
+stay valid: nothing in shipped code resolves either of them.
 
 For a new project, `@golden-frijoles/cli` writes **`GOLDEN_FRIJOLES_URL`**,
 **`GOLDEN_FRIJOLES_FLAG_READ_KEY`** and **`GOLDEN_FRIJOLES_ENVIRONMENT`** into `.env.local` and
@@ -96,7 +96,7 @@ Either set of names works. Pick one per project.
 import { createGrowthEngineClient } from '@golden-frijoles/sdk'
 
 const growth = createGrowthEngineClient({
-  baseUrl: process.env.GROWTH_ENGINE_URL!,
+  baseUrl: process.env.GOLDEN_FRIJOLES_URL!,
   apiKey: process.env.GROWTH_ENGINE_API_KEY!,
   userId: 'opaque-user-id',
 })
@@ -114,8 +114,8 @@ uses a safe caller-supplied default if no fresh snapshot is available.
 import { createFlagProvider } from '@golden-frijoles/sdk'
 
 const flags = createFlagProvider({
-  baseUrl: process.env.GROWTH_ENGINE_URL!,
-  flagReadKey: process.env.GOLDEN_BEANS_FLAG_READ_KEY!,
+  baseUrl: process.env.GOLDEN_FRIJOLES_URL!,
+  flagReadKey: process.env.GOLDEN_FRIJOLES_FLAG_READ_KEY!,
   environment: 'production',
 })
 
@@ -152,8 +152,8 @@ const catalog: FlagDefinitionSyncEntry[] = [
 ]
 
 const sync = createFlagDefinitionSyncClient({
-  baseUrl: process.env.GROWTH_ENGINE_URL!,
-  flagSyncKey: process.env.GOLDEN_BEANS_FLAG_SYNC_KEY!,
+  baseUrl: process.env.GOLDEN_FRIJOLES_URL!,
+  flagSyncKey: process.env.GOLDEN_FRIJOLES_FLAG_SYNC_KEY!,
 })
 const result = await sync.syncFlagDefinitions(catalog)
 
@@ -175,8 +175,8 @@ application must apply it at an explicitly instrumented server seam.
 import { createScenarioProvider } from '@golden-frijoles/sdk'
 
 const scenarios = createScenarioProvider({
-  baseUrl: process.env.GROWTH_ENGINE_URL!,
-  flagReadKey: process.env.GOLDEN_BEANS_FLAG_READ_KEY!,
+  baseUrl: process.env.GOLDEN_FRIJOLES_URL!,
+  flagReadKey: process.env.GOLDEN_FRIJOLES_FLAG_READ_KEY!,
   environment: 'production',
 })
 

@@ -86,7 +86,7 @@ test('unauthed destination management for a foreign slug → /login', async ({ r
 // reaches the branch — an HTTP-level version of this spec passed against a deliberately vulnerable
 // build (a false-positive tautology, caught by a mutation check). Same pattern lib/flags.ts uses.
 test.describe('safeRedirectPath — the auth-callback open-redirect guard', () => {
-  const base = 'https://golden-beans-gamma.vercel.app'
+  const base = 'https://goldenfrijoles.com'
 
   for (const hostile of [
     '/\\evil.example', // backslash normalizes to // — the exact bypass Codex found
@@ -94,7 +94,7 @@ test.describe('safeRedirectPath — the auth-callback open-redirect guard', () =
     'https://evil.example',
     '/\\/evil.example',
     'javascript:alert(1)',
-    'https://golden-beans-gamma.vercel.app.evil.example/x', // prefix-lookalike host
+    'https://goldenfrijoles.com.evil.example/x', // prefix-lookalike host
   ]) {
     test(`rejects ${hostile} → falls back on-origin`, () => {
       const result = safeRedirectPath(hostile, base)

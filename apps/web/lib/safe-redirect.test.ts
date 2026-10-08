@@ -19,7 +19,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { safeRedirectPath } from './safe-redirect.ts'
 
-const base = 'https://golden-beans-gamma.vercel.app'
+const base = 'https://goldenfrijoles.com'
 const baseOrigin = new URL(base).origin
 
 function assertOnOrigin(result: string) {
@@ -37,8 +37,8 @@ const hostileInputsFallToDefault = [
   ['https://evil.example', 'absolute URL to a foreign origin'],
   ['///evil.example', 'triple-slash variant'],
   ['javascript:alert(1)', 'non-http(s) scheme — opaque origin, must never match'],
-  ['https://golden-beans-gamma.vercel.app.evil.example/x', 'prefix-lookalike host (subdomain trick)'],
-  ['https://golden-beans-gamma.vercel.app@evil.example/', 'userinfo trick — host is actually evil.example'],
+  ['https://goldenfrijoles.com.evil.example/x', 'prefix-lookalike host (subdomain trick)'],
+  ['https://goldenfrijoles.com@evil.example/', 'userinfo trick — host is actually evil.example'],
   [' //evil.example', 'leading ASCII space + protocol-relative (WHATWG URL trims ASCII whitespace)'],
   ['//evil.example ', 'trailing ASCII space + protocol-relative'],
   ['\t/\\evil.example', 'tab-prefixed backslash bypass'],

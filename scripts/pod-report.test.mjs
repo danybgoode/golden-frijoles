@@ -324,8 +324,8 @@ test('resolvePushConfig yields a null apiKey when neither env var is set — the
 });
 
 test('resolvePushConfig reads GROWTH_ENGINE_URL when set', () => {
-  const cfg = resolvePushConfig({ GROWTH_ENGINE_URL: 'https://golden-beans-gamma.vercel.app' });
-  assert.equal(cfg.baseUrl, 'https://golden-beans-gamma.vercel.app');
+  const cfg = resolvePushConfig({ GROWTH_ENGINE_URL: 'https://goldenfrijoles.com' });
+  assert.equal(cfg.baseUrl, 'https://goldenfrijoles.com');
 });
 
 test('buildPushEnvelope adds git provenance WITHOUT displacing the dataset counts', () => {

@@ -91,12 +91,12 @@ legacy public experiment read and `/llms.txt` while the born-OFF governance page
 
 ## Sprint 1 — Smoke walkthrough (do these in order)
 
-Env: production · https://golden-beans-gamma.vercel.app
+Env: production · https://goldenfrijoles.com
 
 1. With `EXPERIMENT_GOVERNANCE_ENABLED` OFF, run the existing SDK bucketing/exposure/comparison smoke.
    → v1 behavior remains available and unchanged.
 2. Redeploy with the gate ON, sign in as a disposable project owner and open
-   https://golden-beans-gamma.vercel.app/app/experiments.
+   https://goldenfrijoles.com/app/experiments.
    → “Create experiment” appears for that project.
 3. Create a two-variant draft with control, hypothesis, metrics, allocation, window and sample guidance.
    → Version 1 validates and remains draft until explicitly started.

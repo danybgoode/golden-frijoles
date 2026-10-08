@@ -196,7 +196,7 @@ adopted the released `sdk-v0.2.0` primitive in the completed cutover described b
   the Golden authority seam, durable mirror, SDK telemetry and request-driven serverless refresh.
 - Both active Cloud Run services are configured with `GOLDEN_BEANS_FLAG_CUTOVER=*=golden`,
   `GOLDEN_BEANS_FLAG_ENVIRONMENT=production`, a scoped read-key secret and
-  `GROWTH_ENGINE_URL=https://golden-beans-gamma.vercel.app`. Evaluation sampling is `0.1`.
+  `GROWTH_ENGINE_URL` = the Vercel deployment host (now `goldenfrijoles.com`). Evaluation sampling is `0.1`.
 - Current PII-free authority logs from both services reported snapshot `46`, Golden live authority
   during normal refresh and Golden durable authority during bounded fallback. Registered keys agree
   on immutable flag version `1` and the local/Golden values match.

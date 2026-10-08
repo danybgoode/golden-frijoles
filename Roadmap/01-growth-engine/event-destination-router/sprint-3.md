@@ -116,7 +116,7 @@ claim is made.
 
 ## Sprint 3 — Smoke walkthrough (do these in order)
 
-Env: production · https://golden-beans-gamma.vercel.app + https://miyagisanchez.com
+Env: production · https://goldenfrijoles.com + https://miyagisanchez.com
 
 1. Create the documented disposable merchant in Miyagi and perform the preview-approved fixture.
    → Golden Beans delivery history shows one successful merchant event.
@@ -127,7 +127,7 @@ Env: production · https://golden-beans-gamma.vercel.app + https://miyagisanchez
 4. Open the pilot Attio workspace.
    → The same merchant is present once; if Attio is disabled, Miyagi remains complete and Golden Beans names
    the adapter as disabled rather than failed.
-5. Open https://golden-beans-gamma.vercel.app/app and then https://golden-beans-gamma.vercel.app/.
+5. Open https://goldenfrijoles.com/app and then https://goldenfrijoles.com/.
    → Authenticated delivery health is visible without secrets; the public page describes reliable destinations
    without claiming unsupported providers or exactly-once delivery.
 

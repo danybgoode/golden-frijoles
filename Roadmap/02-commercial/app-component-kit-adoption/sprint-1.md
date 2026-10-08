@@ -136,12 +136,12 @@ stories:
   `LEARNINGS.md`.
 
 ## Sprint 1 — Smoke walkthrough (do these in order)
-Env: preview (pre-merge) · then production · https://golden-beans-gamma.vercel.app
+Env: preview (pre-merge) · then production · https://goldenfrijoles.com
 
-1. Sign in and go to https://golden-beans-gamma.vercel.app/app
+1. Sign in and go to https://goldenfrijoles.com/app
    → The app shell renders as it does today. **Nothing has visibly changed** — this sprint adds
      components, it does not convert routes.
-2. Go to the keys page for your project: https://golden-beans-gamma.vercel.app/app/keys/<projectSlug>
+2. Go to the keys page for your project: https://goldenfrijoles.com/app/keys/<projectSlug>
    → The form section that was converted as proof-of-use renders with a heading, labelled fields and
      hint text. The information shown is the same as before.
 3. Click the destructive action on that page (revoke / deactivate).

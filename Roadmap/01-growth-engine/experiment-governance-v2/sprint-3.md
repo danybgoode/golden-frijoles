@@ -144,7 +144,7 @@ visible; an owner records the final human decision; Golden Beans never reads or 
 
 ## Sprint 3 — Smoke walkthrough (do these in order)
 
-Env: https://golden-beans-gamma.vercel.app + https://miyagisanchez.com
+Env: https://goldenfrijoles.com + https://miyagisanchez.com
 
 1. Stop the disposable experiment and record an `inconclusive` decision with rationale.
    → The result/integrity snapshot and owner/time are immutable and no flag changes.

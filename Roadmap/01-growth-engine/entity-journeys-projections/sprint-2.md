@@ -88,10 +88,10 @@ return 200.
 
 ## Sprint 2 — Smoke walkthrough (do these in order)
 
-Env: production · https://golden-beans-gamma.vercel.app
+Env: production · https://goldenfrijoles.com
 
 1. Sign in and open
-   https://golden-beans-gamma.vercel.app/app/journeys/miyagisanchez/merchant_activation.
+   https://goldenfrijoles.com/app/journeys/miyagisanchez/merchant_activation.
    → Stage counts, conversion, aging, definition version and source freshness render for the smoke cohort.
 2. Select one stage count.
    → Its paginated opaque subject ids exactly explain the total.

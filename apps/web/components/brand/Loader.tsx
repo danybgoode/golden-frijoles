@@ -1,10 +1,24 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { LOADER_PHRASES } from '@/lib/loader-phrases'
+import { LOADER_PHRASES, pickLoaderPhraseIndex } from '@/lib/loader-phrases'
+
+// The phrase the last loader showed, across mounts: the navigation loader mounts once per navigation, so without this
+// two navigations in a row could open on the same phrase.
+let lastPhraseIndex: number | null = null
 
 export function GoldenFrijolesLoader({ compact = false }: { compact?: boolean }) {
-  const [phraseIndex, setPhraseIndex] = useState(0)
+  // A random start is safe from hydration mismatches: this loader only mounts after a click or a submit
+  // (NavigationLoader renders nothing at hydration), so it never renders on the server.
+  const [phraseIndex, setPhraseIndex] = useState(() => pickLoaderPhraseIndex(lastPhraseIndex))
+  // Live regions announce a CHANGE, not the text they are created with, so the status text arrives just after mount.
+  const [announced, setAnnounced] = useState(false)
+
+  useEffect(() => setAnnounced(true), [])
+
+  useEffect(() => {
+    lastPhraseIndex = phraseIndex
+  }, [phraseIndex])
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -13,11 +27,13 @@ export function GoldenFrijolesLoader({ compact = false }: { compact?: boolean })
     return () => window.clearInterval(timer)
   }, [])
 
+  // The rotating phrase is decoration, hidden from assistive tech: a screen reader gets the one status line below,
+  // not a new word every 1.5 s.
   return (
-    <div className={`gb-loader${compact ? ' gb-loader--compact' : ''}`} role="status" aria-live="polite">
+    <div className={`gb-loader${compact ? ' gb-loader--compact' : ''}`} role="status">
       <span className="gb-loader__dot" aria-hidden="true" />
-      <p>{LOADER_PHRASES[phraseIndex]}</p>
-      <span className="sr-only">Loading Golden Frijoles</span>
+      <p aria-hidden="true">{LOADER_PHRASES[phraseIndex]}</p>
+      <span className="sr-only">{announced ? 'Loading Golden Frijoles' : ''}</span>
     </div>
   )
 }

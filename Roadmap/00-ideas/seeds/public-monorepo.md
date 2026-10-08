@@ -8,7 +8,7 @@ appetite: M
 underwritten_by: wave-backfill
 risk: high
 epic: "09-platform-infra/public-monorepo"
-build_order: 77
+build_order: 78
 updated: 2026-09-28
 ---
 
@@ -40,7 +40,7 @@ Roadmap.
   guards, crons).
   - **81 of its `scripts/` are byte-identical copies** of dobby-foundation's `template/scripts/`, and 5 differ.
   - It has three absolute-path references to `/Users/cosmo/dobby/golden-beans`.
-- **Vercel team `danybgoodes-projects` is on the Hobby plan.** Vercel doesn't connect a Hobby team to an
+- **The Vercel team is on the Hobby plan.** Vercel doesn't connect a Hobby team to an
   **organization-owned** GitHub repo, so transferring this repo into `golden-frijoles` would cut the Git integration,
   and with it the "merge to `main` = deploy" pipeline (AGENTS rule #4). Hobby is also Vercel's non-commercial tier,
   and goldenfrijoles.com takes signups. **→ Decision 1 below.**
@@ -74,7 +74,7 @@ Roadmap.
   memory, and it can't recall existing clones.
 - **Moving npm publishing into the monorepo** would need npm-side trusted-publisher changes (Daniel's 2FA). The mirror
   keeps publishing instead.
-- **Renaming addresses** (Vercel project, `golden-beans-gamma.vercel.app`, tenant slugs, `GOLDEN_BEANS_*`, the MCP
+- **Renaming addresses** (Vercel project, the old Vercel deployment host, tenant slugs, `GOLDEN_BEANS_*`, the MCP
   id, the webhook envelope) is out per E2 and belongs to the rebrand close-out A3/A4/A6.
 
 ## No-gos

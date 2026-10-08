@@ -128,7 +128,7 @@ If any step fails, record the step, credential class, snapshot version and obser
 - The seven additive migrations (`20260807100000` through `20260807160000`) were applied separately
   to the linked production Supabase project and its migration ledger matches the repository.
 - Production smoke: `GET /api/v1/flags/snapshot` on
-  `https://golden-beans-gamma.vercel.app` returned the expected flat `404` while
+  the Vercel deployment host (now `goldenfrijoles.com`) returned the expected flat `404` while
   `FLAG_SERVING_ENABLED` remains OFF. This proves the dark boundary only; it is not a Miyagi
   migration or an owner UI proof.
 - `@golden-beans/sdk@0.1.0` was packed and publish-verified, but public npm release is blocked only

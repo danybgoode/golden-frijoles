@@ -129,7 +129,7 @@ a bypass of the write-only flag.
    code deployed to production via `vercel --prod` (this repo's Vercel project has no Git-integration
    auto-deploy — merging to `main` does not deploy by itself; a manual `vercel --prod` is required,
    same as it was after Sprint 1). → **Confirmed:** migration applied (`supabase migration list` shows
-   `20260715090000` synced), `https://golden-beans-gamma.vercel.app/` → 200.
+   `20260715090000` synced), the Vercel deployment host (now `goldenfrijoles.com`) → 200.
 2. Queried the real `miyagisanchez` project's `setup_guide` events directly.
    → **Confirmed:** 4 real rows — the Sprint-1 `provisioning_smoke_test` row, plus **3 real
    `setup_guide_viewed` events** with Daniel's actual Clerk user id
@@ -141,7 +141,7 @@ a bypass of the write-only flag.
    `retained_event: setup_guide_share_tapped`, `retention_days: 7`. Set **`enabled: false`
    conservatively** — this session has no way to read Miyagi's live `growth.telemetry_enabled` value,
    so it does not guess. → **Confirmed:** row upserted, `synced_at` fresh.
-4. `curl https://golden-beans-gamma.vercel.app/funnel/miyagisanchez/setup_guide`.
+4. `curl https://goldenfrijoles.com/funnel/miyagisanchez/setup_guide`.
    → **Confirmed:** renders `Funnel — setup_guide (miyagisanchez)`, `Registry: disabled, last synced
    7/14/2026, 8:47:21 PM`, **Targeted: 0, Adopted: 0, Retained: 0** — all three numbers are *correct*
    given the real data: Targeted is 0 because the registry is (conservatively) disabled; Adopted is 0
@@ -157,7 +157,7 @@ reading Miyagi's:
 
 1. Updated the `setup_guide` registry row: `enabled: false → true`, `synced_at` bumped.
    → **Confirmed:** row updated.
-2. Re-fetched `https://golden-beans-gamma.vercel.app/funnel/miyagisanchez/setup_guide`.
+2. Re-fetched `/funnel/miyagisanchez/setup_guide` on the Vercel deployment host (now `goldenfrijoles.com`).
    → **Confirmed:** `Registry: enabled`, **Targeted: 1** (correctly counting the one distinct user —
    Daniel's Clerk id — who fired `setup_guide_viewed`; the unrelated `provisioning_smoke_test` row
    from Sprint 1 doesn't match `target_event` and is correctly excluded). Adopted/Retained remain 0 —
@@ -165,7 +165,7 @@ reading Miyagi's:
    has completed a step or shared since the initial view).
 
 ### Part B — ✅ confirmed by Daniel 2026-07-14
-Daniel opened `https://golden-beans-gamma.vercel.app/funnel/miyagisanchez/setup_guide` in his own
+Daniel opened `/funnel/miyagisanchez/setup_guide` on the Vercel deployment host (now `goldenfrijoles.com`) in his own
 browser and confirmed it renders **as expected** — the headline "funnel-renders-real-data" smoke
 (Decision 2 of the scope doc) is done. Adopted/Retained will move to non-zero naturally once a real
 seller (or Daniel) completes a setup-guide step and taps share — that's real future usage, not a gap

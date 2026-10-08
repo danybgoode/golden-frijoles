@@ -12,7 +12,7 @@ npx @golden-frijoles/cli --version
 ```bash
 npm i -g @golden-frijoles/cli          # or use npx for everything below
 
-gf login                                # paste a token from /app/setup/cli
+gf login                                # opens your browser to sign this machine in
 gf init                                 # project + key + .env.local + the snippet
 gf flags create checkout.demo_enabled --kill-switch --all-envs
 gf flags rollout checkout.demo_enabled --env production --percent 25
@@ -29,12 +29,16 @@ in every environment* — was the line that stopped and waited for someone to op
 
 ## Signing in
 
-Mint a token at **`/app/setup/cli`** in the console, then:
+At a terminal, `gf login` opens your browser: confirm the code it shows and this machine is signed in.
 
 ```bash
-gf login                # reads the token from stdin — never from argv, never from your history
+gf login                # browser sign-in
 gf whoami               # who you are, which credential, which projects
 ```
+
+Without a browser, mint a token at **`/app/setup/cli`** and pipe it in (`echo "$TOKEN" | gf login`); a piped or
+pasted token is read from stdin, never from argv or your history. `--token <token>` also works, but it lands in argv
+and your shell history, so prefer the pipe.
 
 In CI, set `GOLDEN_FRIJOLES_TOKEN` and skip `gf login` entirely. Nothing is written to disk on that
 path.
