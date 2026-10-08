@@ -53,12 +53,13 @@ async function demoToken(): Promise<string> {
   return tokenRow.token
 }
 
-test.describe('isConnectorEnabled — dark by default', () => {
-  test('unset/anything-but-"true" → disabled', () => {
+test.describe('isConnectorEnabled — the off-Vercel override', () => {
+  test('unset → the catalog fallback; anything-but-"true" → disabled', () => {
     const original = process.env.CONNECTOR_ENABLED
     try {
+      // one-product-project D6: unset, the catalog answers (its fallback, production's ON); a SET value keeps the exact reading.
       delete process.env.CONNECTOR_ENABLED
-      expect(isConnectorEnabled()).toBe(false)
+      expect(isConnectorEnabled()).toBe(true)
       process.env.CONNECTOR_ENABLED = 'false'
       expect(isConnectorEnabled()).toBe(false)
       process.env.CONNECTOR_ENABLED = 'true'
