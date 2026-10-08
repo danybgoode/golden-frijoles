@@ -3,7 +3,7 @@ epic: coaches-v2
 sprint: 1
 title: "Cold read and compare"
 risk: low
-phase: Shaping
+phase: Building
 stories_total: 2
 stories:
   - id: S1.1
