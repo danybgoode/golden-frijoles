@@ -9,9 +9,8 @@ update features set project_id = 'c7af5b7a-11f2-4496-9649-baf17915ef55'
  where project_id = '2a709135-c801-4443-a733-a788f3ac41c2'
    and key in ('waitlist_conversion', 'activation', 'methodology_reading');
 
--- One North Star: the synthetic payable_sellers retires (backed up), the real proven_bets moves in with its inputs.
-delete from north_star_metrics
- where id = '2b8f4531-1d4f-425c-8eef-ebdf6fbc1ba0' and project_id = 'c7af5b7a-11f2-4496-9649-baf17915ef55';
+-- The real proven_bets North Star moves in with its inputs. The synthetic payable_sellers STAYS: its input_values are
+-- append-only (input_values_no_mutation blocks DELETE and the cascade from north_star_metrics), found at the cutover.
 
 update north_star_metrics set project_id = 'c7af5b7a-11f2-4496-9649-baf17915ef55'
  where id = 'baa1e79a-15d2-4154-83f8-1a2d80ea1c24' and project_id = '2a709135-c801-4443-a733-a788f3ac41c2';

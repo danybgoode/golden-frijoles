@@ -154,10 +154,12 @@ Architect and builder in place (one session, Opus 5.5). Reviews go through `scri
 `golden-beans` (`2a709135…`) → into `golden-frijoles` (= `golden-beans-demo`, `c7af5b7a…`):
 - **Moves (UPDATE project_id, no key collisions):** features `waitlist_conversion`, `activation`, `methodology_reading`.
   North Star `proven_bets` + its 4 leading inputs. Ingest key `d2bf557b…` (Vercel's `SELF_PROJECT_API_KEY`).
-- **Retires in `golden-frijoles`:** the synthetic demo North Star `payable_sellers` (+1 input, 14 values), so the
-  project has one North Star. It is backed up first (`~/dobby/golden-frijoles-backup-payable-sellers-2026-10-08.json`
-  and `…-feature-inputs-…`). `scripts/seed-demo-project.mjs` refuses any non-local database now (fresh review of
-  #318: its reset deletes every event and feature in the project), so prod is never re-seeded.
+- **Stays in `golden-frijoles` (amended at the cutover, 2026-10-08):** the synthetic demo North Star `payable_sellers`.
+  The plan was to retire it, but `input_values` is append-only (`input_values_no_mutation` blocks the DELETE and the
+  cascade into it), so the transaction refused and rolled back whole. The project has two North Stars until
+  `north-star-multi-metric-read` (queued) settles how several are read. Backups are at
+  `~/dobby/golden-frijoles-backup-*-2026-10-08.json`. `scripts/seed-demo-project.mjs` refuses any non-local database
+  (fresh review of #318).
 - **Recreated, not moved:** `auth.terminal_sign_in_enabled`. `flag_definition_versions` is immutable, so its history
   stays on `golden-beans`.
 - **Stays, archived:** 502 events, audit rows, journey proof rows, flag history. Connector token `6225230f…` is revoked.
@@ -193,7 +195,9 @@ Done during the build (2026-10-08, approved by name at the Plan gate, D4):
 - ✅ Backups of the synthetic North Star rows: `~/dobby/golden-frijoles-backup-*-2026-10-08.json`.
 
 Owed. HIGH-risk PRs are merged by Daniel (WAYS-OF-WORKING → *Review & merge*; the merge was refused to the agent):
-1. **Merge #318 (S1).** When its production deployment is Ready, run S1.2's one transaction: `supabase db query --linked -f
+1. ✅ **Merge #318 (S1)** — `f5e4c2c`. S1.2 ran at 14:08 UTC: slug renamed, 3 features + `proven_bets` + 4 inputs +
+   the self-tracking key moved, `golden-beans` has no live key or token. A landing visit lands in `golden-frijoles`.
+   (Original step:) When its production deployment is Ready, run S1.2's one transaction: `supabase db query --linked -f
    Roadmap/09-platform-infra/one-product-project/s1-2-move.sql` (every statement is id-pinned and guarded, so a re-run
    changes nothing). Then check that `/hub/golden-frijoles`
    renders, `/hub/golden-beans-demo` redirects to it, and `/app/north-star/golden-frijoles` reads Proven bets. The
