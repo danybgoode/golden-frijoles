@@ -259,7 +259,7 @@ export const CREDENTIAL_KINDS_NOT_LISTED = [
   },
   {
     // ⚠️ **golden-frijoles-cli · Sprint 1. It reaches this project, so this page has to name it.**
-    // A `cli_tokens` row signs `gf` in as its holder and can therefore do, against THIS project,
+    // A `cli_tokens` row signs `frijoles` in as its holder and can therefore do, against THIS project,
     // everything that person can do in the console — read its flags, and from Sprint 2 change what
     // they serve. It is invisible to the completeness test below because that test is keyed on
     // `api_keys.scope` and this credential lives in its own table, which is exactly how the

@@ -82,7 +82,7 @@ const CALLERS: Record<string, { kind: 'informational' } | { kind: 'durable'; gat
   'app/signup/page.tsx': { kind: 'informational' },
   // D7 — the device flow's verification URL lives ten minutes and is opened once.
   'app/api/v1/cli/device/route.ts': { kind: 'informational' },
-  // D8 — the same OAuth return as the door pages, for a person signing in from `gf login`.
+  // D8 — the same OAuth return as the door pages, for a person signing in from `frijoles login`.
   'app/cli/connect/page.tsx': { kind: 'informational' },
   // S3.2 — Setup › Connections offers the setup prompt for another coding agent (a prompt is read now).
   'app/app/setup/connect/[projectSlug]/page.tsx': { kind: 'informational' },

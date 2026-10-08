@@ -163,7 +163,7 @@ export function toCliFlagDetailView(
   return {
     ...toCliFlagView(flag),
     versions: [...flag.versions]
-      // Newest first: `gf flags get` is read top-down, and the question being asked is almost always
+      // Newest first: `frijoles flags get` is read top-down, and the question being asked is almost always
       // "what changed most recently". The registry returns them ascending for the console's history.
       .sort((left, right) => right.version - left.version)
       .map((version) => ({

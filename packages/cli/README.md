@@ -12,11 +12,11 @@ npx @golden-frijoles/cli --version
 ```bash
 npm i -g @golden-frijoles/cli          # or use npx for everything below
 
-gf login                                # opens your browser to sign this machine in
-gf init                                 # project + key + .env.local + the snippet
-gf flags create checkout.demo_enabled --kill-switch --all-envs
-gf flags rollout checkout.demo_enabled --env production --percent 25
-gf flags kill checkout.demo_enabled --env production
+frijoles login                                # opens your browser to sign this machine in
+frijoles init                                 # project + key + .env.local + the snippet
+frijoles flags create checkout.demo_enabled --kill-switch --all-envs
+frijoles flags rollout checkout.demo_enabled --env production --percent 25
+frijoles flags kill checkout.demo_enabled --env production
 ```
 
 ## Why this exists
@@ -25,22 +25,22 @@ Every high-risk change ships behind a flag, and a flag is invisible until it exi
 provider**. Before this, the one line of a release that most needs to be reliable — *create the flag
 in every environment* — was the line that stopped and waited for someone to open a browser.
 
-`gf flags create … --all-envs` is that line.
+`frijoles flags create … --all-envs` is that line.
 
 ## Signing in
 
-At a terminal, `gf login` opens your browser: confirm the code it shows and this machine is signed in.
+At a terminal, `frijoles login` opens your browser: confirm the code it shows and this machine is signed in.
 
 ```bash
-gf login                # browser sign-in
-gf whoami               # who you are, which credential, which projects
+frijoles login                # browser sign-in
+frijoles whoami               # who you are, which credential, which projects
 ```
 
-Without a browser, mint a token at **`/app/setup/cli`** and pipe it in (`echo "$TOKEN" | gf login`); a piped or
+Without a browser, mint a token at **`/app/setup/cli`** and pipe it in (`echo "$TOKEN" | frijoles login`); a piped or
 pasted token is read from stdin, never from argv or your history. `--token <token>` also works, but it lands in argv
 and your shell history, so prefer the pipe.
 
-In CI, set `GOLDEN_FRIJOLES_TOKEN` and skip `gf login` entirely. Nothing is written to disk on that
+In CI, set `GOLDEN_FRIJOLES_TOKEN` and skip `frijoles login` entirely. Nothing is written to disk on that
 path.
 
 A token signs you in as **you**: it can do exactly what your console session can do, across every
@@ -84,14 +84,14 @@ else** — no progress lines, no warnings. A failure is a JSON document too, on 
 `--help` output and these envelopes are pinned by golden-file tests. They do not change on a copy
 edit.
 
-## Sending a North Star: `gf north-star set`
+## Sending a North Star: `frijoles north-star set`
 
 The `north-star` coach in the Golden Frijoles plugin leaves `Roadmap/00-strategy/north-star.md`, with the metric and
 its inputs in one ```json block under `## Sync payload`. This command sends that block to your project:
 
 ```bash
-gf north-star set Roadmap/00-strategy/north-star.md          # dry run: shows what would change, sends nothing
-gf north-star set Roadmap/00-strategy/north-star.md --yes    # sends it once (project owners only)
+frijoles north-star set Roadmap/00-strategy/north-star.md          # dry run: shows what would change, sends nothing
+frijoles north-star set Roadmap/00-strategy/north-star.md --yes    # sends it once (project owners only)
 ```
 
 A sync never replaces or deletes. A new metric key is **added** beside an existing North Star, and an input key that
@@ -99,14 +99,14 @@ already exists **moves** to this metric. The dry run says so before anything is 
 reuse its key. The server validates the block and prints its `issues` on a 400. A file that still has the template's
 `<…>` placeholders is refused before anything is sent.
 
-## Reading a result: `gf north-star readings`, `gf experiments decision`
+## Reading a result: `frijoles north-star readings`, `frijoles experiments decision`
 
 An agent reading an epic's result (the plugin's `epic-read`) fetches the number itself through these two reads. Any
 project member can run them; `--json` prints the body the agent parses.
 
 ```bash
-gf north-star readings grounded_bets_share --to 2026-11-04 --json   # the input's readings; `latest` is the number
-gf experiments decision smart-defaults --json                        # the experiment's decision record
+frijoles north-star readings grounded_bets_share --to 2026-11-04 --json   # the input's readings; `latest` is the number
+frijoles experiments decision smart-defaults --json                        # the experiment's decision record
 ```
 
 `latest` is the last reading on or before `--to`; an input with no reading yet says so rather than reporting zero.
@@ -118,7 +118,7 @@ Cite them as `north-star:<input>@<latest.date>` and `ab:<experiment>`.
 |---|---|---|
 | `0` | ok | it worked |
 | `1` | usage | the command is wrong — nothing was sent |
-| `2` | auth | the credential is not accepted — run `gf login` |
+| `2` | auth | the credential is not accepted — run `frijoles login` |
 | `3` | not-found | no such thing, or not yours |
 | `4` | conflict | someone else changed it — re-read and retry |
 | `5` | partial | some environments changed and some did not |
@@ -127,7 +127,7 @@ Cite them as `north-star:<input>@<latest.date>` and `ab:<experiment>`.
 ## When something is wrong
 
 ```bash
-gf doctor
+frijoles doctor
 ```
 
 It runs without a credential — diagnosing a missing one is the point — and reports every check it
@@ -139,13 +139,13 @@ Then one line per module (Plan, Build, Ship, Measure, Spend, Operate): *configur
 configured* (with the command that fixes it) or *could not look*. Module lines never change the
 exit code.
 
-## Settings: `gf setup` and `gf config`
+## Settings: `frijoles setup` and `frijoles config`
 
 ```bash
-gf setup                                   # two questions, each with a default; --yes takes them all
-gf config list                             # every setting, and which file it came from
-gf config get review.reviewScope
-gf config set review.reviewScope every-pr
+frijoles setup                                   # two questions, each with a default; --yes takes them all
+frijoles config list                             # every setting, and which file it came from
+frijoles config get review.reviewScope
+frijoles config set review.reviewScope every-pr
 ```
 
 Settings live in the project's `golden-frijoles.config.json`, the same file the Golden Frijoles
@@ -162,7 +162,7 @@ verbs needs a credential.
 | `GOLDEN_FRIJOLES_URL` | the deployment to talk to |
 | `GOLDEN_FRIJOLES_PROJECT` | the active project |
 
-`gf init` writes `GOLDEN_FRIJOLES_URL`, `GOLDEN_FRIJOLES_FLAG_READ_KEY` and
+`frijoles init` writes `GOLDEN_FRIJOLES_URL`, `GOLDEN_FRIJOLES_FLAG_READ_KEY` and
 `GOLDEN_FRIJOLES_ENVIRONMENT` into `.env.local` (mode `0600`), adds that file to `.gitignore` — or
 refuses — and prints the `@golden-frijoles/sdk` snippet that reads exactly those names.
 
@@ -172,5 +172,5 @@ refuses — and prints the `@golden-frijoles/sdk` snippet that reads exactly tho
   parallel pipeline.
 - **Experiments, journeys, north star, scenarios, destinations, breakers.** Out of v1 on purpose.
 - **A TUI.** Plain output and `--json`.
-- **Plans and quotas.** Every account is unlimited today; `gf` will learn about plans when there is
+- **Plans and quotas.** Every account is unlimited today; `frijoles` will learn about plans when there is
   a plan to learn about.

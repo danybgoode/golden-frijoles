@@ -26,7 +26,7 @@ export async function readViewerWorkspaceIds(
 }
 
 /**
- * Every workspace `userId` belongs to, with their role in it, sorted by name. For DISPLAY (`gf whoami`, the switcher's
+ * Every workspace `userId` belongs to, with their role in it, sorted by name. For DISPLAY (`frijoles whoami`, the switcher's
  * group labels) — so it THROWS on a query failure rather than returning [], which would read as "you belong to no
  * workspace": an authorization answer for what is really an outage (the same rule as getUserProjects).
  */

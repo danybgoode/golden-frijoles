@@ -11,7 +11,7 @@
 // The CLI and the MCP write tools must not drift. The MCP tools live in `apps/web`, which already
 // depends on `@golden-frijoles/sdk` and must not start depending on the CLI; the CLI cannot import
 // from `apps/web` at all. The SDK is the one place both sides can reach, so putting the planners
-// here is what makes parity STRUCTURAL rather than a review checklist: `gf flags kill` and the
+// here is what makes parity STRUCTURAL rather than a review checklist: `frijoles flags kill` and the
 // `kill_flag` MCP tool call the same function, so they cannot disagree about what killing a flag
 // means. A spec in Sprint 3 asserts plan equality for the same input, and it is only meaningful
 // because there is one implementation to compare against itself.
@@ -116,7 +116,7 @@ export function normalizeEnvironments(requested: readonly FlagEnvironment[]): Fl
  * A description the parser will accept, when the caller gave none.
  *
  * ⚠️ **Without this, the epic's HEADLINE COMMAND failed.** `parseFlagDefinition` requires a
- * NON-BLANK description, and `--description` is optional — so `gf flags create <key>
+ * NON-BLANK description, and `--description` is optional — so `frijoles flags create <key>
  * --kill-switch --all-envs`, the exact line the epic exists to make work, returned a 400. Every
  * planner unit test happened to pass a description, and the CLI's own tests stubbed the network, so
  * nothing ran the real parser against the real default until an end-to-end spec against the write
@@ -141,7 +141,7 @@ export type FlagCreateInput = {
 }
 
 /**
- * D3 — `gf flags create <key> --kill-switch|--enablement`.
+ * D3 — `frijoles flags create <key> --kill-switch|--enablement`.
  *
  * The caller supplies the polarity; this derives the variants, the default variant AND the
  * activation. There is no parameter for "what value should it serve", which is the point: a caller
@@ -178,7 +178,7 @@ export type FlagTypedCreateInput = {
 }
 
 /**
- * `gf flags create --type string|number|json`, for the flags polarity does not describe.
+ * `frijoles flags create --type string|number|json`, for the flags polarity does not describe.
  *
  * Polarity is a *boolean* concept — "which way is off?" has no answer for a string flag — so this is
  * a separate entry point rather than an optional branch inside `planFlagCreate`. Keeping them apart
@@ -204,7 +204,7 @@ export function planTypedFlagCreate(input: FlagTypedCreateInput): FlagPlanResult
 }
 
 /**
- * `gf flags set <key> --value <v>` — change which variant is served by default.
+ * `frijoles flags set <key> --value <v>` — change which variant is served by default.
  *
  * Takes the CURRENT definition and returns the next one. Variants and rules are carried over
  * untouched: `set` changes the default, and a `set` that quietly dropped a targeting rule would be
@@ -227,7 +227,7 @@ export function planFlagSet(input: {
 }
 
 /**
- * `gf flags rollout <key> --percent <0-100>` — serve the `on` variant to a fraction of contexts.
+ * `frijoles flags rollout <key> --percent <0-100>` — serve the `on` variant to a fraction of contexts.
  *
  * The percent goes through `percentToBasisPoints`, the one conversion seam, which REJECTS rather
  * than clamps. That matters more from a CLI than from a form: `--percent 150` from a script is a
@@ -236,7 +236,7 @@ export function planFlagSet(input: {
  * ⚠️ **This REPLACES the rule list with a single unconditional rollout rule**, and says so in its
  * name and in `--help`. An unconditional rollout beside existing clause rules would be ambiguous
  * about which one wins at a glance, and "ambiguous at a glance" is what an operator reaches for at
- * 3am. `gf flags rules --rules-file` is the verb for composing several.
+ * 3am. `frijoles flags rules --rules-file` is the verb for composing several.
  */
 export function planFlagRollout(input: {
   current: FlagDefinition
@@ -264,7 +264,7 @@ export function planFlagRollout(input: {
 }
 
 /**
- * `gf flags rules <key> --rules-file rules.json` — replace the rule list wholesale.
+ * `frijoles flags rules <key> --rules-file rules.json` — replace the rule list wholesale.
  *
  * A FILE, never a command-line DSL. The shaping named a rule-expression DSL as the appetite trap
  * that would eat this sprint, and a file has a second property that matters more: rules live in
@@ -286,7 +286,7 @@ export function planFlagRules(input: {
 }
 
 /**
- * `gf flags kill <key>` — the verb you reach for at 3am.
+ * `frijoles flags kill <key>` — the verb you reach for at 3am.
  *
  * Two things happen, and the second is the one a hand-composed `set --value false` forgets:
  *   1. the default variant becomes the one whose value is `false`, and
@@ -307,20 +307,20 @@ export function planFlagKill(input: {
   if (environments.length === 0) return failure('Name at least one environment, or use --all-envs.')
   if (input.current.valueType !== 'boolean')
     return failure(
-      `kill only applies to a boolean flag; this one is \`${input.current.valueType}\`. Use \`gf flags set\` and name the variant you want.`
+      `kill only applies to a boolean flag; this one is \`${input.current.valueType}\`. Use \`frijoles flags set\` and name the variant you want.`
     )
 
   const off = input.current.variants.find((variant) => variant.value === false)
   if (!off)
     return failure(
-      'This flag has no variant whose value is false, so there is nothing to kill it to. Use `gf flags set`.'
+      'This flag has no variant whose value is false, so there is nothing to kill it to. Use `frijoles flags set`.'
     )
 
   return planned({ ...input.current, defaultVariantKey: off.key, rules: [] }, environments)
 }
 
 /**
- * The value a definition serves when no rule matches — what `gf flags ls` prints in the
+ * The value a definition serves when no rule matches — what `frijoles flags ls` prints in the
  * "serving" column.
  *
  * Returns `undefined` when the default variant is missing from the variant list, which the parser

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { problemsFor, compareVersions, DEPRECATIONS } from './check-deprecations.mjs';
+import { problemsFor, compareVersions, DEPRECATIONS, oldCommandLines } from './check-deprecations.mjs';
 
 const row = {
   alias: 'gf',
@@ -45,4 +45,24 @@ test('versions compare numerically', () => {
 test('every row names both removal promises', () => {
   for (const r of DEPRECATIONS)
     assert.ok(/^\d{4}-\d{2}-\d{2}$/.test(r.removeBy) && /^\d+\.\d+\.\d+$/.test(r.removeIn), r.alias);
+});
+
+test('an old command in shipped text is caught; prose about the name, tokens and records are not', () => {
+  const bad = [
+    'README.md:3:run `gf login` first',
+    'skills/x/SKILL.md:9:  gf-kit config set a b',
+    'apps/web/a.tsx:2:<code>gf flags kill x</code>',
+  ];
+  assert.deepEqual(oldCommandLines(bad), bad);
+  assert.deepEqual(
+    oldCommandLines([
+      'packages/cli/src/invoked-as.ts:4:the old name gf keeps working',
+      "apps/web/lib/cli-tokens.ts:26:const TOKEN_PREFIX = 'gf_pat_'",
+      'skills/CHANGELOG.md:12:- `gf login` opens the browser',
+      'scripts/jev-eval.fixtures.json:4:`gf login`, ',
+      'README.md:1:run `frijoles login`',
+      '',
+    ]),
+    []
+  );
 });

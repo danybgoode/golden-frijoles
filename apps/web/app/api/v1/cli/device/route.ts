@@ -7,7 +7,7 @@ import { getSiteUrl } from '@/lib/site-url'
 import { startDeviceCode } from '@/lib/cli-device-codes'
 import { DEVICE_CODE_TTL_SECONDS, DEVICE_POLL_INTERVAL_SECONDS } from '@/lib/cli-device-code-format'
 
-// POST /api/v1/cli/device — account-from-the-terminal S2.2 (epic D7): `gf login` starts a browser
+// POST /api/v1/cli/device — account-from-the-terminal S2.2 (epic D7): `frijoles login` starts a browser
 // sign-in. Unauthenticated by nature: the terminal has no credential yet, which is the point.
 //
 // ORDER IS THE CONTRACT: both gates, then the rate limit, then the body (LEARNINGS: a kill switch

@@ -17,10 +17,10 @@ import { DEVICE_CODE_FORMAT, DEVICE_POLL_INTERVAL_SECONDS } from '@/lib/cli-devi
 export const runtime = 'nodejs'
 
 const REFUSAL_MESSAGES = {
-  expired: 'That sign-in code expired. Run `gf login` again.',
-  used: 'That sign-in code was already used. Run `gf login` again.',
+  expired: 'That sign-in code expired. Run `frijoles login` again.',
+  used: 'That sign-in code was already used. Run `frijoles login` again.',
   denied: 'That sign-in was declined in the browser. Nothing was signed in.',
-  unknown: 'That sign-in code is not one this server issued. Run `gf login` again.',
+  unknown: 'That sign-in code is not one this server issued. Run `frijoles login` again.',
 } as const
 
 export async function POST(req: NextRequest) {
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
     default:
       return cliError(
         'server_error',
-        'Could not check the sign-in right now. Keep waiting, or run `gf login` again.'
+        'Could not check the sign-in right now. Keep waiting, or run `frijoles login` again.'
       )
   }
 }

@@ -3,7 +3,7 @@
 //
 // ── Why this is generated, and from what ──────────────────────────────────────────────────────
 // Every command on the page is a constant from `lib/install-prompt.ts` (the plugin) or
-// `lib/cli-install.ts` (the `gf` CLI) — the same constants `/install` renders — so the page cannot
+// `lib/cli-install.ts` (the `frijoles` CLI) — the same constants `/install` renders — so the page cannot
 // describe an install the site does not show. Pure and env-free: the route passes `getSiteUrl()`.
 //
 // ── The claims on it are exact, and the tests hold them to that ──────────────────────────────
@@ -44,7 +44,7 @@ export function installServices(siteUrl: string): InstallService[] {
     },
     {
       host: 'registry.npmjs.org',
-      when: '`npx skills` (other agents), the planning kit the skills run through `npx`, and the optional `gf` CLI',
+      when: '`npx skills` (other agents), the planning kit the skills run through `npx`, and the optional `frijoles` CLI',
     },
     { host: 'api.github.com', when: '`npx skills` only: it reads the skills repo before copying it' },
     {
@@ -53,7 +53,7 @@ export function installServices(siteUrl: string): InstallService[] {
     },
     {
       host: new URL(siteUrl).host,
-      when: 'reading this page; after that, only once you sign in (`gf login`, `gf init`, reading your flags)',
+      when: 'reading this page; after that, only once you sign in (`frijoles login`, `frijoles init`, reading your flags)',
     },
   ]
 }

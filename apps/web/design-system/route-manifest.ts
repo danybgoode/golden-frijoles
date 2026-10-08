@@ -696,7 +696,7 @@ export const ROUTE_MANIFEST: readonly CoverageRow[] = [
     retiresIn: null,
     deferred: null,
   },
-  // account-from-the-terminal · Sprint 2, Story 2.2 — the device-code confirm page `gf login` opens. Built from the
+  // account-from-the-terminal · Sprint 2, Story 2.2 — the device-code confirm page `frijoles login` opens. Built from the
   // door frame and its primitives (doorlede, doorform, doornote); the canvas SignIn frame it follows is not yet an
   // approved state, so — like FinOps and the portfolio — it joins the DENOMINATOR with a dated deferral.
   {

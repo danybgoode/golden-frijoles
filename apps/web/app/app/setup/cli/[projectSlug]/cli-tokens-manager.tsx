@@ -89,7 +89,7 @@ export function CliTokensManager({ slug, tokens }: { slug: string; tokens: CliTo
         body={
           <>
             This is the only time it is shown — only a hash was stored, so it cannot be displayed again. Paste
-            it into <code>gf login</code>, or set it as <code>GOLDEN_FRIJOLES_TOKEN</code> in CI.
+            it into <code>frijoles login</code>, or set it as <code>GOLDEN_FRIJOLES_TOKEN</code> in CI.
           </>
         }
       >
@@ -234,7 +234,7 @@ export function CliTokensManager({ slug, tokens }: { slug: string; tokens: CliTo
         verb="Revoke"
         noun="CLI token"
         subject={revoking?.label ?? ''}
-        consequence="Any machine holding it is signed out of gf immediately. This cannot be undone."
+        consequence="Any machine holding it is signed out of frijoles immediately. This cannot be undone."
         pending={pendingRevoke}
         onCancel={() => setRevoking(null)}
         onConfirm={() => revoking && onRevoke(revoking)}

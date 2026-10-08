@@ -128,7 +128,7 @@ function newestVersion(flag: Awaited<ReturnType<typeof getFlagRegistryView>>['fl
 /**
  * Do the named environments disagree about which version they serve?
  *
- * ⚠️ **This refuses rather than picking one, and that is a deliberate cost.** `gf flags rollout
+ * ⚠️ **This refuses rather than picking one, and that is a deliberate cost.** `frijoles flags rollout
  * <key> --all-envs --percent 25` across environments serving v3, v3 and v7 has no single correct
  * answer: whichever base is chosen, two environments get a definition they were not on, and the
  * command reports success. Silently flattening a deliberate divergence — a canary held back in
@@ -217,7 +217,7 @@ export async function executeCliFlagWrite(input: {
   if (input.command.command === 'create') {
     // A `create` on an existing key is allowed and means "a new version of it". The RPC already
     // reuses the registry row and increments the version, so refusing here would break the
-    // idempotent re-run `gf init` and every CI pipeline depends on.
+    // idempotent re-run `frijoles init` and every CI pipeline depends on.
     plan =
       'polarity' in input.command
         ? planFlagCreate({
@@ -267,7 +267,7 @@ export async function executeCliFlagWrite(input: {
   // ── reuse an identical version rather than writing a new one ───────────────────────────────
   //
   // ⚠️ **`create_flag_definition_version` ALWAYS creates a version** — it takes `max(version)+1` and
-  // inserts. So without this, re-running `gf flags create … --all-envs` produced v1, v2, v3… of a
+  // inserts. So without this, re-running `frijoles flags create … --all-envs` produced v1, v2, v3… of a
   // definition that never changed, and every re-run rewrote the activation and wrote an audit row
   // saying something had happened. An agent re-running its own setup script is the ordinary case,
   // not an edge one, and the epic's acceptance says re-running is idempotent.
@@ -286,7 +286,7 @@ export async function executeCliFlagWrite(input: {
   //
   // ⚠️ **Only the NEWEST version is eligible for reuse** (cross-family review, Codex, PR #150,
   // Blocking). The first version reused ANY identical historical version — so with v1=off and
-  // v2=on, `gf flags set --value false` matched v1 and re-activated it: a change recorded in the
+  // v2=on, `frijoles flags set --value false` matched v1 and re-activated it: a change recorded in the
   // lifecycle as a rollback to an old version, and, because rollout bucketing is keyed on the
   // definition VERSION, one that can re-bucket users differently from a fresh version with the same
   // rules. "The command already happened" is only true of the newest version; anything older is
@@ -335,7 +335,7 @@ export async function executeCliFlagWrite(input: {
     // ⚠️ **Added after the end-to-end spec went `partial` under concurrency.** The snapshot counter
     // is per (project, environment), so a write to ANY OTHER FLAG in the same environment between
     // our read and our write trips it — the RPC cannot tell "someone changed your flag" from
-    // "someone changed a neighbour". An agent running two `gf` commands at once hits that routinely,
+    // "someone changed a neighbour". An agent running two `frijoles` commands at once hits that routinely,
     // and D2's per-environment report then says `conflict` for a change that was never contested.
     //
     // So on a conflict the environment is re-read, and the activation is retried with the fresh

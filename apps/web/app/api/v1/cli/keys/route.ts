@@ -9,7 +9,7 @@ import { listFlagSyncKeys, mintFlagSyncKey, revokeFlagSyncKey } from '@/lib/flag
 import { FLAG_KEY_EXPIRY_DAYS } from '@/lib/credential-inventory'
 import { recordAudit } from '@/lib/audit'
 
-// golden-frijoles-cli · Story 1.4 (`gf init` mints a flag_read key) and Story 2.6 (`gf keys`).
+// golden-frijoles-cli · Story 1.4 (`frijoles init` mints a flag_read key) and Story 2.6 (`frijoles keys`).
 //
 // ── OWNER, not member, and it is the same boundary the console draws ──────────────────────────
 // `requireCliOwner` resolves the PAT to a user and then asks `project_members` whether that user

@@ -12,7 +12,7 @@ import { northStarSyncSchema } from './north-star-schema'
 // ── What a sync does, said plainly (think-skills C2) ──────────────────────────────────────────────────────────────
 // It upserts the metric on (project_id, key) and each input on (project_id, key). A metric with a NEW key is added
 // beside any existing one, never replacing it. An input key that already exists moves to this metric. Nothing is
-// ever deleted. `gf north-star set`'s dry run shows exactly these three effects before anything is sent.
+// ever deleted. `frijoles north-star set`'s dry run shows exactly these three effects before anything is sent.
 
 export type NorthStarInputView = {
   key: string

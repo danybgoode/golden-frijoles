@@ -5,7 +5,7 @@ import { cliError, cliOk, cliUserProjects, requireCliAccount } from '@/lib/cli-a
 import { provisionTenantForUser } from '@/lib/provisioning'
 import { getSupabaseServiceClient } from '@/lib/supabase'
 
-// golden-frijoles-cli · Sprint 1, Story 1.3 — `gf projects ls` and `gf projects create`.
+// golden-frijoles-cli · Sprint 1, Story 1.3 — `frijoles projects ls` and `frijoles projects create`.
 //
 // ── D9, and why `create` is an ENSURE ─────────────────────────────────────────────────────────
 // `projects_one_per_creator_idx` (20260721100000_self_serve_tenants.sql) is a partial UNIQUE index
@@ -32,9 +32,9 @@ import { getSupabaseServiceClient } from '@/lib/supabase'
 // that could talk to that account would have nothing to talk about.
 //
 // What this verb IS for: a script saying "make sure I have a project before I init", idempotently,
-// without parsing `gf projects ls`. Recovery from a failed provision is a browser task at `/app`.
+// without parsing `frijoles projects ls`. Recovery from a failed provision is a browser task at `/app`.
 //
-// `gf projects use` is a CLIENT-side concept: it records the active project in the credentials
+// `frijoles projects use` is a CLIENT-side concept: it records the active project in the credentials
 // file. There is nothing to store server-side, which is why there is no route for it.
 
 export const runtime = 'nodejs'
@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
   if (!result.ok) return cliError('server_error', result.error)
 
   // `plaintextKey` is deliberately NOT returned. It is a full ingest credential, and the CLI has
-  // `gf keys create --type ingest` for that with its own confirmation and its own audit row. A
+  // `frijoles keys create --type ingest` for that with its own confirmation and its own audit row. A
   // verb whose job is "make sure I have a project" must not silently also mint a credential into a
   // terminal's scrollback.
   return cliOk({ created: result.created, slug: result.projectSlug })

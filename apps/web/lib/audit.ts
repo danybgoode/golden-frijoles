@@ -60,7 +60,7 @@ export type AuditAction =
   // golden-frijoles-cli · Sprint 1, Story 1.2 — the CLI credential's lifecycle. Its OWN labels,
   // beside the four credential pairs above, for the reason `agent_write_key_*` states: these kinds
   // share a shape but answer different incident questions, and this one answers a question none of
-  // the others can — "which laptop or CI job was signed in to `gf` when this flag changed?"
+  // the others can — "which laptop or CI job was signed in to `frijoles` when this flag changed?"
   //
   // ⚠️ These are the only actions in this union whose rows carry `project_id: null`, and that is
   // correct rather than a gap. A CLI token belongs to an ACCOUNT; filing its mint under whichever

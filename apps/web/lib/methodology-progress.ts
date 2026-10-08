@@ -18,7 +18,7 @@
 // cleared, or blocked, or the key changed — is a number-shaped lie. `null` is not.
 
 /** Bumped only if the stored SHAPE changes; a chapter id changing is handled by filtering. */
-export const PROGRESS_STORAGE_KEY = 'gf.methodology.read.v1'
+export const PROGRESS_STORAGE_KEY = 'frijoles.methodology.read.v1'
 
 export interface ReadProgress {
   /** Chapter ids the visitor has opened, in no particular order. Always a subset of the module's. */

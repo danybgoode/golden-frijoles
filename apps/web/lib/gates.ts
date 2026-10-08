@@ -8,7 +8,7 @@
 // ── The cache ─────────────────────────────────────────────────────────────────────────────────
 // One read of the whole catalog per process per 30 s, shared by every gate (one query, not nineteen). A gate is a
 // single GLOBAL fact, not tenant data, so sharing it across requests leaks nothing. 30 s bounds how long a
-// `gf flags kill` takes to land. A failed read is cached too (serving the last good catalog), so an outage costs one
+// `frijoles flags kill` takes to land. A failed read is cached too (serving the last good catalog), so an outage costs one
 // query per 30 s, not one per request.
 
 import { createCatalogCache, envOverride, resolveGate, type Gate, type ServedCatalog } from './gates-decision'

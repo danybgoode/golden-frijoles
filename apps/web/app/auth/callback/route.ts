@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
             after(() => registerStarterFeature(starterKey))
           }
           after(() => trackSelfEvent(ACCOUNT_CONFIRMED_EVENT, user.id))
-          // account-from-the-terminal D8: a brand-new account that signed up FROM `gf login`'s
+          // account-from-the-terminal D8: a brand-new account that signed up FROM `frijoles login`'s
           // browser page goes back to that page, or the terminal waits on a code nobody confirms.
           if (new URL(target).pathname === '/cli/connect') return NextResponse.redirect(target)
           // connect-page D2: otherwise a new account lands on Connect.

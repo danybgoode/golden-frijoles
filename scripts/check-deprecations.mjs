@@ -7,6 +7,7 @@
 // while the old name is still published. Same shape as check-quarantine: a dated red on every PR forces the decision.
 //
 //   node scripts/check-deprecations.mjs     exit 1 on an expired alias; prints the table either way
+import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -30,6 +31,39 @@ export const DEPRECATIONS = [
     removeIn: '1.1.0',
   },
 ];
+
+/** A typed old command: `gf <verb>` or `gf-kit <verb>`. Prose about the name itself ("the old name gf") does not match. */
+export const OLD_COMMAND =
+  /(?<![\w\-/.$])gf(?:-kit)? (?:login|logout|init|setup|flags|whoami|doctor|projects|keys|config|north-star|experiments|help|--version|--help|--list)\b/;
+
+/** Shipped text: where a reader meets a command. Roadmap history and the release notes are records, not instructions. */
+export const SHIPPED = [
+  'skills/plugins',
+  'skills/template',
+  'skills/kit',
+  'skills/scripts',
+  'skills/README.md',
+  'apps/web',
+  'packages',
+  'scripts',
+  'README.md',
+  'CONTRIBUTING.md',
+  'AGENTS.md',
+];
+export const TEXT_ALLOWED = [
+  /CHANGELOG\.md:/,
+  /supabase\/migrations\//, // applied migrations are history; a COMMENT ON string is stored in the database
+  /jev-eval(\.lint)?\.fixtures\.json:/, // replayed seed text with fixed baselines; rewriting it would move scores
+  /^scripts\/check-deprecations(\.test)?\.mjs:/,
+];
+
+/** `git grep -n` lines → the ones that still teach an old command. */
+export function oldCommandLines(grepLines) {
+  return grepLines.filter(
+    (line) =>
+      line && OLD_COMMAND.test(line.slice(line.indexOf(':') + 1)) && !TEXT_ALLOWED.some((re) => re.test(line))
+  );
+}
 
 /** -1 · 0 · 1 for two `x.y.z` versions (a pre-release suffix is ignored: 1.1.0-rc.1 already promised the removal). */
 export function compareVersions(a, b) {
@@ -69,7 +103,22 @@ function main() {
       `  ${row.alias} → ${row.replacement}  remove by ${row.removeBy} or in ${row.removeIn}  (${manifest.version}) ${state}`
     );
   }
-  if (problems.length === 0) return console.log('✓ deprecations: every alias is inside its window');
+  let grep = '';
+  try {
+    grep = execFileSync('git', ['grep', '-n', '-I', '-P', OLD_COMMAND.source, '--', ...SHIPPED], {
+      cwd: ROOT,
+      encoding: 'utf8',
+      maxBuffer: 64 * 1024 * 1024,
+    });
+  } catch (error) {
+    if (error.status !== 1) throw error; // 1 = no match; anything else is a broken read, not a pass
+  }
+  for (const line of oldCommandLines(grep.split('\n')))
+    problems.push(`old command in shipped text: ${line.slice(0, 160)}`);
+  if (problems.length === 0)
+    return console.log(
+      '✓ deprecations: every alias is inside its window, and no shipped text teaches an old command'
+    );
   for (const p of problems) console.error(`✗ ${p}`);
   process.exit(1);
 }

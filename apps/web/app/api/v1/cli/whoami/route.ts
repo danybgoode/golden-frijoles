@@ -5,7 +5,7 @@ import { cliError, cliOk, cliUserProjects, requireCliAccount } from '@/lib/cli-a
 import { getUserWorkspaces } from '@/lib/workspace'
 import { getSupabaseServiceClient } from '@/lib/supabase'
 
-// golden-frijoles-cli · Sprint 1, Story 1.2 — `gf whoami`.
+// golden-frijoles-cli · Sprint 1, Story 1.2 — `frijoles whoami`.
 //
 // The first thing an agent runs when something is wrong, so it answers the three questions that
 // actually get asked: WHO am I, WHICH credential am I using, and WHAT can I reach. A CLI that can
@@ -17,7 +17,7 @@ export const runtime = 'nodejs'
  * The account's own email address.
  *
  * Its own, and only its own — read by user id from the already-resolved credential, never from
- * anything in the request. Showing it is what makes `gf whoami` answer "am I logged in as the right
+ * anything in the request. Showing it is what makes `frijoles whoami` answer "am I logged in as the right
  * account?", which is the question a person with two tenants actually has.
  *
  * Returns null rather than failing the request: a `whoami` that 500s because the auth schema was
@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
     const [email, projects, workspaces] = await Promise.all([
       accountEmail(account.userId),
       cliUserProjects(account),
-      // workspaces S2.3 — the tenant, where `gf whoami` already looks. getUserWorkspaces THROWS on a query failure
+      // workspaces S2.3 — the tenant, where `frijoles whoami` already looks. getUserWorkspaces THROWS on a query failure
       // for the same reason getUserProjects does, and lands in the same 500 below.
       getUserWorkspaces(account.userId),
     ])

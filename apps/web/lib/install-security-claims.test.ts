@@ -110,7 +110,7 @@ claimTest('keys-in-env-local', () => {
   assert.match(init, /const ENV_FILE = '\.env\.local'/)
   assert.ok(
     init.indexOf('ensureIgnored(gitignorePath') < init.indexOf("'api/v1/cli/keys'"),
-    '`gf init` mints a key before .gitignore covers .env.local'
+    '`frijoles init` mints a key before .gitignore covers .env.local'
   )
   assert.match(init, /writeFileSync\(envPath, next, \{ mode: 0o600 \}\)/)
   const credentials = code(join(CLI_SRC, 'credentials.ts'))

@@ -2,7 +2,7 @@ import { test, expect, type APIRequestContext } from '@playwright/test'
 import { createClient } from '@supabase/supabase-js'
 import { createHash, randomBytes } from 'node:crypto'
 
-// account-from-the-terminal · Sprint 2, Story 2.2 — `gf login` through the browser, over HTTP
+// account-from-the-terminal · Sprint 2, Story 2.2 — `frijoles login` through the browser, over HTTP
 // (epic D6–D8). The confirm step is a signed-in Server Action; here it is driven through the same
 // SQL function the action calls (`decide_cli_device_code`), so this spec covers every HTTP answer the
 // CLI can get. The signed-in page itself is exercised by `cli-device-login.authed.spec.ts`.
@@ -164,7 +164,7 @@ test('/cli/connect without a code points back at the terminal; with one, signed 
 }) => {
   const bare = await request.get('/cli/connect')
   expect(bare.status()).toBe(200)
-  expect(await bare.text()).toContain('gf login')
+  expect(await bare.text()).toContain('frijoles login')
 
   const started = await start(request)
   const page = await request.get(`/cli/connect?code=${started.userCode}`)

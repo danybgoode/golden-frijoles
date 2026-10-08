@@ -161,7 +161,7 @@ server-side, exactly as before.
 
 **One named carve-out, and it is not a data read:** `getUserProjects(userId)` (`lib/membership.ts`) lists the caller's
 OWN memberships — the id, slug, role and workspace of each project they belong to — so the switcher, `/app` and
-`gf projects` can offer a choice. It returns nothing FROM inside those projects, and it drops any project whose
+`frijoles projects` can offer a choice. It returns nothing FROM inside those projects, and it drops any project whose
 workspace is not one of the caller's. Anything that reads events, metrics, flags
 or any other project data from several projects is a multi-project read and goes through `getWorkspaceProjects()`.
 
@@ -250,9 +250,9 @@ deriving its own fallback.
 ### 6. A gate is a Golden Frijoles flag, never an env var.
 **one-product-project D3 (Daniel, 2026-10-08):** every product gate is a flag in the `golden-frijoles` catalog, read
 through ONE seam — `lib/gates.ts` (the table is `lib/gates-decision.ts → GATES`: key · the env var it replaced ·
-fallback). `gf flags kill <key> --env production` is the switch: no Vercel variable and no redeploy, landing within
-the seam's 30 s cache. A new gate is a `GATES` row plus `gf flags create <key> --kill-switch|--enablement --all-envs`
-(activation is its own step — `gf flags get <key>` must not print `—` in production). Never add a
+fallback). `frijoles flags kill <key> --env production` is the switch: no Vercel variable and no redeploy, landing within
+the seam's 30 s cache. A new gate is a `GATES` row plus `frijoles flags create <key> --kill-switch|--enablement --all-envs`
+(activation is its own step — `frijoles flags get <key>` must not print `—` in production). Never add a
 `process.env.*_ENABLED` read (`lib/gates-guard.test.ts` fails CI), and always `await` a gate: a bare call is a
 Promise, which is always truthy. Off Vercel (CI, local) a set env var still overrides, so `ci/gates.*.env` drive the
 test servers; on Vercel the env is never read. `FLAG_SERVING_ENABLED` and `CLI_WRITE_API_ENABLED` were retired, not
@@ -298,7 +298,7 @@ supabase link --project-ref <ref> && supabase migration list   # apply: Supabase
 - **URLs** — `SITE_URL` (absolute-URL base; `lib/site-url.ts` — never a Host-header fallback, rule #5).
 - **Tenancy** — `DEMO_PROJECT_SLUG` (default `golden-frijoles`: the one public project, Golden Frijoles' own) and `SELF_PROJECT_SLUG` (defaults to it — self-tracking lands in the same project); `SELF_PROJECT_API_KEY` (that project's ingest key); `DEMO_PROJECT_API_KEY`, `DEMO_CONNECTOR_TOKEN` (local seeding only).
 - **Gates are NOT env vars** (rule #6) — they are flags in the `golden-frijoles` catalog, listed in
-  `lib/gates-decision.ts → GATES` and by `gf flags ls --project golden-frijoles`. The `*_ENABLED` names survive only
+  `lib/gates-decision.ts → GATES` and by `frijoles flags ls --project golden-frijoles`. The `*_ENABLED` names survive only
   as off-Vercel test overrides (`ci/gates.*.env`). Every other var above still needs a commit to `main` to reach
   running functions (rule #4).
 - **Tenancy limits are DATA, not env** — `projects.monthly_event_quota` / `projects.ingest_rate_per_min`

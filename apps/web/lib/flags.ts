@@ -1,5 +1,5 @@
 // The product's gates. Each one is a flag in Golden Frijoles' own catalog, in the `golden-frijoles` project
-// (one-product-project D1/D3), read through the ONE seam, lib/gates.ts. `gf flags kill <key> --env production` is
+// (one-product-project D1/D3), read through the ONE seam, lib/gates.ts. `frijoles flags kill <key> --env production` is
 // the switch: no Vercel variable and no redeploy. The keys, the variables they replaced and each gate's fallback are
 // in lib/gates-decision.ts (`GATES`) and the epic README's gate table.
 //
