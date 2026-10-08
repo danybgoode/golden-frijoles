@@ -173,7 +173,7 @@ i.e. the compiler, not a test. Stated because "mutation check passed" would have
 
 ## Sprint 3 — Smoke walkthrough (RUN IN PRODUCTION 2026-07-27, every step observed)
 
-_Run end-to-end against `https://golden-beans-gamma.vercel.app` with both gates live. Two disposable
+_Run end-to-end against `https://goldenfrijoles.com` with both gates live. Two disposable
 credentials were minted inside SQL (so no plaintext was constructed in a shell), used, and revoked;
 `select count(*) … where label like 'SMOKE%' and revoked_at is null` returns **0**._
 

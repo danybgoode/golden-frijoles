@@ -10,7 +10,7 @@ here from one versioned place, not a copy-paste fork.
 
 ## Status
 
-**Live in production** at `https://golden-beans-gamma.vercel.app`. Two epics shipped:
+**Live in production** at `https://goldenfrijoles.com`. Two epics shipped:
 - **Growth Engine v1** (2026-07-16) — telemetry ingest + SDK, a TARS funnel, a North Star metric with
   real Medusa revenue inputs, and A/B bucketing. Dogfooded against Miyagi's setup-guide funnel.
 - **Commercial shell** (2026-07-20) — public landing + waitlist, a read-only MCP connector + `/install`

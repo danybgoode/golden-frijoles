@@ -41,7 +41,7 @@ jobs:
       - name: Push golden-beans' own Pod Report artifact
         continue-on-error: true
         env:
-          GROWTH_ENGINE_URL: ${{ vars.SITE_URL || 'https://golden-beans-gamma.vercel.app' }}
+          GROWTH_ENGINE_URL: ${{ vars.SITE_URL || 'https://goldenfrijoles.com' }}
           SELF_PROJECT_API_KEY: ${{ secrets.SELF_PROJECT_API_KEY }}
           # `gh` reads GH_TOKEN from the environment; the job token carries the pull-requests: read scope above.
           GH_TOKEN: ${{ github.token }}

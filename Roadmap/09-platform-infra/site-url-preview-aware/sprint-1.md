@@ -159,7 +159,7 @@ Vercel actually exposes the variables rather than trusting that it does.
 Steps 1–5 were run against the real preview for PR #116 and are recorded with what came back.
 Steps 6–7 are the post-merge production re-check.
 
-**Preview:** `golden-beans-git-feat-site-url-prev-f68354-danybgoodes-projects.vercel.app`
+**Preview:** `<preview URL>`
 
 Note the shape of that hostname: `…-git-feat-site-url-prev-…`. It is the **branch** URL, not the
 per-deployment one, which is the observable proof that `VERCEL_BRANCH_URL` is what resolved (epic
@@ -179,7 +179,7 @@ D3) rather than `VERCEL_URL`.
    allow-listed by `agentic-pm-public-surface` A10, which confirms that guard still behaves on a
    non-production host. **Zero occurrences of `localhost`.**
 4. Grep that body for the hand-off line.
-   → `Start here: https://golden-beans-git-feat-site-url-prev-…vercel.app/install` — the line that
+   → `Start here: https://<preview URL>/install` — the line that
    used to read `http://localhost:3000/install`.
 5. **This is the acceptance no unit test could give** (epic D5): before this, nothing in the repo
    had ever demonstrated that Vercel exposes `VERCEL_ENV` / `VERCEL_BRANCH_URL` to a running

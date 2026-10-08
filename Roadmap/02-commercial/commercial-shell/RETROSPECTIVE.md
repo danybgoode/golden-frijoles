@@ -4,7 +4,7 @@ _Closed: 2026-07-20_
 
 _Written: 2026-07-20. Epic status: **shipped** — all three sprints live in production; Story 3.3
 (the launch) executed 2026-07-20 with Daniel's explicit authorization and live per-action approval.
-The read-only MCP connector is now enabled in production. Domain stays on `golden-beans-gamma.vercel.app`
+The read-only MCP connector is now enabled in production. Domain stays on the Vercel deployment host (`golden-beans-gamma`)
 for v1._
 
 ## What shipped
@@ -23,7 +23,7 @@ for v1._
   live per-action approval — self-tenant `golden-beans` project + `waitlist_conversion` Grower
   signal seeded in prod, demo `connector_tokens` row minted, `SELF_PROJECT_API_KEY` set in Vercel,
   and `CONNECTOR_ENABLED` flipped ON (activated by a push-to-`main` deploy, since env-var changes
-  don't apply to already-running functions). Domain: staying on `golden-beans-gamma.vercel.app` for
+  don't apply to already-running functions). Domain: staying on the Vercel deployment host (`golden-beans-gamma`) for
   v1. Announce: owner-owned.
 
 ## What went well

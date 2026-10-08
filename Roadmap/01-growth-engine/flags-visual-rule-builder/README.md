@@ -339,7 +339,7 @@ fresh reviewer subagent (HIGH tier).
 
 *Closed 2026-08-10. **All three sprints are merged and the gate is ON in production** — the builder,
 the rollout bars, the version diff and the preview are live on
-`golden-beans-gamma.vercel.app/app/flags/<slug>`, verified against a real flag.*
+`goldenfrijoles.com/app/flags/<slug>`, verified against a real flag.*
 
 - [x] **All sprints merged to `main`** — S1 `92e24b3` (#87), S2 `a3a5606` (#88), S3 `b473d13` (#90, which replaced #89 after its stacked base branch was deleted on merge)
 - [x] Each `sprint-N.md` has its smoke walkthrough (real URLs) — and each now carries what was built and what the review layer found

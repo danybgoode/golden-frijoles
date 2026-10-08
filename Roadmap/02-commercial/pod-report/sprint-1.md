@@ -91,28 +91,28 @@ unshipped work (poster rule); seeds render hazy (un-groomed ≠ promised).
 
 ## Sprint 1 — Smoke walkthrough (do these in order)
 
-Environment: production — `https://golden-beans-gamma.vercel.app`. Steps 1–4 are already run and
+Environment: production — `https://goldenfrijoles.com`. Steps 1–4 are already run and
 green (API-level, by the agent); steps 5–7 are **owed to Daniel** because they need a browser and a
 repo secret.
 
-1. `curl -s -o /dev/null -w "%{http_code}\n" -X POST https://golden-beans-gamma.vercel.app/api/v1/roadmap/push -H 'Content-Type: application/json' -d '{}'`
+1. `curl -s -o /dev/null -w "%{http_code}\n" -X POST https://goldenfrijoles.com/api/v1/roadmap/push -H 'Content-Type: application/json' -d '{}'`
    → **401.** The rail is live and fails closed. *(401 rather than 404 is the load-bearing part: it
    proves the route exists and resolves, so a missing table would look different from a missing
    route — the multi-tenant-activation rollout check, reused.)*
 2. Repeat with `-H 'Authorization: Bearer definitely-not-a-real-key'`
    → **401.** An invalid credential is rejected the same way as none.
-3. Open `https://golden-beans-gamma.vercel.app/hub/golden-beans-demo`
+3. Open `https://goldenfrijoles.com/hub/golden-beans-demo`
    → **200**, showing "No roadmap pushed yet / empty hopper" and the `roadmap-push.mjs` command.
    That is the deliberate empty state, not a broken page — no artifact has been pushed to
    production yet, and the page says so and tells you how to fix it.
-4. Open `https://golden-beans-gamma.vercel.app/hub/some-foreign-tenant`
+4. Open `https://goldenfrijoles.com/hub/some-foreign-tenant`
    → **307 to /login**, never 200. Tenant isolation holds on the live surface.
 5. **Owed — Daniel:** add `SELF_PROJECT_API_KEY` as a repo secret (Settings → Secrets → Actions).
    → The `Push roadmap artifact` workflow stops skipping. Until then it is green-and-inert by
    design.
 6. **Owed — Daniel:** merge anything to `main`, then wait for the production deploy to finish.
    → The workflow pushes golden-beans' own roadmap, and
-   `https://golden-beans-gamma.vercel.app/hub/golden-beans-demo` flips from the empty state to the
+   `https://goldenfrijoles.com/hub/golden-beans-demo` flips from the empty state to the
    journey view: shipped epics behind, a 📍 "you are here" marker on the first unshipped epic, and
    a freshness stamp reading "as of merge `<sha>`, just now". Content should match
    `Roadmap/00-ideas/BUILD-ORDER.md`.

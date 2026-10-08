@@ -133,13 +133,13 @@ definition, **so that** I can run a resilience exercise without an engineer.
   merges.**
 
 ## Sprint 1 — Smoke walkthrough (do these in order)
-Env: preview (pre-merge) · then production · https://golden-beans-gamma.vercel.app
+Env: preview (pre-merge) · then production · https://goldenfrijoles.com
 
 > Use a **test project** throughout. Nothing in this sprint launches a run — that is Sprint 2 — but
 > it writes real definitions.
 
 1. With `SCENARIO_AUTHORING_ENABLED` unset, go to
-   https://golden-beans-gamma.vercel.app/app/scenarios/<testProjectSlug>
+   https://goldenfrijoles.com/app/scenarios/<testProjectSlug>
    → The page is the **read-only evidence view**. No define, launch, kill or revoke control exists.
 2. Read the impact-evidence section and the cohort caveats.
    → Every caveat that was there before the rewrite is still there, and still says the same thing.

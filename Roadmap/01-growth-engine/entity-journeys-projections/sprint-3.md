@@ -97,7 +97,7 @@ connector token were revoked after proof (zero active proof credentials).
 
 ## Sprint 3 — Smoke walkthrough (do these in order)
 
-Env: https://golden-beans-gamma.vercel.app + https://miyagisanchez.com
+Env: https://goldenfrijoles.com + https://miyagisanchez.com
 
 1. ✅ Activate reviewed `merchant_activation` v1 for the `golden-beans` self tenant.
    → Audited registry RPCs created and activated the exact 13-stage contract.

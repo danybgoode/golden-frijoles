@@ -210,32 +210,32 @@ conversion, and it is squarely `flags-visual-rule-builder`'s (#15) territory.
   check:design-drift` green before merge.
 
 ## Sprint 2 — Smoke walkthrough (do these in order)
-Env: preview (pre-merge) · then production · https://golden-beans-gamma.vercel.app
+Env: preview (pre-merge) · then production · https://goldenfrijoles.com
 
-1. Go to https://golden-beans-gamma.vercel.app/app/keys/<projectSlug>
+1. Go to https://goldenfrijoles.com/app/keys/<projectSlug>
    → The key table renders. Click a column header.
    → The table sorts by that column.
 2. Type into the table's filter box.
    → Rows narrow as you type; clearing it restores all rows.
-3. Go to https://golden-beans-gamma.vercel.app/app/destinations/<projectSlug>
+3. Go to https://goldenfrijoles.com/app/destinations/<projectSlug>
    → The destinations table sorts and filters **the same way**, with the same control in the same
      place.
-4. Go to https://golden-beans-gamma.vercel.app/app/experiments/<projectSlug> and open one experiment.
+4. Go to https://goldenfrijoles.com/app/experiments/<projectSlug> and open one experiment.
    → The **create-a-draft form** is converted (heading, labelled fields, hints). The per-experiment
      version tables and the detail page's per-variant tables are **unchanged** — a deliberate,
      reasoned miss, not an oversight: see the D3 finding in Story 2.4. Story 2.2 asked for the
      detail route and this sprint is not delivering it; that is the one acceptance criterion this
      sprint knowingly does not meet.
-5. Go to https://golden-beans-gamma.vercel.app/app/flags/<projectSlug>
+5. Go to https://goldenfrijoles.com/app/flags/<projectSlug>
    → **Snapshot keys**, **catalog sync keys** and the **lifecycle audit** each sort and filter.
      The **definitions** table (one per flag) is unchanged — D3 finding, Story 2.4.
      **The JSON textarea for creating a flag is unchanged** — this epic deliberately does not touch
      it; replacing it is `flags-visual-rule-builder`'s entire epic.
-6. Go to https://golden-beans-gamma.vercel.app/app/impact/<projectSlug>/<featureKey>
+6. Go to https://goldenfrijoles.com/app/impact/<projectSlug>/<featureKey>
    → Headline numbers render as stat cards. The time-series table is still a table.
 7. Open any converted page for a project with no data yet.
    → The empty state is a sentence telling you what to do, not an empty table.
-8. Go to https://golden-beans-gamma.vercel.app/app/scenarios/<projectSlug>
+8. Go to https://goldenfrijoles.com/app/scenarios/<projectSlug>
    → **Unchanged** — six tables, as today. This is deliberate (D6), not a miss.
 
 If any step fails, note the step number + what you saw — that's the bug report.

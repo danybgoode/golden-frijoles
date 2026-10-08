@@ -30,7 +30,7 @@ stories:
 ---
 # Commercial shell — Sprint 3: Launch & dogfood
 
-**Status:** ✅ Done (2026-07-20) — Stories 3.1 + 3.2 merged to `main` ([PR #11](https://github.com/danybgoode/golden-beans/pull/11), squash `7b24502`); Story 3.3 launch executed the same day (self-tracking project seeded in prod, demo connector token minted, `CONNECTOR_ENABLED` flipped ON). Domain: staying on `golden-beans-gamma.vercel.app` for v1 (Daniel's call, zero-cost outcome). Announce: owner-owned.
+**Status:** ✅ Done (2026-07-20) — Stories 3.1 + 3.2 merged to `main` ([PR #11](https://github.com/danybgoode/golden-beans/pull/11), squash `7b24502`); Story 3.3 launch executed the same day (self-tracking project seeded in prod, demo connector token minted, `CONNECTOR_ENABLED` flipped ON). Domain: staying on the Vercel deployment host (`golden-beans-gamma`) for v1 (Daniel's call, zero-cost outcome). Announce: owner-owned.
 
 ## Stories
 
@@ -167,7 +167,7 @@ workflow file in isolation wouldn't surface a cross-step env-propagation-timing 
 
 ### Story 3.3 — Launch checklist ✅ (executed 2026-07-20, Daniel-authorized + Daniel-approved live)
 **As** Daniel, **I want** the launch executed: domain decision (**paid infra ⇒ Daniel green-lights
-before provisioning; staying on `golden-beans-gamma.vercel.app` is a valid v1 outcome**),
+before provisioning; staying on the Vercel deployment host is a valid v1 outcome**),
 `CONNECTOR_ENABLED` flipped ON in production (the deliberate enablement flip), waitlist live,
 announce.
 **Acceptance:** checklist executed and recorded in this doc; flip time-stamped; landing sections
@@ -205,7 +205,7 @@ path wasn't.
 - [x] **Demo `connector_tokens` row minted in prod** — token `gb_connector_63207fc…` for
   `golden-beans-demo` (project `c7af…ef55`), generated in-query. `/install` for the demo project now
   renders a live connector URL instead of "not seeded."
-- [x] **Domain decision — stay on `golden-beans-gamma.vercel.app` for v1** (Daniel's call; zero-cost,
+- [x] **Domain decision — stay on the Vercel deployment host for v1** (Daniel's call; zero-cost,
   an explicitly valid v1 outcome per the epic README — no paid infra provisioned).
 - [x] **`CONNECTOR_ENABLED=true` set in production (2026-07-20).** Env-var-only changes do NOT take
   effect on already-running functions here (unlike the SITE_URL case — the live MCP route still
@@ -223,7 +223,7 @@ path wasn't.
 - **deterministic gate:** `tsc --noEmit` + `npm run build` + Playwright `api` green before merge
 
 ## Sprint 3 — Smoke walkthrough (do these in order)
-Env: production · `https://golden-beans-gamma.vercel.app` (or the custom domain if 3.3 decides one)
+Env: production · `https://goldenfrijoles.com` (or the custom domain if 3.3 decides one)
 
 1. Visit the landing in a private window, then join the waitlist with a disposable email.
    → Confirmation state.

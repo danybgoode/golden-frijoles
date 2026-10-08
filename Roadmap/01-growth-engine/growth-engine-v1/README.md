@@ -70,7 +70,7 @@ S1 → S2 → S3 → S4, linear — each sprint needs the prior sprint's data (S
 Miyagi's live flag rows; S3 needs S2's funnel to link inputs; S4 needs S1's SDK to add bucketing).
 golden-beans deploys to its own Vercel project + its own Supabase project. **Provisioned 2026-07-14**
 (Daniel's green light): Supabase project `golden-beans` (ref `slweidgffcfndnskcskc`) + Vercel project
-`golden-beans` (production: https://golden-beans-gamma.vercel.app), both live. Story 1.3 deploys to
+`golden-beans` (production: https://goldenfrijoles.com), both live. Story 1.3 deploys to
 Miyagi (medusa-bonsai) on its own branch/PR, additive and gated OFF by default — zero blast radius
 until the flag is flipped; `GROWTH_ENGINE_URL`/`GROWTH_ENGINE_API_KEY` are already set on Miyagi's
 Vercel production env, ready for the moment PR #253 merges.

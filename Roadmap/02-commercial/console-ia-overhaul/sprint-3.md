@@ -394,7 +394,7 @@ production, which are flagged by name in it.
 Env: **production · `https://goldenfrijoles.com`**, signed in as an owner of `miyagisanchez`.
 
 ⚠️ Two things this walkthrough used to get wrong, kept here because they still apply. The host is
-`goldenfrijoles.com` (`golden-beans-gamma.vercel.app` is the old deployment host). And per **A2**
+`goldenfrijoles.com` (`golden-beans-gamma` was the old Vercel deployment host). And per **A2**
 there is **no useful pre-merge preview run** for these steps: `FLAG_SERVING_ENABLED` is
 Production-only, so the flags page's own gate is closed on a preview.
 

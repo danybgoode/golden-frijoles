@@ -137,7 +137,7 @@ all public surface. Steps 1–5 are a browser walkthrough; step 6 is the same th
 
 **The walkthrough is baselined, so a pass is evidence rather than a script that would have passed
 either way.** The same three specs were run against the *previous* production deployment
-(`d0824bc`, `https://golden-beans-q5nfh7ubg-danybgoodes-projects.vercel.app`) and **3 failed / 0
+(`d0824bc`, `<preview URL>`) and **3 failed / 0
 passed**. Against `0751e45` they are **3 passed / 0 failed**. The checks can tell the two builds
 apart.
 

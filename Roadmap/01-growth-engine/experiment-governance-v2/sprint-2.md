@@ -108,7 +108,7 @@ deployment `ad2da1a…` reached production, while the born-OFF gate still return
 
 ## Sprint 2 — Smoke walkthrough (do these in order)
 
-Env: production · https://golden-beans-gamma.vercel.app
+Env: production · https://goldenfrijoles.com
 
 1. Send balanced control/treatment exposures and normal conversion events without experiment tags.
    → The report joins conversions by opaque subject id and shows non-zero primary/guardrail results.

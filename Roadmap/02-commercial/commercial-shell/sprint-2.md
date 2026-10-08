@@ -102,7 +102,7 @@ Playwright's own Chromium instead (desktop + 390px screenshots). Commit `bd7c434
 ## Sprint 2 — Smoke walkthrough (do these in order)
 Env: no per-branch Vercel preview yet (ci.yml's own header comment — ADR unchanged since Sprint 1
 despite prod now being linked); run locally against `npm run build && npm run start` +
-`supabase start` + `npm run seed:demo` pre-merge. Production `https://golden-beans-gamma.vercel.app`
+`supabase start` + `npm run seed:demo` pre-merge. Production `https://goldenfrijoles.com`
 post-merge — **connector stays dark there** until Story 3.3 flips `CONNECTOR_ENABLED` (and
 **`SITE_URL` must be set in prod first** — owed to Daniel, see Story 2.2's build note — or the
 install page's copy-URL field will render a broken `localhost` link in production).

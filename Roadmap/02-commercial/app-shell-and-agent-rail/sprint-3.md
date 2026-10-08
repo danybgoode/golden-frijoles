@@ -95,7 +95,7 @@ parent layout turned a feature gate's required 404 into a 200 during the design-
   indistinguishable from its broken state is the bug class this repo shipped to production once.
 
 ## Sprint 3 — Smoke walkthrough (do these in order)
-Env: the branch preview (pre-merge) · production `https://golden-beans-gamma.vercel.app` once merged
+Env: the branch preview (pre-merge) · production `https://goldenfrijoles.com` once merged
 
 1. Sign in and go to `/app`.
    → A Command Center: stat strip, funnel bars, recent activity. Not a bulleted list of slugs.

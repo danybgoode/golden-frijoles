@@ -32,7 +32,7 @@ Three things happened at once, and they are one epic because they touch the same
 
 **1. The product has a new name and a real domain.** *Golden Beans* becomes **Golden Frijoles**, and
 `goldenfrijoles.com` is registered, assigned to the Vercel project and already serving the current
-build. `SITE_URL` still points at `golden-beans-gamma.vercel.app`, so the page currently hands a
+build. `SITE_URL` still points at the old Vercel deployment host, so the page currently hands a
 reader's agent a `golden-beans` URL while calling itself something else. The copy-a-prompt blocks
 are the sharpest version of that: they are the one thing on this page a stranger pastes into their
 own agent, and they name the host in plain text.

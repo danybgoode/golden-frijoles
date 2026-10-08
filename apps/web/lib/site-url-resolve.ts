@@ -58,7 +58,7 @@ function normalise(url: string): string {
  *
  * It deliberately does NOT fire in production. A production deploy that has lost `SITE_URL` must
  * keep failing loud via `isSiteUrlMisconfiguredInProduction()` — silently serving its own
- * `golden-beans-xyz.vercel.app` URL in place of `goldenfrijoles.com` would be a worse bug than the
+ * `<deployment>.vercel.app` URL in place of `goldenfrijoles.com` would be a worse bug than the
  * one this fixes, because it looks plausible.
  */
 export function resolveSiteUrl(env: SiteUrlEnv): string {

@@ -153,9 +153,9 @@ can deduplicate at-least-once delivery; rate limits prevent replay abuse.
 
 ## Sprint 2 — Smoke walkthrough (do these in order)
 
-Env: production · https://golden-beans-gamma.vercel.app
+Env: production · https://goldenfrijoles.com
 
-1. Sign in and open https://golden-beans-gamma.vercel.app/app/destinations.
+1. Sign in and open https://goldenfrijoles.com/app/destinations.
    → The disposable project shows no destinations and a clear “Add destination” action.
 2. Add the disposable signed receiver, select one event name, and click “Send test”.
    → Receiver gets one event and verifies the signature; the page shows a successful attempt.

@@ -31,7 +31,7 @@ stories:
 # Multi-tenant activation — Sprint 1: The account boundary (auth hardening core)
 
 **Status:** ✅ **MERGED + LIVE IN PRODUCTION** (2026-07-21) — PR #13 squash-merged as `e032867`,
-deployed to `https://golden-beans-gamma.vercel.app`. All 3 stories; deterministic gate green
+deployed to `https://goldenfrijoles.com`. All 3 stories; deterministic gate green
 (tsc + build + Playwright `api`, **107 passed**). Commits: 1.1 `a33a316`, 1.2 `1c7ef9d`,
 1.3 `401c39b`; review fixes `77350bc` (round 1) + `151b025` (round 2).
 
@@ -96,7 +96,7 @@ no links to the dashboards). Fixed in `151b025`.
 **Owed to Daniel — the browser smoke only.** Everything else is done: the account exists, membership
 is seeded as `owner` on all three tenants, and the full rollout is verified in production.
 
-Run the walkthrough below at `https://golden-beans-gamma.vercel.app/login`. An automated `api` run
+Run the walkthrough below at `https://goldenfrijoles.com/login`. An automated `api` run
 can't hold a real auth session, which is the whole reason this stays owed. The two assertions no
 automated check has covered:
 - a **signed-in** non-member on a foreign slug → **404** (unauthed is spec-covered; signed-in isn't);
@@ -151,7 +151,7 @@ rotation; Miyagi's existing ingest key keeps working through the migration, spec
 - **deterministic gate:** `tsc --noEmit` + `npm run build` + Playwright `api` — green before merge.
 
 ## Sprint 1 — Smoke walkthrough (do these in order)
-Env: preview URL pre-merge · production `https://golden-beans-gamma.vercel.app` post-merge.
+Env: preview URL pre-merge · production `https://goldenfrijoles.com` post-merge.
 **Prerequisite:** the PR's *ordering kit* is done — migrations applied to prod Supabase **before**
 the code deploys, `NEXT_PUBLIC_SUPABASE_URL`/`_ANON_KEY` set in Vercel, Supabase Auth redirect URLs
 include `/auth/callback`, and your membership row seeded **as `owner`**.

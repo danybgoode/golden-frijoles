@@ -75,7 +75,7 @@ runners are free today; the announced $0.002/min platform fee is postponed, not 
   Supersedes the working doc's earlier "private monorepo + public mirror" (revised 2026-09-28 after measuring §1).
 - **E2 — Names:** monorepo `golden-frijoles/golden-frijoles`; local folder `~/dobby/golden-frijoles`;
   `~/dobby/dobby-foundation` archived after the first mirrored release installs cleanly. Addresses do **not** move in
-  this pass (Vercel/Supabase projects, `golden-beans-gamma.vercel.app`, tenant slugs, `golden-beans-connector`,
+  this pass (Vercel/Supabase projects, the old Vercel deployment host, tenant slugs, `golden-beans-connector`,
   `GOLDEN_BEANS_*`, `golden_beans.webhook.test` — rebrand close-out A3/A4/A6).
 - **E3 — What becomes public in the kit:** the review rail, the routine prompts and `build-state.mjs`.
 - **E4 — Notifications:** bring-your-own bot now, with a guided setup; a hosted "Connect Telegram" is a later account

@@ -160,28 +160,28 @@ revoke-confirm-dead cycle executed and noted.
 
 ## Sprint 3 — Smoke walkthrough (do these in order)
 
-Environment: production — `https://golden-beans-gamma.vercel.app`. Steps 1–5 are already run and
+Environment: production — `https://goldenfrijoles.com`. Steps 1–5 are already run and
 green (API-level, by the agent). Steps 6–9 are **owed to Daniel**: they need a browser, and step 6
 mints a production credential.
 
-1. `curl -s -o /dev/null -w "%{http_code}\n" https://golden-beans-gamma.vercel.app/s/nonsense`
+1. `curl -s -o /dev/null -w "%{http_code}\n" https://goldenfrijoles.com/s/nonsense`
    → **404.** A malformed token is refused.
 2. Same with a well-formed but invented token (`/s/gbs_<43 random chars>`)
    → **404, identical to step 1.** Deliberate: a 401 would confirm the token was real once, which is
    an oracle handed to whoever holds a leaked link you just revoked. Unknown, malformed, expired and
    revoked all answer the same way.
-3. `curl -s -o /dev/null -w "%{http_code}\n" -X POST https://golden-beans-gamma.vercel.app/api/v1/reports/pod/push -H 'Content-Type: application/json' -d '{}'`
+3. `curl -s -o /dev/null -w "%{http_code}\n" -X POST https://goldenfrijoles.com/api/v1/reports/pod/push -H 'Content-Type: application/json' -d '{}'`
    → **401.** The pod_report rail is live and fails closed.
-4. Open `https://golden-beans-gamma.vercel.app/` and scroll to **§5 Pods & proof**
+4. Open `https://goldenfrijoles.com/` and scroll to **§5 Pods & proof**
    → real numbers, not a teaser: *13 days · 88 commits · 2.2 d median epic lead time · 16.2
    deploys/week (proxy) · step 1 "Assisted" · **11 things we do not measure — and say so***, with the
    gaps named. Computed from golden-beans' own repository, re-pushed by CI on every deploy.
-5. Open `https://golden-beans-gamma.vercel.app/hub/golden-beans-demo/report`
+5. Open `https://goldenfrijoles.com/hub/golden-beans-demo/report`
    → the full team-lens report: speed paired with its gaps, the maturity ladder with evidence
    pointers, benchmark citations, caveats on the page.
 
 6. **Owed — Daniel (mints a production credential).** Sign in, open
-   `https://golden-beans-gamma.vercel.app/app/shares/miyagisanchez`, pick the **investor** lens, label
+   `https://goldenfrijoles.com/app/shares/miyagisanchez`, pick the **investor** lens, label
    it, and mint. Copy the URL — it is shown once.
    *Why this is yours and not the agent's: the token is a bearer credential that exposes a real
    client's internal delivery history to anyone holding the URL. Choosing to create one, and choosing

@@ -64,6 +64,9 @@ jobs:
         run: node scripts/check-script-parity.mjs
       - name: Design-drift guard
         run: node scripts/check-design-drift.mjs
+      # The brand domain only: no Vercel deployment host in docs, workflows or tests (launch-trust-sweep S1.2).
+      - name: Brand host
+        run: node scripts/check-brand-host.mjs
       # The skills CI checks the plugin's own copies; this adds the root Roadmap's copies of the gate wording
       # (gates-in-plain-agile D9).
       - name: Gate words stay off the screen (root Roadmap copies)

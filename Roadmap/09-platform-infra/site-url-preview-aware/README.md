@@ -76,7 +76,7 @@ behaviour cannot change; that is a property of the ordering, not a promise.
 
 `isSiteUrlMisconfiguredInProduction()` **stays exactly as it is.** Production must keep failing loud
 if `SITE_URL` goes missing — a production deploy silently serving its own ugly
-`golden-beans-xyz.vercel.app` deployment URL instead of `goldenfrijoles.com` would be a worse bug
+`<deployment>.vercel.app` URL instead of `goldenfrijoles.com` would be a worse bug
 than the one this epic fixes, and it would be invisible.
 
 ### D2. The fallback fires ONLY on `VERCEL_ENV === 'preview'`

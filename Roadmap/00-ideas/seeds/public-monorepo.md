@@ -74,7 +74,7 @@ Roadmap.
   memory, and it can't recall existing clones.
 - **Moving npm publishing into the monorepo** would need npm-side trusted-publisher changes (Daniel's 2FA). The mirror
   keeps publishing instead.
-- **Renaming addresses** (Vercel project, `golden-beans-gamma.vercel.app`, tenant slugs, `GOLDEN_BEANS_*`, the MCP
+- **Renaming addresses** (Vercel project, the old Vercel deployment host, tenant slugs, `GOLDEN_BEANS_*`, the MCP
   id, the webhook envelope) is out per E2 and belongs to the rebrand close-out A3/A4/A6.
 
 ## No-gos

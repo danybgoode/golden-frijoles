@@ -51,7 +51,7 @@ stories:
 every link and fallback lands on goldenfrijoles.com.
 **Acceptance:**
 - `roadmap-push.yml` and `pod-report-push.yml` fall back to `https://goldenfrijoles.com`.
-- Every `golden-beans-gamma.vercel.app` in docs → `goldenfrijoles.com`; every preview host → `<preview URL>`.
+- Every URL on the old Vercel deployment host (`golden-beans-gamma`) in docs → `goldenfrijoles.com`; every preview host → `<preview URL>`.
 - A CI check fails on a `vercel.app` host outside an allow-list (the tests that check the site-URL rule).
 **Risk:** low
 
@@ -76,11 +76,11 @@ Env: production · https://goldenfrijoles.com (or the preview URL before merge)
    → the repo opens, not a profile.
 3. Open https://goldenfrijoles.com/hub/golden-frijoles and click between Roadmap and Board three times
    → the loader shows a different phrase each time.
-4. Open https://golden-beans-gamma.vercel.app
+4. Open the old Vercel deployment host (`golden-beans-gamma`, on `vercel.app`)
    → redirects to goldenfrijoles.com (after Daniel's domain setting, below).
 
 **Outside the PR (account settings, Daniel):** the GitHub description and homepage of `danybgoode/golden-frijoles` and
 `golden-frijoles/skills` (the agent can run `gh repo edit` on your go), and the Vercel domain redirect
-(`golden-beans-gamma.vercel.app` → `goldenfrijoles.com`, 308) in the project's Domains settings.
+(the old `golden-beans-gamma` host → `goldenfrijoles.com`, 308) in the project's Domains settings.
 
 If any step fails, note the step number + what you saw — that's the bug report.

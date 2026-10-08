@@ -125,9 +125,9 @@ something instead of just contradicting me.
   cross-family passes, **no** fresh reviewer subagent (LOW). Reviewer may auto-merge on green.
 
 ## Sprint 3 — Smoke walkthrough (do these in order)
-Env: preview (pre-merge) · then production · https://golden-beans-gamma.vercel.app
+Env: preview (pre-merge) · then production · https://goldenfrijoles.com
 
-1. Go to https://golden-beans-gamma.vercel.app/app/flags/<testProjectSlug> and open the flag you
+1. Go to https://goldenfrijoles.com/app/flags/<testProjectSlug> and open the flag you
    built in Sprint 1 (`plan equals pro`, 10% rollout, variant `on`).
    → A "Preview as a user" section is visible on the flag's own view.
 2. Enter `plan = pro`, `region = mx`, and a targeting key. Evaluate.

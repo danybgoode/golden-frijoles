@@ -129,9 +129,9 @@ walkthrough below.**
   merges.**
 
 ## Sprint 2 — Smoke walkthrough (do these in order)
-Env: preview (pre-merge) · then production · https://golden-beans-gamma.vercel.app
+Env: preview (pre-merge) · then production · https://goldenfrijoles.com
 
-1. Go to https://golden-beans-gamma.vercel.app/app/flags/<testProjectSlug> with the builder gate on.
+1. Go to https://goldenfrijoles.com/app/flags/<testProjectSlug> with the builder gate on.
    → Each flag shows per-environment state in the list, without opening anything.
 2. Open the flag you created in Sprint 1 (rollout 10%).
    → Three rollout bars — development, preview, production. The one carrying the 10% reads **10%**,

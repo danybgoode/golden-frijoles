@@ -71,7 +71,7 @@ independently shippable slice of value.
   change it did not plan against.
 - ✅ [Growth Engine v1](01-growth-engine/growth-engine-v1/README.md) (telemetry ingest · SDK · TARS
   funnel · North Star metric · A/B bucketing) — live in production at
-  `https://golden-beans-gamma.vercel.app`, dogfooded against Miyagi's real setup-guide funnel.
+  `https://goldenfrijoles.com`, dogfooded against Miyagi's real setup-guide funnel.
 - ✅ [Event destination router](01-growth-engine/event-destination-router/README.md) (versioned
   actor/subject event contract · transactional outbox · tenant-managed **signed webhook
   destinations** · bounded retry/dead-letter + operator replay · delivery operating view) —
@@ -441,7 +441,7 @@ independently shippable slice of value.
   that four agy rounds had read past. **Owed to Daniel:** minting the first real share links.
 - ✅ [Commercial shell](02-commercial/commercial-shell/README.md) (Golden Beans landing · waitlist ·
   read-only MCP connector + install page · dogfood instrumentation · SEO/OG + agent manifest) —
-  **launched** and live in production at `https://golden-beans-gamma.vercel.app`. The landing tracks
+  **launched** and live in production at `https://goldenfrijoles.com`. The landing tracks
   itself as a real tenant (visitor→waitlist funnel via the actual SDK), serves real OG cards +
   `/llms.txt`, and the read-only MCP connector is **enabled** (`CONNECTOR_ENABLED` flipped ON
   2026-07-20) with a live demo token on `/install`. Staying on the `vercel.app` domain for v1.
@@ -955,7 +955,7 @@ independently shippable slice of value.
   serves real OG/Twitter cards and an `llms.txt` agent-readable manifest (Stories 3.1–3.2, PR #11),
   and the read-only **MCP connector is now enabled in production** with a live demo token
   (Story 3.3 — self-tenant seeded, demo token minted, `CONNECTOR_ENABLED` flipped ON; domain stays
-  on `golden-beans-gamma.vercel.app` for v1).
+  on the Vercel deployment host for v1 (since moved to `goldenfrijoles.com`)).
 - **2026-07-16** — `growth-engine-v1` shipped: a standalone telemetry engine (event ingest + SDK),
   a TARS (Targeted/Adopted/Retained) funnel, a North Star metric with real Medusa revenue inputs,
   and client-side A/B bucketing with a basic-lift comparison view — all proven against one real

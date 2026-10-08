@@ -24,7 +24,7 @@ to end, across four sprints:
   variant comparison view (basic lift). Deployed to production
   (`dpl_3XbG9GfK3Q5WGSTTW21CM2jKAhy5`).
 
-Production: `https://golden-beans-gamma.vercel.app`. Supabase project `golden-beans` (ref
+Production: `https://goldenfrijoles.com`. Supabase project `golden-beans` (ref
 `slweidgffcfndnskcskc`).
 
 ## What went well
@@ -72,7 +72,7 @@ Production: `https://golden-beans-gamma.vercel.app`. Supabase project `golden-be
 ## Gaps / follow-ups
 
 - **Owed to Daniel: Sprint 4's real-production smoke** (an authenticated round-trip against
-  `https://golden-beans-gamma.vercel.app` proving bucketing → exposure → comparison end-to-end with
+  `https://goldenfrijoles.com` proving bucketing → exposure → comparison end-to-end with
   real data). No session held a plaintext production API key to run this as the agent — same
   limitation Sprints 2–3 hit for their own agent-verified Part A's. A copy-pasteable smoke kit
   (mint a disposable project via the Supabase SQL editor, run the `curl` sequence, clean up) is in

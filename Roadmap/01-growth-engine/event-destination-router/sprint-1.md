@@ -83,10 +83,10 @@ Mutation-checked (A: 4 red, B: 1 red, D: 1 red; results in the spec header), inc
 
 ## Sprint 1 — Smoke walkthrough (do these in order)
 
-Env: production · https://golden-beans-gamma.vercel.app
+Env: production · https://goldenfrijoles.com
 
 1. With a disposable Golden Beans project key, send the smoke kit's legacy payload to
-   https://golden-beans-gamma.vercel.app/api/v1/track.
+   https://goldenfrijoles.com/api/v1/track.
    → HTTP 201 returns one event id; the existing client contract still works.
 2. Send the smoke kit's merchant-subject payload with one idempotency key to the same URL twice.
    → Both calls resolve to one logical event and one queued delivery identity.

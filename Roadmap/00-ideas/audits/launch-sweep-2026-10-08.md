@@ -92,7 +92,7 @@ Google sign-in this may not matter. Check it once.
 
 | Surface | Today | Fix |
 |---|---|---|
-| GitHub `danybgoode/golden-frijoles`, description and homepage | "Golden Beans — Unified Growth Engine (standalone), spawned from dobby-foundation's project template" · `golden-beans-gamma.vercel.app` | Pitch line · `https://goldenfrijoles.com` · topics |
+| GitHub `danybgoode/golden-frijoles`, description and homepage | "Golden Beans — Unified Growth Engine (standalone), spawned from dobby-foundation's project template" · the old Vercel deployment host (`golden-beans-gamma`) | Pitch line · `https://goldenfrijoles.com` · topics |
 | GitHub `golden-frijoles/skills`, description | "…portable ways-of-work for sibling ~/dobby/ projects" | Pitch line + homepage |
 | Root `README.md` | Titled `golden-beans`, the Vercel URL, "Two epics shipped", dobby-foundation lore, the template-drift guard | A user README: one-line pitch, the 30-second quickstart (the paste-this prompt from `skills/README.md`), a screenshot (the Outcome report or `/app` Today), what you get in three lines, links (install.md, methodology, docs), the licence table, Contributing. Maintainer material moves to `CONTRIBUTING.md` / `AGENTS.md` |
 | `Roadmap/README.md:964-966` | "Private / internal. Not open-source; all rights reserved." | Point to `LICENSE`. **This is the only licence contradiction**: `LICENSE`, `NOTICE`, the package.json files and `Roadmap/README.md:464` already agree (Apache-2.0 for `skills/`, the CLI and the SDK; FSL-1.1-ALv2 for `apps/web/` and the rest; trademark in NOTICE) |
@@ -105,10 +105,10 @@ Google sign-in this may not matter. Check it once.
 - **Live:** `.github/workflows/roadmap-push.yml:84` and `pod-report-push.yml:44` fall back to the Vercel host when
   `vars.SITE_URL` is unset → `https://goldenfrijoles.com`.
 - **Public docs:** root `README.md:13`; `Roadmap/README.md:74, 444, 447, 958`; the GitHub homepage field.
-- **History:** about 50 sprint and retro docs. `https://golden-beans-gamma.vercel.app` → `https://goldenfrijoles.com`
-  is a safe replacement (same deployment). Preview URLs (`…-danybgoodes-projects.vercel.app`) → `<preview URL>`, which
+- **History:** about 50 sprint and retro docs. URLs on the old Vercel deployment host (`golden-beans-gamma`) → `https://goldenfrijoles.com`
+  is a safe replacement (same deployment). Preview URLs (on the team's `vercel.app` subdomain) → `<preview URL>`, which
   also stops publishing the Vercel team name.
-- **Platform:** redirect `golden-beans-gamma.vercel.app` to `goldenfrijoles.com` (308) in the Vercel project's domains,
+- **Platform:** redirect the old Vercel deployment host (`golden-beans-gamma`) to `goldenfrijoles.com` (308) in the Vercel project's domains,
   so old links don't serve a second copy. Dashboard step, Daniel.
 - **Guard:** a CI grep for `vercel.app` outside the test allow-list.
 

@@ -103,9 +103,9 @@ stories:
   merges.**
 
 ## Sprint 3 — Smoke walkthrough (do these in order)
-Env: preview (pre-merge) · then production · https://golden-beans-gamma.vercel.app
+Env: preview (pre-merge) · then production · https://goldenfrijoles.com
 
-1. Go to https://golden-beans-gamma.vercel.app/app/scenarios/<testProjectSlug> and find the impact
+1. Go to https://goldenfrijoles.com/app/scenarios/<testProjectSlug> and find the impact
    evidence for the synthetic run from Sprint 2.
    → It renders as a control-vs-treatment comparison (or as today's table, if #14 hasn't landed and
      the PR says so).

@@ -129,12 +129,12 @@ serves, **so that** I can read the rule as one thing instead of four fields.
   cross-family passes **plus** a fresh reviewer subagent. **Product owner merges.**
 
 ## Sprint 1 — Smoke walkthrough (do these in order)
-Env: preview (pre-merge) · then production · https://golden-beans-gamma.vercel.app
+Env: preview (pre-merge) · then production · https://goldenfrijoles.com
 
 > Use a **test project**. This sprint writes real flag definitions to the control plane.
 
 1. With `FLAG_RULE_BUILDER_ENABLED` unset, go to
-   https://golden-beans-gamma.vercel.app/app/flags/<testProjectSlug>
+   https://goldenfrijoles.com/app/flags/<testProjectSlug>
    → The page looks **exactly as it does today**, including the JSON textarea. No builder anywhere.
 2. Set `FLAG_RULE_BUILDER_ENABLED=true` for preview and reload.
    → A "Build a rule" affordance appears alongside the existing textarea.
