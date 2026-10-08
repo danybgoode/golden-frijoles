@@ -5,9 +5,13 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 // @ts-expect-error — a root .mjs script with no type declarations
-import { renderPluginRelease } from '../../../scripts/render-plugin-release.mjs'
+import { renderPluginRelease, staleCliPins } from '../../../scripts/render-plugin-release.mjs'
 
 test('plugin-release.generated.ts matches skills/SHA256SUMS and the versions it names', () => {
   const current = readFileSync(join(import.meta.dirname, 'plugin-release.generated.ts'), 'utf8')
   assert.equal(current, renderPluginRelease(), 'stale — run: node scripts/render-plugin-release.mjs')
+})
+
+test('every skill quotes the CLI version the CLI ships (coaches-v2 D12, dogfood F15)', () => {
+  assert.deepEqual(staleCliPins(), [], 'stale — run: node scripts/render-plugin-release.mjs')
 })

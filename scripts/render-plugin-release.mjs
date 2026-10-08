@@ -3,7 +3,8 @@
 // (account-from-the-terminal S1.1, canvas First run frame 2).
 //
 //   node scripts/render-plugin-release.mjs          write apps/web/lib/plugin-release.generated.ts
-//   node scripts/render-plugin-release.mjs --check  exit 1 if it is stale
+//   node scripts/render-plugin-release.mjs --check  exit 1 if it is stale, or a SKILL.md quotes another CLI version
+//   (write mode also rewrites every `@golden-frijoles/cli@<v>` in the plugin's SKILL.md files to the CLI's version)
 //
 // install.md names the plugin release and lists a SHA-256 per file. Those come from `skills/SHA256SUMS`
 // (written by `skills/scripts/plugin-checksums.mjs`) and the versions in `plugin.json` and the CLI's
@@ -13,7 +14,7 @@
 //
 // Zero deps — Node 18+.
 
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -36,6 +37,41 @@ export const PLUGIN_SHA256SUMS = ${JSON.stringify(sums)}
 `;
 }
 
+// ── The CLI version a skill quotes (coaches-v2 D12) ────────────────────────────────────────────────────────────────
+// Skills tell the person to run `npx -y @golden-frijoles/cli@<version> …`. A typed version goes stale with every CLI
+// release (dogfood F15: the North Star coach still named 0.3.0 at 0.4.1, and setup named 0.7.0 at 0.8.0). The skills
+// mirror cannot see packages/cli, so the pin is rewritten HERE, from the CLI's package.json, and the unit suite fails
+// while any SKILL.md still names another version.
+const CLI_PIN = /@golden-frijoles\/cli@(\d+\.\d+\.\d+)/g;
+const SKILLS_DIR = 'skills/plugins/golden-frijoles/skills';
+
+/** Every SKILL.md under the plugin, as [relative path, text]. */
+export function skillFiles(root = ROOT) {
+  return readdirSync(join(root, SKILLS_DIR), { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => join(SKILLS_DIR, d.name, 'SKILL.md'))
+    .flatMap((rel) => {
+      try {
+        return [[rel, readFileSync(join(root, rel), 'utf8')]];
+      } catch {
+        return [];
+      }
+    });
+}
+
+/** Pure — `text` with every quoted CLI version replaced by `version`. */
+export const pinCli = (text, version) => text.replace(CLI_PIN, `@golden-frijoles/cli@${version}`);
+
+/** The skills that quote a CLI version other than the CLI's own: [{ file, found }]. Empty = in step. */
+export function staleCliPins(root = ROOT) {
+  const { version } = JSON.parse(readFileSync(join(root, 'packages/cli/package.json'), 'utf8'));
+  return skillFiles(root).flatMap(([file, text]) =>
+    [...text.matchAll(CLI_PIN)]
+      .filter((m) => m[1] !== version)
+      .map((m) => ({ file, found: m[1], want: version }))
+  );
+}
+
 function main(argv) {
   const rendered = renderPluginRelease();
   const target = join(ROOT, TARGET);
@@ -44,11 +80,23 @@ function main(argv) {
     try {
       current = readFileSync(target, 'utf8');
     } catch {}
-    if (current === rendered) return 0;
-    console.error(`render-plugin-release: ${TARGET} is stale. Run: node scripts/render-plugin-release.mjs`);
+    const stale = staleCliPins();
+    for (const p of stale)
+      console.error(`render-plugin-release: ${p.file} quotes cli@${p.found}, the CLI is ${p.want}.`);
+    if (current === rendered && !stale.length) return 0;
+    if (current !== rendered) console.error(`render-plugin-release: ${TARGET} is stale.`);
+    console.error('Run: node scripts/render-plugin-release.mjs');
     return 1;
   }
   writeFileSync(target, rendered);
+  const { version } = JSON.parse(readFileSync(join(ROOT, 'packages/cli/package.json'), 'utf8'));
+  for (const [file, text] of skillFiles()) {
+    const pinned = pinCli(text, version);
+    if (pinned !== text) {
+      writeFileSync(join(ROOT, file), pinned);
+      console.log(`render-plugin-release: ${file} now quotes cli@${version}.`);
+    }
+  }
   console.log(`render-plugin-release: wrote ${TARGET}.`);
   return 0;
 }
