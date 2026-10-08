@@ -3,8 +3,8 @@ epic: build-view-upgrade
 sprint: 1
 title: "Why, how far, and where"
 risk: low
-phase: Shaping
-stories_total: 3
+phase: Building
+stories_total: 4
 stories:
   - id: S1.1
     title: "Why we're building it, while it builds"
@@ -25,6 +25,13 @@ stories:
     as_a: "a founder"
     i_want: "the view's link to open this epic's page in my project"
     so_that: "one click shows the whole epic"
+    risk: low
+    status: planned
+  - id: S1.4
+    title: "The session line in colour, with time to reset"
+    as_a: "a founder watching a build"
+    i_want: "the session figures coloured by how close they are to the limit, with the time to each reset"
+    so_that: "I see at a glance whether to keep going and when the window frees up"
     risk: low
     status: planned
 ---
@@ -65,6 +72,16 @@ repo's `board.hubUrl` to it. The three copies of `build-state.mjs` stay identica
 **Acceptance:**
 - The link opens `/hub/<project>/epic/<slug>` in the project this repo pushes to.
 - `check-script-parity.mjs` and `render-hook-vendor.test.mjs` pass.
+**Risk:** low
+
+### Story 1.4 — The session line in colour, with time to reset
+**As** a founder watching a build, **I want** the session figures coloured by how close they are to the limit, with the
+time to each reset, **so that** I see at a glance whether to keep going and when the window frees up.
+Daniel's addendum at the kickoff (2026-10-08). `Session 48% · 5h 78% (-2h) · 7d 46% (-3d) → keep going`, each figure
+green, yellow or red (README D5/D6).
+**Acceptance:**
+- Each figure's colour follows D5's table; the reset shows minutes, hours or days per D5, none when unknown.
+- The verdict and the Cowork line are unchanged.
 **Risk:** low
 
 ## Sprint QA
