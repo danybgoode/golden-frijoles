@@ -28,11 +28,10 @@ _a pitch is waiting at the approval gate._
 - [Analytics visualization — the charting-dependency decision (spike), then the layer](seeds/analytics-visualization-layer.md) — #14 · 01 Growth Engine · seed · Spike · risk: Low · appetite S · _docs: status ready_
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
 
-## Ready to build (8)
+## Ready to build (7)
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
-- [Launch trust sweep: every public surface says Golden Frijoles, on goldenfrijoles.com](../02-commercial/launch-trust-sweep/README.md) — #71 · 02 Commercial · 3/3 stories · risk: Low · appetite S · _docs: status in-progress_
 - [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #73 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
 - [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #74 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
 - [Scenarios made PM-operable — define, launch, and kill a scenario from the UI](../01-growth-engine/scenarios-pm-operable/README.md) — #75 · 01 Growth Engine · 10/10 stories · risk: High · appetite M · _docs: status in-progress_
@@ -49,11 +48,12 @@ _a work branch is on origin. Not in this committed file: `node scripts/build-ord
 
 _a PR is ready for review, or merged and waiting for its close-out. Not in this committed file: `node scripts/build-order.mjs --live` or the Hub board._
 
-## Shipped (67)
+## Shipped (68)
 
 _merged, deployed and closed._
 
 - [Coaches v2: a cold read first, then coaches that read each other, save as they go and leave one-pagers ✅](../09-platform-infra/coaches-v2/README.md) — #72 · 09 Platform Infra · 9/9 stories · risk: Low · appetite M · _docs: status shipped_
+- [Launch trust sweep: every public surface says Golden Frijoles, on goldenfrijoles.com](../02-commercial/launch-trust-sweep/README.md) — #71 · 02 Commercial · 3/3 stories · risk: Low · appetite S · _docs: status shipped_
 - [Build view upgrade ✅](../02-commercial/build-view-upgrade/README.md) — #70 · 02 Commercial · 4/4 stories · risk: Low · appetite S · _docs: status shipped_
 - [First run: setup starts ✅](../02-commercial/first-run-setup/README.md) — #69 · 02 Commercial · 3/3 stories · risk: Low · appetite M · _docs: status shipped_
 - [Gates in plain agile ✅](../02-commercial/gates-in-plain-agile/README.md) — #68 · 02 Commercial · 5/5 stories · risk: Low · appetite M · _docs: status shipped_

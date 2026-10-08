@@ -3,7 +3,7 @@ epic: launch-trust-sweep
 sprint: 1
 title: "Launch trust sweep: every public surface says Golden Frijoles, on goldenfrijoles.com"
 risk: low
-phase: In review
+phase: Shipped
 stories_total: 3
 stories:
   - id: S1.1
@@ -30,7 +30,7 @@ stories:
 ---
 # Launch trust sweep — Sprint 1: every public surface says Golden Frijoles
 
-**Status:** 🟡 in review — all 3 stories built; PR open
+**Status:** ✅ shipped 2026-10-08 (#322, merge `f9898c1`)
 
 ## Stories
 
@@ -82,5 +82,9 @@ Env: production · https://goldenfrijoles.com (or the preview URL before merge)
 **Outside the PR (account settings, Daniel):** the GitHub description and homepage of `danybgoode/golden-frijoles` and
 `golden-frijoles/skills` (the agent can run `gh repo edit` on your go), and the Vercel domain redirect
 (the old `golden-beans-gamma` host → `goldenfrijoles.com`, 308) in the project's Domains settings.
+
+**Run 2026-10-08 on production (agent):** 1 ✅ the README opens on the pitch, no "golden-beans" or `vercel.app` ·
+2 ✅ the footer links the repo · 3 ✅ ten navigations showed ten phrases, no two in a row the same (Beanstalking,
+North-Star-gazing, Funneling, Degassing, Burring, …) · 4 owed: Daniel's redirect setting.
 
 If any step fails, note the step number + what you saw — that's the bug report.

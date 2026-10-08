@@ -381,6 +381,12 @@ independently shippable slice of value.
   repo. When the strategy is approved, **three one-pagers** render from the files: a business model canvas, a value
   proposition sheet and a persona poster, every line labelled. **Owed:** Daniel's interactive walkthroughs, the
   claude.ai duplicates, the Strategyzer VPC ask.
+- ✅ [Launch trust sweep](02-commercial/launch-trust-sweep/README.md) (launch-sweep audit, score 11) — **shipped
+  2026-10-08** (#322). The repo opens on a user README (pitch, quickstart, a screenshot of this board), maintainer
+  notes live in `CONTRIBUTING.md`, and this poster's licence section states the real per-folder licences. No Vercel
+  deployment host is left anywhere; `scripts/check-brand-host.mjs` keeps it out in CI. The landing's GitHub link opens
+  the repo, and the navigation loader no longer always says "Percolating…". **Owed:** Daniel's two account settings
+  (repo descriptions, the old host's redirect) and the `_Intent_` word.
 - ✅ [First run: setup starts](02-commercial/first-run-setup/README.md) (gap 4 of the First run review) — **shipped
   and published 2026-10-07** (#307; plugin + kit 0.37.0). Before its first question, setup says who is signed in, for
   which product, and what it found in the repo. Then: **What are we working on? 1 This repo · 2 A new idea · 3 Just
@@ -550,6 +556,9 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-08**: `launch-trust-sweep` **shipped**: one sprint, one PR, ≈$8.01, not quoted. Every public surface says
+  Golden Frijoles on goldenfrijoles.com, and a CI guard keeps the Vercel host out. Review caught that rewriting the
+  host in old smoke records turned July evidence into claims about a domain that only existed from August.
 - **2026-10-08**: `coaches-v2` **shipped**: three sprints, three PRs, ≈$24.61 against a $22–34 quote. The lock
   found the epic's base gone: bet A's names never shipped and `agreed` had moved to the Strategy gate, so it built on
   today's names and rendered the one-pagers at the gate. Review found the seal could be swapped beside its read, and
