@@ -136,7 +136,7 @@ export default async function HubRoadmapPage({ params }: { params: Promise<{ pro
 
       <p className="ds-hint" data-freshness-tone={freshness.tone}>
         Now is Building and QA. Next is {stageLabel('Ready to build')}. Later is {stageLabel('To groom')} and
-        Grooming. Each row runs in build order.{' '}
+        {stageLabel('Grooming')}. Each row runs in build order.{' '}
         {freshness.tone === 'stale' ? <strong>Possibly stale — </strong> : null}
         Pushed{' '}
         {freshness.iso ? (

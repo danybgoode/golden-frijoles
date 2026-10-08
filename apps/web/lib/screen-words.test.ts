@@ -10,7 +10,7 @@ import { RETIRED_SCREEN_WORDS } from '../design-system/vocabulary.ts'
 test('the board columns read the decision-2 words, in the keys’ order', () => {
   assert.deepEqual(ROADMAP_STAGES.map(stageLabel), [
     'Backlog',
-    'Grooming',
+    'Refining',
     'Ready',
     'Building',
     'QA',
@@ -72,4 +72,10 @@ test('the nav labels are the settled words', async () => {
   assert.equal(label('flag-audit'), SCREEN_WORDS.flagHistory)
   assert.equal(label('destinations'), SCREEN_WORDS.webhooks)
   assert.equal(label('hub/report'), SCREEN_WORDS.outcomeReport)
+})
+
+test('the console and the scripts call every stage the same thing (plugin-1-0 D6)', async () => {
+  const { stageWord } = await import('../../../scripts/lib/stage.mjs')
+  for (const stage of ROADMAP_STAGES) assert.equal(stageLabel(stage), stageWord(stage), stage)
+  assert.equal(stageLabel('Grooming'), 'Refining')
 })

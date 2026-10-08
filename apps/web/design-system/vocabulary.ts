@@ -321,6 +321,7 @@ export const RETIRED_SCREEN_WORDS: readonly {
   { word: 'Tasks', insteadSay: 'Agent queue', match: 'label' },
   { word: 'Activity', insteadSay: 'Flag history', match: 'label' },
   { word: 'To groom', insteadSay: 'Backlog', match: 'stage' },
+  { word: 'Grooming', insteadSay: 'Refining', match: 'stage' },
   { word: 'Ready to build', insteadSay: 'Ready', match: 'stage' },
 ]
 
