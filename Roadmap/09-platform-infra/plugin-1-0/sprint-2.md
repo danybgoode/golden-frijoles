@@ -34,12 +34,12 @@ stories:
 
 ## Stories
 
-### Story 2.1 — The skill is refine ✅ `6399d5e`
+### Story 2.1 — The skill is refine ✅ `bb9af11`
 **As** a founder installing Golden Frijoles, **I want** to call the planning skill `refine`, **so that** its name says what it does to my idea.
 **Acceptance:** `skills/plugins/golden-frijoles/skills/groom/` → `refine/`; every generator locator (`GROOM=` blocks → `REFINE=`), reference, hook (`build-view`), vendored copy and script path follows; `pack-skills`, `check-plugin-leaks`, `check-onboarding-parity`, `render-hook-vendor` pass.
 **Risk:** high
 
-### Story 2.2 — The screens say Refining and Backlog ✅ `e56aadc`
+### Story 2.2 — The screens say Refining and Backlog ✅ `d91abeb`
 **As** a founder reading the board, **I want** to see Backlog → Refining → Ready, **so that** the stages read as plain agile.
 **Acceptance:** Labels only, through `stageLabel()`: "To groom" → "Backlog", "Grooming" → "Refining" on the board, epic page, Hub roadmap, build view and generated BUILD-ORDER headings; keys in `stage.mjs` / `hub-areas.ts` unchanged. Console visual baselines re-approved.
 **Risk:** low

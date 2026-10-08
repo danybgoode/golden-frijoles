@@ -188,7 +188,7 @@ test('frijoles setup --yes saves the defaults, never the account answer, and say
   const written = JSON.parse(readFileSync(join(root, CONFIG), 'utf8'))
   assert.deepEqual(written.project, { mode: 'existing' }, 'store:env answers never reach the file; Q2 is not asked')
   assert.ok(body.next.some((step: string) => /`setup` skill: it reads this repo/.test(step)))
-  assert.ok(!body.next.some((step: string) => /live-smoke/.test(step)))
+  assert.ok(!body.next.some((step: string) => /`smoke`/.test(step)))
 })
 
 test('frijoles setup asks Q1 then the account question (never "where are you starting"), and Q1 decides the next steps', async () => {
@@ -246,7 +246,7 @@ test('nextSteps routes by Q1: this repo → the read, a new idea → the skill w
   assert.match(last('existing'), /`setup` skill: it reads this repo into your roadmap/)
   assert.match(last('new'), /`setup` skill and tell it your idea/)
   assert.match(last('planning-only'), /`refine` skill/)
-  assert.ok(!nextSteps({ 'project.mode': 'existing', 'project.startPoint': 'building' }, null).some((s) => /live-smoke/.test(s)))
+  assert.ok(!nextSteps({ 'project.mode': 'existing', 'project.startPoint': 'building' }, null).some((s) => /`smoke`/.test(s)))
 })
 
 test('nextSteps pins the kit version it prints', () => {

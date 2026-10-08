@@ -41,17 +41,17 @@ stories:
 
 ## Stories
 
-### Story 3.1 — strategy holds the four chapters ✅ `4ffb8b3`
+### Story 3.1 — strategy holds the four chapters ✅ `7dcdf50`
 **As** a founder installing Golden Frijoles, **I want** one strategy skill, **so that** I find the cold read, the PMF narrative, the North Star and risk validation in one place.
 **Acceptance:** `strategy/` with one SKILL.md that routes by chapter; the four bodies move to `references/`; `strategy.mjs`, the one-pagers and the Strategy gate find them; the cold-read seal unchanged.
 **Risk:** low
 
-### Story 3.2 — report posts daily, weekly or monthly ✅ `e016e81`
+### Story 3.2 — report posts daily, weekly or monthly ✅ `0f9d299`
 **As** a founder who wants a recap, **I want** one report skill with a cadence, **so that** I don't pick between three.
 **Acceptance:** `report/` routes `--cadence daily|weekly|monthly` to `standup.mjs`, `weekly-recap.mjs`, `pmo-report.mjs` (unchanged).
 **Risk:** low
 
-### Story 3.3 — setup is the front door; the ops skills leave ✅ `29f387e`
+### Story 3.3 — setup is the front door; the ops skills leave ✅ `f326890`
 **As** a founder installing Golden Frijoles, **I want** the front door called setup and no internal ops skills, **so that** the list I install reads like my job.
 **Acceptance:** `golden-frijoles/` → `setup/` (`/golden-frijoles:setup`; install prompt, README, install.md follow); `build-order-sync`, `doc-hygiene`, `vercel-prune`, `babysit-pr`, `prose-draft` move to this repo's `.claude/skills/`; the template's routine prompts call the kit scripts by name; `live-smoke` → `smoke`. Adverts regenerated: 5 skills.
 **Risk:** high

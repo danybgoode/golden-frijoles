@@ -47,8 +47,8 @@ Pleasantries are fine and cost nothing — the leverage is the defined verb, not
 | **Build epic \<epic\>** | §2 — build a WHOLE epic in one orchestrated run (**the default**). Start it: `/build <slug>` (without the plugin's mod: `npx -y @golden-frijoles/kit emit-epic-kickoff --epic <slug>` from the project root) |
 | **Build S\<N\> of \<epic\>** | §2 — build a single sprint (the exception: one-sprint epic, or the next sprint's scope genuinely isn't knowable yet) |
 | **Spike \<name\>** | §3 — run a spike |
-| **Review PR #\<N\>** | §4 — route it: `node scripts/review-route.mjs --builder <who> <N>` → one external general pass + the fresh `pr-reviewer` subagent (+ a security lens when the paths trigger it) |
-| **Cross-review PR #\<N\>** | §4 — synonym. Always route it; hand-picking `--agent` is how a family reviews its own diff. The fresh `pr-reviewer` subagent runs on **every** non-trivial PR here |
+| **Review PR #\<N\>** | §4 — route it: `node scripts/review-route.mjs --builder <who> <N>` → one external general pass + the fresh `verifier` subagent (+ a security lens when the paths trigger it) |
+| **Cross-review PR #\<N\>** | §4 — synonym. Always route it; hand-picking `--agent` is how a family reviews its own diff. The fresh `verifier` subagent runs on **every** non-trivial PR here |
 | **Skip \<family\>** | a reviewer family is capped — re-route past it: `node scripts/review-route.mjs --builder <who> <N> --exclude <family>` (there is no refund pause) |
 | **Panel: \<scope-doc \| ask\>** | advisory second opinion on a *plan* — `node scripts/cross-panel.mjs <doc> --lens both --agent codex\|antigravity` (single-pass, print-only, never gates; on demand only) |
 | **Wrap S\<N\>** | tick the sprint doc status + emit the §7 sprint-wrap terminal summary |
@@ -119,7 +119,7 @@ node scripts/review-route.mjs --builder <who-wrote-it> <N>
 
 It prints the exact commands: the **general pass** by the highest-preference family that did not build the
 diff, the **security lens** by the next family when a changed path matches `scripts/review-config.json` →
-`securityPaths` (or the body declares `risk: high`), and the **fresh `pr-reviewer` subagent**, which runs
+`securityPaths` (or the body declares `risk: high`), and the **fresh `verifier` subagent**, which runs
 on every non-trivial PR here.
 
 A capped family is routed past with `--exclude <family>` (order `codex → agy → vibe → claude`); there is no refund pause.
