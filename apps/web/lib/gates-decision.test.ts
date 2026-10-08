@@ -4,6 +4,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
   GATES,
+  GATE_CATALOG_PROJECT_SLUG,
   envOverride,
   flagEnvironmentFor,
   resolveGate,
@@ -41,6 +42,10 @@ test('the gate table: 18 gates, their keys, the variables they replaced, and eac
     ['reports.shares_enabled', 'REPORT_SHARES_ENABLED', true],
     ['signals.loop_enabled', 'SIGNALS_ENABLED', true],
   ])
+})
+
+test('the gate catalog is a fixed, reserved project — no env var can move every gate elsewhere (#319)', () => {
+  assert.equal(GATE_CATALOG_PROJECT_SLUG, 'golden-frijoles')
 })
 
 test('the catalog answers only with a served boolean; a kill (false) always lands', () => {

@@ -2,13 +2,12 @@ import 'server-only'
 import { getSupabaseServiceClient } from './supabase'
 import { getFlagRegistryView } from './flag-registry'
 import { toCliFlagView } from './cli-flag-view'
-import { DEMO_PROJECT_SLUG } from './public-demo'
-import type { ServedCatalog, ServedEnvironment } from './gates-decision'
+import { GATE_CATALOG_PROJECT_SLUG, type ServedCatalog, type ServedEnvironment } from './gates-decision'
 
 // one-product-project · Sprint 2, Story 2.1 — what Golden Frijoles' own catalog serves, for lib/gates.ts.
 //
-// The project is the one Golden Frijoles is built in (`golden-frijoles`, D1), resolved from configuration, never
-// from a request. The read is service-role and needs no sign-in, so nothing it gates can stand in its way. Every
+// The project is the one Golden Frijoles is built in (`GATE_CATALOG_PROJECT_SLUG`, D1): a constant, never
+// configuration and never a request. The read is service-role and needs no sign-in, so nothing it gates can stand in its way. Every
 // failure — no database (previews: SUPABASE_* is Production-only), no project, a query error — returns `null`, and
 // each gate then serves its fallback (lib/gates-decision.ts, D5). It never throws: a page that cannot read a gate
 // still renders, as production.
@@ -17,7 +16,7 @@ export async function readServedCatalog(): Promise<ServedCatalog> {
     const { data: project, error } = await getSupabaseServiceClient()
       .from('projects')
       .select('id')
-      .eq('slug', DEMO_PROJECT_SLUG)
+      .eq('slug', GATE_CATALOG_PROJECT_SLUG)
       .maybeSingle()
     if (error || !project) {
       console.error(

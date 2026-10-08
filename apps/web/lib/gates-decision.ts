@@ -18,6 +18,13 @@
 // exactly the old `=== 'true'` contract. ON Vercel the env is never read: a leftover Vercel var cannot become a
 // second source of truth (and S3.2 deletes them all).
 
+/**
+ * The project whose catalog holds the product's gates: Golden Frijoles' own (D1). A constant, NOT
+ * `DEMO_PROJECT_SLUG`/`SELF_PROJECT_SLUG`: one env var must not be able to hand every gate to another project's
+ * catalog (cross-family review of #319, Codex). The slug is reserved (lib/tenant-slug.ts), so no tenant can take it.
+ */
+export const GATE_CATALOG_PROJECT_SLUG = 'golden-frijoles'
+
 export type FlagEnvironmentName = 'development' | 'preview' | 'production'
 
 export type Gate = {
