@@ -30,7 +30,7 @@ stories:
 ---
 # Coaches v2 — Sprint 3: Per-coach fixes and the one-pagers
 
-**Status:** ⬜ not started
+**Status:** 🟦 In review (0.43.0)
 
 ## Stories
 
