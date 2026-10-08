@@ -2235,3 +2235,22 @@ one-liner + why + date shape.
   that no hint text survives, not only that no `<` does.
 - **A breakpoint applies on paper too.** `@media (max-width:820px)` matched A4 landscape in Chromium print, so every
   one-pager printed on two pages. Scope phone layouts to `screen`, and check a printable artefact as a PDF.
+
+### Gates in env vars, and a public project that is ours (one-product-project, 2026-10-08)
+- **An env var is a flag with none of a flag's properties.** 18 product gates lived in Vercel: invisible in the flag
+  console, no history, a redeploy to change, and six values masked so nobody could read them back. They are catalog
+  flags now (AGENTS rule #6). **Read a masked value from the behaviour it gates** (a 404 vs a 401 on the route it
+  guards, a cron that dispatched nothing), never from a guess. Four were OFF in production while CI's "mirrors
+  production" file said three of them were ON.
+- **A gate that guards its own off switch cannot live in the catalog it guards.** `FLAG_SERVING_ENABLED` gated
+  activation and `CLI_WRITE_API_ENABLED` gated the CLI. Killed through the catalog, either one would have locked the
+  operator out of the restore. Those retire to always-on; the rest move.
+- **"Nothing served" is not "off" for a gate.** The console's off switch DEACTIVATES. A seam that reads a deactivated
+  flag as "use the fallback" leaves a born-ON gate on after an operator switched it off. Deactivated reads as off;
+  only never-activated or unreadable rows fall back.
+- **Async gates fail OPEN when someone forgets `await`.** `if (!isX())` tests a Promise, which is always truthy. TS
+  catches it in an `if`, but not in `&&`, a prop or an object field, so a source guard checks every call is awaited.
+- **When the public demo becomes the real project, every "demo" assumption becomes a hazard.** The demo seed's reset
+  would have deleted every real event. The public connector handed a person's id to anyone, in four tools, and the
+  first fix covered one: redaction belongs at the one place every reply passes, by field name.
+

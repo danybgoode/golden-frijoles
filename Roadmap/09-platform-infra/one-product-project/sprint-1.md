@@ -3,7 +3,7 @@ epic: one-product-project
 sprint: 1
 title: "One project"
 risk: high
-phase: Building
+phase: Shipped
 stories_total: 3
 stories:
   - id: S1.1
@@ -12,25 +12,25 @@ stories:
     i_want: "the demo/self project to be one slug, golden-frijoles"
     so_that: "every surface, CI push and link names the one project"
     risk: high
-    status: planned
+    status: done
   - id: S1.2
     title: "Prod data moves into golden-frijoles"
     as_a: "the product owner"
     i_want: "golden-beans' real funnels, North Star and self-tracking key in golden-frijoles"
     so_that: "there is one place to manage it all"
     risk: high
-    status: planned
+    status: done
   - id: S1.3
     title: "The terminal sign-in flag lives in golden-frijoles"
     as_a: "the product owner"
     i_want: "auth.terminal_sign_in_enabled in the one project"
     so_that: "the epic page and gf flags see it"
     risk: high
-    status: planned
+    status: done
 ---
 # One product project, and every flag in it — Sprint 1: One project
 
-**Status:** ⬜ not started
+**Status:** ✅ shipped 2026-10-08 (#318 `f5e4c2c`, #319 `26a1fd3`, #320)
 
 ## Stories
 

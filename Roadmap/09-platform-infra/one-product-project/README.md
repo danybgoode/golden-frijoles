@@ -1,6 +1,6 @@
 ---
-status: in-progress   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Building                   # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+status: shipped   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+phase: Shipped                   # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
 locked_at: "2026-10-08T12:21:43Z"
 slug: one-product-project
@@ -154,10 +154,12 @@ Architect and builder in place (one session, Opus 5.5). Reviews go through `scri
 `golden-beans` (`2a709135…`) → into `golden-frijoles` (= `golden-beans-demo`, `c7af5b7a…`):
 - **Moves (UPDATE project_id, no key collisions):** features `waitlist_conversion`, `activation`, `methodology_reading`.
   North Star `proven_bets` + its 4 leading inputs. Ingest key `d2bf557b…` (Vercel's `SELF_PROJECT_API_KEY`).
-- **Retires in `golden-frijoles`:** the synthetic demo North Star `payable_sellers` (+1 input, 14 values), so the
-  project has one North Star. It is backed up first (`~/dobby/golden-frijoles-backup-payable-sellers-2026-10-08.json`
-  and `…-feature-inputs-…`). `scripts/seed-demo-project.mjs` refuses any non-local database now (fresh review of
-  #318: its reset deletes every event and feature in the project), so prod is never re-seeded.
+- **Stays in `golden-frijoles` (amended at the cutover, 2026-10-08):** the synthetic demo North Star `payable_sellers`.
+  The plan was to retire it, but `input_values` is append-only (`input_values_no_mutation` blocks the DELETE and the
+  cascade into it), so the transaction refused and rolled back whole. The project has two North Stars until
+  `north-star-multi-metric-read` (queued) settles how several are read. Backups are at
+  `~/dobby/golden-frijoles-backup-*-2026-10-08.json`. `scripts/seed-demo-project.mjs` refuses any non-local database
+  (fresh review of #318).
 - **Recreated, not moved:** `auth.terminal_sign_in_enabled`. `flag_definition_versions` is immutable, so its history
   stays on `golden-beans`.
 - **Stays, archived:** 502 events, audit rows, journey proof rows, flag history. Connector token `6225230f…` is revoked.
@@ -182,6 +184,41 @@ Architect and builder in place (one session, Opus 5.5). Reviews go through `scri
    belt-and-braces, not load-bearing.
 3. S2 merges → each gate is verified on prod → S3.2 deletes the env vars. The deletion takes effect on the next deploy
    and changes nothing, because nothing on Vercel reads them any more.
+
+## Cutover runbook (the prod steps, in order)
+
+Done during the build (2026-10-08, approved by name at the Plan gate, D4):
+- ✅ S1.3: `auth.terminal_sign_in_enabled` recreated in the project (same id as `golden-beans-demo`), serving true
+  everywhere.
+- ✅ S3.1: the 17 gate flags created and activated in all three environments at the production values in the gate
+  table. `gf flags ls` lists 18, every production row `on`.
+- ✅ Backups of the synthetic North Star rows: `~/dobby/golden-frijoles-backup-*-2026-10-08.json`.
+
+Owed. HIGH-risk PRs are merged by Daniel (WAYS-OF-WORKING → *Review & merge*; the merge was refused to the agent):
+1. ✅ **Merge #318 (S1)** — `f5e4c2c`. S1.2 ran at 14:08 UTC: slug renamed, 3 features + `proven_bets` + 4 inputs +
+   the self-tracking key moved, `golden-beans` has no live key or token. A landing visit lands in `golden-frijoles`.
+   (Original step:) When its production deployment is Ready, run S1.2's one transaction: `supabase db query --linked -f
+   Roadmap/09-platform-infra/one-product-project/s1-2-move.sql` (every statement is id-pinned and guarded, so a re-run
+   changes nothing). Then check that `/hub/golden-frijoles`
+   renders, `/hub/golden-beans-demo` redirects to it, and `/app/north-star/golden-frijoles` reads Proven bets. The
+   public demo routes 404 for the minute between deploy and rename.
+2. ✅ **Merge #319 (S2)** — `26a1fd3`, deployed; every probe answered as before (snapshot 401; scenarios, security,
+   breakers 404; signup, install, login, hub 200; connector 401; no `[gates]` errors in the logs). (Original step:) (base retargets to `main` once #318 is in). Its deploy reads every gate from the catalog.
+   Every gate's fallback is its production value, so nothing visible changes. Verify with the S3.1 probes:
+   `GET /api/v1/flags/snapshot` → 401, `GET /api/v1/scenarios/snapshot` → 404, `POST /api/v1/breakers/automatic` →
+   404, `/signup` renders, `/install` renders.
+3. ✅ **Kill test done 2026-10-08 on `auth.signup_enabled`** (visible signed out, `SIGNUP_ENABLED=true` still in Vercel):
+   `/signup` went 404 32 s after `gf flags kill`, and back to 200 31 s after `gf flags set --value true` (v2 → v3).
+   (Original step, on the rail, signed in:) **Kill test (S3.2), while `AGENT_RAIL_ENABLED=true` is still set in Vercel** (fresh review of #319, S5: no test
+   resolves a gate from a real catalog row, and this one step proves the whole chain plus `VERCEL=1` at runtime):
+   `gf flags kill console.agent_rail_enabled --env production --project golden-frijoles`, reload `/app` (signed in):
+   within a minute the rail is gone, although the env var says on. `gf flags set console.agent_rail_enabled on …`: it returns.
+4. ✅ **Env vars deleted** — 18 production, 6 preview, 4 development; `vercel env ls <env> | grep _ENABLED` is empty
+   in all three. (Original step:) **Delete the env vars (S3.2)**, only after step 2 is verified. Production: the 18 `*_ENABLED` names in the gate table,
+   `FLAG_SERVING_ENABLED` included. Preview: `AGENT_RAIL_ENABLED`, `EXPERIMENT_BUILDER_ENABLED`, `FLAG_CONSOLE_ENABLED`,
+   `FLAG_RULE_BUILDER_ENABLED`, `SCENARIO_AUTHORING_ENABLED`. Then `vercel env ls production | grep _ENABLED` should
+   print only Vercel's own `TURBO_DOWNLOAD_LOCAL_ENABLED`.
+5. ✅ **Merge #320 (S3 docs).**
 
 ## Definition of Done (epic)
 - [ ] All sprints merged to `main` + smoke-tested (gaps stated — `node scripts/owed-ledger.mjs` counts what is still owed)

@@ -64,11 +64,11 @@ fixed or answered.
 1. **The growth engine (Supabase-backed ingest/registry/TARS/North Star/experiments) owns telemetry.**
    Never a parallel event pipeline, a direct `events`/`features` table insert from app code, or a bespoke
    analytics route — go through `/api/v1/track`, `/api/v1/features/sync`, or the real `@golden-frijoles/sdk`.
-2. **`/api/v1/public/*` may only ever serve the demo project** (`DEMO_PROJECT_SLUG`, checked via
-   `assertPublicAllowedSlug()`). A real customer project slug must 403, not 404 — never a public route
+2. **`/api/v1/public/*` may only ever serve the one public project** (`DEMO_PROJECT_SLUG` = `golden-frijoles`,
+   Golden Frijoles' own, checked via `assertPublicAllowedSlug()`). A real customer project slug must 403, not 404 — never a public route
    that trusts a caller-supplied project slug without this check.
-3. **The MCP connector is enablement-gated by two independent switches** — `CONNECTOR_ENABLED` (born OFF)
-   and per-project revocable `connector_tokens`. Never a code path that skips either check "temporarily."
+3. **The MCP connector is enablement-gated by two independent switches** — the `connector.mcp_enabled` gate
+   (a catalog flag) and per-project revocable `connector_tokens`. Never a code path that skips either check "temporarily."
 4. **Merging to `main` is the deploy** — never a manual `vercel deploy`/`--prod` in scripts or docs.
 5. **Site/base URLs never fall back to a request Host header** — only `getSiteUrl()`'s explicit
    `SITE_URL` env var or its hardcoded localhost default.

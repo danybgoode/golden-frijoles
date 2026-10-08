@@ -3,7 +3,7 @@ epic: one-product-project
 sprint: 2
 title: "One gate reader"
 risk: high
-phase: Shaping
+phase: Shipped
 stories_total: 3
 stories:
   - id: S2.1
@@ -12,25 +12,25 @@ stories:
     i_want: "one seam that serves every gate from golden-frijoles' flags"
     so_that: "a gate is switched in the product, not in Vercel"
     risk: high
-    status: planned
+    status: done
   - id: S2.2
     title: "Every gate call goes through the seam"
     as_a: "a builder"
     i_want: "every isXEnabled() to await the seam"
     so_that: "no gate reads process.env on Vercel"
     risk: high
-    status: planned
+    status: done
   - id: S2.3
     title: "Guard: no env-var gates outside the seam"
     as_a: "a builder"
     i_want: "CI to fail on a new process.env.*_ENABLED read"
     so_that: "the next epic cannot reach for an env var"
     risk: low
-    status: planned
+    status: done
 ---
 # One product project, and every flag in it — Sprint 2: One gate reader
 
-**Status:** ⬜ not started
+**Status:** ✅ shipped 2026-10-08 (#318 `f5e4c2c`, #319 `26a1fd3`, #320)
 
 ## Stories
 

@@ -122,9 +122,14 @@ project (e.g. `miyagisanchez`) must 403, not 404, on these routes. Any new publi
 this same allow-list check — never a route that trusts a caller-supplied project slug.
 **Unchanged by the workspace-level invariant (2026-10-01):** the allow-list names one PROJECT, and the workspace
 that project sits in widens nothing — see [§ The tenancy invariant](#the-tenancy-invariant-workspace-level).
+**The one public project is Golden Frijoles' own (one-product-project D1, 2026-10-08):** `golden-frijoles` (formerly
+the synthetic `golden-beans-demo`), built in the open. Its funnels, North Star, roadmap and flags are public; its
+administration is members-only, and an anonymous reader of its connector never sees a person's id
+(`lib/public-connector-scrub.ts`). `npm run seed:demo` refuses any non-local database: its reset deletes the
+project's events and features.
 
 ### 3. The MCP connector is enablement-gated. Never bypass either gate as a shortcut.
-`CONNECTOR_ENABLED` (`apps/web/lib/flags.ts`, born unset/OFF) and per-project revocable tokens
+The `connector.mcp_enabled` gate (`apps/web/lib/flags.ts → isConnectorEnabled`, a catalog flag — rule #6) and per-project revocable tokens
 (`connector_tokens`, `apps/web/lib/connector-tokens.ts`) are two independent kill switches — the route
 must 404 while the flag is off regardless of token validity, and a revoked token must fail regardless of
 the flag. Never hardcode the flag to `true`, and never add a connector code path that skips the token
@@ -241,6 +246,19 @@ fallback can silently build a broken URL from a garbage header, dangerous on any
 path). Any new code that builds an absolute URL from the running request reuses this helper instead of
 deriving its own fallback.
 
+
+### 6. A gate is a Golden Frijoles flag, never an env var.
+**one-product-project D3 (Daniel, 2026-10-08):** every product gate is a flag in the `golden-frijoles` catalog, read
+through ONE seam — `lib/gates.ts` (the table is `lib/gates-decision.ts → GATES`: key · the env var it replaced ·
+fallback). `gf flags kill <key> --env production` is the switch: no Vercel variable and no redeploy, landing within
+the seam's 30 s cache. A new gate is a `GATES` row plus `gf flags create <key> --kill-switch|--enablement --all-envs`
+(activation is its own step — `gf flags get <key>` must not print `—` in production). Never add a
+`process.env.*_ENABLED` read (`lib/gates-guard.test.ts` fails CI), and always `await` a gate: a bare call is a
+Promise, which is always truthy. Off Vercel (CI, local) a set env var still overrides, so `ci/gates.*.env` drive the
+test servers; on Vercel the env is never read. `FLAG_SERVING_ENABLED` and `CLI_WRITE_API_ENABLED` were retired, not
+moved (D2): they gated the control plane that would turn them back on, so they are always on and roll back with
+`git revert`.
+
 ---
 
 ## Context routing — read only what you need
@@ -278,22 +296,11 @@ supabase link --project-ref <ref> && supabase migration list   # apply: Supabase
 **Key env vars** (all on `apps/web`, set in Vercel):
 - **Supabase** — `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (service-role, server-only; `lib/supabase.ts` throws if missing).
 - **URLs** — `SITE_URL` (absolute-URL base; `lib/site-url.ts` — never a Host-header fallback, rule #5).
-- **Tenancy** — `DEMO_PROJECT_SLUG` + `DEMO_PROJECT_API_KEY` (the demo tenant), `DEMO_CONNECTOR_TOKEN`; `SELF_PROJECT_SLUG` + `SELF_PROJECT_API_KEY` (the landing's self-dogfood tenant).
-- **Gates** — `CONNECTOR_ENABLED` (`lib/flags.ts`, MCP connector kill-switch, ON in prod),
-  `JOURNEY_PROJECTIONS_ENABLED` (`lib/flags.ts`, journey registry/read/UI kill-switch, **born OFF**), and
-  `EXPERIMENT_GOVERNANCE_ENABLED` (`lib/flags.ts`, experiment registry/lifecycle/UI enablement gate,
-  **born OFF**; legacy local bucketing, exposure ingest and v1 comparison do not read it), and
-  `FLAG_DEFINITION_SYNC_ENABLED` (`lib/flags.ts`, project catalog-registration write gate,
-  **born OFF**; definition inspection, activation and snapshot serving do not read it), and
-  `SCENARIO_AUTHORING_ENABLED` (`lib/flags.ts`, owner-session define/launch/stop/revoke UI gate,
-  **born OFF**; scenario evidence remains readable and the underlying resilience/security/breaker
-  gates still apply independently), and
-  `SIGNUP_ENABLED` (`lib/flags.ts`, self-serve signup enablement gate, **born OFF**; gates the
-  `/signup` page, `POST /api/v1/public/signup`, tenant provisioning in `/auth/callback`, and the
-  landing's §1/§7 CTA flip — all four read it fresh per request, but every env change still needs a
-  new Git-tracked deployment because Vercel snapshots env values at build time). The same redeploy
-  requirement applies to every gate above.
-  `DESTINATION_DELIVERY_ENABLED` (`lib/flags.ts`, scheduled destination-delivery gate, **born OFF**).
+- **Tenancy** — `DEMO_PROJECT_SLUG` (default `golden-frijoles`: the one public project, Golden Frijoles' own) and `SELF_PROJECT_SLUG` (defaults to it — self-tracking lands in the same project); `SELF_PROJECT_API_KEY` (that project's ingest key); `DEMO_PROJECT_API_KEY`, `DEMO_CONNECTOR_TOKEN` (local seeding only).
+- **Gates are NOT env vars** (rule #6) — they are flags in the `golden-frijoles` catalog, listed in
+  `lib/gates-decision.ts → GATES` and by `gf flags ls --project golden-frijoles`. The `*_ENABLED` names survive only
+  as off-Vercel test overrides (`ci/gates.*.env`). Every other var above still needs a commit to `main` to reach
+  running functions (rule #4).
 - **Tenancy limits are DATA, not env** — `projects.monthly_event_quota` / `projects.ingest_rate_per_min`
   (`lib/quota.ts`); raising a customer's ceiling is an `UPDATE`, never a deploy.
 
@@ -302,6 +309,7 @@ supabase link --project-ref <ref> && supabase migration list   # apply: Supabase
 - `lib/auth.ts` — hashed-key → `project_id` resolution. Every authed route starts here.
 - `lib/membership.ts` — session/PAT user → project access, re-checked against the user's workspaces. Every console, CLI and MCP user check passes here.
 - `lib/workspace.ts` → `getWorkspaceProjects()` — the ONLY multi-project read on a request path (§ The tenancy invariant).
+- `lib/gates.ts` / `lib/flags.ts` — the ONE gate seam: every product gate from the catalog (rule #6).
 - `lib/rate-limit.ts` — DB-backed, serverless-safe bounded writes for any public write route.
 - `lib/site-url.ts` → `getSiteUrl()` — the ONLY absolute-URL builder (rule #5).
 - `lib/public-demo.ts` → `assertPublicAllowedSlug()` — the demo-only gate for any public read (rule #2).
