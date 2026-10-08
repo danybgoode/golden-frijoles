@@ -86,6 +86,12 @@ No engine change beyond console labels through the existing `stageLabel()`; keys
 - **D8 — Every PR is HIGH** (shared infra, a breaking release): Daniel merges; the verifier (today `pr-reviewer`) plus
   the routed external passes on each.
 
+- **D9 — CLI 1.0.0 pins kit 0.43.0, the newest PUBLISHED kit** (corrected at build, 2026-10-08). The CLI pins an exact
+  kit and loads its config core from it, but kit 1.0.0 only publishes when the merge lands (OIDC, `release.yml`), and
+  D7 publishes the CLI before the merge. Nothing the CLI compares changed in this epic (it reads `askWhen` only for
+  `'setup'` and `'never-yet'`; the `npx @golden-frijoles/kit@<v> init` it prints works on any version), and its 158
+  tests pass against kit 0.43.0 installed clean. The pin moves to kit 1.0.x with the next CLI release.
+
 ## Scope — stories
 | Sprint | Story | Risk |
 |---|---|---|
