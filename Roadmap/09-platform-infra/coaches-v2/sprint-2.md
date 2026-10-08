@@ -3,7 +3,7 @@ epic: coaches-v2
 sprint: 2
 title: "Shared coach behaviours: progress, options, save, check"
 risk: low
-phase: Shaping
+phase: Shipped
 stories_total: 4
 stories:
   - id: S2.1
@@ -12,51 +12,51 @@ stories:
     i_want: "every coach to open by playing back the agreed files before it, show 'Step N of X' on every message, and save a draft after each step with early answers parked under their headings"
     so_that: "I always know where I am and never lose work"
     risk: low
-    status: planned
+    status: shipped
   - id: S2.2
     title: "Options, research and current use cases"
     as_a: "a maker who would rather choose than write from scratch"
     i_want: "2–4 options to pick from or edit at each step, looked up online when the step leans on the present, with current use cases and the classic ones as fallback"
     so_that: "the session is faster and more fun, and grounded in today's market"
     risk: low
-    status: planned
+    status: shipped
   - id: S2.3
     title: "Delegation, the product check and private strategy"
     as_a: "a maker with a real product on a public repo"
     i_want: "an options brief when I hand a step over (marked proposed), claims labelled true today or aspirational against my repo, and the strategy folder git-ignored unless I opt in"
     so_that: "the coach does the homework honestly and my strategy stays mine"
     risk: low
-    status: planned
+    status: shipped
   - id: S2.4
     title: "Ladder up: an example becomes a need, with evidence"
     as_a: "a founder answering the narrative coach"
     i_want: "the coach to turn each example I give into the need behind it, check it against outside evidence, and ask me to confirm before it becomes a dimension or a persona line"
     so_that: "my strategy and one-pagers carry real goals and frustrations, not anecdotes"
     risk: low
-    status: planned
+    status: shipped
 ---
 # Coaches v2 — Sprint 2: Shared coach behaviours: progress, options, save, check
 
-**Status:** 🟦 In review (#315, 0.42.0)
+**Status:** ✅ shipped 2026-10-08 — #315, merge `5dfc455` (plugin + kit 0.42.0, published)
 
 ## Stories
 
-### Story 2.1 — One shared coach reference
+### Story 2.1 — One shared coach reference ✅ `58e1033`, `dc05c40`
 **As a** a maker in any coach, **I want** every coach to open by playing back the agreed files before it, show "Step N of X" on every message, and save a draft after each step with early answers parked under their headings, **so that** I always know where I am and never lose work.
 **Acceptance:** All three coaches read the shared reference; a session cut at step 3 leaves a draft with steps 1–3; X is fixed per coach.
 **Risk:** low
 
-### Story 2.2 — Options, research and current use cases
+### Story 2.2 — Options, research and current use cases ✅ `b9cd157`
 **As a** a maker who would rather choose than write from scratch, **I want** 2–4 options to pick from or edit at each step, looked up online when the step leans on the present, with current use cases and the classic ones as fallback, **so that** the session is faster and more fun, and grounded in today's market.
 **Acceptance:** Each step offers options; present-day facts are cited or the coach says it couldn't look; no invented figures.
 **Risk:** low
 
-### Story 2.3 — Delegation, the product check and private strategy
+### Story 2.3 — Delegation, the product check and private strategy ✅ `a206db4`, `3a3ac62`
 **As a** a maker with a real product on a public repo, **I want** an options brief when I hand a step over (marked proposed), claims labelled true today or aspirational against my repo, and the strategy folder git-ignored unless I opt in, **so that** the coach does the homework honestly and my strategy stays mine.
 **Acceptance:** A delegated section is `proposed` until I agree; an aspirational benefit is labelled in the file; a public repo gets the folder ignored by default.
 **Risk:** low
 
-### Story 2.4 — Ladder up: an example becomes a need, with evidence
+### Story 2.4 — Ladder up: an example becomes a need, with evidence ✅ `b9392de` (the deterministic half, unlabelled persona line = hypothesis, is specced in S3.2)
 **As a** founder answering the narrative coach, **I want** the coach to turn each example I give into the need behind it, check it against outside evidence, and ask me to confirm before it becomes a dimension or a persona line, **so that** my strategy and one-pagers carry real goals and frustrations, not anecdotes.
 **Acceptance:** A fixture conversation where the founder answers with three anecdotes produces three needs, each with a source or a "hypothesis" label, and none of the anecdotes verbatim in `narrative.md` or the persona poster; the persona poster labels every line sourced, agreed or hypothesis. (Dogfood F34: on 2026-10-04 the coach wrote the founder's career anecdotes down as the persona's frustrations and drivers.)
 **Risk:** low
@@ -77,3 +77,9 @@ Env: a local repo with the plugin installed from this branch's release
    → no strategy file is listed; `.gitignore` shows as modified, with `Roadmap/00-strategy/` and a line saying how to opt in.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+**Run 2026-10-08:** step 3 against the published kit (`@golden-frijoles/kit@0.42.0`) in a scratch repo with no
+remote: `strategy-private ensure` → "kept out of git because this repo's visibility couldn't be read", and `git status`
+listed only `.gitignore` with a strategy file present ✅; after changing the line to `!Roadmap/00-strategy/`, a second
+run said "you chose to commit them" and left it ✅. **Owed to the PO:** steps 1–2, an interactive
+`/golden-frijoles:pmf-narrative` run (Step 1 of 8, options, a draft saved after step 3).
