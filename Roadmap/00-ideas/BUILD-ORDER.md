@@ -32,7 +32,7 @@ _a pitch is waiting at the approval gate._
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
-- [Plugin 1.0: five plain skills, the frijoles CLI, and Refining](../09-platform-infra/plugin-1-0/README.md) — #73 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
+- [Plugin 1.0: five plain skills, the frijoles CLI, and Refining](../09-platform-infra/plugin-1-0/README.md) — #73 · 09 Platform Infra · 3/12 stories · risk: High · appetite L · _docs: status scaffolded_
 - [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #74 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
 - [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #75 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
 - [Scenarios made PM-operable — define, launch, and kill a scenario from the UI](../01-growth-engine/scenarios-pm-operable/README.md) — #76 · 01 Growth Engine · 10/10 stories · risk: High · appetite M · _docs: status in-progress_
