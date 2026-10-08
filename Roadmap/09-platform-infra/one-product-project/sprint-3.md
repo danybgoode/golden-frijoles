@@ -3,7 +3,7 @@ epic: one-product-project
 sprint: 3
 title: "Move the flags and delete the env vars"
 risk: high
-phase: Shaping
+phase: Verifying
 stories_total: 3
 stories:
   - id: S3.1
@@ -12,7 +12,7 @@ stories:
     i_want: "every env gate as a golden-frijoles flag, activated per env"
     so_that: "gf flags kill is the switch"
     risk: high
-    status: planned
+    status: done
   - id: S3.2
     title: "Verify on prod, then delete the Vercel env vars"
     as_a: "the product owner"
@@ -26,11 +26,11 @@ stories:
     i_want: "AGENTS, LEARNINGS and the flags comments to say gf flags, not Vercel"
     so_that: "nobody adds an env-var flag again"
     risk: low
-    status: planned
+    status: done
 ---
 # One product project, and every flag in it — Sprint 3: Move the flags and delete the env vars
 
-**Status:** ⬜ not started
+**Status:** 🟡 built and reviewed; merge + prod step owed to Daniel (README → Cutover runbook)
 
 ## Stories
 

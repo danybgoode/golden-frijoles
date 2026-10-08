@@ -3,7 +3,7 @@ epic: one-product-project
 sprint: 1
 title: "One project"
 risk: high
-phase: Building
+phase: Verifying
 stories_total: 3
 stories:
   - id: S1.1
@@ -12,7 +12,7 @@ stories:
     i_want: "the demo/self project to be one slug, golden-frijoles"
     so_that: "every surface, CI push and link names the one project"
     risk: high
-    status: planned
+    status: done
   - id: S1.2
     title: "Prod data moves into golden-frijoles"
     as_a: "the product owner"
@@ -26,11 +26,11 @@ stories:
     i_want: "auth.terminal_sign_in_enabled in the one project"
     so_that: "the epic page and gf flags see it"
     risk: high
-    status: planned
+    status: done
 ---
 # One product project, and every flag in it — Sprint 1: One project
 
-**Status:** ⬜ not started
+**Status:** 🟡 built and reviewed; merge + prod step owed to Daniel (README → Cutover runbook)
 
 ## Stories
 

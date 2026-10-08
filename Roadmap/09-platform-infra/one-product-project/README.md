@@ -181,6 +181,33 @@ Architect and builder in place (one session, Opus 5.5). Reviews go through `scri
 3. S2 merges → each gate is verified on prod → S3.2 deletes the env vars. The deletion takes effect on the next deploy
    and changes nothing, because nothing on Vercel reads them any more.
 
+## Cutover runbook (the prod steps, in order)
+
+Done during the build (2026-10-08, approved by name at the Plan gate, D4):
+- ✅ S1.3: `auth.terminal_sign_in_enabled` recreated in the project (same id as `golden-beans-demo`), serving true
+  everywhere.
+- ✅ S3.1: the 17 gate flags created and activated in all three environments at the production values in the gate
+  table. `gf flags ls` lists 18, every production row `on`.
+- ✅ Backups of the synthetic North Star rows: `~/dobby/golden-frijoles-backup-*-2026-10-08.json`.
+
+Owed. HIGH-risk PRs are merged by Daniel (WAYS-OF-WORKING → *Review & merge*; the merge was refused to the agent):
+1. **Merge #318 (S1).** When its production deployment is Ready, run S1.2's one transaction: `supabase db query --linked -f
+   Roadmap/09-platform-infra/one-product-project/s1-2-move.sql` (every statement is id-pinned and guarded, so a re-run
+   changes nothing). Then check that `/hub/golden-frijoles`
+   renders, `/hub/golden-beans-demo` redirects to it, and `/app/north-star/golden-frijoles` reads Proven bets. The
+   public demo routes 404 for the minute between deploy and rename.
+2. **Merge #319 (S2)** (base retargets to `main` once #318 is in). Its deploy reads every gate from the catalog.
+   Every gate's fallback is its production value, so nothing visible changes. Verify with the S3.1 probes:
+   `GET /api/v1/flags/snapshot` → 401, `GET /api/v1/scenarios/snapshot` → 404, `POST /api/v1/breakers/automatic` →
+   404, `/signup` renders, `/install` renders.
+3. **Kill test (S3.2):** `gf flags kill console.agent_rail_enabled --env production --project golden-frijoles`, reload
+   `/app` (signed in): within a minute the rail is gone. `gf flags set console.agent_rail_enabled on …`: it returns.
+4. **Delete the env vars (S3.2)**, only after step 2 is verified. Production: the 18 `*_ENABLED` names in the gate table,
+   `FLAG_SERVING_ENABLED` included. Preview: `AGENT_RAIL_ENABLED`, `EXPERIMENT_BUILDER_ENABLED`, `FLAG_CONSOLE_ENABLED`,
+   `FLAG_RULE_BUILDER_ENABLED`, `SCENARIO_AUTHORING_ENABLED`. Then `vercel env ls production | grep _ENABLED` should
+   print only Vercel's own `TURBO_DOWNLOAD_LOCAL_ENABLED`.
+5. **Merge #320 (S3 docs).**
+
 ## Definition of Done (epic)
 - [ ] All sprints merged to `main` + smoke-tested (gaps stated — `node scripts/owed-ledger.mjs` counts what is still owed)
 - [ ] Each `sprint-N.md` has its smoke walkthrough (real URLs)
