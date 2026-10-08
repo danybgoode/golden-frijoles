@@ -3,7 +3,7 @@ epic: north-star-multi-metric-read
 sprint: 1
 title: "S1 One rule for the current North Star, every reader uses it"
 risk: low
-phase: Shaping
+phase: In review
 stories_total: 1
 stories:
   - id: S1.1
@@ -12,11 +12,11 @@ stories:
     i_want: "my North Star page and Pod Report to show the newest metric and its inputs"
     so_that: "a state gf north-star set creates on purpose never renders as an outage"
     risk: low
-    status: planned
+    status: done
 ---
 # Several North Star metrics, one reading rule — Sprint 1: S1 One rule for the current North Star, every reader uses it
 
-**Status:** ⬜ not started
+**Status:** 🟡 built 2026-10-08 — the bug went live on golden-frijoles after one-product-project's cutover
 
 ## Build contract (the architect locks this before the builder starts)
 Cite, don't restate: the epic README's **D1–D5**. D5's live count is part of the lock: record the number in the README.
@@ -37,7 +37,8 @@ the newest metric and its inputs, **so that** a state `gf north-star set` create
 **Risk:** low
 
 ## Sprint QA
-- **api spec(s):** a new `e2e/north-star-multi-metric.spec.ts` (two-metric fixture, both readers); the existing North Star
+- **api spec(s):** `e2e/north-star-multi-metric.authed.spec.ts` (two metrics inserted against their creation order; the
+  North Star page AND the Pod Report's North Star card, which runs its own input count); the existing North Star
   and Pod Report specs stay green.
 - **browser smoke owed:** yes, to Daniel: the signed-in page view (step 2 below).
 - **deterministic gate:** `npm run typecheck` + `npm run build` + Playwright `api` green before merge.
