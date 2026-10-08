@@ -85,12 +85,12 @@ Scope the live system corrected, said out loud:
   sprint by sprint in build order, `▰` for a story with a commit (the same measure as live-build-view D9: "done" here
   means "has a commit", nothing new is inferred), `▱` otherwise, `│` between sprints. A sprint wider than 8 cells is
   scaled to 8. The mod draws the resolver's own glyphs (▰ green, ▱ and │ dim) and no longer computes a bar.
-- **D3 Status track (S1.2).** `Status   Grooming ─ Ready ─ ◉ Building ─ QA ─ Shipped · live from git`, the stage words
-  from `lib/stage.mjs` (`Ready to build` → `Ready`; `To groom` is prepended as `Backlog` only when it is the stage). The
-  Locking-architecture refinement marks Building as `◉ Locking`. The tail is `<live | snapshot 3h ago | docs only> from
-  <git | github | docs …>` (the source's kind before its colon); a written phase that differs follows as
-  `· phase X`. No stage → the old written-phase line, unchanged. The mod's Status tone reads the marked word (after
-  `◉`), and draws that word bold in its tone and the rest dim. Never wrapped: the band row truncates.
+- **D3 Status track (S1.2).** `Status   Grooming ─ Ready ─ ◉ Building ─ QA ─ Shipped`, the stage words from
+  `lib/stage.mjs` (`Ready to build` → `Ready`; `To groom` is prepended as `Backlog` only when it is the stage). The
+  Locking-architecture refinement marks Building as `◉ Locking`. The source keeps today's words on a continuation line
+  under it, `from git: feat/x (live) · phase Shaping` (amended at the build: beside the track it pushed the line past
+  80 columns and the band would cut the PR number off). No stage → the old written-phase line, unchanged. The mod's
+  Status tone reads the marked word (after `◉`) and draws that word bold in its tone, the rest dim.
 - **D4 The link (S1.3).** `↗ <board.hubUrl>/epic/<slug>` when an epic or seed is in flight and the board has a row for
   it; `↗ <board.hubUrl>/board` otherwise. https only, none without a hub URL — as today.
 - **D5 Session line colours + resets (S1.4).** In `session-budget.mjs` (one table, beside THRESHOLDS): a figure is
