@@ -138,7 +138,7 @@ exit code.
 ## Settings: `gf setup` and `gf config`
 
 ```bash
-gf setup                                   # three questions, each with a default; --yes takes them all
+gf setup                                   # two questions, each with a default; --yes takes them all
 gf config list                             # every setting, and which file it came from
 gf config get review.reviewScope
 gf config set review.reviewScope every-pr

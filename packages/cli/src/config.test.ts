@@ -183,26 +183,21 @@ test('gf setup --yes saves the defaults, never the account answer, and says what
   const body = JSON.parse(setup.out)
   assert.deepEqual(body.answers, {
     'project.mode': 'existing',
-    'project.startPoint': 'idea',
     'project.account': 'later',
   })
   const written = JSON.parse(readFileSync(join(root, CONFIG), 'utf8'))
-  assert.deepEqual(
-    written.project,
-    { mode: 'existing', startPoint: 'idea' },
-    'store:env answers never reach the file'
-  )
-  assert.ok(body.next.some((step: string) => /groom/.test(step)))
+  assert.deepEqual(written.project, { mode: 'existing' }, 'store:env answers never reach the file; Q2 is not asked')
+  assert.ok(body.next.some((step: string) => /`golden-frijoles` skill: it reads this repo/.test(step)))
+  assert.ok(!body.next.some((step: string) => /live-smoke/.test(step)))
 })
 
-test('gf setup asks the three setup questions in order, and the answers decide the next steps', async () => {
+test('gf setup asks Q1 then the account question (never "where are you starting"), and Q1 decides the next steps', async () => {
   const { root, env } = project()
   const asked: string[] = []
   const was = { ...setupIo }
   setupIo.isInteractive = () => true
   const picks: Record<string, unknown> = {
     'project.mode': 'planning-only',
-    'project.startPoint': 'building',
     'project.account': 'now',
   }
   setupIo.chooser = () => async (entry) => {
@@ -212,11 +207,11 @@ test('gf setup asks the three setup questions in order, and the answers decide t
   try {
     const setup = await gf(['setup', '--json'], env)
     assert.equal(setup.code, EXIT.OK)
-    assert.deepEqual(asked, ['project.mode', 'project.startPoint', 'project.account'])
+    assert.deepEqual(asked, ['project.mode', 'project.account'])
     const body = JSON.parse(setup.out)
     assert.ok(body.next.some((step: string) => /gf login/.test(step)))
     assert.ok(!body.next.some((step: string) => /kit.* init/.test(step)), 'planning-only never adds Roadmap/')
-    assert.ok(body.next.some((step: string) => /live-smoke/.test(step)))
+    assert.ok(body.next.some((step: string) => /`groom` skill/.test(step)), 'just planning goes to groom')
     assert.equal(JSON.parse(readFileSync(join(root, CONFIG), 'utf8')).project.mode, 'planning-only')
   } finally {
     Object.assign(setupIo, was)
@@ -244,6 +239,14 @@ test('stepChoice: arrows wrap, Enter chooses, Esc takes the default, Ctrl-C abor
   assert.equal(stepChoice(1, 3, { name: 'escape' }).done, 'default')
   assert.equal(stepChoice(1, 3, { name: 'c', ctrl: true }).done, 'abort')
   assert.equal(stepChoice(1, 3, { name: 'x' }).done, undefined)
+})
+
+test('nextSteps routes by Q1: this repo → the read, a new idea → the skill with a sentence, just planning → groom', () => {
+  const last = (mode: string) => nextSteps({ 'project.mode': mode }, '0.38.0').at(-1)!
+  assert.match(last('existing'), /`golden-frijoles` skill: it reads this repo into your roadmap/)
+  assert.match(last('new'), /`golden-frijoles` skill and tell it your idea/)
+  assert.match(last('planning-only'), /`groom` skill/)
+  assert.ok(!nextSteps({ 'project.mode': 'existing', 'project.startPoint': 'building' }, null).some((s) => /live-smoke/.test(s)))
 })
 
 test('nextSteps pins the kit version it prints', () => {
