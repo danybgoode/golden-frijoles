@@ -62,8 +62,8 @@ test('the next step and its criteria, from the rows the scorer wrote', () => {
 
 test('the prompt names the product and the next step', () => {
   assert.equal(
-    agentPrompt('golden-beans-demo', { label: 'Parallel' }),
-    'Read the golden-beans-demo outcome report and the Steps of AI Adoption, then suggest what we change to reach Parallel'
+    agentPrompt('golden-frijoles', { label: 'Parallel' }),
+    'Read the golden-frijoles outcome report and the Steps of AI Adoption, then suggest what we change to reach Parallel'
   )
 })
 

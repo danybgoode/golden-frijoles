@@ -5,7 +5,7 @@ import { test, expect } from '@playwright/test'
 // in Roadmap/01-growth-engine/growth-engine-v1/sprint-2.md and sprint-3.md) — the least-convenient
 // input, per the growth-engine-v1 retrospective's "test with a real Miyagi projectId" lesson —
 // not a nonsense string that would 404 for an unrelated reason.
-const DEMO_SLUG = 'golden-beans-demo'
+const DEMO_SLUG = 'golden-frijoles'
 const REAL_PRODUCTION_SLUG = 'miyagisanchez'
 
 test.describe('GET /v1/public/funnel', () => {

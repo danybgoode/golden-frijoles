@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test'
 // console-ia-overhaul · Sprint 1. The PUBLIC half of the shell, asserted anonymously.
 //
 // ── Why this belongs in the anonymous project ─────────────────────────────────────────────────
-// `/app/funnel/golden-beans-demo/<key>` and its impact twin render `ProductShell` with NO session —
+// `/app/funnel/golden-frijoles/<key>` and its impact twin render `ProductShell` with NO session —
 // they are the public showcase, allow-listed by `lib/public-demo.ts` (AGENTS rule #2). Every other
 // spec for this shell needs credentials, so this is the one surface where the shell's behaviour is
 // observable without any.
@@ -33,7 +33,7 @@ import { test, expect } from '@playwright/test'
 // them. The annotation is deleted rather than left to fire on a variable nothing sets: a note
 // saying "this run proved nothing" printed on a run that proves everything is worse than no note.
 
-const DEMO = '/app/funnel/golden-beans-demo/setup_guide'
+const DEMO = '/app/funnel/golden-frijoles/setup_guide'
 
 test('the public demo dashboard renders public chrome, never the signed-in console', async ({ page }) => {
   const response = await page.goto(DEMO)
@@ -135,7 +135,7 @@ test('the manifest the public chrome links to actually serves', async ({ page })
 // above — and, because they have no rail, the shell's fallback row carries the Hub's four pages so they can still move
 // between them. `HubFrame`'s "Back to the console" is gone for everybody.
 test('the public demo Hub renders public chrome plus its own pages, never the console', async ({ page }) => {
-  const response = await page.goto('/hub/golden-beans-demo')
+  const response = await page.goto('/hub/golden-frijoles')
   expect(response?.status(), 'the demo Hub must stay anonymously readable').toBe(200)
 
   await expect(page.locator('.ds-shell-identity')).toHaveCount(0)
@@ -146,6 +146,6 @@ test('the public demo Hub renders public chrome plus its own pages, never the co
   const hubNav = page.locator('nav[aria-label="Hub sections"] a')
   await expect(hubNav).toHaveText(['Roadmap', 'Board', 'Horizon', 'Outcome report'])
   await expect(page.locator('nav[aria-label="Hub sections"] a[aria-current="page"]')).toHaveText('Roadmap')
-  await expect(hubNav.nth(1)).toHaveAttribute('href', '/hub/golden-beans-demo/board')
+  await expect(hubNav.nth(1)).toHaveAttribute('href', '/hub/golden-frijoles/board')
   await expect(page.getByText('Back to the console')).toHaveCount(0)
 })

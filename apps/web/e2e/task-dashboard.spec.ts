@@ -18,7 +18,7 @@ test.describe('task dashboard access boundary', () => {
     // The whole point of the dashboard existing is that a human can audit what an agent did. That
     // audit trail must not be world-readable: these tasks carry scrubbed samples of a tenant's own
     // runtime errors.
-    const res = await request.get('/app/tasks/golden-beans-demo', { maxRedirects: 0 })
+    const res = await request.get('/app/tasks/golden-frijoles', { maxRedirects: 0 })
 
     // Either redirected to login (session-gated) or 404 (dark / no such project). What it must
     // NEVER be is a 200 carrying queue content.
@@ -33,7 +33,7 @@ test.describe('task dashboard access boundary', () => {
     // No existence oracle. If "not yours" and "not there" gave different answers, an unauthenticated
     // caller could enumerate which tenants exist by watching status codes — the same property every
     // other tenant-scoped surface in this codebase holds.
-    const real = await request.get('/app/tasks/golden-beans-demo', { maxRedirects: 0 })
+    const real = await request.get('/app/tasks/golden-frijoles', { maxRedirects: 0 })
     const invented = await request.get('/app/tasks/definitely-not-a-real-project-xyz', {
       maxRedirects: 0,
     })
@@ -47,7 +47,7 @@ test.describe('task dashboard access boundary', () => {
     // would pass for the wrong reason in a dark environment and fail in a live one.
     test.skip(isSignalsEnabled(), 'seam is enabled in this environment — dark-state is not reachable')
 
-    const res = await request.get('/app/tasks/golden-beans-demo', { maxRedirects: 0 })
+    const res = await request.get('/app/tasks/golden-frijoles', { maxRedirects: 0 })
     expect(res.status()).toBe(404)
   })
 })

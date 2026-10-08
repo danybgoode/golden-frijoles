@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // seed-demo-project.mjs — Story 1.2 (Roadmap/02-commercial/commercial-shell/sprint-1.md). Seeds
-// (idempotently, re-runnable) the synthetic `golden-beans-demo` project the public landing's
+// (idempotently, re-runnable) the synthetic `golden-frijoles` project the public landing's
 // live-proof section reads. Everything below the project-row upsert goes through the REAL
 // Bearer-authed API, the same surface any customer uses — never a raw DB insert for content.
 //
@@ -22,7 +22,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 import { seededProjectWorkspace } from './lib/seed-workspace.mjs';
 
-export const DEMO_PROJECT_SLUG = process.env.DEMO_PROJECT_SLUG?.trim() || 'golden-beans-demo';
+export const DEMO_PROJECT_SLUG = process.env.DEMO_PROJECT_SLUG?.trim() || 'golden-frijoles';
 const FEATURE_KEY = 'setup_guide';
 const TARGET_EVENT = 'setup_guide_viewed';
 const ADOPTED_EVENT = 'setup_guide_step_completed';

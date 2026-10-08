@@ -17,7 +17,7 @@ import { createHash, randomBytes } from 'node:crypto'
 //   an ingest key in the header     → absent
 //   a revoked CLI token             → absent
 
-const DEMO_SLUG = 'golden-beans-demo'
+const DEMO_SLUG = 'golden-frijoles'
 const WRITE_TOOLS = ['create_flag', 'kill_flag', 'rollout_flag', 'set_flag']
 
 function db() {

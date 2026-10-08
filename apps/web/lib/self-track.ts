@@ -1,6 +1,7 @@
 import 'server-only'
 import { createGrowthEngineClient } from '@golden-frijoles/sdk'
 import { getSiteUrl } from './site-url'
+import { DEMO_PROJECT_SLUG } from './public-demo'
 
 // Story 3.1 (commercial-shell/sprint-3.md) — the landing dogfoods the engine: Golden Frijoles is its
 // OWN tenant (a THIRD project, separate from the marketing demo and from Miyagi), and its
@@ -34,11 +35,12 @@ export {
   type SelfTrackEvent,
 } from './self-track-events'
 
-// The self tenant's slug — a SEPARATE project from DEMO_PROJECT_SLUG (public-demo.ts). Named after
-// SITE_URL's / DEMO_PROJECT_SLUG's env-override pattern. Nothing here reads or writes the demo
-// project; the tenant is chosen entirely by SELF_PROJECT_API_KEY, resolved server-side from the
-// Authorization header (lib/auth.ts) — so events physically cannot land against another project.
-export const SELF_PROJECT_SLUG = process.env.SELF_PROJECT_SLUG?.trim() || 'golden-beans'
+// The self tenant's slug. one-product-project D1 (2026-10-08): Golden Frijoles is ONE project, the public
+// `golden-frijoles` (DEMO_PROJECT_SLUG), so self-tracking lands there by default. It used to be a separate
+// `golden-beans` project, kept apart from the demo; the demo IS us now, built in the open. The tenant is
+// still chosen entirely by SELF_PROJECT_API_KEY, resolved server-side from the Authorization header
+// (lib/auth.ts), so events physically cannot land against any project but that key's.
+export const SELF_PROJECT_SLUG = process.env.SELF_PROJECT_SLUG?.trim() || DEMO_PROJECT_SLUG
 
 // The per-visitor identity cookie. A visit (Server Components can't set cookies, so the visited
 // beacon is a Route Handler — see app/api/v1/public/self-visit/route.ts) mints/returns this id;

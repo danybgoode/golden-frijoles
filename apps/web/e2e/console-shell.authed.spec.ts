@@ -187,7 +187,7 @@ test.describe('the console shell', () => {
   test('a signed-in NON-member on the demo Hub gets Today alone plus the Hub’s own pages', async ({
     page,
   }) => {
-    const response = await page.goto('/hub/golden-beans-demo')
+    const response = await page.goto('/hub/golden-frijoles')
     expect(response?.status()).toBe(200)
     await expect(page.locator('.ds-shell-tabs:not([data-fallback-nav]) a')).toHaveText(['Today'])
     await expect(page.locator('.console-rail')).toHaveCount(0)

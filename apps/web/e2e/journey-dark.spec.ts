@@ -28,7 +28,7 @@ test('journey MCP registration requires connector ON and journey ON independentl
 test('journey seams are nonexistent before auth while OFF and old surfaces stay live', async ({ request }) => {
   test.skip(isJourneyProjectionsEnabled(), 'dedicated dark-path pass requires JOURNEY_PROJECTIONS_ENABLED=false')
 
-  expect((await request.get('/app/journeys/golden-beans-demo')).status()).toBe(404)
+  expect((await request.get('/app/journeys/golden-frijoles')).status()).toBe(404)
 
   // Deliberately omit Authorization. The gate must run before auth: removing or reordering it
   // changes this exact response from 404 to 401 and fails the dedicated OFF integration pass.

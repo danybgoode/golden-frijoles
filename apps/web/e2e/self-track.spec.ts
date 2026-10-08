@@ -23,8 +23,8 @@ import { createClient } from '@supabase/supabase-js'
 // and only SKIPS (not fails) in an environment that genuinely lacks that (e.g. a bare local run
 // without `npm run seed:self` first).
 
-const SELF_SLUG = process.env.SELF_PROJECT_SLUG?.trim() || 'golden-beans'
-const DEMO_SLUG = process.env.DEMO_PROJECT_SLUG?.trim() || 'golden-beans-demo'
+// one-product-project D1: the self tenant is the public project unless SELF_PROJECT_SLUG says otherwise.
+const SELF_SLUG = process.env.SELF_PROJECT_SLUG?.trim() || process.env.DEMO_PROJECT_SLUG?.trim() || 'golden-frijoles'
 const SELF_KEY = process.env.SELF_PROJECT_API_KEY?.trim()
 
 // Each waitlist test uses its own random x-forwarded-for so it doesn't contend for one rate-limit
@@ -119,9 +119,8 @@ test('waitlist join → still 200 (tracking is fire-and-forget, never blocks the
 
 // --- Deeper: real isolation — only when a self key is provided AND the project is seeded ---
 
-test('funnel events land in the self tenant and NEVER the demo project', async ({ request }) => {
+test('funnel events land in the self tenant and nowhere else', async ({ request }) => {
   test.skip(!SELF_KEY, 'SELF_PROJECT_API_KEY not set — self tenant not seeded in this environment')
-  test.skip(SELF_SLUG === DEMO_SLUG, 'self and demo slugs must differ for this isolation check')
 
   const db = dbClient()
   // Guard against an env that has a key but no seeded project — skip rather than false-fail.
@@ -142,7 +141,7 @@ test('funnel events land in the self tenant and NEVER the demo project', async (
   })
   expect(join.status()).toBe(200)
 
-  // Both events, under the one visitor id, must resolve to the self project — and NONE to the demo.
+  // Both events, under the one visitor id, must resolve to the self project and no other.
   // The tenant is chosen by the Bearer key server-side (lib/auth.ts), so this is structurally true;
   // the assertion guards against an accidental cross-wire (e.g. the helper grabbing the demo key).
   //
@@ -153,7 +152,6 @@ test('funnel events land in the self tenant and NEVER the demo project', async (
   // asserting on the first read.
   const events = await pollForEvents(db, vid, 2)
   const slugs = new Set(events.map((r) => r.projects?.slug))
-  expect(slugs.has(DEMO_SLUG), 'a landing event must NEVER land against the demo project').toBe(false)
   expect([...slugs]).toEqual([SELF_SLUG]) // every event for this visitor is the self tenant, nothing else
   expect(events.map((r) => r.event).sort()).toEqual(['landing_visited', 'waitlist_joined'])
 })

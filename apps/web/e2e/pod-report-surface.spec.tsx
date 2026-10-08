@@ -46,7 +46,7 @@ const FRESHNESS = formatFreshness('2026-07-26T00:00:00.000Z', new Date('2026-07-
 
 /** The outcome half a tenant with one registered feature and a registered North Star produces. */
 const OUTCOME = buildOutcomeSection({
-  tenant: 'golden-beans-demo',
+  tenant: 'golden-frijoles',
   features: [{ key: 'setup_guide', tars: { targeted: 40, adopted: 10, retained: 4 } }],
   northStar: { metric: 'activated_merchants', inputCount: 3, latestValue: null },
 })
@@ -161,7 +161,7 @@ function render(
   return decodeEntities(
     renderToStaticMarkup(
       <PodReportBody
-        projectSlug="golden-beans-demo"
+        projectSlug="golden-frijoles"
         view={view}
         outcome={OUTCOME}
         payingOff={payingOff}
@@ -505,7 +505,7 @@ test('S1.3: the epics table — column names, the bet under the name, every row 
   expect(table).toContain('Paid on time · 61 → 70 · actual 72 (▲ 2)')
   expect(table).toContain('▲ $3.30 over $5–8')
   for (const slug of ['overdue-reminders', 'smart-defaults', 'export-csv', 'the-cli']) {
-    expect(table).toContain(`href="/hub/golden-beans-demo/epic/${slug}"`)
+    expect(table).toContain(`href="/hub/golden-frijoles/epic/${slug}"`)
   }
   // Overspend is a marker, never Ember: no red class anywhere in this half.
   const half = html.slice(html.indexOf('data-testid="paying-off"'))
@@ -543,7 +543,7 @@ test('S2.2: the five steps, named by the scorer, with you are here, next, the ne
   expect(steps).toMatch(new RegExp(`data-step="${next.step}" data-next="true"`))
   expect(slice(html, 'adoption-next', 300)).toContain(`${next.met} of ${next.total} of its criteria met`)
   expect(slice(html, 'adoption-prompt', 400)).toContain(
-    `Read the golden-beans-demo outcome report and the Steps of AI Adoption, then suggest what we change to reach ${next.label}`
+    `Read the golden-frijoles outcome report and the Steps of AI Adoption, then suggest what we change to reach ${next.label}`
   )
 })
 
@@ -559,9 +559,9 @@ test('S2.3: every section has its line; the team gets its links, a share link ge
   const team = render(viewFor('team'))
   for (const id of ['links-paying-off', 'links-figures', 'links-speed'])
     expect(team).toContain(`data-testid="${id}"`)
-  expect(team).toContain('href="/app/north-star/golden-beans-demo"')
-  expect(team).toContain('href="/app/finops/golden-beans-demo"')
-  expect(team).toContain('href="/hub/golden-beans-demo/board"')
+  expect(team).toContain('href="/app/north-star/golden-frijoles"')
+  expect(team).toContain('href="/app/finops/golden-frijoles"')
+  expect(team).toContain('href="/hub/golden-frijoles/board"')
   expect(team).toContain('id="benchmarks-heading">Read against<')
   expect(slice(team, 'who-did-the-work', 900)).toContain('91%')
   for (const lens of ['client', 'investor'] as const) {
@@ -576,7 +576,7 @@ test('S2.3 (#300 review): a signed-out reader of the demo report gets no /app/ l
   const html = decodeEntities(
     renderToStaticMarkup(
       <PodReportBody
-        projectSlug="golden-beans-demo"
+        projectSlug="golden-frijoles"
         view={viewFor('team')}
         outcome={OUTCOME}
         payingOff={payingOffFor('team')}
@@ -591,6 +591,6 @@ test('S2.3 (#300 review): a signed-out reader of the demo report gets no /app/ l
   expect(html).not.toContain('href="/app/')
   expect(html).not.toContain('data-testid="adoption-prompt"')
   // The hub pages it can open still link: the Board and the epic pages read anonymously for the demo.
-  expect(html).toContain('href="/hub/golden-beans-demo/board"')
-  expect(html).toContain('href="/hub/golden-beans-demo/epic/overdue-reminders"')
+  expect(html).toContain('href="/hub/golden-frijoles/board"')
+  expect(html).toContain('href="/hub/golden-frijoles/epic/overdue-reminders"')
 })

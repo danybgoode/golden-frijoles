@@ -147,7 +147,7 @@ test('a revoked URL answers 401', async ({ request }) => {
 
 test('the public demo URL never writes, even if a maker were somehow stamped on it', async ({ request }) => {
   const client = db()
-  const { data: demo } = await client.from('projects').select('id').eq('slug', 'golden-beans-demo').single()
+  const { data: demo } = await client.from('projects').select('id').eq('slug', 'golden-frijoles').single()
   const { data: row } = await client
     .from('connector_tokens')
     .select('id, token, created_by')

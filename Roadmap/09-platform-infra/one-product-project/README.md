@@ -115,7 +115,8 @@ table and no migration.
   env-overridable. Neither var is set in Vercel production, so the default IS prod.
 - `RESERVED_SLUGS` gains `golden-beans-demo` and `golden-frijoles`. `golden-beans` is already there.
 - `next.config` redirects (permanent): `/hub/golden-beans-demo/:path*`, `/hub/golden-beans-demo`, and
-  `/app/:section/golden-beans-demo/:path*` → `golden-frijoles`. The same for `golden-beans` under `/app/:section/`.
+  `/app/:section/golden-beans-demo/:path*` → `golden-frijoles`. **Amended in build:** `golden-beans` is not redirected,
+  because it still exists, archived, and its flag history is readable there.
 - Every literal `golden-beans-demo` in code, specs, fixtures, surfaces and seed scripts becomes `golden-frijoles`.
   `Roadmap/` history is not rewritten.
 - The prod SQL (S1.2) runs in ONE transaction, after S1's deploy is Ready, with the backup taken first.

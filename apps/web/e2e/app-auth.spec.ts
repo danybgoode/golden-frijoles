@@ -11,7 +11,7 @@ import { isOwner } from '../lib/roles'
 //   • the demo project stays anonymously readable (the allow-list carve-out survives).
 
 const REAL_FOREIGN_SLUG = 'miyagisanchez'
-const DEMO_SLUG = 'golden-beans-demo'
+const DEMO_SLUG = 'golden-frijoles'
 
 test('unauthed /app → redirect to /login', async ({ request }) => {
   const res = await request.get('/app', { maxRedirects: 0 })

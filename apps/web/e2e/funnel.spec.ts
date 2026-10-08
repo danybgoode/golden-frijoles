@@ -67,7 +67,7 @@ test('funnel endpoint + page reflect a real event sequence for a registered feat
 test('the demo funnel page 404s for an unregistered feature (anonymous carve-out still resolves)', async ({ request }) => {
   // The demo project renders anonymously, so a missing feature reaches notFound() (404) rather than
   // the /login bounce a non-demo slug would get — proving both the carve-out and the 404 path.
-  const res = await request.get(`/app/funnel/golden-beans-demo/spec-unregistered-page-${Date.now()}`, {
+  const res = await request.get(`/app/funnel/golden-frijoles/spec-unregistered-page-${Date.now()}`, {
     maxRedirects: 0,
   })
   expect(res.status()).toBe(404)

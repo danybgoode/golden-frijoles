@@ -19,7 +19,7 @@ const MAX_SLUG_LENGTH = 40
 //   • a slug that collides with an /app route segment or an obvious impersonation target.
 const RESERVED_SLUGS = new Set([
   'admin', 'api', 'app', 'auth', 'billing', 'dashboard', 'demo', 'docs', 'experiments', 'funnel',
-  'golden-beans', 'help', 'impact', 'install', 'internal', 'keys', 'login', 'logout', 'mcp',
+  'golden-beans', 'golden-beans-demo', 'golden-frijoles', 'help', 'impact', 'install', 'internal', 'keys', 'login', 'logout', 'mcp',
   'north-star', 'onboarding', 'public', 'root', 'settings', 'signup', 'staff', 'static',
   'superuser', 'support', 'system', 'test', 'www',
 ])

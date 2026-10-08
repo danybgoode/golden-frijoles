@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic'
 //
 // The Hub never computes a stage (lock D19): `lib/hub-board.ts` groups the rows the push already resolved, and this
 // page renders what it returns. Gating is the other hub pages' (`requireDashboardAccess`): a member reads it, and the
-// demo project — this repo's own self-tenant, `golden-beans-demo` — is public by design (AGENTS rule #2, lock C2).
+// demo project — this repo's own self-tenant, `golden-frijoles` — is public by design (AGENTS rule #2, lock C2).
 // A share link does not reach it in v1 (lock C10).
 export default async function HubBoardPage({
   params,
