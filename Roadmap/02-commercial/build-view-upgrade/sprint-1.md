@@ -3,7 +3,7 @@ epic: build-view-upgrade
 sprint: 1
 title: "Why, how far, and where"
 risk: low
-phase: Building
+phase: Shipped
 stories_total: 4
 stories:
   - id: S1.1
@@ -12,38 +12,38 @@ stories:
     i_want: "to see why we're building it"
     so_that: "the work stays tied to the number"
     risk: low
-    status: planned
+    status: shipped
   - id: S1.2
     title: "Progress by sprint, and the stage as a track"
     as_a: "a founder watching a build"
     i_want: "progress by sprint and the stage as a track"
     so_that: "I see how far at a glance"
     risk: low
-    status: planned
+    status: shipped
   - id: S1.3
     title: "The link opens the epic's page"
     as_a: "a founder"
     i_want: "the view's link to open this epic's page in my project"
     so_that: "one click shows the whole epic"
     risk: low
-    status: planned
+    status: shipped
   - id: S1.4
     title: "The session line in colour, with time to reset"
     as_a: "a founder watching a build"
     i_want: "the session figures coloured by how close they are to the limit, with the time to each reset"
     so_that: "I see at a glance whether to keep going and when the window frees up"
     risk: low
-    status: planned
+    status: shipped
 ---
 # Build view upgrade — Sprint 1: Why, how far, and where
 
-**Status:** ⬜ not started
+**Status:** ✅ shipped 2026-10-08 — #312, merge `68b05e3` (plugin + kit 0.40.0)
 
 ## Stories
 <!-- Keep the heading shape `### Story 1.M — <title>`. When a story ships, append ✅ + its commit ref.
      The epic README frontmatter `status:` is the AUTHORITATIVE epic status. -->
 
-### Story 1.1 — Why we're building it, while it builds
+### Story 1.1 — Why we're building it, while it builds ✅ `61d960e`
 **As** a founder watching a build, **I want** to see why we're building it, **so that** the work stays tied to the
 number.
 A Why line after Epic: the hypothesis (truncated to fit), the metric from ━━▸ to, and the read date ("read 4 Dec", or
@@ -54,7 +54,7 @@ second line.
 - Lines fit an 80-column terminal.
 **Risk:** low
 
-### Story 1.2 — Progress by sprint, and the stage as a track
+### Story 1.2 — Progress by sprint, and the stage as a track ✅ `93fb65a`, `fc9ae98`
 **As** a founder watching a build, **I want** progress by sprint and the stage as a track, **so that** I see how far at
 a glance.
 Progress: one bar per sprint (▰ done, ▱ not yet, │ between sprints), then "4 of 9 stories done · Sprint 2 of 3".
@@ -63,7 +63,7 @@ Status: "Grooming ─ Ready ─ ◉ Building ─ QA ─ Shipped · live from git
 - The bars match each sprint's stories; the track marks the right stage for each stage.
 **Risk:** low
 
-### Story 1.3 — The link opens the epic's page
+### Story 1.3 — The link opens the epic's page ✅ `8ac31a4`
 **As** a founder, **I want** the view's link to open this epic's page in my project, **so that** one click shows the
 whole epic.
 The link becomes `<board.hubUrl>/epic/<slug>` (https only, as today; none without a hub URL). At the lock, check which
@@ -74,7 +74,7 @@ repo's `board.hubUrl` to it. The three copies of `build-state.mjs` stay identica
 - `check-script-parity.mjs` and `render-hook-vendor.test.mjs` pass.
 **Risk:** low
 
-### Story 1.4 — The session line in colour, with time to reset
+### Story 1.4 — The session line in colour, with time to reset ✅ `0d2ae28`, `7dffc29`
 **As** a founder watching a build, **I want** the session figures coloured by how close they are to the limit, with the
 time to each reset, **so that** I see at a glance whether to keep going and when the window frees up.
 Daniel's addendum at the kickoff (2026-10-08). `Session 48% · 5h 78% (-2h) · 7d 46% (-3d) → keep going`, each figure
@@ -101,5 +101,13 @@ Env: Claude Code in this repo, with the plugin from this branch
    → The epic's page opens in your project.
 4. Switch to an epic groomed before launch epic 4
    → "Why · no target set".
+5. Look under the prompt after a turn
+   → `Session N% · 5h N% (-Xh) · 7d N% (-Xd) → …`, each figure green, yellow from 60 %, red from the hand-off line;
+     the countdown moves a minute at a time with no new turn.
+
+Verified before merge (2026-10-08): `node scripts/build-state.mjs --offline` in this repo printed the Why, the bars,
+the track with its source and `↗ https://goldenfrijoles.com/hub/golden-beans-demo/epic/build-view-upgrade`, which
+answers 200 on prod. `claude plugin test` mounted the band and the hint row (10/10). **Owed to Daniel:** steps 1–5 in
+a real terminal with plugin 0.40.0.
 
 If any step fails, note the step number + what you saw — that's the bug report.

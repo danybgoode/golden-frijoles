@@ -365,6 +365,12 @@ independently shippable slice of value.
   Build gate (what was created, `/build <slug>`, only the setup that's missing). One home, groom's
   `references/gates.md`; a CI check keeps fund, scaffold, cycle, kickoff, agreed and draft off the screen in every
   copy. Files and their values are unchanged. **Owed:** Daniel's terminal walkthrough from setup to `/build`.
+- ✅ [Build view upgrade](02-commercial/build-view-upgrade/README.md) (launch epic 8) — **shipped and published
+  2026-10-08** (#312; plugin + kit 0.40.0). While an epic builds, the view says why (a Why line from the epic's
+  target, or "no target set"), how far (one bar per sprint, `▰▰▱│▱▱`), and where (the stage as a track, `Grooming ─
+  Ready ─ ◉ Building ─ QA ─ Shipped`, and a link to the epic's own page on the Hub). The session line under the
+  prompt is now in colour, green to yellow to red, with the time to each window's reset: `5h 78% (-2h) · 7d 46%
+  (-3d)`. **Owed:** Daniel's walkthrough in Claude Code with plugin 0.40.0.
 - ✅ [First run: setup starts](02-commercial/first-run-setup/README.md) (gap 4 of the First run review) — **shipped
   and published 2026-10-07** (#307; plugin + kit 0.37.0). Before its first question, setup says who is signed in, for
   which product, and what it found in the repo. Then: **What are we working on? 1 This repo · 2 A new idea · 3 Just
@@ -534,6 +540,10 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-08**: `build-view-upgrade` **shipped**: one sprint, one PR, ≈$13.82 against an $8–19 quote. The build
+  view says why, how far and where, and the session line is coloured with reset times (Daniel's kickoff addendum).
+  The lock found the mod was not a pure renderer: it drew the bar itself, and its Status colour would have turned
+  every stage track green.
 - **2026-10-07**: `first-run-setup` **shipped**: one sprint, one PR, ≈$13.45 against a $22–34 quote. Setup now
   reads an existing repo into its roadmap. Running it on a real outside repo (`sindresorhus/ky`) before review found
   two bugs that every fixture had passed: a dev-only test server reported as the stack, and a header linking a seed
