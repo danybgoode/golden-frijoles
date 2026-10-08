@@ -1373,6 +1373,12 @@ one-liner + why + date shape.
   1.0.10 incident this repo already paid for. *(2026-07-25.)*
 
 ## Working efficiently
+- **Rewriting history docs: split instructions from evidence.** A step, an `Env:` line or a curl is an instruction and
+  can take a new address; "→ 200", "is live at" or "Daniel opened" is evidence of a past moment and keeps where it was
+  observed. A blanket replace keeps every URL working and still falsifies the record. *(launch-trust-sweep, 2026-10-08.)*
+- **In zsh, an unquoted `$files` is ONE argument.** `sed -i '' … $files` failed ("File name too long") and changed
+  nothing; zsh does not word-split. Pipe `git grep -lz` into `xargs -0`, or do the edit in a script.
+  *(launch-trust-sweep, 2026-10-08.)*
 - **A new npm scope is an owned namespace, not a label the first publish creates.** A scoped publish
   can authenticate successfully and still fail `Scope not found` until the organization exists;
   creating that organization is its own outward decision about owner and package plan. On the first
