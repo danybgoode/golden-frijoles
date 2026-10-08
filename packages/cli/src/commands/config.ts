@@ -268,18 +268,25 @@ export const setupCommand: Command = {
   },
 }
 
-/** Pure — what to do after setup, from the answers. Same rules as the umbrella skill's Stage 2. */
+/**
+ * Pure — what to do after setup, from the answers. Same routes as the umbrella skill's Stage 2.3, decided by Q1 alone:
+ * "where are you starting" is no longer asked (first-run-setup D4), so an existing product goes to the skill's read of
+ * the repo, never straight to `live-smoke`.
+ */
 export function nextSteps(answers: Record<string, unknown>, kit: string | null): string[] {
   const steps: string[] = []
+  const mode = answers['project.mode']
   if (answers['project.account'] === 'now') steps.push('Connect your account: `gf login`, then `gf init`.')
-  if (answers['project.mode'] === 'existing' || answers['project.mode'] === 'new')
+  if (mode === 'existing' || mode === 'new')
     steps.push(
       `Add the Roadmap/ skeleton: \`npx -y @golden-frijoles/kit${kit ? `@${kit}` : ''} init\` (it never overwrites anything).`
     )
-  steps.push(
-    answers['project.startPoint'] === 'building'
-      ? 'Ask your agent to run the `live-smoke` skill against what you are building.'
-      : 'Ask your agent to run the `groom` skill on your first idea.'
-  )
+  if (mode === 'existing')
+    steps.push(
+      'Ask your agent to run the `golden-frijoles` skill: it reads this repo into your roadmap (a dry run first; nothing is written until you say so).'
+    )
+  else if (mode === 'new')
+    steps.push('Ask your agent to run the `golden-frijoles` skill and tell it your idea in a sentence or two.')
+  else steps.push('Ask your agent to run the `groom` skill on your first idea.')
   return steps
 }
