@@ -56,7 +56,7 @@ export default async function FinopsPage({ params }: { params: Promise<{ project
               body={
                 <>
                   Turn on usage push with{' '}
-                  <span className="ds-mono">gf-kit config set spend.telemetry on</span>, then build an epic.
+                  <span className="ds-mono">frijoles-kit config set spend.telemetry on</span>, then build an epic.
                   Quotes and actuals arrive with your next roadmap push.
                 </>
               }

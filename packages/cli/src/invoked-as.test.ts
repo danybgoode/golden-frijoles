@@ -20,7 +20,7 @@ test('started as frijoles, through the built entry, or with no path: no notice',
     undefined,
     '',
     '/x/gfx',
-    '/x/gf-kit',
+    '/x/frijoles-kit',
   ]) {
     assert.equal(deprecatedNameNotice(path), null, String(path))
   }
