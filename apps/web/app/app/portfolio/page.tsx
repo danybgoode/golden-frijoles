@@ -111,7 +111,7 @@ async function PortfolioRows({ userId, workspaceId }: { userId: string; workspac
         <Callout tone="warn">Couldn&apos;t load your workspace. Try again.</Callout>
       </div>
     )
-  const gates = readGates()
+  const gates = await readGates()
   return (
     <div data-portfolio-state="portfolio">
       <Table>

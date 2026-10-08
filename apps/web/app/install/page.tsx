@@ -130,7 +130,7 @@ export default async function InstallPage() {
                 is switched off, or omitting one that is live, is a claim this page cannot check and
                 a reader can. */}
             <p className="ds-hint">
-              {isConnectorWritesEnabled() ? (
+              {(await isConnectorWritesEnabled()) ? (
                 <>
                   This URL is <b>read-only on its own</b> — it is displayed on this public page, so it can
                   never authorize a change. To let your agent <em>claim</em> and <em>resolve</em> tasks, mint

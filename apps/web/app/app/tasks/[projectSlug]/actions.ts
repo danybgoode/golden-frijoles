@@ -25,7 +25,7 @@ export async function transitionTaskAction(
   resolution?: string,
   evidencePointer?: string,
 ): Promise<TaskActionResult> {
-  if (!isSignalsEnabled()) return { ok: false, error: 'Not found.' }
+  if (!(await isSignalsEnabled())) return { ok: false, error: 'Not found.' }
 
   // An allow-list, not a cast. `toStatus` arrives from the client, and passing an arbitrary string
   // to the RPC would let a caller attempt transitions the UI never offers — including 'open', which

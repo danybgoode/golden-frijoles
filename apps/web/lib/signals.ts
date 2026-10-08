@@ -190,10 +190,12 @@ export function scheduleSignalGrouping(input: {
   metadata: Record<string, unknown>
   occurredAt: string | null
 }): void {
-  if (!isSignalsEnabled()) return
   if (input.event !== ERROR_EVENT) return
 
   after(async () => {
+    // The gate is a catalog read now (one-product-project S2.2), so it is checked inside `after()`: the ingest
+    // response never waits on it, and with the gate off nothing below runs.
+    if (!(await isSignalsEnabled())) return
     try {
       await recordErrorSignal(input)
     } catch (err) {

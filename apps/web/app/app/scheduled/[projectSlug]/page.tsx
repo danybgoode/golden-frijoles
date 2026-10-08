@@ -41,7 +41,7 @@ import { SCREEN_WORDS } from '@/lib/screen-words'
 export const dynamic = 'force-dynamic'
 
 export default async function ScheduledChangesPage({ params }: { params: Promise<{ projectSlug: string }> }) {
-  if (!isFlagConsoleEnabled()) notFound()
+  if (!(await isFlagConsoleEnabled())) notFound()
   const { projectSlug } = await params
   // MEMBER-readable. There is nothing here to protect — the page holds no data at all — and
   // owner-gating a page that says "this is not built yet" would tell a member less than it tells

@@ -32,11 +32,11 @@ import { OpsTabs, type ResolvedSurface } from './OpsTabs'
 // in one place and bare in another, because there is one list and one status resolution. If a
 // second surface on this site ever needs to name these capabilities, it imports `maker-ops.ts` and
 // resolves the gates per request. It does not write them down.
-export function OpsSection() {
+export async function OpsSection() {
   const gates = {
-    resilienceScenariosEnabled: isResilienceScenariosEnabled(),
-    securitySimulationsEnabled: isSecuritySimulationsEnabled(),
-    destinationDeliveryEnabled: isDestinationDeliveryEnabled(),
+    resilienceScenariosEnabled: await isResilienceScenariosEnabled(),
+    securitySimulationsEnabled: await isSecuritySimulationsEnabled(),
+    destinationDeliveryEnabled: await isDestinationDeliveryEnabled(),
   }
 
   const surfaces: ResolvedSurface[] = MAKER_OPS_SURFACES.map((surface) => ({

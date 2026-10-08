@@ -14,8 +14,8 @@ import { isExperimentGovernanceEnabled } from '@/lib/flags'
 import { getSupabaseServiceClient } from '@/lib/supabase'
 import { createBuilderIo } from '@/lib/experiment-builder-io'
 
-function requireGate() {
-  if (!isExperimentGovernanceEnabled()) notFound()
+async function requireGate() {
+  if (!(await isExperimentGovernanceEnabled())) notFound()
 }
 
 function requireString(value: unknown, field: string): string {
@@ -29,7 +29,7 @@ export async function transitionExperimentVersionAction(
   versionId: unknown,
   targetStatus: unknown
 ) {
-  requireGate()
+  await requireGate()
   const safeSlug = requireString(slug, 'project')
   // Resolve ownership before lifecycle-specific validation to avoid a management oracle.
   const { projectId, userId } = await requireProjectOwnership(safeSlug)
@@ -66,7 +66,7 @@ export async function recordExperimentDecisionAction(
   rationale: unknown,
   idempotencyKey: unknown
 ) {
-  requireGate()
+  await requireGate()
   const safeSlug = requireString(slug, 'project')
   // Resolve an owner before validating experiment identifiers so this mutation cannot become a
   // foreign-project or registry-discovery oracle.

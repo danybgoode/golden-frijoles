@@ -22,7 +22,7 @@ function snapshotHeaders(etag: string): HeadersInit {
  */
 export async function GET(req: NextRequest) {
   // Gate before credential work so OFF cannot become a credential-validity oracle.
-  if (!isResilienceScenariosEnabled()) return new NextResponse(null, { status: 404 })
+  if (!(await isResilienceScenariosEnabled())) return new NextResponse(null, { status: 404 })
 
   const authorization = req.headers.get('authorization')
   if (!authorization?.startsWith('Bearer ')) return unauthorized()

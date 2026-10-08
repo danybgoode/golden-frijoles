@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   // The root gate is checked before body parsing and credential work.
-  if (!isSecuritySimulationsEnabled()) {
+  if (!(await isSecuritySimulationsEnabled())) {
     return new NextResponse(null, { status: 404 })
   }
   let body: unknown

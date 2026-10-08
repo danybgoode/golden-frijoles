@@ -33,8 +33,8 @@ async function project(client: SupabaseClient, owner: string): Promise<Fixture> 
 
 function deps(client: SupabaseClient, fx: Fixture): BuilderDependencies {
   return {
-    builderEnabled: () => true,
-    servingEnabled: () => true,
+    builderEnabled: async () => true,
+    servingEnabled: async () => true,
     requireOwnership: async () => ({ projectId: fx.projectId, userId: fx.owner }),
     io: createBuilderIo(client),
   }

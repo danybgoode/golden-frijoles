@@ -18,7 +18,7 @@ import {
   mapExperimentRegistryRows,
   type ExperimentRegistryRelationRow,
 } from '@/lib/experiment-registry-view'
-import { isExperimentGovernanceEnabled } from '@/lib/flags'
+import { isExperimentGovernanceEnabled } from './helpers/gates'
 import {
   cleanupExperimentProjects,
   requireLocalSupabaseApiUrl,
@@ -265,9 +265,11 @@ test.describe('experiment definition — closed bounded contract', () => {
 test('flag is exact true, and authorization precedes experiment payload validation', async () => {
   const original = process.env.EXPERIMENT_GOVERNANCE_ENABLED
   try {
-    for (const off of [undefined, 'false', 'TRUE', '1', ' true']) {
-      if (off === undefined) delete process.env.EXPERIMENT_GOVERNANCE_ENABLED
-      else process.env.EXPERIMENT_GOVERNANCE_ENABLED = off
+    // one-product-project D6: unset, the catalog answers (its fallback, production's ON); a SET value keeps the exact reading.
+    delete process.env.EXPERIMENT_GOVERNANCE_ENABLED
+    expect(isExperimentGovernanceEnabled()).toBe(true)
+    for (const off of ['false', 'TRUE', '1', ' true']) {
+      process.env.EXPERIMENT_GOVERNANCE_ENABLED = off
       expect(isExperimentGovernanceEnabled()).toBe(false)
     }
     process.env.EXPERIMENT_GOVERNANCE_ENABLED = 'true'

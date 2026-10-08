@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { isAgentRailEnabled } from '../lib/flags'
+import { isAgentRailEnabled } from './helpers/gates'
 import { shouldRenderAgentRail } from '../lib/agent-rail-visibility'
 
 // app-shell-and-agent-rail · Sprint 2, Story 2.2 — the rail's dark path.

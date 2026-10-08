@@ -5,7 +5,6 @@ import { getUserProjects, type MemberProject } from './membership'
 import {
   isExperimentGovernanceEnabled,
   isFlagConsoleEnabled,
-  isFlagServingEnabled,
   isJourneyProjectionsEnabled,
   isSignalsEnabled,
 } from './flags'
@@ -107,13 +106,13 @@ function emptyHeader(activeSection: ShellSection) {
  * The gate values, read once per call. One resolution point, three consumers: the header, the rail, and the
  * portfolio's cell links (portfolio-view S2.1), which must not link to a surface whose gate is off.
  */
-export function readGates(): ProjectSurfaceGates {
+export async function readGates(): Promise<ProjectSurfaceGates> {
   return {
-    'experiment-governance': isExperimentGovernanceEnabled(),
-    'flag-console': isFlagConsoleEnabled(),
-    'flag-serving': isFlagServingEnabled(),
-    'journey-projections': isJourneyProjectionsEnabled(),
-    signals: isSignalsEnabled(),
+    'experiment-governance': await isExperimentGovernanceEnabled(),
+    'flag-console': await isFlagConsoleEnabled(),
+    'flag-serving': true, // one-product-project D2: serving is no longer a gate
+    'journey-projections': await isJourneyProjectionsEnabled(),
+    signals: await isSignalsEnabled(),
     // ⚠️ **`console-shell` is GONE — mockups-as-built Story 3.3 deleted the flag.** It gated Setup ›
     // Connect, which is now `gate: 'always'`. Two other derived gates (`legacy-keys`,
     // `legacy-flag-credentials`) were deleted before it for the same reason design-system-rails S4.5
@@ -248,7 +247,7 @@ export async function getShellNav(
     // Read once, per render, and passed to both consumers. Two reads of the same gates could not
     // disagree today (they are pure env reads), but one resolution point is what keeps the header
     // and the rail describing the same product.
-    const gates = readGates()
+    const gates = await readGates()
 
     return {
       activeProject,

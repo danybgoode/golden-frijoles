@@ -12,7 +12,7 @@ function credential(req: NextRequest): string | null {
 
 export async function POST(req: NextRequest) {
   // The root automatic-action gate precedes body and credential work. Its OFF response is flat.
-  if (!isAutomaticCircuitBreakersEnabled()) return new NextResponse(null, { status: 404 })
+  if (!(await isAutomaticCircuitBreakersEnabled())) return new NextResponse(null, { status: 404 })
   let body: unknown
   try {
     body = await req.json()

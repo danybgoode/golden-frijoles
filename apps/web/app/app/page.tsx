@@ -64,7 +64,7 @@ export default async function AppHome({
   // `?provision=failed` breaks the loop: after a failed attempt we render the honest empty state
   // below instead of bouncing back and retrying forever.
   const { provision, project: requestedSlug } = await searchParams
-  if (projects.length === 0 && isSignupEnabled() && provision !== 'failed') {
+  if (projects.length === 0 && (await isSignupEnabled()) && provision !== 'failed') {
     redirect('/app/provision')
   }
 
@@ -114,7 +114,7 @@ export default async function AppHome({
               title="Today"
               lede="You are signed in, and not a member of any project yet."
               actions={
-                isSignupEnabled() ? (
+                (await isSignupEnabled()) ? (
                   <a className="ds-btn ds-btn--primary" href="/app/provision">
                     Create your first project
                   </a>

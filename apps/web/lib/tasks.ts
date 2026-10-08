@@ -513,7 +513,7 @@ function mapTaskRow(r: Record<string, unknown>): TaskRow {
  * caller has to remember the flag.
  */
 export async function promoteEligibleSignals(projectId: string): Promise<number> {
-  if (!isSignalsEnabled()) return 0
+  if (!(await isSignalsEnabled())) return 0
 
   const supabase = getSupabaseServiceClient()
   const { data, error } = await supabase

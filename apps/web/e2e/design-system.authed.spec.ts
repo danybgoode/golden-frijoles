@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { IMPACT_FEATURE_KEY, IMPACT_SERIES, readTenantRecord } from './helpers/authed-fixture'
-import { isFlagConsoleEnabled } from '../lib/flags'
+import { isFlagConsoleEnabled } from './helpers/gates'
 
 function tenantSlug() {
   const slug = readTenantRecord()?.slug

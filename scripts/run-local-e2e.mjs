@@ -20,7 +20,6 @@ const next = join(root, 'node_modules/.bin/next');
 const playwright = join(root, 'node_modules/.bin/playwright');
 const normalPort = 3110;
 const darkPort = 3111;
-const syncWithoutServingPort = 3112;
 // Where this runner deliberately differs from CI's lit server: it turns two owner-mutation gates ON, so their lit
 // suites run here. The one cost: scenario-authoring-dark.authed.spec.ts skips locally (CI runs it).
 const LOCAL_OVERRIDES = {
@@ -185,7 +184,6 @@ async function main() {
     runPlaywright(dark, darkPort, [
       'apps/web/e2e/journey-dark.spec.ts',
       'apps/web/e2e/experiment-governance-dark.spec.ts',
-      'apps/web/e2e/flag-serving-dark.spec.ts',
       'apps/web/e2e/flag-catalog-sync-dark.spec.ts',
       'apps/web/e2e/scenario-dark.spec.ts',
       // ⚠️ **These three were added because the change above SILENTLY RETIRED them locally**
@@ -203,16 +201,8 @@ async function main() {
     ]);
   });
 
-  // Catalog registration is a draft-only control-plane write. It must remain independently
-  // operable when the serving kill switch is off, so an owner can prepare recovery definitions
-  // without restoring snapshot delivery first.
-  const syncWithoutServing = { ...shared, FLAG_SERVING_ENABLED: 'false' };
-  await withServer(
-    { port: syncWithoutServingPort, env: syncWithoutServing, label: 'sync-with-serving-off' },
-    async () => {
-      runPlaywright(syncWithoutServing, syncWithoutServingPort, ['apps/web/e2e/flag-catalog-sync.spec.ts']);
-    }
-  );
+  // (A fourth server once ran catalog sync with flag serving OFF. Serving retired as a gate — one-product-project D2 —
+  // so that state no longer exists.)
 
   await withServer({ port: normalPort, env: shared, label: 'enabled-gate' }, async () => {
     // Seed scripts intentionally print newly minted credentials for an interactive operator.

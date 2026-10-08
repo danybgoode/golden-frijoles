@@ -82,7 +82,8 @@ async function track(request: import('@playwright/test').APIRequestContext, key:
 
 // ── the dispatcher gate (injected client, both flag states) ───────────────────────────────────
 //
-// The flag is read fresh from process.env per call, so these specs set it explicitly and restore
+// Off Vercel the gate reads its DESTINATION_DELIVERY_ENABLED override fresh per call (lib/gates.ts, D6), so these
+// specs set it explicitly and restore
 // it — never assume the ambient value. The gate-OFF spec must NOT depend on a broken client, so it
 // passes one whose every call would throw: proof the gate short-circuits BEFORE touching the DB.
 

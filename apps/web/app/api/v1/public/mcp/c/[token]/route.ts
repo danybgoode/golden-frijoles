@@ -6,7 +6,6 @@ import { getExperimentDecisionByKey } from '@/lib/experiment-decision-query'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
 import {
-  isCliWriteApiEnabled,
   isConnectorEnabled,
   isConnectorWritesEnabled,
   isConnectorWriteToolEnabled,
@@ -52,7 +51,7 @@ export const runtime = 'nodejs'
 async function gate(
   token: string
 ): Promise<{ ok: true; projectId: string; projectSlug: string; createdBy: string | null } | Response> {
-  if (!isConnectorEnabled()) {
+  if (!(await isConnectorEnabled())) {
     return Response.json({ error: 'Not found.' }, { status: 404 })
   }
 
@@ -104,12 +103,12 @@ function scrubRepliesForPublicReader(server: McpServer): void {
     })
 }
 
-function buildMcpServer(
+async function buildMcpServer(
   projectId: string,
   projectSlug: string,
   writeKeyId: string | null,
   flagWriteActor: { userId: string } | null
-): McpServer {
+): Promise<McpServer> {
   const server = new McpServer({ name: 'golden-beans-connector', version: '1.0.0' })
 
   // golden-frijoles-cli · Sprint 3, Story 3.4 — the flag tools, on the same command core the CLI
@@ -243,7 +242,7 @@ function buildMcpServer(
 
   // The decision ledger is governed: this tool registers only when its governance gate is on, like
   // `get_experiment_analysis` below (fresh review, #293).
-  if (isExperimentGovernanceMcpToolEnabled()) {
+  if (await isExperimentGovernanceMcpToolEnabled()) {
     server.registerTool(
       'get_experiment_decision',
       {
@@ -282,7 +281,7 @@ function buildMcpServer(
   // Governed analysis is a separate, born-OFF tool. The legacy compare_experiment contract above
   // stays unchanged while this extension is dark, and every enabled call remains scoped to the
   // connector token's already-resolved project.
-  if (isExperimentGovernanceMcpToolEnabled()) {
+  if (await isExperimentGovernanceMcpToolEnabled()) {
     server.registerTool(
       'get_experiment_analysis',
       {
@@ -343,7 +342,7 @@ function buildMcpServer(
   // Journey reads have their own born-OFF enablement gate in addition to the connector's route-wide
   // flag and revocable token. While dark, the tool does not exist; the three legacy tools above
   // remain byte-for-byte compatible.
-  if (isJourneyMcpToolEnabled()) {
+  if (await isJourneyMcpToolEnabled()) {
     server.registerTool(
       'get_journey_cohort',
       {
@@ -445,7 +444,7 @@ function buildMcpServer(
   // Plain tools, NOT the MCP tasks extension: it is SEP-2663, moved out of core after production
   // feedback (epic README, Amendment 1). Revisit when it is promoted back into core — not on a
   // version bump.
-  if (isTaskMcpToolEnabled()) {
+  if (await isTaskMcpToolEnabled()) {
     server.registerTool(
       'list_tasks',
       {
@@ -537,7 +536,7 @@ function buildMcpServer(
   // key per call would be a second place for the rule to live and a second place to get it wrong —
   // and pod-report S3's cross-review caught precisely the shape where a route re-resolves identity
   // it was already handed. `writeKeyId` is carried through for the audit trail, not re-derived.
-  if (isConnectorWriteToolEnabled() && writeKeyId) {
+  if ((await isConnectorWriteToolEnabled()) && writeKeyId) {
     server.registerTool(
       'propose_task_change',
       {
@@ -631,9 +630,7 @@ function buildMcpServer(
 /**
  * The account a flag write will be attributed to, or null.
  *
- * Three conditions, ALL required, and each one is its own independent kill switch:
- *   • `CLI_WRITE_API_ENABLED` (epic D8) — checked first, so OFF removes the tools without any
- *     credential work and cannot become an oracle for whether a token is valid.
+ * Two conditions, both required (a third, `CLI_WRITE_API_ENABLED`, retired with one-product-project D2):
  *   • the presented credential is a live `gf_pat_…`.
  *   • its holder is an OWNER of the project THIS connector token resolved to.
  *
@@ -647,7 +644,7 @@ async function resolveFlagWriteActor(
   projectId: string,
   presentedKey: string | null
 ): Promise<{ userId: string } | null> {
-  if (!isCliWriteApiEnabled() || !presentedKey) return null
+  if (!presentedKey) return null
   const resolved = await resolveCliToken(presentedKey)
   if (!resolved.ok) return null
   // A token made for one product (the /cli/connect approve page) writes to that product only.
@@ -678,8 +675,8 @@ async function resolveMakerActor(
     createdBy,
     projectSlug,
     demoProjectSlug: DEMO_PROJECT_SLUG,
-    connectorWritesEnabled: isConnectorWritesEnabled(),
-    cliWritesEnabled: isCliWriteApiEnabled(),
+    connectorWritesEnabled: await isConnectorWritesEnabled(),
+    cliWritesEnabled: true, // one-product-project D2: the CLI write API is always on
   }
   if (!makerMayWrite(facts)) return null
   const membership = await getMembershipByProjectId(facts.createdBy, projectId)
@@ -722,7 +719,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
     (await resolveFlagWriteActor(gated.projectId, presentedKey)) ??
     (presentedKey ? null : await resolveMakerActor(gated.projectId, gated.projectSlug, gated.createdBy))
 
-  const server = buildMcpServer(gated.projectId, gated.projectSlug, writeKeyId, flagWriteActor)
+  const server = await buildMcpServer(gated.projectId, gated.projectSlug, writeKeyId, flagWriteActor)
   // Stateless: a fresh server + transport per request, no session ID, no connection reuse —
   // matches the read-only, single-call-per-request shape of these tools.
   const transport = new WebStandardStreamableHTTPServerTransport({

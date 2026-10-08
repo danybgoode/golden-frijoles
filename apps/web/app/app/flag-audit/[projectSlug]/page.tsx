@@ -37,7 +37,7 @@ export default async function FlagAuditPage({
   params: Promise<{ projectSlug: string }>
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  if (!isFlagConsoleEnabled()) notFound()
+  if (!(await isFlagConsoleEnabled())) notFound()
   const { projectSlug } = await params
   const membership = await requireProjectMembership(projectSlug)
   const registry = await getFlagRegistryView(membership.projectId)

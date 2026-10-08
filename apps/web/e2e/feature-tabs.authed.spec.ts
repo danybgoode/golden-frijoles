@@ -28,7 +28,7 @@ import {
   readTenantRecord,
 } from './helpers/authed-fixture'
 import { booleanDefinition, seedFlagVersion } from './helpers/seed-flag'
-import { isFlagConsoleEnabled } from '../lib/flags'
+import { isFlagConsoleEnabled } from './helpers/gates'
 
 const VIEWPORT = { width: 1440, height: 960 }
 

@@ -24,9 +24,9 @@ import { WaitlistForm } from './WaitlistForm'
 // send anyone to, so the tier renders the waitlist form instead of a button into a 404. Note the
 // event limits below are the ones the tier DESCRIBES, not a quota this code enforces — real
 // per-tenant ceilings are data (`projects.monthly_event_quota`), not env and not copy.
-export function PricingSection() {
+export async function PricingSection() {
   const section = getSection('pricing')
-  const signupEnabled = isSignupEnabled()
+  const signupEnabled = await isSignupEnabled()
 
   return (
     <>

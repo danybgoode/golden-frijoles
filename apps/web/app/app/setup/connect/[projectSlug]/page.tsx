@@ -1,5 +1,5 @@
 import { requireProjectMembership } from '@/lib/dashboard-auth'
-import { isCliWriteApiEnabled, isConnectorEnabled, isConnectorWritesEnabled } from '@/lib/flags'
+import { isConnectorEnabled, isConnectorWritesEnabled } from '@/lib/flags'
 import { listCliTokens } from '@/lib/cli-tokens'
 import { DEMO_PROJECT_SLUG } from '@/lib/public-demo'
 import { installPrompt, PLUGIN_INSTALL, PLUGIN_MARKETPLACE_ADD, SKILLS_ADD } from '@/lib/install-prompt'
@@ -48,7 +48,7 @@ export default async function SetupConnectPage({ params }: { params: Promise<{ p
   // AGENTS rule #3: the connector is gated by TWO independent switches. With the env flag off we do
   // not even look for a token — there is nothing to offer, and a disabled-looking control would
   // imply the surface exists and is merely unavailable to you.
-  const connectorEnabled = isConnectorEnabled()
+  const connectorEnabled = await isConnectorEnabled()
   // ⚠️ Read the status EVEN WHEN the connector is switched off, so an existing token stays visible
   // and revocable. `actions.ts` says in words that revoke is deliberately ungated — "if
   // CONNECTOR_ENABLED were flipped off mid-incident, an owner must still be able to permanently kill
@@ -62,7 +62,7 @@ export default async function SetupConnectPage({ params }: { params: Promise<{ p
   // CLI-token outage cannot 500 the page that revokes connector URLs (fresh reviewer, PR #282).
   const codingAgents = await listCliTokens(membership.userId).then(activeCliTokens, () => null)
   // D11: whether a URL made by a person may write here at all. Never on the public demo project.
-  const writesOn = isConnectorWritesEnabled() && isCliWriteApiEnabled() && projectSlug !== DEMO_PROJECT_SLUG
+  const writesOn = (await isConnectorWritesEnabled()) && projectSlug !== DEMO_PROJECT_SLUG
   const firstUse = status.state === 'active' ? status.tokens[0].lastUsedAt : null
   // D5: the Codex command carries the newest URL — owner-only, like the URL itself.
   const codexUrl = canManage && status.state === 'active' ? status.tokens[0].url : null

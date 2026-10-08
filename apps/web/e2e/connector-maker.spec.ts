@@ -2,7 +2,7 @@ import { test, expect, type APIRequestContext } from '@playwright/test'
 import { createClient } from '@supabase/supabase-js'
 import { randomBytes } from 'node:crypto'
 import { specWorkspaceId } from './helpers/spec-workspace'
-import { isConnectorWritesEnabled } from '../lib/flags'
+import { isConnectorWritesEnabled } from './helpers/gates'
 
 // account-from-the-terminal · Sprint 3, Story 3.1 — a connector URL that acts as the person who made
 // it (epic D11). No Bearer header anywhere in this file: the Claude app's connector settings take a

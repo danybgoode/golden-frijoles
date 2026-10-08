@@ -33,7 +33,7 @@ export default async function LoginPage({
   // (`app/signup/page.tsx`), so an unconditional "Create one" would be a link to a hard 404 on the
   // one screen a locked-out person is already frustrated on. Read fresh per request, which is what
   // `force-dynamic` above buys.
-  const signupOpen = isSignupEnabled()
+  const signupOpen = await isSignupEnabled()
 
   return (
     <Frame variant="door" brandHref="/">

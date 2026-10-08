@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
       // off must stop provisioning immediately — including for confirmation links already sitting
       // in inboxes when the flip happened. A gate checked only at the front door leaves a queue of
       // pending links that can still create tenants behind it.
-      if (user && isSignupEnabled()) {
+      if (user && (await isSignupEnabled())) {
         const result = await provisionTenantForUser(
           user.id,
           user.email ?? '',

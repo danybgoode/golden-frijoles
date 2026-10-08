@@ -77,7 +77,7 @@ export async function evaluateFrictionForProject(
   projectSlug: string,
   options: { force?: boolean } = {}
 ): Promise<number | null> {
-  if (!isSignalsEnabled()) return null
+  if (!(await isSignalsEnabled())) return null
 
   const supabase = getSupabaseServiceClient()
 

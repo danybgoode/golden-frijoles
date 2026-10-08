@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
   // The governed ledger's kill switch, checked BEFORE authentication like every other governed read (the console page,
   // the versioned compare route, `get_experiment_analysis`): with the gate off this seam does not exist (fresh review,
   // #293 — D19 says nothing is returned that the console would not show).
-  if (!isExperimentGovernanceEnabled())
+  if (!(await isExperimentGovernanceEnabled()))
     return cliError('disabled', 'Experiment decisions are not switched on here.')
   const url = new URL(req.url)
   const context = await requireCliMember(req, url.searchParams.get('project'))

@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { readTenantRecord } from './helpers/authed-fixture'
-import { isAgentRailEnabled } from '../lib/flags'
+import { isAgentRailEnabled } from './helpers/gates'
 
 // app-shell-and-agent-rail · Sprint 2 — the rail's RENDERED behaviour.
 //

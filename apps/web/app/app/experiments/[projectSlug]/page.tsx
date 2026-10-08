@@ -41,11 +41,11 @@ export const dynamic = 'force-dynamic'
 
 export default async function ExperimentsPage({ params }: { params: Promise<{ projectSlug: string }> }) {
   // New governance management is nonexistent while dark. The nested legacy comparison page remains.
-  if (!isExperimentGovernanceEnabled()) notFound()
+  if (!(await isExperimentGovernanceEnabled())) notFound()
   const { projectSlug } = await params
   const membership = await requireProjectMembership(projectSlug)
   const canManage = canManageExperiments(membership)
-  const builderEnabled = isExperimentBuilderEnabled() && canManage
+  const builderEnabled = (await isExperimentBuilderEnabled()) && canManage
   const [experiments, builderData] = await Promise.all([
     listExperimentRegistries(membership.projectId),
     builderEnabled
@@ -92,7 +92,7 @@ export default async function ExperimentsPage({ params }: { params: Promise<{ pr
                   + New experiment
                 </Button>
                 <span className="ds-x-hint">
-                  {isExperimentBuilderEnabled()
+                  {(await isExperimentBuilderEnabled())
                     ? 'A project owner creates experiments.'
                     : 'Creating experiments is paused'}
                 </span>

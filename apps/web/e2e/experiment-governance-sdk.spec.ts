@@ -1,8 +1,5 @@
 import { test, expect } from '@playwright/test'
-import {
-  createGrowthEngineClient,
-  type ExperimentGovernanceContext,
-} from '@golden-frijoles/sdk'
+import { createGrowthEngineClient, type ExperimentGovernanceContext } from '@golden-frijoles/sdk'
 
 const variants = [
   { key: 'treatment', weight: 3 },
@@ -33,15 +30,19 @@ test('legacy bucket and exposure retain their exact local assignment and request
   })
 
   expect(growth.bucket('checkout-cta-copy', variants)).toEqual({ ok: true, variant: 'treatment' })
-  await expect(growth.trackExposure('checkout-cta-copy', 'treatment', {
-    tags: { region: 'mx', variant: 'caller-value-is-overridden-in-v1' },
-  })).resolves.toEqual({ ok: true, id: 'event-1' })
-  expect(bodies).toEqual([{
-    userId: 'legacy-user',
-    event: 'experiment_exposed',
-    featureId: 'checkout-cta-copy',
-    tags: { region: 'mx', variant: 'treatment' },
-  }])
+  await expect(
+    growth.trackExposure('checkout-cta-copy', 'treatment', {
+      tags: { region: 'mx', variant: 'caller-value-is-overridden-in-v1' },
+    })
+  ).resolves.toEqual({ ok: true, id: 'event-1' })
+  expect(bodies).toEqual([
+    {
+      userId: 'legacy-user',
+      event: 'experiment_exposed',
+      featureId: 'checkout-cta-copy',
+      tags: { region: 'mx', variant: 'treatment' },
+    },
+  ])
 })
 
 test('governed assignment is synchronous, tuple-hashed, sorted and independent of registry/gate/network', () => {
@@ -49,7 +50,9 @@ test('governed assignment is synchronous, tuple-hashed, sorted and independent o
     baseUrl: 'http://registry-is-down.invalid',
     apiKey: 'unused',
     userId: 'legacy-user-is-not-the-assignment-unit',
-    fetchImpl: async () => { throw new Error('registry unavailable') },
+    fetchImpl: async () => {
+      throw new Error('registry unavailable')
+    },
   })
   const original = process.env.EXPERIMENT_GOVERNANCE_ENABLED
   try {
@@ -76,20 +79,25 @@ test('governed exposure preserves caller fields and writes canonical assignment 
       return response()
     },
   })
-  const result = await growth.trackExposure('checkout-cta-copy', 'control', {
-    tags: {
-      region: 'mx',
-      variant: 'control',
-      experiment_definition_version: 7,
+  const result = await growth.trackExposure(
+    'checkout-cta-copy',
+    'control',
+    {
+      tags: {
+        region: 'mx',
+        variant: 'control',
+        experiment_definition_version: 7,
+      },
+      metadata: { sourceNote: 'kept' },
+      context: {
+        version: 1,
+        actor: { type: 'staff_user', id: 'staff-1' },
+        subject: { type: 'merchant', id: 'm-123' },
+        correlationId: 'workflow-1',
+      },
     },
-    metadata: { sourceNote: 'kept' },
-    context: {
-      version: 1,
-      actor: { type: 'staff_user', id: 'staff-1' },
-      subject: { type: 'merchant', id: 'm-123' },
-      correlationId: 'workflow-1',
-    },
-  }, governance)
+    governance
+  )
   expect(result).toEqual({ ok: true, id: 'event-1' })
   expect(body).toMatchObject({
     userId: 'legacy-user',
@@ -126,32 +134,37 @@ test('governed reserved-field conflicts and malformed assignment fail before fet
     { tags: { experiment_definition_version: 8 } },
     { context: { version: 1 as const, subject: { type: 'merchant', id: 'other' } } },
   ]) {
-    await expect(growth.trackExposure('checkout-cta-copy', 'control', props, governance))
-      .resolves.toMatchObject({ ok: false, code: 'GOVERNANCE_CONTEXT_CONFLICT' })
+    await expect(
+      growth.trackExposure('checkout-cta-copy', 'control', props, governance)
+    ).resolves.toMatchObject({ ok: false, code: 'GOVERNANCE_CONTEXT_CONFLICT' })
   }
-  expect(growth.bucket('checkout-cta-copy', variants, {
-    definitionVersion: 0,
-    assignmentEntity: { type: 'Merchant', id: ' m-123' },
-  })).toMatchObject({ ok: false, code: 'INVALID_GOVERNANCE_CONTEXT' })
-  expect(growth.bucket('checkout-cta-copy', variants, {
-    definitionVersion: 7,
-    assignmentEntity: null,
-  } as unknown as ExperimentGovernanceContext)).toMatchObject({
+  expect(
+    growth.bucket('checkout-cta-copy', variants, {
+      definitionVersion: 0,
+      assignmentEntity: { type: 'Merchant', id: ' m-123' },
+    })
+  ).toMatchObject({ ok: false, code: 'INVALID_GOVERNANCE_CONTEXT' })
+  expect(
+    growth.bucket('checkout-cta-copy', variants, {
+      definitionVersion: 7,
+      assignmentEntity: null,
+    } as unknown as ExperimentGovernanceContext)
+  ).toMatchObject({
     ok: false,
     code: 'INVALID_GOVERNANCE_CONTEXT',
   })
   for (const falsy of [null, false, 0, '']) {
-    expect(growth.bucket(
-      'checkout-cta-copy',
-      variants,
-      falsy as unknown as ExperimentGovernanceContext,
-    )).toMatchObject({ ok: false, code: 'INVALID_GOVERNANCE_CONTEXT' })
-    await expect(growth.trackExposure(
-      'checkout-cta-copy',
-      'control',
-      undefined,
-      falsy as unknown as ExperimentGovernanceContext,
-    )).resolves.toMatchObject({ ok: false, code: 'INVALID_GOVERNANCE_CONTEXT' })
+    expect(
+      growth.bucket('checkout-cta-copy', variants, falsy as unknown as ExperimentGovernanceContext)
+    ).toMatchObject({ ok: false, code: 'INVALID_GOVERNANCE_CONTEXT' })
+    await expect(
+      growth.trackExposure(
+        'checkout-cta-copy',
+        'control',
+        undefined,
+        falsy as unknown as ExperimentGovernanceContext
+      )
+    ).resolves.toMatchObject({ ok: false, code: 'INVALID_GOVERNANCE_CONTEXT' })
   }
   expect(calls).toBe(0)
 })

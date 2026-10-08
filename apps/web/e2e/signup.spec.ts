@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { isSignupEnabled } from '../lib/flags'
+import { isSignupEnabled } from './helpers/gates'
 import { slugFromEmail, normalizeSlug, isReservedSlug } from '../lib/tenant-slug'
 import { monthWindowStart, monthWindowEnd } from '../lib/quota-window'
 
@@ -20,12 +20,14 @@ import { monthWindowStart, monthWindowEnd } from '../lib/quota-window'
 // lib/flags.ts) and asserted DIRECTLY below — not inferred from an HTTP status that would be
 // identical whether the logic were right or wrong.
 
-test.describe('isSignupEnabled — dark by default', () => {
-  test('unset/anything-but-"true" → disabled', () => {
+test.describe('isSignupEnabled — the off-Vercel override', () => {
+  // one-product-project D6: the gate is the `auth.signup_enabled` catalog flag. Off Vercel a SET SIGNUP_ENABLED still
+  // wins with the old exact reading; unset, the catalog answers — here, its fallback (production's ON).
+  test('unset → the catalog fallback; anything-but-"true" → disabled', () => {
     const original = process.env.SIGNUP_ENABLED
     try {
       delete process.env.SIGNUP_ENABLED
-      expect(isSignupEnabled()).toBe(false)
+      expect(isSignupEnabled()).toBe(true)
       // The polarity cases that matter: an enablement gate must not open on a typo, and the
       // strings people actually type when they mean "off" must all read as off.
       for (const off of ['false', '0', 'off', 'no', 'TRUE', 'True', ' true', '']) {

@@ -1,6 +1,5 @@
 import 'server-only'
 import { NextResponse, type NextRequest } from 'next/server'
-import { isCliWriteApiEnabled } from './flags'
 import { resolveCliToken, touchCliToken } from './cli-tokens'
 import { getMembership, getUserProjects, type MemberProject } from './membership'
 import { isOwner } from './roles'
@@ -9,13 +8,13 @@ import { isOwner } from './roles'
 // through. There is no second path into these routes and there must not be one.
 //
 // ── The order is the design, and it is the same order the connector route uses ────────────────
-//   gate -> credential shape -> resolve -> (per request) membership
+//   credential shape -> resolve -> (per request) membership
 //
-// The **gate first**, before any credential-derived work, so `CLI_WRITE_API_ENABLED=false` is a
-// real whole-surface kill switch and never becomes a credential-validity oracle: with the surface
-// off, a valid token and a garbage one get the identical 404. Every gated route in this repo is
-// written this way (`flags/snapshot`, `flags/sync`, the MCP connector) and it is the property that
-// breaks first if someone "simplifies" by checking auth before the flag.
+// There is no surface gate any more (one-product-project D2, 2026-10-08). `CLI_WRITE_API_ENABLED` used to be checked
+// first, before any credential work, so OFF was never a credential-validity oracle. It retired rather than moving into
+// the flag catalog: the CLI is the recovery path for every catalog flag, and a CLI that could be killed through the
+// catalog could lock its operator out of the switch that restores it. The rollback is `git revert`. Any gate added
+// here later goes first again, for the oracle reason.
 //
 // ── What a CLI token is allowed to do, in one sentence ────────────────────────────────────────
 // Exactly what its holder's console session is allowed to do. `requireCliMember` and
@@ -87,19 +86,11 @@ function unauthorized() {
   return cliError('unauthorized', 'This CLI credential is not accepted. Run `gf login` again.')
 }
 
-function gateClosed() {
-  return cliError('disabled', 'The CLI API is not available here.')
-}
-
 /**
- * Gate, THEN the request body, for a POST route. Returns the body as a record, or a `Response` to return verbatim.
- *
- * The gate has to come before the body too, not only before the credential. A route that parsed first answered a
- * malformed body with 400 while the surface was OFF, so OFF stopped being the same 404 for every request (cross-family
- * review, Codex, think-skills #216). Three routes had that order; all three read their body through here now.
+ * The request body for a POST route, as a record, or a `Response` to return verbatim. It is still the one place the
+ * three body-reading routes parse, so a gate added here later precedes the body (think-skills #216).
  */
 export async function readCliBody(req: NextRequest): Promise<Record<string, unknown> | NextResponse> {
-  if (!isCliWriteApiEnabled()) return gateClosed()
   try {
     const body: unknown = await req.json()
     return (body ?? {}) as Record<string, unknown>
@@ -128,10 +119,6 @@ export type CliAccount = {
  * check a boolean.
  */
 export async function requireCliAccount(req: NextRequest): Promise<CliAccount | NextResponse> {
-  // ⚠️ FIRST. See this module's header — moving this below the credential work turns OFF into an
-  // oracle for whether a token is valid.
-  if (!isCliWriteApiEnabled()) return gateClosed()
-
   const token = bearer(req)
   if (!token) return unauthorized()
 

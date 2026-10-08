@@ -73,7 +73,7 @@ function unauthorized() {
 export async function POST(req: NextRequest) {
   // The gate intentionally precedes header and body work. OFF is a real whole-route kill switch,
   // not a credential-validity or payload-shape oracle, and is independent from snapshot serving.
-  if (!isFlagDefinitionSyncEnabled()) return new NextResponse(null, { status: 404 })
+  if (!(await isFlagDefinitionSyncEnabled())) return new NextResponse(null, { status: 404 })
 
   const rawKey = credential(req)
   if (!rawKey) return unauthorized()

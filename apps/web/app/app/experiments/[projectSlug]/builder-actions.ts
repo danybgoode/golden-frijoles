@@ -1,7 +1,7 @@
 'use server'
 import { revalidatePath } from 'next/cache'
 import { requireProjectOwnership } from '@/lib/dashboard-auth'
-import { isExperimentBuilderWritable, isFlagServingEnabled } from '@/lib/flags'
+import { isExperimentBuilderWritable } from '@/lib/flags'
 import { getSupabaseServiceClient } from '@/lib/supabase'
 import { createBuilderIo } from '@/lib/experiment-builder-io'
 import {
@@ -19,7 +19,7 @@ import { rolloutExperimentCommand, undoRolloutCommand } from '@/lib/experiment-r
 function dependencies(): BuilderDependencies {
   return {
     builderEnabled: isExperimentBuilderWritable,
-    servingEnabled: isFlagServingEnabled,
+    servingEnabled: async () => true, // one-product-project D2: serving is no longer a gate
     requireOwnership: requireProjectOwnership,
     io: createBuilderIo(getSupabaseServiceClient()),
   }

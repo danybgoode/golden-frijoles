@@ -120,9 +120,9 @@ export type DispatchOptions = {
 export async function dispatchPendingDeliveries(
   db: SupabaseClient,
   projectId: string,
-  options: DispatchOptions = {},
+  options: DispatchOptions = {}
 ): Promise<DispatchOutcome> {
-  if (!isDestinationDeliveryEnabled()) {
+  if (!(await isDestinationDeliveryEnabled())) {
     return { ok: true, dispatched: false, reason: 'disabled', claimed: [] }
   }
 
@@ -157,7 +157,9 @@ export async function dispatchPendingDeliveries(
           // removed) — not the one we asked for (cross-review, Codex round 18).
           const restingStatus = released.get(r.id)
           settlements.push({
-            id: r.id, event_id: r.event_id, destination_id: r.destination_id,
+            id: r.id,
+            event_id: r.event_id,
+            destination_id: r.destination_id,
             disposition: 'skipped',
             status: (restingStatus as DeliverySettlement['status']) ?? 'in_flight',
             attemptCount: r.attempt_count,
@@ -175,10 +177,18 @@ export async function dispatchPendingDeliveries(
       try {
         settlements.push(await sendAndSettle(db, projectId, r, now, options))
       } catch (rowErr) {
-        console.error('[delivery-dispatch] row settle threw:', rowErr instanceof Error ? rowErr.message : rowErr)
+        console.error(
+          '[delivery-dispatch] row settle threw:',
+          rowErr instanceof Error ? rowErr.message : rowErr
+        )
         settlements.push({
-          id: r.id, event_id: r.event_id, destination_id: r.destination_id,
-          disposition: 'internal_error', status: 'in_flight', attemptCount: r.attempt_count, persisted: false,
+          id: r.id,
+          event_id: r.event_id,
+          destination_id: r.destination_id,
+          disposition: 'internal_error',
+          status: 'in_flight',
+          attemptCount: r.attempt_count,
+          persisted: false,
         })
       }
     }
@@ -201,7 +211,7 @@ async function sendAndSettle(
   projectId: string,
   row: ClaimedRow,
   now: Date,
-  options: DispatchOptions,
+  options: DispatchOptions
 ): Promise<DeliverySettlement> {
   const nowIso = now.toISOString()
   const base = { id: row.id, event_id: row.event_id, destination_id: row.destination_id }
@@ -220,7 +230,7 @@ async function sendAndSettle(
   const { data: event, error: eventErr } = await db
     .from('events')
     .select(
-      'id, event, occurred_at, created_at, user_id, feature_id, tags, metadata, actor_type, actor_id, subject_type, subject_id, correlation_id',
+      'id, event, occurred_at, created_at, user_id, feature_id, tags, metadata, actor_type, actor_id, subject_type, subject_id, correlation_id'
     )
     .eq('id', row.event_id)
     .eq('project_id', projectId)
@@ -233,13 +243,28 @@ async function sendAndSettle(
   if (destErr || eventErr) {
     console.error('[delivery-dispatch] parent read failed:', (destErr ?? eventErr)?.message)
     await settleDelivery(db, {
-      row, projectId, claimToken: nowIso, now: nowIso, status: 'pending',
-      nextAttemptAt: null, lastError: null, attemptCount: row.attempt_count,
-      log: false, outcome: 'skipped', httpStatus: null, latencyMs: null,
+      row,
+      projectId,
+      claimToken: nowIso,
+      now: nowIso,
+      status: 'pending',
+      nextAttemptAt: null,
+      lastError: null,
+      attemptCount: row.attempt_count,
+      log: false,
+      outcome: 'skipped',
+      httpStatus: null,
+      latencyMs: null,
     })
     // Reported as internal_error and NEVER persisted:true — a persistent DB read failure would
     // otherwise stall every affected delivery while the cron stayed green (cross-review, Codex 13).
-    return { ...base, disposition: 'internal_error', status: 'pending', attemptCount: row.attempt_count, persisted: false }
+    return {
+      ...base,
+      disposition: 'internal_error',
+      status: 'pending',
+      attemptCount: row.attempt_count,
+      persisted: false,
+    }
   }
 
   // A genuinely MISSING parent (clean null, no error) is a PERMANENT anomaly — DEAD-letter it, never
@@ -249,14 +274,25 @@ async function sendAndSettle(
   // "defensive" must not mean "infinite loop." Terminal, no attempt logged.
   if (!dest || !event) {
     const persisted = await settleDelivery(db, {
-      row, projectId, claimToken: nowIso, now: nowIso, status: 'dead',
-      nextAttemptAt: null, lastError: 'destination or event no longer exists', attemptCount: row.attempt_count,
-      log: false, outcome: 'skipped', httpStatus: null, latencyMs: null,
+      row,
+      projectId,
+      claimToken: nowIso,
+      now: nowIso,
+      status: 'dead',
+      nextAttemptAt: null,
+      lastError: 'destination or event no longer exists',
+      attemptCount: row.attempt_count,
+      log: false,
+      outcome: 'skipped',
+      httpStatus: null,
+      latencyMs: null,
     })
     return {
-      ...base, disposition: 'skipped',
+      ...base,
+      disposition: 'skipped',
       status: (persisted as DeliverySettlement['status']) ?? 'in_flight',
-      attemptCount: row.attempt_count, persisted: persisted !== null,
+      attemptCount: row.attempt_count,
+      persisted: persisted !== null,
     }
   }
 
@@ -266,22 +302,43 @@ async function sendAndSettle(
   // until it is deliverable again. No attempt logged (p_log=false).
   if (!dest.enabled || !dest.target_url || !dest.signing_secret) {
     const persisted = await settleDelivery(db, {
-      row, projectId, claimToken: nowIso, now: nowIso, status: 'pending',
-      nextAttemptAt: null, lastError: null, attemptCount: row.attempt_count,
-      log: false, outcome: 'skipped', httpStatus: null, latencyMs: null,
+      row,
+      projectId,
+      claimToken: nowIso,
+      now: nowIso,
+      status: 'pending',
+      nextAttemptAt: null,
+      lastError: null,
+      attemptCount: row.attempt_count,
+      log: false,
+      outcome: 'skipped',
+      httpStatus: null,
+      latencyMs: null,
     })
     return {
-      ...base, disposition: 'skipped',
+      ...base,
+      disposition: 'skipped',
       status: (persisted as DeliverySettlement['status']) ?? 'in_flight',
-      attemptCount: row.attempt_count, persisted: persisted !== null,
+      attemptCount: row.attempt_count,
+      persisted: persisted !== null,
     }
   }
 
   const body = serializeEnvelope(buildEventEnvelope(event as CanonicalEventRow))
   const result = await deliverWebhook(
-    { id: dest.id as string, name: dest.name as string, targetUrl: dest.target_url as string, signingSecret: dest.signing_secret as string },
+    {
+      id: dest.id as string,
+      name: dest.name as string,
+      targetUrl: dest.target_url as string,
+      signingSecret: dest.signing_secret as string,
+    },
     body,
-    { fetchImpl: options.fetchImpl, resolveHost: options.resolveHost, deliveryId: row.id, eventId: row.event_id },
+    {
+      fetchImpl: options.fetchImpl,
+      resolveHost: options.resolveHost,
+      deliveryId: row.id,
+      eventId: row.event_id,
+    }
   )
 
   const attemptCount = row.attempt_count + 1 // this pass made one real attempt
@@ -296,17 +353,28 @@ async function sendAndSettle(
   // by the claim token — history cannot be lost by a partial write, and a lost reclaim race writes
   // neither (cross-review, Codex 2026-07-21).
   const persisted = await settleDelivery(db, {
-    row, projectId, claimToken: nowIso, now: settledAt.toISOString(), status: next.status,
-    nextAttemptAt: next.nextAttemptAt, lastError: result.error, attemptCount,
-    log: true, outcome: result.disposition, httpStatus: result.status, latencyMs: result.latencyMs,
+    row,
+    projectId,
+    claimToken: nowIso,
+    now: settledAt.toISOString(),
+    status: next.status,
+    nextAttemptAt: next.nextAttemptAt,
+    lastError: result.error,
+    attemptCount,
+    log: true,
+    outcome: result.disposition,
+    httpStatus: result.status,
+    latencyMs: result.latencyMs,
   })
 
   // The DB's ACTUAL resting status, which differs from `next.status` when settle_delivery coerced a
   // failed/pending settlement to `dead` because the destination was removed mid-flight.
   return {
-    ...base, disposition: result.disposition,
+    ...base,
+    disposition: result.disposition,
     status: (persisted as DeliverySettlement['status']) ?? next.status,
-    attemptCount, persisted: persisted !== null,
+    attemptCount,
+    persisted: persisted !== null,
   }
 }
 
@@ -363,7 +431,7 @@ async function releaseUnsent(
   db: SupabaseClient,
   projectId: string,
   rows: ClaimedRow[],
-  now: Date,
+  now: Date
 ): Promise<Map<string, string>> {
   if (rows.length === 0) return new Map()
   const nowIso = now.toISOString()
@@ -389,7 +457,7 @@ async function releaseUnsent(
 function nextState(
   disposition: DeliveryDisposition,
   attemptCount: number,
-  now: Date,
+  now: Date
 ): { status: 'delivered' | 'failed' | 'dead'; nextAttemptAt: string | null } {
   if (disposition === 'delivered') return { status: 'delivered', nextAttemptAt: null }
   // A permanent 4xx (not 408/429): retrying identical bytes can't help, so dead-letter immediately

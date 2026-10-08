@@ -76,7 +76,7 @@ export async function POST(request: Request) {
   if (!authorized(request)) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }
-  if (!isDestinationDeliveryEnabled()) {
+  if (!(await isDestinationDeliveryEnabled())) {
     return NextResponse.json({ enabled: false, projects: 0, dispatched: 0 })
   }
 
@@ -149,7 +149,7 @@ export async function POST(request: Request) {
       internalErrors,
       errored,
     },
-    { status },
+    { status }
   )
 }
 

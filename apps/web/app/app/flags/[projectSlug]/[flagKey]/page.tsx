@@ -17,7 +17,7 @@
 
 import { notFound } from 'next/navigation'
 import { requireProjectMembership } from '@/lib/dashboard-auth'
-import { isFlagConsoleEnabled, isFlagRuleBuilderEnabled, isFlagServingEnabled } from '@/lib/flags'
+import { isFlagConsoleEnabled, isFlagRuleBuilderEnabled } from '@/lib/flags'
 import { isOwner } from '@/lib/roles'
 import { getFlagRegistryView } from '@/lib/flag-registry'
 import { getFeatureFunnelByProjectId } from '@/lib/tars-query'
@@ -94,7 +94,7 @@ export default async function FlagDetailPage({
   params: Promise<{ projectSlug: string; flagKey: string }>
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  if (!isFlagConsoleEnabled()) notFound()
+  if (!(await isFlagConsoleEnabled())) notFound()
   const { projectSlug, flagKey } = await params
   const membership = await requireProjectMembership(projectSlug)
   const registry = await getFlagRegistryView(membership.projectId)
@@ -117,8 +117,8 @@ export default async function FlagDetailPage({
   const tab: Tab = TABS.includes(candidate as Tab) ? (candidate as Tab) : 'value'
 
   const canManage = isOwner({ projectId: membership.projectId, role: membership.role })
-  const ruleBuilderEnabled = isFlagRuleBuilderEnabled()
-  const servingEnabled = isFlagServingEnabled()
+  const ruleBuilderEnabled = await isFlagRuleBuilderEnabled()
+  const servingEnabled = true // one-product-project D2: serving is no longer a gate
   const latest = flag.versions.reduce<(typeof flag.versions)[number] | undefined>(
     (best, row) => (best === undefined || row.version > best.version ? row : best),
     undefined
