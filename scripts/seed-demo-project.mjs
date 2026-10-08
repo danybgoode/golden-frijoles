@@ -31,7 +31,7 @@ export const DEMO_PROJECT_SLUG = process.env.DEMO_PROJECT_SLUG?.trim() || 'golde
 /** True only for a local Supabase (`supabase start`, CI's runner): the one place this destructive seed may run. */
 export function isLocalSupabaseUrl(url) {
   try {
-    return ['localhost', '127.0.0.1', '[::1]', '::1'].includes(new URL(url).hostname);
+    return ['localhost', '127.0.0.1', '[::1]'].includes(new URL(url).hostname);
   } catch {
     return false;
   }

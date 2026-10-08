@@ -70,18 +70,11 @@ function text(payload: unknown, isError = false) {
  * The READ tools register regardless. They answer a question a connector token already authorizes,
  * and withholding them would make the connector worse at the thing it is for.
  */
-/** What the public project's anonymous connector shows in place of an audit actor's user id. */
-export const PUBLIC_ACTOR = 'a member (hidden on the public connector)'
-
 export function registerFlagTools(
   server: McpServer,
   projectId: string,
   projectSlug: string,
-  writeActor: { userId: string } | null,
-  // one-product-project S1.1 (fresh review of #318): the public project's connector URL is handed to every
-  // visitor on /install, and that project is Golden Frijoles' own now. Its flags are readable there (built in the
-  // open), but the audit's `actor` is a Supabase user id, so an anonymous reader gets it hidden.
-  hideActors = false
+  writeActor: { userId: string } | null
 ): void {
   server.registerTool(
     'list_flags',
@@ -119,9 +112,7 @@ export function registerFlagTools(
         const registry = await getFlagRegistryView(projectId)
         const flag = registry.flags.find((candidate) => candidate.key === key)
         if (!flag) return text({ ok: false, error: `No flag \`${key}\` in this project.` }, true)
-        const detail = toCliFlagDetailView(flag, registry.audit)
-        if (hideActors) detail.audit = detail.audit.map((row) => ({ ...row, actor: PUBLIC_ACTOR }))
-        return text({ ok: true, project: projectSlug, flag: detail })
+        return text({ ok: true, project: projectSlug, flag: toCliFlagDetailView(flag, registry.audit) })
       } catch {
         return text({ ok: false, error: 'Could not read this project’s flags right now.' }, true)
       }

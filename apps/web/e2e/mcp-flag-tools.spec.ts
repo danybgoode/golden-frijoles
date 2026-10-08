@@ -116,8 +116,11 @@ test.describe('MCP flag write tools', () => {
       const read = JSON.parse(anonymous.result.content[0].text)
       expect(read.ok).toBe(true)
       expect(read.flag.audit.length).toBeGreaterThan(0)
-      for (const row of read.flag.audit) expect(row.actor).toBe('a member (hidden on the public connector)') // lib/mcp-flag-tools.ts PUBLIC_ACTOR
+      for (const row of read.flag.audit) expect(row.actor).toBe('hidden on the public connector') // lib/public-connector-scrub.ts
       expect(anonymous.result.content[0].text).not.toContain(owner.userId)
+      // …and the condition is not a constant: the owner's own bearer, on the same URL, still sees their id.
+      const asOwner = await rpc(request, connector, owner.token, 'tools/call', { name: 'get_flag', arguments: { key } })
+      expect(asOwner.result.content[0].text).toContain(owner.userId)
     } finally {
       await owner.cleanup()
     }

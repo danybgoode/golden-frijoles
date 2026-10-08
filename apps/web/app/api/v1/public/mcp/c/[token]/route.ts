@@ -25,6 +25,7 @@ import { evaluateFrictionForProject } from '@/lib/friction-eval'
 import { resolveConnectorToken, TOKEN_FORMAT } from '@/lib/connector-tokens'
 import { makerMayWrite } from '@/lib/connector-maker'
 import { DEMO_PROJECT_SLUG } from '@/lib/public-demo'
+import { scrubToolText } from '@/lib/public-connector-scrub'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { getFeatureFunnelByProjectId } from '@/lib/tars-query'
 import { getFeatureImpactByProjectId, getInputSeriesByKey } from '@/lib/north-star-query'
@@ -81,6 +82,26 @@ async function gate(
 // Every tool call is scoped to this one resolved project — no tool schema below accepts a
 // project/projectId param, so a token minted for project A has no way to even ask for project
 // B's data. This is what makes the cross-project isolation acceptance true by construction.
+/** Every tool registered after this returns its text content through `scrubToolText`. */
+function scrubRepliesForPublicReader(server: McpServer): void {
+  const register = server.registerTool.bind(server) as (...args: unknown[]) => unknown
+  ;(server as unknown as { registerTool: (...args: unknown[]) => unknown }).registerTool = (
+    name: unknown,
+    config: unknown,
+    handler: unknown
+  ) =>
+    register(name, config, async (...args: unknown[]) => {
+      const reply = (await (handler as (...a: unknown[]) => Promise<{ content?: unknown[] }>)(...args)) ?? {}
+      return {
+        ...reply,
+        content: (reply.content ?? []).map((part) => {
+          const item = part as { type?: string; text?: string }
+          return item.type === 'text' && typeof item.text === 'string' ? { ...item, text: scrubToolText(item.text) } : part
+        }),
+      }
+    })
+}
+
 function buildMcpServer(
   projectId: string,
   projectSlug: string,
@@ -93,9 +114,12 @@ function buildMcpServer(
   // uses (D4). The READ tools register unconditionally; the WRITE tools only when `flagWriteActor`
   // is non-null, which requires a CLI token whose holder OWNS this project. See lib/mcp-flag-tools.ts
   // for why that credential and not `agent_write`.
-  // The public project's anonymous reader (no write credential of either kind) sees flags without actor ids.
-  const anonymousOnPublicProject = projectSlug === DEMO_PROJECT_SLUG && !writeKeyId && !flagWriteActor
-  registerFlagTools(server, projectId, projectSlug, flagWriteActor, anonymousOnPublicProject)
+  // one-product-project S1.1 (fresh review of #318): the public project is Golden Frijoles' own, and its URL is on
+  // /install for anyone. A reader holding no write credential of either kind gets every reply through ONE scrubber
+  // (lib/public-connector-scrub.ts), wired before the first tool registers, so no tool — now or later — hands an
+  // anonymous visitor a person's id.
+  if (projectSlug === DEMO_PROJECT_SLUG && !writeKeyId && !flagWriteActor) scrubRepliesForPublicReader(server)
+  registerFlagTools(server, projectId, projectSlug, flagWriteActor)
 
   server.registerTool(
     'get_tars_funnel',
