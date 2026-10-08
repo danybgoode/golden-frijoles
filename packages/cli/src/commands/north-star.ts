@@ -1,7 +1,7 @@
 // think-skills S3 (D6) — `frijoles north-star set <file>`: the North Star workshop's metric reaches the engine.
 //
 // ── A thin shell over one route ───────────────────────────────────────────────────────────────────────────────────
-// The `north-star` coach leaves `Roadmap/00-strategy/north-star.md`, whose `## Sync payload` section holds exactly one
+// The North Star chapter of the `strategy` skill leaves `Roadmap/00-strategy/north-star.md`, whose `## Sync payload` section holds exactly one
 // ```json block. This command reads that block and nothing else, and sends it to `/api/v1/cli/north-star`. The SERVER
 // validates it (`northStarSyncSchema`) and its `issues` are printed verbatim on a 400, the same rule `flags-write.ts`
 // follows: one judge of what a valid North Star is, and it lives on the server.
