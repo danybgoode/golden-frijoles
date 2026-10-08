@@ -69,8 +69,9 @@ Scope the live system corrected, said out loud:
 - **`board.hubUrl` is already `https://goldenfrijoles.com/hub/golden-beans-demo`**, and
   `/hub/golden-beans-demo/epic/build-view-upgrade` answers 200 with this epic on prod. The project question is
   answered: no config change, only the link's path changes.
-- **There are five copies of `build-state.mjs`**, not three: `scripts/`, `skills/scripts/`, `skills/template/scripts/`,
-  `skills/kit/dist/` and `hooks/vendor/`. All stay byte-identical (parity check + vendor render).
+- **There are four tracked copies of `build-state.mjs`**, not three: `scripts/`, `skills/scripts/`,
+  `skills/template/scripts/` and `hooks/vendor/` (plus the gitignored kit build in `skills/kit/dist/`). All stay
+  byte-identical (parity check + vendor render).
 - **Addendum from Daniel at the kickoff (2026-10-08), added as S1.4:** the session line under the prompt
   (`Session 48% · 5h 78% · 7d 46%`) colours each figure green → yellow → red and shows the time to each window's reset:
   `5h 78% (-2h)`, `7d 46% (-3d)` (hours at 24 h or less). `$.ui.status` takes plain text only (the engine's type:
@@ -99,10 +100,14 @@ Scope the live system corrected, said out loud:
   24 h, `(-3d)` beyond (whole units, rounded down, never `-0`); a missing or past `resetsAt` shows no reset. The plain
   `sessionLine` text keeps the same words (Cowork's line, the log) and the verdict logic is untouched.
 - **D6 Where the coloured line draws.** A `ui.render` hook on `PromptHint` (the dim hint line under the prompt) wraps
-  the engine's own drawing (`next(e)`) and adds the coloured parts after it, read from `$.state`
-  (`golden-frijoles.sessionLine`, declared in `types/index.d.ts`). On an engine without `$.state` or a hint hook that
-  throws, it falls back to today's plain `$.ui.status` text. Never both.
-- **D7 Copies.** Edit `scripts/build-state.mjs`, then copy to the other four; re-render the hook vendor;
+  the engine's own drawing (`next(e)`) and adds a coloured row under it, computed at draw time from the figures in
+  `$.state` (`golden-frijoles.sessionFigures`, declared in `types/index.d.ts`); a one-minute clock redraws it so the
+  reset countdown moves. On an engine without `$.state` the plain `$.ui.status` line is the session line, rewritten by
+  the same clock. Never both. *Amended at review (#312):* the key is `sessionFigures`, not `sessionLine`; a hint hook
+  that throws makes the engine draw its own hint (no session row) rather than falling back, accepted for an advisory
+  line; a question waiting shows before the first measurement; a hot reload reads the kept figures back.
+- **D7 Copies.** Edit `scripts/build-state.mjs`, then copy to the other three tracked copies (`skills/kit/dist/` is
+  build output, gitignored); re-render the hook vendor;
   `check-script-parity.mjs` and `render-hook-vendor.test.mjs` green.
 - **D8 Release.** Plugin + kit 0.40.0, CHANGELOG, `plugin-checksums.mjs`, one PR (low risk, one sprint).
 - **D9 No flag, no migration, no new data.** Rollback is a revert plus a version bump.
