@@ -42,7 +42,7 @@ test('the board: six columns in order, the answer names the next pull, filters l
   const columns = page.locator('.ds-tiles--board > .ds-tile .ds-tile-label')
   // one-header-one-name D8 — the columns SHOW the decision-2 words; `data-stage` keeps the stored key, and the cards
   // below are the same cards (no key was renamed, so no column emptied).
-  await expect(columns).toHaveText(['Backlog', 'Grooming', 'Ready', 'Building', 'QA', 'Shipped'])
+  await expect(columns).toHaveText(['Backlog', 'Refining', 'Ready', 'Building', 'QA', 'Shipped'])
   await expect(page.locator('.ds-tiles--board > .ds-tile').first()).toHaveAttribute('data-stage', 'To groom')
   await expect(page.locator('.ds-answer')).toContainText('Next to pull: An idea nobody has bet on yet.')
   // one-header-one-name S1.2 — the board is IN the console: the header has Plan current, the Plan rail has Board current,
@@ -101,7 +101,7 @@ test('the epic page: chips not tiles, the track lit at its stage, one command in
   await expect(page.locator('main .ds-tile, main .ds-summary')).toHaveCount(0)
   // Seven steps, the current one named by aria-current, and its stored key kept beside the word.
   const steps = page.locator('main .ds-epic-track li')
-  await expect(steps).toHaveText(['Backlog', 'Grooming', 'Ready', 'Building', 'QA', 'Shipped', 'Read'])
+  await expect(steps).toHaveText(['Backlog', 'Refining', 'Ready', 'Building', 'QA', 'Shipped', 'Read'])
   await expect(page.locator('main .ds-epic-track li[aria-current="step"]')).toHaveAttribute(
     'data-step',
     'Ready to build'

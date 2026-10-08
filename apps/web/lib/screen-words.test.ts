@@ -75,7 +75,9 @@ test('the nav labels are the settled words', async () => {
 })
 
 test('the console and the scripts call every stage the same thing (plugin-1-0 D6)', async () => {
-  const { stageWord } = await import('../../../scripts/lib/stage.mjs')
+  // A variable specifier: the scripts are untyped .mjs, and this test reads one function at runtime only.
+  const scriptsStage = '../../../scripts/lib/stage.mjs'
+  const { stageWord } = (await import(scriptsStage)) as { stageWord: (stage: string) => string }
   for (const stage of ROADMAP_STAGES) assert.equal(stageLabel(stage), stageWord(stage), stage)
   assert.equal(stageLabel('Grooming'), 'Refining')
 })
