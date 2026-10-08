@@ -73,16 +73,18 @@ export default async function InstallPage() {
     <Frame variant="public" brandHref="/" agentFooter actions={<FrameLink href="/login">Sign in</FrameLink>}>
       <h1>Point Claude at a real project</h1>
       <p className="ds-lede">
-        This is a working connector for our demo shop. Paste it into Claude and ask it about the funnel, the
-        North Star, or which features are on — it will answer from live data.
+        This is a working connector for Golden Frijoles itself, the product built in the open with the
+        product. Paste it into Claude and ask it about our funnel, our North Star, or which features are on —
+        it will answer from live data.
       </p>
 
       {/* The whole defect this page once caused was a signed-in operator following a link here and
-          copying somebody else's URL, so the page's job is to be UNMISTAKABLY the demo. */}
+          copying somebody else's URL, so the page's job is to be UNMISTAKABLY ours. Since one-product-project
+          D1 the public project is Golden Frijoles' own, no longer a synthetic demo shop. */}
       <div className="ds-demobar">
         <span className="ds-demobar-pip" />
         <span>
-          <b>This is the demo project, not yours.</b> The token below reads{' '}
+          <b>This is our project, not yours.</b> The token below reads{' '}
           <span className="ds-mono">{DEMO_PROJECT_SLUG}</span> and nothing else. Your own project&apos;s URL
           lives inside the product, at <span className="ds-mono">Setup › Connect</span>.
         </span>

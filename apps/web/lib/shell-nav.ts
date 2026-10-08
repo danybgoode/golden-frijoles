@@ -188,7 +188,7 @@ export async function getShellNav(
     // signed-in console* — it has a project switcher, an account menu and a palette over surfaces
     // that all require a session. An anonymous visitor is not a degraded signed-in user.
     //
-    // This is not hypothetical: `/app/funnel/golden-beans-demo/<key>` and its impact twin are
+    // This is not hypothetical: `/app/funnel/golden-frijoles/<key>` and its impact twin are
     // ANONYMOUSLY readable (lib/public-demo.ts' allow-list) and render this shell. A previous
     // revision keyed the chrome on the env var alone, which would have given that public page a logo,
     // an empty sections nav, an empty identity slot and a ⌘K palette listing nothing — on a page with
@@ -217,7 +217,7 @@ export async function getShellNav(
 
     // A slug the caller supplied that the viewer is NOT a member of does not silently fall back to
     // their first project (fresh-reviewer finding). The two anonymously-readable demo dashboards
-    // are exactly this case: a member of `acme` opening /app/funnel/golden-beans-demo/setup_guide
+    // are exactly this case: a member of `acme` opening /app/funnel/golden-frijoles/setup_guide
     // is allowed to (lib/dashboard-auth.ts' allow-list) — and would have got `acme`'s sections and
     // `acme`'s activity rail wrapped around the DEMO project's numbers. Not a leak, since it is the
     // viewer's own data, but the chrome and the <main> would name different tenants, which is the

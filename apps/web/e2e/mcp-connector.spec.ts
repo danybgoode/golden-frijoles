@@ -14,7 +14,7 @@ function disposableToken(): string {
 // a live route — the dark-default (flag unset) is instead covered as a pure-function assertion,
 // not a second differently-enved server boot (see lib/flags.ts's header comment).
 
-const DEMO_SLUG = 'golden-beans-demo'
+const DEMO_SLUG = 'golden-frijoles'
 
 function dbClient() {
   const url = process.env.SUPABASE_URL

@@ -30,7 +30,7 @@ import { METHODOLOGY_CHAPTER_IDS } from '@/lib/methodology-chapters'
 // The same expression `lib/self-track.ts` uses. Read here rather than imported because that module
 // starts with `import 'server-only'` and cannot be loaded by this runner — the constraint that put
 // the event vocabulary in its own file. A literal would be a third copy of the default.
-const SELF_PROJECT_SLUG = process.env.SELF_PROJECT_SLUG?.trim() || 'golden-beans'
+const SELF_PROJECT_SLUG = process.env.SELF_PROJECT_SLUG?.trim() || process.env.DEMO_PROJECT_SLUG?.trim() || 'golden-frijoles'
 
 const dbUrl = process.env.SUPABASE_DB_URL
 const selfKey = process.env.SELF_PROJECT_API_KEY

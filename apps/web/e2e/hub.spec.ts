@@ -14,7 +14,7 @@ import { specWorkspaceId } from './helpers/spec-workspace'
 // The fixture is provisioned here rather than assumed, because supabase/seed.sql seeds only
 // project-one/project-two — the demo project arrives via `npm run seed:demo`, which runs in CI but
 // may not have run on a given developer's machine.
-const DEMO_SLUG = process.env.DEMO_PROJECT_SLUG?.trim() || 'golden-beans-demo'
+const DEMO_SLUG = process.env.DEMO_PROJECT_SLUG?.trim() || 'golden-frijoles'
 const DEMO_KEY = 'local-hub-spec-key-do-not-use-in-prod'
 
 // ── Why Stories 1.2 and 1.3 share ONE spec file, serially ─────────────────────────────────────

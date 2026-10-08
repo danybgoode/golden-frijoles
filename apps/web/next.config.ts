@@ -8,6 +8,17 @@ import type { NextConfig } from 'next'
 const nextConfig: NextConfig = {
   async redirects() {
     return [
+      // one-product-project S1.1 — `golden-beans-demo` was renamed `golden-frijoles` (D1). Links already shared
+      // keep working. Permanent: the old slug is reserved (lib/tenant-slug.ts) and can never mean anything else.
+      // `golden-beans` is NOT redirected: it still exists, archived, and its flag history stays readable there.
+      { source: '/hub/golden-beans-demo', destination: '/hub/golden-frijoles', permanent: true },
+      { source: '/hub/golden-beans-demo/:path*', destination: '/hub/golden-frijoles/:path*', permanent: true },
+      { source: '/app/:section/golden-beans-demo', destination: '/app/:section/golden-frijoles', permanent: true },
+      {
+        source: '/app/:section/golden-beans-demo/:path*',
+        destination: '/app/:section/golden-frijoles/:path*',
+        permanent: true,
+      },
       {
         source: '/funnel/:projectSlug/:featureKey',
         destination: '/app/funnel/:projectSlug/:featureKey',

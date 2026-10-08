@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // seed-self-project.mjs — Story 3.1 (Roadmap/02-commercial/commercial-shell/sprint-3.md). Seeds
-// (idempotently, re-runnable) the `golden-beans` SELF tenant — the engine's own project, the one
-// the public landing dogfoods its visitor→waitlist funnel into. This is a THIRD project, separate
-// from the marketing demo (`golden-beans-demo`, seed-demo-project.mjs) and from Miyagi; landing
-// traffic must never mix into either (AGENTS.md rules #1/#2). Sibling of seed-demo-project.mjs and
+// (idempotently, re-runnable) the SELF tenant — the engine's own project, the one the public landing
+// dogfoods its funnels into. Since one-product-project D1 (2026-10-08) that is the public
+// `golden-frijoles` project seed-demo-project.mjs makes: Golden Frijoles is built in the open, in one
+// project. It is still never Miyagi's (AGENTS.md rules #1/#2). Sibling of seed-demo-project.mjs and
 // the same shape: the PROJECT ROW is a direct Supabase upsert (there's no self-serve signup API),
 // but the Grower SIGNAL is registered through the REAL Bearer-authed API, never a raw DB write.
 //
@@ -16,7 +16,7 @@
 //   SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY — provisioning (the project row upsert)
 //   GROWTH_ENGINE_URL                        — the running server the fetch calls target
 //                                              (defaults to http://localhost:3000)
-//   SELF_PROJECT_SLUG                        — optional slug override (default 'golden-beans'),
+//   SELF_PROJECT_SLUG                        — optional slug override (default DEMO_PROJECT_SLUG),
 //                                              matching lib/self-track.ts's env pattern.
 //   SELF_PROJECT_API_KEY                     — optional; if set, hash+upsert this fixed value
 //                                              instead of minting a fresh random key each run, so
@@ -29,9 +29,9 @@ import { seededProjectWorkspace } from './lib/seed-workspace.mjs';
 
 // The self tenant's slug. Kept in sync with lib/self-track.ts's SELF_PROJECT_SLUG (this script
 // can't import that TS file — see the header comment).
-export const SELF_PROJECT_SLUG = process.env.SELF_PROJECT_SLUG?.trim() || 'golden-beans';
-// The demo tenant's slug (mirrors lib/public-demo.ts) — used ONLY for the isolation guard below.
-const DEMO_PROJECT_SLUG = process.env.DEMO_PROJECT_SLUG?.trim() || 'golden-beans-demo';
+// one-product-project D1: the self tenant IS the public project now, so the default mirrors lib/public-demo.ts.
+const DEMO_PROJECT_SLUG = process.env.DEMO_PROJECT_SLUG?.trim() || 'golden-frijoles';
+export const SELF_PROJECT_SLUG = process.env.SELF_PROJECT_SLUG?.trim() || DEMO_PROJECT_SLUG;
 
 // The Grower signal: waitlist conversion rate, as a TARS feature. targetEvent is the funnel entry
 // (a landing visit), adoptedEvent is the conversion (a waitlist join) — exactly the two events
@@ -109,6 +109,13 @@ async function provisionProject(db) {
   }
 
   const plaintextKey = overrideKey || randomBytes(24).toString('hex');
+  // one-product-project D1: the self tenant is usually the demo project seed-demo-project.mjs already made.
+  // An existing row is never re-upserted: that would overwrite its legacy key hash and its workspace. The key
+  // is only attached to it.
+  if (existing) {
+    await ensureActiveApiKey(db, existing.id, plaintextKey);
+    return { projectId: existing.id, apiKey: plaintextKey };
+  }
   const { data, error } = await db
     .from('projects')
     .upsert(
@@ -215,16 +222,6 @@ async function registerGrowerSignal(baseUrl, apiKey) {
 }
 
 export async function main() {
-  // Isolation guard: the self tenant must be a DIFFERENT project from the demo. Refuse to run if
-  // they've been cross-wired to the same slug — otherwise the two API keys would upsert onto one
-  // project row and landing traffic could mix into the demo (the exact thing the story forbids).
-  if (SELF_PROJECT_SLUG === DEMO_PROJECT_SLUG) {
-    throw new Error(
-      `SELF_PROJECT_SLUG ('${SELF_PROJECT_SLUG}') must differ from DEMO_PROJECT_SLUG — the self ` +
-        `tenant is a separate project; sharing a slug would mix landing traffic into the demo.`
-    );
-  }
-
   const baseUrl = process.env.GROWTH_ENGINE_URL?.trim() || 'http://localhost:3000';
   const db = supabase();
 

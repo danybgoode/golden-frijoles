@@ -32,8 +32,8 @@ const RAIL_MARKERS = ['agent-rail', 'Recent activity', 'Waiting on you']
 // (lib/dashboard-auth.ts' allow-listed carve-out) and they use the same ProductShell the rail lives
 // in — which makes them the exact place a rail rendered above the membership check would leak.
 const ANONYMOUS_APP_SURFACES = [
-  '/app/funnel/golden-beans-demo/setup_guide',
-  '/app/impact/golden-beans-demo/setup_guide',
+  '/app/funnel/golden-frijoles/setup_guide',
+  '/app/impact/golden-frijoles/setup_guide',
 ]
 
 test.describe('agent rail — anonymous boundary', () => {

@@ -17,7 +17,7 @@ import { createHash, randomBytes } from 'node:crypto'
 //   an ingest key in the header     → absent
 //   a revoked CLI token             → absent
 
-const DEMO_SLUG = 'golden-beans-demo'
+const DEMO_SLUG = 'golden-frijoles'
 const WRITE_TOOLS = ['create_flag', 'kill_flag', 'rollout_flag', 'set_flag']
 
 function db() {
@@ -60,6 +60,7 @@ async function seedAccount(slug: string, role: 'owner' | 'member') {
   await client.from('cli_tokens').insert({ user_id: userId, token_hash: sha256(token), label: 'mcp spec' })
   return {
     token,
+    userId,
     cleanup: async () => {
       await client.from('project_members').delete().eq('user_id', userId)
       await client.auth.admin.deleteUser(userId)
@@ -108,6 +109,24 @@ test.describe('MCP flag write tools', () => {
       expect(result.ok).toBe(true)
       expect(result.serving).toBe(true)
       expect(result.environments[0].status).toBe('applied')
+
+      // one-product-project S1.1 (fresh review of #318): the public project's URL is on /install for anyone. An
+      // anonymous reader sees the flag, but the audit names no user id — the owner just wrote one into it.
+      const anonymous = await rpc(request, connector, null, 'tools/call', {
+        name: 'get_flag',
+        arguments: { key },
+      })
+      const read = JSON.parse(anonymous.result.content[0].text)
+      expect(read.ok).toBe(true)
+      expect(read.flag.audit.length).toBeGreaterThan(0)
+      for (const row of read.flag.audit) expect(row.actor).toBe('hidden on the public connector') // lib/public-connector-scrub.ts
+      expect(anonymous.result.content[0].text).not.toContain(owner.userId)
+      // …and the condition is not a constant: the owner's own bearer, on the same URL, still sees their id.
+      const asOwner = await rpc(request, connector, owner.token, 'tools/call', {
+        name: 'get_flag',
+        arguments: { key },
+      })
+      expect(asOwner.result.content[0].text).toContain(owner.userId)
     } finally {
       await owner.cleanup()
     }

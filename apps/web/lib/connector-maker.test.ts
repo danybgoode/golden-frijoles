@@ -8,7 +8,7 @@ import { makerMayWrite, makerToStamp } from './connector-maker.ts'
 const base = {
   createdBy: 'user-1',
   projectSlug: 'acme',
-  demoProjectSlug: 'golden-beans-demo',
+  demoProjectSlug: 'golden-frijoles',
   connectorWritesEnabled: true,
   cliWritesEnabled: true,
 }
@@ -19,14 +19,14 @@ test('a URL with a maker, outside the demo, with both write switches on, may wri
 
 test('each condition alone turns it read-only', () => {
   assert.equal(makerMayWrite({ ...base, createdBy: null }), false, 'a URL from before this sprint')
-  assert.equal(makerMayWrite({ ...base, projectSlug: 'golden-beans-demo' }), false, 'the public demo URL')
+  assert.equal(makerMayWrite({ ...base, projectSlug: 'golden-frijoles' }), false, 'the public demo URL')
   assert.equal(makerMayWrite({ ...base, connectorWritesEnabled: false }), false)
   assert.equal(makerMayWrite({ ...base, cliWritesEnabled: false }), false)
 })
 
 test('the mint never stamps a maker on the demo project', () => {
-  assert.equal(makerToStamp('golden-beans-demo', 'golden-beans-demo', 'user-1'), null)
-  assert.equal(makerToStamp('acme', 'golden-beans-demo', 'user-1'), 'user-1')
+  assert.equal(makerToStamp('golden-frijoles', 'golden-frijoles', 'user-1'), null)
+  assert.equal(makerToStamp('acme', 'golden-frijoles', 'user-1'), 'user-1')
 })
 
 // The dark side, pinned STRUCTURALLY (fresh reviewer, PR #282): CI's lit server now matches production

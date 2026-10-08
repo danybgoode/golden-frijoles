@@ -101,6 +101,9 @@ test.describe('slugFromEmail — what a stranger can name their tenant', () => {
     // register a reserved/demo-shaped name would inherit a publicly-readable dashboard.
     expect(isReservedSlug('demo')).toBe(true)
     expect(isReservedSlug('golden-beans')).toBe(true)
+    // one-product-project S1.1: the one public project, and the slug it was renamed from, can never be re-registered.
+    expect(isReservedSlug('golden-frijoles')).toBe(true)
+    expect(isReservedSlug('golden-beans-demo')).toBe(true)
     expect(isReservedSlug('admin')).toBe(true)
     expect(isReservedSlug('api')).toBe(true)
     expect(isReservedSlug('app')).toBe(true)

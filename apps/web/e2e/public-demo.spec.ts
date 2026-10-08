@@ -5,7 +5,7 @@ import { test, expect } from '@playwright/test'
 // in Roadmap/01-growth-engine/growth-engine-v1/sprint-2.md and sprint-3.md) — the least-convenient
 // input, per the growth-engine-v1 retrospective's "test with a real Miyagi projectId" lesson —
 // not a nonsense string that would 404 for an unrelated reason.
-const DEMO_SLUG = 'golden-beans-demo'
+const DEMO_SLUG = 'golden-frijoles'
 const REAL_PRODUCTION_SLUG = 'miyagisanchez'
 
 test.describe('GET /v1/public/funnel', () => {
@@ -69,4 +69,19 @@ test.describe('GET /v1/public/experiments', () => {
     expect(body.ok).toBe(true)
     expect(body.comparison.variants.length).toBeGreaterThan(0)
   })
+})
+
+// one-product-project S1.1 — `golden-beans-demo` became `golden-frijoles`. A link shared under the old slug
+// must still land, permanently, on the same page of the renamed project (next.config.ts redirects).
+test('old golden-beans-demo links redirect permanently to golden-frijoles', async ({ request }) => {
+  for (const [from, to] of [
+    ['/hub/golden-beans-demo', '/hub/golden-frijoles'],
+    ['/hub/golden-beans-demo/board', '/hub/golden-frijoles/board'],
+    ['/app/funnel/golden-beans-demo/setup_guide', '/app/funnel/golden-frijoles/setup_guide'],
+    ['/app/north-star/golden-beans-demo', '/app/north-star/golden-frijoles'],
+  ]) {
+    const res = await request.get(from, { maxRedirects: 0 })
+    expect(res.status(), from).toBe(308)
+    expect(new URL(res.headers()['location'], 'http://x').pathname, from).toBe(to)
+  }
 })

@@ -213,8 +213,8 @@ test('a gold CTA keeps its label while hovered', async ({ page }) => {
   ).toBeGreaterThan(240)
 })
 
-// frijoles-rebrand-closeout A4. The two old-name tenant slugs are live DATA identities, not brand
-// copy: one owns historical landing telemetry and one owns the synthetic public proof. Strip only
+// frijoles-rebrand-closeout A4. The old-name tenant slug is a live DATA identity, not brand copy: it owns
+// historical landing telemetry (the public proof's `golden-beans-demo` became `golden-frijoles`, one-product-project). Strip only
 // those exact, enumerated values before checking the rest of the rendered page. A broad matcher or
 // a generic hyphen exception would let the old brand creep back in under cover of the slug decision.
 test('the page is called Golden Frijoles, with only the named data-slug survivors', async ({ page }) => {
@@ -224,7 +224,7 @@ test('the page is called Golden Frijoles, with only the named data-slug survivor
   await expect(page.locator('.brand-lockup__type strong').first()).toHaveText('golden frijoles')
 
   const body = await page.locator('body').innerText()
-  const withoutDataSlugs = body.replaceAll('golden-beans-demo', '').replaceAll('golden-beans', '')
+  const withoutDataSlugs = body.replaceAll('golden-beans', '')
   expect(withoutDataSlugs).not.toMatch(/golden[ -]beans/i)
 })
 

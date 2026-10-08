@@ -95,7 +95,7 @@ test('impact endpoint + page reflect real telemetry AND real pushed-revenue seri
 })
 
 test('the demo impact page 404s for a feature with no linked inputs (anonymous carve-out still resolves)', async ({ request }) => {
-  const res = await request.get(`/app/impact/golden-beans-demo/spec-unlinked-page-${Date.now()}`, {
+  const res = await request.get(`/app/impact/golden-frijoles/spec-unlinked-page-${Date.now()}`, {
     maxRedirects: 0,
   })
   expect(res.status()).toBe(404)

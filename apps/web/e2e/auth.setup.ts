@@ -433,7 +433,7 @@ async function seedExperimentFixture(db: SupabaseClient, projectId: string, acto
  * ── Why this exists ───────────────────────────────────────────────────────────────────────────
  * design-system-rails Story 5.2 mounts Today's three bands on `/app` and `/app/tasks`, and epic D10
  * records that **no production tenant can render them populated**: `miyagisanchez` has zero tasks,
- * and the one production task is a resolved one on `golden-beans-demo`. So without this the ROW —
+ * and the one production task is a resolved one on `golden-frijoles`. So without this the ROW —
  * its dot, its evidence phrase, its holder, its actions — is a component nothing ever draws with
  * data, which is the same "a guard nobody has seen red" problem one level up.
  *
