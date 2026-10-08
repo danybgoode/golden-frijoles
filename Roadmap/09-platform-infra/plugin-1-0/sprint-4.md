@@ -29,7 +29,7 @@ stories:
 
 ### Story 4.1 — Plugin, kit and CLI 1.0.0 ✅ `e1c7fbf`
 **As** a founder upgrading, **I want** one release with a table of what was renamed, **so that** I can find my old command.
-**Acceptance:** plugin + kit 1.0.0, CLI 1.0.0 (pins kit 1.0.0); CHANGELOG with the old → new table; `skills/RELEASING.md` followed. **Order:** Daniel publishes CLI 1.0.0 from the branch (2FA) and `npm view @golden-frijoles/cli bin` shows `frijoles`, THEN the four PRs merge in one sitting (D7); the kit publishes itself on the merge.
+**Acceptance:** plugin + kit 1.0.0, CLI 1.0.0 (pins kit 0.43.0, the newest published kit: D9); CHANGELOG with the old → new table; `skills/RELEASING.md` followed. **Order:** Daniel publishes CLI 1.0.0 from the branch (2FA) and `npm view @golden-frijoles/cli bin` shows `frijoles`, THEN the four PRs merge in one sitting (D7); the kit publishes itself on the merge.
 **Risk:** high
 
 ### Story 4.2 — A stranger installs 1.0
