@@ -161,7 +161,7 @@ export function EpicWhy({ card }: { card: BoardCard }) {
       </p>
       {r?.hypothesis ? <p className="ds-epic-why-line">{r.hypothesis}</p> : null}
       {seed ? (
-        <p className="ds-hint">No target yet: that comes with grooming.</p>
+        <p className="ds-hint">No target yet: that comes with refining.</p>
       ) : !target ? (
         <p className="ds-hint">No target set.</p>
       ) : (
@@ -228,7 +228,7 @@ export function EpicBars({ card }: { card: BoardCard }) {
     return (
       <p className="ds-hint">
         {card.grain === 'Seed'
-          ? "Sprints appear once it's groomed."
+          ? "Sprints appear once it's refined."
           : 'No sprints recorded for this epic yet.'}
       </p>
     )

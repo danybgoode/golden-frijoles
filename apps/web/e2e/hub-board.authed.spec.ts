@@ -159,8 +159,8 @@ test("a seed's page: the idea, no target yet, no sprints (S1.1)", async ({ page 
     'data-step',
     'To groom'
   )
-  await expect(page.locator('main')).toContainText('No target yet: that comes with grooming')
-  await expect(page.locator('main')).toContainText("Sprints appear once it's groomed.")
+  await expect(page.locator('main')).toContainText('No target yet: that comes with refining')
+  await expect(page.locator('main')).toContainText("Sprints appear once it's refined.")
 })
 
 test('a seed with a goal still says it has no target yet (fresh review, #295)', async ({ page }) => {
@@ -168,7 +168,7 @@ test('a seed with a goal still says it has no target yet (fresh review, #295)', 
   await expect(page.getByRole('region', { name: 'The idea' })).toContainText(
     'So that a founder hears about the week without opening anything.'
   )
-  await expect(page.locator('main')).toContainText('No target yet: that comes with grooming')
+  await expect(page.locator('main')).toContainText('No target yet: that comes with refining')
 })
 
 // ── one-epic-page · Sprint 2 — why, progress, flag and spend ───────────────────────────────────────────────────────

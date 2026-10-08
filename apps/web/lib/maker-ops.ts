@@ -184,7 +184,7 @@ export const MAKER_OPS_SURFACES: readonly OpsSurface[] = [
       {
         name: 'Quote vs actual',
         detail:
-          'A calibrated quote at grooming; an alert in the build view when spend passes it. Nothing is stopped.',
+          'A calibrated quote at refining; an alert in the build view when spend passes it. Nothing is stopped.',
         icon: 'warning',
       },
     ],

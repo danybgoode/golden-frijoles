@@ -517,7 +517,7 @@ test('S1.3: the epics table — column names, the bet under the name, every row 
 test('S2.1: How fast has its subtitle and a delta per metric against the last two months', () => {
   const html = render(viewFor('team'))
   expect(slice(html, 'speed-subtitle', 200)).toContain(
-    'From groomed to shipped, and how that compares with the last two months.'
+    'From refined to shipped, and how that compares with the last two months.'
   )
   const lead = html.slice(html.indexOf('data-deltas="epic_lead_time"'))
   expect(lead.slice(0, 200)).toContain('▲ 1 vs Sep · ±0 vs Aug')

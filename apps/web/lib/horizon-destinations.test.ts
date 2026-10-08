@@ -58,7 +58,7 @@ test('an epic MISSING from the artifact is exactly as unshipped as one in flight
   }
 })
 
-test('an UNREGISTERED epic lights nothing, silently — a renamed or ungroomed slug is not a claim', () => {
+test('an UNREGISTERED epic lights nothing, silently — a renamed or unrefined slug is not a claim', () => {
   const view = deriveHorizon([epic('some-epic-nobody-registered', true)])
   for (const d of view) {
     assert.equal(d.status, 'coming')

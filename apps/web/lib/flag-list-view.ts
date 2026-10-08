@@ -31,7 +31,7 @@
  *
  * The distinction between `off` and `never` is the whole of Story 2.3, and it is not cosmetic —
  * see `resolveActivationState` for how the two are stored differently, and the epic README's
- * Amendment 2 for why the story that was groomed ("not created") could not be built.
+ * Amendment 2 for why the story that was refined ("not created") could not be built.
  */
 export type FlagActivationState =
   /** An activation row points at a definition version. That version is what this environment serves. */

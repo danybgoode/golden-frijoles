@@ -83,11 +83,11 @@ stop and hammer scope instead.
 
 | Lane | Tell | What follows |
 |---|---|---|
-| **Shaped bet** | genuinely-new / strategic | pitch is complete (problem · appetite · bill of materials · rabbit holes · no-gos) → stops at `status: ready`, waits for §9. **No scaffolding yet** — an unfunded epic is a plan nobody paid for. |
+| **Shaped bet** | genuinely-new / strategic | the plan is complete (problem · appetite · bill of materials · rabbit holes · no-gos) → the **Plan gate**: *Approve the plan* places it in the queue and sets up its epic and sprint docs in the same answer; *Park it* leaves it `status: ready` with nothing set up. |
 | **Fixed scope** | bug, chore, well-specified story | default `appetite: S`, **skip §9 entirely** → on my approval scaffold the epic + sprint docs (commit path-scoped) and emit the per-sprint kickoffs |
 | **Reactive / ops** | incident, launch support, can't wait | no shaping — do it, then log it against the current wave's budget so the economics stay visible |
 
-*Add for a shaped bet:* `"Stop at the pitch. Do not scaffold — this goes to the betting table."`
+*Add for a shaped bet:* `"Stop at the Plan gate and wait for my answer."`
 
 ## 2 · Build a sprint — plan on strong model → execute
 ```
@@ -108,7 +108,7 @@ Read <AGENTS-path> (Start here) + Roadmap/LEARNINGS.md, then <brief path>.
 Run the <name> spike: time-boxed, READ-ONLY investigation → a written DECISION appended to the brief. No
 branch, no code. Answer the brief's questions against the live codebase; sort each capability into
 already-possible / light-enhancement / genuinely-new; end with Go / No-go / Go-with-constraints.
-I sign off the decision before anything gets groomed.
+I sign off the decision before anything gets refined.
 ```
 
 ## 4 · Review a PR — one external pass (+ a security lens when triggered), routed (NOT the builder)

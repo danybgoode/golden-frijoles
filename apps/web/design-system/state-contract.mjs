@@ -6,7 +6,7 @@
 //   node apps/web/design-system/state-contract.mjs --check    # CI: regenerate and fail on any diff
 //
 // ── Why this exists, and what it replaced ─────────────────────────────────────────────────────
-// The epic scaffolded a per-route SCREENSHOT DIFF against the reference PNGs (D2 as groomed), with
+// The epic scaffolded a per-route SCREENSHOT DIFF against the reference PNGs (D2 as refined), with
 // a threshold to be settled by making `/app/journeys` red and `/app/flags` green. It was measured
 // before it was written, and the two routes come out in the WRONG ORDER:
 //

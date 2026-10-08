@@ -152,13 +152,13 @@ export function stageWhen(card: Pick<BoardCard, 'stageSource' | 'pr' | 'shippedA
 export function nowLine(card: BoardCard): string {
   switch (card.stage) {
     case 'To groom':
-      return 'An idea, not groomed yet: no appetite, no slices, no target.'
+      return 'An idea, not refined yet: no appetite, no slices, no target.'
     case 'Grooming':
       return 'Being shaped into a pitch: appetite, slices and a target, then the approval gate.'
     case 'Ready to build':
       return card.bet
         ? `Funded (${card.bet})${card.buildOrder !== null ? `, #${card.buildOrder} in the build order` : ''}. Ready to build.`
-        : 'Groomed and ready to build, not funded yet.'
+        : 'Refined and ready to build, not funded yet.'
     case 'Building': {
       const sprint = currentSprint(card)
       if (!sprint) return 'Being built.'

@@ -28,7 +28,7 @@ updates:
         patterns: ['@playwright/*', 'playwright*']
     ignore:
       # Majors are an architecture decision, not a dependency chore — they arrive through a
-      # groomed epic with its own migration plan, never as an auto-opened PR.
+      # refined epic with its own migration plan, never as an auto-opened PR.
       - dependency-name: '*'
         update-types: ['version-update:semver-major']
 

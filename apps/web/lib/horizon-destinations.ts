@@ -97,7 +97,7 @@ export interface HorizonDestinationView extends HorizonDestination {
   /**
    * Epics from the pushed artifact that matched this destination's registered `epics`, in registry
    * order. Only MATCHED epics appear here — an artifact epic whose slug is not registered against
-   * any destination never appears anywhere in the output (an un-groomed or renamed epic lights
+   * any destination never appears anywhere in the output (an unrefined or renamed epic lights
    * nothing, silently, rather than erroring).
    */
   litBy: LitEpic[]

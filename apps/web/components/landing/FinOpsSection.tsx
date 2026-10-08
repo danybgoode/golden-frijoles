@@ -18,7 +18,7 @@ import { Badge } from '@/components/ui/Badge'
 //      own, in words, inside the panel. The section is live; that sentence is not, and it says so.
 const facets = [
   { label: 'Measured', detail: 'from your own Claude Code sessions' },
-  { label: 'Quoted', detail: 'from your shipped epics, at grooming' },
+  { label: 'Quoted', detail: 'from your shipped epics, at refining' },
   { label: 'Alerted', detail: 'in the build view, when spend passes the quote' },
   { label: 'Stamped', detail: 'into the epic at close — the next quote learns' },
 ]
@@ -32,7 +32,7 @@ export function FinOpsSection() {
         <p className="eyebrow">FinOps for agentic making</p>
         <h2 className="section-title">Know what each epic costs — against what you expected</h2>
         <p className="measure">
-          Every epic gets a quote when it is groomed, calibrated from what your own shipped epics actually
+          Every epic gets a quote when it is refined, calibrated from what your own shipped epics actually
           cost. While it is built, the build view shows spend against that quote; at close the actual is
           stamped into the epic, so the next quote is better. Push your usage and FinOps in the console breaks
           it down by epic, skill and model.

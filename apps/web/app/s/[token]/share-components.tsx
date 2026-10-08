@@ -140,7 +140,7 @@ export function ShareJourneyStrip({
  *
  * Every lens sees this — it is the least granular view there is, and the one that reads as progress
  * against a destination rather than as a backlog. Seeds are stated as a count and never named: an
- * un-groomed idea is not a promise, and putting an outsider's eyes on one turns it into a roadmap
+ * unrefined idea is not a promise, and putting an outsider's eyes on one turns it into a roadmap
  * commitment nobody made (the poster's own rule, applied to a page a client can read).
  */
 export function ShareHorizonStrip({ counts, seeds }: { counts: Counts; seeds: number }) {
@@ -154,7 +154,7 @@ export function ShareHorizonStrip({ counts, seeds }: { counts: Counts; seeds: nu
         <Tile label="Ideas on the horizon" value={String(seeds)} />
       </Tiles>
       <p className="ds-hint">
-        Ideas on the horizon are un-groomed and deliberately unnamed — they are possibilities, not
+        Ideas on the horizon are unrefined and deliberately unnamed — they are possibilities, not
         commitments.
       </p>
     </section>

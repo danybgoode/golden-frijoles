@@ -827,7 +827,7 @@ export function PodReportBody({
                 How fast
               </h2>
               <p className="ds-lede" data-testid="speed-subtitle">
-                From groomed to shipped, and how that compares with the last two months.
+                From refined to shipped, and how that compares with the last two months.
               </p>
               <p className="ds-hint">
                 Why it matters: speed is only worth having if the work above is paying off — read these beside

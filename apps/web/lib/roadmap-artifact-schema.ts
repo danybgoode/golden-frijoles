@@ -144,7 +144,7 @@ const roadmapRowSchema = z
     shipped_at: z.string().max(40).nullish(),
     appetite: z.string().max(10).nullish(),
     underwritten_by: z.string().max(200).nullish(),
-    // finops · Story 3.2 (D6) — an epic's quote (groomed) and actual (stamped at close), in ≈ API $. Nullish, so an
+    // finops · Story 3.2 (D6) — an epic's quote (refined) and actual (stamped at close), in ≈ API $. Nullish, so an
     // older pusher that never sends them stays valid: absent is "not quoted / not measured", never zero. Declared
     // rather than left to `.passthrough()` so a malformed value is refused instead of stored and rendered.
     quote_low_usd: z.number().nonnegative().max(1e7).nullish(),
@@ -174,7 +174,7 @@ const roadmapRowSchema = z
     verdict_evidence: z.string().max(500).nullish(),
     verdict_at: isoDay.nullish(),
     read_late: z.boolean().nullish(),
-    // one-epic-page · Story 2.3 (D11) — the epic's flag, decided at grooming, and the README's own line on it. Nullish:
+    // one-epic-page · Story 2.3 (D11) — the epic's flag, decided at refining, and the README's own line on it. Nullish:
     // an older pusher never sends them, and absent is "no flag". The key is held to the SDK's grammar here too, so a
     // malformed key is a 400 naming the field rather than a lookup the epic page makes against the registry.
     flag_key: z
@@ -319,7 +319,7 @@ export function summarizeRoadmap(items: RoadmapRow[]) {
     },
     epics: [...epics]
       // build_order_num is the road's running order; a missing one sorts last rather than first, so
-      // an ungroomed row never jumps the queue on the journey view.
+      // an unrefined row never jumps the queue on the journey view.
       .sort(
         (a, b) =>
           (a.build_order_num ?? Number.MAX_SAFE_INTEGER) - (b.build_order_num ?? Number.MAX_SAFE_INTEGER)
