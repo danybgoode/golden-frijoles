@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
   // for a real zero. Returning zeroes here would quietly convert "we have not switched this on yet"
   // into "no agent is doing any work", which is a claim we would be making about ourselves without
   // having measured it.
-  if (!isSignalsEnabled()) {
+  if (!(await isSignalsEnabled())) {
     return NextResponse.json({ ok: true, instrumented: false, taskLifecycle: null })
   }
 

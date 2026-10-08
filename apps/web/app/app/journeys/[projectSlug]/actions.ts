@@ -11,10 +11,10 @@ function requireString(value: unknown, field: string): string {
   return value
 }
 
-function requireGate() {
+async function requireGate() {
   // Gate before argument/auth work: while dark, a forged action learns nothing about this seam and
   // no old surface changes behavior.
-  if (!isJourneyProjectionsEnabled()) notFound()
+  if (!(await isJourneyProjectionsEnabled())) notFound()
 }
 
 export async function createJourneyVersionAction(
@@ -22,7 +22,7 @@ export async function createJourneyVersionAction(
   journeyKey: unknown,
   definitionJson: unknown,
 ) {
-  requireGate()
+  await requireGate()
   const command = await createJourneyVersionAfterGate(slug, journeyKey, definitionJson, {
     // Session identity, never an API key, supplies both project ownership and the audit actor.
     requireOwnership: requireProjectOwnership,
@@ -36,7 +36,7 @@ export async function activateJourneyVersionAction(
   journeyId: unknown,
   versionId: unknown,
 ) {
-  requireGate()
+  await requireGate()
   const safeSlug = requireString(slug, 'project')
   // Resolve session ownership before validating action-specific identifiers so a non-owner cannot
   // use malformed arguments to distinguish this management seam from an authorization failure.

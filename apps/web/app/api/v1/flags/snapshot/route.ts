@@ -1,16 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { hashCredential } from '@/lib/credential-hash'
-import { isFlagServingEnabled } from '@/lib/flags'
 import { ifNoneMatchIncludes } from '@/lib/http-etag'
 import { getSupabaseServiceClient } from '@/lib/supabase'
 
 // Operational snapshot route. Its caller cannot supply a project or environment: both are derived
 // atomically from the revocable flag_read credential inside get_flag_read_snapshot().
 export async function GET(req: NextRequest) {
-  // Gate before credential work so OFF is a real whole-surface kill switch and does not become a
-  // credential-validity oracle. Definitions/audit are intentionally governed elsewhere, not here.
-  if (!isFlagServingEnabled()) return new NextResponse(null, { status: 404 })
-
   const authHeader = req.headers.get('authorization')
   if (!authHeader?.startsWith('Bearer ')) return unauthorized()
   const rawKey = authHeader.slice('Bearer '.length).trim()

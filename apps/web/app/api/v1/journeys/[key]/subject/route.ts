@@ -13,7 +13,7 @@ const MAX_POSTGRES_INTEGER = 2_147_483_647
 // resolver query below.
 export async function GET(req: NextRequest, { params }: { params: Promise<{ key: string }> }) {
   // Gate first so disabled seams reveal neither credentials nor registry existence.
-  if (!isJourneyProjectionsEnabled()) return NextResponse.json({ ok: false, error: 'Not found' }, { status: 404 })
+  if (!(await isJourneyProjectionsEnabled())) return NextResponse.json({ ok: false, error: 'Not found' }, { status: 404 })
 
   const auth = await resolveProjectFromAuthHeader(req.headers.get('authorization'))
   if (!auth.ok) return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status })

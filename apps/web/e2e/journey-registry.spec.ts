@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { EXACT_SEGMENT_TAG_FIELDS, MAX_EXACT_SEGMENT_SAFE_INTEGER_ABS } from '@/lib/entity-contract'
-import { isJourneyProjectionsEnabled } from '@/lib/flags'
+import { isJourneyProjectionsEnabled } from './helpers/gates'
 import {
   MAX_EVENT_NAME_LENGTH,
   MAX_JOURNEY_DESCRIPTION_LENGTH,

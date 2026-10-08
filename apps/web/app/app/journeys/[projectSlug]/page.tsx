@@ -40,7 +40,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function JourneysPage({ params }: { params: Promise<{ projectSlug: string }> }) {
   // Dark means nonexistent, before auth or project lookup. Old surfaces remain untouched.
-  if (!isJourneyProjectionsEnabled()) notFound()
+  if (!(await isJourneyProjectionsEnabled())) notFound()
   const { projectSlug } = await params
   const membership = await requireProjectMembership(projectSlug)
   const journeys = await listJourneyRegistries(membership.projectId)

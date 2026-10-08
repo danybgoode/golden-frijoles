@@ -5,8 +5,7 @@
 //   • the URL names a maker (`connector_tokens.created_by`; every URL minted before this sprint is NULL),
 //   • the URL is not the DEMO project's — `/install` shows that URL to the public (AGENTS rule #2), so it
 //     must never write as anybody, whoever happened to rotate it,
-//   • `CONNECTOR_WRITES_ENABLED` and `CLI_WRITE_API_ENABLED` are both on (the flag write tools sit
-//     behind the CLI write seam, D8 of golden-frijoles-cli),
+//   • `connector.writes_enabled` is on (the CLI write seam it also needed is always on since one-product-project D2),
 //   • the maker is STILL an owner of the URL's project — re-resolved per request, so removing them
 //     from the project (or demoting them) turns their URL read-only at once.
 //

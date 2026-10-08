@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { createGrowthEngineClient } from '@golden-frijoles/sdk'
-import { isExperimentGovernanceEnabled } from '@/lib/flags'
+import { isExperimentGovernanceEnabled } from './helpers/gates'
 
 test('governance management is nonexistent while OFF and legacy experiments remain unchanged', async ({ request }) => {
   test.skip(

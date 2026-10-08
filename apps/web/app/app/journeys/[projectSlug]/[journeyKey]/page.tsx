@@ -35,7 +35,7 @@ export default async function JourneyCohortPage({
   params: Promise<{ projectSlug: string; journeyKey: string }>
   searchParams: Promise<Query>
 }) {
-  if (!isJourneyProjectionsEnabled()) notFound()
+  if (!(await isJourneyProjectionsEnabled())) notFound()
   const { projectSlug, journeyKey } = await params
   if (!validateJourneyKey(journeyKey)) notFound()
   const membership = await requireProjectMembership(projectSlug)

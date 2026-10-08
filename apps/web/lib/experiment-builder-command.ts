@@ -16,8 +16,8 @@ import type { BuilderIo } from './experiment-builder-io'
 // rebuilt by the planner on the server, from the CURRENT served feature and catalog.
 
 export type BuilderDependencies = {
-  builderEnabled: () => boolean
-  servingEnabled: () => boolean
+  builderEnabled: () => boolean | Promise<boolean>
+  servingEnabled: () => boolean | Promise<boolean>
   requireOwnership: (slug: string) => Promise<{ projectId: string; userId: string }>
   io: BuilderIo
 }
@@ -90,7 +90,7 @@ export async function saveExperimentDraftCommand(
   options: { revise?: boolean } = {}
 ): Promise<SaveDraftResult> {
   // The gate FIRST — an OFF deployment must not reach ownership, the database, or the planner.
-  if (!deps.builderEnabled()) return { ok: false, error: BUILDER_PAUSED }
+  if (!(await deps.builderEnabled())) return { ok: false, error: BUILDER_PAUSED }
   if (typeof slug !== 'string') return { ok: false, error: 'Invalid project.' }
   const { projectId, userId } = await deps.requireOwnership(slug)
   let draft = null
@@ -150,10 +150,10 @@ export async function startExperimentCommand(
   experimentKey: unknown,
   deps: BuilderDependencies
 ): Promise<StartResult> {
-  if (!deps.builderEnabled()) return { ok: false, error: BUILDER_PAUSED }
+  if (!(await deps.builderEnabled())) return { ok: false, error: BUILDER_PAUSED }
   if (typeof slug !== 'string' || typeof experimentKey !== 'string')
     return { ok: false, error: 'Invalid request.' }
-  if (!deps.servingEnabled()) return { ok: false, error: 'Flag serving is unavailable in this deployment.' }
+  if (!(await deps.servingEnabled())) return { ok: false, error: 'Flag serving is unavailable in this deployment.' }
   const { projectId, userId } = await deps.requireOwnership(slug)
 
   const stored = await deps.io.loadDraft(projectId, experimentKey)
@@ -234,10 +234,10 @@ export async function retryServingCommand(
   experimentKey: unknown,
   deps: BuilderDependencies
 ): Promise<StartResult> {
-  if (!deps.builderEnabled()) return { ok: false, error: BUILDER_PAUSED }
+  if (!(await deps.builderEnabled())) return { ok: false, error: BUILDER_PAUSED }
   if (typeof slug !== 'string' || typeof experimentKey !== 'string')
     return { ok: false, error: 'Invalid request.' }
-  if (!deps.servingEnabled()) return { ok: false, error: 'Flag serving is unavailable in this deployment.' }
+  if (!(await deps.servingEnabled())) return { ok: false, error: 'Flag serving is unavailable in this deployment.' }
   const { projectId, userId } = await deps.requireOwnership(slug)
   // The RUNNING version, not the latest: "Change the plan" may have added a draft after it (round 3).
   const latest = await deps.io.loadDraft(projectId, experimentKey)

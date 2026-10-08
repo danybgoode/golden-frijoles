@@ -8,7 +8,7 @@ import { getJourneyCohortByProjectId } from '@/lib/journey-query'
 // GET /api/v1/journeys/:key/cohort?version=1&from=<offset>&to=<offset>&timezone=UTC
 // API credentials resolve the only project id accepted by the shared cohort resolver.
 export async function GET(req: NextRequest, { params }: { params: Promise<{ key: string }> }) {
-  if (!isJourneyProjectionsEnabled()) {
+  if (!(await isJourneyProjectionsEnabled())) {
     return NextResponse.json({ ok: false, error: 'Not found' }, { status: 404 })
   }
   const auth = await resolveProjectFromAuthHeader(req.headers.get('authorization'))

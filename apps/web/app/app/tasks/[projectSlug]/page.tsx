@@ -41,7 +41,7 @@ export default async function TasksPage({
   // Dark means NONEXISTENT, and the check runs before auth or any project lookup — so while the
   // seam is off this route cannot even confirm that a project slug exists. Same ordering as every
   // other gated surface here (journeys, experiments, shares).
-  if (!isSignalsEnabled()) notFound()
+  if (!(await isSignalsEnabled())) notFound()
 
   const { projectSlug } = await params
   // Resolves the tenant server-side from the SESSION, never from the slug alone. A non-member gets

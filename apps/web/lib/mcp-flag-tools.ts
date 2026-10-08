@@ -30,11 +30,11 @@ import { toCliFlagDetailView, toCliFlagView } from './cli-flag-view'
 // new attribution concept and a migration, mid-sprint, for a surface that already has one.
 //
 // So a flag write over MCP needs a `gf_pat_…` — the account-scoped CLI token — and the holder must
-// OWN the project the connector token resolved to. Three independent conditions, all required:
+// OWN the project the connector token resolved to. Two independent conditions, both required (the third,
+// `CLI_WRITE_API_ENABLED`, retired with one-product-project D2):
 //
-//   1. `CONNECTOR_ENABLED` + a live connector token          (AGENTS rule #3, unchanged)
-//   2. `CLI_WRITE_API_ENABLED`                                (epic D8)
-//   3. a `gf_pat_…` whose holder owns THAT project            (this module)
+//   1. the connector gate + a live connector token          (AGENTS rule #3, unchanged)
+//   2. a `gf_pat_…` whose holder owns THAT project            (this module)
 //
 // AGENTS rule #2 is untouched: this is the credentialed connector path, not `/api/v1/public/*`
 // serving a caller-supplied slug. Parity is closed by bringing MCP UP to the CLI, never by

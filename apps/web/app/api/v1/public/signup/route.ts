@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   // FIRST, before parsing, rate-limiting, or touching the DB. While the gate is off this route is
   // indistinguishable from one that was never deployed — no 400 on a malformed body, no 429, no
   // timing difference worth reading. Same contract the MCP connector's flag check has.
-  if (!isSignupEnabled()) {
+  if (!(await isSignupEnabled())) {
     return NextResponse.json({ ok: false, error: 'Not found.' }, { status: 404 })
   }
 

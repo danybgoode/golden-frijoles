@@ -299,22 +299,7 @@ test('invalid catalog commands and a genuinely oversized body leave no definitio
   expect(states.data).toEqual([])
 })
 
-test('flag catalog sync remains available while flag snapshot serving is switched off', async ({
-  request,
-}) => {
-  test.skip(
-    process.env.FLAG_DEFINITION_SYNC_ENABLED !== 'true' || process.env.FLAG_SERVING_ENABLED !== 'false',
-    'independence proof runs only with sync ON and flag serving OFF'
-  )
-  const client = db()
-  const owner = await fixtureUser(client, 'serving-off')
-  const project = await fixtureProject(client, owner, 'serving-off')
-  const syncKey = await mintSyncKey(client, project, owner, 'frontend')
-  const response = await sync(request, syncKey.plaintext, [{ key: 'catalog.serving-off', definition }])
-  expect(response.status()).toBe(200)
-  const states = await client.from('flag_environment_states').select('environment').eq('project_id', project)
-  expect(states.data).toEqual([])
-})
+// (The 'sync while serving is OFF' independence test retired with the serving gate — one-product-project D2.)
 
 test('database constraints and grants keep flag_sync credentials narrow', async () => {
   const client = db()

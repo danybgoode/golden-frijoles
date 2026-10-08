@@ -26,10 +26,10 @@ function environment(value: unknown): Environment | null {
   return value === 'development' || value === 'preview' || value === 'production' ? value : null
 }
 
-function capabilities(): ScenarioCapabilityGates {
+async function capabilities(): Promise<ScenarioCapabilityGates> {
   return {
-    resilience: isResilienceScenariosEnabled(),
-    security: isSecuritySimulationsEnabled(),
+    resilience: (await isResilienceScenariosEnabled()),
+    security: (await isSecuritySimulationsEnabled()),
   }
 }
 
@@ -46,7 +46,7 @@ export async function scenarioOwnerOperationAction(
   rawOperation: unknown
 ) {
   // Gate first: an OFF deployment cannot reveal project membership or mutate through this seam.
-  if (!isScenarioAuthoringEnabled())
+  if (!(await isScenarioAuthoringEnabled()))
     return { ok: false as const, error: 'Scenario authoring is unavailable in this deployment.' }
   if (typeof slug !== 'string') return { ok: false as const, error: 'Invalid project.' }
   const { projectId, userId } = await requireProjectOwnership(slug)
@@ -65,7 +65,7 @@ export async function scenarioOwnerOperationAction(
     )
   )
     return { ok: false as const, error: 'Invalid scenario command.' }
-  const gates = capabilities()
+  const gates = await capabilities()
   if (operation.operation === 'create_definition') {
     if (operation.definition.environment !== safeEnvironment)
       return { ok: false as const, error: 'The definition environment does not match the command.' }
@@ -93,7 +93,7 @@ export async function scenarioOwnerOperationAction(
 }
 
 export async function launchScenarioRunAction(slug: unknown, scenarioVersionId: unknown, reason: unknown) {
-  if (!isScenarioAuthoringEnabled())
+  if (!(await isScenarioAuthoringEnabled()))
     return { ok: false as const, error: 'Scenario authoring is unavailable in this deployment.' }
   if (typeof slug !== 'string') return { ok: false as const, error: 'Invalid project.' }
   const { projectId, userId } = await requireProjectOwnership(slug)
@@ -113,7 +113,7 @@ export async function launchScenarioRunAction(slug: unknown, scenarioVersionId: 
       productionSecurityApproved: context.productionSecurityApproved,
       faultSummaryAvailable: context.faultSummary !== null,
     },
-    capabilities()
+    await capabilities()
   )
   if (blocker) return { ok: false as const, error: blocker }
   const safeEnvironment = context.definition.environment
@@ -153,7 +153,7 @@ export async function startScenarioRunAction(
   expectedRevision: unknown,
   reason: unknown
 ) {
-  if (!isScenarioAuthoringEnabled())
+  if (!(await isScenarioAuthoringEnabled()))
     return { ok: false as const, error: 'Scenario authoring is unavailable in this deployment.' }
   if (typeof slug !== 'string') return { ok: false as const, error: 'Invalid project.' }
   const { projectId, userId } = await requireProjectOwnership(slug)
@@ -171,7 +171,7 @@ export async function startScenarioRunAction(
       productionSecurityApproved: context.productionSecurityApproved,
       faultSummaryAvailable: context.faultSummary !== null,
     },
-    capabilities()
+    await capabilities()
   )
   if (blocker) return { ok: false as const, error: blocker }
   const result = await executeScenarioOwnerOperation({

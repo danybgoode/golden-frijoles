@@ -259,7 +259,8 @@ test('flag_admin credentials bind a Miyagi operation to one project/environment 
     value: false,
     description: 'Disposable static Miyagi control-plane flag.',
   })
-  if (process.env.FLAG_SERVING_ENABLED === 'true') {
+  {
+    // Serving is always on (one-product-project D2), so the HTTP half always runs.
     const httpBefore = await request.get('/api/v1/flags/admin', {
       headers: { Authorization: `Bearer ${adminKey}` },
     })
@@ -384,10 +385,6 @@ test('flag_admin credentials bind a Miyagi operation to one project/environment 
 test('credential-scoped snapshot is ETagged, monotonic, audit-backed, and cannot cross project or scope', async ({
   request,
 }) => {
-  test.skip(
-    process.env.FLAG_SERVING_ENABLED !== 'true',
-    'enabled snapshot assertions run only in the owned enabled-gate pass'
-  )
   const client = db()
   const ownerA = await fixtureUser(client, 'a')
   const ownerB = await fixtureUser(client, 'b')

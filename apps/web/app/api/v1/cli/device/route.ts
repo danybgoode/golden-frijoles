@@ -1,7 +1,6 @@
 import 'server-only'
 import type { NextRequest } from 'next/server'
 import { cliError, cliOk, readCliBody } from '@/lib/cli-auth'
-import { isCliWriteApiEnabled } from '@/lib/flags'
 import { isTerminalSignInEnabled } from '@/lib/terminal-sign-in-flag'
 import { checkRateLimit, hashIp } from '@/lib/rate-limit'
 import { getSiteUrl } from '@/lib/site-url'
@@ -18,7 +17,7 @@ import { DEVICE_CODE_TTL_SECONDS, DEVICE_POLL_INTERVAL_SECONDS } from '@/lib/cli
 export const runtime = 'nodejs'
 
 export async function POST(req: NextRequest) {
-  if (!isCliWriteApiEnabled() || !(await isTerminalSignInEnabled())) {
+  if (!(await isTerminalSignInEnabled())) {
     return cliError('disabled', 'Browser sign-in is not available here. Paste a token instead.')
   }
 

@@ -4,12 +4,10 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-// think-skills #216 (cross-family review, Codex): the CLI gate must come before the request BODY as well as before the
-// credential. Three POST routes parsed first, so with CLI_WRITE_API_ENABLED off a malformed body answered 400
-// instead of the uniform 404. They read their body through `readCliBody` now.
-//
-// The e2e server always runs with the gate ON (born ON, `cli-api.spec.ts`), so the gate-off answer can't be asserted
-// end to end. This pins it structurally instead: no CLI route reads a body itself, and the one reader gates first.
+// think-skills #216 (cross-family review, Codex): three POST routes once parsed their body before the CLI gate, so with
+// the gate off a malformed body answered 400 instead of the uniform 404. They read their body through `readCliBody`.
+// The gate itself retired (one-product-project D2), but the one-reader rule stays: a gate added later goes in
+// `readCliBody`, ahead of the parse, and this pins that no CLI route reads a body itself.
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const CLI_ROUTES = join(HERE, '..', 'app', 'api', 'v1', 'cli')
@@ -141,13 +139,4 @@ test('no CLI route parses a request body itself — every body goes through read
   assert.deepEqual(unread, [], 'every CLI route handler must be declared in a shape this guard can read')
   const offenders = files.filter((file) => bodyReads(readFileSync(file, 'utf8')).length > 0)
   assert.deepEqual(offenders, [])
-})
-
-test('readCliBody checks the gate before it touches the body', () => {
-  const source = readFileSync(join(HERE, 'cli-auth.ts'), 'utf8')
-  const fn = source.slice(source.indexOf('export async function readCliBody'))
-  const gate = fn.indexOf('if (!isCliWriteApiEnabled()) return gateClosed()')
-  const parse = fn.indexOf('await req.json()')
-  assert.ok(gate !== -1 && parse !== -1, 'readCliBody must gate and then parse')
-  assert.ok(gate < parse, 'the gate must come first')
 })

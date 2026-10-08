@@ -1,5 +1,5 @@
 import { requireProjectMembership } from '@/lib/dashboard-auth'
-import { isFlagConsoleEnabled, isFlagRuleBuilderEnabled, isFlagServingEnabled } from '@/lib/flags'
+import { isFlagConsoleEnabled, isFlagRuleBuilderEnabled } from '@/lib/flags'
 import { isOwner } from '@/lib/roles'
 import { getFlagRegistryView } from '@/lib/flag-registry'
 import { resolveActorIdentities } from '@/lib/actor-names'
@@ -49,7 +49,7 @@ export default async function FlagsPage({
   const { projectSlug } = await params
   const membership = await requireProjectMembership(projectSlug)
   const canManage = isOwner({ projectId: membership.projectId, role: membership.role })
-  const consoleEnabled = isFlagConsoleEnabled()
+  const consoleEnabled = (await isFlagConsoleEnabled())
   // Credential metadata is operationally sensitive. Definitions and audit are member-readable, but
   // only an owner may enumerate the keys they are allowed to mint or revoke.
   //
@@ -201,7 +201,7 @@ export default async function FlagsPage({
               // would refuse them. Nothing about the DATA changes: keys, descriptions and states
               // stay member-readable.
               canManage={canManage}
-              servingEnabled={isFlagServingEnabled()}
+              servingEnabled
             />
           ))}
         <FlagManager
@@ -211,8 +211,8 @@ export default async function FlagsPage({
           keys={keys}
           syncKeys={syncKeys}
           canManage={canManage}
-          servingEnabled={isFlagServingEnabled()}
-          ruleBuilderEnabled={isFlagRuleBuilderEnabled()}
+          servingEnabled
+          ruleBuilderEnabled={(await isFlagRuleBuilderEnabled())}
           // The two free-key creation paths (the raw-JSON textarea and `RuleBuilder`'s own key
           // field) leave the console branch, and their replacement is the `<NewFeature>` control in
           // the head above. Both go in ONE prop because the product had TWO of them, and gating them

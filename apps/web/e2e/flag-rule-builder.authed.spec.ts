@@ -30,7 +30,7 @@ import {
 } from '@golden-frijoles/sdk'
 import { SCENARIO_FLAG_KEY, readTenantRecord } from './helpers/authed-fixture'
 import { seedFlagVersion } from './helpers/seed-flag'
-import { isFlagConsoleEnabled } from '../lib/flags'
+import { isFlagConsoleEnabled } from './helpers/gates'
 
 function tenantSlug(): string {
   const slug = readTenantRecord()?.slug

@@ -1,7 +1,7 @@
 import { test, expect, type APIRequestContext } from '@playwright/test'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { randomBytes } from 'node:crypto'
-import { isSignalsEnabled } from '../lib/flags'
+import { isSignalsEnabled } from './helpers/gates'
 // From the zero-import module, NOT from lib/signals.ts — that file imports `server-only`, and
 // importing it here fails the whole suite at collection time with an opaque module error
 // (Roadmap/LEARNINGS.md; see lib/signal-events.ts's header for the full account).

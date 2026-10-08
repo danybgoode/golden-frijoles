@@ -1,7 +1,7 @@
 import { test, expect, type APIRequestContext } from '@playwright/test'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { randomBytes, createHash } from 'node:crypto'
-import { isTaskMcpToolEnabled } from '../lib/flags'
+import { isTaskMcpToolEnabled } from './helpers/gates'
 import { ERROR_EVENT } from '../lib/signal-events'
 import { specWorkspaceId } from './helpers/spec-workspace'
 

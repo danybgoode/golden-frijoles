@@ -453,9 +453,9 @@ test('the mint action feeds the connector gate into the predicate', () => {
       'utf8'
     )
   )
-  const start = actions.indexOf('function closedGate()')
+  const start = actions.indexOf('async function closedGate()')
   const body = actions.slice(start, actions.indexOf('\n}', start))
-  assert.match(body, /connectorEnabled: isConnectorEnabled\(\)/, 'the connector gate is not read')
+  assert.match(body, /connectorEnabled: \(await isConnectorEnabled\(\)\)/, 'the connector gate is not read')
 })
 
 // ── B1: the legacy Connect link must never point at a gated route ─────────────────────────────

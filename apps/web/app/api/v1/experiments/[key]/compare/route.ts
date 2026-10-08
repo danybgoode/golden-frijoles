@@ -12,7 +12,7 @@ import { isExperimentGovernanceEnabled } from '@/lib/flags'
 // decision, see sprint-4.md) — the caller names whichever event should count as a conversion.
 export async function GET(req: NextRequest, { params }: { params: Promise<{ key: string }> }) {
   const governed = req.nextUrl.searchParams.has('version')
-  if (governed && !isExperimentGovernanceEnabled()) {
+  if (governed && !(await isExperimentGovernanceEnabled())) {
     return NextResponse.json({ ok: false, error: 'Not found' }, { status: 404 })
   }
   const auth = await resolveProjectFromAuthHeader(req.headers.get('authorization'))

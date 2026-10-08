@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { isJourneyMcpToolEnabled, isJourneyProjectionsEnabled } from '@/lib/flags'
+import { isJourneyMcpToolEnabled, isJourneyProjectionsEnabled } from './helpers/gates'
 
 test('journey MCP registration requires connector ON and journey ON independently', () => {
   const connector = process.env.CONNECTOR_ENABLED

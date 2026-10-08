@@ -43,7 +43,7 @@ export const metadata = {
 export default async function SharePage({ params }: { params: Promise<{ token: string }> }) {
   // Gate first, token second. Reversing these would make a dark deployment answer "is this token
   // real?" through its timing and its logs.
-  if (!isReportSharesEnabled()) notFound()
+  if (!(await isReportSharesEnabled())) notFound()
 
   const { token } = await params
 

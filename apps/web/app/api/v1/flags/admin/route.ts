@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { hashCredential } from '@/lib/credential-hash'
-import { isFlagServingEnabled } from '@/lib/flags'
 import { isVerifiedMiyagiActor, parseFlagAdminOperation } from '@/lib/flag-admin-operation'
 import { getFlagAdminSnapshot, setFlagAdminBoolean } from '@/lib/flag-admin-operations'
 
@@ -17,9 +16,6 @@ function unauthorized() {
 }
 
 export async function GET(req: NextRequest) {
-  // The whole admin surface shares FLAG_SERVING_ENABLED's dark-by-default semantics. Check before
-  // any credential-derived work so OFF is not a credential-validity oracle.
-  if (!isFlagServingEnabled()) return new NextResponse(null, { status: 404 })
   const rawKey = credential(req)
   if (!rawKey) return unauthorized()
   try {
@@ -36,9 +32,6 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  // Operational activation shares FLAG_SERVING_ENABLED's dark-by-default semantics. This is after
-  // nothing credential-specific, so OFF is not a credential-validity oracle.
-  if (!isFlagServingEnabled()) return new NextResponse(null, { status: 404 })
   const rawKey = credential(req)
   const actor = req.headers.get('x-miyagi-clerk-actor')
   if (!rawKey) return unauthorized()

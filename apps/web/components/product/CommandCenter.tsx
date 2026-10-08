@@ -66,7 +66,7 @@ export async function CommandCenter({ project }: { project: CommandCenterProject
   // The page this replaced resolved the gate into a `gates` record and handed it down; the rewrite
   // dropped that, and the bands rendered unconditionally. Caught by a cross-family reviewer noticing
   // the `links` prop had gone (Mistral Vibe) — it reached the right defect from the wrong route.
-  const signals = isSignalsEnabled()
+  const signals = (await isSignalsEnabled())
 
   // Read in parallel, and independently: one slow or failing layer must not take the others with it.
   // The queue is not read at all when its gate is dark — a dark capability is not a slow one.

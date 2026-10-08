@@ -18,7 +18,7 @@ import {
   mapExperimentRegistryRows,
   type ExperimentRegistryRelationRow,
 } from '@/lib/experiment-registry-view'
-import { isExperimentGovernanceEnabled } from '@/lib/flags'
+import { isExperimentGovernanceEnabled } from './helpers/gates'
 import {
   cleanupExperimentProjects,
   requireLocalSupabaseApiUrl,

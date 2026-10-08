@@ -122,7 +122,7 @@ export async function dispatchPendingDeliveries(
   projectId: string,
   options: DispatchOptions = {},
 ): Promise<DispatchOutcome> {
-  if (!isDestinationDeliveryEnabled()) {
+  if (!(await isDestinationDeliveryEnabled())) {
     return { ok: true, dispatched: false, reason: 'disabled', claimed: [] }
   }
 

@@ -68,8 +68,8 @@ export async function POST(req: NextRequest) {
   // available so a gate cannot strand an active run.
   if (
     operation.operation === 'start_run' &&
-    !isResilienceScenariosEnabled() &&
-    !isSecuritySimulationsEnabled()
+    !(await isResilienceScenariosEnabled()) &&
+    !(await isSecuritySimulationsEnabled())
   ) {
     return new NextResponse(null, { status: 404 })
   }
@@ -98,8 +98,8 @@ export async function POST(req: NextRequest) {
       )
       const kind = version?.definition.kind
       if (
-        (kind === 'resilience' && !isResilienceScenariosEnabled()) ||
-        (kind === 'security' && !isSecuritySimulationsEnabled()) ||
+        (kind === 'resilience' && !(await isResilienceScenariosEnabled())) ||
+        (kind === 'security' && !(await isSecuritySimulationsEnabled())) ||
         (kind !== 'resilience' && kind !== 'security')
       ) {
         return new NextResponse(null, { status: 404 })

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { isExperimentGovernanceEnabled, isJourneyProjectionsEnabled, isTaskMcpToolEnabled } from '@/lib/flags'
+import { isExperimentGovernanceEnabled, isJourneyProjectionsEnabled, isTaskMcpToolEnabled } from './helpers/gates'
 
 // Story 2.2 (commercial-shell/sprint-2.md) — the install page's copy-your-URL field must show a
 // real, live connector URL (seeded by scripts/seed-demo-project.mjs), not a placeholder.

@@ -29,7 +29,7 @@ import { SignupForm } from './signup-form'
 export const dynamic = 'force-dynamic'
 
 export default async function SignupPage() {
-  if (!isSignupEnabled()) notFound()
+  if (!(await isSignupEnabled())) notFound()
 
   return (
     <Frame variant="door" brandHref="/">

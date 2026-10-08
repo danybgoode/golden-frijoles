@@ -71,13 +71,13 @@ const rehearsed = [
   },
 ]
 
-export function AuthoritySection() {
+export async function AuthoritySection() {
   // Shares `gatedDrillNote` with the Ops panel rather than re-deriving the answer. Two components
   // making the same claim about the same two flags is two claims to keep in step; the first version
   // hardcoded this one and would have said "no drill can run" while one of them ran. Codex, PR #100.
   const gates = {
-    resilienceScenariosEnabled: isResilienceScenariosEnabled(),
-    securitySimulationsEnabled: isSecuritySimulationsEnabled(),
+    resilienceScenariosEnabled: (await isResilienceScenariosEnabled()),
+    securitySimulationsEnabled: (await isSecuritySimulationsEnabled()),
   }
   // Empty note = every drill can be started, so nothing needs qualifying.
   const drillsRunnable = gatedDrillNote(gates) === ''
@@ -88,7 +88,7 @@ export function AuthoritySection() {
   // it — and this panel inherited the argument ("let agents move") without inheriting the gate that
   // made the claim checkable. A repositioning is exactly when this happens: the claim survives the
   // section that qualified it. Caught by Codex in cross-family review round 3 of PR #100.
-  const writesLive = isConnectorWritesEnabled()
+  const writesLive = (await isConnectorWritesEnabled())
 
   return (
     <section className="band" id="authority">

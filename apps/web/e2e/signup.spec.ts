@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { isSignupEnabled } from '../lib/flags'
+import { isSignupEnabled } from './helpers/gates'
 import { slugFromEmail, normalizeSlug, isReservedSlug } from '../lib/tenant-slug'
 import { monthWindowStart, monthWindowEnd } from '../lib/quota-window'
 

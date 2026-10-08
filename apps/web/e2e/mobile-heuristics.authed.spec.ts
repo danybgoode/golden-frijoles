@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { IMPACT_FEATURE_KEY, readTenantRecord } from './helpers/authed-fixture'
 import { assertMobileClean } from './helpers/mobile-heuristics'
-import { isFlagConsoleEnabled } from '../lib/flags'
+import { isFlagConsoleEnabled } from './helpers/gates'
 
 // frijoles-rebrand-closeout · Story 1.4 — the signed-in half of the shared mobile rail.
 //

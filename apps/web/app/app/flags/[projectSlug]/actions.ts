@@ -1,7 +1,7 @@
 'use server'
 import { revalidatePath } from 'next/cache'
 import { requireProjectMembership, requireProjectOwnership } from '@/lib/dashboard-auth'
-import { isFlagRuleBuilderEnabled, isFlagServingEnabled } from '@/lib/flags'
+import { isFlagRuleBuilderEnabled } from '@/lib/flags'
 import {
   FLAG_CONTEXT_FIELDS,
   explainFlagEvaluation,
@@ -79,10 +79,6 @@ export async function activateFlagAction(
   expectedSnapshotVersion: unknown,
   reason: unknown
 ) {
-  // The operational gate is checked first so an OFF deployment cannot perform an activation.
-  // Inspection and draft creation deliberately remain available while serving is dark.
-  if (!isFlagServingEnabled())
-    return { ok: false as const, error: 'Flag serving is unavailable in this deployment.' }
   const safeSlug = requireString(slug, 'project')
   // Resolve ownership before lifecycle payload validation to avoid a foreign-project management oracle.
   const { projectId, userId } = await requireProjectOwnership(safeSlug)
@@ -113,8 +109,6 @@ export async function deactivateFlagAction(
   expectedSnapshotVersion: unknown,
   reason: unknown
 ) {
-  if (!isFlagServingEnabled())
-    return { ok: false as const, error: 'Flag serving is unavailable in this deployment.' }
   const safeSlug = requireString(slug, 'project')
   const { projectId, userId } = await requireProjectOwnership(safeSlug)
   const safeEnvironment = parseEnvironment(environment)
@@ -262,7 +256,7 @@ export async function previewFlagEvaluationAction(
 ) {
   // The gate first, and server-side: with FLAG_RULE_BUILDER_ENABLED unset the surface is not
   // rendered AND the action refuses, so an unreachable button is not the only thing holding it shut.
-  if (!isFlagRuleBuilderEnabled())
+  if (!(await isFlagRuleBuilderEnabled()))
     return { ok: false as const, error: 'The rule builder is unavailable in this deployment.' }
   const safeSlug = requireString(slug, 'project')
   const { projectId } = await requireProjectMembership(safeSlug)

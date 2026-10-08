@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { isSignalsEnabled } from '../lib/flags'
+import { isSignalsEnabled } from './helpers/gates'
 
 // signals-loop · Sprint 2, Story 2.2 — the task dashboard's ACCESS boundary.
 //

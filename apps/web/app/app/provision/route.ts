@@ -31,7 +31,7 @@ export async function GET() {
 
   // Re-checked here, not just at the caller: this is a real HTTP endpoint anyone with a session
   // can hit directly, so it must never provision while signup is dark.
-  if (!isSignupEnabled()) return NextResponse.redirect(backToApp)
+  if (!(await isSignupEnabled())) return NextResponse.redirect(backToApp)
 
   // Already has a tenant → nothing to do. Also what stops a redirect loop with /app.
   const projects = await getUserProjects(user.id)

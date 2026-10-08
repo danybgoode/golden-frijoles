@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { isFlagConsoleEnabled } from '../lib/flags'
+import { isFlagConsoleEnabled } from './helpers/gates'
 
 // flags-console-parity · Sprint 1 Story 1.1 + Sprint 2 Story 2.1 — the console's dark path.
 //

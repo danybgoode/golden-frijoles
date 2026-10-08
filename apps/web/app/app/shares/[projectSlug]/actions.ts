@@ -110,5 +110,5 @@ export async function revokeShareAction(slug: unknown, shareId: unknown) {
  * gate that also blocked preparation would force the flip to come first.
  */
 export async function sharesEnabledAction() {
-  return { enabled: isReportSharesEnabled() }
+  return { enabled: (await isReportSharesEnabled()) }
 }

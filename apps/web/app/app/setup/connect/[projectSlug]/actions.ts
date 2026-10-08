@@ -51,13 +51,13 @@ function requireString(value: unknown, field: string): string {
 //
 // What remains here is only the wiring, and `setup-route-guards.test.ts` pins that BOTH values reach
 // the predicate — the one thing a source scan is actually good for.
-function closedGate(): ConnectorGate {
-  return closedConnectorGate({ connectorEnabled: isConnectorEnabled() })
+async function closedGate(): Promise<ConnectorGate> {
+  return closedConnectorGate({ connectorEnabled: (await isConnectorEnabled()) })
 }
 
 export async function mintConnectorAction(slug: unknown) {
   const safeSlug = requireString(slug, 'project')
-  const blocked = closedGate()
+  const blocked = await closedGate()
   if (blocked !== null) {
     return {
       ok: false as const,
@@ -136,7 +136,7 @@ export async function revokeConnectorAction(slug: unknown, tokenId: unknown) {
 export async function rotateConnectorAction(slug: unknown, tokenId: unknown) {
   const safeSlug = requireString(slug, 'project')
   const safeTokenId = requireString(tokenId, 'token id')
-  if (closedGate() !== null) {
+  if ((await closedGate()) !== null) {
     return {
       ok: false as const,
       error: 'The MCP connector is switched off for this deployment, so a new URL would not serve.',

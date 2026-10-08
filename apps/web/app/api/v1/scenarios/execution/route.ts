@@ -18,7 +18,7 @@ function unauthorized() {
 
 export async function POST(req: NextRequest) {
   // Gate before body or credential work so OFF cannot become a validity oracle.
-  if (!isResilienceScenariosEnabled()) return new NextResponse(null, { status: 404 })
+  if (!(await isResilienceScenariosEnabled())) return new NextResponse(null, { status: 404 })
 
   let body: unknown
   try {

@@ -22,9 +22,9 @@ import { Icon } from '@/components/ui/Icon'
 // gave that section a real destination (`/methodology`), which left `label` with no call site. A
 // prop kept alive by nothing is an unexercised branch shipped on the assumption someone will want
 // it; when the section that needed it stopped needing it, it went with it.
-export function RunYourFirstBet({ className }: { className?: string }) {
+export async function RunYourFirstBet({ className }: { className?: string }) {
   return (
-    <Button href={primaryCtaHref(isSignupEnabled())} className={className}>
+    <Button href={primaryCtaHref((await isSignupEnabled()))} className={className}>
       Run your first Bet
       <Icon name="arrow-right" />
     </Button>

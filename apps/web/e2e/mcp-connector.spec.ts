@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { createClient } from '@supabase/supabase-js'
 import { randomBytes } from 'node:crypto'
-import { isConnectorEnabled, isTaskMcpToolEnabled } from '@/lib/flags'
+import { isConnectorEnabled, isTaskMcpToolEnabled } from './helpers/gates'
 import { specWorkspaceId } from './helpers/spec-workspace'
 
 function disposableToken(): string {
