@@ -371,6 +371,16 @@ independently shippable slice of value.
   Ready ─ ◉ Building ─ QA ─ Shipped`, and a link to the epic's own page on the Hub). The session line under the
   prompt is now in colour, green to yellow to red, with the time to each window's reset: `5h 78% (-2h) · 7d 46%
   (-3d)`. **Owed:** Daniel's walkthrough in Claude Code with plugin 0.40.0.
+- ✅ [Coaches v2](09-platform-infra/coaches-v2/README.md) — **shipped and published 2026-10-08** (#314, #315,
+  #316; plugin + kit 0.41.0–0.43.0). A **cold read** goes first: a separate agent, on another model family when one
+  is reachable, reads the repo without the strategy files and seals its read; after the coaches, the compare refuses a
+  read whose hash changed and writes what agreed, what didn't and what each missed. The three coaches now share one
+  way of working (groom's `references/coaching.md`): they play back what is written, show `Step N of X`, save after
+  every step, offer options with sources, mark a step the maker handed over as the coach's proposal, label each
+  benefit true today or aspirational, ladder examples up to needs, and keep `Roadmap/00-strategy/` out of a public
+  repo. When the strategy is approved, **three one-pagers** render from the files: a business model canvas, a value
+  proposition sheet and a persona poster, every line labelled. **Owed:** Daniel's interactive walkthroughs, the
+  claude.ai duplicates, the Strategyzer VPC ask.
 - ✅ [First run: setup starts](02-commercial/first-run-setup/README.md) (gap 4 of the First run review) — **shipped
   and published 2026-10-07** (#307; plugin + kit 0.37.0). Before its first question, setup says who is signed in, for
   which product, and what it found in the repo. Then: **What are we working on? 1 This repo · 2 A new idea · 3 Just
@@ -540,6 +550,10 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-08**: `coaches-v2` **shipped**: three sprints, three PRs, ≈$24.61 against a $22–34 quote. The lock
+  found the epic's base gone: bet A's names never shipped and `agreed` had moved to the Strategy gate, so it built on
+  today's names and rendered the one-pagers at the gate. Review found the seal could be swapped beside its read, and
+  the "one-pagers" printed on two pages.
 - **2026-10-08**: `build-view-upgrade` **shipped**: one sprint, one PR, ≈$13.82 against an $8–19 quote. The build
   view says why, how far and where, and the session line is coloured with reset times (Daniel's kickoff addendum).
   The lock found the mod was not a pure renderer: it drew the bar itself, and its Status colour would have turned

@@ -1,7 +1,7 @@
 ---
 title: "Coaches v2: a cold read first, then three coaches that read each other, save as they go and check the product"
 slug: coaches-v2
-status: scaffolded
+status: shipped
 area: "09"
 type: feature
 appetite: M

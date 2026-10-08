@@ -2225,3 +2225,13 @@ one-liner + why + date shape.
 - **A refused command may be a deny-list glob, not a judgement.** `git add -u` is denied in `.claude/settings.json`;
   the refusal of a release commit looked like a policy call and cost a question to the product owner. Read the deny
   list first, and stage by name.
+
+### Seals, placeholders and print (coaches-v2, 2026-10-08)
+- **A guard stored beside what it guards protects nothing from whoever can write there.** The cold read's seal was a
+  `.sha256` next to the read: delete it, edit, reseal, and the compare said "seal holds". Check against something the
+  writer can't reach (here, the hash the maker was shown at sealing time), and say UNVERIFIED without it.
+- **Test for a placeholder before you strip its fragments.** Removing `<…>` first turned `<benefit> (true today |
+  aspirational)` into a benefit called "(true today | aspirational)". A spec that renders the bare template must assert
+  that no hint text survives, not only that no `<` does.
+- **A breakpoint applies on paper too.** `@media (max-width:820px)` matched A4 landscape in Chromium print, so every
+  one-pager printed on two pages. Scope phone layouts to `screen`, and check a printable artefact as a PDF.
