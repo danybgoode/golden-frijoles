@@ -3,7 +3,7 @@ epic: launch-trust-sweep
 sprint: 1
 title: "Launch trust sweep: every public surface says Golden Frijoles, on goldenfrijoles.com"
 risk: low
-phase: Shaping
+phase: In review
 stories_total: 3
 stories:
   - id: S1.1
@@ -12,29 +12,29 @@ stories:
     i_want: "The public text speaks Golden Frijoles: a user README at the root, the poster's licence and host lines, the SDK and CLI READMEs, the landing's GitHub link"
     so_that: "nothing they read contradicts the product or its licence"
     risk: low
-    status: planned
+    status: done
   - id: S1.2
     title: "No Vercel host left, and CI keeps it that way"
     as_a: "a developer who finds Golden Frijoles"
     i_want: "No Vercel host is left in the repo outside the tests that check the rule, and CI keeps it that way"
     so_that: "every link and fallback lands on goldenfrijoles.com"
     risk: low
-    status: planned
+    status: done
   - id: S1.3
     title: "The loader opens on a different phrase"
     as_a: "anyone moving between pages"
     i_want: "The navigation loader opens on a different phrase each time, and a screen reader hears \"Loading\" once"
     so_that: "the loader feels alive and a screen reader is not flooded"
     risk: low
-    status: planned
+    status: done
 ---
 # Launch trust sweep — Sprint 1: every public surface says Golden Frijoles
 
-**Status:** ⬜ not started
+**Status:** 🟡 in review — all 3 stories built; PR open
 
 ## Stories
 
-### Story 1.1 — The public text speaks Golden Frijoles
+### Story 1.1 — The public text speaks Golden Frijoles ✅ `6c134b3`
 **As** a developer who finds Golden Frijoles, **I want** the repo and the landing to describe the product as it is,
 **so that** nothing I read contradicts the product or its licence.
 **Acceptance:**
@@ -46,7 +46,7 @@ stories:
 - The landing footer's GitHub link opens `github.com/danybgoode/golden-frijoles`.
 **Risk:** low
 
-### Story 1.2 — No Vercel host left, and CI keeps it that way
+### Story 1.2 — No Vercel host left, and CI keeps it that way ✅ `afe3377`
 **As** a developer who finds Golden Frijoles, **I want** every link and fallback to use the brand domain, **so that**
 every link and fallback lands on goldenfrijoles.com.
 **Acceptance:**
@@ -55,7 +55,7 @@ every link and fallback lands on goldenfrijoles.com.
 - A CI check fails on a `vercel.app` host outside an allow-list (the tests that check the site-URL rule).
 **Risk:** low
 
-### Story 1.3 — The loader opens on a different phrase
+### Story 1.3 — The loader opens on a different phrase ✅ `7b98466`
 **As** anyone moving between pages, **I want** the loader to open on a random phrase and never the same one twice in a
 row, **so that** the loader feels alive and a screen reader is not flooded.
 **Acceptance:** the first phrase is random and differs from the previous navigation's; the phrase is hidden from
