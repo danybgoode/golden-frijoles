@@ -3,7 +3,7 @@ epic: plugin-1-0
 sprint: 1
 title: "The CLI is frijoles"
 risk: high
-phase: Shaping
+phase: Building
 stories_total: 3
 stories:
   - id: S1.1

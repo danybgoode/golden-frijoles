@@ -1,7 +1,8 @@
 ---
 status: scaffolded   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Shaping       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+phase: Building       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
+locked_at: "2026-10-08T19:39:18Z"
 slug: plugin-1-0
 title: "Plugin 1.0: five plain skills, the frijoles CLI, and Refining"
 area: 09-platform-infra
@@ -54,6 +55,34 @@ No engine change beyond console labels through the existing `stageLabel()`; keys
 - `skills/scripts/{render-skill-adverts,pack-skills,check-release,check-gate-words,check-onboarding-parity,render-hook-vendor}.mjs`, `skills/RELEASING.md`
 - `apps/web/lib/{epic-page,hub-areas,stage-commands}.ts`, `scripts/lib/stage.mjs`, `scripts/check-quarantine.mjs` (the expiry pattern)
 - `packages/cli/package.json`, `skills/kit/package.json`, `apps/web/lib/install-prompt.ts`, the routines in `skills/template/scripts/routines/`
+
+## Architecture lock (2026-10-08, verified against live code)
+
+- **D1 — Only the typed command changes.** `gf_pat_` tokens (`apps/web/lib/cli-tokens.ts:26`, server-issued), `GF_*`
+  env vars (`GF_SKIP_STORY_CHECK`), the `GF-NEEDS-SETTING` marker, the credentials path
+  (`~/.config/golden-frijoles/credentials.json`, `packages/cli/src/credentials.ts:57`) and `golden-frijoles.config.json`
+  stay. Renaming a token prefix would invalidate every issued token.
+- **D2 — One executable, two names.** `packages/cli/package.json` `bin` maps both `frijoles` and `gf` to
+  `dist/bin.js`; `bin.ts` (the only file that reads `process.argv`) checks the invoked basename and, for `gf`, writes one
+  notice line to **stderr** (never stdout, so `--json` output is unchanged): `gf is now frijoles. gf stops working on
+  2026-12-31 (or in CLI 1.1.0).` Same for the kit: `frijoles-kit` + `gf-kit` → `bin.mjs`.
+- **D3 — The alias expires.** `scripts/check-deprecations.mjs` (+ test) holds one table: `{ bin, package, removeBy:
+  '2026-12-31', orVersion: '1.1.0' }` for `gf` and `gf-kit`. Red when the date has passed or the package version reaches
+  `orVersion` while the alias is still in `bin`. Runs in CI's static steps, the precedent `check-quarantine.mjs` set
+  (a dated red on every PR is the point: it forces the removal).
+- **D4 — The console names the binary in one place:** `CLI_BIN` (`apps/web/lib/cli-install.ts:19`) → `'frijoles'`.
+- **D5 — Text scope:** a command a person or agent types (`gf <verb>`, `gf-kit <verb>`, the CLI called "gf") in shipped
+  text: skills, template, install.md, console copy, package READMEs, AGENTS.md rule 6. Roadmap history is not rewritten.
+  `check-deprecations.mjs` also fails on a `gf <verb>` in shipped text outside the notice and the CHANGELOG.
+- **D6 — Stage keys stay** (`'To groom'`, `'Grooming'` in `scripts/lib/stage.mjs`, `apps/web/lib/hub-areas.ts:34`);
+  labels change through the existing `stageLabel()`. The board already says "Backlog" for `To groom`
+  (production, 2026-10-08); "Grooming" → "Refining" is the change.
+- **D7 — One break, one sitting.** `check-release.mjs` requires a version bump in every PR that touches `plugins/**`,
+  and strangers track `main`, so each sprint merge is live. The four PRs are stacked and **merged in one sitting**
+  after Sprint 4's walkthrough: 0.44–0.46 are tagged minutes apart and 1.0.0 lands with them. The CLI publish is
+  Daniel's 2FA step; the kit publishes itself (OIDC trusted publishing, `release.yml`).
+- **D8 — Every PR is HIGH** (shared infra, a breaking release): Daniel merges; the verifier (today `pr-reviewer`) plus
+  the routed external passes on each.
 
 ## Scope — stories
 | Sprint | Story | Risk |
