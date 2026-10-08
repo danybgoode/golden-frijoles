@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 // seed-demo-project.mjs — Story 1.2 (Roadmap/02-commercial/commercial-shell/sprint-1.md). Seeds
-// (idempotently, re-runnable) the synthetic `golden-frijoles` project the public landing's
-// live-proof section reads. Everything below the project-row upsert goes through the REAL
+// (idempotently, re-runnable) the public project's synthetic proof data, for a LOCAL or CI database only.
+//
+// ⚠️ LOCAL ONLY since one-product-project D1 (2026-10-08). The public project used to be a synthetic demo; it is
+// now `golden-frijoles`, Golden Frijoles' own real project, and this script's reset deletes every event and
+// feature in it. So it refuses any SUPABASE_URL that is not a local instance (`assertLocalTarget`). There is no
+// override: production is never re-seeded. Everything below the project-row upsert goes through the REAL
 // Bearer-authed API, the same surface any customer uses — never a raw DB insert for content.
 //
 // Uses raw fetch() rather than importing @golden-frijoles/sdk: the SDK ships as un-transpiled TS
@@ -23,6 +27,24 @@ import { createClient } from '@supabase/supabase-js';
 import { seededProjectWorkspace } from './lib/seed-workspace.mjs';
 
 export const DEMO_PROJECT_SLUG = process.env.DEMO_PROJECT_SLUG?.trim() || 'golden-frijoles';
+
+/** True only for a local Supabase (`supabase start`, CI's runner): the one place this destructive seed may run. */
+export function isLocalSupabaseUrl(url) {
+  try {
+    return ['localhost', '127.0.0.1', '[::1]', '::1'].includes(new URL(url).hostname);
+  } catch {
+    return false;
+  }
+}
+
+export function assertLocalTarget(url) {
+  if (!isLocalSupabaseUrl(url)) {
+    throw new Error(
+      `Refusing to seed: SUPABASE_URL is not a local instance. The public project '${DEMO_PROJECT_SLUG}' is ` +
+        `Golden Frijoles' real project, and this seed deletes its events and features (one-product-project D1).`
+    );
+  }
+}
 const FEATURE_KEY = 'setup_guide';
 const TARGET_EVENT = 'setup_guide_viewed';
 const ADOPTED_EVENT = 'setup_guide_step_completed';
@@ -275,6 +297,8 @@ async function seedExperiment(baseUrl, apiKey) {
 }
 
 export async function main() {
+  // Before ANY database call, including the project lookup.
+  assertLocalTarget(requireEnv('SUPABASE_URL'));
   const baseUrl = process.env.GROWTH_ENGINE_URL?.trim() || 'http://localhost:3000';
   const db = supabase();
 

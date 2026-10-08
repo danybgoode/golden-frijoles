@@ -153,8 +153,9 @@ Architect and builder in place (one session, Opus 5.5). Reviews go through `scri
 - **Moves (UPDATE project_id, no key collisions):** features `waitlist_conversion`, `activation`, `methodology_reading`.
   North Star `proven_bets` + its 4 leading inputs. Ingest key `d2bf557b…` (Vercel's `SELF_PROJECT_API_KEY`).
 - **Retires in `golden-frijoles`:** the synthetic demo North Star `payable_sellers` (+1 input, 14 values), so the
-  project has one North Star. It is backed up to the epic's scratch file first, and `scripts/seed-demo-project.mjs`
-  can re-seed it.
+  project has one North Star. It is backed up first (`~/dobby/golden-frijoles-backup-payable-sellers-2026-10-08.json`
+  and `…-feature-inputs-…`). `scripts/seed-demo-project.mjs` refuses any non-local database now (fresh review of
+  #318: its reset deletes every event and feature in the project), so prod is never re-seeded.
 - **Recreated, not moved:** `auth.terminal_sign_in_enabled`. `flag_definition_versions` is immutable, so its history
   stays on `golden-beans`.
 - **Stays, archived:** 502 events, audit rows, journey proof rows, flag history. Connector token `6225230f…` is revoked.

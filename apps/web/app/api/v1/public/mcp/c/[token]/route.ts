@@ -93,7 +93,9 @@ function buildMcpServer(
   // uses (D4). The READ tools register unconditionally; the WRITE tools only when `flagWriteActor`
   // is non-null, which requires a CLI token whose holder OWNS this project. See lib/mcp-flag-tools.ts
   // for why that credential and not `agent_write`.
-  registerFlagTools(server, projectId, projectSlug, flagWriteActor)
+  // The public project's anonymous reader (no write credential of either kind) sees flags without actor ids.
+  const anonymousOnPublicProject = projectSlug === DEMO_PROJECT_SLUG && !writeKeyId && !flagWriteActor
+  registerFlagTools(server, projectId, projectSlug, flagWriteActor, anonymousOnPublicProject)
 
   server.registerTool(
     'get_tars_funnel',

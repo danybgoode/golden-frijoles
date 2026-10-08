@@ -42,7 +42,10 @@ default to the same project, **so that** the landing, Hub, connector, CI pushes 
 - `golden-beans` and `golden-beans-demo` are reserved, so nobody can sign up with them.
 - `/hub/golden-beans-demo/*` and `/app/<section>/golden-beans-demo/*` redirect (308) to `golden-frijoles`.
   `golden-beans` does not redirect: it stays, archived, with its flag history readable (README, Build contract — S1).
-- `golden-frijoles.config.json → hubUrl`, the seed scripts, fixtures, surfaces and specs all use the new slug.
+- `golden-frijoles.config.json → hubUrl`, the seed scripts, fixtures and specs all use the new slug. The approved
+  design-system surfaces and prototype are hash-pinned illustrations and keep the old slug (the redirect covers them).
+- `seed:demo` refuses a non-local database: its reset deletes every event and feature in the project, which is the
+  real one now. The public connector hides audit actor ids from an anonymous reader. `/install` says it is our project.
 - Rule #2 specs: only `golden-frijoles` is public. `golden-beans` and `golden-beans-demo` no longer exist as projects
   in CI.
 **Risk:** high
@@ -67,8 +70,8 @@ that `golden-beans` printed. The Google buttons on `/login` still show. History 
 **Risk:** high
 
 ## Sprint QA
-- **api spec(s):** `public-demo.spec.ts`, `hub.spec.ts`, `self-track.spec.ts`, `signup.spec.ts` (reserved slugs), a
-  new redirect case in `hub.spec.ts`
+- **api spec(s):** `public-demo.spec.ts` (+ the redirect case), `hub.spec.ts`, `self-track.spec.ts`, `signup.spec.ts`
+  (reserved slugs), `mcp-flag-tools.spec.ts` (anonymous actor hidden), `scripts/seed-demo-project.test.mjs` (local only)
 - **browser smoke owed:** yes, to Daniel: the signed-in console switcher shows `golden-frijoles`
 - **deterministic gate:** `tsc --noEmit` + `npm run build` + Playwright `api` green before merge
 

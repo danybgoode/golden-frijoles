@@ -4,7 +4,7 @@ import { getSiteUrl } from './site-url'
 import { DEMO_PROJECT_SLUG } from './public-demo'
 
 // Story 3.1 (commercial-shell/sprint-3.md) — the landing dogfoods the engine: Golden Frijoles is its
-// OWN tenant (a THIRD project, separate from the marketing demo and from Miyagi), and its
+// OWN tenant (since one-product-project D1, the one public `golden-frijoles` project; never Miyagi's), and its
 // visitor→waitlist funnel is measured by the engine itself, through the real customer-facing SDK
 // (AGENTS.md rule #1 — no parallel telemetry pipeline, no direct events insert from app code).
 //

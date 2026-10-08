@@ -60,7 +60,9 @@ stories:
 **As** an agent, **I want** AGENTS, LEARNINGS and the `flags.ts` comments to say `gf flags`, not Vercel, **so that**
 nobody adds an env-var flag again.
 **Acceptance:** AGENTS rule #4's env paragraph and the "Key env vars → Gates" list are rewritten to the catalog.
-LEARNINGS gets the lesson. Grep finds no "set the Vercel variable" instruction for a gate.
+LEARNINGS gets the lesson. Grep finds no "set the Vercel variable" instruction for a gate. AGENTS rule #2 and the
+Key env vars wording say the public project IS Golden Frijoles' own (not "the demo tenant" / "the self-dogfood
+tenant"), and `scripts/cross-review.prompt.md` agrees (fresh review of #318).
 **Risk:** low
 
 ## Sprint QA
