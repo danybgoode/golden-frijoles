@@ -37,8 +37,8 @@ the newest metric and its inputs, **so that** a state `gf north-star set` create
 **Risk:** low
 
 ## Sprint QA
-- **api spec(s):** `e2e/north-star-multi-metric.authed.spec.ts` (two-metric fixture on the page; the Pod Report reads
-  through the same `getProjectNorthStarByProjectId`/`currentNorthStar`, so one fixture covers both readers' rule); the existing North Star
+- **api spec(s):** `e2e/north-star-multi-metric.authed.spec.ts` (two metrics inserted against their creation order; the
+  North Star page AND the Pod Report's North Star card, which runs its own input count); the existing North Star
   and Pod Report specs stay green.
 - **browser smoke owed:** yes, to Daniel: the signed-in page view (step 2 below).
 - **deterministic gate:** `npm run typecheck` + `npm run build` + Playwright `api` green before merge.
