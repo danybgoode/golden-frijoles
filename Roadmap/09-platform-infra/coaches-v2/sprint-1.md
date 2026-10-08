@@ -3,7 +3,7 @@ epic: coaches-v2
 sprint: 1
 title: "Cold read and compare"
 risk: low
-phase: Shaping
+phase: Building
 stories_total: 2
 stories:
   - id: S1.1
@@ -23,7 +23,7 @@ stories:
 ---
 # Coaches v2 — Sprint 1: Cold read and compare
 
-**Status:** ⬜ not started
+**Status:** 🔨 in review (PR pending, 0.41.0)
 
 ## Stories
 
@@ -46,7 +46,7 @@ stories:
 Env: a local repo with the plugin installed from this branch's release
 
 1. In a repo with a Roadmap, run `/golden-frijoles:cold-read`
-   → a sealed file appears under `strategy/cold-read/` and its hash is printed.
+   → a sealed file appears under `Roadmap/00-strategy/cold-read/` and its hash is printed.
 2. Edit one character of the sealed file, then run the compare
    → it refuses and names the hash mismatch.
 
