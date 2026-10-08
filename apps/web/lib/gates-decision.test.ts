@@ -71,6 +71,18 @@ test('every other catalog state serves the fallback — an outage changes nothin
   }
 })
 
+test('DEACTIVATED is OFF, whatever the fallback: the console off switch must turn a born-ON gate off (#319)', () => {
+  const deactivated = { environment: 'production', serving: null, readable: true, state: 'off' }
+  assert.equal(servedValue(ON, catalogOf(ON.key, [deactivated]), 'production'), false)
+  assert.equal(servedValue(OFF, catalogOf(OFF.key, [deactivated]), 'production'), false)
+  const never = { environment: 'production', serving: null, readable: true, state: 'never' }
+  assert.equal(
+    servedValue(ON, catalogOf(ON.key, [never]), 'production'),
+    true,
+    'never activated: the fallback'
+  )
+})
+
 test('one environment killed does not kill another', () => {
   const catalog = catalogOf(ON.key, [row('preview', false), row('production', true)])
   assert.equal(servedValue(ON, catalog, 'preview'), false)

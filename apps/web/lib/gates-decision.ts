@@ -30,7 +30,7 @@ export type Gate = {
 }
 
 /** The shape of `CliFlagView['environments'][number]` this rule reads — nothing more. */
-export type ServedEnvironment = { environment: string; serving: unknown; readable: boolean }
+export type ServedEnvironment = { environment: string; serving: unknown; readable: boolean; state?: string }
 
 /** flag key → what each environment serves. `null` = the catalog could not be read. */
 export type ServedCatalog = ReadonlyMap<string, readonly ServedEnvironment[]> | null
@@ -117,12 +117,17 @@ export function envOverride(
 }
 
 /**
- * The catalog's answer for one gate in one environment. A served boolean is the answer; anything else — the catalog
- * unreadable, the flag absent, never activated or deactivated here (`serving: null`), a corrupt row, a non-boolean —
- * is not an answer, and the gate serves its fallback. `gf flags kill` serves `false`, so a kill always lands.
+ * The catalog's answer for one gate in one environment.
+ * - A served boolean is the answer. `gf flags kill` serves `false`, so a kill always lands.
+ * - DEACTIVATED (`state: 'off'`) is OFF. That is what the console's off switch does (`deactivateFlagAction`), and an
+ *   operator who switched a gate off must never find it still on because "nothing served" fell back to a
+ *   born-ON default (cross-family review of #319, Codex).
+ * - Anything else — the catalog unreadable, the flag absent, never activated here, a corrupt row, a non-boolean — is
+ *   not an answer, and the gate serves its fallback.
  */
 export function servedValue(gate: Gate, catalog: ServedCatalog, environment: FlagEnvironmentName): boolean {
   const row = catalog?.get(gate.key)?.find((candidate) => candidate.environment === environment)
+  if (row?.state === 'off') return false
   if (!row || !row.readable || typeof row.serving !== 'boolean') return gate.fallback
   return row.serving
 }
