@@ -14,6 +14,7 @@
 //
 // Zero deps — Node 18+.
 
+import { spawnSync } from 'node:child_process';
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -88,15 +89,33 @@ function main(argv) {
     console.error('Run: node scripts/render-plugin-release.mjs');
     return 1;
   }
-  writeFileSync(target, rendered);
+  // Pins FIRST: a rewritten SKILL.md changes the plugin's checksums, so the sums are re-made and only then is the
+  // generated module rendered from them (the release order in LEARNINGS: bump, plugin-checksums, render). Writing the
+  // module first left it naming hashes of the pre-rewrite files (review of #316).
   const { version } = JSON.parse(readFileSync(join(ROOT, 'packages/cli/package.json'), 'utf8'));
+  let rewrote = 0;
   for (const [file, text] of skillFiles()) {
     const pinned = pinCli(text, version);
     if (pinned !== text) {
       writeFileSync(join(ROOT, file), pinned);
+      rewrote += 1;
       console.log(`render-plugin-release: ${file} now quotes cli@${version}.`);
     }
   }
+  if (rewrote) {
+    const sums = spawnSync(process.execPath, ['scripts/plugin-checksums.mjs'], {
+      cwd: join(ROOT, 'skills'),
+      encoding: 'utf8',
+    });
+    if (sums.status !== 0) {
+      console.error(`render-plugin-release: plugin-checksums failed: ${sums.stderr.trim()}`);
+      return 1;
+    }
+    console.log(
+      'render-plugin-release: re-made skills/SHA256SUMS. A plugin file changed, so this needs a version bump (check-release).'
+    );
+  }
+  writeFileSync(target, renderPluginRelease());
   console.log(`render-plugin-release: wrote ${TARGET}.`);
   return 0;
 }
