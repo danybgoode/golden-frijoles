@@ -1,388 +1,161 @@
-// Story 2.1 (commercial-shell/sprint-2.md) — the connector's kill-switch. Born unset/OFF
-// (epic README, "Kill-switch" section): the MCP connector route no-ops 404 until this is
-// deliberately flipped to 'true' (Story 3.3, production only).
+// The product's gates. Each one is a flag in Golden Frijoles' own catalog, in the `golden-frijoles` project
+// (one-product-project D1/D3), read through the ONE seam, lib/gates.ts. `gf flags kill <key> --env production` is
+// the switch: no Vercel variable and no redeploy. The keys, the variables they replaced and each gate's fallback are
+// in lib/gates-decision.ts (`GATES`) and the epic README's gate table.
 //
-// Deliberately NOT `import 'server-only'` here (unlike its sibling lib/*.ts files): this is a
-// zero-import pure function (Roadmap/LEARNINGS.md — keep pure logic free of framework/runtime-only
-// imports) so the e2e suite can assert its dark-default behavior directly, without booting a
-// second differently-enved server just to exercise the one-line flag check the route makes.
-export function isConnectorEnabled(): boolean {
-  return process.env.CONNECTOR_ENABLED === 'true'
+// Every function is async because a catalog read is, and every caller awaits it. A bare `isXEnabled()` in a
+// condition is a Promise and therefore always truthy, so a forgotten `await` silently opens the gate. The guard in
+// lib/gates-guard.test.ts fails CI on any call that is not awaited.
+//
+// Deliberately NOT `import 'server-only'`: the Playwright process imports these to decide which suites run, and
+// there the off-Vercel env override answers without loading the database (lib/gates.ts, D6).
+//
+// Two gates are gone, not moved (D2). `FLAG_SERVING_ENABLED` gated activation itself, and `CLI_WRITE_API_ENABLED`
+// gated the CLI that would turn it back on. Killed through the catalog, either one would have locked the operator
+// out of the switch that restores it, so both paths are simply always on. The rollback is `git revert`, and the CLI
+// stays the recovery path for every flag below.
+//
+// Each comment below says what its gate gates. That is the contract worth keeping when a gate's surface changes.
+
+import { gate } from './gates'
+import { GATES } from './gates-decision'
+
+/** The MCP connector (commercial-shell 2.1). One of two independent kill switches with the per-project revocable
+ * token (AGENTS rule #3): the route must 404 while this is off, whatever the token. */
+export function isConnectorEnabled(): Promise<boolean> {
+  return gate(GATES.connector)
 }
 
-// multi-tenant-activation · Sprint 2, Story 2.1 — self-serve signup's enablement gate. Same
-// polarity and same dark-by-default contract as the connector flag above (epic README,
-// "Kill-switch"): born unset/OFF, flipped deliberately in production at Story 3.3.
-//
-// Exactly `=== 'true'` — not a truthiness check. `SIGNUP_ENABLED=false`, `=0`, `=off` and an
-// accidental `= ` must ALL read as OFF; an enablement gate that opens on a typo isn't a gate.
-// Everything downstream of this reads it fresh per request (no module-level capture). Vercel still
-// snapshots environment variables into a deployment, so a changed value needs a new Git-tracked
-// deployment before running functions can observe it (AGENTS.md rule #4).
-export function isSignupEnabled(): boolean {
-  return process.env.SIGNUP_ENABLED === 'true'
+/** Self-serve signup (multi-tenant-activation 2.1): the `/signup` page, `POST /api/v1/public/signup`, tenant
+ * provisioning in `/auth/callback`, and the landing's CTA flip. */
+export function isSignupEnabled(): Promise<boolean> {
+  return gate(GATES.signup)
 }
 
-// event-destination-router · Sprint 1, Story 1.2 — the dispatcher's enablement gate. Third flag,
-// same polarity, same dark-by-default contract as its two siblings above (epic README,
-// "Kill-switch"): born unset/OFF in preview and production, flipped deliberately once Sprint 2 has
-// a real sink and Sprint 3 has proven it against a disposable receiver.
-//
-// Exactly `=== 'true'`, for the same reason as `isSignupEnabled`: `DESTINATION_DELIVERY_ENABLED=
-// false`, `=0`, `=off`, `=TRUE` and an accidental `= ` must ALL read as OFF. A gate that opens on a
-// typo is not a gate — and this particular one opens outbound HTTP to third-party systems.
-//
-// WHAT IT GATES, PRECISELY: only the dispatcher (lib/delivery-dispatch.ts). Ingest and OUTBOX
-// PERSISTENCE stay fully active while it is OFF, which is the whole design — turning delivery off
-// must lose no events, it must only stop them moving. If you ever find yourself reading this flag
-// on the /track path, something has gone wrong: an ingest that depends on a delivery flag has
-// reintroduced exactly the coupling the outbox exists to remove.
-//
-// Read fresh per request, no module-level capture — but note that on Vercel a new value still needs
-// a REDEPLOY to reach running functions (AGENTS.md, corrected 2026-07-21: env vars are snapshotted
-// into a deployment at build time). "Set" and "live" are two separate facts.
-export function isDestinationDeliveryEnabled(): boolean {
-  return process.env.DESTINATION_DELIVERY_ENABLED === 'true'
+/** The destination dispatcher only (event-destination-router 1.2, lib/delivery-dispatch.ts). Ingest and OUTBOX
+ * PERSISTENCE stay active while it is off: turning delivery off must lose no events, only stop them moving. If this
+ * is ever read on the /track path, ingest has been coupled to delivery, which is the thing the outbox removes. */
+export function isDestinationDeliveryEnabled(): Promise<boolean> {
+  return gate(GATES.destinationDelivery)
 }
 
-// entity-journeys-projections · Sprint 1, Story 1.1 — enablement gate for every NEW journey seam.
-// Born unset/OFF. Definition management, later projections, UI/API and MCP reads must all disappear
-// while dark, without changing ingest, TARS, experiments or destination delivery.
-//
-// Read fresh on every request/action. As above, changing a Vercel env value still needs a new
-// Git-tracked deployment before the running app receives the new snapshot.
-export function isJourneyProjectionsEnabled(): boolean {
-  return process.env.JOURNEY_PROJECTIONS_ENABLED === 'true'
+/** Every journey seam (entity-journeys-projections 1.1): definition management, projections, UI/API and MCP reads.
+ * Ingest, TARS, experiments and delivery do not read it. */
+export function isJourneyProjectionsEnabled(): Promise<boolean> {
+  return gate(GATES.journeyProjections)
 }
 
-// experiment-governance-v2 · Sprint 1 — enablement gate for NEW registry/lifecycle management
-// only. Existing local SDK bucketing, exposure ingest and v1 comparison never consult this flag:
-// governance must be removable without changing runtime assignment or losing telemetry.
-// Born unset/OFF; changing it on Vercel requires a new Git-tracked deployment.
-export function isExperimentGovernanceEnabled(): boolean {
-  return process.env.EXPERIMENT_GOVERNANCE_ENABLED === 'true'
+/** Experiment registry/lifecycle management (experiment-governance-v2 S1). Local SDK bucketing, exposure ingest and
+ * v1 comparison never consult it: governance must be removable without changing assignment or losing telemetry. */
+export function isExperimentGovernanceEnabled(): Promise<boolean> {
+  return gate(GATES.experimentGovernance)
 }
 
-// experiments-for-humans (epic README D9, A5) — the guided experiment builder: the "+ New experiment"
-// dialog's builder content and every builder server action (save, start, retry). Enablement polarity,
-// born OFF in every Vercel environment on 2026-09-24; kept as the kill-switch after the JSON authoring
-// path retires (off ⇒ the door is drawn blocked with its reason, never hidden). Like every gate here,
-// a change reaches running functions only with a new Git-tracked deployment.
-export function isExperimentBuilderEnabled(): boolean {
-  return process.env.EXPERIMENT_BUILDER_ENABLED === 'true'
+/** The guided experiment builder (experiments-for-humans D9, A5): the "+ New experiment" dialog's builder content
+ * and every builder server action. Off ⇒ the door is drawn blocked with its reason, never hidden. */
+export function isExperimentBuilderEnabled(): Promise<boolean> {
+  return gate(GATES.experimentBuilder)
 }
 
-// The builder's WRITES need both gates: they write governed experiments, so with governance off the
-// page they live on is gone and so are they (fresh reviewer, PR #170).
-export function isExperimentBuilderWritable(): boolean {
-  return isExperimentGovernanceEnabled() && isExperimentBuilderEnabled()
+/** The builder's WRITES need both gates: they write governed experiments, so with governance off the page they live
+ * on is gone and so are they (fresh reviewer, PR #170). */
+export async function isExperimentBuilderWritable(): Promise<boolean> {
+  return (await isExperimentGovernanceEnabled()) && (await isExperimentBuilderEnabled())
 }
 
-// pod-report · Sprint 3, Story 3.1 — the share-link enablement gate. Sixth flag, same polarity and
-// same dark-by-default contract as its siblings (epic README, "Kill-switch"): born unset/OFF,
-// flipped deliberately at Story 3.3.
-//
-// Exactly `=== 'true'`, for the reason the others give: a gate that opens on a typo is not a gate.
-// This one is worth stating plainly, because of the five flags above it this is the only one whose
-// OFF state is protecting data from ANONYMOUS readers rather than protecting a feature from being
-// used early. While it is off, `/s/<token>` must 404 for every token — valid, revoked or invented —
-// so the flag is a real kill switch for the whole surface and not merely a feature toggle.
-//
-// The fine-grained kill is revoking the individual row (lib/report-shares.ts + revokeApiKey). The
-// two are independent by design: a revoked token must die while the flag is ON, and every token
-// must die while the flag is OFF, regardless of validity. Same two-independent-kill-switches shape
-// as the MCP connector (AGENTS rule #3).
-export function isReportSharesEnabled(): boolean {
-  return process.env.REPORT_SHARES_ENABLED === 'true'
+/** Share links, `/s/<token>` (pod-report 3.1). The one gate whose OFF state protects data from ANONYMOUS readers:
+ * while it is off every token 404s, valid, revoked or invented. Revoking a row is the fine-grained kill; the two are
+ * independent by design (rule #3's shape). */
+export function isReportSharesEnabled(): Promise<boolean> {
+  return gate(GATES.reportShares)
 }
 
-// signals-loop · Story 1.0 — the seventh flag. Born unset/OFF.
-//
-// ── WHAT IT GATES, PRECISELY (corrected after cross-review, Codex round 2, 2026-07-26) ────────
-// GATED:     deterministic grouping into `signals` · friction evaluation · signal→task promotion ·
-//            the dashboard task views · the connector's task READ tools.
-// NOT gated: ingest of a `$error` event itself, and the redaction applied to it.
-//
-// The first version of this comment said it gated "capture", and the epic README said the same.
-// The code never did, and the doc was the thing that was wrong — so the doc is what changed.
-//
-// Two reasons this is the right polarity, not a shortcut. First, a `$error` event is an ORDINARY
-// event: it arrives through /v1/track, it belongs to the tenant, and storing it is the engine's
-// core job. Rejecting it while the seam is dark would mean a customer's SDK starts taking 4xx on a
-// call that is contractually valid, to hide a feature they cannot see. That is the same coupling
-// isDestinationDeliveryEnabled's comment forbids one layer down: turning a downstream seam off must
-// lose no events, only stop them moving.
-//
-// Second, and more important: REDACTION IS NOT GATED BY THIS FLAG EITHER (see
-// lib/signals.ts → scrubReservedEventPayload). If it were, pulling the kill switch would start
-// storing raw credentials — a switch whose OFF position is less safe than its ON position is worse
-// than no switch at all.
-//
-// Amendment 5 (epic README) added this. The groom had planned only CONNECTOR_WRITES_ENABLED below,
-// but that flag gates a mutation surface, not a seam — and capture/grouping/tasks is a new ingest
-// AND storage surface, which every prior epic gave its own born-OFF gate
-// (JOURNEY_PROJECTIONS_ENABLED, EXPERIMENT_GOVERNANCE_ENABLED, REPORT_SHARES_ENABLED). Without
-// this, the only way to stop signal capture would be a revert.
-//
-// Exactly `=== 'true'`, for the reason all six above give: a gate that opens on a typo is not a
-// gate. Read fresh per request; on Vercel a changed value still needs a new Git-tracked deployment
-// (AGENTS.md rule #4 — "set" and "live" are two separate facts).
-export function isSignalsEnabled(): boolean {
-  return process.env.SIGNALS_ENABLED === 'true'
+/** The signals loop (signals-loop 1.0). GATED: grouping into `signals`, friction evaluation, signal→task promotion,
+ * the task views, the connector's task READ tools. NOT gated: ingest of a `$error` event and its redaction. A
+ * `$error` event is an ordinary event, and a kill switch whose OFF position stored raw credentials would be less safe
+ * than its ON position (lib/signals.ts → scrubReservedEventPayload). */
+export function isSignalsEnabled(): Promise<boolean> {
+  return gate(GATES.signals)
 }
 
-// signals-loop · Story 1.0 — the engine's FIRST PUBLIC MUTATION SURFACE, and therefore the flag on
-// this list whose OFF state matters most. Born unset/OFF, flipped deliberately at Story 3.4.
-//
-// WHAT IT GATES, PRECISELY: only the staged connector write tools (claim/resolve/dismiss). Signal
-// capture, grouping, promotion, the dashboard and the task READ tools all ride isSignalsEnabled()
-// above and are unaffected. Turning writes off must not stop the queue filling — it must only stop
-// an agent changing it.
-//
-// This flag is ONE of three independent kill switches on that surface (epic README, Amendment 2):
-// this env gate · revoking the project's connector token · revoking the agent_write credential.
-// Any one of them alone must be sufficient, which is why none of them is checked in place of
-// another. AGENTS rule #3 requires two for the connector; the first mutation path earns a third.
-export function isConnectorWritesEnabled(): boolean {
-  return process.env.CONNECTOR_WRITES_ENABLED === 'true'
+/** The staged connector WRITE tools only, claim/resolve/dismiss (signals-loop 1.0): the engine's first public
+ * mutation surface. One of three independent kill switches with the project's connector token and the agent_write
+ * credential (Amendment 2); none is checked in place of another. */
+export function isConnectorWritesEnabled(): Promise<boolean> {
+  return gate(GATES.connectorWrites)
 }
 
-// flag-serving-and-prd-g · root bootstrap gate for the operational serving plane. Definitions and
-// their immutable audit remain inspectable while this is OFF; only snapshot serving and activation
-// are dark. The control plane must not be able to lock itself out of inspection or rollback.
-export function isFlagServingEnabled(): boolean {
-  return process.env.FLAG_SERVING_ENABLED === 'true'
+/** Project catalog registration, `/api/v1/flags/sync` (flag-serving-and-prd-g S4). Separate from serving on
+ * purpose: an incident may stop publishers without interrupting the snapshots already being served. */
+export function isFlagDefinitionSyncEnabled(): Promise<boolean> {
+  return gate(GATES.flagDefinitionSync)
 }
 
-// ── golden-frijoles-cli · D8 — the CLI-authenticated write seam, and the ONE gate in this module
-// whose polarity is inverted ────────────────────────────────────────────────────────────────────
-//
-// ⚠️ **`!== 'false'`, not `=== 'true'`. It is BORN ON.** Every other gate in this file is born
-// dark; this one is not, and the deviation is deliberate rather than a slip:
-//
-//   • **A standing product-owner instruction.** Daniel, 2026-08-31 and again for this epic on
-//     2026-09-17: "nothing is dark, all is enabled, nothing is waiting for me." A born-dark gate
-//     would mean the epic merges, deploys, and does nothing until someone sets a Vercel variable —
-//     which is the state that instruction exists to forbid. Born ON is the only polarity that
-//     ships live on merge with no env var owed.
-//   • **The epic's scope doc asked for the opposite, and the epic README records the inversion**
-//     (D8) rather than resolving it quietly. Read that before changing this line.
-//
-// **On the bet's "must fail CLOSED" clause.** That clause addressed a real hazard — a flag service
-// gating its own CLI *through its own flag service*, where a failed read would grant write access.
-// This gate does not do that. It reads an environment variable; there is no read that can fail, and
-// no recursion. What remains true either way is that setting `CLI_WRITE_API_ENABLED=false` is a
-// genuine whole-surface kill switch: every CLI route below checks it BEFORE any credential work, so
-// OFF is never a credential-validity oracle.
-//
-// ── WHAT IT GATES, PRECISELY ──────────────────────────────────────────────────────────────────
-// ⚠️ **This paragraph used to say "it does not gate ... flag inspection", and that was FALSE**
-// (cross-family review, Codex, round 4). `requireCliAccount` checks this gate before any credential
-// work on EVERY `/api/v1/cli/*` route, reads included — which is deliberate and is what
-// `lib/cli-auth.ts` says in its header ("OFF is a real whole-surface kill switch"). The comment
-// was describing an intention the code did not have, which is the class CODE-QUALITY #3 exists for.
-//
-// GATED: every `/api/v1/cli/*` route — `whoami`, `projects`, `keys`, `flags` (read AND write) —
-// and the MCP flag WRITE tools. An operator turning this off wants the CLI off, not half of it.
-//
-// NOT GATED: `/api/v1/flags/snapshot` (its own `FLAG_SERVING_ENABLED`), `/api/v1/flags/sync` (its
-// own `FLAG_DEFINITION_SYNC_ENABLED`), the console, and the connector's flag READ tools. An
-// incident that needs the CLI stopped must not also stop the consumers already reading snapshots,
-// and none of those paths reads this flag.
-export function isCliWriteApiEnabled(): boolean {
-  return process.env.CLI_WRITE_API_ENABLED !== 'false'
+/** Resilience scenario execution (flag-serving-and-prd-g). Off stops fault payload delivery but keeps the record
+ * needed to understand and safely stop a scenario already created. */
+export function isResilienceScenariosEnabled(): Promise<boolean> {
+  return gate(GATES.resilienceScenarios)
 }
 
-// flag-serving-and-prd-g · Sprint 4 — definition synchronization is an independently removable
-// control-plane WRITE seam.  It is deliberately separate from FLAG_SERVING_ENABLED: an owner may
-// prepare immutable drafts while serving is dark, and an incident may stop publishers without
-// interrupting the already-serving snapshots.
-export function isFlagDefinitionSyncEnabled(): boolean {
-  return process.env.FLAG_DEFINITION_SYNC_ENABLED === 'true'
+/** The defensive-simulation runner (flag-serving-and-prd-g), separate from resilience scenarios: an owner may allow
+ * an internal fault drill without authorizing an active security probe. */
+export function isSecuritySimulationsEnabled(): Promise<boolean> {
+  return gate(GATES.securitySimulations)
 }
 
-// flag-serving-and-prd-g · scenario execution is deliberately independent from definition and
-// evidence inspection. Turning it OFF stops fault payload delivery but preserves the record needed
-// to understand and safely stop an already-created scenario.
-export function isResilienceScenariosEnabled(): boolean {
-  return process.env.RESILIENCE_SCENARIOS_ENABLED === 'true'
+/** Automatic breakers' pre-authorized protective transition (flag-serving-and-prd-g). Manual, staged breaker actions
+ * stay available while it is off. */
+export function isAutomaticCircuitBreakersEnabled(): Promise<boolean> {
+  return gate(GATES.automaticCircuitBreakers)
 }
 
-// flag-serving-and-prd-g · defensive-simulation runner gate. It is separate from resilience
-// scenarios because a production owner may allow an internal fault drill without authorizing an
-// active security probe.
-export function isSecuritySimulationsEnabled(): boolean {
-  return process.env.SECURITY_SIMULATIONS_ENABLED === 'true'
+/** PM-authored scenario writes (scenarios-pm-operable): create/start/stop/revoke fail before auth or payload work
+ * while it is off; evidence stays readable. */
+export function isScenarioAuthoringEnabled(): Promise<boolean> {
+  return gate(GATES.scenarioAuthoring)
 }
 
-// flag-serving-and-prd-g · automatic breakers may only make their pre-authorized protective
-// transition while this is explicitly enabled. Manual, staged breaker actions remain available.
-export function isAutomaticCircuitBreakersEnabled(): boolean {
-  return process.env.AUTOMATIC_CIRCUIT_BREAKERS_ENABLED === 'true'
+/** The agent rail, components/product/AgentRail.tsx, and nothing else (app-shell-and-agent-rail 2.2). It does not
+ * gate the section nav, Command Center's stat strip or its funnel. Not a tenancy control: both reads it renders are
+ * project-scoped either way. If an agent strip is ever added to Command Center, it MUST check this gate. */
+export function isAgentRailEnabled(): Promise<boolean> {
+  return gate(GATES.agentRail)
 }
 
-// scenarios-pm-operable · PM-authored scenario writes are an independently removable control
-// plane. Evidence remains readable while this is OFF; create/start/stop/revoke fail before auth or
-// payload work. Born dark like every operational gate in this module.
-export function isScenarioAuthoringEnabled(): boolean {
-  return process.env.SCENARIO_AUTHORING_ENABLED === 'true'
+/** The visual rule builder, rollout bars, version diff and "preview as a user" on /app/flags/[projectSlug]
+ * (flags-visual-rule-builder D6). With it off the page renders as before that epic, textarea included. Not an
+ * authorization control: writes resolve ownership through `requireProjectOwnership` either way. */
+export function isFlagRuleBuilderEnabled(): Promise<boolean> {
+  return gate(GATES.flagRuleBuilder)
 }
 
-// app-shell-and-agent-rail · Sprint 2, Story 2.2 — the agent rail's enablement gate. Fourteenth
-// flag, same polarity and same dark-by-default contract as every one above (epic README, D6): born
-// unset/OFF, created disabled, flipped deliberately once the rail has been exercised.
-//
-// Exactly `=== 'true'`, for the reason all thirteen give: a gate that opens on a typo is not a gate.
-//
-// WHAT IT GATES, PRECISELY: components/product/AgentRail.tsx, and nothing else. That is the ONE
-// surface which renders lib/agent-activity.ts and lib/pending-confirmations.ts.
-//
-// The epic's D6 named a second surface — "Command Center's agent strip" — and this comment used to
-// name it too. Sprint 3 shipped Command Center WITHOUT one: the rail already answers "what did my
-// agent do", and a second copy of the same feed on the same page would have been two devices for
-// one promise (the epic's own D5, one layer up). So the strip does not exist, and describing a gate
-// over a surface that was never built is the exact failure CODE-QUALITY rule 3 names — a comment
-// asserting a property the code does not have. Corrected after the fresh-reviewer pass caught this
-// file and components/product/CommandCenter.tsx saying opposite things.
-//
-// If an agent strip is ever added to Command Center, it reads these same two seams and MUST check
-// this gate. That is the sentence to keep; the claim that it already does is the one that was wrong.
-//
-// It explicitly does NOT gate the section nav (lib/shell-nav.ts, ProductShell), and it does not
-// gate Command Center's stat strip or funnel. A rail can be born off and switched on; navigation
-// that vanishes with a flag is a worse failure than no flag, and a front door that half-renders is
-// worse than either.
-//
-// Note what this flag is NOT: it is not a tenancy control. Both reads are project-scoped
-// server-side whether it is on or off, and turning it ON grants no one access to anything they
-// could not already see on the surface the data came from. It decides whether a SURFACE exists.
-//
-// Read fresh per request; on Vercel a changed value still needs a new Git-tracked deployment
-// (AGENTS.md rule #4 — "set" and "live" are two separate facts).
-export function isAgentRailEnabled(): boolean {
-  return process.env.AGENT_RAIL_ENABLED === 'true'
+/** The flag console: its feature list, environment selector, per-feature destination, credentials and
+ * lifecycle-audit routes (flags-console-parity D6 + Amendment 1). Off ⇒ the legacy flags page, which keeps every
+ * activate/deactivate control. Not an authorization control: membership is resolved server-side either way. */
+export function isFlagConsoleEnabled(): Promise<boolean> {
+  return gate(GATES.flagConsole)
 }
 
-// flags-visual-rule-builder · Sprint 1, Story 1.4 (epic README, D6) — the FIFTEENTH flag. Born
-// unset/OFF, created DISABLED in every environment before Sprint 1 merged.
-//
-// Exactly `=== 'true'`, for the reason all fourteen above give: a gate that opens on a typo is not
-// a gate.
-//
-// ── WHAT IT GATES, PRECISELY ──────────────────────────────────────────────────────────────────
-// GATED:     the visual rule builder, the rollout bars, the version diff and "preview as a user" —
-//            i.e. every surface this epic adds to /app/flags/[projectSlug].
-// NOT gated: anything that exists today. **With this OFF the page renders exactly as it did before
-//            the epic, textarea included.** That is the whole polarity argument: this flag ships a
-//            new WRITE path onto the production flag control plane, so it merges dark — but a PM
-//            must never be left unable to author a flag because a new authoring surface is off.
-//            A gate whose OFF state removes the only way to do the job is an outage, not a switch.
-//
-// It is an ENABLEMENT gate, not a kill-switch, and the difference is not pedantry: nothing depends
-// on it yet, so flipping it on is a deliberate act after a real definition round-trip is verified,
-// and flipping it back off costs a PM nothing but the new controls.
-//
-// Note what it is NOT: it is not an authorization control. The builder posts through
-// `createFlagDefinitionVersionAction`, which resolves ownership server-side via
-// `requireProjectOwnership` whether this flag is on or off. Turning it ON grants nobody the right
-// to write a definition they could not already write through the textarea — it decides whether a
-// SURFACE exists, not who may use it.
-//
-// Read fresh per request; on Vercel a changed value still needs a new Git-tracked deployment
-// (AGENTS.md rule #4 — "set" and "live" are two separate facts).
-export function isFlagRuleBuilderEnabled(): boolean {
-  return process.env.FLAG_RULE_BUILDER_ENABLED === 'true'
+/** Registration predicate for journey-only MCP tools: the connector route enforces its own gate before token
+ * resolution, and a journey tool needs BOTH gates. */
+export async function isJourneyMcpToolEnabled(): Promise<boolean> {
+  return (await isConnectorEnabled()) && (await isJourneyProjectionsEnabled())
 }
 
-// flags-console-parity · Sprint 1, Story 1.1 (epic README, D6 + Amendment 1) — the SEVENTEENTH
-// flag. Born unset/OFF, created DISABLED in development, preview and production before Sprint 1
-// merged.
-//
-// Exactly `=== 'true'`, for the reason all sixteen above give: a gate that opens on a typo is not a
-// gate.
-//
-// ── WHY THIS ONE IS A KILL-SWITCH-GRADE CONCERN, NOT A COSMETIC TOGGLE ────────────────────────
-// The surface it replaces is how an operator kills a live checkout on Miyagi Sánchez. A
-// half-landed redesign must never become the only route to that control, which is the whole reason
-// this epic merges dark and flips deliberately after the product owner has walked the surface.
-//
-// ── WHAT IT GATES, PRECISELY ──────────────────────────────────────────────────────────────────
-// TODAY (Sprint 1):  the feature list and the environment selector on /app/flags/[projectSlug].
-//                    That is ALL that exists behind this gate right now.
-// PLANNED:           the per-feature destination (Sprint 2) and the credentials + lifecycle-audit
-//                    routes (Sprint 3) join it as they land.
-// NOT gated, ever:   anything that existed before the epic. **With this OFF the flags page is
-//                    byte-for-byte what it was, textarea and key-minting forms included.**
-//
-// The TODAY/PLANNED split is deliberate (fresh HIGH-tier reviewer, PR #118). This comment first
-// listed all four surfaces in the present tense, describing a gate scope the code did not yet have
-// — the same "prose asserting a property the code lacks" defect that CODE-QUALITY rule 3 names and
-// that this very file's `isAgentRailEnabled` comment was already corrected for once. A gate comment
-// is read as an inventory of what is dark; listing an unbuilt surface makes it a wrong one.
-//
-// That last clause is load-bearing and is the reason Amendment 1 exists. Stories 3.1/3.2 WILL move
-// the credential forms and the lifecycle audit off the flags page — and an unconditional move would
-// delete controls from the gate-off page, breaking the guarantee this comment just made. So when
-// that lands it must be gate-conditional: while this is off, `flag-manager.tsx` keeps rendering
-// them exactly as today. (Future tense on purpose: nothing has moved yet.) A dark-launch guarantee that holds "except for the three forms" is not a guarantee, and
-// the sibling epic `flags-visual-rule-builder` already nearly broke the same promise over one CSS
-// class (see the textarea's inline style, below in that file, and the comment defending it).
-//
-// ── HOW THE GUARANTEE IS ENFORCED — by construction, not by a spec ────────────────────────────
-// The new console is a NEW component tree, so byte-for-byte holds *because the legacy render is
-// unchanged* — a property auditable with `git diff`, which is strictly stronger than a test.
-//
-// Sprint 1 does not edit `flag-manager.tsx`; the file is byte-identical to what it was before the
-// epic. A mid-build revision briefly weakened that to allow one prop (`showDefinitions`) so the
-// console could hide the legacy per-flag stack — and it turned out that stack holds every
-// activate/deactivate control, whose replacement is a sprint away. Turning the console ON would have
-// removed the only way to kill a live flag. The constraint was load-bearing; it is back.
-//
-// So the console is ADDITIVE in Sprint 1: it renders above the existing controls, which keep
-// working. The stack is removed in Sprint 2, by the story that lands its replacement.
-//
-// This matters because the guarantee is NOT assertable in the merge gate, and the epic's QA
-// section originally claimed it was. `/app/flags/[projectSlug]` is credential-gated, so the
-// Playwright `api` project only ever observes the login redirect — identical with this flag on or
-// off. A spec asserting "the page renders as it did" from there is a guard that cannot fail. What
-// IS assertable without a session is the two NEW routes: they follow the established
-// `if (!isFlagConsoleEnabled()) notFound()` pattern, so they return a flat 404 while dark.
-//
-// Note what this flag is NOT: it is not an authorization control. Every surface it gates resolves
-// membership server-side through `requireProjectMembership` (or `requireProjectOwnership` for the
-// credentials route) whether it is on or off. Turning it ON grants nobody the right to read or
-// write anything they could not already reach. It decides whether a SURFACE exists.
-//
-// Read fresh per request; on Vercel a changed value still needs a new Git-tracked deployment
-// (AGENTS.md rule #4 — "set" and "live" are two separate facts).
-export function isFlagConsoleEnabled(): boolean {
-  return process.env.FLAG_CONSOLE_ENABLED === 'true'
+/** Registration predicate for the task READ tools: the connector gate and the signals seam. */
+export async function isTaskMcpToolEnabled(): Promise<boolean> {
+  return (await isConnectorEnabled()) && (await isSignalsEnabled())
 }
 
-/** Registration predicate for journey-only MCP tools. The route still performs its connector gate
- * before token resolution; this shared pure predicate pins that a journey tool needs BOTH gates. */
-export function isJourneyMcpToolEnabled(): boolean {
-  return isConnectorEnabled() && isJourneyProjectionsEnabled()
+/** Registration predicate for the staged WRITE tools. Deliberately all three gates in one expression rather than
+ * delegating to isTaskMcpToolEnabled(): "can this agent mutate?" should be readable in one place. The credential
+ * checks (connector token + agent_write key, same project) are enforced separately at call time; a gate decides only
+ * whether the tool EXISTS. */
+export async function isConnectorWriteToolEnabled(): Promise<boolean> {
+  return (await isConnectorEnabled()) && (await isSignalsEnabled()) && (await isConnectorWritesEnabled())
 }
 
-/** Registration predicate for the task READ tools. Same shape as the journey predicate above: the
- * route enforces its route-wide connector flag and revocable token first, and this pins that a task
- * tool additionally needs the signals seam to be enabled. */
-export function isTaskMcpToolEnabled(): boolean {
-  return isConnectorEnabled() && isSignalsEnabled()
-}
-
-/** Registration predicate for the staged WRITE tools. Deliberately requires all three flags rather
- * than delegating to isTaskMcpToolEnabled(): a reader checking "can this agent mutate?" should see
- * every condition in one expression, not inherit two of them from a helper named after reads. The
- * credential checks (connector token + agent_write key, same project) are enforced separately at
- * call time — a flag can only decide whether the tool EXISTS. */
-export function isConnectorWriteToolEnabled(): boolean {
-  return isConnectorEnabled() && isSignalsEnabled() && isConnectorWritesEnabled()
-}
-
-/** Governed experiment reads are independently removable while the legacy compare tool remains
- * available. The connector route still enforces its route-wide flag and revocable token first. */
-export function isExperimentGovernanceMcpToolEnabled(): boolean {
-  return isConnectorEnabled() && isExperimentGovernanceEnabled()
+/** Governed experiment reads are independently removable while the legacy compare tool stays available. */
+export async function isExperimentGovernanceMcpToolEnabled(): Promise<boolean> {
+  return (await isConnectorEnabled()) && (await isExperimentGovernanceEnabled())
 }

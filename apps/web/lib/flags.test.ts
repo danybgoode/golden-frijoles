@@ -1,357 +1,73 @@
-// Fast unit layer for the enablement gates.
+// one-product-project · Sprint 2 — the product's gates are wired to the right catalog entries.
 //
-// Every gate in this file shares one contract, stated in the module's own comments: born
-// unset/OFF, and `=== 'true'` EXACTLY — not a truthiness check. `SIGNUP_ENABLED=false`, `=0`,
-// `=TRUE`, `=1` and an accidental trailing space must ALL read as OFF, because a gate that opens on
-// a typo isn't a gate. That's the property worth pinning here, for every flag, rather than assuming
-// the pattern holds just because one flag was reviewed carefully.
-//
-// process.env is global mutable state, so each test restores exactly what it changed — this file
-// must never leak an env var into another test file running in the same process.
+// The resolution rule is executed in gates-decision.test.ts. This file reads flags.ts as SOURCE, because flags.ts
+// imports the seam (lib/gates.ts) without a `.ts` extension, as production code here does, and node's test runner
+// cannot load that chain. What it pins is what flags.ts itself decides: which table entry each function reads, and
+// which gates each composite requires.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import {
-  isConnectorEnabled,
-  isSignupEnabled,
-  isDestinationDeliveryEnabled,
-  isJourneyProjectionsEnabled,
-  isExperimentGovernanceEnabled,
-  isExperimentBuilderEnabled,
-  isExperimentBuilderWritable,
-  isReportSharesEnabled,
-  isJourneyMcpToolEnabled,
-  isExperimentGovernanceMcpToolEnabled,
-  isSignalsEnabled,
-  isConnectorWritesEnabled,
-  isFlagServingEnabled,
-  isFlagDefinitionSyncEnabled,
-  isResilienceScenariosEnabled,
-  isSecuritySimulationsEnabled,
-  isAutomaticCircuitBreakersEnabled,
-  isScenarioAuthoringEnabled,
-  isAgentRailEnabled,
-  isFlagRuleBuilderEnabled,
-  isFlagConsoleEnabled,
-  isTaskMcpToolEnabled,
-  isConnectorWriteToolEnabled,
-  isCliWriteApiEnabled,
-} from './flags.ts'
+import { GATES } from './gates-decision.ts'
 
-function withEnv(key: string, value: string | undefined, fn: () => void) {
-  const original = process.env[key]
-  if (value === undefined) delete process.env[key]
-  else process.env[key] = value
-  try {
-    fn()
-  } finally {
-    if (original === undefined) delete process.env[key]
-    else process.env[key] = original
-  }
+const source = readFileSync(new URL('./flags.ts', import.meta.url), 'utf8')
+
+function body(name: string): string {
+  const start = source.indexOf(`export function ${name}(`) + 1 || source.indexOf(`export async function ${name}(`) + 1
+  assert.ok(start > 0, `${name} is exported`)
+  return source.slice(start, source.indexOf('\n}\n', start))
 }
 
-const singleFlagGates: Array<[string, () => boolean]> = [
-  ['CONNECTOR_ENABLED', isConnectorEnabled],
-  ['SIGNUP_ENABLED', isSignupEnabled],
-  ['DESTINATION_DELIVERY_ENABLED', isDestinationDeliveryEnabled],
-  ['JOURNEY_PROJECTIONS_ENABLED', isJourneyProjectionsEnabled],
-  ['EXPERIMENT_GOVERNANCE_ENABLED', isExperimentGovernanceEnabled],
-  ['EXPERIMENT_BUILDER_ENABLED', isExperimentBuilderEnabled],
-  // ⚠️ NOT added by the epic that built it — added 2026-08-27 by console-ia-overhaul Story 1.1,
-  // because the exhaustiveness test below went red on its FIRST run and named this flag. It had
-  // been reading `process.env.REPORT_SHARES_ENABLED` since pod-report S3 while inheriting NONE of
-  // the born-dark or near-miss assertions above.
-  //
-  // Of the seventeen gates in flags.ts this is the worst one to have missed, and its own comment
-  // says why: it is "the only one whose OFF state is protecting data from ANONYMOUS readers rather
-  // than protecting a feature from being used early" — while it is off, `/s/<token>` must 404 for
-  // every token, valid or invented. `REPORT_SHARES_ENABLED=TRUE` opening that surface would have
-  // been a data exposure, and nothing in the suite would have noticed.
-  //
-  // Now covered, and it passes — the gate was written correctly all along. What was missing was the
-  // proof, which is the whole argument for a registry a checker walks rather than a list an author
-  // remembers.
-  ['REPORT_SHARES_ENABLED', isReportSharesEnabled],
-  // signals-loop · Story 1.0. Added to the SHARED table rather than tested separately on purpose:
-  // the contract is a property of every gate in the file, so a new flag should inherit the whole
-  // near-miss matrix automatically instead of relying on whoever adds it remembering to. Same
-  // structural reasoning as the AGY_MODELS_IN_USE registry (LEARNINGS: the fix for a
-  // predicted-but-unguarded failure is one registry the checker walks, not a re-typing).
-  ['SIGNALS_ENABLED', isSignalsEnabled],
-  ['CONNECTOR_WRITES_ENABLED', isConnectorWritesEnabled],
-  ['FLAG_SERVING_ENABLED', isFlagServingEnabled],
-  ['FLAG_DEFINITION_SYNC_ENABLED', isFlagDefinitionSyncEnabled],
-  ['RESILIENCE_SCENARIOS_ENABLED', isResilienceScenariosEnabled],
-  ['SECURITY_SIMULATIONS_ENABLED', isSecuritySimulationsEnabled],
-  ['AUTOMATIC_CIRCUIT_BREAKERS_ENABLED', isAutomaticCircuitBreakersEnabled],
-  ['SCENARIO_AUTHORING_ENABLED', isScenarioAuthoringEnabled],
-  ['AGENT_RAIL_ENABLED', isAgentRailEnabled],
-  // flags-visual-rule-builder · Story 1.4 (D6). Added to the shared table, not tested
-  // separately, for the reason the SIGNALS_ENABLED note above gives: the born-dark contract is a
-  // property of every gate in this file, and a fifteenth one should inherit the whole near-miss
-  // matrix automatically rather than depend on whoever added it remembering to re-type it.
-  ['FLAG_RULE_BUILDER_ENABLED', isFlagRuleBuilderEnabled],
-  ['FLAG_CONSOLE_ENABLED', isFlagConsoleEnabled],
-  // ⚠️ **`CONSOLE_SHELL_ENABLED` was the eighteenth and is GONE** — mockups-as-built Story 3.3
-  // deleted it from `lib/flags.ts`, from `ci.yml`, from `run-local-e2e.mjs` and from every Vercel
-  // environment. The console ships unflagged; the merge is the release and rollback is `git revert`.
-  //
-  // Nothing had to be remembered to remove it from here: the exhaustiveness test below is keyed on
-  // the `process.env.<NAME>` reads in `flags.ts`, so deleting the function is what deletes the row,
-  // and leaving this line behind would have gone red rather than passing quietly.
-]
+const singles: Record<string, keyof typeof GATES> = {
+  isConnectorEnabled: 'connector',
+  isSignupEnabled: 'signup',
+  isDestinationDeliveryEnabled: 'destinationDelivery',
+  isJourneyProjectionsEnabled: 'journeyProjections',
+  isExperimentGovernanceEnabled: 'experimentGovernance',
+  isExperimentBuilderEnabled: 'experimentBuilder',
+  isReportSharesEnabled: 'reportShares',
+  isSignalsEnabled: 'signals',
+  isConnectorWritesEnabled: 'connectorWrites',
+  isFlagDefinitionSyncEnabled: 'flagDefinitionSync',
+  isResilienceScenariosEnabled: 'resilienceScenarios',
+  isSecuritySimulationsEnabled: 'securitySimulations',
+  isAutomaticCircuitBreakersEnabled: 'automaticCircuitBreakers',
+  isScenarioAuthoringEnabled: 'scenarioAuthoring',
+  isAgentRailEnabled: 'agentRail',
+  isFlagRuleBuilderEnabled: 'flagRuleBuilder',
+  isFlagConsoleEnabled: 'flagConsole',
+}
 
-// ── The ONE gate that is born ON, and why it gets a MIRRORED matrix rather than an exemption ──
-//
-// golden-frijoles-cli · D8. `CLI_WRITE_API_ENABLED` reads `!== 'false'`, so the epic ships live on
-// merge with no Vercel variable owed (Daniel's standing instruction: nothing dark, nothing waiting).
-//
-// ⚠️ **An exemption here would have been the wrong shape, and expensively so.** The obvious move is
-// a skip-list on the exhaustiveness test — and a gate excused from the matrix is a gate with NO
-// contract at all, which is worse than the born-dark default it deviates from: nothing would then
-// catch `CLI_WRITE_API_ENABLED=FALSE` or `= false` silently leaving the surface open. This table
-// gives it the SAME rigour with the polarity flipped, so the near-miss family is asserted in the
-// direction that matters for a born-ON gate: only the exact string `false` may close it, and every
-// typo leaves it OPEN and visibly so rather than closing the surface by accident.
-//
-// Both tables feed the exhaustiveness test below, so a new gate still has to land in one of them.
-const bornOnGates: Array<[string, () => boolean]> = [['CLI_WRITE_API_ENABLED', isCliWriteApiEnabled]]
-
-// ── The table is now SELF-ENFORCING, and that is the point of adding it here ──────────────────
-//
-// `singleFlagGates` above gives every gate the whole born-dark + near-miss matrix for free. Until
-// now, being IN the table was a thing each author had to remember, and LEARNINGS records exactly
-// what that costs: "the fix for a predicted-but-unguarded failure is structural, not a re-typing —
-// put every instance in ONE registry the checker walks, so a new consumer inherits the check
-// instead of needing to remember it." Two comments in this file already predicted this hazard in
-// prose; prose does not fail a build.
-//
-// Keyed on the ONE thing every env gate must contain — a `process.env.<NAME>` read in flags.ts —
-// rather than on the shape of the function around it. A source scan keyed on syntax is an
-// allow-list of shapes (LEARNINGS, site-url-preview-aware): a renamed binding, a different
-// formatting, an early return or a `??` default would each dodge a function-shaped matcher, and
-// none of them can dodge the SPECIFIER-keyed match the way they would dodge a function-shaped one.
-// It is not unconditional: `process.env['X']` or a destructure would escape it. Both are absent
-// today (18 reads, 18 unique, 18 registered) and neither is this file's style, but "cannot be
-// dodged" was overstated — a guard's own description earns the same scrutiny as the guard
-// (fresh reviewer, PR #122). Adding a nineteenth gate the normal way turns this red until registered.
-//
-// It asserts in BOTH directions on purpose. A discovery guard with only one assertion can shrink
-// its own coverage to nothing and still report success — that is precisely how the
-// site-url-preview-aware sweep silently dropped a durable call site.
-test('every env gate in flags.ts is registered in singleFlagGates, and vice versa', () => {
-  const source = readFileSync(new URL('./flags.ts', import.meta.url), 'utf8')
-  const readInSource = new Set(Array.from(source.matchAll(/process\.env\.([A-Z0-9_]+)/g), (m) => m[1]))
-  // BOTH tables. A gate may be born dark or born on, but it may not be in neither — which is the
-  // property this assertion exists to hold, and the reason D8's deviation did not become a skip.
-  const registered = new Set([
-    ...singleFlagGates.map(([envKey]) => envKey),
-    ...bornOnGates.map(([envKey]) => envKey),
-  ])
-
-  const unregistered = [...readInSource].filter((key) => !registered.has(key)).sort()
+test('every gate in GATES but terminal sign-in (its own seam) has exactly one function here, reading its own entry', () => {
   assert.deepEqual(
-    unregistered,
-    [],
-    `flags.ts reads these env vars but singleFlagGates does not cover them, so they inherit none of ` +
-      `the born-dark/near-miss assertions: ${unregistered.join(', ')}`
+    Object.values(singles).sort(),
+    Object.keys(GATES)
+      .filter((name) => name !== 'terminalSignIn')
+      .sort()
   )
-
-  const orphaned = [...registered].filter((key) => !readInSource.has(key)).sort()
-  assert.deepEqual(
-    orphaned,
-    [],
-    `singleFlagGates/bornOnGates name env vars flags.ts no longer reads, so the tables are testing ` +
-      `nothing for them: ${orphaned.join(', ')}`
-  )
-
-  // A bare count, so a future refactor that made BOTH sets empty (a regex that stops matching, a
-  // table that gets cleared) fails loudly instead of passing two vacuous deepEquals.
-  //
-  // ⚠️ **17, down from 18 — mockups-as-built Story 3.3 DELETED `CONSOLE_SHELL_ENABLED`.** This is a
-  // FLOOR against vacuity, not a ratchet: the two `deepEqual`s above are what actually hold the two
-  // sets equal, and a gate that is genuinely retired must be allowed to lower it. Lowering it is a
-  // decision that leaves its trace here rather than a number quietly following the code.
-  assert.ok(registered.size >= 18, `expected at least 18 registered gates, found ${registered.size}`)
-
-  // ⚠️ And a floor on the BORN-DARK table specifically. Without it, moving every gate into
-  // `bornOnGates` would keep the union intact and keep this test green while silently inverting the
-  // default for the whole product — a guard that can be satisfied by the change it exists to catch
-  // (CODE-QUALITY #5b). Born-ON is the exception; the count says so.
-  assert.equal(
-    bornOnGates.length,
-    1,
-    `exactly one gate is born ON by decision (CLI_WRITE_API_ENABLED, epic D8). Adding a second is a ` +
-      `product decision, not a test edit — record it in the epic README first.`
-  )
+  for (const [fn, gate] of Object.entries(singles)) {
+    assert.match(body(fn), new RegExp(`return gate\\(GATES\\.${gate}\\)`), fn)
+  }
 })
 
-// The born-ON matrix, mirrored. Read it beside the born-dark loop below: same shape, inverted.
-for (const [envKey, gate] of bornOnGates) {
-  test(`${envKey}: unset reads as ON (born-on by decision — epic D8)`, () => {
-    withEnv(envKey, undefined, () => {
-      assert.equal(gate(), true)
-    })
-  })
-
-  test(`${envKey}: exactly 'false' reads as OFF`, () => {
-    withEnv(envKey, 'false', () => {
-      assert.equal(gate(), false)
-    })
-  })
-
-  // The same near-miss family the born-dark gates get, asserted in the direction that matters here:
-  // a typo must not CLOSE the surface by accident. `FALSE`, `False` and `0` are the ones an operator
-  // reaching for the kill switch would plausibly type — and every one of them leaves it open, which
-  // is why the kill switch's exact spelling is documented at the gate and on this line.
-  for (const nearMiss of ['FALSE', 'False', '0', 'no', ' false', 'false ', '', 'true']) {
-    test(`${envKey}: near-miss value ${JSON.stringify(nearMiss)} reads as ON, not OFF`, () => {
-      withEnv(envKey, nearMiss, () => {
-        assert.equal(gate(), true)
-      })
-    })
-  }
+const composites: Record<string, string[]> = {
+  isExperimentBuilderWritable: ['isExperimentGovernanceEnabled', 'isExperimentBuilderEnabled'],
+  isJourneyMcpToolEnabled: ['isConnectorEnabled', 'isJourneyProjectionsEnabled'],
+  isTaskMcpToolEnabled: ['isConnectorEnabled', 'isSignalsEnabled'],
+  isConnectorWriteToolEnabled: ['isConnectorEnabled', 'isSignalsEnabled', 'isConnectorWritesEnabled'],
+  isExperimentGovernanceMcpToolEnabled: ['isConnectorEnabled', 'isExperimentGovernanceEnabled'],
 }
 
-for (const [envKey, gate] of singleFlagGates) {
-  test(`${envKey}: unset reads as OFF (born-dark default)`, () => {
-    withEnv(envKey, undefined, () => {
-      assert.equal(gate(), false)
-    })
-  })
-
-  test(`${envKey}: exactly 'true' reads as ON`, () => {
-    withEnv(envKey, 'true', () => {
-      assert.equal(gate(), true)
-    })
-  })
-
-  for (const nearMiss of ['false', '0', 'TRUE', 'True', '1', 'yes', ' true', 'true ', '']) {
-    test(`${envKey}: near-miss value ${JSON.stringify(nearMiss)} reads as OFF, not ON`, () => {
-      withEnv(envKey, nearMiss, () => {
-        assert.equal(gate(), false)
-      })
-    })
+test('each composite ANDs exactly the gates it needs, each one awaited', () => {
+  for (const [fn, needs] of Object.entries(composites)) {
+    const expression = body(fn).split('return ')[1] ?? ''
+    const called = [...expression.matchAll(/\(await (\w+)\(\)\)/g)].map((match) => match[1])
+    assert.deepEqual(called, needs, fn)
+    assert.equal(expression.split('&&').length, needs.length, `${fn} is a plain AND`)
   }
-}
-
-test('isJourneyMcpToolEnabled requires BOTH the connector gate and the journey-projections gate', () => {
-  withEnv('CONNECTOR_ENABLED', 'true', () => {
-    withEnv('JOURNEY_PROJECTIONS_ENABLED', undefined, () => {
-      assert.equal(isJourneyMcpToolEnabled(), false)
-    })
-  })
-  withEnv('CONNECTOR_ENABLED', undefined, () => {
-    withEnv('JOURNEY_PROJECTIONS_ENABLED', 'true', () => {
-      assert.equal(isJourneyMcpToolEnabled(), false)
-    })
-  })
-  withEnv('CONNECTOR_ENABLED', 'true', () => {
-    withEnv('JOURNEY_PROJECTIONS_ENABLED', 'true', () => {
-      assert.equal(isJourneyMcpToolEnabled(), true)
-    })
-  })
 })
 
-test('isExperimentGovernanceMcpToolEnabled requires BOTH the connector gate and the governance gate', () => {
-  withEnv('CONNECTOR_ENABLED', 'true', () => {
-    withEnv('EXPERIMENT_GOVERNANCE_ENABLED', undefined, () => {
-      assert.equal(isExperimentGovernanceMcpToolEnabled(), false)
-    })
-  })
-  withEnv('CONNECTOR_ENABLED', undefined, () => {
-    withEnv('EXPERIMENT_GOVERNANCE_ENABLED', 'true', () => {
-      assert.equal(isExperimentGovernanceMcpToolEnabled(), false)
-    })
-  })
-  withEnv('CONNECTOR_ENABLED', 'true', () => {
-    withEnv('EXPERIMENT_GOVERNANCE_ENABLED', 'true', () => {
-      assert.equal(isExperimentGovernanceMcpToolEnabled(), true)
-    })
-  })
-})
-
-test('isTaskMcpToolEnabled requires BOTH the connector gate and the signals gate', () => {
-  withEnv('CONNECTOR_ENABLED', 'true', () => {
-    withEnv('SIGNALS_ENABLED', undefined, () => {
-      assert.equal(isTaskMcpToolEnabled(), false)
-    })
-  })
-  withEnv('CONNECTOR_ENABLED', undefined, () => {
-    withEnv('SIGNALS_ENABLED', 'true', () => {
-      assert.equal(isTaskMcpToolEnabled(), false)
-    })
-  })
-  withEnv('CONNECTOR_ENABLED', 'true', () => {
-    withEnv('SIGNALS_ENABLED', 'true', () => {
-      assert.equal(isTaskMcpToolEnabled(), true)
-    })
-  })
-})
-
-// The engine's first public MUTATION surface. This is the assertion that matters most in the file:
-// it enumerates all eight combinations rather than the three the other predicates check, because
-// "the write tools exist" must be false for every arrangement except the single all-on one, and a
-// predicate that got two of three conditions right would pass a three-case test.
-test('isConnectorWriteToolEnabled is ON for exactly one of the eight flag combinations', () => {
-  const values = [undefined, 'true'] as const
-  let onCount = 0
-  for (const connector of values) {
-    for (const signals of values) {
-      for (const writes of values) {
-        withEnv('CONNECTOR_ENABLED', connector, () => {
-          withEnv('SIGNALS_ENABLED', signals, () => {
-            withEnv('CONNECTOR_WRITES_ENABLED', writes, () => {
-              const allOn = connector === 'true' && signals === 'true' && writes === 'true'
-              assert.equal(
-                isConnectorWriteToolEnabled(),
-                allOn,
-                `connector=${connector} signals=${signals} writes=${writes}`
-              )
-              if (isConnectorWriteToolEnabled()) onCount += 1
-            })
-          })
-        })
-      }
-    }
-  }
-  assert.equal(onCount, 1)
-})
-
-// The write gate must not be reachable through the READ gate. If someone later "simplified"
-// isConnectorWriteToolEnabled to delegate to isTaskMcpToolEnabled and forgot the writes flag, the
-// combination test above would catch it — but this states the property in the form a reader would
-// actually reason about: turning writes off leaves reads working.
-test('turning CONNECTOR_WRITES_ENABLED off leaves the task READ tools enabled', () => {
-  withEnv('CONNECTOR_ENABLED', 'true', () => {
-    withEnv('SIGNALS_ENABLED', 'true', () => {
-      withEnv('CONNECTOR_WRITES_ENABLED', undefined, () => {
-        assert.equal(isTaskMcpToolEnabled(), true)
-        assert.equal(isConnectorWriteToolEnabled(), false)
-      })
-    })
-  })
-})
-
-test('flags are read fresh per call, not captured once at module load', () => {
-  withEnv('SIGNUP_ENABLED', undefined, () => {
-    assert.equal(isSignupEnabled(), false)
-    process.env.SIGNUP_ENABLED = 'true'
-    assert.equal(isSignupEnabled(), true)
-    process.env.SIGNUP_ENABLED = 'false'
-    assert.equal(isSignupEnabled(), false)
-  })
-})
-
-test('builder writes need BOTH governance and the builder gate', () => {
-  for (const governance of [undefined, 'true']) {
-    for (const builder of [undefined, 'true']) {
-      withEnv('EXPERIMENT_GOVERNANCE_ENABLED', governance, () => {
-        withEnv('EXPERIMENT_BUILDER_ENABLED', builder, () => {
-          assert.equal(isExperimentBuilderWritable(), governance === 'true' && builder === 'true')
-        })
-      })
-    }
-  }
+test('the two control-plane gates are retired, not moved (D2), and flags.ts reads no env var', () => {
+  assert.doesNotMatch(source, /isFlagServingEnabled|isCliWriteApiEnabled/)
+  assert.doesNotMatch(source, /process\.env/)
 })
