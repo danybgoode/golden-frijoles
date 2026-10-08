@@ -93,7 +93,7 @@ export default async function SetupConnectPage({ params }: { params: Promise<{ p
           <h2 className="ds-label">2 · Or do it yourself</h2>
           <Field
             label="Claude Code"
-            hint="Two commands, then run the golden-frijoles skill and start its setup."
+            hint="Two commands, then run the setup skill from the golden-frijoles plugin."
           >
             <CopyField value={PLUGIN_MARKETPLACE_ADD} label="Copy the marketplace command" />
             <CopyField value={PLUGIN_INSTALL} label="Copy the install command" />

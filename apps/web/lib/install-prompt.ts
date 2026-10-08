@@ -31,7 +31,7 @@ export function installPrompt(siteUrl: string): string {
     '2. Tell me in a few lines what it installs, what changes on this machine and which services it contacts. ' +
     'Offer me a security review, and wait for my go-ahead. ' +
     '3. Install it the way install.md says for the agent you are. ' +
-    '4. Run the golden-frijoles skill and start its setup.'
+    '4. Run the setup skill from the golden-frijoles plugin.'
   )
 }
 
@@ -53,4 +53,4 @@ export const SKILLS_TELEMETRY_OPT_OUT = 'DISABLE_TELEMETRY=1'
 export const KIT_PACKAGE = '@golden-frijoles/kit'
 export const SKILLS_REPO_URL = 'https://github.com/golden-frijoles/skills'
 export const UMBRELLA_SKILL_URL =
-  'https://github.com/golden-frijoles/skills/blob/main/plugins/golden-frijoles/skills/golden-frijoles/SKILL.md'
+  'https://github.com/golden-frijoles/skills/blob/main/plugins/golden-frijoles/skills/setup/SKILL.md'

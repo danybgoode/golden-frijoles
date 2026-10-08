@@ -15,7 +15,7 @@ Paste this into your coding agent, in an empty repo or an existing one:
 > Set up Golden Frijoles in this project. 1. Read https://goldenfrijoles.com/install.md before installing anything.
 > 2. Tell me in a few lines what it installs, what changes on this machine and which services it contacts. Offer me a
 > security review, and wait for my go-ahead. 3. Install it the way install.md says for the agent you are. 4. Run the
-> golden-frijoles skill and start its setup.
+> setup skill from the golden-frijoles plugin.
 
 The agent reads your repository, puts what you've already shipped on a roadmap in `Roadmap/`, and asks you before
 it plans anything. Everything stays in your repo as plain Markdown until you choose to connect it.

@@ -129,7 +129,7 @@ ${PLUGIN_INSTALL}
 ${SKILLS_ADD}
 \`\`\`
 
-Use one method, not both. Then run the golden-frijoles skill and start its setup.
+Use one method, not both. Then run the setup skill from the golden-frijoles plugin.
 
 **The CLI, only if you want an account:**
 
