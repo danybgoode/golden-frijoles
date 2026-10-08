@@ -1,14 +1,15 @@
 ---
 status: scaffolded   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Shaping       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+phase: Building       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
+locked_at: "2026-10-08T01:42:45Z"
 slug: build-view-upgrade
 title: "Build view upgrade"
 area: 02-commercial
 risk: low
 type: feature
 sprints_total: 1
-stories_total: 3   # the sum of every sprint's stories_total — keep it in step when a story is added
+stories_total: 4   # the sum of every sprint's stories_total — keep it in step when a story is added
 intent_match: null   # copied from the seed by scaffold-epic (intent-match); the reader at the lock may update it
 quote_low_usd: 8    # ≈ API $ — copied from the seed's `quote:` by scaffold-epic (finops); null = not quoted, never 0
 quote_high_usd: 19
@@ -54,12 +55,72 @@ target and read date come from launch epic 4, the epic page from launch epic 5, 
 - `golden-frijoles.config.json` (`board.hubUrl`), `scripts/lib/config-registry.mjs`.
 - Design source: the private canvas, page 4: Band (proposed) and BandNow (today).
 
+## Locked decisions (2026-10-08, verified against live code and data)
+
+Scope the live system corrected, said out loud:
+- **The mod does not render `lines` fully as-is.** `hooks/index.tsx` draws the Progress bar itself from the text's
+  "N of M stories have commits" (`progressOf`), and colours Status with `toneOf`, whose `/shipped/` test would mark a
+  track containing "Shipped" good at every stage. So S1.2 changes `build-view.mjs` + `index.tsx` too, not only the
+  resolver.
+- **The Story line's user story already exists** (`renderLines`, "As …, I want …, so that …" on the second line). S1.1
+  adds the Why line only.
+- **No epic carries a target today.** `grep target_metric: Roadmap/*/*/README.md` → one README (`first-run-setup`),
+  every field `null`. So "Why · no target set" is what every epic shows on day one, this one included.
+- **`board.hubUrl` is already `https://goldenfrijoles.com/hub/golden-beans-demo`**, and
+  `/hub/golden-beans-demo/epic/build-view-upgrade` answers 200 with this epic on prod. The project question is
+  answered: no config change, only the link's path changes.
+- **There are five copies of `build-state.mjs`**, not three: `scripts/`, `skills/scripts/`, `skills/template/scripts/`,
+  `skills/kit/dist/` and `hooks/vendor/`. All stay byte-identical (parity check + vendor render).
+- **Addendum from Daniel at the kickoff (2026-10-08), added as S1.4:** the session line under the prompt
+  (`Session 48% · 5h 78% · 7d 46%`) colours each figure green → yellow → red and shows the time to each window's reset:
+  `5h 78% (-2h)`, `7d 46% (-3d)` (hours at 24 h or less). `$.ui.status` takes plain text only (the engine's type:
+  `status(text: string | undefined)`), so a coloured line needs a render site.
+
+- **D1 Why line (S1.1).** Read from the epic README's `hypothesis`, `target_metric`, `target_from`, `target_to`,
+  `read_date` (result-record's `TARGET_FIELDS`). With a target: `Why      <hypothesis, clipped to fit>` then a
+  continuation `<metric> <from> ━━▸ <to> · read 4 Dec` (`read 30 days after shipping` with no `read_date`; the year is
+  added when it is not the current one). A hypothesis with no target: the hypothesis, then `no target set`. Neither:
+  `Why      no target set`. Seeds (no epic) get no Why line. Every Why/continuation line ≤ 80 columns (clipped with …).
+- **D2 Progress (S1.2).** `Progress  ▰▰▱│▱▱▱ 2 of 6 stories done · in flight S1.2 · Sprint 1 of 2`: one cell per story,
+  sprint by sprint in build order, `▰` for a story with a commit (the same measure as live-build-view D9: "done" here
+  means "has a commit", nothing new is inferred), `▱` otherwise, `│` between sprints. A sprint wider than 8 cells is
+  scaled to 8. The mod draws the resolver's own glyphs (▰ green, ▱ and │ dim) and no longer computes a bar.
+- **D3 Status track (S1.2).** `Status   Grooming ─ Ready ─ ◉ Building ─ QA ─ Shipped · live from git`, the stage words
+  from `lib/stage.mjs` (`Ready to build` → `Ready`; `To groom` is prepended as `Backlog` only when it is the stage). The
+  Locking-architecture refinement marks Building as `◉ Locking`. The tail is `<live | snapshot 3h ago | docs only> from
+  <git | github | docs …>` (the source's kind before its colon); a written phase that differs follows as
+  `· phase X`. No stage → the old written-phase line, unchanged. The mod's Status tone reads the marked word (after
+  `◉`), and draws that word bold in its tone and the rest dim. Never wrapped: the band row truncates.
+- **D4 The link (S1.3).** `↗ <board.hubUrl>/epic/<slug>` when an epic or seed is in flight and the board has a row for
+  it; `↗ <board.hubUrl>/board` otherwise. https only, none without a hub URL — as today.
+- **D5 Session line colours + resets (S1.4).** In `session-budget.mjs` (one table, beside THRESHOLDS): a figure is
+  green below 60 %, yellow from 60 %, red from the hand-off line (context 80 %, 5 h 90 %, 7 d 90 %).
+  `figuresFromMeasure` also reads each window's `resetsAt`; the reset reads `(-40m)` under an hour, `(-2h)` up to
+  24 h, `(-3d)` beyond (whole units, rounded down, never `-0`); a missing or past `resetsAt` shows no reset. The plain
+  `sessionLine` text keeps the same words (Cowork's line, the log) and the verdict logic is untouched.
+- **D6 Where the coloured line draws.** A `ui.render` hook on `PromptHint` (the dim hint line under the prompt) wraps
+  the engine's own drawing (`next(e)`) and adds the coloured parts after it, read from `$.state`
+  (`golden-frijoles.sessionLine`, declared in `types/index.d.ts`). On an engine without `$.state` or a hint hook that
+  throws, it falls back to today's plain `$.ui.status` text. Never both.
+- **D7 Copies.** Edit `scripts/build-state.mjs`, then copy to the other four; re-render the hook vendor;
+  `check-script-parity.mjs` and `render-hook-vendor.test.mjs` green.
+- **D8 Release.** Plugin + kit 0.40.0, CHANGELOG, `plugin-checksums.mjs`, one PR (low risk, one sprint).
+- **D9 No flag, no migration, no new data.** Rollback is a revert plus a version bump.
+
+### Sprint 1 build contract
+`scripts/build-state.mjs` (D1–D4) + its four copies · `hooks/build-view.mjs` (progress/track parsing, D2/D3) ·
+`hooks/index.tsx` (bar from glyphs, Status track, PromptHint session line, D2/D3/D6) ·
+`skills/groom/session-budget.mjs` (D5) · `hooks/types` / plugin `types/index.d.ts` (D6) · tests:
+`build-state.test.mjs`, `build-view.test.mjs`, `session-budget.test.mjs`, `build-view.mod.test.ts`.
+Builder: the architect, in place (one small sprint).
+
 ## Scope — stories
 | Sprint | Story | Risk |
 |---|---|---|
 | 1 | S1.1 Why we're building it, while it builds | low |
 | 1 | S1.2 Progress by sprint, and the stage as a track | low |
 | 1 | S1.3 The link opens the epic's page | low |
+| 1 | S1.4 The session line in colour, with time to reset (Daniel's kickoff addendum) | low |
 
 **No-gos:** removing Spend or Board (the canvas drops Board; Daniel's call, not this epic's) · new data or a
 "questions waiting" marker · the mod's refresh, cache and key · styling beyond what the terminal renders.
