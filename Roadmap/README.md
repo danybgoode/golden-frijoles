@@ -365,6 +365,15 @@ independently shippable slice of value.
   Build gate (what was created, `/build <slug>`, only the setup that's missing). One home, groom's
   `references/gates.md`; a CI check keeps fund, scaffold, cycle, kickoff, agreed and draft off the screen in every
   copy. Files and their values are unchanged. **Owed:** Daniel's terminal walkthrough from setup to `/build`.
+- ✅ [First run: setup starts](02-commercial/first-run-setup/README.md) (gap 4 of the First run review) — **shipped
+  and published 2026-10-07** (#307; plugin + kit 0.37.0). Before its first question, setup says who is signed in, for
+  which product, and what it found in the repo. Then: **What are we working on? 1 This repo · 2 A new idea · 3 Just
+  planning**. **This repo** reads the project into its roadmap: a dry run, then on approval shipped epics (merged pull
+  requests grouped by branch, last 12 months, the 20 largest, marked "backfilled, no target"), Building epics from
+  open pull requests, and open issues grouped into backlog ideas. It writes only new files under `Roadmap/`, through
+  groom's generators, and only reads GitHub. **A new idea** takes one sentence, then strategy first or a first epic
+  now. With no strategy, a pitch and its Plan gate say "not grounded". **Owed:** Daniel's terminal walkthrough, and a
+  CLI release so `gf config` stops asking the retired Q2.
 - ✅ [Outcome report v2](02-commercial/outcome-report-v2/README.md) (launch epic 6) — **shipped and live 2026-10-07**
   (#299, #300). The Outcome report opens by saying whether the product is on the pace its epics planned, then a chart
   of each North Star input against the line the shipped epics' targets draw, four figures each against expected, and
@@ -525,6 +534,10 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-07**: `first-run-setup` **shipped**: one sprint, one PR, ≈$13.45 against a $22–34 quote. Setup now
+  reads an existing repo into its roadmap. Running it on a real outside repo (`sindresorhus/ky`) before review found
+  two bugs that every fixture had passed: a dev-only test server reported as the stack, and a header linking a seed
+  that never existed.
 - **2026-10-07**: `gates-in-plain-agile` **shipped**: two sprints, two PRs, ≈$14.63 against a $22–34 quote. The
   terminal's gates now read in plain agile and share one shape. Reading the private canvas before the lock caught four
   things it drew that the system doesn't do (a flag made at grooming, an email digest, one-pagers, a renamed folder).
