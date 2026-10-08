@@ -184,7 +184,6 @@ async function main() {
     runPlaywright(dark, darkPort, [
       'apps/web/e2e/journey-dark.spec.ts',
       'apps/web/e2e/experiment-governance-dark.spec.ts',
-      'apps/web/e2e/flag-serving-dark.spec.ts',
       'apps/web/e2e/flag-catalog-sync-dark.spec.ts',
       'apps/web/e2e/scenario-dark.spec.ts',
       // ⚠️ **These three were added because the change above SILENTLY RETIRED them locally**
