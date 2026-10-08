@@ -11,8 +11,9 @@ export const REMOVE_GF_IN_VERSION = '1.1.0'
 /** The notice to print when the CLI was started under its old name, or null. `invokedPath` is `process.argv[1]`. */
 export function deprecatedNameNotice(invokedPath: string | undefined): string | null {
   const name = (invokedPath ?? '').split(/[\\/]/).pop() ?? ''
-  // npm's Windows shims are `gf.cmd` / `gf.ps1`; strip a known script extension before comparing.
-  const bare = name.replace(/\.(cmd|ps1|js|mjs|cjs)$/i, '')
-  if (bare !== 'gf') return null
+  // Unix only, said rather than implied (verifier, #324): npm's Windows shims (`gf.cmd`, `gf.ps1`) start
+  // `node …\\dist\\bin.js`, so argv[1] is the entry file and a Windows `gf` gets no notice. It still works until the
+  // alias is removed; the CHANGELOG and the release notes carry the warning for everyone.
+  if (name !== 'gf') return null
   return `gf is now frijoles. gf stops working on ${REMOVE_GF_BY} (or in CLI ${REMOVE_GF_IN_VERSION}).\n`
 }
