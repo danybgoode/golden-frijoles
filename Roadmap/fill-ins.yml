@@ -19,7 +19,7 @@ deploy_rail: |
   deliberate step** — applied through the Supabase MCP by an agent, or `supabase db push` by the product
   owner by hand; nothing migrates on merge.
 
-review_scope_note: "**Here `reviewScope` is `every-pr`**: the fresh `pr-reviewer` and the external general pass run on every non-trivial PR."
+review_scope_note: "**Here `reviewScope` is `every-pr`**: the fresh `verifier` and the external general pass run on every non-trivial PR."
 
 security_floor: |
   **A deterministic security floor runs underneath, free and without an LLM:** GitHub secret scanning with
@@ -70,7 +70,7 @@ project_sections: |
   | A well-specified story with a clear acceptance check | **Mid** (Sonnet-class subagent) | Bounded, verifiable, cheap to re-run. |
   | Read-only research / data-availability reports over a large or foreign codebase | **Mid**, background, parallel | Fan-out with no write conflicts. Ask for an explicit "NOT DERIVABLE" list — an honest gap beats an optimistic guess. |
   | Money · auth · migrations · tenancy · concurrency | **Strongest**, never delegated | Same tier that decides who merges. |
-  | PR review — the judgment layers (CI is the gate; reviews authorize nothing) | **The routed external pass**, the fresh `pr-reviewer` and, when paths trigger it, the security lens | See *Review & merge*. Findings are resolved or answered before merge. |
+  | PR review — the judgment layers (CI is the gate; reviews authorize nothing) | **The routed external pass**, the fresh `verifier` and, when paths trigger it, the security lens | See *Review & merge*. Findings are resolved or answered before merge. |
   | File-derived prose: retro, poster entry, sprint wrap, the merge report | **Devin — the dedicated prose writer**, with Agy `gpt-oss-120b-medium` as fallback | Devin owns prose so Codex/Agy quota stays free for review and building. **One** prose model, never a Gemini one — a model-level fallback between registers is what silently changed every report's voice (see `PROSE_MODEL`). **Always read the draft.** |
 
   ### Verifying delegated work — the rule that is not optional

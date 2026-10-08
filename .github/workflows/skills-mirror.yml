@@ -12,7 +12,7 @@
 # merge commit (D1) — never `--force`.
 #
 # The key lives in the `skills-mirror` Environment, whose deployment-branch policy is `main` only: a run from any other
-# ref — a dispatch from a feature branch, or a branch-local edit of this file — cannot read it (pr-reviewer, #181).
+# ref — a dispatch from a feature branch, or a branch-local edit of this file — cannot read it (verifier, #181).
 name: Skills mirror
 
 on:

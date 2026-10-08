@@ -116,7 +116,7 @@ questions** — not more reviewers of the same kind.
 
 ```
 CI (deterministic gate)            — does it build, typecheck, pass the suite?   BLOCKS merge
-  → fresh pr-reviewer subagent     — context independence: did not hold the diff
+  → fresh verifier subagent     — context independence: did not hold the diff
   → one external cross-family pass — family independence: different blind spots
   → + a lean security lens         — when the diff touches a security path
   → the builder merges on green
@@ -125,7 +125,7 @@ CI (deterministic gate)            — does it build, typecheck, pass the suite?
 **Which PRs**: `scripts/review-config.json` → `reviewScope` — `every-pr` (all non-trivial PRs;
 `--skip-trivial` drops docs-only and tiny diffs) or `security-paths-only`. The **security lens** is
 triggered by a `securityPaths` glob or a `risk: high` body in either scope — paths, not judgement, so a
-builder can add it but never skip it. **Here `reviewScope` is `every-pr`**: the fresh `pr-reviewer` and the external general pass run on every non-trivial PR.
+builder can add it but never skip it. **Here `reviewScope` is `every-pr`**: the fresh `verifier` and the external general pass run on every non-trivial PR.
 
 **Who reviews** is printed by `node scripts/review-route.mjs --builder <who> <PR#>`, never picked by hand:
 the highest-preference family that did **not** build the diff takes the general pass, the next takes the
@@ -286,7 +286,7 @@ is mechanical — not to use one tier for everything.
 | A well-specified story with a clear acceptance check | **Mid** (Sonnet-class subagent) | Bounded, verifiable, cheap to re-run. |
 | Read-only research / data-availability reports over a large or foreign codebase | **Mid**, background, parallel | Fan-out with no write conflicts. Ask for an explicit "NOT DERIVABLE" list — an honest gap beats an optimistic guess. |
 | Money · auth · migrations · tenancy · concurrency | **Strongest**, never delegated | Same tier that decides who merges. |
-| PR review — the judgment layers (CI is the gate; reviews authorize nothing) | **The routed external pass**, the fresh `pr-reviewer` and, when paths trigger it, the security lens | See *Review & merge*. Findings are resolved or answered before merge. |
+| PR review — the judgment layers (CI is the gate; reviews authorize nothing) | **The routed external pass**, the fresh `verifier` and, when paths trigger it, the security lens | See *Review & merge*. Findings are resolved or answered before merge. |
 | File-derived prose: retro, poster entry, sprint wrap, the merge report | **Devin — the dedicated prose writer**, with Agy `gpt-oss-120b-medium` as fallback | Devin owns prose so Codex/Agy quota stays free for review and building. **One** prose model, never a Gemini one — a model-level fallback between registers is what silently changed every report's voice (see `PROSE_MODEL`). **Always read the draft.** |
 
 ### Verifying delegated work — the rule that is not optional
