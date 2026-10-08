@@ -1,33 +1,51 @@
-# golden-beans
+# Golden Frijoles
 
-**Golden Beans — Unified Growth Engine.** A standalone product (flags + A/B + telemetry routing +
-North Star/TARS dashboards), maintained on its own — not a fork of any other project.
+**Plan, ship and prove it paid off.** Golden Frijoles is agentic product management: the whole product discipline
+(decide, build, prove, grow) run by one person and their agents, on rails that keep the evidence honest.
 
-Spawned from the [`dobby-foundation`](https://github.com/golden-frijoles/skills) project
-template (`dobby-foundation` Sprint 1, Story 1.4) — it consumes the same `golden-frijoles` plugin every
-`~/dobby/` sibling project does (see `.claude/settings.json`), so groom/skills/CI conventions land
-here from one versioned place, not a copy-paste fork.
+[goldenfrijoles.com](https://goldenfrijoles.com) · [Install](https://goldenfrijoles.com/install) ·
+[Methodology](https://goldenfrijoles.com/methodology) · [Live roadmap of this repo](https://goldenfrijoles.com/hub/golden-frijoles)
 
-## Status
+![The board of this repository: every initiative from backlog to shipped](.github/readme/board.png)
 
-**Live in production** at `https://goldenfrijoles.com`. Two epics shipped:
-- **Growth Engine v1** (2026-07-16) — telemetry ingest + SDK, a TARS funnel, a North Star metric with
-  real Medusa revenue inputs, and A/B bucketing. Dogfooded against Miyagi's setup-guide funnel.
-- **Commercial shell** (2026-07-20) — public landing + waitlist, a read-only MCP connector + `/install`
-  page (enabled in prod), self-dogfood instrumentation, and SEO/OG + an `llms.txt` agent manifest.
+## Quickstart (30 seconds)
 
-See `Roadmap/README.md` (the product poster) for the at-a-glance feature map and what's next.
+Paste this into your coding agent, in an empty repo or an existing one:
 
-## Start here
+> Set up Golden Frijoles in this project. 1. Read https://goldenfrijoles.com/install.md before installing anything.
+> 2. Tell me in a few lines what it installs, what changes on this machine and which services it contacts. Offer me a
+> security review, and wait for my go-ahead. 3. Install it the way install.md says for the agent you are. 4. Run the
+> golden-frijoles skill and start its setup.
 
-- `AGENTS.md` — the project's architecture + the non-negotiable rules. **Read it before building.**
-- `Roadmap/README.md` — the product poster (all features, by domain, with status).
-- `Roadmap/WAYS-OF-WORKING.md` — the cadence, gitflow, Definition of Done, QA/cross-review gate.
-- `Roadmap/LEARNINGS.md` — the cross-cutting retro digest; read at every session start.
-- `Roadmap/00-ideas/` — the idea funnel (seeds, audits, the generated `BUILD-ORDER.md`).
+The agent reads your repository, puts what you've already shipped on a roadmap in `Roadmap/`, and asks you before
+it plans anything. Everything stays in your repo as plain Markdown until you choose to connect it.
 
-**Template-drift guard:** the spawn left `TEMPLATE FILL-IN` markers in load-bearing docs; they must
-stay filled. `npm run check:template-drift` (or `node scripts/check-template-drift.mjs`) fails if any
-load-bearing doc still contains an *unfilled placeholder*. It matches the placeholder syntax (the
-phrase in angle brackets, or immediately followed by a colon) — which is what every real unfilled
-marker uses — so a plain prose mention of the phrase, like this sentence, is deliberately allowed.
+## What you get
+
+- **Plan.** Turn a raw idea into an epic with a reason to build it: the North Star input it should move, a target and
+  a date to read the result. The plan lives in your repo, next to the code.
+- **Ship.** Feature flags and A/B tests from a terminal or an agent ([`@golden-frijoles/cli`](packages/cli/README.md)),
+  served to your app by the [`@golden-frijoles/sdk`](packages/sdk/README.md). Roll out to 10%, then everyone, and kill
+  it in seconds.
+- **Prove.** Events, funnels (targeted → adopted → retained), a North Star with its inputs, and an Outcome report that
+  says whether each epic paid off, against the target you wrote down before building it.
+
+This repository builds Golden Frijoles with Golden Frijoles: its [roadmap](https://goldenfrijoles.com/hub/golden-frijoles),
+its board and its Outcome report are public.
+
+## What's in this repository
+
+| Folder | What it is | Licence |
+|---|---|---|
+| [`skills/`](skills/README.md) | The agent plugin, the kit and the project template (mirrored to [golden-frijoles/skills](https://github.com/golden-frijoles/skills)) | Apache-2.0 |
+| [`packages/sdk/`](packages/sdk/README.md) | `@golden-frijoles/sdk`: events, flags, A/B bucketing, error capture | Apache-2.0 |
+| [`packages/cli/`](packages/cli/README.md) | `@golden-frijoles/cli`: flags, keys and the North Star from a terminal | Apache-2.0 |
+| `apps/web/` | The engine and the console at goldenfrijoles.com (Next.js + Supabase) | FSL-1.1-ALv2 |
+| `Roadmap/` | How this product is planned and built, in the open | FSL-1.1-ALv2 |
+
+FSL-1.1-ALv2 versions become Apache-2.0 two years after release. See [`LICENSE`](LICENSE). "Golden Frijoles" and its
+logo are trademarks ([`NOTICE`](NOTICE)).
+
+## Contributing
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md). Agents working in this repo start at [`AGENTS.md`](AGENTS.md).

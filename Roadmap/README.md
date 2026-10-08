@@ -444,7 +444,7 @@ independently shippable slice of value.
   **launched** and live in production at `https://goldenfrijoles.com`. The landing tracks
   itself as a real tenant (visitor→waitlist funnel via the actual SDK), serves real OG cards +
   `/llms.txt`, and the read-only MCP connector is **enabled** (`CONNECTOR_ENABLED` flipped ON
-  2026-07-20) with a live demo token on `/install`. Staying on the `vercel.app` domain for v1.
+  2026-07-20) with a live demo token on `/install`. It moved to `goldenfrijoles.com` with the Frijoles rebrand.
 
 ### 09 · Platform & Infra
 - ✅ [Fund at approval](09-platform-infra/fund-at-approval/README.md): **the approval gate is the betting table.**
@@ -963,4 +963,6 @@ independently shippable slice of value.
 
 ## License
 
-Private / internal. Not open-source; all rights reserved.
+Licensed per folder: Apache-2.0 for `skills/`, the CLI and the SDK; FSL-1.1-ALv2 (each version becomes Apache-2.0
+two years after release) for `apps/web/` and everything else. See [`LICENSE`](../LICENSE) and the trademark note in
+[`NOTICE`](../NOTICE).
