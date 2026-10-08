@@ -203,10 +203,10 @@ export const setupCommand: Command = {
   summary: 'answer the setup questions (each has a default; only the first is required)',
   usage: 'gf setup [--yes] [--json]',
   needsAuth: false,
-  detail: `Asks what you are working on, where you are starting, and whether to connect an
-  account now — arrow keys to choose, Esc to take the default. --yes takes every default without
-  asking. Answers go to golden-frijoles.config.json; an account is connected with \`gf login\` and
-  \`gf init\`, which write .env.local, never the config file.`,
+  detail: `Asks what you are working on and whether to connect an account now — arrow keys to
+  choose, Esc to take the default. --yes takes every default without asking. Answers go to
+  golden-frijoles.config.json; an account is connected with \`gf login\` and \`gf init\`, which
+  write .env.local, never the config file.`,
   flags: [{ name: 'yes', describe: 'take every default without asking (required when not on a terminal)' }],
   async run(context): Promise<ExitCode> {
     const yes = boolFlag(context.args, 'yes')

@@ -3,10 +3,10 @@ gf setup — answer the setup questions (each has a default; only the first is r
 Usage
   gf setup [--yes] [--json]
 
-Asks what you are working on, where you are starting, and whether to connect an
-  account now — arrow keys to choose, Esc to take the default. --yes takes every default without
-  asking. Answers go to golden-frijoles.config.json; an account is connected with `gf login` and
-  `gf init`, which write .env.local, never the config file.
+Asks what you are working on and whether to connect an account now — arrow keys to
+  choose, Esc to take the default. --yes takes every default without asking. Answers go to
+  golden-frijoles.config.json; an account is connected with `gf login` and `gf init`, which
+  write .env.local, never the config file.
 
 Flags
   --yes  take every default without asking (required when not on a terminal)
