@@ -170,7 +170,7 @@ migration, no flag, no production mutation. **Owed to the PO:** retire the claud
 (`pmf-narrative-facilitator`, `deliberate-risk-validation`); the Strategyzer VPC permission ask.
 
 ### Build contract — Sprint 1 (locked by the architect before the builder started)
-`cold-read` skill + `references/brief.md`; `template/scripts/cold-read.mjs` + `cold-read.test.mjs` (pure: `sealLine`,
+`cold-read` skill; the brief is the kit file `cold-read.prompt.md` (D2); `template/scripts/cold-read.mjs` + `cold-read.test.mjs` (pure: `sealLine`,
 `parseSealLine`, `verifySeal`, `renderCompare`, `missingSections`, `stampRead`, `deliveryTail`; the marker reader is
 `proposedSections` in `lib/strategy-files.mjs`); byte copies in `scripts/`;
 `requires_scripts` on `cold-read`; adverts re-rendered; 0.41.0. Cites D1–D4, D13.
