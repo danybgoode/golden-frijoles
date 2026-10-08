@@ -202,8 +202,10 @@ Owed. HIGH-risk PRs are merged by Daniel (WAYS-OF-WORKING → *Review & merge*; 
    Every gate's fallback is its production value, so nothing visible changes. Verify with the S3.1 probes:
    `GET /api/v1/flags/snapshot` → 401, `GET /api/v1/scenarios/snapshot` → 404, `POST /api/v1/breakers/automatic` →
    404, `/signup` renders, `/install` renders.
-3. **Kill test (S3.2):** `gf flags kill console.agent_rail_enabled --env production --project golden-frijoles`, reload
-   `/app` (signed in): within a minute the rail is gone. `gf flags set console.agent_rail_enabled on …`: it returns.
+3. **Kill test (S3.2), while `AGENT_RAIL_ENABLED=true` is still set in Vercel** (fresh review of #319, S5: no test
+   resolves a gate from a real catalog row, and this one step proves the whole chain plus `VERCEL=1` at runtime):
+   `gf flags kill console.agent_rail_enabled --env production --project golden-frijoles`, reload `/app` (signed in):
+   within a minute the rail is gone, although the env var says on. `gf flags set console.agent_rail_enabled on …`: it returns.
 4. **Delete the env vars (S3.2)**, only after step 2 is verified. Production: the 18 `*_ENABLED` names in the gate table,
    `FLAG_SERVING_ENABLED` included. Preview: `AGENT_RAIL_ENABLED`, `EXPERIMENT_BUILDER_ENABLED`, `FLAG_CONSOLE_ENABLED`,
    `FLAG_RULE_BUILDER_ENABLED`, `SCENARIO_AUTHORING_ENABLED`. Then `vercel env ls production | grep _ENABLED` should
