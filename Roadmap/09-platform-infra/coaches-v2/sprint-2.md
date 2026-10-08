@@ -37,7 +37,7 @@ stories:
 ---
 # Coaches v2 — Sprint 2: Shared coach behaviours: progress, options, save, check
 
-**Status:** ⬜ not started
+**Status:** 🟦 In review (#315, 0.42.0)
 
 ## Stories
 
@@ -74,6 +74,6 @@ Env: a local repo with the plugin installed from this branch's release
 2. Stop after step 3 and open `Roadmap/00-strategy/pmf-narrative.md`
    → steps 1–3 are saved as a draft.
 3. Run `git status` on a public repo
-   → the strategy folder isn't listed (`.gitignore` gained `Roadmap/00-strategy/` and a line saying how to opt in).
+   → no strategy file is listed; `.gitignore` shows as modified, with `Roadmap/00-strategy/` and a line saying how to opt in.
 
 If any step fails, note the step number + what you saw — that's the bug report.
