@@ -14,7 +14,7 @@ import { hashCredential } from './credential-hash'
 // reach a project its holder's console session could not.
 //
 // If you are about to add a "which project is this token for?" column: don't. That is the design
-// that was rejected in D1 — a project-scoped credential cannot answer `gf projects ls`, and a
+// that was rejected in D1 — a project-scoped credential cannot answer `frijoles projects ls`, and a
 // credential that carries its own authorization is one that outlives a membership change.
 //
 // ── Why a different prefix from `gb_key_` ─────────────────────────────────────────────────────
@@ -26,7 +26,7 @@ import { hashCredential } from './credential-hash'
 const TOKEN_PREFIX = 'gf_pat_'
 
 /**
- * The shape a CLI token has. Exported so the CLI and `gf doctor` can reject an obviously malformed
+ * The shape a CLI token has. Exported so the CLI and `frijoles doctor` can reject an obviously malformed
  * paste locally instead of spending a round-trip on it, and so this repo's specs can assert the
  * shape without minting one.
  *

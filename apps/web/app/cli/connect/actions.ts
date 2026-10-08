@@ -30,7 +30,7 @@ function done(code: string | null, outcome: string): never {
 
 /**
  * The product to bind the token to. A person with no product at all gets their first one, made the way
- * `gf init` makes it (the same idempotent `provisionTenantForUser`, its one-time key never revealed here).
+ * `frijoles init` makes it (the same idempotent `provisionTenantForUser`, its one-time key never revealed here).
  */
 async function chosenProjectId(
   userId: string,

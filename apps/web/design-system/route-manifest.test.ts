@@ -172,7 +172,7 @@ test('the denominator moves exactly as the D13 ledger says', () => {
   const atClose = liveRows(6)
 
   // ⚠️ **+1 again — golden-frijoles-cli Sprint 1, Story 1.2: `/app/setup/cli/[projectSlug]`.**
-  // Setup's third destination, where `gf login` gets its token. It moves the DENOMINATOR and not the
+  // Setup's third destination, where `frijoles login` gets its token. It moves the DENOMINATOR and not the
   // "has a state" count, exactly as North Star did above and for the same reason: the console
   // prototype predates the CLI, so there is no approved picture for it yet and its row says so with
   // a dated deferral rather than claiming coverage it has not earned.

@@ -2,7 +2,7 @@ import { test, expect, type APIRequestContext } from '@playwright/test'
 import { createClient } from '@supabase/supabase-js'
 import { createHash, randomBytes } from 'node:crypto'
 
-// think-skills S3 (D6) — `/api/v1/cli/north-star`, the route `gf north-star set` reads and writes through.
+// think-skills S3 (D6) — `/api/v1/cli/north-star`, the route `frijoles north-star set` reads and writes through.
 //
 // A new door onto an existing write, on an auth boundary, so this spec is about WHO can do WHAT to WHICH project:
 // a bad token, a stranger, a member, an owner, and an owner aiming at a project that is not theirs. It also proves

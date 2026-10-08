@@ -206,7 +206,7 @@ async function readInputSeries(
 /**
  * north-star-multi-metric-read · S1.1 — THE rule for which metric is a project's North Star, read by every reader.
  *
- * A project may hold several metrics (`gf north-star set` with a new key adds one beside the old; the schema allows it,
+ * A project may hold several metrics (`frijoles north-star set` with a new key adds one beside the old; the schema allows it,
  * `UNIQUE (project_id, key)`). **The most recently created one is the North Star, ties broken by `key`** (Daniel,
  * 2026-10-04): a revision reuses its key, so its `created_at` doesn't move, and a new key is a deliberate new North
  * Star. `order … limit 1`, never `.maybeSingle()`: that errors on two rows, and the page rendered a legitimate state
@@ -306,7 +306,7 @@ export type InputSeriesByKeyResult =
   | { ok: false; reason: 'input_not_found' | 'query_failed' }
 
 /**
- * result-record D14 — ONE input's series by its key, for an agent reading a result (`gf north-star readings`).
+ * result-record D14 — ONE input's series by its key, for an agent reading a result (`frijoles north-star readings`).
  *
  * Reads only that input (unique per project and key, the same lookup `POST /api/v1/inputs/[key]/values` makes) and its
  * series through `readInputSeries`, so it cannot disagree with the North Star page about what an input's series is.

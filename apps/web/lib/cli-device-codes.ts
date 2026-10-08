@@ -13,7 +13,7 @@ import {
   userCodeFromBytes,
 } from './cli-device-code-format'
 
-// account-from-the-terminal · Sprint 2, Story 2.2 — `gf login` through the browser (epic D6–D8).
+// account-from-the-terminal · Sprint 2, Story 2.2 — `frijoles login` through the browser (epic D6–D8).
 //
 // Three operations, one per party:
 //   • START   — the CLI, unauthenticated: a fresh pair (secret device code, display user code).
@@ -142,7 +142,7 @@ export type CollectOutcome =
 /**
  * The CLI's poll. A malformed device code is `unknown` without a query (not an oracle: an unknown
  * well-formed one answers the same). On `approved` the code is already consumed in the database, so
- * a failure to mint here burns it — the person runs `gf login` again, which is the safe direction.
+ * a failure to mint here burns it — the person runs `frijoles login` again, which is the safe direction.
  */
 export async function collectDeviceCode(deviceCode: unknown): Promise<CollectOutcome> {
   if (typeof deviceCode !== 'string' || !DEVICE_CODE_FORMAT.test(deviceCode)) {
@@ -172,7 +172,7 @@ export async function collectDeviceCode(deviceCode: unknown): Promise<CollectOut
       const projectId = typeof row.project_id === 'string' ? row.project_id : null
       const minted = await mintCliToken({
         userId: row.user_id,
-        label: `gf login · ${typeof row.label === 'string' ? row.label : 'a terminal'}`,
+        label: `frijoles login · ${typeof row.label === 'string' ? row.label : 'a terminal'}`,
         projectId,
       })
       if (!minted.ok) return { kind: 'error' }

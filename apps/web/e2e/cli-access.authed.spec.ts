@@ -42,7 +42,7 @@ test('a member mints a CLI token in the console, the API accepts it, and revokin
 
   const reveal = page.getByRole('alert').filter({ hasText: 'Your CLI token' })
   await expect(reveal).toBeVisible()
-  // The COPY ROW's code — the reveal's prose also has `<code>` tags naming `gf login` and the env var.
+  // The COPY ROW's code — the reveal's prose also has `<code>` tags naming `frijoles login` and the env var.
   const token = (await reveal.locator('.ds-copyrow code').textContent())?.trim() ?? ''
   expect(token).toMatch(/^gf_pat_/)
   // While the value is on screen, the mint control is gone — a second live credential is the most

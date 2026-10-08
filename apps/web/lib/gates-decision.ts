@@ -5,7 +5,7 @@
 // Every gate in lib/flags.ts used to be a Vercel env var. Changing one took a Vercel edit AND a commit to main (env
 // is snapshotted at build — AGENTS rule #4), it was invisible in the flag console, and six production values were
 // sensitive-masked so nobody could read them back. The gates now live where the product says flags live: Golden
-// Frijoles' own catalog, in the one project (`golden-frijoles`, epic D1/D3). `gf flags kill <key>` is the switch.
+// Frijoles' own catalog, in the one project (`golden-frijoles`, epic D1/D3). `frijoles flags kill <key>` is the switch.
 //
 // The epic README's gate table is the record of each key's production value on 2026-10-08 (the masked ones read from
 // live behaviour). `fallback` below IS that value (D5): what a gate serves when the catalog cannot answer — the read
@@ -125,7 +125,7 @@ export function envOverride(
 
 /**
  * The catalog's answer for one gate in one environment.
- * - A served boolean is the answer. `gf flags kill` serves `false`, so a kill always lands.
+ * - A served boolean is the answer. `frijoles flags kill` serves `false`, so a kill always lands.
  * - DEACTIVATED (`state: 'off'`) is OFF. That is what the console's off switch does (`deactivateFlagAction`), and an
  *   operator who switched a gate off must never find it still on because "nothing served" fell back to a
  *   born-ON default (cross-family review of #319, Codex).
@@ -157,7 +157,7 @@ export function mayReplaceCatalog(startedAt: number, keptStartedAt: number): boo
 }
 
 export type CatalogCacheOptions = {
-  /** How long one read answers every gate. Bounds how long `gf flags kill` takes to land. */
+  /** How long one read answers every gate. Bounds how long `frijoles flags kill` takes to land. */
   cacheMs?: number
   /** A read that has not answered in this long counts as failed: an env var could never hang a request, and a stalled
    * database must not either (fresh review of #319). */

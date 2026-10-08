@@ -5,7 +5,7 @@ import { ProductShell } from '@/components/product/ProductShell'
 import { listOwnCliTokens } from './actions'
 import { CliTokensManager } from './cli-tokens-manager'
 
-// Setup › CLI — where `gf login` gets its token.
+// Setup › CLI — where `frijoles login` gets its token.
 //
 // ── Why this is not a section of Setup › Keys ─────────────────────────────────────────────────
 // Keys' lede is "Everything that gives something else access to **this project**", and its
@@ -43,7 +43,7 @@ export default async function SetupCliPage({ params }: { params: Promise<{ proje
           title="CLI access"
           lede={
             <>
-              A token signs <code>gf</code> in as <strong>you</strong>. It reaches every project you are a
+              A token signs <code>frijoles</code> in as <strong>you</strong>. It reaches every project you are a
               member of — not just the one in the switcher above — and it can do exactly what you can do here,
               no more.
             </>

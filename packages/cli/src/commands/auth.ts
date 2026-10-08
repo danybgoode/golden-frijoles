@@ -1,4 +1,4 @@
-// golden-frijoles-cli · Sprint 1, Story 1.2 — `gf login`, `gf logout`, `gf whoami`.
+// golden-frijoles-cli · Sprint 1, Story 1.2 — `frijoles login`, `frijoles logout`, `frijoles whoami`.
 
 import { flagValue } from '../args'
 import type { Command, CommandContext } from '../command'
@@ -26,12 +26,12 @@ type WhoamiBody = {
  *
  * ⚠️ **stdin, not `argv`, and not a prompt with echo.** A token in `argv` is readable by every
  * process on the machine (`ps`) and lands in shell history; the shaping listed key material on disk
- * as a rabbit hole and this is the same hazard one step earlier. Piping (`… | gf login`) is the CI
+ * as a rabbit hole and this is the same hazard one step earlier. Piping (`… | frijoles login`) is the CI
  * shape and works identically.
  */
 async function readTokenFromStdin(context: CommandContext): Promise<string | null> {
   // ⚠️ **The `--json` branch used to only SUPPRESS the prompt, and then read stdin anyway** (fresh
-  // reviewer, PR #149, graded Blocking). On an interactive terminal `gf login --json` printed
+  // reviewer, PR #149, graded Blocking). On an interactive terminal `frijoles login --json` printed
   // nothing at all and blocked until the user guessed at Ctrl-D — strictly worse than the
   // non-`--json` path it was meant to improve on, and on the credential-entry path. The comment
   // above it claimed it returned a usage error. It did not.
@@ -45,7 +45,7 @@ async function readTokenFromStdin(context: CommandContext): Promise<string | nul
     context.emit.note('Paste your CLI token and press Enter:')
     // ⚠️ **ONE LINE, not "read to EOF"** (cross-family review, Codex, round 3, graded Blocking).
     // `for await (const chunk of process.stdin)` ends at EOF, and pressing Enter on a terminal does
-    // NOT close stdin — so the documented happy path, `gf login` with no flags, printed the prompt,
+    // NOT close stdin — so the documented happy path, `frijoles login` with no flags, printed the prompt,
     // accepted the paste, and then hung until the user guessed at Ctrl-D. The verb every new user
     // runs first, unusable, under a prompt that said it was waiting for Enter.
     //
@@ -61,7 +61,7 @@ async function readTokenFromStdin(context: CommandContext): Promise<string | nul
       rl.close()
     }
   }
-  // PIPED. Read to EOF, which is exactly right here and is the CI shape: `echo $TOKEN | gf login`
+  // PIPED. Read to EOF, which is exactly right here and is the CI shape: `echo $TOKEN | frijoles login`
   // closes stdin, and a token that arrives in several chunks is reassembled.
   const chunks: Buffer[] = []
   for await (const chunk of process.stdin) chunks.push(Buffer.from(chunk))
@@ -72,7 +72,7 @@ async function readTokenFromStdin(context: CommandContext): Promise<string | nul
 export const loginCommand: Command = {
   path: ['login'],
   summary: 'sign this machine in (browser), or save a CLI token',
-  usage: 'gf login [--token <token>] [--api <url>]',
+  usage: 'frijoles login [--token <token>] [--api <url>]',
   needsAuth: false,
   detail: `At a terminal, opens your browser: confirm the code it shows and this machine
   is signed in. If browser sign-in is not available, it asks for a token instead — mint
@@ -105,13 +105,13 @@ export const loginCommand: Command = {
     }
     if (!token) token = await readTokenFromStdin(context)
     if (!token) {
-      context.emit.fail('invalid', 'No token supplied. Pass --token, or pipe one into `gf login`.')
+      context.emit.fail('invalid', 'No token supplied. Pass --token, or pipe one into `frijoles login`.')
       return EXIT.USAGE
     }
 
     // ⚠️ VERIFY before saving. Writing an unverified token produces a credentials file that looks
     // fine and fails on every later command with an error about that command — which is how someone
-    // spends an afternoon debugging `gf flags ls` when the real answer is "that paste was truncated".
+    // spends an afternoon debugging `frijoles flags ls` when the real answer is "that paste was truncated".
     const probe = await context.clientFor(token).get<WhoamiBody>('api/v1/cli/whoami')
     if (probe.kind === 'network') {
       context.emit.fail('server_error', probe.message)
@@ -124,7 +124,7 @@ export const loginCommand: Command = {
 
     const existing = readCredentials(context.env)
     // Keep the active project only if it is still one this account can reach. A token swapped
-    // for a different account would otherwise leave `gf flags ls` pointed at a project the new
+    // for a different account would otherwise leave `frijoles flags ls` pointed at a project the new
     // credential 404s on, and the error would name the flag rather than the stale selection. A token made
     // for one product (the browser's approve page) reaches only that one, so it becomes the active one.
     const activeProject = probe.body.projects.some((project) => project.slug === existing?.activeProject)
@@ -150,7 +150,7 @@ export const loginCommand: Command = {
 export const logoutCommand: Command = {
   path: ['logout'],
   summary: 'forget the saved token on this machine',
-  usage: 'gf logout',
+  usage: 'frijoles logout',
   needsAuth: false,
   detail: `Removes the local credential only. It does NOT revoke the token — anything else
   holding it still works. Revoke it in the console (Setup › CLI access) when that is what you mean.`,
@@ -162,7 +162,7 @@ export const logoutCommand: Command = {
       return EXIT.OK
     }
     // Overwritten with an empty token rather than unlinked: `readCredentials` treats it as "not
-    // logged in", the file keeps its 0600 mode, and `gf doctor` can still report where it looked.
+    // logged in", the file keeps its 0600 mode, and `frijoles doctor` can still report where it looked.
     writeCredentials({ token: '', apiUrl: DEFAULT_API_URL }, context.env)
     context.emit.ok(
       { removed: true, credentialsPath: path },
@@ -175,7 +175,7 @@ export const logoutCommand: Command = {
 export const whoamiCommand: Command = {
   path: ['whoami'],
   summary: 'the account, the credential and the projects it reaches',
-  usage: 'gf whoami [--json]',
+  usage: 'frijoles whoami [--json]',
   needsAuth: true,
   flags: [],
   async run(context): Promise<ExitCode> {
@@ -194,7 +194,7 @@ export const whoamiCommand: Command = {
     context.emit.ok(
       {
         account,
-        // The credential's id and LABEL. Never the token — `gf doctor`'s rule applies here too, and
+        // The credential's id and LABEL. Never the token — `frijoles doctor`'s rule applies here too, and
         // `whoami` is the command most likely to be pasted into an issue.
         credential,
         apiUrl: context.api!.baseUrl,
@@ -208,7 +208,7 @@ export const whoamiCommand: Command = {
         `credential: ${credential.label} (from ${describeSource(context.auth.source)})`,
         // The tenant (workspaces S2.3): one line per workspace, so a person in two sees both.
         ...workspaces.map((workspace) => `workspace: ${workspace.name}`),
-        `active project: ${context.auth.activeProject ?? 'none — run `gf projects use <slug>`'}`,
+        `active project: ${context.auth.activeProject ?? 'none — run `frijoles projects use <slug>`'}`,
         '',
         table(
           ['PROJECT', 'ROLE'],

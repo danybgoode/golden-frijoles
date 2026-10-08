@@ -143,14 +143,14 @@ test('everything after -- is a positional, even if it starts with a dash', () =>
 
 // ── The dispatcher ────────────────────────────────────────────────────────────────────────────
 
-test('gf --version prints the version and exits 0 with no credential and no network', async () => {
+test('frijoles --version prints the version and exits 0 with no credential and no network', async () => {
   const { writer, out } = capture()
   const code = await run({ argv: ['--version'], writer, env: sandbox() })
   assert.equal(code, EXIT.OK)
   assert.deepEqual(out, [VERSION])
 })
 
-test('gf with no arguments prints help and exits 0 — asking what this is, is not an error', async () => {
+test('frijoles with no arguments prints help and exits 0 — asking what this is, is not an error', async () => {
   const { writer, out } = capture()
   const code = await run({ argv: [], writer, env: sandbox() })
   assert.equal(code, EXIT.OK)
@@ -189,7 +189,7 @@ test('a command that needs auth refuses with EXIT.AUTH before touching the netwo
   assert.equal(code, EXIT.AUTH)
 })
 
-test('gf doctor runs WITHOUT a credential — diagnosing that is its job', async () => {
+test('frijoles doctor runs WITHOUT a credential — diagnosing that is its job', async () => {
   const { writer, out } = capture()
   const code = await run({ argv: ['doctor', '--json'], writer, env: sandbox() })
   // Non-zero, because something IS wrong — but it ran, and said what.
@@ -198,7 +198,7 @@ test('gf doctor runs WITHOUT a credential — diagnosing that is its job', async
   assert.ok(report.checks.some((check) => check.id === 'credential' && check.status === 'fail'))
 })
 
-test('⚠️ gf doctor never prints key material, in either mode', async () => {
+test('⚠️ frijoles doctor never prints key material, in either mode', async () => {
   for (const argv of [['doctor'], ['doctor', '--json']]) {
     const { writer, all } = capture()
     await run({
@@ -210,12 +210,12 @@ test('⚠️ gf doctor never prints key material, in either mode', async () => {
     assert.equal(
       all().includes(TOKEN),
       false,
-      `\`gf ${argv.join(' ')}\` printed the token. Its output is the thing people paste into an issue.`
+      `\`frijoles ${argv.join(' ')}\` printed the token. Its output is the thing people paste into an issue.`
     )
   }
 })
 
-test('gf doctor names a TRUNCATED paste as a shape problem, without a round-trip', async () => {
+test('frijoles doctor names a TRUNCATED paste as a shape problem, without a round-trip', async () => {
   const { writer, out } = capture()
   const code = await run({
     argv: ['doctor', '--json'],
@@ -316,7 +316,7 @@ test('a bare hostname gets https, and loopback gets http — never the other way
 
 // ── login ─────────────────────────────────────────────────────────────────────────────────────
 
-test('gf login VERIFIES the token before saving it', async () => {
+test('frijoles login VERIFIES the token before saving it', async () => {
   const env = sandbox()
   const { writer } = capture()
   const code = await run({
@@ -329,11 +329,11 @@ test('gf login VERIFIES the token before saving it', async () => {
   })
   assert.equal(code, EXIT.AUTH)
   // ⚠️ Nothing on disk. A saved-but-invalid credential fails every LATER command with THAT
-  // command's error, which is how an afternoon goes into debugging `gf flags ls`.
+  // command's error, which is how an afternoon goes into debugging `frijoles flags ls`.
   assert.equal(existsSync(credentialsPath(env)), false)
 })
 
-test('gf login saves the token and adopts the account’s project', async () => {
+test('frijoles login saves the token and adopts the account’s project', async () => {
   const env = sandbox()
   const { writer } = capture()
   const code = await run({
@@ -349,7 +349,7 @@ test('gf login saves the token and adopts the account’s project', async () => 
   assert.equal(saved?.activeProject, 'acme')
 })
 
-test('gf logout forgets the credential and SAYS the token is not revoked', async () => {
+test('frijoles logout forgets the credential and SAYS the token is not revoked', async () => {
   const env = sandbox()
   writeCredentials({ token: TOKEN, apiUrl: 'https://example.test' }, env)
   const { writer, all } = capture()
@@ -360,7 +360,7 @@ test('gf logout forgets the credential and SAYS the token is not revoked', async
 
 // ── projects use ──────────────────────────────────────────────────────────────────────────────
 
-test('gf projects use REFUSES a slug the account cannot reach, and writes nothing', async () => {
+test('frijoles projects use REFUSES a slug the account cannot reach, and writes nothing', async () => {
   const env = sandbox()
   writeCredentials({ token: TOKEN, apiUrl: 'https://example.test', activeProject: 'acme' }, env)
   const { writer } = capture()
@@ -390,7 +390,7 @@ test('upsertEnvValue REPLACES rather than duplicating — a dotenv file’s last
   assert.equal(readEnvValue(after, 'GOLDEN_FRIJOLES_URL'), 'https://new')
 })
 
-test('gf init writes .env.local at 0600, ignores it, and prints the snippet that reads it', async () => {
+test('frijoles init writes .env.local at 0600, ignores it, and prints the snippet that reads it', async () => {
   const env = sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN, GOLDEN_FRIJOLES_PROJECT: 'acme' })
   const cwd = mkdtempSync(join(tmpdir(), 'gf-repo-'))
   const { writer, out } = capture()
@@ -422,7 +422,7 @@ test('gf init writes .env.local at 0600, ignores it, and prints the snippet that
   for (const name of Object.values(ENV_KEYS)) assert.match(report.snippet, new RegExp(name))
 })
 
-test('gf init is IDEMPOTENT: a second run mints nothing', async () => {
+test('frijoles init is IDEMPOTENT: a second run mints nothing', async () => {
   const env = sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN, GOLDEN_FRIJOLES_PROJECT: 'acme' })
   const cwd = mkdtempSync(join(tmpdir(), 'gf-repo-'))
   const seen: Array<{ method: string; url: string; body: unknown }> = []
@@ -432,7 +432,7 @@ test('gf init is IDEMPOTENT: a second run mints nothing', async () => {
         body: { ok: true, id: 'key-1', key: 'gb_key_secret', type: 'flag_read', expiresAt: null },
       },
       // The second run PROBES the key it found. "Still works" now means BOTH that it resolves and
-      // that it names the environment being set up — `gf init` defaults to development here.
+      // that it names the environment being set up — `frijoles init` defaults to development here.
       '/api/v1/flags/snapshot': {
         body: { ok: true, contractVersion: 1, environment: 'development', flags: [] },
       },
@@ -456,7 +456,7 @@ test('gf init is IDEMPOTENT: a second run mints nothing', async () => {
   assert.equal(report.existingKeyState, 'live')
 })
 
-test('\u26a0\ufe0f gf init REPLACES a revoked or expired key rather than reporting it reused', async () => {
+test('\u26a0\ufe0f frijoles init REPLACES a revoked or expired key rather than reporting it reused', async () => {
   // The defect this closes (Codex, PR #149): "there is a key" is not "the key works". A `flag_read`
   // key is minted with an expiry and can be revoked from the console, and a rerun after either
   // reported success while leaving the project unable to resolve a flag.
@@ -522,7 +522,7 @@ test('an UNVERIFIABLE key refuses retryably, and nothing is minted or rewritten'
   assert.equal(readFileSync(join(cwd, '.env.local'), 'utf8'), before)
 })
 
-test('⚠️ gf init REFUSES rather than minting into a repository it cannot protect', async () => {
+test('⚠️ frijoles init REFUSES rather than minting into a repository it cannot protect', async () => {
   const env = sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN, GOLDEN_FRIJOLES_PROJECT: 'acme' })
   const cwd = mkdtempSync(join(tmpdir(), 'gf-repo-'))
   // A DIRECTORY called .gitignore: writing to it throws, which is the reachable stand-in for a
@@ -542,9 +542,9 @@ test('⚠️ gf init REFUSES rather than minting into a repository it cannot pro
   assert.equal(existsSync(join(cwd, '.env.local')), false)
 })
 
-test('\u26a0\ufe0f gf init REFUSES when git does not actually ignore .env.local', async () => {
+test('\u26a0\ufe0f frijoles init REFUSES when git does not actually ignore .env.local', async () => {
   // A line in .gitignore is not the same fact as "git ignores this file": a file that is ALREADY
-  // TRACKED ignores .gitignore entirely. `gf init` used to print "ignored by git" on the strength of
+  // TRACKED ignores .gitignore entirely. `frijoles init` used to print "ignored by git" on the strength of
   // having appended the line (fresh reviewer, PR #149) — a checkable claim, asserted rather than
   // checked, on the one property that keeps a live credential out of a public repository.
   const env = sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN, GOLDEN_FRIJOLES_PROJECT: 'acme' })
@@ -579,7 +579,7 @@ test('\u26a0\ufe0f gf init REFUSES when git does not actually ignore .env.local'
   assert.equal(readFileSync(join(cwd, '.env.local'), 'utf8'), 'EXISTING=1\n')
 })
 
-test('\u26a0\ufe0f gf init REPLACES a live key that reads a DIFFERENT environment', async () => {
+test('\u26a0\ufe0f frijoles init REPLACES a live key that reads a DIFFERENT environment', async () => {
   // A `flag_read` credential is scoped to ONE environment, and a live-but-wrong key is the most
   // dangerous of the three states: the probe said "works", init kept it, and then wrote
   // GOLDEN_FRIJOLES_ENVIRONMENT=production beside a development credential. The app then believes it
@@ -621,7 +621,7 @@ test('\u26a0\ufe0f gf init REPLACES a live key that reads a DIFFERENT environmen
   assert.equal(seen.filter((call) => call.url === '/api/v1/cli/keys').length, 1)
 })
 
-test('\u26a0\ufe0f gf init REFUSES a symlinked .env.local, and writes nothing', async () => {
+test('\u26a0\ufe0f frijoles init REFUSES a symlinked .env.local, and writes nothing', async () => {
   // The ignore check answers about the PATH; `writeFileSync` follows the LINK. An ignored
   // `.env.local` pointing at a tracked file passes every check and then writes a live credential
   // into a file git is watching — the outcome `ensureIgnored` exists to prevent, reached around it
@@ -652,7 +652,7 @@ test('\u26a0\ufe0f gf init REFUSES a symlinked .env.local, and writes nothing', 
 test('\u26a0\ufe0f --json --help emits ONE JSON document, not the plain-text help', async () => {
   // `output.ts` states the contract in one line: under --json, stdout carries exactly one JSON
   // document and nothing else. The help path wrote straight to the writer and bypassed the emitter,
-  // so an agent piping `gf --json --help` into a parser got a wall of prose (Codex, round 2).
+  // so an agent piping `frijoles --json --help` into a parser got a wall of prose (Codex, round 2).
   for (const argv of [
     ['--json', '--help'],
     ['flags', 'ls', '--json', '--help'],
@@ -669,7 +669,7 @@ test('\u26a0\ufe0f --json --help emits ONE JSON document, not the plain-text hel
   }
 })
 
-test('\u26a0\ufe0f gf init mints NOTHING when .env.local cannot be written', async () => {
+test('\u26a0\ufe0f frijoles init mints NOTHING when .env.local cannot be written', async () => {
   // Minting first and discovering the file is unwritable leaves a LIVE credential nobody holds —
   // unrevokable by the caller, who never saw it — and a retry mints another (Codex, round 3).
   const env = sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN, GOLDEN_FRIJOLES_PROJECT: 'acme' })
@@ -693,7 +693,7 @@ test('\u26a0\ufe0f gf init mints NOTHING when .env.local cannot be written', asy
 
 test('dotenv duplicates: the LAST assignment is read, and an upsert leaves exactly one', () => {
   // `dotenv` assigns in file order, so a later line overrides an earlier one. Reading the first
-  // meant `gf init` could probe and rewrite one key while the app resolved another (Codex, round 3).
+  // meant `frijoles init` could probe and rewrite one key while the app resolved another (Codex, round 3).
   const duplicated = `${ENV_KEYS.flagRead}=first\nOTHER=1\n${ENV_KEYS.flagRead}=last\n`
   assert.equal(readEnvValue(duplicated, ENV_KEYS.flagRead), 'last')
 
@@ -724,7 +724,7 @@ test('\u26a0\ufe0f a flag given an EMPTY value is refused, never defaulted — `
   }
 })
 
-test('\u26a0\ufe0f gf init refuses to re-point an UNVERIFIED key at a different environment', async () => {
+test('\u26a0\ufe0f frijoles init refuses to re-point an UNVERIFIED key at a different environment', async () => {
   // Cannot-check + about-to-change is the mismatched config `wrong-environment` exists to prevent,
   // reached by the back door (Codex, round 6).
   const env = sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN, GOLDEN_FRIJOLES_PROJECT: 'acme' })
@@ -745,7 +745,7 @@ test('\u26a0\ufe0f gf init refuses to re-point an UNVERIFIED key at a different 
   assert.equal(readFileSync(join(cwd, '.env.local'), 'utf8'), before)
 })
 
-test('\u26a0\ufe0f global flags work BEFORE the verb — `gf --json flags ls` is not root help', async () => {
+test('\u26a0\ufe0f global flags work BEFORE the verb — `frijoles --json flags ls` is not root help', async () => {
   // The parser collected the verb only until the first flag, so this printed root help with exit 0:
   // a success code and none of the output asked for (Codex, round 8).
   const { writer, out } = capture()
@@ -771,7 +771,7 @@ test('a flag value never leaks into the verb path', () => {
 
 // ── the reading verbs ─────────────────────────────────────────────────────────────────────────
 
-test('gf flags ls refuses to guess a project when none was chosen', async () => {
+test('frijoles flags ls refuses to guess a project when none was chosen', async () => {
   const { writer } = capture()
   const code = await run({
     argv: ['flags', 'ls'],
@@ -799,8 +799,8 @@ test('under --json, stdout carries exactly ONE parseable document and stderr is 
   JSON.parse(out[0])
 })
 
-// ── workspaces S2.3 — `gf whoami` prints the tenant ───────────────────────────────────────────────────────────────
-test('gf whoami prints `workspace: <name>` for each workspace the account belongs to', async () => {
+// ── workspaces S2.3 — `frijoles whoami` prints the tenant ───────────────────────────────────────────────────────────────
+test('frijoles whoami prints `workspace: <name>` for each workspace the account belongs to', async () => {
   const { writer, out } = capture()
   const code = await run({
     argv: ['whoami'],
@@ -812,7 +812,7 @@ test('gf whoami prints `workspace: <name>` for each workspace the account belong
   assert.ok(out.join('\n').includes("workspace: Someone's products"), out.join('\n'))
 })
 
-test('gf whoami still works against a server too old to send workspaces — it just prints none', async () => {
+test('frijoles whoami still works against a server too old to send workspaces — it just prints none', async () => {
   const { writer, out } = capture()
   const { workspaces: _omitted, ...older } = WHOAMI
   const code = await run({
@@ -826,7 +826,7 @@ test('gf whoami still works against a server too old to send workspaces — it j
 })
 
 // ── result-record S3.2 (D16) — the two reads an agent fetches an epic's result through ───────────────────────────
-test('gf north-star readings: the body under --json, with --to passed through', async () => {
+test('frijoles north-star readings: the body under --json, with --to passed through', async () => {
   const { writer, out } = capture()
   const seen: Array<{ method: string; url: string; body: unknown }> = []
   const body = {
@@ -862,7 +862,7 @@ test('gf north-star readings: the body under --json, with --to passed through', 
   assert.equal(doc.input.key, 'grounded_bets_share')
 })
 
-test('gf north-star readings: an unknown input is the route’s not_found and exit code; a bad --to never sends', async () => {
+test('frijoles north-star readings: an unknown input is the route’s not_found and exit code; a bad --to never sends', async () => {
   const { writer } = capture()
   const code = await run({
     argv: ['north-star', 'readings', 'nope', '--project', 'acme', '--json'],
@@ -885,7 +885,7 @@ test('gf north-star readings: an unknown input is the route’s not_found and ex
   assert.equal(bad, EXIT.USAGE)
 })
 
-test('gf experiments decision: the decision record under --json; the human line names the outcome', async () => {
+test('frijoles experiments decision: the decision record under --json; the human line names the outcome', async () => {
   const body = {
     ok: true,
     project: 'acme',

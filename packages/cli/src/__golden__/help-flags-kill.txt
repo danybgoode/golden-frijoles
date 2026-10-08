@@ -1,7 +1,7 @@
-gf flags kill — the 3am verb — serve false, and clear every rule
+frijoles flags kill — the 3am verb — serve false, and clear every rule
 
 Usage
-  gf flags kill <key> --env production
+  frijoles flags kill <key> --env production
 
 Two things happen, and the second is the one a hand-composed "set --value false"
   forgets:
@@ -18,12 +18,12 @@ Flags
   --env <environment>  development | preview | production (repeatable)
   --all-envs           all three environments, under the partial-failure contract
   --project <slug>     the project (default: the remembered one)
-  --reason <text>      why — it goes in the audit trail (default: "via gf")
+  --reason <text>      why — it goes in the audit trail (default: "via frijoles")
 
 Exit codes
   0  ok         it worked
   1  usage      the command is wrong — nothing was sent
-  2  auth       the credential is not accepted — run `gf login`
+  2  auth       the credential is not accepted — run `frijoles login`
   3  not-found  no such thing, or not yours
   4  conflict   someone else changed it — re-read and retry
   5  partial    some environments changed and some did not

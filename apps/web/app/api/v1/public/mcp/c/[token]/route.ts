@@ -196,7 +196,7 @@ async function buildMcpServer(
   )
 
   // result-record · Story 3.2 (D18) — the two reads an agent fetches an epic's result through, the same two the CLI has
-  // (`gf north-star readings`, `gf experiments decision`) on the same lib reads, scoped to this token's project.
+  // (`frijoles north-star readings`, `frijoles experiments decision`) on the same lib reads, scoped to this token's project.
   server.registerTool(
     'get_input_readings',
     {

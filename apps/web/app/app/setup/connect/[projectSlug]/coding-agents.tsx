@@ -7,10 +7,10 @@ import { formatUtc } from '@/lib/format-utc'
 import type { CliTokenRow } from '@/lib/cli-tokens'
 import { revokeCliTokenAction } from '../../cli/[projectSlug]/actions'
 
-// account-from-the-terminal · Sprint 3, Story 3.2 — "Your coding agent and gf", the first row of
+// account-from-the-terminal · Sprint 3, Story 3.2 — "Your coding agent and frijoles", the first row of
 // Setup › Connections' "who and what is connected". Each row is one of YOUR CLI tokens — the
-// credential `gf login` saves, which your coding agent uses through `gf` — so Disconnect is
-// `revokeCliTokenAction`, scoped to your own account in `revokeCliToken`. The next `gf whoami` on
+// credential `frijoles login` saves, which your coding agent uses through `frijoles` — so Disconnect is
+// `revokeCliTokenAction`, scoped to your own account in `revokeCliToken`. The next `frijoles whoami` on
 // that machine is refused and says to sign in again.
 //
 // Rendered as a `Field` INSIDE the page's first card: the approved `setup-connect` state is a fixed
@@ -37,13 +37,13 @@ export function CodingAgents({ slug, tokens }: { slug: string; tokens: readonly 
 
   return (
     <Field
-      label="Your coding agent and gf"
+      label="Your coding agent and frijoles"
       hint={
         tokens === null
           ? 'Could not check your signed-in machines right now. Reload in a moment — nothing was changed.'
           : tokens.length === 0
-            ? 'Nothing connected yet. Run “gf login” in your terminal; it signs this account in through the browser.'
-            : 'Each one is a machine signed in with “gf login”. Disconnect signs it out: its next command asks to sign in again.'
+            ? 'Nothing connected yet. Run “frijoles login” in your terminal; it signs this account in through the browser.'
+            : 'Each one is a machine signed in with “frijoles login”. Disconnect signs it out: its next command asks to sign in again.'
       }
     >
       {(tokens ?? []).map((token) => (
@@ -68,8 +68,8 @@ export function CodingAgents({ slug, tokens }: { slug: string; tokens: readonly 
             verb="Disconnect"
             noun="coding agent"
             subject={token.label}
-            consequence="That machine is signed out at once: its next gf command asks to sign in again."
-            details="Run gf login there to connect it again."
+            consequence="That machine is signed out at once: its next frijoles command asks to sign in again."
+            details="Run frijoles login there to connect it again."
             pending={pending}
             onConfirm={() => onDisconnect(token.id)}
             onCancel={() => setConfirming(null)}

@@ -3,7 +3,7 @@
 // ── Why an enum and not `process.exit(1)` at forty call sites ─────────────────────────────────
 // The point of this CLI is that an agent drives it. An agent branches on the exit code, and a shell
 // script branches on nothing else at all. So the codes are a CONTRACT — pinned by a golden file
-// (D5), printed by `gf --help`, and named here once so a new verb cannot invent a meaning for `4`
+// (D5), printed by `frijoles --help`, and named here once so a new verb cannot invent a meaning for `4`
 // that disagrees with every other verb's `4`.
 //
 // ── Why these seven, and no more ──────────────────────────────────────────────────────────────
@@ -62,7 +62,7 @@ export function exitForServerCode(code: string | undefined): ExitCode {
 export const EXIT_CODE_TABLE: ReadonlyArray<{ code: ExitCode; name: string; means: string }> = [
   { code: EXIT.OK, name: 'ok', means: 'it worked' },
   { code: EXIT.USAGE, name: 'usage', means: 'the command is wrong — nothing was sent' },
-  { code: EXIT.AUTH, name: 'auth', means: 'the credential is not accepted — run `gf login`' },
+  { code: EXIT.AUTH, name: 'auth', means: 'the credential is not accepted — run `frijoles login`' },
   { code: EXIT.NOT_FOUND, name: 'not-found', means: 'no such thing, or not yours' },
   { code: EXIT.CONFLICT, name: 'conflict', means: 'someone else changed it — re-read and retry' },
   { code: EXIT.PARTIAL, name: 'partial', means: 'some environments changed and some did not' },

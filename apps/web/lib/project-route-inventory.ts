@@ -396,7 +396,7 @@ export const PROJECT_ROUTE_INVENTORY = [
     section: 'setup',
     label: 'CLI access',
     href: (slug: string) => `/app/setup/cli/${slug}`,
-    description: () => 'a token that signs `gf` in as you',
+    description: () => 'a token that signs `frijoles` in as you',
   },
   {
     routeSegment: 'setup/keys',

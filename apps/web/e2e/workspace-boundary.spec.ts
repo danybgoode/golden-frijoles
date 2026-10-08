@@ -160,7 +160,7 @@ test.describe('S2.1 — getWorkspaceProjects, the one legal multi-project read',
 })
 
 test.describe('S2.2 — every access path re-checks the workspace', () => {
-  test('CLI (PAT): a project in a workspace I left is a 404 — on the project route AND missing from `gf projects`', async ({
+  test('CLI (PAT): a project in a workspace I left is a 404 — on the project route AND missing from `frijoles projects`', async ({
     request,
   }) => {
     const seeded = await seedOwner()

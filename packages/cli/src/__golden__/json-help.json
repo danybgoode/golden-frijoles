@@ -1,12 +1,12 @@
 {
   "ok": true,
   "help": {
-    "usage": "gf <command> [flags]",
+    "usage": "frijoles <command> [flags]",
     "commands": [
       {
         "command": "login",
         "summary": "sign this machine in (browser), or save a CLI token",
-        "usage": "gf login [--token <token>] [--api <url>]",
+        "usage": "frijoles login [--token <token>] [--api <url>]",
         "needsAuth": false,
         "flags": [
           {
@@ -24,21 +24,21 @@
       {
         "command": "logout",
         "summary": "forget the saved token on this machine",
-        "usage": "gf logout",
+        "usage": "frijoles logout",
         "needsAuth": false,
         "flags": []
       },
       {
         "command": "whoami",
         "summary": "the account, the credential and the projects it reaches",
-        "usage": "gf whoami [--json]",
+        "usage": "frijoles whoami [--json]",
         "needsAuth": true,
         "flags": []
       },
       {
         "command": "doctor",
         "summary": "why is it not working — every check, in order",
-        "usage": "gf doctor [--json]",
+        "usage": "frijoles doctor [--json]",
         "needsAuth": false,
         "flags": [
           {
@@ -51,7 +51,7 @@
       {
         "command": "setup",
         "summary": "answer the setup questions (each has a default; only the first is required)",
-        "usage": "gf setup [--yes] [--json]",
+        "usage": "frijoles setup [--yes] [--json]",
         "needsAuth": false,
         "flags": [
           {
@@ -64,28 +64,28 @@
       {
         "command": "config list",
         "summary": "every setting in golden-frijoles.config.json and the legacy files, and which files each section came from",
-        "usage": "gf config list [--json]",
+        "usage": "frijoles config list [--json]",
         "needsAuth": false,
         "flags": []
       },
       {
         "command": "config get",
         "summary": "one setting's effective value (or its default when nothing sets it)",
-        "usage": "gf config get <key> [--json]",
+        "usage": "frijoles config get <key> [--json]",
         "needsAuth": false,
         "flags": []
       },
       {
         "command": "config set",
         "summary": "change one setting in golden-frijoles.config.json",
-        "usage": "gf config set <key> <value> [--json]",
+        "usage": "frijoles config set <key> <value> [--json]",
         "needsAuth": false,
         "flags": []
       },
       {
         "command": "init",
         "summary": "project, key, .env.local and the snippet — in one verb",
-        "usage": "gf init [--env <environment>] [--json] [--yes]",
+        "usage": "frijoles init [--env <environment>] [--json] [--yes]",
         "needsAuth": true,
         "flags": [
           {
@@ -108,28 +108,28 @@
       {
         "command": "projects ls",
         "summary": "the projects this credential reaches",
-        "usage": "gf projects ls [--json]",
+        "usage": "frijoles projects ls [--json]",
         "needsAuth": true,
         "flags": []
       },
       {
         "command": "projects create",
         "summary": "make sure this account has a project (idempotent)",
-        "usage": "gf projects create [--json]",
+        "usage": "frijoles projects create [--json]",
         "needsAuth": true,
         "flags": []
       },
       {
         "command": "projects use",
         "summary": "remember which project the other commands act on",
-        "usage": "gf projects use <slug>",
+        "usage": "frijoles projects use <slug>",
         "needsAuth": true,
         "flags": []
       },
       {
         "command": "flags ls",
         "summary": "every flag, and what each environment serves",
-        "usage": "gf flags ls [--project <slug>] [--json]",
+        "usage": "frijoles flags ls [--project <slug>] [--json]",
         "needsAuth": true,
         "flags": [
           {
@@ -142,7 +142,7 @@
       {
         "command": "flags get",
         "summary": "one flag: its definition, its versions and who changed it",
-        "usage": "gf flags get <key> [--project <slug>] [--json]",
+        "usage": "frijoles flags get <key> [--project <slug>] [--json]",
         "needsAuth": true,
         "flags": [
           {
@@ -155,7 +155,7 @@
       {
         "command": "flags create",
         "summary": "create a flag, with a polarity, in the environments you name",
-        "usage": "gf flags create <key> --kill-switch|--enablement --all-envs",
+        "usage": "frijoles flags create <key> --kill-switch|--enablement --all-envs",
         "needsAuth": true,
         "flags": [
           {
@@ -176,7 +176,7 @@
           {
             "flag": "--reason",
             "takesValue": true,
-            "describe": "why — it goes in the audit trail (default: \"via gf\")"
+            "describe": "why — it goes in the audit trail (default: \"via frijoles\")"
           },
           {
             "flag": "--kill-switch",
@@ -213,7 +213,7 @@
       {
         "command": "flags set",
         "summary": "change which variant a flag serves by default",
-        "usage": "gf flags set <key> --value true|false --env production",
+        "usage": "frijoles flags set <key> --value true|false --env production",
         "needsAuth": true,
         "flags": [
           {
@@ -234,7 +234,7 @@
           {
             "flag": "--reason",
             "takesValue": true,
-            "describe": "why — it goes in the audit trail (default: \"via gf\")"
+            "describe": "why — it goes in the audit trail (default: \"via frijoles\")"
           },
           {
             "flag": "--value",
@@ -251,7 +251,7 @@
       {
         "command": "flags rollout",
         "summary": "serve a flag to a percentage of contexts",
-        "usage": "gf flags rollout <key> --percent 25 --env production",
+        "usage": "frijoles flags rollout <key> --percent 25 --env production",
         "needsAuth": true,
         "flags": [
           {
@@ -272,7 +272,7 @@
           {
             "flag": "--reason",
             "takesValue": true,
-            "describe": "why — it goes in the audit trail (default: \"via gf\")"
+            "describe": "why — it goes in the audit trail (default: \"via frijoles\")"
           },
           {
             "flag": "--percent",
@@ -289,7 +289,7 @@
       {
         "command": "flags rules",
         "summary": "replace a flag’s targeting rules from a file",
-        "usage": "gf flags rules <key> --rules-file rules.json --env production",
+        "usage": "frijoles flags rules <key> --rules-file rules.json --env production",
         "needsAuth": true,
         "flags": [
           {
@@ -310,7 +310,7 @@
           {
             "flag": "--reason",
             "takesValue": true,
-            "describe": "why — it goes in the audit trail (default: \"via gf\")"
+            "describe": "why — it goes in the audit trail (default: \"via frijoles\")"
           },
           {
             "flag": "--rules-file",
@@ -322,7 +322,7 @@
       {
         "command": "flags kill",
         "summary": "the 3am verb — serve false, and clear every rule",
-        "usage": "gf flags kill <key> --env production",
+        "usage": "frijoles flags kill <key> --env production",
         "needsAuth": true,
         "flags": [
           {
@@ -343,14 +343,14 @@
           {
             "flag": "--reason",
             "takesValue": true,
-            "describe": "why — it goes in the audit trail (default: \"via gf\")"
+            "describe": "why — it goes in the audit trail (default: \"via frijoles\")"
           }
         ]
       },
       {
         "command": "flags diff",
         "summary": "what changed between two versions, in words",
-        "usage": "gf flags diff <key> --from 3 --to 4    ·    gf flags diff <key> --env preview --env production",
+        "usage": "frijoles flags diff <key> --from 3 --to 4    ·    frijoles flags diff <key> --env preview --env production",
         "needsAuth": true,
         "flags": [
           {
@@ -378,7 +378,7 @@
       {
         "command": "flags history",
         "summary": "every version of a flag, and who changed what",
-        "usage": "gf flags history <key> [--project <slug>] [--json]",
+        "usage": "frijoles flags history <key> [--project <slug>] [--json]",
         "needsAuth": true,
         "flags": [
           {
@@ -391,7 +391,7 @@
       {
         "command": "flags sync",
         "summary": "publish a flag catalog from source control",
-        "usage": "gf flags sync --file flags.json [--dry-run]",
+        "usage": "frijoles flags sync --file flags.json [--dry-run]",
         "needsAuth": false,
         "flags": [
           {
@@ -414,7 +414,7 @@
       {
         "command": "north-star set",
         "summary": "send a North Star workshop's metric and inputs to the project",
-        "usage": "gf north-star set <file> [--yes] [--project <slug>]",
+        "usage": "frijoles north-star set <file> [--yes] [--project <slug>]",
         "needsAuth": true,
         "flags": [
           {
@@ -432,7 +432,7 @@
       {
         "command": "north-star readings",
         "summary": "one North Star input's readings, and the latest on or before a day",
-        "usage": "gf north-star readings <input> [--to <YYYY-MM-DD>] [--project <slug>] [--json]",
+        "usage": "frijoles north-star readings <input> [--to <YYYY-MM-DD>] [--project <slug>] [--json]",
         "needsAuth": true,
         "flags": [
           {
@@ -450,7 +450,7 @@
       {
         "command": "experiments decision",
         "summary": "an experiment's decision record (the latest version unless --version)",
-        "usage": "gf experiments decision <key> [--version <n>] [--project <slug>] [--json]",
+        "usage": "frijoles experiments decision <key> [--version <n>] [--project <slug>] [--json]",
         "needsAuth": true,
         "flags": [
           {
@@ -468,7 +468,7 @@
       {
         "command": "keys ls",
         "summary": "every credential that can reach this project",
-        "usage": "gf keys ls [--project <slug>] [--json]",
+        "usage": "frijoles keys ls [--project <slug>] [--json]",
         "needsAuth": true,
         "flags": [
           {
@@ -481,7 +481,7 @@
       {
         "command": "keys create",
         "summary": "mint a credential — the kind is required, never guessed",
-        "usage": "gf keys create --type flag_read --env production --label \"my app\"",
+        "usage": "frijoles keys create --type flag_read --env production --label \"my app\"",
         "needsAuth": true,
         "flags": [
           {
@@ -514,7 +514,7 @@
       {
         "command": "keys revoke",
         "summary": "kill a credential, immediately and permanently",
-        "usage": "gf keys revoke <id> --type ingest",
+        "usage": "frijoles keys revoke <id> --type ingest",
         "needsAuth": true,
         "flags": [
           {
@@ -557,7 +557,7 @@
       {
         "code": 2,
         "name": "auth",
-        "means": "the credential is not accepted — run `gf login`"
+        "means": "the credential is not accepted — run `frijoles login`"
       },
       {
         "code": 3,

@@ -1,7 +1,7 @@
-gf flags create — create a flag, with a polarity, in the environments you name
+frijoles flags create — create a flag, with a polarity, in the environments you name
 
 Usage
-  gf flags create <key> --kill-switch|--enablement --all-envs
+  frijoles flags create <key> --kill-switch|--enablement --all-envs
 
 Polarity decides what the flag serves on the day it is born, and the CLI derives the
   default variant AND the activation from it — so the wrong combination cannot be typed:
@@ -20,7 +20,7 @@ Flags
   --env <environment>   development | preview | production (repeatable)
   --all-envs            all three environments, under the partial-failure contract
   --project <slug>      the project (default: the remembered one)
-  --reason <text>       why — it goes in the audit trail (default: "via gf")
+  --reason <text>       why — it goes in the audit trail (default: "via frijoles")
   --kill-switch         born serving true — the incident switch
   --enablement          born serving false — the gate you open later
   --description <text>  what the flag is for
@@ -31,7 +31,7 @@ Flags
 Exit codes
   0  ok         it worked
   1  usage      the command is wrong — nothing was sent
-  2  auth       the credential is not accepted — run `gf login`
+  2  auth       the credential is not accepted — run `frijoles login`
   3  not-found  no such thing, or not yours
   4  conflict   someone else changed it — re-read and retry
   5  partial    some environments changed and some did not

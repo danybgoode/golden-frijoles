@@ -30,7 +30,11 @@ test('the package the install page names is the package that is published', () =
 })
 
 test('the binary the install page names is the binary that is published', () => {
-  assert.deepEqual(Object.keys(manifest.bin), [CLI_BIN])
+  // The install page's name comes first. Any other bin is a deprecated alias with a removal date (plugin-1-0 D2–D3,
+  // scripts/check-deprecations.mjs), never a second name to teach.
+  const [primary, ...aliases] = Object.keys(manifest.bin)
+  assert.equal(primary, CLI_BIN)
+  assert.deepEqual(aliases, ['gf'])
 })
 
 test('every printed command uses those two names and nothing else', () => {
@@ -59,7 +63,7 @@ test('the kill-switch story is the three verbs the epic promises, in order', () 
 // while `/install` kept teaching a flag that no longer parses. The claim "one surface" was only
 // half enforced.
 //
-// The CLI's own recorded `--json --help` is the machine-readable truth about what `gf` accepts —
+// The CLI's own recorded `--json --help` is the machine-readable truth about what `frijoles` accepts —
 // every verb and every flag it declares — and it is pinned by the CLI's golden test, so it cannot
 // drift from the CLI either. Read off DISK, for the same D4 reason as the manifest above.
 
@@ -93,7 +97,7 @@ function assertRealCommand(line: string) {
     ...recorded.help.commands.find((entry) => entry.command === verb)!.flags.map((flag) => flag.flag),
   ])
   for (const flag of words.filter((word) => word.startsWith('--'))) {
-    assert.ok(declared.has(flag), `\`${line}\` passes ${flag}, which \`gf ${verb}\` does not declare`)
+    assert.ok(declared.has(flag), `\`${line}\` passes ${flag}, which \`frijoles ${verb}\` does not declare`)
   }
 }
 

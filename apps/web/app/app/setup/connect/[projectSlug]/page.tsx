@@ -195,12 +195,12 @@ export default async function SetupConnectPage({ params }: { params: Promise<{ p
           )}
 
           <h2 className="ds-label">5 · Send your product&apos;s events</h2>
-          {/* connect-page S2.3. The key's real sources: `gf keys create --type ingest` or Setup › Keys —
-              NOT `gf init`, which writes a flag-read key only. */}
+          {/* connect-page S2.3. The key's real sources: `frijoles keys create --type ingest` or Setup › Keys —
+              NOT `frijoles init`, which writes a flag-read key only. */}
           <p className="ds-hint">
             Your product reports what its users do; your agent reads it back as funnels and your North Star.
             Add the SDK where your app runs, with an <b>ingest key</b> in <code>GROWTH_ENGINE_API_KEY</code> —
-            an owner gets one with <code>gf keys create --type ingest --label &quot;my app&quot;</code> or
+            an owner gets one with <code>frijoles keys create --type ingest --label &quot;my app&quot;</code> or
             under <a href={`/app/setup/keys/${projectSlug}`}>Setup › Keys</a>. It is shown once; keep it in
             your environment, never in code.
           </p>

@@ -43,7 +43,7 @@ const TEXT = /\.(md|mjs|js|cjs|ts|tsx|json|ya?ml|txt|sh)$/;
 
 /**
  * True when `rel` (POSIX, from the repo root) is exempt by path — ROOT `Roadmap/` only (lock C6). The template's
- * `Roadmap/00-ideas/README.md` is in the skeleton `gf-kit init` hands every new project, so it is scanned.
+ * `Roadmap/00-ideas/README.md` is in the skeleton `frijoles-kit init` hands every new project, so it is scanned.
  */
 export function isExempt(rel) {
   return /^Roadmap\/00-ideas\//.test(rel) || /^Roadmap\/\d{2}-[^/]+\/[^/]+\//.test(rel);

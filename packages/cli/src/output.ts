@@ -2,7 +2,7 @@
 // them.
 //
 // ── The rule: `--json` writes ONE JSON document to stdout, and nothing else, ever ─────────────
-// Not a progress line, not a warning, not a "minting…". An agent runs `gf … --json` and pipes
+// Not a progress line, not a warning, not a "minting…". An agent runs `frijoles … --json` and pipes
 // stdout into a parser; one stray human sentence makes the whole document unparseable, and it does
 // so intermittently — only on the runs that happened to warn. So under `--json`, stdout carries
 // exactly one `JSON.stringify` and every human word goes to stderr or nowhere.

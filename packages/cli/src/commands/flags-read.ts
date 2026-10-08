@@ -1,4 +1,4 @@
-// golden-frijoles-cli · Sprint 1, Story 1.5 — `gf flags ls` and `gf flags get`.
+// golden-frijoles-cli · Sprint 1, Story 1.5 — `frijoles flags ls` and `frijoles flags get`.
 //
 // Read-only. Every write verb lands in Sprint 2 and goes through the shared command core; nothing
 // in this file plans or posts anything.
@@ -64,7 +64,7 @@ export function resolveProject(context: CommandContext): string | null {
 }
 
 export function missingProject(context: CommandContext): ExitCode {
-  context.emit.fail('invalid', 'No project chosen. Pass --project <slug>, or run `gf projects use <slug>`.')
+  context.emit.fail('invalid', 'No project chosen. Pass --project <slug>, or run `frijoles projects use <slug>`.')
   return EXIT.USAGE
 }
 
@@ -87,7 +87,7 @@ export function describeServing(row: CliFlagEnvironment): string {
 export const flagsLsCommand: Command = {
   path: ['flags', 'ls'],
   summary: 'every flag, and what each environment serves',
-  usage: 'gf flags ls [--project <slug>] [--json]',
+  usage: 'frijoles flags ls [--project <slug>] [--json]',
   needsAuth: true,
   detail: `The "serving" column is what a context with no attributes actually GETS — the
   answer the SDK's own evaluator gives, which is the answer production gives.
@@ -114,7 +114,7 @@ export const flagsLsCommand: Command = {
     context.emit.ok(
       { project, flags, environments },
       flags.length === 0
-        ? `No flags in ${project} yet. Create one with \`gf flags create <key> --kill-switch --all-envs\`.`
+        ? `No flags in ${project} yet. Create one with \`frijoles flags create <key> --kill-switch --all-envs\`.`
         : table(
             ['FLAG', 'TYPE', 'DEVELOPMENT', 'PREVIEW', 'PRODUCTION'],
             flags.map((flag) => [
@@ -134,13 +134,13 @@ export const flagsLsCommand: Command = {
 export const flagsGetCommand: Command = {
   path: ['flags', 'get'],
   summary: 'one flag: its definition, its versions and who changed it',
-  usage: 'gf flags get <key> [--project <slug>] [--json]',
+  usage: 'frijoles flags get <key> [--project <slug>] [--json]',
   needsAuth: true,
   flags: [{ name: 'project', value: '<slug>', describe: 'the project (default: the remembered one)' }],
   async run(context): Promise<ExitCode> {
     const key = context.args.positionals[0]
     if (!key) {
-      context.emit.fail('invalid', 'Name a flag: `gf flags get <key>`.')
+      context.emit.fail('invalid', 'Name a flag: `frijoles flags get <key>`.')
       return EXIT.USAGE
     }
     const project = resolveProject(context)

@@ -1,7 +1,7 @@
 // result-record · Story 3.2 (D16) — the two reads an agent fetches an epic's result through.
 //
-//   gf north-star readings <input> [--to <day>]      an input's readings, and the latest on or before --to
-//   gf experiments decision <key> [--version <n>]    an experiment's decision record (latest version by default)
+//   frijoles north-star readings <input> [--to <day>]      an input's readings, and the latest on or before --to
+//   frijoles experiments decision <key> [--version <n>]    an experiment's decision record (latest version by default)
 //
 // Both are `--json`-first: `epic-read` spawns them and reads the body, so the JSON is the contract and the table is for
 // a person. Both go through `/api/v1/cli/*`, which checks membership exactly as the console does (404 elsewhere).
@@ -42,7 +42,7 @@ const DAY = /^\d{4}-\d{2}-\d{2}$/
 export const northStarReadingsCommand: Command = {
   path: ['north-star', 'readings'],
   summary: "one North Star input's readings, and the latest on or before a day",
-  usage: 'gf north-star readings <input> [--to <YYYY-MM-DD>] [--project <slug>] [--json]',
+  usage: 'frijoles north-star readings <input> [--to <YYYY-MM-DD>] [--project <slug>] [--json]',
   needsAuth: true,
   detail: `An agent reading an epic's result calls this: \`latest\` is the number it reports, and
   \`north-star:<input>@<latest.date>\` is the evidence it writes. Nothing is invented: an input
@@ -54,7 +54,7 @@ export const northStarReadingsCommand: Command = {
   async run(context): Promise<ExitCode> {
     const input = context.args.positionals[0]
     if (!input) {
-      context.emit.fail('invalid', 'Name the input: `gf north-star readings <input-key>`.')
+      context.emit.fail('invalid', 'Name the input: `frijoles north-star readings <input-key>`.')
       return EXIT.USAGE
     }
     const to = flagValue(context.args, 'to')
@@ -106,7 +106,7 @@ export const northStarReadingsCommand: Command = {
 export const experimentsDecisionCommand: Command = {
   path: ['experiments', 'decision'],
   summary: "an experiment's decision record (the latest version unless --version)",
-  usage: 'gf experiments decision <key> [--version <n>] [--project <slug>] [--json]',
+  usage: 'frijoles experiments decision <key> [--version <n>] [--project <slug>] [--json]',
   needsAuth: true,
   detail: `What was decided about an A/B test, from the experiment's append-only decision ledger.
   An agent reading an epic's result cites it as \`ab:<key>\`.`,
@@ -117,7 +117,7 @@ export const experimentsDecisionCommand: Command = {
   async run(context): Promise<ExitCode> {
     const key = context.args.positionals[0]
     if (!key) {
-      context.emit.fail('invalid', 'Name the experiment: `gf experiments decision <key>`.')
+      context.emit.fail('invalid', 'Name the experiment: `frijoles experiments decision <key>`.')
       return EXIT.USAGE
     }
     const version = flagValue(context.args, 'version')

@@ -6,14 +6,14 @@ import { cliError, cliOk, requireCliMember } from '@/lib/cli-auth'
 import { toCliFlagDetailView, toCliFlagView } from '@/lib/cli-flag-view'
 import { getFlagRegistryView } from '@/lib/flag-registry'
 
-// golden-frijoles-cli · Sprint 1, Story 1.5 — `gf flags ls` and `gf flags get`.
+// golden-frijoles-cli · Sprint 1, Story 1.5 — `frijoles flags ls` and `frijoles flags get`.
 //
 // MEMBER, not owner: the console already shows definitions and per-environment state to any member
 // (`/app/flags/[projectSlug]` calls `requireProjectMembership`), and this answers a question they
 // can already read. Credential enumeration stays owner-only where it belongs.
 //
 // Read-only, and that is asserted rather than asserted-about: there is no write in this file, and
-// `gf flags diff` / `gf flags history` (Story 2.4) are served from this same GET for the same
+// `frijoles flags diff` / `frijoles flags history` (Story 2.4) are served from this same GET for the same
 // reason — a read verb that could write is a read verb someone will run during an incident.
 
 export const runtime = 'nodejs'
@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
     return cliOk({
       project: context.projectSlug,
       flags: registry.flags.map(toCliFlagView),
-      // The snapshot revision per environment. `gf flags ls` prints it because it is the number
+      // The snapshot revision per environment. `frijoles flags ls` prints it because it is the number
       // every write has to carry (D10's optimistic concurrency), so an agent that read the list can
       // write without a second round-trip — and a human debugging a 409 can see what moved.
       environments: registry.environments.map((row) => ({

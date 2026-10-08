@@ -45,7 +45,7 @@ const ENVIRONMENT_FLAGS: FlagDoc[] = [
   { name: 'env', value: '<environment>', describe: 'development | preview | production (repeatable)' },
   { name: 'all-envs', describe: 'all three environments, under the partial-failure contract' },
   { name: 'project', value: '<slug>', describe: 'the project (default: the remembered one)' },
-  { name: 'reason', value: '<text>', describe: 'why — it goes in the audit trail (default: "via gf")' },
+  { name: 'reason', value: '<text>', describe: 'why — it goes in the audit trail (default: "via frijoles")' },
 ]
 
 /**
@@ -91,7 +91,7 @@ async function submit(
   const result = await context.api!.post<WriteBody>('api/v1/cli/flags/write', {
     project,
     key,
-    reason: flagValue(context.args, 'reason')?.trim() || 'via gf',
+    reason: flagValue(context.args, 'reason')?.trim() || 'via frijoles',
     ...environments,
     ...payload,
   })
@@ -135,7 +135,7 @@ async function submit(
 export const flagsCreateCommand: Command = {
   path: ['flags', 'create'],
   summary: 'create a flag, with a polarity, in the environments you name',
-  usage: 'gf flags create <key> --kill-switch|--enablement --all-envs',
+  usage: 'frijoles flags create <key> --kill-switch|--enablement --all-envs',
   needsAuth: true,
   detail: `Polarity decides what the flag serves on the day it is born, and the CLI derives the
   default variant AND the activation from it — so the wrong combination cannot be typed:
@@ -161,7 +161,7 @@ export const flagsCreateCommand: Command = {
   async run(context): Promise<ExitCode> {
     const key = context.args.positionals[0]
     if (!key) {
-      context.emit.fail('invalid', 'Name a flag: `gf flags create <key> --kill-switch --all-envs`.')
+      context.emit.fail('invalid', 'Name a flag: `frijoles flags create <key> --kill-switch --all-envs`.')
       return EXIT.USAGE
     }
 
@@ -241,14 +241,14 @@ export const flagsCreateCommand: Command = {
 export const flagsSetCommand: Command = {
   path: ['flags', 'set'],
   summary: 'change which variant a flag serves by default',
-  usage: 'gf flags set <key> --value true|false --env production',
+  usage: 'frijoles flags set <key> --value true|false --env production',
   needsAuth: true,
-  detail: `--value true|false is shorthand for the "on" / "off" variants every flag \`gf flags
+  detail: `--value true|false is shorthand for the "on" / "off" variants every flag \`frijoles flags
   create\` makes. For a flag created elsewhere, or a non-boolean one, name the variant with
   --variant; the server lists the real variant keys if the one you name is not there.
 
   Rules are carried across untouched. A set that quietly dropped a targeting rule would be
-  the worst kind of surprise on a flag someone is mid-rollout on — use \`gf flags kill\` when
+  the worst kind of surprise on a flag someone is mid-rollout on — use \`frijoles flags kill\` when
   clearing the rules is what you mean.`,
   flags: [
     ...ENVIRONMENT_FLAGS,
@@ -258,7 +258,7 @@ export const flagsSetCommand: Command = {
   async run(context): Promise<ExitCode> {
     const key = context.args.positionals[0]
     if (!key) {
-      context.emit.fail('invalid', 'Name a flag: `gf flags set <key> --value true --env production`.')
+      context.emit.fail('invalid', 'Name a flag: `frijoles flags set <key> --value true --env production`.')
       return EXIT.USAGE
     }
     const variant = flagValue(context.args, 'variant')
@@ -289,12 +289,12 @@ export const flagsSetCommand: Command = {
 export const flagsRolloutCommand: Command = {
   path: ['flags', 'rollout'],
   summary: 'serve a flag to a percentage of contexts',
-  usage: 'gf flags rollout <key> --percent 25 --env production',
+  usage: 'frijoles flags rollout <key> --percent 25 --env production',
   needsAuth: true,
   detail: `⚠️ REPLACES the rule list with one unconditional rollout rule, and says so here rather
   than surprising you. An unconditional rollout beside existing clause rules is ambiguous
   about which one wins at a glance, and "ambiguous at a glance" is what an operator reaches
-  for at 3am. Use \`gf flags rules --rules-file\` to compose several.
+  for at 3am. Use \`frijoles flags rules --rules-file\` to compose several.
 
   --percent is rejected, never clamped: 150 is a typo, and agreeing with a typo is worse
   than refusing it. 0 and 100 are exactly expressible.`,
@@ -307,7 +307,7 @@ export const flagsRolloutCommand: Command = {
     const key = context.args.positionals[0]
     const raw = flagValue(context.args, 'percent')
     if (!key || raw === undefined) {
-      context.emit.fail('invalid', 'Usage: `gf flags rollout <key> --percent <0-100> --env production`.')
+      context.emit.fail('invalid', 'Usage: `frijoles flags rollout <key> --percent <0-100> --env production`.')
       return EXIT.USAGE
     }
     const percent = Number(raw)
@@ -327,7 +327,7 @@ export const flagsRolloutCommand: Command = {
 export const flagsRulesCommand: Command = {
   path: ['flags', 'rules'],
   summary: 'replace a flag’s targeting rules from a file',
-  usage: 'gf flags rules <key> --rules-file rules.json --env production',
+  usage: 'frijoles flags rules <key> --rules-file rules.json --env production',
   needsAuth: true,
   detail: `A FILE, never a command-line expression language. A rule DSL is the appetite trap
   this epic named, and a file has a property that matters more: rules live in source
@@ -340,7 +340,7 @@ export const flagsRulesCommand: Command = {
     const key = context.args.positionals[0]
     const path = flagValue(context.args, 'rules-file')
     if (!key || !path) {
-      context.emit.fail('invalid', 'Usage: `gf flags rules <key> --rules-file rules.json --env production`.')
+      context.emit.fail('invalid', 'Usage: `frijoles flags rules <key> --rules-file rules.json --env production`.')
       return EXIT.USAGE
     }
     let rules: unknown
@@ -365,7 +365,7 @@ export const flagsRulesCommand: Command = {
 export const flagsKillCommand: Command = {
   path: ['flags', 'kill'],
   summary: 'the 3am verb — serve false, and clear every rule',
-  usage: 'gf flags kill <key> --env production',
+  usage: 'frijoles flags kill <key> --env production',
   needsAuth: true,
   detail: `Two things happen, and the second is the one a hand-composed "set --value false"
   forgets:
@@ -381,7 +381,7 @@ export const flagsKillCommand: Command = {
   async run(context): Promise<ExitCode> {
     const key = context.args.positionals[0]
     if (!key) {
-      context.emit.fail('invalid', 'Name a flag: `gf flags kill <key> --env production`.')
+      context.emit.fail('invalid', 'Name a flag: `frijoles flags kill <key> --env production`.')
       return EXIT.USAGE
     }
     return submit(context, key, { command: 'kill' }, 'Killed')

@@ -2,7 +2,7 @@
 //
 // ── D5: this output is a CONTRACT ─────────────────────────────────────────────────────────────
 // `src/__golden__/help.txt` holds these exact bytes and `golden.test.ts` diffs them. That is not
-// pedantry about copy: an agent handed `gf --help` reads it to learn the verbs and the flags, so a
+// pedantry about copy: an agent handed `frijoles --help` reads it to learn the verbs and the flags, so a
 // silent change to this text changes what every agent believes the tool can do. A golden file makes
 // the change arrive in review, where someone can decide it is intended.
 //
@@ -13,14 +13,14 @@ import type { Command } from './command'
 import { EXIT_CODE_TABLE } from './exit-codes'
 import { pad } from './output'
 
-const HEADER = `gf — the Golden Frijoles CLI
+const HEADER = `frijoles — the Golden Frijoles CLI
 
   Create a flag in every environment, roll it out, and kill it, from a terminal
   or from an agent. Every command takes --json.`
 
 const GLOBAL_FLAGS = `Global flags
   --json                 machine-readable output on stdout, and nothing else
-  --project <slug>       act on this project (default: the one from \`gf projects use\`)
+  --project <slug>       act on this project (default: the one from \`frijoles projects use\`)
   --api <url>            the deployment to talk to (default: the one you logged in to)
   --token <token>        use this credential instead of the saved one
   --help, -h             this text, or a verb's own
@@ -58,10 +58,10 @@ function exitCodes(): string {
 /**
  * `--help` as DATA, for `--json`.
  *
- * ⚠️ **This exists because `gf --json --help` printed the plain-text help to stdout** (cross-family
+ * ⚠️ **This exists because `frijoles --json --help` printed the plain-text help to stdout** (cross-family
  * review, Codex, round 2). `output.ts` states the contract in one line — under `--json`, stdout
  * carries exactly one JSON document and nothing else — and the help path wrote straight to the
- * writer, bypassing the emitter entirely. An agent that piped `gf --json --help` into a parser got
+ * writer, bypassing the emitter entirely. An agent that piped `frijoles --json --help` into a parser got
  * a wall of prose.
  *
  * It is a STRUCTURED shape rather than `{ help: "<the same text>" }`, because the reason an agent
@@ -71,7 +71,7 @@ function exitCodes(): string {
  */
 export function helpAsData(commands: readonly Command[]) {
   return {
-    usage: 'gf <command> [flags]',
+    usage: 'frijoles <command> [flags]',
     commands: commands.map((command) => ({
       command: command.path.join(' '),
       summary: command.summary,
@@ -96,7 +96,7 @@ export function commandAsData(command: Command) {
 export function renderRootHelp(commands: readonly Command[]): string {
   return [
     HEADER,
-    `Usage\n  gf <command> [flags]`,
+    `Usage\n  frijoles <command> [flags]`,
     `Commands\n${verbList(commands)}`,
     GLOBAL_FLAGS,
     ENVIRONMENT,
@@ -105,7 +105,7 @@ export function renderRootHelp(commands: readonly Command[]): string {
 }
 
 export function renderCommandHelp(command: Command): string {
-  const parts = [`gf ${command.path.join(' ')} — ${command.summary}`, `Usage\n  ${command.usage}`]
+  const parts = [`frijoles ${command.path.join(' ')} — ${command.summary}`, `Usage\n  ${command.usage}`]
   if (command.detail) parts.push(command.detail)
   if (command.flags.length > 0) {
     const width = Math.max(

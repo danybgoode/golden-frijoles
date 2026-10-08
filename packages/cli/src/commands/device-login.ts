@@ -1,9 +1,9 @@
-// account-from-the-terminal · Sprint 2, Story 2.2 — `gf login` through the browser (epic D9).
+// account-from-the-terminal · Sprint 2, Story 2.2 — `frijoles login` through the browser (epic D9).
 //
 // Start a pairing, show the code, open the browser, poll until the person confirms in a signed-in
 // page, and hand back the token the server minted for this machine. Everything that can go wrong
 // before the person is involved — a server that predates these routes, the flag killed, no network —
-// returns `fallback`, and `gf login` asks for a pasted token exactly as it always did.
+// returns `fallback`, and `frijoles login` asks for a pasted token exactly as it always did.
 
 import { execFileSync, spawn } from 'node:child_process'
 import { hostname, platform } from 'node:os'
@@ -136,6 +136,6 @@ export async function deviceLogin(context: CommandContext, apiUrl: string): Prom
   return {
     kind: 'refused',
     code: 'not_found',
-    message: 'That sign-in code expired before it was confirmed. Run `gf login` again.',
+    message: 'That sign-in code expired before it was confirmed. Run `frijoles login` again.',
   }
 }

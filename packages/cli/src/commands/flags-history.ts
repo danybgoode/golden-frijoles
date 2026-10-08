@@ -1,4 +1,4 @@
-// golden-frijoles-cli · Sprint 2, Story 2.4 — `gf flags history` and `gf flags diff`.
+// golden-frijoles-cli · Sprint 2, Story 2.4 — `frijoles flags history` and `frijoles flags diff`.
 //
 // ── READ-ONLY, and that is asserted rather than asserted-about ────────────────────────────────
 // Both verbs are served by the SAME `GET /api/v1/cli/flags?key=…` the read verbs use. There is no
@@ -8,7 +8,7 @@
 //
 // ── The diff is SEMANTIC, and it is the console's diff ────────────────────────────────────────
 // `diffFlagDefinitions` comes from `@golden-frijoles/sdk` — the same function `/app/flags` renders
-// its version history with, moved there by D4 precisely so `gf flags diff` and the console produce
+// its version history with, moved there by D4 precisely so `frijoles flags diff` and the console produce
 // the SAME sentences. A JSON text diff would have been easier and would have said "two lines
 // changed" where the console says "rollout 10% → 25%".
 //
@@ -43,7 +43,7 @@ async function loadFlag(
 export const flagsHistoryCommand: Command = {
   path: ['flags', 'history'],
   summary: 'every version of a flag, and who changed what',
-  usage: 'gf flags history <key> [--project <slug>] [--json]',
+  usage: 'frijoles flags history <key> [--project <slug>] [--json]',
   needsAuth: true,
   detail: `Read-only: it creates no version, touches no activation and writes no audit row.
 
@@ -54,7 +54,7 @@ export const flagsHistoryCommand: Command = {
   async run(context): Promise<ExitCode> {
     const key = context.args.positionals[0]
     if (!key) {
-      context.emit.fail('invalid', 'Name a flag: `gf flags history <key>`.')
+      context.emit.fail('invalid', 'Name a flag: `frijoles flags history <key>`.')
       return EXIT.USAGE
     }
     const project = resolveProject(context)
@@ -97,7 +97,7 @@ export const flagsHistoryCommand: Command = {
 export const flagsDiffCommand: Command = {
   path: ['flags', 'diff'],
   summary: 'what changed between two versions, in words',
-  usage: 'gf flags diff <key> --from 3 --to 4    ·    gf flags diff <key> --env preview --env production',
+  usage: 'frijoles flags diff <key> --from 3 --to 4    ·    frijoles flags diff <key> --env preview --env production',
   needsAuth: true,
   detail: `Two ways to ask:
     --from <n> --to <n>          compare two version numbers
@@ -115,7 +115,7 @@ export const flagsDiffCommand: Command = {
   async run(context): Promise<ExitCode> {
     const key = context.args.positionals[0]
     if (!key) {
-      context.emit.fail('invalid', 'Name a flag: `gf flags diff <key> --from 3 --to 4`.')
+      context.emit.fail('invalid', 'Name a flag: `frijoles flags diff <key> --from 3 --to 4`.')
       return EXIT.USAGE
     }
     const project = resolveProject(context)

@@ -1,4 +1,4 @@
-// think-skills S3 (D6) — `gf north-star set <file>`: the North Star workshop's metric reaches the engine.
+// think-skills S3 (D6) — `frijoles north-star set <file>`: the North Star workshop's metric reaches the engine.
 //
 // ── A thin shell over one route ───────────────────────────────────────────────────────────────────────────────────
 // The `north-star` coach leaves `Roadmap/00-strategy/north-star.md`, whose `## Sync payload` section holds exactly one
@@ -202,7 +202,7 @@ async function readCurrent(context: CommandContext, project: string): Promise<Cu
 export const northStarSetCommand: Command = {
   path: ['north-star', 'set'],
   summary: "send a North Star workshop's metric and inputs to the project",
-  usage: 'gf north-star set <file> [--yes] [--project <slug>]',
+  usage: 'frijoles north-star set <file> [--yes] [--project <slug>]',
   needsAuth: true,
   detail: `Reads the one \`\`\`json block under "## Sync payload" in <file> — the
   Roadmap/00-strategy/north-star.md the north-star coach writes.
@@ -222,7 +222,7 @@ export const northStarSetCommand: Command = {
     if (!file) {
       context.emit.fail(
         'invalid',
-        'Usage: `gf north-star set <file>` — e.g. Roadmap/00-strategy/north-star.md.'
+        'Usage: `frijoles north-star set <file>` — e.g. Roadmap/00-strategy/north-star.md.'
       )
       return EXIT.USAGE
     }

@@ -1,7 +1,7 @@
 // golden-frijoles-cli · Sprint 3, Story 3.5 — the CLI's install instructions, named ONCE.
 //
 // ── Why these strings live in a module and not in the JSX ─────────────────────────────────────
-// Story 3.5's acceptance is that `/install` and `gf init`'s printed next-steps say the SAME thing:
+// Story 3.5's acceptance is that `/install` and `frijoles init`'s printed next-steps say the SAME thing:
 // "the install page and the CLI's printed next-steps are one surface" (the shaping's words). Two
 // hand-written copies of `npx @golden-frijoles/cli init` agree right up until one of them is edited.
 //
@@ -15,8 +15,8 @@
 /** The published package. Asserted against `packages/cli/package.json`'s `name`. */
 export const CLI_PACKAGE = '@golden-frijoles/cli'
 
-/** The binary. Asserted against the single key of `packages/cli/package.json`'s `bin`. */
-export const CLI_BIN = 'gf'
+/** The binary. Asserted against the FIRST key of `packages/cli/package.json`'s `bin` (any other is a dated alias). */
+export const CLI_BIN = 'frijoles'
 
 /**
  * The one-line path: no install, no global, nothing on `PATH`.

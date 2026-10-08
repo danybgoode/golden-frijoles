@@ -1,7 +1,7 @@
 // golden-frijoles-cli · D4 — the shared command core, asserted directly.
 //
 // These are the claims the CLI's `--help` makes and the MCP write tools inherit. They are asserted
-// here, against pure functions, rather than through `gf` or through a route, for the reason
+// here, against pure functions, rather than through `frijoles` or through a route, for the reason
 // CODE-QUALITY #5 gives: a guard behind auth and network state is a guard the harness reaches by
 // accident, and the ones that matter most here — "kill clears the rules", "a percent is rejected
 // rather than clamped" — are exactly the ones a happy-path integration test never exercises.
@@ -115,7 +115,7 @@ test('a create plan round-trips through the real parser', () => {
 })
 
 test('\u26a0\ufe0f a create with NO description still plans — the headline command must work', () => {
-  // `gf flags create <key> --kill-switch --all-envs` passes no description, and the parser requires a
+  // `frijoles flags create <key> --kill-switch --all-envs` passes no description, and the parser requires a
   // non-blank one. Every other test here happens to pass 'x', which is how this shipped broken.
   const plan = unwrap(
     planFlagCreate({

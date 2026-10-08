@@ -40,7 +40,7 @@ test.describe('/app/finops (finops 3.3)', () => {
       await page.goto(`/app/finops/${project.slug}`)
       await expect(page.locator('main[data-finops-state="empty"]')).toHaveCount(1)
       await expect(page.getByText('No usage yet.')).toBeVisible()
-      await expect(page.getByText('gf-kit config set spend.telemetry on')).toBeVisible()
+      await expect(page.getByText('frijoles-kit config set spend.telemetry on')).toBeVisible()
       await expect(page.getByText(/Claude Code only — other agents not measured/)).toBeVisible()
 
       // Through the real rails, with a real key for this project.

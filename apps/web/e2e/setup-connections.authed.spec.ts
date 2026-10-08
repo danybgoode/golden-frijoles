@@ -4,7 +4,7 @@ import { createHash, randomBytes } from 'node:crypto'
 import { readTenantRecord } from './helpers/authed-fixture'
 
 // account-from-the-terminal · Sprint 3, Story 3.2 — Setup › Connections, signed in: "Get a new URL"
-// stops the old URL at once, and "Disconnect" signs a machine out (its next `gf whoami` is refused).
+// stops the old URL at once, and "Disconnect" signs a machine out (its next `frijoles whoami` is refused).
 
 function db() {
   const url = process.env.SUPABASE_URL

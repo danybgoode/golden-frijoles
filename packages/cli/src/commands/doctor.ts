@@ -1,4 +1,4 @@
-// golden-frijoles-cli · Sprint 1, Story 1.5 — `gf doctor`.
+// golden-frijoles-cli · Sprint 1, Story 1.5 — `frijoles doctor`.
 //
 // ── What this verb is for ─────────────────────────────────────────────────────────────────────
 // The seed's words: *"an agent that can't tell WHY it's unauthenticated burns a whole session
@@ -12,7 +12,7 @@
 //
 // ── It NEVER prints key material ──────────────────────────────────────────────────────────────
 // Not the token, not a prefix, not a length. `doctor` output is the thing people paste into an
-// issue, and `cli.test.ts`'s "gf doctor never prints key material, in either mode" asserts that a
+// issue, and `cli.test.ts`'s "frijoles doctor never prints key material, in either mode" asserts that a
 // known token string appears nowhere in its output — a claim about a security property gets an
 // assertion, not a comment. (That citation named a `doctor.test.ts` which does not exist; a
 // pointer to a missing guard is how the next reader concludes there isn't one.)
@@ -44,7 +44,7 @@ type WhoamiBody = {
 export const doctorCommand: Command = {
   path: ['doctor'],
   summary: 'why is it not working — every check, in order',
-  usage: 'gf doctor [--json]',
+  usage: 'frijoles doctor [--json]',
   needsAuth: false,
   detail: `Runs whether or not you are logged in — diagnosing a missing credential is the
   point. Prints no key material in either mode.
@@ -65,12 +65,12 @@ export const doctorCommand: Command = {
     const parsedFile = readCredentials(context.env)
     if (fileExists && parsedFile === null) {
       // The one case where "no credential" has a different remedy: the file is there and unusable.
-      // Collapsing it into "not logged in" sends someone to `gf login` when the answer may be a
+      // Collapsing it into "not logged in" sends someone to `frijoles login` when the answer may be a
       // half-written file from an interrupted paste.
       checks.push({
         id: 'credentials-file',
         status: 'fail',
-        detail: `${path} exists but could not be read as a credential. Delete it and run \`gf login\`.`,
+        detail: `${path} exists but could not be read as a credential. Delete it and run \`frijoles login\`.`,
       })
     } else if (fileExists) {
       checks.push({ id: 'credentials-file', status: 'ok', detail: `Readable at ${path}.` })
@@ -81,7 +81,7 @@ export const doctorCommand: Command = {
         detail:
           context.auth.source === 'env'
             ? `No file at ${path} — GOLDEN_FRIJOLES_TOKEN is in use, which is the CI path.`
-            : `No file at ${path}. Run \`gf login\`.`,
+            : `No file at ${path}. Run \`frijoles login\`.`,
       })
     }
 
@@ -89,7 +89,7 @@ export const doctorCommand: Command = {
       checks.push({
         id: 'credential',
         status: 'fail',
-        detail: 'No credential. Run `gf login`, or set GOLDEN_FRIJOLES_TOKEN.',
+        detail: 'No credential. Run `frijoles login`, or set GOLDEN_FRIJOLES_TOKEN.',
       })
       return report(context, checks)
     }
@@ -136,7 +136,7 @@ export const doctorCommand: Command = {
         // Unknown, revoked and expired are one answer at the server by design, so `doctor` must not
         // invent a distinction it cannot have. It names all three and one remedy that covers them.
         detail:
-          'The deployment rejected this credential — unknown, revoked or expired. Run `gf login` again (or mint one in the console under Setup › CLI access).',
+          'The deployment rejected this credential — unknown, revoked or expired. Run `frijoles login` again (or mint one in the console under Setup › CLI access).',
       })
       return report(context, checks)
     }
@@ -162,7 +162,7 @@ export const doctorCommand: Command = {
       checks.push({
         id: 'active-project',
         status: 'warn',
-        detail: 'No project chosen. Run `gf projects use <slug>` or pass --project.',
+        detail: 'No project chosen. Run `frijoles projects use <slug>` or pass --project.',
       })
     } else if (whoami.body.projects.some((project) => project.slug === wanted)) {
       checks.push({ id: 'active-project', status: 'ok', detail: `\`${wanted}\` is reachable.` })
@@ -191,7 +191,7 @@ export const doctorCommand: Command = {
  * same second-HTTP-path defect `init.ts`'s `probeFlagReadKey` records having already made once.
  *
  * ⚠️ A `warn` or a `skipped`, NEVER a `fail`. The registry is a third party: an offline machine, a
- * corporate proxy or an npm outage must not make `gf doctor` report that the CLI is broken. Being
+ * corporate proxy or an npm outage must not make `frijoles doctor` report that the CLI is broken. Being
  * unable to check is a different fact from being out of date, and this reports which.
  */
 async function versionCheck(fetchImpl: typeof fetch): Promise<Check> {

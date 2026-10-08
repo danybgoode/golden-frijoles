@@ -11,7 +11,7 @@ import { getUserProjects } from '@/lib/membership'
 import { confirmDeviceCode, denyDeviceCode } from './actions'
 
 // account-from-the-terminal · Sprint 2, Story 2.2 — `/cli/connect?code=KQ7M-3RTX` (epic D8, the
-// canvas SignIn frame). `gf login` opens this page; the person compares the code with their terminal
+// canvas SignIn frame). `frijoles login` opens this page; the person compares the code with their terminal
 // and confirms. Signed out, it offers sign-in and comes back here with the code.
 //
 // Nothing on this page writes except the two Server Actions in `./actions.ts`, and both take the
@@ -25,24 +25,24 @@ const DONE_MESSAGES: Record<string, { title: string; body: string }> = {
   },
   not_member: {
     title: 'Nothing was signed in',
-    body: 'That product is not one of yours. Run `gf login` again and pick one you belong to.',
+    body: 'That product is not one of yours. Run `frijoles login` again and pick one you belong to.',
   },
   denied: { title: 'Nothing was signed in', body: 'The code was declined. You can close this page.' },
   expired: {
     title: 'That code expired',
-    body: 'Codes last ten minutes. Run `gf login` again for a new one.',
+    body: 'Codes last ten minutes. Run `frijoles login` again for a new one.',
   },
   used: {
     title: 'That code was already used',
-    body: 'Each code works once. Run `gf login` again if you need to.',
+    body: 'Each code works once. Run `frijoles login` again if you need to.',
   },
   unknown: {
     title: 'That is not a code we issued',
-    body: 'Check the code in your terminal, or run `gf login` again.',
+    body: 'Check the code in your terminal, or run `frijoles login` again.',
   },
   error: {
     title: 'Something went wrong',
-    body: 'Nothing was signed in. Try again, or run `gf login` again.',
+    body: 'Nothing was signed in. Try again, or run `frijoles login` again.',
   },
 }
 
@@ -77,7 +77,7 @@ export default async function CliConnectPage({
       <Frame variant="door" brandHref="/">
         <h1>Sign in from your terminal</h1>
         <p className="ds-doorlede">
-          Run <span className="ds-mono">gf login</span> in your terminal. It opens this page with its code.
+          Run <span className="ds-mono">frijoles login</span> in your terminal. It opens this page with its code.
         </p>
       </Frame>
     )
@@ -117,7 +117,7 @@ export default async function CliConnectPage({
   }
 
   // ── Written against remote phishing (RFC 8628 §5.4; the security lens on PR #280) ─────────────
-  // Anyone can start a `gf login` and send this link to someone signed in. Nothing in a device flow
+  // Anyone can start a `frijoles login` and send this link to someone signed in. Nothing in a device flow
   // can tell that apart from the real thing, so this page has to: the label is the requester's OWN
   // words (shown as such, never as a fact), the request's age is shown, what allowing grants is
   // stated in full, and "if someone sent you this link" is said before the button, not after.
@@ -131,7 +131,7 @@ export default async function CliConnectPage({
     <Frame variant="door" brandHref="/">
       <h1>Let your agent work on your product?</h1>
       <p className="ds-doorlede">
-        Your coding agent and <span className="ds-mono">gf</span>, on the terminal that calls itself “
+        Your coding agent and <span className="ds-mono">frijoles</span>, on the terminal that calls itself “
         {view.label}” (its own name, not something we checked), showing{' '}
         <span className="ds-mono">{code}</span>. Requested{' '}
         {minutesAgo === 0 ? 'less than a minute' : `${minutesAgo} minute${minutesAgo === 1 ? '' : 's'}`} ago,
@@ -160,7 +160,7 @@ export default async function CliConnectPage({
         ) : (
           <p className="ds-hint">
             You have no product yet. Allow makes your first one, the way{' '}
-            <span className="ds-mono">gf init</span> does.
+            <span className="ds-mono">frijoles init</span> does.
           </p>
         )}
         <p className="ds-hint">

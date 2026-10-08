@@ -79,11 +79,11 @@ function bearer(req: NextRequest): string | null {
  * Unknown, malformed, revoked, expired and "belongs to a deleted account" are ONE answer.
  *
  * A CLI that could tell them apart would let an attacker confirm that a stolen token was once real,
- * and `gf doctor` does not need the distinction — "your credential is not accepted; log in again"
+ * and `frijoles doctor` does not need the distinction — "your credential is not accepted; log in again"
  * is the same remedy for all of them.
  */
 function unauthorized() {
-  return cliError('unauthorized', 'This CLI credential is not accepted. Run `gf login` again.')
+  return cliError('unauthorized', 'This CLI credential is not accepted. Run `frijoles login` again.')
 }
 
 /**
@@ -101,7 +101,7 @@ export async function readCliBody(req: NextRequest): Promise<Record<string, unkn
 
 /**
  * `scopeProjectId`: null for an account-wide token (the console mint); set for a token minted on the approve
- * page (`gf login` through /cli/connect), which reaches that ONE project and nothing else. Every project read
+ * page (`frijoles login` through /cli/connect), which reaches that ONE project and nothing else. Every project read
  * below honours it — a scoped token asking for a sibling project gets the same 404 a stranger gets.
  */
 export type CliAccount = {
@@ -159,7 +159,7 @@ export async function requireCliMember(
   const account = await requireCliAccount(req)
   if (account instanceof NextResponse) return account
   if (!slug || typeof slug !== 'string')
-    return cliError('invalid', 'Name a project with --project, or set one with `gf projects use`.')
+    return cliError('invalid', 'Name a project with --project, or set one with `frijoles projects use`.')
 
   const membership = await getMembership(account.userId, slug)
   // Not a member, no such project, and outside this token's product are indistinguishable — see this module's
@@ -194,7 +194,7 @@ export function withinScope(account: Pick<CliAccount, 'scopeProjectId'>, project
   return account.scopeProjectId === null || account.scopeProjectId === projectId
 }
 
-/** The caller's memberships this credential reaches, for `gf whoami` and `gf projects ls`. */
+/** The caller's memberships this credential reaches, for `frijoles whoami` and `frijoles projects ls`. */
 export async function cliUserProjects(
   account: Pick<CliAccount, 'userId' | 'scopeProjectId'>
 ): Promise<MemberProject[]> {

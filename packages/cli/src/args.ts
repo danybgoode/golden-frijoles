@@ -7,11 +7,11 @@
 // in the package by an order of magnitude, to save those forty lines.
 //
 // ── Pure, so the contract can be asserted without spawning anything ───────────────────────────
-// Every parsing rule below is tested directly (CODE-QUALITY #5). Spawning `gf` to find out whether
+// Every parsing rule below is tested directly (CODE-QUALITY #5). Spawning `frijoles` to find out whether
 // `--percent` accepts `=` is a test that also exercises the network, the filesystem and a token.
 
 export type ParsedArgs = {
-  /** The verb path: `['flags', 'create']` for `gf flags create …`. */
+  /** The verb path: `['flags', 'create']` for `frijoles flags create …`. */
   path: string[]
   /** Everything that was not a flag and not part of the verb path. */
   positionals: string[]
@@ -28,7 +28,7 @@ export type ParsedArgs = {
 /**
  * Boolean flags — the ones that take NO value.
  *
- * ⚠️ A closed list, and it has to exist. Without it `gf flags create k --all-envs --kill-switch`
+ * ⚠️ A closed list, and it has to exist. Without it `frijoles flags create k --all-envs --kill-switch`
  * parses `--kill-switch` as the VALUE of `--all-envs`, and the command then silently creates a flag
  * in one environment with no polarity — a wrong result from a correct-looking command line, which
  * is the worst failure shape a CLI has. Adding a boolean flag means adding it here.
@@ -58,7 +58,7 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
 
   // ⚠️ **Every bare word goes to `path`, wherever it appears — not only the LEADING run** (cross-
   // family review, Codex, round 8). The first version collected the path only until the first
-  // flag, so `gf --json flags ls` parsed as an empty path and printed ROOT HELP with exit 0 — an
+  // flag, so `frijoles --json flags ls` parsed as an empty path and printed ROOT HELP with exit 0 — an
   // agent that put its global flags first (which the help calls "global" and the README says work
   // "anywhere") got a success code and none of the output it asked for.
   //
@@ -148,7 +148,7 @@ export function boolFlag(args: ParsedArgs, name: string): boolean {
  * place with exit 0 — the CLI agreeing with a command nobody wrote. Fail loud (CODE-QUALITY #7).
  */
 export function unknownFlags(args: ParsedArgs, known: readonly string[]): string[] {
-  // ⚠️ **`project` belongs in this list, and its absence made `gf --help` lie** (fresh reviewer,
+  // ⚠️ **`project` belongs in this list, and its absence made `frijoles --help` lie** (fresh reviewer,
   // PR #149). The help's "Global flags" block documents `--project`, and six verbs — `whoami`,
   // `login`, `logout`, `projects ls|create|use` — rejected it with exit 1 and a JSON error saying
   // the flag it had just been shown does not exist.
