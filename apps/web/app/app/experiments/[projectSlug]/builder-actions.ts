@@ -19,7 +19,7 @@ import { rolloutExperimentCommand, undoRolloutCommand } from '@/lib/experiment-r
 function dependencies(): BuilderDependencies {
   return {
     builderEnabled: isExperimentBuilderWritable,
-    servingEnabled: () => true, // one-product-project D2: serving is no longer a gate
+    servingEnabled: async () => true, // one-product-project D2: serving is no longer a gate
     requireOwnership: requireProjectOwnership,
     io: createBuilderIo(getSupabaseServiceClient()),
   }

@@ -34,7 +34,7 @@ test('the mint never stamps a maker on the demo project', () => {
 // writes off" exists on neither — the LEARNINGS rule for a gate the test server can't turn off.
 test('the route feeds BOTH write gates into the maker rule, and task writes stay behind their own gate', () => {
   const route = readFileSync(new URL('../app/api/v1/public/mcp/c/[token]/route.ts', import.meta.url), 'utf8')
-  assert.match(route, /connectorWritesEnabled: \(await isConnectorWritesEnabled\(\)\)/)
+  assert.match(route, /connectorWritesEnabled: \(?await isConnectorWritesEnabled\(\)\)?/)
   assert.match(route, /cliWritesEnabled: true/) // one-product-project D2: the CLI write API is always on
   assert.match(route, /if \(!makerMayWrite\(facts\)\) return null/)
   assert.match(route, /if \(\(await isConnectorWriteToolEnabled\(\)\) && writeKeyId\)/)

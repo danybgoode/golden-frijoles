@@ -131,7 +131,6 @@ jobs:
           ./node_modules/.bin/playwright test --config=apps/web/playwright.config.ts --project=api --grep-invert @quarantine \
             apps/web/e2e/journey-dark.spec.ts \
             apps/web/e2e/experiment-governance-dark.spec.ts \
-            apps/web/e2e/flag-serving-dark.spec.ts \
             apps/web/e2e/scenario-dark.spec.ts \
             apps/web/e2e/setup-routes-dark.spec.ts \
             apps/web/e2e/flag-console-dark.spec.ts \

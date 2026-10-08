@@ -95,12 +95,13 @@ async function createVersion(
   })
 }
 
-test.describe('JOURNEY_PROJECTIONS_ENABLED — dark by default', () => {
-  test('only the exact string "true" enables it', () => {
+test.describe('JOURNEY_PROJECTIONS_ENABLED — the off-Vercel override', () => {
+  test('only the exact string "true" enables it when set; unset, the catalog fallback answers', () => {
     const original = process.env.JOURNEY_PROJECTIONS_ENABLED
     try {
+      // one-product-project D6: unset, the catalog answers (its fallback, production's ON); a SET value keeps the exact reading.
       delete process.env.JOURNEY_PROJECTIONS_ENABLED
-      expect(isJourneyProjectionsEnabled()).toBe(false)
+      expect(isJourneyProjectionsEnabled()).toBe(true)
       for (const off of ['false', '0', 'off', 'TRUE', ' true', '']) {
         process.env.JOURNEY_PROJECTIONS_ENABLED = off
         expect(isJourneyProjectionsEnabled()).toBe(false)

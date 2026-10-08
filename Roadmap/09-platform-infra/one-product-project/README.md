@@ -104,8 +104,10 @@ table and no migration.
 - **D5 amended by the reads:** each fallback is now the prod value, so every OFF gate falls back OFF. No gate needs an
   exception any more.
 - **`gf flags kill` serves `false` and clears the rules** (`packages/cli/src/__golden__/help.txt`). A gate reads
-  `false` as off and any other served boolean as its value. A row that is not readable (never activated, or
-  deactivated) serves the fallback (`isTerminalSignInOn`'s rule, generalised).
+  `false` as off and any other served boolean as its value. **A deactivated row is OFF** (the console's off switch
+  deactivates; amended at review of #319). A row that cannot answer (never activated, unreadable, absent) serves the
+  fallback. A failed or slow (>1.5 s) catalog read keeps serving the last good catalog; the fallbacks answer only
+  before any read has succeeded in the process.
 - **No new migration.** The data moves are row UPDATEs. `flag_definition_versions` and `journey_definition_versions`
   have immutability triggers, which is why the flag is recreated and the journey proof rows stay.
 - **`golden-beans` keeps its slug** (archived: no live key or token). Its slug and `golden-beans-demo` are reserved.
