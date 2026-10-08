@@ -36,8 +36,9 @@ gf login                # browser sign-in
 gf whoami               # who you are, which credential, which projects
 ```
 
-Without a browser, mint a token at **`/app/setup/cli`** and pipe it in (`echo "$TOKEN" | gf login`) or pass
-`--token`; a pasted token is read from stdin, never from argv or your history.
+Without a browser, mint a token at **`/app/setup/cli`** and pipe it in (`echo "$TOKEN" | gf login`); a piped or
+pasted token is read from stdin, never from argv or your history. `--token <token>` also works, but it lands in argv
+and your shell history, so prefer the pipe.
 
 In CI, set `GOLDEN_FRIJOLES_TOKEN` and skip `gf login` entirely. Nothing is written to disk on that
 path.
