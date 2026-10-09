@@ -1129,3 +1129,23 @@ test("frijoles status off (the kill switch) is the server's 404, said plainly", 
   assert.notEqual(code, EXIT.OK)
   assert.match(captured.all(), /not switched on here/)
 })
+
+test('init --ingest as a member who is not an owner says who can mint the key, not to re-run', async () => {
+  const env = sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN, GOLDEN_FRIJOLES_PROJECT: 'acme' })
+  const cwd = mkdtempSync(join(tmpdir(), 'gf-repo-'))
+  const base = initFetch()
+  const fetchImpl = (async (input: string | URL, init?: RequestInit) => {
+    const body = typeof init?.body === 'string' ? (JSON.parse(init.body) as { type?: string }) : undefined
+    if (new URL(String(input)).pathname === '/api/v1/cli/keys' && body?.type === 'ingest')
+      return new Response(JSON.stringify({ ok: false, code: 'not_found', error: 'Not found.' }), {
+        status: 404,
+        headers: { 'content-type': 'application/json' },
+      })
+    return base(input, init)
+  }) as unknown as typeof fetch
+  const captured = capture()
+  const code = await run({ argv: ['init', '--ingest'], writer: captured.writer, env, cwd, fetchImpl })
+  assert.notEqual(code, EXIT.OK)
+  assert.match(captured.all(), /Only an owner of acme can mint its ingest key/)
+  assert.doesNotMatch(captured.all(), /again\./)
+})

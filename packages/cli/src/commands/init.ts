@@ -294,7 +294,16 @@ export const initCommand: Command = {
       if (result.kind === 'network')
         ingestFailure = { code: 'server_error', message: result.message, exit: EXIT.SERVER }
       else if (result.kind === 'error')
-        ingestFailure = { code: result.code, message: result.message, exit: exitForServerCode(result.code) }
+        ingestFailure = {
+          code: result.code,
+          // Minting is owner-only (the keys route answers a member as it answers a stranger): say who can, rather than
+          // suggest a re-run that cannot help (verifier, #338).
+          message:
+            result.code === 'not_found'
+              ? `Only an owner of ${project} can mint its ingest key: ask one to run \`frijoles init --ingest\`, or to mint one with \`frijoles keys create --type ingest\` and share it outside this tool.`
+              : result.message,
+          exit: exitForServerCode(result.code),
+        }
       else mintedIngest = result.body
     }
 
@@ -319,8 +328,8 @@ export const initCommand: Command = {
     if (ingestFailure) {
       context.emit.fail(
         ingestFailure.code,
-        `${ingestFailure.message} The ingest key was not minted; ${ENV_FILE} was written with everything else. ` +
-          `Run \`frijoles init --ingest\` again.`
+        `${ingestFailure.message} The ingest key was not minted; ${ENV_FILE} was written with everything else.` +
+          (ingestFailure.code === 'not_found' ? '' : ' Run `frijoles init --ingest` again.')
       )
       return ingestFailure.exit
     }
