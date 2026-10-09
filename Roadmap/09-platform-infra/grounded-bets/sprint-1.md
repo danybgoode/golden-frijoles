@@ -3,7 +3,7 @@ epic: grounded-bets
 sprint: 1
 title: "The cascade in refine"
 risk: low
-phase: In review
+phase: Shipped
 stories_total: 3
 stories:
   - id: S1.1
@@ -30,7 +30,7 @@ stories:
 ---
 # Grounded bets: every Why is a hypothesis traced from the North Star — Sprint 1: The cascade in refine
 
-**Status:** 🟡 built, in review (one PR for both sprints)
+**Status:** ✅ shipped 2026-10-09 (#334, merge `ff5d426`; plugin + kit 1.1.0)
 
 ## Stories
 

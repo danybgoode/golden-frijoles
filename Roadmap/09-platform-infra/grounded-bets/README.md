@@ -1,6 +1,6 @@
 ---
-status: in-progress  # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: In review     # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+status: shipped      # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+phase: Shipped       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
 locked_at: "2026-10-09T17:22:15Z"
 slug: grounded-bets
@@ -27,6 +27,9 @@ flag_key: null   # the epic's flag, decided at refine Stage 6b and copied from t
 build_order: 75      # integer position in the ONE global build sequence — the SSOT once the epic
                      # exists (the seed's value is only a fallback). Fill it in at the betting
                      # table; plain integers, no "#2a" suffixes. See 00-ideas/README.md → Ordering.
+actual_usd: 15.48
+actual_mtok: 52.8
+actual_basis: "this machine · 2026-10-09 · 1 session · prices 2026-10-02"
 ---
 
 # Epic: Grounded bets: every Why is a hypothesis traced from the North Star
@@ -79,7 +82,7 @@ writes them, one recorded field, and the count. No engine route or migration.
   counted. So the October baseline needs no backfill: old bets are measured by their targets.
 - **D3 · The share.** Per calendar month: the bets whose seed's `underwritten_by:` names a ledger `wave-YYYY-MM…`
   (the stamp `fund.mjs` writes; the month from that name; `wave-backfill` excluded), read as the seed overlaid by the
-  epic README, minus Bugs and Chores (`type:`); share = grounded ÷ counted, four decimals. A month with no counted bets
+  epic README, minus Bugs and Chores (`type:`); share = grounded ÷ counted, two decimals (the engine stores NUMERIC(14,2)). A month with no counted bets
   prints "no bets" and pushes nothing. *(Amended at build: the lock said the ledger's rows, but their shape changed over
   the months and epic READMEs carry no stamp; each bet's own stamp counts every bet once.)*
 - **D4 · The push.** `bets-grounded.mjs --push` posts `{ occurredOn: today (UTC), value: <this month's share> }` to
