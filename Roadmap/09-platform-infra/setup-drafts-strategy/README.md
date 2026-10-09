@@ -85,7 +85,9 @@ count, which the tenancy invariant forbids, so it is its own seed (`proving-work
   not print. `north-star.md` gains a `## Candidates` section holding **A** and **B** (each: the game, the metric, 3–4
   inputs, what it would make you build differently); its North Star sections and the sync payload keep the template's
   placeholders until one is chosen, so `strategy.mjs` reports no inputs from a draft. The two must differ in game or unit.
-- **D6 · One review.** The Strategy gate grows to five blocks: **Product & persona** (decided from the repo) ·
+- **D6 · One review.** *(Amended at build, verifier on #336: each candidate carries its own inputs and their
+  measurement, shown alike so neither anchors; the first idea and its target follow the choice; the target is asked,
+  never proposed; the on-screen row is "First idea".)* The Strategy gate grows to five blocks: **Product & persona** (decided from the repo) ·
   **North Star: A or B** · **Measurement plan** (the event each input of the chosen candidate needs; which are already
   tracked, from D2) · **Roadmap** (what read-repo found, one line) · **First bet** (the sentence on the chosen input,
   with a target the founder confirms). The three-decision limit counts A-or-B and the first bet's target.
@@ -93,8 +95,8 @@ count, which the tenancy invariant forbids, so it is its own seed (`proving-work
   `## Candidates`; sets `status: agreed` on all three files (Daniel, decision a: Approve is agreement); writes the first
   bet as a seed from `templates/scope-seed.md` (`status: raw`, `hypothesis`, `persona`, `grounded: true`, the target).
   A target the founder could not give leaves the bet `grounded: false — no baseline yet`, never an invented number.
-- **D8 · Route 2 drafts too.** *"1 Draft it now (about 5 minutes) · 2 Coach me through it (about 45) · 3 A first epic
-  now"*; a draft from the sentence alone cites `(your words)` or `(assumed)` and ends at the same review.
+- **D8 · Route 2 drafts too.** *"1 Write it now (about 5 minutes) · 2 Coach me through it (about 45) · 3 A first epic
+  now"* ("draft" never reaches the screen: gates.md's words, amended at build); a draft from the sentence alone cites `(your words)` or `(assumed)` and ends at the same review.
 - **D9 · The coaches go deeper.** A coach opened on an existing file revises it section by section in place, keeps the
   citations it does not change, replaces `(assumed)` with the founder's answer, and never restarts from the template.
   Plugin 1.2.0 (additive). read-product lives in refine, as read-repo does; the kit's version still moves to 1.2.0,
