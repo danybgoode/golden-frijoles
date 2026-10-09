@@ -3,7 +3,7 @@ epic: grounded-bets
 sprint: 2
 title: "Recorded and counted"
 risk: low
-phase: In review
+phase: Shipped
 stories_total: 3
 stories:
   - id: S2.1
@@ -30,7 +30,7 @@ stories:
 ---
 # Grounded bets: every Why is a hypothesis traced from the North Star — Sprint 2: Recorded and counted
 
-**Status:** 🟡 built, in review (one PR for both sprints)
+**Status:** ✅ shipped 2026-10-09 (#334, merge `ff5d426`; plugin + kit 1.1.0)
 
 ## Stories
 
@@ -61,7 +61,7 @@ Env: production · https://goldenfrijoles.com
    `SELF_PROJECT_API_KEY` set so it reads the inputs from the engine; with neither, nothing can be grounded and it reads 0%)
    → October: 1 of 15 grounded (6.7%), the one being this epic; August 0 of 7, September 0 of 5.
 2. After the merge, ask the connector `get_input_readings grounded_bets_share`
-   → one reading dated the merge day: 0.0667 (October's share).
+   → one reading dated the merge day: 0.07 (October's share, stored to two decimals).
 3. Open an epic page whose bet is `grounded: false` at https://goldenfrijoles.com/hub/golden-frijoles/epic/<slug>
    → "Grounded: no — <reason>" under the Why.
 

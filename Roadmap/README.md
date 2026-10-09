@@ -464,6 +464,11 @@ independently shippable slice of value.
   "Approve, don't fund" leaves the pitch `ready`. `build-order.mjs` fails any live bet with no funding record, after
   an honest 45-row `wave-backfill`. `priority:` is retired. A fixed-scope seed scaffolds from its slug alone, with its
   acceptance criteria as the stories (dogfood F33). **Shipped 2026-10-04** (#271, plugin + kit 0.28.0).
+- ✅ [Grounded bets: every Why is a hypothesis traced from the North Star](09-platform-infra/grounded-bets/README.md) —
+  **shipped 2026-10-09** (#334; plugin + kit 1.1.0). refine writes each bet as *We believe that … for … will … because …
+  We'll know when …*, traced to a North Star input, challenges once when none fits, and records an override with its
+  reason; `grounded_bets_share` is computed from the funded bets and pushed on every merge (October: 1 of 15).
+  **Owed:** the `_Intent_` word and the interactive refine walkthrough.
 - ✅ [Plugin 1.0: five plain skills, the frijoles CLI, and Refining](09-platform-infra/plugin-1-0/README.md) —
   **shipped and released 2026-10-08** (#324, #328; plugin and kit 1.0.0, CLI 1.0.0). Five skills instead of fifteen:
   `setup`, `refine` (was groom), `strategy` (cold read, PMF narrative, North Star, risk validation), `report` (daily,
@@ -569,6 +574,9 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-09**: `grounded-bets` **shipped**: one PR, ≈$15.48 against a $17–32 quote. Every new bet's Why is a
+  hypothesis traced from the North Star, and our own depth input `grounded_bets_share` is now computed and pushed from
+  the roadmap (October: 1 of 15). Three review rounds; the first caught a push that could never run in CI.
 - **2026-10-09**: `sdk-1-0` **shipped**: one PR, ≈$29.55 against a $16–32 quote. The SDK starts in one line, knows who
   the user is and pushes North Star inputs; review found a construction-time config read that would have sent three
   real 0.6.0 config shapes to production, now pinned by the freeze test.

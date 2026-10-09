@@ -1373,6 +1373,11 @@ one-liner + why + date shape.
   1.0.10 incident this repo already paid for. *(2026-07-25.)*
 
 ## Working efficiently
+- **Run a new script once from a clean worktree before trusting it in CI.** `bets-grounded.mjs` read the private,
+  untracked `Roadmap/00-strategy/` on the maker's machine and found nothing on the runner, so its push would have skipped
+  forever with every test green. *(grounded-bets, 2026-10-09.)*
+- **A local CI replay is trustworthy only after a deliberate break turns it red.** One replay missed a guard, an inline
+  workflow budget and every `cmp` pair (BSD `sed` has no `\s`); each surfaced as a red CI run. *(grounded-bets.)*
 - **"Additive" is checked against how the old version READ its inputs, not only what it exported.** SDK 1.0's freeze
   test (every 0.6.0 export, a literal-object call) was green while reading the config once at construction broke
   getter, inherited and filled-in-later configs, sending them to production. Pin the input shapes too.
