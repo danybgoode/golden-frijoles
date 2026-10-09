@@ -193,6 +193,11 @@ const roadmapRowSchema = z
     grounded_reason: z.string().max(300).nullish(),
   })
   .passthrough()
+  // The contract's own rule (validateGrounded), held here too so a hand-written push cannot store a reason the board
+  // would silently drop (codex, #334).
+  .refine((row) => row.grounded_reason == null || row.grounded === false, {
+    message: 'grounded_reason is only for grounded: false',
+  })
 
 export const roadmapPushSchema = z.object({
   // Rejected with a clear message when it does not match — see the refinement below.

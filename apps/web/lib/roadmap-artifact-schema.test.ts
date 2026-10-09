@@ -377,3 +377,13 @@ test('a push carrying grounded and grounded_reason stores them; a non-boolean gr
   assert.equal(bad.ok, false)
   if (!bad.ok) assert.match(JSON.stringify(bad.issues), /grounded/)
 })
+
+test('codex #334: a grounded_reason without grounded: false is refused, naming it', () => {
+  for (const grounded of [true, null, undefined]) {
+    const res = parseRoadmapPush(
+      push({ items: [row({ grounded, grounded_reason: 'why' } as Partial<RoadmapRow>)] })
+    )
+    assert.equal(res.ok, false, String(grounded))
+    if (!res.ok) assert.match(JSON.stringify(res.issues), /grounded_reason is only for grounded: false/)
+  }
+})
