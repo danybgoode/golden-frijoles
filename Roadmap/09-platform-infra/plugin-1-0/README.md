@@ -1,6 +1,6 @@
 ---
-status: scaffolded   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Building       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+status: shipped      # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+phase: Shipped       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
 locked_at: "2026-10-08T19:39:18Z"
 slug: plugin-1-0
@@ -27,6 +27,9 @@ flag_key: null   # the epic's flag, decided at groom Stage 6b and copied from th
 build_order: 73      # integer position in the ONE global build sequence — the SSOT once the epic
                      # exists (the seed's value is only a fallback). Fill it in at the betting
                      # table; plain integers, no "#2a" suffixes. See 00-ideas/README.md → Ordering.
+actual_usd: 56.54
+actual_mtok: 215.1
+actual_basis: "this machine · 2026-10-08 · 1 session · prices 2026-10-02"
 ---
 
 # Epic: Plugin 1.0: five plain skills, the frijoles CLI, and Refining

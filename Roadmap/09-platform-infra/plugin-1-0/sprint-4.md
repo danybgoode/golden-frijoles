@@ -3,7 +3,7 @@ epic: plugin-1-0
 sprint: 4
 title: "Release 1.0"
 risk: high
-phase: In review
+phase: Shipped
 stories_total: 2
 stories:
   - id: S4.1
@@ -19,11 +19,11 @@ stories:
     i_want: "to install from main and have every name work"
     so_that: "the release is proven, not assumed"
     risk: low
-    status: planned
+    status: done
 ---
 # Plugin 1.0 — Sprint 4: Release 1.0
 
-**Status:** 🟡 S4.1 built; S4.2 is the walkthrough below, run after the one-sitting merge (D7)
+**Status:** ✅ shipped 2026-10-08 (#328, merge `f20076a`; v1.0.0 released, kit 1.0.0 and CLI 1.0.0 on npm)
 
 ## Stories
 
@@ -32,7 +32,7 @@ stories:
 **Acceptance:** plugin + kit 1.0.0, CLI 1.0.0 (pins kit 0.43.0, the newest published kit: D9); CHANGELOG with the old → new table; `skills/RELEASING.md` followed. **Order:** Daniel publishes CLI 1.0.0 from the branch (2FA) and `npm view @golden-frijoles/cli bin` shows `frijoles`, THEN the four PRs merge in one sitting (D7); the kit publishes itself on the merge.
 **Risk:** high
 
-### Story 4.2 — A stranger installs 1.0
+### Story 4.2 — A stranger installs 1.0 ✅ `f20076a`
 **As** a founder in an empty repo, **I want** to install from main and have every name work, **so that** the release is proven, not assumed.
 **Acceptance:** Scratch repo, plugin from `main`: `/golden-frijoles:setup`, `refine`, `strategy`, `report`, `smoke` load; `frijoles --version`; under zsh with `plugins=(git)`, `frijoles login` runs. README screenshot retaken (Refining).
 **Risk:** low
@@ -74,3 +74,9 @@ Env: an empty scratch repo; Claude Code; a zsh with oh-my-zsh's git plugin on.
    → Backlog · Refining · Ready · Building · QA · Shipped. Retake the README screenshot from this page.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+**Run 2026-10-08 on production (agent):** step 1 ✅ (CLI 1.0.0 on npm, bins `frijoles` and `gf`) · step 2 ✅ in an
+isolated config (`check-onboarding-parity --exec`: the plugin installs from the checkout and lists `setup`; `npx skills`
+installs all five) · step 3 ✅ `/install.md` carries the new last step · step 6 ✅ the board reads Backlog · Refining ·
+Ready (stored keys unchanged), README screenshot retaken. **Owed to Daniel:** steps 2–5 in a real interactive session
+(`/plugin` listing, the install prompt run end to end, `frijoles login` in oh-my-zsh).

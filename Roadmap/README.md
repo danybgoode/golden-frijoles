@@ -459,6 +459,14 @@ independently shippable slice of value.
   "Approve, don't fund" leaves the pitch `ready`. `build-order.mjs` fails any live bet with no funding record, after
   an honest 45-row `wave-backfill`. `priority:` is retired. A fixed-scope seed scaffolds from its slug alone, with its
   acceptance criteria as the stories (dogfood F33). **Shipped 2026-10-04** (#271, plugin + kit 0.28.0).
+- ✅ [Plugin 1.0: five plain skills, the frijoles CLI, and Refining](09-platform-infra/plugin-1-0/README.md) —
+  **shipped and released 2026-10-08** (#324, #328; plugin and kit 1.0.0, CLI 1.0.0). Five skills instead of fifteen:
+  `setup`, `refine` (was groom), `strategy` (cold read, PMF narrative, North Star, risk validation), `report` (daily,
+  weekly, PMO) and `smoke`, plus the `verifier` agent with a security lens; our own ops skills live in this repo's
+  `.claude/skills/`, and the routines run their scripts. The CLI is `frijoles` (`gf` is shadowed by oh-my-zsh's
+  `git fetch` alias; it keeps working with a notice until 2026-12-31, and CI goes red after). The board reads Backlog ·
+  Refining · Ready; stored keys are unchanged. **Owed:** Daniel's interactive walkthrough, the Notion `Stage` option
+  and the prototype's wording decisions, his live routines, and the `_Intent_` word.
 - ✅ [Notification rails](09-platform-infra/notification-rails/README.md) (Telegram + Slack
   mechanical push/deploy pings · identical reviewed prose reports · per-channel retry checkpoints)
   — **shipped 2026-07-28** (PR #51); Slack uses a channel-scoped Incoming Webhook and plain-text
@@ -556,6 +564,10 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-08**: `plugin-1-0` **shipped**: four sprints, ≈$56.54 against a $55–111 quote. The plugin went from fifteen
+  skills to five plus the verifier, the CLI became `frijoles`, and Grooming became Refining. The verifier found a
+  defect in every sprint that the builder's gates could not see; the stacked PRs merged into their bases instead of
+  `main`, and one more PR (#328) carried the rest.
 - **2026-10-08**: `launch-trust-sweep` **shipped**: one sprint, one PR, ≈$8.01, not quoted. Every public surface says
   Golden Frijoles on goldenfrijoles.com, and a CI guard keeps the Vercel host out. Review caught that rewriting the
   host in old smoke records turned July evidence into claims about a domain that only existed from August.

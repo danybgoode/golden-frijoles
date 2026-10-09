@@ -3,7 +3,7 @@ epic: plugin-1-0
 sprint: 3
 title: "Five skills and the verifier"
 risk: high
-phase: In review
+phase: Shipped
 stories_total: 4
 stories:
   - id: S3.1
@@ -37,7 +37,7 @@ stories:
 ---
 # Plugin 1.0 — Sprint 3: Five skills and the verifier
 
-**Status:** 🟡 built, in review (stacked on S2; merges with S1–S4 in one sitting, D7)
+**Status:** ✅ shipped 2026-10-08 (S1 via #324 `f05bc81`; S2–S4 via #328 `f20076a`)
 
 ## Stories
 
