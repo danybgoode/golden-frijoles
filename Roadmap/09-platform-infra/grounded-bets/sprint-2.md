@@ -57,7 +57,8 @@ stories:
 ## Sprint 2 — Smoke walkthrough (do these in order)
 Env: production · https://goldenfrijoles.com
 
-1. Run `node scripts/bets-grounded.mjs`
+1. Run `node scripts/bets-grounded.mjs` (with the local `Roadmap/00-strategy/north-star.md`, or with
+   `SELF_PROJECT_API_KEY` set so it reads the inputs from the engine; with neither, nothing can be grounded and it reads 0%)
    → October: 1 of 15 grounded (6.7%), the one being this epic; August 0 of 7, September 0 of 5.
 2. After the merge, ask the connector `get_input_readings grounded_bets_share`
    → one reading dated the merge day: 0.0667 (October's share).
