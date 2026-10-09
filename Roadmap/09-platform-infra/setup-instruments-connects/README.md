@@ -91,7 +91,9 @@ gate is a Golden Frijoles catalog flag (rule 6).
   `--kill-switch --all-envs` and the hypothesis as its description. It gates the band and the status route.
 - **D6 · The instrument step.** `setup/references/instrument.md`, offered after the Strategy gate's Approve ("Add the
   measuring code now? It comes as a pull request you review."). On a new branch: install `@golden-frijoles/sdk`; one
-  client module by stack (`createGrowthEngineClient({ apiKey: process.env.GROWTH_ENGINE_API_KEY })`, server-side);
+  server-side client module by stack, making **a client per request for that request's user** (`growthFor(userId)`;
+  amended at build: a shared client with `identify()` would attribute one person's events to another) and a
+  `system:server` client for error capture;
   one `track` per chosen-candidate input marked "needs an event", at the code point it cites (or a `TODO` with the
   reason, never a guess); `captureGlobalErrors` where the stack has a server entry; flags only if the product has a flag
   read. Never a key in code; `.env.local` never committed.
