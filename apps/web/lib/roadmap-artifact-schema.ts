@@ -189,7 +189,7 @@ const roadmapRowSchema = z
     flag_note: z.string().max(300).nullish(),
     // grounded-bets D9 — the founder's grounding at Stage 1.5. Nullish so an older pusher stays valid; absent is "never
     // asked" (a Bug, a Chore, or an epic refined before it), never "no".
-    grounded: z.boolean().nullish(),
+    grounded: z.boolean({ invalid_type_error: 'grounded must be true, false or null' }).nullish(),
     grounded_reason: z.string().max(300).nullish(),
   })
   .passthrough()
