@@ -113,3 +113,51 @@ test('S1.2: two clients never share identity (state is per instance)', async () 
   assert.equal(JSON.parse(String(a.calls[0].init.body)).userId, 'u1')
   assert.equal(JSON.parse(String(b.calls[0].init.body)).userId, 'u2')
 })
+
+test('S1.3: pushInputValues posts the values to the input route with the project key, and returns the route\'s fields', async () => {
+  const { calls, fetchImpl } = recorder({ ok: true, inputKey: 'attributed revenue', inserted: 1, skippedDuplicates: 1, mismatchedDuplicates: ['2026-10-07'] })
+  const growth = createGrowthEngineClient({ apiKey: 'proj_key', fetchImpl }) // no user: inputs need none
+  const result = await growth.pushInputValues('attributed revenue', [
+    { occurredOn: '2026-10-07', value: 120.5 },
+    { occurredOn: '2026-10-08', value: 98 },
+  ])
+  assert.deepEqual(result, { ok: true, inputKey: 'attributed revenue', inserted: 1, skippedDuplicates: 1, mismatchedDuplicates: ['2026-10-07'] })
+  assert.equal(calls[0].url, 'https://goldenfrijoles.com/api/v1/inputs/attributed%20revenue/values')
+  assert.equal((calls[0].init.headers as Record<string, string>).Authorization, 'Bearer proj_key')
+  assert.deepEqual(JSON.parse(String(calls[0].init.body)), {
+    values: [{ occurredOn: '2026-10-07', value: 120.5 }, { occurredOn: '2026-10-08', value: 98 }],
+  })
+})
+
+test('S1.3: bad values are refused locally, without a request', async () => {
+  const { calls, fetchImpl } = recorder()
+  const growth = createGrowthEngineClient({ apiKey: 'k', fetchImpl })
+  const cases: [string, unknown][] = [
+    ['revenue', []],
+    ['revenue', [{ occurredOn: '2026-02-30', value: 1 }]],
+    ['revenue', [{ occurredOn: '2026/10/08', value: 1 }]],
+    ['revenue', [{ occurredOn: '2026-10-08', value: Number.NaN }]],
+    ['revenue', [{ occurredOn: '2026-10-08', value: 1 }, { occurredOn: '2026-10-08', value: 2 }]],
+    ['', [{ occurredOn: '2026-10-08', value: 1 }]],
+  ]
+  for (const [key, values] of cases) {
+    const r = await growth.pushInputValues(key, values as never)
+    assert.equal(!r.ok && r.code, 'INVALID_INPUT_VALUES', JSON.stringify(values))
+  }
+  assert.equal(calls.length, 0)
+})
+
+test('S1.3: a route refusal and a network failure come back as envelopes, never throws', async () => {
+  const refused = createGrowthEngineClient({
+    apiKey: 'k',
+    fetchImpl: recorder({ ok: false, error: "Input 'x' is telemetry_event-sourced" }, 400).fetchImpl,
+  })
+  const r = await refused.pushInputValues('x', [{ occurredOn: '2026-10-08', value: 1 }])
+  assert.equal(!r.ok && r.code, '400')
+  const offline = createGrowthEngineClient({
+    apiKey: 'k',
+    fetchImpl: (async () => { throw new Error('ENOTFOUND') }) as unknown as typeof fetch,
+  })
+  const n = await offline.pushInputValues('x', [{ occurredOn: '2026-10-08', value: 1 }])
+  assert.equal(!n.ok && n.code, 'NETWORK_ERROR')
+})

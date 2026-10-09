@@ -74,8 +74,10 @@ No engine change: the inputs route, the track route and the flag snapshot alread
   corrected here). A governed `bucket` uses its own assignment entity and is unaffected.
 - **D4 — `pushInputValues(key, values)`** posts `{ values }` to `/api/v1/inputs/<encoded key>/values` with the
   client's `apiKey`; validates each `occurredOn` (YYYY-MM-DD) and `value` (finite) before sending and returns
-  `{ ok: false, code: 'INVALID_INPUT_VALUES' }` locally; on success returns the route's body as
-  `{ ok: true, inserted, skipped }`; never throws (`NETWORK_ERROR` like `track`). It needs no user.
+  `{ ok: false, code: 'INVALID_INPUT_VALUES' }` locally; on success returns the route's own fields, `{ ok: true,
+  inputKey, inserted, skippedDuplicates, mismatchedDuplicates }` (corrected at build: the route reports which re-pushed
+  days carried a different value, which a caller needs to see); never throws (`NETWORK_ERROR` like `track`). It needs
+  no user. The client checks a real calendar date and duplicate days, the same rules the route enforces.
 - **D5 — Dual build.** `tsconfig.build.json` (CJS → `dist/cjs/`) plus `tsconfig.esm.json` (ESNext → `dist/esm/`, with a
   `{"type":"module"}` marker), `exports` with `import`, `require` and `types`; `main` keeps pointing at CJS for old
   resolvers. A packed-tarball test imports and requires it from a scratch project.

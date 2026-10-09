@@ -31,8 +31,10 @@ import {
 } from './scenario-telemetry'
 import { scrubClientText, SDK_MAX_MESSAGE, SDK_MAX_STACK } from './scrub'
 import { DEFAULT_BASE_URL, resolveBaseUrl } from './defaults'
+import { inputValuesProblems, type InputValue, type PushInputValuesResult } from './input-values'
 
 export { DEFAULT_BASE_URL }
+export type { InputValue, PushInputValuesResult } from './input-values'
 
 export type { BucketVariant } from './bucketing'
 export { ERROR_EVENT } from './capture'
@@ -342,6 +344,12 @@ export interface GrowthEngineClient {
   identify(userId: string): IdentifyResult
   /** Forget the current user (e.g. at sign-out). Calls that need one return `NO_USER` until the next `identify`. */
   reset(): void
+  /**
+   * sdk-1-0 D4 — append daily values to a North Star input whose values are pushed (not computed from events), e.g.
+   * revenue. Append-only and idempotent per day on the engine: re-pushing a day is a no-op, and the result lists the
+   * days whose value differed from the one on file. Needs no user. Never throws.
+   */
+  pushInputValues(inputKey: string, values: InputValue[]): Promise<PushInputValuesResult>
   track(event: string, props?: TrackEventProps): Promise<TrackResult>
   trackAdoption(featureKey: string, props?: Omit<TrackEventProps, 'featureId'>): Promise<TrackResult>
   syncFeatures(features: FeatureSyncEntry[]): Promise<SyncResult>
@@ -424,6 +432,41 @@ export function createGrowthEngineClient(config: GrowthEngineClientConfig): Grow
 
   function reset(): void {
     userId = null
+  }
+
+  async function pushInputValues(inputKey: string, values: InputValue[]): Promise<PushInputValuesResult> {
+    const problems = inputValuesProblems(inputKey, values)
+    if (problems.length > 0) return { ok: false, error: problems[0], code: 'INVALID_INPUT_VALUES', issues: problems }
+    if (baseUrl === undefined) return missingBaseUrl
+    let res: Response
+    try {
+      res = await fetchFn(`${baseUrl}/api/v1/inputs/${encodeURIComponent(inputKey)}/values`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.apiKey}` },
+        body: JSON.stringify({ values: values.map((v) => ({ occurredOn: v.occurredOn, value: v.value })) }),
+      })
+    } catch (err) {
+      return { ok: false, error: err instanceof Error ? err.message : 'Unknown network error', code: 'NETWORK_ERROR' }
+    }
+    const body = (await res.json().catch(() => null)) as {
+      ok?: boolean
+      error?: string
+      issues?: unknown
+      inputKey?: string
+      inserted?: number
+      skippedDuplicates?: number
+      mismatchedDuplicates?: string[]
+    } | null
+    if (!res.ok || !body?.ok) {
+      return { ok: false, error: body?.error ?? `HTTP ${res.status}`, code: String(res.status), issues: body?.issues }
+    }
+    return {
+      ok: true,
+      inputKey: body.inputKey ?? inputKey,
+      inserted: body.inserted ?? 0,
+      skippedDuplicates: body.skippedDuplicates ?? 0,
+      mismatchedDuplicates: body.mismatchedDuplicates ?? [],
+    }
   }
   const missingBaseUrl = {
     ok: false as const,
@@ -750,6 +793,7 @@ export function createGrowthEngineClient(config: GrowthEngineClientConfig): Grow
   return {
     identify,
     reset,
+    pushInputValues,
     track,
     trackAdoption: (featureKey, props) => track('feature_adopted', { ...props, featureId: featureKey }),
     syncFeatures,
