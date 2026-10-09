@@ -3,14 +3,28 @@ epic: grounded-bets
 sprint: 1
 title: "The cascade in refine"
 risk: low
-phase: Shaping
-stories_total: 1
+phase: Building
+stories_total: 3
 stories:
   - id: S1.1
-    title: "<title>"
-    as_a: "a <role>"
-    i_want: "<capability>"
-    so_that: "<outcome>"
+    title: "The reader names the persona and the job; the bet sentence at Stage 1.5"
+    as_a: "a founder refining an idea"
+    i_want: "refine to draft the bet sentence from my agreed strategy"
+    so_that: "the Why says who it is for, which input it moves and why we think so"
+    risk: low
+    status: planned
+  - id: S1.2
+    title: "The challenge, the override and Bug/Chore"
+    as_a: "a founder whose ask moves no North Star input"
+    i_want: "two or three reframes from my strategy, once, and the right to fund it anyway"
+    so_that: "an ungrounded bet is a choice on the record, not an accident"
+    risk: low
+    status: planned
+  - id: S1.3
+    title: "The Plan gate shows the bet and its grounding; no strategy offers the North Star once"
+    as_a: "a founder at the Plan gate"
+    i_want: "to approve the bet itself, grounded or not"
+    so_that: "the gate reads as the decision it is"
     risk: low
     status: planned
 ---
@@ -19,44 +33,33 @@ stories:
 **Status:** ⬜ not started
 
 ## Stories
-<!-- One block per story. Thinnest shippable slice first.
-     Each story ALSO has an entry in the frontmatter `stories:` list above — that entry is what tools
-     read (the build view, build-state.mjs); the prose below is what people read. Add both, and keep
-     `stories_total` (here and in the epic README) equal to the number of entries.
-     Story `status:` is planned | in-progress | done. The sprint's `phase:` is the executive ladder
-     (Shaping | Locking architecture | Building | Verifying | In review | Shipped), WRITTEN at each
-     cadence event. Name the story in each commit subject (`S1.1 …`): that is how the build view
-     knows which story is in flight.
-     Keep the heading shape `### Story 1.M — <title>` (this is what the status board counts).
-     When a story ships, append ✅ + its commit ref to the heading, e.g.
-       ### Story 1.1 — <title> ✅ `abc1234`
-     Note: the epic README frontmatter `status:` is the AUTHORITATIVE epic status; this ✅ marker only
-     feeds the cosmetic per-sprint progress count, so a format slip can't mis-state shipped/not-shipped. -->
 
-### Story 1.1 — <title>
-**As a** <role>, **I want** <capability>, **so that** <outcome>.
-**Acceptance:** <plain-language checks the product owner can run>
+### Story 1.1 — The reader names the persona and the job; the bet sentence at Stage 1.5
+**As** a founder refining an idea, **I want** refine to draft the bet sentence from my agreed strategy, **so that** the Why says who it is for, which input it moves and why we think so.
+**Acceptance:** `strategy.mjs` prints `persona:` and `job:` for both label shapes (template and our narrative); refine's Stage 1.5 drafts `We believe that … for … will … because … We'll know when …` and writes it as the seed's `hypothesis`, with `persona`.
+**Risk:** low
+
+### Story 1.2 — The challenge, the override and Bug/Chore
+**As** a founder whose ask moves no North Star input, **I want** two or three reframes from my strategy, once, and the right to fund it anyway, **so that** an ungrounded bet is a choice on the record, not an accident.
+**Acceptance:** the cascade offers the reframes (another input · a smaller cut on the highest domino · a chore) once per seed; an override writes `grounded: false` and `grounded_reason`; a Bug or Chore writes `Why: keeps <X> working` and leaves `grounded` null.
+**Risk:** low
+
+### Story 1.3 — The Plan gate shows the bet and its grounding; no strategy offers the North Star once
+**As** a founder at the Plan gate, **I want** to approve the bet itself, grounded or not, **so that** the gate reads as the decision it is.
+**Acceptance:** `gates.md` shows the sentence and `Grounded ..... yes | no — <reason>`; with no strategy, refine offers the North Star chapter once and a decline records `grounded: false — no strategy yet`; `check-gate-words` passes.
 **Risk:** low
 
 ## Sprint QA
-- **api spec(s):** <which testable story → which `e2e/*.spec.ts`>
-- **browser smoke owed:** <no · or: yes, to the product owner — name the money/auth step>
-- **deterministic gate:** `tsc --noEmit` + `npm run build` + Playwright `api` green before merge
+- **unit:** `strategy.test.mjs` (both label shapes, unfilled skipped) · `check-gate-words` · skills tests
+- **browser smoke owed:** no (terminal behaviour; Daniel's interactive refine walkthrough, step 2 below)
+- **deterministic gate:** the Skills CI replay + `npm run test:unit` green before merge
 
 ## Sprint 1 — Smoke walkthrough (do these in order)
-Env: production · https://<your-domain>   (or the preview URL while testing pre-merge)
+Env: this repo, a terminal.
 
-1. Go to https://<your-domain>/<page-or-path>
-   → <observable expected result>
-2. In <the relevant authed area>, go to https://<your-domain>/<authed-path>
-   → <observable expected result>
-3. (money path — owed to <product owner> by name) <the money-path steps for your project> using a
-   test-mode payment credential.
-   → <observable expected result>
-
-<!-- Delete whichever pre-filled steps don't apply to this sprint; add more using the same shape
-     (real clickable URL + one observable result). Flag any money/auth/checkout step by name —
-     those are owed to your project's product owner (an automated browser smoke can't fully cover
-     them). -->
+1. Run `node skills/plugins/golden-frijoles/skills/refine/strategy.mjs`
+   → it prints `persona:` (the founder, solo to mid-size) and `job:` (the Outcome sentence) beside the inputs.
+2. (owed to Daniel — interactive) In Claude Code, "let's refine <a small idea that moves no input>"
+   → at Stage 1.5 the agent drafts the sentence or offers two or three reframes once; overriding writes `grounded: false` with your reason, and the Plan gate shows `Grounded ..... no — <reason>`.
 
 If any step fails, note the step number + what you saw — that's the bug report.

@@ -4,13 +4,27 @@ sprint: 2
 title: "Recorded and counted"
 risk: low
 phase: Shaping
-stories_total: 1
+stories_total: 3
 stories:
   - id: S2.1
-    title: "<title>"
-    as_a: "a <role>"
-    i_want: "<capability>"
-    so_that: "<outcome>"
+    title: "grounded through scaffold, push, schema and the epic page"
+    as_a: "a founder reading the board"
+    i_want: "to see when a bet was funded ungrounded and why"
+    so_that: "the record survives past the seed"
+    risk: low
+    status: planned
+  - id: S2.2
+    title: "bets-grounded.mjs computes the share and pushes it from main"
+    as_a: "the product owner"
+    i_want: "grounded_bets_share computed from the bets ledger and pushed on every merge"
+    so_that: "our own North Star input moves without a hand push"
+    risk: low
+    status: planned
+  - id: S2.3
+    title: "The flag description carries the hypothesis; plugin + kit 1.1.0"
+    as_a: "a founder opening a flag in the console"
+    i_want: "the flag to say why it exists"
+    so_that: "a flag is never an orphan switch"
     risk: low
     status: planned
 ---
@@ -19,44 +33,35 @@ stories:
 **Status:** ⬜ not started
 
 ## Stories
-<!-- One block per story. Thinnest shippable slice first.
-     Each story ALSO has an entry in the frontmatter `stories:` list above — that entry is what tools
-     read (the build view, build-state.mjs); the prose below is what people read. Add both, and keep
-     `stories_total` (here and in the epic README) equal to the number of entries.
-     Story `status:` is planned | in-progress | done. The sprint's `phase:` is the executive ladder
-     (Shaping | Locking architecture | Building | Verifying | In review | Shipped), WRITTEN at each
-     cadence event. Name the story in each commit subject (`S2.1 …`): that is how the build view
-     knows which story is in flight.
-     Keep the heading shape `### Story 2.M — <title>` (this is what the status board counts).
-     When a story ships, append ✅ + its commit ref to the heading, e.g.
-       ### Story 2.1 — <title> ✅ `abc1234`
-     Note: the epic README frontmatter `status:` is the AUTHORITATIVE epic status; this ✅ marker only
-     feeds the cosmetic per-sprint progress count, so a format slip can't mis-state shipped/not-shipped. -->
 
-### Story 2.1 — <title>
-**As a** <role>, **I want** <capability>, **so that** <outcome>.
-**Acceptance:** <plain-language checks the product owner can run>
+### Story 2.1 — grounded through scaffold, push, schema and the epic page
+**As** a founder reading the board, **I want** to see when a bet was funded ungrounded and why, **so that** the record survives past the seed.
+**Acceptance:** `scaffold-epic` copies `grounded`, `grounded_reason`, `persona`; the extract and push carry `grounded`/`grounded_reason`; the schema accepts them nullish (an older push stays valid); the epic page shows "Grounded: no — <reason>" only when false.
+**Risk:** low
+
+### Story 2.2 — bets-grounded.mjs computes the share and pushes it from main
+**As** the product owner, **I want** grounded_bets_share computed from the bets ledger and pushed on every merge, **so that** our own North Star input moves without a hand push.
+**Acceptance:** `node scripts/bets-grounded.mjs` prints each month's counted bets, grounded ones and the share (Bugs, Chores, backfill excluded; true-without-target reported); `--push` posts today's value to `grounded_bets_share` only when the project's North Star has that input; `roadmap-push.yml` runs it on pushes to `main`.
+**Risk:** low
+
+### Story 2.3 — The flag description carries the hypothesis; plugin + kit 1.1.0
+**As** a founder opening a flag in the console, **I want** the flag to say why it exists, **so that** a flag is never an orphan switch.
+**Acceptance:** Stage 6b's `frijoles flags create` line passes `--description "<hypothesis> (epic <slug>)"`; plugin and kit at 1.1.0 with a CHANGELOG entry; `check-release` agrees.
 **Risk:** low
 
 ## Sprint QA
-- **api spec(s):** <which testable story → which `e2e/*.spec.ts`>
-- **browser smoke owed:** <no · or: yes, to the product owner — name the money/auth step>
-- **deterministic gate:** `tsc --noEmit` + `npm run build` + Playwright `api` green before merge
+- **unit:** `bets-grounded.test.mjs` (month split, dedupe, exclusions, derived grounding, push skip rules) · `scaffold-epic.test.mjs` · `roadmap-artifact-schema` test · epic page render test
+- **browser smoke owed:** no (the epic page line is pinned by a render test; checked on production after merge)
+- **deterministic gate:** `npm run typecheck` + `npm run build` + Playwright `api` green before merge
 
 ## Sprint 2 — Smoke walkthrough (do these in order)
-Env: production · https://<your-domain>   (or the preview URL while testing pre-merge)
+Env: production · https://goldenfrijoles.com
 
-1. Go to https://<your-domain>/<page-or-path>
-   → <observable expected result>
-2. In <the relevant authed area>, go to https://<your-domain>/<authed-path>
-   → <observable expected result>
-3. (money path — owed to <product owner> by name) <the money-path steps for your project> using a
-   test-mode payment credential.
-   → <observable expected result>
-
-<!-- Delete whichever pre-filled steps don't apply to this sprint; add more using the same shape
-     (real clickable URL + one observable result). Flag any money/auth/checkout step by name —
-     those are owed to your project's product owner (an automated browser smoke can't fully cover
-     them). -->
+1. Run `node scripts/bets-grounded.mjs`
+   → October's counted bets, the grounded ones, and the share (about 0%).
+2. After the merge, ask the connector `get_input_readings grounded_bets_share`
+   → one reading dated the merge day, with October's share.
+3. Open an epic page whose bet is `grounded: false` at https://goldenfrijoles.com/hub/golden-frijoles/epic/<slug>
+   → "Grounded: no — <reason>" under the Why.
 
 If any step fails, note the step number + what you saw — that's the bug report.
