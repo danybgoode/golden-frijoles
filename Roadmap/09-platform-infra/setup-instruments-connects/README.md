@@ -69,12 +69,16 @@ gate is a Golden Frijoles catalog flag (rule 6).
 - setup's Strategy gate and `read-product.mjs` (each input's event, or "needs an event")
 
 ## Architecture lock (D1–D10)
-- **D1 · `frijoles init --ingest`.** After the flag-read key, `init` (only with `--ingest`) mints an **ingest** key
+- **D1 · `frijoles init --ingest`.** *(Amended at build: an existing key is VERIFIED, through a member-gated
+  `POST /api/v1/cli/keys/verify` that answers one bit, live for this project or not; live → kept, anything else →
+  replaced, could not check → refuse with nothing changed, the rule `init` already holds for the flag-read key.)* After the flag-read key, `init` (only with `--ingest`) mints an **ingest** key
   through the existing keys route and writes `GROWTH_ENGINE_API_KEY` and `GROWTH_ENGINE_URL` (the site URL) into
   `.env.local`: the names the SDK snippet, `roadmap-push` and the plugin hooks read. Same order as today: the gitignore
   and writability checks come before anything is minted. Idempotent: a present `GROWTH_ENGINE_API_KEY` is kept and said
   so (to replace it, delete the line), never minted twice. Prints names, never values.
-- **D2 · The first-event read.** `getProductEventMarks(projectId)` in `lib/event-catalog-query.ts`: the earliest and
+- **D2 · The first-event read.** *(Amended at build, verifier on #338: no `(project_id, created_at)` index exists, so
+  the ordered reads serve `frijoles status` on demand, and Today uses a bounded read, `getFirstEventForBand`: an
+  unsorted `LIMIT 1` for any product event older than the window, then the first inside it.)* `getProductEventMarks(projectId)` in `lib/event-catalog-query.ts`: the earliest and
   the latest event of ONE project that is not in `RESERVED_EVENTS` (the SDK's own `flag_evaluated` and friends), each
   `{ event, at }` or null. Two one-row queries (`order … limit 1`), no scan, no other project.
 - **D3 · `frijoles status`.** `GET /api/v1/cli/status?project=` (`requireCliMember`, then the D2 read) → `{ project,
@@ -100,7 +104,9 @@ gate is a Golden Frijoles catalog flag (rule 6).
 - **D7 · The pull request** (Daniel, a): pushed and opened with `gh pr create` when `gh` is signed in, else the branch
   pushed and the link printed; the body lists every file and why. Never committed to the default branch, never merged
   by the agent.
-- **D8 · The connect step** (Daniel, b): "Connect to Golden Frijoles? It opens your browser once." → `frijoles login` →
+- **D8 · The connect step** (Daniel, b): *(Amended at build: `roadmap-push --env-file .env.local`, the script's own
+  flag reading only its variables and evaluating nothing, in place of Node's `--env-file`, which a kit run through
+  `npx` cannot pass.)* "Connect to Golden Frijoles? It opens your browser once." → `frijoles login` →
   `frijoles init --ingest` → `frijoles north-star set` from the agreed file → `node --env-file=.env.local` +
   `roadmap-push` → the Today link → `frijoles status`. Each step says what it did; a failure stops and names the fix.
 - **D9 · The ending.** Three lines: the North Star, the first idea in the backlog, the PR to review (or "no code
