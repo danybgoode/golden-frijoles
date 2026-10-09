@@ -1,6 +1,6 @@
 ---
-status: in-progress  # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: In review     # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+status: shipped      # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+phase: Shipped       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
 locked_at: "2026-10-09T19:00:17Z"
 slug: setup-drafts-strategy
@@ -30,6 +30,9 @@ flag_key: null   # the epic's flag, decided at refine Stage 6b and copied from t
 build_order: 76      # integer position in the ONE global build sequence — the SSOT once the epic
                      # exists (the seed's value is only a fallback). Fill it in at the betting
                      # table; plain integers, no "#2a" suffixes. See 00-ideas/README.md → Ordering.
+actual_usd: 15.5
+actual_mtok: 53.3
+actual_basis: "this machine · 2026-10-09 · 1 session · prices 2026-10-02"
 ---
 
 # Epic: Setup drafts the strategy: two North Stars from the evidence, and a first bet in one review

@@ -1373,6 +1373,11 @@ one-liner + why + date shape.
   1.0.10 incident this repo already paid for. *(2026-07-25.)*
 
 ## Working efficiently
+- **Instructions an agent will execute are code: run them.** Approve's seed spec read fine and broke the board the
+  first time a reviewer wrote a seed exactly as it said. *(setup-drafts-strategy, 2026-10-09.)*
+- **After changing a pattern list, re-run every earlier probe against it.** Three regressions in one epic were fixes
+  wider than their bugs (a secret-folder list, a key filter with no word boundary, a comment rule for one language
+  applied to all). *(setup-drafts-strategy.)*
 - **Run a new script once from a clean worktree before trusting it in CI.** `bets-grounded.mjs` read the private,
   untracked `Roadmap/00-strategy/` on the maker's machine and found nothing on the runner, so its push would have skipped
   forever with every test green. *(grounded-bets, 2026-10-09.)*

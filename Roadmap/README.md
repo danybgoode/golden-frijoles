@@ -464,6 +464,11 @@ independently shippable slice of value.
   "Approve, don't fund" leaves the pitch `ready`. `build-order.mjs` fails any live bet with no funding record, after
   an honest 45-row `wave-backfill`. `priority:` is retired. A fixed-scope seed scaffolds from its slug alone, with its
   acceptance criteria as the stories (dogfood F33). **Shipped 2026-10-04** (#271, plugin + kit 0.28.0).
+- ✅ [Setup drafts the strategy: two North Stars from the evidence, and a first bet in one review](09-platform-infra/setup-drafts-strategy/README.md) —
+  **shipped 2026-10-09** (#336; plugin + kit 1.2.0). Setup asks what the product is for first, reads the product
+  (`read-product.mjs`: README, landing copy, routes, analytics calls, flags, each with its file), drafts the strategy
+  with a source on every line and two North Star candidates, and ends with a first idea in the backlog, grounded when
+  it has a target. **Owed:** the interactive setup walkthrough.
 - ✅ [Grounded bets: every Why is a hypothesis traced from the North Star](09-platform-infra/grounded-bets/README.md) —
   **shipped 2026-10-09** (#334; plugin + kit 1.1.0). refine writes each bet as *We believe that … for … will … because …
   We'll know when …*, traced to a North Star input, challenges once when none fits, and records an override with its
@@ -574,6 +579,9 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-09**: `setup-drafts-strategy` **shipped**: ≈$15.50 against a $15–32 quote, four verifier rounds to clean.
+  Setup now drafts the strategy from the product's own evidence, with two North Stars to choose between, and ends with
+  a first idea already grounded.
 - **2026-10-09**: `grounded-bets` **shipped**: one PR, ≈$15.48 against a $17–32 quote. Every new bet's Why is a
   hypothesis traced from the North Star, and our own depth input `grounded_bets_share` is now computed and pushed from
   the roadmap (October: 1 of 15). Three review rounds; the first caught a push that could never run in CI.
