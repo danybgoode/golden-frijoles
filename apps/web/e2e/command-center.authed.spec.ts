@@ -335,3 +335,18 @@ test.describe('command center', () => {
     // Today lost is a second telling of it, on a screen the design keeps for three bands.
   })
 })
+
+// setup-instruments-connects D4 — with the first-event switch on, Today says either that it is waiting for the first
+// product event or that it arrived (the seeded project may have either); with it off, neither.
+test('Today says whether the first event has arrived, and keeps its three bands', async ({ page }) => {
+  await page.goto('/app')
+  const message = page.locator('main .ds-callout').filter({ hasText: /first event/i })
+  if (process.env.FIRST_EVENT_BAND_ENABLED === 'false') {
+    await expect(message).toHaveCount(0)
+  } else {
+    await expect(message).toHaveCount(1)
+    await expect(message).toContainText(/Waiting for your first event|Your first event arrived: /)
+  }
+  await expect(page.locator('main .ds-band')).toHaveCount(3)
+})
+

@@ -3,7 +3,10 @@ import { getFlagRegistryView } from '@/lib/flag-registry'
 import { getDeliveryHealth } from '@/lib/deliveries'
 import { getTaskLifecycleFacts } from '@/lib/task-lifecycle-facts'
 import { listTasksByProjectId, type TaskRow } from '@/lib/tasks'
-import { isSignalsEnabled } from '@/lib/flags'
+import { isFirstEventBandEnabled, isSignalsEnabled } from '@/lib/flags'
+import { getProductEventMarks } from '@/lib/event-catalog-query'
+import { firstEventBand } from '@/lib/first-event-band'
+import { formatUtc } from '@/lib/format-utc'
 import { projectFlagRows, summariseFlagList } from '@/lib/flag-list-view'
 import { splitTaskBands } from '@/lib/today-bands'
 import { northStarFigure } from '@/lib/stat-figures'
@@ -67,12 +70,13 @@ export async function CommandCenter({ project }: { project: CommandCenterProject
   // dropped that, and the bands rendered unconditionally. Caught by a cross-family reviewer noticing
   // the `links` prop had gone (Mistral Vibe) — it reached the right defect from the wrong route.
   const signals = await isSignalsEnabled()
+  const firstEventOn = await isFirstEventBandEnabled()
 
   // Read in parallel, and independently: one slow or failing layer must not take the others with it.
   // The queue is not read at all when its gate is dark — a dark capability is not a slow one.
   // result-record D10 — reads due come from the latest pushed roadmap, and fail SOFT to none: Today must not
   // become an error page because a roadmap payload could not be read.
-  const [outcome, flags, tasks, deliveries, agentFacts, dueReads] = await Promise.all([
+  const [outcome, flags, tasks, deliveries, agentFacts, dueReads, eventMarks] = await Promise.all([
     getProjectOutcome(project.id, project.slug).catch(() => null),
     getFlagRegistryView(project.id).catch(() => null),
     signals
@@ -83,7 +87,10 @@ export async function CommandCenter({ project }: { project: CommandCenterProject
     getLatestArtifact(project.id, 'roadmap')
       .then((artifact) => readsDue(artifact?.payload ?? null))
       .catch((): EpicResult[] => []),
+    // setup-instruments-connects D4 — read only with the band's switch on; a failed read shows no band, never "waiting".
+    firstEventOn ? getProductEventMarks(project.id).catch(() => null) : Promise.resolve(null),
   ])
+  const firstEvent = firstEventOn ? firstEventBand(eventMarks) : null
 
   const bands = splitTaskBands(tasks ?? [])
   const northStar = outcome ? northStarFigure(outcome.northStar) : null
@@ -160,6 +167,21 @@ export async function CommandCenter({ project }: { project: CommandCenterProject
           detail="awaiting retry or dead-lettered"
         />
       </div>
+
+      {/* setup-instruments-connects D4 — a Callout, not a fourth band: Today's three bands are the approved design (DD1),
+          and this is a one-time setup message, not a queue. */}
+      {firstEvent?.kind === 'waiting' ? (
+        <Callout>
+          <strong>Waiting for your first event.</strong> It shows here once your app sends one with
+          GROWTH_ENGINE_API_KEY set where it runs; refresh to check, or run <code>frijoles status</code>.{' '}
+          <a href={`/app/setup/connect/${project.slug}`}>Setup › Connect</a>
+        </Callout>
+      ) : firstEvent?.kind === 'arrived' ? (
+        <Callout>
+          <strong>Your first event arrived: {firstEvent.event}</strong>, at {formatUtc(firstEvent.at)}. Everything your
+          product sends from here is counted.
+        </Callout>
+      ) : null}
 
       {/* A due read is waiting on you even with the task queue dark (result-record D10), so this band shows then too,
           with only the reads in it. */}

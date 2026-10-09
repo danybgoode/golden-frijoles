@@ -80,7 +80,9 @@ gate is a Golden Frijoles catalog flag (rule 6).
 - **D3 · `frijoles status`.** `GET /api/v1/cli/status?project=` (`requireCliMember`, then the D2 read) → `{ project,
   firstEvent, latestEvent }`; behind the gate (D5: off → 404, as gated routes do). `frijoles status [--project]
   [--json]` prints "Waiting for the first event" or "First event: <event>, <when> · Latest: <event>, <when>".
-- **D4 · Today's band.** `CommandCenter` shows a **First event** band (existing `Band`/`BandEmpty`) when the project has
+- **D4 · Today's first-event message.** *(Amended at build: a `Callout`, not a fourth band. Today's three bands are
+  the approved design, DD1, pinned by `command-center.authed.spec.ts`; this is a one-time setup message, not a queue.)*
+  `CommandCenter` shows it when the project has
   no product event ("Waiting for your first event", with the key names and a link to Connect's snippet), or when its
   first one arrived in the last 7 days ("Your first event arrived: <event>, <when>"); otherwise nothing. Updates on
   refresh (Daniel, c). The approved-states design contract is updated by its own procedure if it measures the band.
