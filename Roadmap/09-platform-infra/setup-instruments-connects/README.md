@@ -99,7 +99,9 @@ gate is a Golden Frijoles catalog flag (rule 6).
   amended at build: a shared client with `identify()` would attribute one person's events to another) and a
   `system:server` client for error capture;
   one `track` per chosen-candidate input marked "needs an event", at the code point it cites (or a `TODO` with the
-  reason, never a guess); `captureGlobalErrors` where the stack has a server entry; flags only if the product has a flag
+  reason, never a guess); error capture through `captureError` *(amended at build, verifier on #338: `captureGlobalErrors` is the
+  browser's hook and a no-op on a server; Next.js reports from `onRequestError`, a Node server from
+  `uncaughtExceptionMonitor`, which observes without changing how the process fails)*; flags only if the product has a flag
   read. Never a key in code; `.env.local` never committed.
 - **D7 · The pull request** (Daniel, a): pushed and opened with `gh pr create` when `gh` is signed in, else the branch
   pushed and the link printed; the body lists every file and why. Never committed to the default branch, never merged

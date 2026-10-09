@@ -300,7 +300,7 @@ export const initCommand: Command = {
           // suggest a re-run that cannot help (verifier, #338).
           message:
             result.code === 'not_found'
-              ? `Only an owner of ${project} can mint its ingest key: ask one to run \`frijoles init --ingest\`, or to mint one with \`frijoles keys create --type ingest\` and share it outside this tool.`
+              ? `Only an owner of ${project} can mint its ingest key: ask one to run \`frijoles init --ingest\`, or to mint one with \`frijoles keys create --type ingest --label "<what holds it>"\` and share it outside this tool.`
               : result.message,
           exit: exitForServerCode(result.code),
         }
