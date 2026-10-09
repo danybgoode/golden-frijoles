@@ -50,8 +50,8 @@ stories:
 **Risk:** low
 
 ## Sprint QA
-- **unit:** `bets-grounded.test.mjs` (month split, dedupe, exclusions, derived grounding, push skip rules) · `scaffold-epic.test.mjs` · `roadmap-artifact-schema` test · epic page render test
-- **browser smoke owed:** no (the epic page line is pinned by a render test; checked on production after merge)
+- **unit:** `bets-grounded.test.mjs` (month, exclusions, derived grounding, the push and its skips, input keys from the engine) · `scaffold-epic.test.mjs` · `roadmap-contract.test.mjs` · `roadmap-artifact-schema.test.ts` (grounded nullish, a non-boolean refused) · `hub-board.test.ts` (`toCard`). The epic page's one conditional line has no render test; it is checked on production (step 3).
+- **browser smoke owed:** no (the epic page line is checked on production after merge, step 3)
 - **deterministic gate:** `npm run typecheck` + `npm run build` + Playwright `api` green before merge
 
 ## Sprint 2 — Smoke walkthrough (do these in order)

@@ -89,7 +89,8 @@ writes them, one recorded field, and the count. No engine route or migration.
   not need a built package (sdk-1-0's learning); the route contract is the one `pushInputValues` uses. The route is
   append-only per day, so the first push of a day stands; the run says so when a later one differs. Run from
   `roadmap-push.yml` on pushes to `main` only (and a manual dispatch only from `main`).
-- **D5 · The reader.** `strategy.mjs` adds `persona` (Target audience → **Now**) and `job` (Problem to solve →
+- **D5 · The reader.** `strategy.mjs` adds `persona` (Target audience → **Attributes**, when the narrative has them,
+  then **Now**) and `job` (Problem to solve →
   **Outcome**), each clipped to one sentence, and reads both label shapes in use: `**Now:** text` (the template) and
   `**Now: text** more` / `**Outcome.** text` (our agreed narrative). An unfilled `<…>` is skipped, as today.
 - **D6 · The cascade** replaces Stage 1.5's single question (`references/result-record.md`, renamed in place to "The bet
