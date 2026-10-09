@@ -34,7 +34,7 @@ const card = (over: Partial<BoardCard>): BoardCard => ({
   result: null,
   finops: null,
   flagKey: null,
-  flagNote: null,
+  flagNote: null, grounded: null, groundedReason: null,
   ...over,
 })
 const texts = (c: BoardCard) => stageCommands(c, 'ledgerly').map((x) => x.text)

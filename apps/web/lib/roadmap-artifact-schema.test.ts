@@ -360,3 +360,30 @@ test('a flag_key that is not a flag key is refused, naming the field', () => {
     if (!res.ok) assert.match(JSON.stringify(res.issues), /flag_key/)
   }
 })
+
+// grounded-bets D9 — the grounding rides the push, nullish, so an older pusher stays valid.
+test('a push carrying grounded and grounded_reason stores them; a non-boolean grounded is refused, naming the field', () => {
+  const full = parseRoadmapPush(
+    push({ items: [row({ grounded: false, grounded_reason: 'a launch blocker' } as Partial<RoadmapRow>)] })
+  )
+  assert.equal(full.ok, true)
+  if (full.ok)
+    assert.deepEqual(
+      [full.value.items[0].grounded, full.value.items[0].grounded_reason],
+      [false, 'a launch blocker']
+    )
+  assert.equal(parseRoadmapPush(push({ items: [row({ grounded: null } as Partial<RoadmapRow>)] })).ok, true)
+  const bad = parseRoadmapPush(push({ items: [row({ grounded: 'yes' } as unknown as Partial<RoadmapRow>)] }))
+  assert.equal(bad.ok, false)
+  if (!bad.ok) assert.match(JSON.stringify(bad.issues), /grounded/)
+})
+
+test('codex #334: a grounded_reason without grounded: false is refused, naming it', () => {
+  for (const grounded of [true, null, undefined]) {
+    const res = parseRoadmapPush(
+      push({ items: [row({ grounded, grounded_reason: 'why' } as Partial<RoadmapRow>)] })
+    )
+    assert.equal(res.ok, false, String(grounded))
+    if (!res.ok) assert.match(JSON.stringify(res.issues), /grounded_reason is only for grounded: false/)
+  }
+})

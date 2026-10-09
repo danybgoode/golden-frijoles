@@ -160,6 +160,10 @@ export function EpicWhy({ card }: { card: BoardCard }) {
             : 'No goal is written for this epic yet — its README has no Why paragraph.')}
       </p>
       {r?.hypothesis ? <p className="ds-epic-why-line">{r.hypothesis}</p> : null}
+      {/* grounded-bets D9 — only a bet funded ungrounded says so; true and never-asked add nothing. */}
+      {card.grounded === false ? (
+        <p className="ds-hint">Grounded: no{card.groundedReason ? ` — ${card.groundedReason}` : ''}</p>
+      ) : null}
       {seed ? (
         <p className="ds-hint">No target yet: that comes with refining.</p>
       ) : !target ? (

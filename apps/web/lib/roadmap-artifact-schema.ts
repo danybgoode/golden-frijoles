@@ -187,8 +187,17 @@ const roadmapRowSchema = z
       .refine((key) => key !== 'null', { message: 'flag_key: write null, not the string "null"' })
       .nullish(),
     flag_note: z.string().max(300).nullish(),
+    // grounded-bets D9 — the founder's grounding at Stage 1.5. Nullish so an older pusher stays valid; absent is "never
+    // asked" (a Bug, a Chore, or an epic refined before it), never "no".
+    grounded: z.boolean({ invalid_type_error: 'grounded must be true, false or null' }).nullish(),
+    grounded_reason: z.string().max(300).nullish(),
   })
   .passthrough()
+  // The contract's own rule (validateGrounded), held here too so a hand-written push cannot store a reason the board
+  // would silently drop (codex, #334).
+  .refine((row) => row.grounded_reason == null || row.grounded === false, {
+    message: 'grounded_reason is only for grounded: false',
+  })
 
 export const roadmapPushSchema = z.object({
   // Rejected with a clear message when it does not match — see the refinement below.

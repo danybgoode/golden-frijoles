@@ -263,3 +263,31 @@ test('FINOPS_ROW_KEYS covers every row field roadmap-finops reads; an Epic carri
   assert.equal(epicCard?.finops?.quote_high_usd, null, 'absent is null, never invented')
   assert.equal(toCard(row({ name: 'Idea', slug: 'idea', grain: 'Seed', stage: 'To groom' }))?.finops, null)
 })
+
+// grounded-bets D9 — the founder's grounding reaches the card for an Epic only; the reason only with false.
+test('toCard carries grounded and its reason for an Epic; a Seed, a non-boolean or a stray reason carries nothing', () => {
+  const card = (over: Record<string, unknown>) =>
+    toCard(row({ name: 'E', slug: 'e', grain: 'Epic', stage: 'Building', ...over }))
+  assert.deepEqual(
+    [
+      card({ grounded: false, grounded_reason: 'a launch blocker' })?.grounded,
+      card({ grounded: false, grounded_reason: 'a launch blocker' })?.groundedReason,
+    ],
+    [false, 'a launch blocker']
+  )
+  assert.equal(card({ grounded: true })?.grounded, true)
+  assert.equal(card({ grounded: true, grounded_reason: 'stray' })?.groundedReason, null)
+  assert.equal(card({ grounded: 'false' })?.grounded, null, 'only a boolean, as the schema stores it')
+  assert.equal(card({})?.grounded, null)
+  const seed = toCard(
+    row({
+      name: 'Idea',
+      slug: 'idea',
+      grain: 'Seed',
+      stage: 'To groom',
+      grounded: false,
+      grounded_reason: 'x',
+    })
+  )
+  assert.deepEqual([seed?.grounded, seed?.groundedReason], [null, null])
+})
