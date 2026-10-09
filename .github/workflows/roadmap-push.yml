@@ -86,9 +86,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: node scripts/roadmap-push.mjs
       # grounded-bets D4 — our own North Star input, computed from the bets and pushed on every merge to main. Skips
-      # cleanly (exit 0) without a key; the route keeps the first value of a day.
+      # cleanly (exit 0) without a key. ONLY from main (Codex, #334): the route keeps the first value of a day, so a
+      # manual dispatch from another branch, whose workflow file is that branch's, must never write the day's reading.
       - name: Push grounded_bets_share
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         env:
           GROWTH_ENGINE_URL: ${{ vars.SITE_URL || 'https://goldenfrijoles.com' }}
           SELF_PROJECT_API_KEY: ${{ secrets.SELF_PROJECT_API_KEY }}

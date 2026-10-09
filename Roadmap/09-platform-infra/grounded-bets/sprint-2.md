@@ -58,9 +58,9 @@ stories:
 Env: production · https://goldenfrijoles.com
 
 1. Run `node scripts/bets-grounded.mjs`
-   → October's counted bets, the grounded ones, and the share (about 0%).
+   → October: 1 of 15 grounded (6.7%), the one being this epic; August 0 of 7, September 0 of 5.
 2. After the merge, ask the connector `get_input_readings grounded_bets_share`
-   → one reading dated the merge day, with October's share.
+   → one reading dated the merge day: 0.0667 (October's share).
 3. Open an epic page whose bet is `grounded: false` at https://goldenfrijoles.com/hub/golden-frijoles/epic/<slug>
    → "Grounded: no — <reason>" under the Why.
 
