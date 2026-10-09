@@ -236,7 +236,8 @@ ${CLI_KILL_SWITCH_STORY.join('\n')}`}
             "await engine.trackAdoption('setup_guide')",
             "const variant = engine.bucket('quick-upload-ui', [{ key: 'control' }, { key: 'treatment' }])",
             '// a North Star input you push yourself, one value per day (re-pushing a day is a no-op)',
-            "await engine.pushInputValues('attributed_revenue', [{ occurredOn: '2026-10-09', value: 1240 }])",
+            "const today = new Date().toISOString().slice(0, 10) // the UTC day the value belongs to",
+            "await engine.pushInputValues('attributed_revenue', [{ occurredOn: today, value: 1240 }])",
           ])}
         </pre>
       </ListCard>

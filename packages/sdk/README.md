@@ -21,7 +21,8 @@ growth.identify(currentUser.id) // after sign-in; growth.reset() at sign-out
 await growth.track('checkout_completed', { featureId: 'checkout' })
 
 // A North Star input you push yourself (revenue, say): one value per day, append-only.
-await growth.pushInputValues('attributed_revenue', [{ occurredOn: '2026-10-09', value: 1240 }])
+const today = new Date().toISOString().slice(0, 10) // the UTC day the value belongs to
+await growth.pushInputValues('attributed_revenue', [{ occurredOn: today, value: 1240 }])
 ```
 
 - **Your own deployment** (local dev, a preview, a self-host): pass `baseUrl`. A `baseUrl` key that is present but empty
