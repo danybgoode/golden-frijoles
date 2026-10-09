@@ -152,3 +152,7 @@ Gaps: none
 - **Approved.**
 - **a.** 1.0 freezes today's whole surface: everything 0.6.0 does keeps working; 1.0 only adds.
 - **b.** React/Next helpers wait for after launch.
+
+## Decisions at release (Daniel, 2026-10-09)
+- The verifier's same-family security lens is accepted for this release.
+- Type-level additions to `GrowthEngineClient` are semver-compatible (runtime is the 1.x promise).

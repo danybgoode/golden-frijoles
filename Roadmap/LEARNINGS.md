@@ -1373,6 +1373,10 @@ one-liner + why + date shape.
   1.0.10 incident this repo already paid for. *(2026-07-25.)*
 
 ## Working efficiently
+- **"Additive" is checked against how the old version READ its inputs, not only what it exported.** SDK 1.0's freeze
+  test (every 0.6.0 export, a literal-object call) was green while reading the config once at construction broke
+  getter, inherited and filled-in-later configs, sending them to production. Pin the input shapes too.
+  *(sdk-1-0, 2026-10-09.)*
 - **A stacked series merges into its bases, not `main`.** #324–#327 were merged in order; only #324 reached `main`,
   because GitHub retargets a stacked PR to `main` only when its base branch is deleted at merge. Release instructions
   for a stack say it: merge the top branch into `main` once, or retarget each PR to `main` before merging it.

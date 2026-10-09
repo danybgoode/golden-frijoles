@@ -55,6 +55,11 @@ independently shippable slice of value.
   members keep the read-only evidence view. The enablement gate stays OFF until a verified synthetic
   production launch/stop and the product owner's rendered-claim judgment are complete. #14's chart
   decision remains open, so impact uses the documented comparison-table fallback.
+- ✅ [SDK 1.0: one line to start, who the user is, and North Star inputs](01-growth-engine/sdk-1-0/README.md) —
+  **shipped 2026-10-09** (#331; `@golden-frijoles/sdk` 1.0.0). `createGrowthEngineClient({ apiKey })` defaults to
+  goldenfrijoles.com (an empty `baseUrl` fails rather than defaulting); `identify`/`reset`; `pushInputValues` for North
+  Star inputs; ESM and CommonJS; one-line quickstarts. Everything 0.6.0 did still works, pinned by a freeze test.
+  **Owed:** the `_Intent_` word and one live identify + track.
 - ✅ [Flag control plane + Miyagi migration + resilience/SecOps](01-growth-engine/flag-serving-and-prd-g/README.md)
   (typed/versioned flag registry · local snapshot provider · complete 40-key Miyagi cutover · closed
   resilience/security scenarios · policy-bound circuit breakers · generic project catalog sync ·
@@ -564,6 +569,9 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-09**: `sdk-1-0` **shipped**: one PR, ≈$29.55 against a $16–32 quote. The SDK starts in one line, knows who
+  the user is and pushes North Star inputs; review found a construction-time config read that would have sent three
+  real 0.6.0 config shapes to production, now pinned by the freeze test.
 - **2026-10-08**: `plugin-1-0` **shipped**: four sprints, ≈$56.54 against a $55–111 quote. The plugin went from fifteen
   skills to five plus the verifier, the CLI became `frijoles`, and Grooming became Refining. The verifier found a
   defect in every sprint that the builder's gates could not see; the stacked PRs merged into their bases instead of
