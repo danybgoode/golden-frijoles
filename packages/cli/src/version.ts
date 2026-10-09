@@ -7,4 +7,4 @@
 //
 // It is a literal, and `version.test.ts` asserts it equals `package.json`'s — so the two cannot
 // drift, and the drift is caught by the unit gate rather than by someone reading `frijoles --version`.
-export const VERSION = '1.0.0'
+export const VERSION = '1.1.0'

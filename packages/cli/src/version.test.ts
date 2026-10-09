@@ -24,11 +24,10 @@ test('VERSION equals the published version in package.json', () => {
   assert.equal(VERSION, manifest.version)
 })
 
-test('the package publishes `frijoles`, and the deprecated `gf`, from the same built entry', () => {
+test('the package publishes `frijoles` only (the old `gf` retired in 1.1.0, as plugin-1-0 promised)', () => {
   assert.equal(manifest.name, '@golden-frijoles/cli')
-  assert.deepEqual(Object.keys(manifest.bin), ['frijoles', 'gf'])
+  assert.deepEqual(Object.keys(manifest.bin), ['frijoles'])
   assert.equal(manifest.bin.frijoles, './dist/bin.js')
-  assert.equal(manifest.bin.gf, './dist/bin.js')
 })
 
 test('only dist and the README are published — never src, never a token', () => {

@@ -105,7 +105,10 @@ gate is a Golden Frijoles catalog flag (rule 6).
   `roadmap-push` → the Today link → `frijoles status`. Each step says what it did; a failure stops and names the fix.
 - **D9 · The ending.** Three lines: the North Star, the first idea in the backlog, the PR to review (or "no code
   changed"), and the console link.
-- **D10 · Releases.** CLI 1.1.0 (`init --ingest`, `status`; pins kit 1.3.0, retiring the 0.43.0 pin, plugin-1-0 D9);
+- **D10 · Releases.** CLI 1.1.0 (`init --ingest`, `status`; pins kit **1.2.0**, retiring the 0.43.0 pin, plugin-1-0 D9.
+  Amended at build: the CLI pins an exact PUBLISHED kit, and 1.3.0 cannot be in the lockfile before it is published;
+  the CLI uses the kit only for its config commands, which 1.3.0 does not change; and the `gf` alias is retired, as
+  plugin-1-0 promised for CLI 1.1.0);
   plugin + kit 1.3.0. npm publishes are Daniel's, after the gate and reviews.
 
 ## Scope — stories

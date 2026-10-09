@@ -1,11 +1,10 @@
 {
   "name": "@golden-frijoles/cli",
   "private": false,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "The Golden Frijoles CLI — create, roll out and kill feature flags from a terminal, or from an agent.",
   "bin": {
-    "frijoles": "./dist/bin.js",
-    "gf": "./dist/bin.js"
+    "frijoles": "./dist/bin.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -33,7 +32,7 @@
     "prepack": "npm run build"
   },
   "dependencies": {
-    "@golden-frijoles/kit": "0.43.0",
+    "@golden-frijoles/kit": "1.2.0",
     "@golden-frijoles/sdk": ">=0.5.0 <2.0.0"
   },
   "devDependencies": {
