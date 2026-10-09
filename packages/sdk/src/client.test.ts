@@ -192,3 +192,24 @@ test('S1.3: a route refusal and a network failure come back as envelopes, never 
   const n = await offline.pushInputValues('x', [{ occurredOn: '2026-10-08', value: 1 }])
   assert.equal(!n.ok && n.code, 'NETWORK_ERROR')
 })
+
+test('security lens #331: a dot-segment input key is refused, and a URL password never reaches an error', async () => {
+  const growth = createGrowthEngineClient({ apiKey: 'k', fetchImpl: recorder().fetchImpl })
+  for (const key of ['.', '..']) {
+    const r = await growth.pushInputValues(key, [{ occurredOn: '2026-10-08', value: 1 }])
+    assert.equal(!r.ok && r.code, 'INVALID_INPUT_VALUES', key)
+  }
+  const leaky = createGrowthEngineClient({
+    baseUrl: 'https://user:hunter2@h.test',
+    apiKey: 'k',
+    userId: 'u',
+    fetchImpl: (async () => {
+      throw new Error(
+        'Request cannot be constructed from a URL that includes credentials: https://user:hunter2@h.test/api/v1/track'
+      )
+    }) as unknown as typeof fetch,
+  })
+  const r = await leaky.track('e')
+  assert.equal(!r.ok && r.code, 'NETWORK_ERROR')
+  assert.doesNotMatch(!r.ok ? r.error : '', /hunter2/)
+})

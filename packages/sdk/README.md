@@ -25,7 +25,8 @@ const today = new Date().toISOString().slice(0, 10) // the UTC day the value bel
 await growth.pushInputValues('attributed_revenue', [{ occurredOn: today, value: 1240 }])
 ```
 
-- **Your own deployment** (local dev, a preview, a self-host): pass `baseUrl`. A `baseUrl` key that is present but empty
+- **Your own deployment** (local dev, a preview, a self-host): pass `baseUrl`, spelled exactly so (a misspelled key such
+  as `baseURL` is not a URL, so the client uses the default and sends your events to goldenfrijoles.com). A `baseUrl` key that is present but empty
   (an unset environment variable) is never defaulted: calls return `MISSING_BASE_URL`, so a test run cannot reach
   production by accident.
 - **No user yet:** `track` and everything built on it return `NO_USER` without a request. `identify` affects what

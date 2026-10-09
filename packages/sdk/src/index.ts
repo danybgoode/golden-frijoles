@@ -410,6 +410,12 @@ export interface GrowthEngineClient {
  * const growth = createGrowthEngineClient({ apiKey, userId })   // baseUrl: https://goldenfrijoles.com unless given
  * await growth.track('signup')
  */
+/** A network error message without any `user:password@` from a URL in it: callers log `result.error`. */
+function safeNetworkMessage(err: unknown): string {
+  const message = err instanceof Error ? err.message : 'Unknown network error'
+  return message.replace(/\/\/[^/\s@]*@/g, '//***@')
+}
+
 export function createGrowthEngineClient(config: GrowthEngineClientConfig): GrowthEngineClient {
   const fetchFn = config.fetchImpl ?? fetch
   // sdk-1-0 D1/D2 — the config is read on EVERY call, as 0.6.0 did: a config whose baseUrl or userId is a getter, is
@@ -442,7 +448,8 @@ export function createGrowthEngineClient(config: GrowthEngineClientConfig): Grow
 
   async function pushInputValues(inputKey: string, values: InputValue[]): Promise<PushInputValuesResult> {
     const problems = inputValuesProblems(inputKey, values)
-    if (problems.length > 0) return { ok: false, error: problems[0], code: 'INVALID_INPUT_VALUES', issues: problems }
+    if (problems.length > 0)
+      return { ok: false, error: problems[0], code: 'INVALID_INPUT_VALUES', issues: problems }
     const baseUrl = resolveBaseUrl(config)
     if (baseUrl === undefined) return missingBaseUrl
     let res: Response
@@ -453,7 +460,7 @@ export function createGrowthEngineClient(config: GrowthEngineClientConfig): Grow
         body: JSON.stringify({ values: values.map((v) => ({ occurredOn: v.occurredOn, value: v.value })) }),
       })
     } catch (err) {
-      return { ok: false, error: err instanceof Error ? err.message : 'Unknown network error', code: 'NETWORK_ERROR' }
+      return { ok: false, error: safeNetworkMessage(err), code: 'NETWORK_ERROR' }
     }
     const body = (await res.json().catch(() => null)) as {
       ok?: boolean
@@ -465,7 +472,12 @@ export function createGrowthEngineClient(config: GrowthEngineClientConfig): Grow
       mismatchedDuplicates?: string[]
     } | null
     if (!res.ok || !body?.ok) {
-      return { ok: false, error: body?.error ?? `HTTP ${res.status}`, code: String(res.status), issues: body?.issues }
+      return {
+        ok: false,
+        error: body?.error ?? `HTTP ${res.status}`,
+        code: String(res.status),
+        issues: body?.issues,
+      }
     }
     return {
       ok: true,
@@ -496,7 +508,7 @@ export function createGrowthEngineClient(config: GrowthEngineClientConfig): Grow
     } catch (err) {
       return {
         ok: false,
-        error: err instanceof Error ? err.message : 'Unknown network error',
+        error: safeNetworkMessage(err),
         code: 'NETWORK_ERROR',
       }
     }
@@ -534,7 +546,7 @@ export function createGrowthEngineClient(config: GrowthEngineClientConfig): Grow
     } catch (err) {
       return {
         ok: false,
-        error: err instanceof Error ? err.message : 'Unknown network error',
+        error: safeNetworkMessage(err),
         code: 'NETWORK_ERROR',
       }
     }

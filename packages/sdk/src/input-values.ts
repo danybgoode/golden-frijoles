@@ -34,6 +34,8 @@ export function inputValuesProblems(inputKey: unknown, values: unknown): string[
   const problems: string[] = []
   if (typeof inputKey !== 'string' || inputKey.trim().length === 0)
     problems.push('inputKey must be a non-empty string')
+  // encodeURIComponent leaves dots alone, so '.' and '..' would normalise into another path (security lens, #331).
+  else if (inputKey === '.' || inputKey === '..') problems.push('inputKey cannot be a dot segment')
   if (!Array.isArray(values) || values.length === 0) return [...problems, 'values must be a non-empty array']
   const seen = new Set<string>()
   values.forEach((entry, i) => {
