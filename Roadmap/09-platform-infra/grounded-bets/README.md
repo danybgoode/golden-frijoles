@@ -76,9 +76,11 @@ writes them, one recorded field, and the count. No engine route or migration.
   of the project's North Star input keys (as `strategy.mjs` reads them) and `target_from` and `target_to` are set; a
   blank `read_date` counts (the 30-day default). `grounded: true` without that target is reported as a problem, never
   counted. So the October baseline needs no backfill: old bets are measured by their targets.
-- **D3 · The share.** Per calendar month: bets in `Roadmap/bets/wave-YYYY-MM*.md` (the month from the file name; slugs
-  de-duplicated; `wave-backfill.md` excluded), minus Bugs and Chores (`type:` from the epic README, else the seed);
-  share = grounded ÷ counted, four decimals. A month with no counted bets prints "no bets" and pushes nothing.
+- **D3 · The share.** Per calendar month: the bets whose seed's `underwritten_by:` names a ledger `wave-YYYY-MM…`
+  (the stamp `fund.mjs` writes; the month from that name; `wave-backfill` excluded), read as the seed overlaid by the
+  epic README, minus Bugs and Chores (`type:`); share = grounded ÷ counted, four decimals. A month with no counted bets
+  prints "no bets" and pushes nothing. *(Amended at build: the lock said the ledger's rows, but their shape changed over
+  the months and epic READMEs carry no stamp; each bet's own stamp counts every bet once.)*
 - **D4 · The push.** `bets-grounded.mjs --push` posts `{ occurredOn: today (UTC), value: <this month's share> }` to
   `/api/v1/inputs/grounded_bets_share/values` with the same key and URL resolution as `roadmap-push.mjs`; a missing key
   is a clean skip. It pushes only when the project's North Star has a `grounded_bets_share` input, so a stranger's
