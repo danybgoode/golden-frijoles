@@ -9,6 +9,36 @@ typed local feature-flag evaluation.
 npm install @golden-frijoles/sdk
 ```
 
+## Quickstart (1.0)
+
+```ts
+import { createGrowthEngineClient } from '@golden-frijoles/sdk'
+
+// One line: with no `baseUrl` key the client talks to https://goldenfrijoles.com.
+const growth = createGrowthEngineClient({ apiKey: process.env.GOLDEN_FRIJOLES_API_KEY! })
+
+growth.identify(currentUser.id) // after sign-in; growth.reset() at sign-out
+await growth.track('checkout_completed', { featureId: 'checkout' })
+
+// A North Star input you push yourself (revenue, say): one value per day, append-only.
+await growth.pushInputValues('attributed_revenue', [{ occurredOn: '2026-10-09', value: 1240 }])
+```
+
+- **Your own deployment** (local dev, a preview, a self-host): pass `baseUrl`. A `baseUrl` key that is present but empty
+  (an unset environment variable) is never defaulted: calls return `MISSING_BASE_URL`, so a test run cannot reach
+  production by accident.
+- **No user yet:** `track` and everything built on it return `NO_USER` without a request. `identify` affects what
+  comes next only (nothing earlier is re-attributed), and `bucket` uses the current id, so bucket after `identify`
+  when a test must follow the person.
+- **ESM and CommonJS:** `import` and `require` both work, with types.
+- **Every method returns an envelope** (`{ ok: true, … }` or `{ ok: false, error, code }`) and never throws.
+
+## 1.0 — a stable surface
+
+**Nothing from 0.6.0 is removed or renamed.** 1.0 adds a default URL, `identify`/`reset`, `pushInputValues` and an
+ESM build, and freezes the rest as the contract. `userId` and `baseUrl` became optional; code that passes them keeps
+working unchanged.
+
 ## 0.6.0 — experiments report their own exposures
 
 **Additive only; nothing existing changes.** An experiment started from the Golden Frijoles
@@ -96,9 +126,8 @@ Either set of names works. Pick one per project.
 import { createGrowthEngineClient } from '@golden-frijoles/sdk'
 
 const growth = createGrowthEngineClient({
-  baseUrl: process.env.GOLDEN_FRIJOLES_URL!,
-  apiKey: process.env.GROWTH_ENGINE_API_KEY!,
-  userId: 'opaque-user-id',
+  apiKey: process.env.GOLDEN_FRIJOLES_API_KEY!,
+  userId: 'opaque-user-id', // or growth.identify(id) later
 })
 
 await growth.track('checkout_completed', { featureId: 'checkout' })
