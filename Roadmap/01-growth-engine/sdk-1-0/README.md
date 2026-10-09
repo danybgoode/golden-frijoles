@@ -1,6 +1,6 @@
 ---
-status: in-progress  # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Building       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+status: shipped      # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+phase: Shipped       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
 locked_at: "2026-10-09T13:19:02Z"
 slug: sdk-1-0
@@ -27,6 +27,9 @@ flag_key: null   # the epic's flag, decided at refine Stage 6b and copied from t
 build_order: 74      # integer position in the ONE global build sequence — the SSOT once the epic
                      # exists (the seed's value is only a fallback). Fill it in at the betting
                      # table; plain integers, no "#2a" suffixes. See 00-ideas/README.md → Ordering.
+actual_usd: 29.55
+actual_mtok: 92.7
+actual_basis: "this machine · 2026-10-09 · 1 session · prices 2026-10-02"
 ---
 
 # Epic: SDK 1.0: one line to start, who the user is, and North Star inputs
@@ -97,6 +100,11 @@ No engine change: the inputs route, the track route and the flag snapshot alread
     root script must not depend on a built SDK (the seed scripts avoid it for the same reason).
   - **Release order:** publish only after the gate is green and every finding is answered (npm versions are
     immutable), then merge.
+
+- **Daniel's decisions at release (2026-10-09):** (1) the verifier's same-family security lens is accepted for this
+  release (agy signed out in worktrees and blocked by untracked symlinks in the main checkout; vibe out of budget);
+  (2) type-level additions to `GrowthEngineClient` are accepted as semver-compatible (hand-written implementations of
+  the interface are not covered by the 1.x promise; runtime behaviour is).
 
 ## Scope — stories
 | Sprint | Story | Risk |

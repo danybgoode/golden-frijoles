@@ -3,7 +3,7 @@ epic: sdk-1-0
 sprint: 2
 title: "Ship it"
 risk: high
-phase: In review
+phase: Shipped
 stories_total: 3
 stories:
   - id: S2.1
@@ -30,7 +30,7 @@ stories:
 ---
 # SDK 1.0 — Sprint 2: Ship it
 
-**Status:** 🟡 built, in review (one PR for both sprints)
+**Status:** ✅ shipped 2026-10-09 (#331, merge `37adc9f`; SDK 1.0.0 on npm)
 
 ## Stories
 
@@ -73,3 +73,8 @@ Env: a scratch Node project; production https://goldenfrijoles.com.
    → the SDK snippet starts in one line (no `baseUrl`), calls `identify`, and its `bucket` passes `{ key }` objects.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+**Run 2026-10-09 on production (agent):** step 4 ✅ `/install` starts in one line with no `baseUrl`, calls `identify`,
+`bucket` passes `{ key }` objects and the input push uses today's UTC date; `npm view @golden-frijoles/sdk` → 1.0.0 with
+the `import`/`require` exports. Steps 1–2 were proven before release (the verifier packed and installed the tarball:
+ESM, CJS, types). **Owed to Daniel:** step 3, a real `identify` + `track` with an ingest key, seen in the event catalog.

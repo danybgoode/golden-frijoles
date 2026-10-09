@@ -3,7 +3,7 @@ epic: sdk-1-0
 sprint: 1
 title: "Start in one line"
 risk: high
-phase: In review
+phase: Shipped
 stories_total: 3
 stories:
   - id: S1.1
@@ -30,7 +30,7 @@ stories:
 ---
 # SDK 1.0 — Sprint 1: Start in one line
 
-**Status:** 🟡 built, in review (one PR for both sprints)
+**Status:** ✅ shipped 2026-10-09 (#331, merge `37adc9f`; SDK 1.0.0 on npm)
 
 ## Stories
 
