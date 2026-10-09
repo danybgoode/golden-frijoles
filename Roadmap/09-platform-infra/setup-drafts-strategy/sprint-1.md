@@ -3,7 +3,7 @@ epic: setup-drafts-strategy
 sprint: 1
 title: "Read and draft"
 risk: low
-phase: In review
+phase: Shipped
 stories_total: 2
 stories:
   - id: S1.1
@@ -23,7 +23,7 @@ stories:
 ---
 # Setup drafts the strategy: two North Stars from the evidence, and a first bet in one review — Sprint 1: Read and draft
 
-**Status:** 🟡 built, in review (one PR for both sprints)
+**Status:** ✅ shipped 2026-10-09 (#336, merge `0428149`; plugin + kit 1.2.0)
 
 ## Stories
 
