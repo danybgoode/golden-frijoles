@@ -41,7 +41,7 @@ stories:
 
 ### Story 2.2 — The quickstarts start in one line ✅ `d378a50`
 **As** a founder reading /install or Connect, **I want** the snippet to be one import and one call, then identify and an input push, **so that** what I copy works first time.
-**Acceptance:** `/install`, Connect and the SDK README show the 1.0 shape; the scripts/sync-revenue-from-miyagi.mjs reference push moves to `pushInputValues`. e2e/text specs follow.
+**Acceptance:** `/install`, Connect and the SDK README show the 1.0 shape; the revenue sync keeps its own fetch (a root script must not depend on a built SDK; verifier, #331). e2e/text specs follow.
 **Risk:** low
 
 ### Story 2.3 — SDK 1.0.0 ✅ `8ad8fdf`
@@ -55,7 +55,8 @@ stories:
 - **deterministic gate:** `npm run test:unit` + typecheck + lint + build + Playwright `api`/`authed` in CI.
 
 ## Release order — Daniel
-1. From `feat/sdk-1-0`: `cd packages/sdk && npm publish` (2FA); `npm view @golden-frijoles/sdk version` → 1.0.0.
+1. When the gate is green and every review finding is answered (npm versions are immutable): from `feat/sdk-1-0`,
+   `cd packages/sdk && npm publish` (2FA); `npm view @golden-frijoles/sdk version` → 1.0.0.
 2. Merge the PR (merge commit). The console's quickstarts deploy with it.
 
 ## Smoke walkthrough (do these in order)
@@ -64,13 +65,11 @@ Env: a scratch Node project; production https://goldenfrijoles.com.
 1. `npm i @golden-frijoles/sdk` then `node -e "console.log(require('@golden-frijoles/sdk').DEFAULT_BASE_URL)"`
    → `https://goldenfrijoles.com`.
 2. In an ESM file: `import { createGrowthEngineClient } from '@golden-frijoles/sdk'`, then
-   `createGrowthEngineClient({ apiKey: process.env.GOLDEN_FRIJOLES_API_KEY })` and `await engine.track('x')`
+   `createGrowthEngineClient({ apiKey: process.env.GROWTH_ENGINE_API_KEY })` and `await engine.track('x')`
    → `{ ok: false, code: 'NO_USER' }` (no user yet, no request).
 3. `engine.identify('smoke-user'); await engine.track('smoke_event')` with a real ingest key
    → `{ ok: true, id }`, and the event shows in the console's event catalog.
 4. Open https://goldenfrijoles.com/install
    → the SDK snippet starts in one line (no `baseUrl`), calls `identify`, and its `bucket` passes `{ key }` objects.
-5. Run `GROWTH_ENGINE_URL=https://goldenfrijoles.com GROWTH_ENGINE_API_KEY=<ingest key> node scripts/sync-revenue-from-miyagi.mjs`
-   (with Miyagi's DB env) → the same "Synced N day(s)…" line as before, through the SDK.
 
 If any step fails, note the step number + what you saw — that's the bug report.

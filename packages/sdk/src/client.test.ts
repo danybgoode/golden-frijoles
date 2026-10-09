@@ -42,7 +42,12 @@ test('S1.1: with no baseUrl key the client talks to goldenfrijoles.com', async (
 
 test('S1.1: a given baseUrl wins, without a trailing slash', async () => {
   const { calls, fetchImpl } = recorder()
-  const growth = createGrowthEngineClient({ baseUrl: 'http://localhost:3000/', apiKey: 'k', userId: 'u1', fetchImpl })
+  const growth = createGrowthEngineClient({
+    baseUrl: 'http://localhost:3000/',
+    apiKey: 'k',
+    userId: 'u1',
+    fetchImpl,
+  })
   await growth.track('signup')
   assert.equal(calls[0].url, 'http://localhost:3000/api/v1/track')
 })
@@ -92,7 +97,10 @@ test('S1.2: identify refuses an empty id and keeps the current one', async () =>
 
 test('S1.2: bucket follows the current id; with no user an ungoverned bucket returns NO_USER', () => {
   const growth = createGrowthEngineClient({ apiKey: 'k', fetchImpl: recorder().fetchImpl })
-  const variants = [{ key: 'a', weight: 50 }, { key: 'b', weight: 50 }]
+  const variants = [
+    { key: 'a', weight: 50 },
+    { key: 'b', weight: 50 },
+  ]
   const none = growth.bucket('exp', variants)
   assert.equal(!none.ok && none.code, 'NO_USER')
   growth.identify('user_1')
@@ -114,18 +122,33 @@ test('S1.2: two clients never share identity (state is per instance)', async () 
   assert.equal(JSON.parse(String(b.calls[0].init.body)).userId, 'u2')
 })
 
-test('S1.3: pushInputValues posts the values to the input route with the project key, and returns the route\'s fields', async () => {
-  const { calls, fetchImpl } = recorder({ ok: true, inputKey: 'attributed revenue', inserted: 1, skippedDuplicates: 1, mismatchedDuplicates: ['2026-10-07'] })
+test("S1.3: pushInputValues posts the values to the input route with the project key, and returns the route's fields", async () => {
+  const { calls, fetchImpl } = recorder({
+    ok: true,
+    inputKey: 'attributed revenue',
+    inserted: 1,
+    skippedDuplicates: 1,
+    mismatchedDuplicates: ['2026-10-07'],
+  })
   const growth = createGrowthEngineClient({ apiKey: 'proj_key', fetchImpl }) // no user: inputs need none
   const result = await growth.pushInputValues('attributed revenue', [
     { occurredOn: '2026-10-07', value: 120.5 },
     { occurredOn: '2026-10-08', value: 98 },
   ])
-  assert.deepEqual(result, { ok: true, inputKey: 'attributed revenue', inserted: 1, skippedDuplicates: 1, mismatchedDuplicates: ['2026-10-07'] })
+  assert.deepEqual(result, {
+    ok: true,
+    inputKey: 'attributed revenue',
+    inserted: 1,
+    skippedDuplicates: 1,
+    mismatchedDuplicates: ['2026-10-07'],
+  })
   assert.equal(calls[0].url, 'https://goldenfrijoles.com/api/v1/inputs/attributed%20revenue/values')
   assert.equal((calls[0].init.headers as Record<string, string>).Authorization, 'Bearer proj_key')
   assert.deepEqual(JSON.parse(String(calls[0].init.body)), {
-    values: [{ occurredOn: '2026-10-07', value: 120.5 }, { occurredOn: '2026-10-08', value: 98 }],
+    values: [
+      { occurredOn: '2026-10-07', value: 120.5 },
+      { occurredOn: '2026-10-08', value: 98 },
+    ],
   })
 })
 
@@ -137,7 +160,13 @@ test('S1.3: bad values are refused locally, without a request', async () => {
     ['revenue', [{ occurredOn: '2026-02-30', value: 1 }]],
     ['revenue', [{ occurredOn: '2026/10/08', value: 1 }]],
     ['revenue', [{ occurredOn: '2026-10-08', value: Number.NaN }]],
-    ['revenue', [{ occurredOn: '2026-10-08', value: 1 }, { occurredOn: '2026-10-08', value: 2 }]],
+    [
+      'revenue',
+      [
+        { occurredOn: '2026-10-08', value: 1 },
+        { occurredOn: '2026-10-08', value: 2 },
+      ],
+    ],
     ['', [{ occurredOn: '2026-10-08', value: 1 }]],
   ]
   for (const [key, values] of cases) {
@@ -156,7 +185,9 @@ test('S1.3: a route refusal and a network failure come back as envelopes, never 
   assert.equal(!r.ok && r.code, '400')
   const offline = createGrowthEngineClient({
     apiKey: 'k',
-    fetchImpl: (async () => { throw new Error('ENOTFOUND') }) as unknown as typeof fetch,
+    fetchImpl: (async () => {
+      throw new Error('ENOTFOUND')
+    }) as unknown as typeof fetch,
   })
   const n = await offline.pushInputValues('x', [{ occurredOn: '2026-10-08', value: 1 }])
   assert.equal(!n.ok && n.code, 'NETWORK_ERROR')

@@ -1,5 +1,5 @@
 ---
-status: scaffolded   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+status: in-progress  # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
 phase: Building       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
 locked_at: "2026-10-09T13:19:02Z"
@@ -83,6 +83,20 @@ No engine change: the inputs route, the track route and the flag snapshot alread
   resolvers. A packed-tarball test imports and requires it from a scratch project.
 - **D6 — The 0.6.0 surface is frozen** (gate decision a): a test calls every 0.6.0 export and client method with its
   0.6.0 argument shapes and asserts the result shapes; nothing is removed or renamed, the scenario API included.
+
+- **Corrections from the verifier on #331 (2026-10-09):**
+  - **D1/D2: the config is read on every call, as 0.6.0 did**, and "absent" means `!('baseUrl' in config)`. Reading it
+    once at construction with `hasOwnProperty` sent a class-getter, inherited or filled-in-later `baseUrl` (and the flag
+    read key, through the provider) to production; `surface-freeze.test` now pins those three shapes.
+  - **Identity:** `identify`/`reset` set an explicit choice; until either is called the client follows `config.userId`
+    live (0.6.0 behaviour). A whitespace-only id counts as none, in the constructor as in `identify`.
+  - **D5's test** proves both halves through the package's own `exports` (self-reference), not a packed tarball; the
+    verifier packed and installed it by hand (ESM, CJS, types under nodenext/bundler/node10, and the CLI with 1.0).
+  - **S2.2 deviations:** the snippets keep `GROWTH_ENGINE_API_KEY`, the name the plugin's roadmap push and FinOps
+    hooks read (a new name would have silently disabled them); the revenue sync stays on its own fetch, because a
+    root script must not depend on a built SDK (the seed scripts avoid it for the same reason).
+  - **Release order:** publish only after the gate is green and every finding is answered (npm versions are
+    immutable), then merge.
 
 ## Scope — stories
 | Sprint | Story | Risk |

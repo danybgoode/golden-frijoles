@@ -39,10 +39,13 @@ function main() {
   for (const file of walk(esm).filter((f) => f.endsWith('.js') || f.endsWith('.d.ts'))) {
     const dir = dirname(file);
     const text = readFileSync(file, 'utf8');
-    const out = text.replace(/(\bfrom\s*|\bimport\s*\(\s*|\bimport\s+)(['"])([^'"]+)\2/g, (whole, lead, q, spec) => {
-      const next = withExtension(spec, (rel) => existsSync(join(dir, rel)));
-      return next === spec ? whole : `${lead}${q}${next}${q}`;
-    });
+    const out = text.replace(
+      /(\bfrom\s*|\bimport\s*\(\s*|\bimport\s+)(['"])([^'"]+)\2/g,
+      (whole, lead, q, spec) => {
+        const next = withExtension(spec, (rel) => existsSync(join(dir, rel)));
+        return next === spec ? whole : `${lead}${q}${next}${q}`;
+      }
+    );
     if (out !== text) writeFileSync(file, out);
   }
   writeFileSync(join(esm, 'package.json'), '{ "type": "module" }\n');

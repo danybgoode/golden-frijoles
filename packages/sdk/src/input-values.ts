@@ -32,13 +32,16 @@ function isCalendarDate(value: unknown): boolean {
 /** Pure: the problems with a key and its values, empty when they can be sent. */
 export function inputValuesProblems(inputKey: unknown, values: unknown): string[] {
   const problems: string[] = []
-  if (typeof inputKey !== 'string' || inputKey.trim().length === 0) problems.push('inputKey must be a non-empty string')
+  if (typeof inputKey !== 'string' || inputKey.trim().length === 0)
+    problems.push('inputKey must be a non-empty string')
   if (!Array.isArray(values) || values.length === 0) return [...problems, 'values must be a non-empty array']
   const seen = new Set<string>()
   values.forEach((entry, i) => {
     const v = entry as Partial<InputValue> | null
-    if (!v || !isCalendarDate(v.occurredOn)) problems.push(`values[${i}].occurredOn must be a real YYYY-MM-DD date`)
-    if (!v || typeof v.value !== 'number' || !Number.isFinite(v.value)) problems.push(`values[${i}].value must be a finite number`)
+    if (!v || !isCalendarDate(v.occurredOn))
+      problems.push(`values[${i}].occurredOn must be a real YYYY-MM-DD date`)
+    if (!v || typeof v.value !== 'number' || !Number.isFinite(v.value))
+      problems.push(`values[${i}].value must be a finite number`)
     if (v && typeof v.occurredOn === 'string') {
       if (seen.has(v.occurredOn)) problems.push(`values[${i}].occurredOn ${v.occurredOn} appears twice`)
       seen.add(v.occurredOn)
