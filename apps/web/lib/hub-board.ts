@@ -66,6 +66,10 @@ export type BoardCard = {
   flagKey: string | null
   /** The README's own `**Flag:** …` line — where an epic with no flag says why. */
   flagNote: string | null
+  /** grounded-bets D9 — the founder's grounding at Stage 1.5; null = never asked. */
+  grounded: boolean | null
+  /** Why it was funded anyway; only with `grounded: false`. */
+  groundedReason: string | null
 }
 
 /** The row fields `epicResult` reads. ⚠️ Kept in step with `lib/roadmap-result.ts` by `hub-board.test.ts`. */
@@ -177,6 +181,9 @@ export function toCard(row: RoadmapRow, project: string | null = null): BoardCar
     // A seed never carries a flag (no flag, no line: S1.1), whatever a hand-pushed row says.
     flagKey: row.grain === 'Epic' && typeof r.flag_key === 'string' ? r.flag_key : null,
     flagNote: row.grain === 'Epic' && typeof r.flag_note === 'string' ? r.flag_note : null,
+    grounded: row.grain === 'Epic' && typeof r.grounded === 'boolean' ? r.grounded : null,
+    groundedReason:
+      row.grain === 'Epic' && r.grounded === false && typeof r.grounded_reason === 'string' ? r.grounded_reason : null,
   }
 }
 
