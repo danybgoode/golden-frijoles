@@ -50,7 +50,8 @@ const { EXIT, exitForServerCode } = await import('./exit-codes.ts')
 const { parseArgs, flagValues, boolFlag } = await import('./args.ts')
 const { credentialsPath, normalizeApiUrl, readCredentials, writeCredentials } =
   await import('./credentials.ts')
-const { gitignoreCovers, readEnvValue, upsertEnvValue, ENV_KEYS } = await import('./commands/init.ts')
+const { gitignoreCovers, readEnvValue, upsertEnvValue, ENV_KEYS, INGEST_ENV_KEYS } =
+  await import('./commands/init.ts')
 const { VERSION } = await import('./version.ts')
 
 const TOKEN = `gf_pat_${'a'.repeat(32)}`
@@ -919,4 +920,142 @@ test('frijoles experiments decision: the decision record under --json; the human
     fetchImpl: stubFetch({ '/api/v1/cli/experiments/decision': { body } }),
   })
   assert.match(human.all(), /smart-defaults v2 \(decided\) — decided: keep_control \(control\)/)
+})
+
+// ── setup-instruments-connects D1 · `frijoles init --ingest` ─────────────────────────────────────
+
+/** A fetch for `init`: each mint answers by the requested type, the verify by `verifyState` (or a 500). */
+function initFetch(
+  opts: { verifyState?: 'live' | 'not-live' | 'down'; ingestMint?: 'ok' | 'fail' } = {},
+  seen: Array<{ url: string; body: { type?: string } | undefined }> = []
+): typeof fetch {
+  return (async (input: string | URL, init?: RequestInit) => {
+    const url = new URL(String(input))
+    const body = typeof init?.body === 'string' ? (JSON.parse(init.body) as { type?: string }) : undefined
+    seen.push({ url: url.pathname, body })
+    const json = (status: number, payload: unknown) =>
+      new Response(JSON.stringify(payload), { status, headers: { 'content-type': 'application/json' } })
+    if (url.pathname === '/api/v1/flags/snapshot')
+      return json(200, { ok: true, contractVersion: 1, environment: 'development', flags: [] })
+    if (url.pathname === '/api/v1/cli/keys/verify')
+      return opts.verifyState === 'down'
+        ? json(500, { ok: false, error: { code: 'server_error', message: 'down' } })
+        : json(200, { ok: true, type: 'ingest', state: opts.verifyState ?? 'live' })
+    if (url.pathname === '/api/v1/cli/keys' && body?.type === 'ingest')
+      return opts.ingestMint === 'fail'
+        ? json(500, { ok: false, error: { code: 'server_error', message: 'mint failed' } })
+        : json(200, { ok: true, id: 'ingest-1', key: 'gk_ingest_secret', type: 'ingest', expiresAt: null })
+    if (url.pathname === '/api/v1/cli/keys')
+      return json(200, { ok: true, id: 'key-1', key: 'gb_key_secret', type: 'flag_read', expiresAt: null })
+    throw new Error(`initFetch has no answer for ${url.pathname}`)
+  }) as unknown as typeof fetch
+}
+
+test('init --ingest writes an ingest key and its URL beside the flag-read key, and prints names, never values', async () => {
+  const env = sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN, GOLDEN_FRIJOLES_PROJECT: 'acme' })
+  const cwd = mkdtempSync(join(tmpdir(), 'gf-repo-'))
+  const { writer, out } = capture()
+  const code = await run({ argv: ['init', '--ingest', '--json'], writer, env, cwd, fetchImpl: initFetch() })
+  assert.equal(code, EXIT.OK)
+  const file = readFileSync(join(cwd, '.env.local'), 'utf8')
+  assert.equal(readEnvValue(file, INGEST_ENV_KEYS.key), 'gk_ingest_secret')
+  assert.ok(readEnvValue(file, INGEST_ENV_KEYS.url))
+  assert.equal(readEnvValue(file, ENV_KEYS.flagRead), 'gb_key_secret')
+  const text = out.join('\n')
+  assert.ok(!text.includes('gk_ingest_secret') && !text.includes('gb_key_secret'))
+  assert.deepEqual((JSON.parse(text) as { ingest: unknown }).ingest, { mintedKeyId: 'ingest-1', kept: false })
+})
+
+test('init --ingest keeps an ingest key verified live for this project, and mints none', async () => {
+  const env = sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN, GOLDEN_FRIJOLES_PROJECT: 'acme' })
+  const cwd = mkdtempSync(join(tmpdir(), 'gf-repo-'))
+  await run({
+    argv: ['init', '--ingest', '--json'],
+    writer: capture().writer,
+    env,
+    cwd,
+    fetchImpl: initFetch(),
+  })
+  const seen: Array<{ url: string; body: { type?: string } | undefined }> = []
+  const second = capture()
+  const code = await run({
+    argv: ['init', '--ingest', '--json'],
+    writer: second.writer,
+    env,
+    cwd,
+    fetchImpl: initFetch({ verifyState: 'live' }, seen),
+  })
+  assert.equal(code, EXIT.OK)
+  assert.equal(seen.filter((c) => c.url === '/api/v1/cli/keys').length, 0, 'nothing minted')
+  assert.deepEqual((JSON.parse(second.out.join('\n')) as { ingest: unknown }).ingest, {
+    mintedKeyId: null,
+    kept: true,
+  })
+})
+
+test('init --ingest replaces an ingest key that is not a live key of this project', async () => {
+  const env = sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN, GOLDEN_FRIJOLES_PROJECT: 'acme' })
+  const cwd = mkdtempSync(join(tmpdir(), 'gf-repo-'))
+  writeFileSync(join(cwd, '.gitignore'), '.env.local\n')
+  writeFileSync(join(cwd, '.env.local'), 'GROWTH_ENGINE_API_KEY=gk_old_other_project\n', { mode: 0o600 })
+  const code = await run({
+    argv: ['init', '--ingest'],
+    writer: capture().writer,
+    env,
+    cwd,
+    fetchImpl: initFetch({ verifyState: 'not-live' }),
+  })
+  assert.equal(code, EXIT.OK)
+  assert.equal(
+    readEnvValue(readFileSync(join(cwd, '.env.local'), 'utf8'), INGEST_ENV_KEYS.key),
+    'gk_ingest_secret'
+  )
+})
+
+test('⚠️ init --ingest REFUSES with nothing minted or written when the ingest key cannot be verified', async () => {
+  const env = sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN, GOLDEN_FRIJOLES_PROJECT: 'acme' })
+  const cwd = mkdtempSync(join(tmpdir(), 'gf-repo-'))
+  writeFileSync(join(cwd, '.gitignore'), '.env.local\n')
+  const before = 'GROWTH_ENGINE_API_KEY=gk_unknown\n'
+  writeFileSync(join(cwd, '.env.local'), before, { mode: 0o600 })
+  const seen: Array<{ url: string; body: { type?: string } | undefined }> = []
+  const code = await run({
+    argv: ['init', '--ingest'],
+    writer: capture().writer,
+    env,
+    cwd,
+    fetchImpl: initFetch({ verifyState: 'down' }, seen),
+  })
+  assert.equal(code, EXIT.SERVER)
+  assert.equal(seen.filter((c) => c.url === '/api/v1/cli/keys').length, 0, 'nothing minted')
+  assert.equal(readFileSync(join(cwd, '.env.local'), 'utf8'), before)
+})
+
+test('⚠️ init --ingest keeps the flag-read key it minted when the ingest mint then fails', async () => {
+  const env = sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN, GOLDEN_FRIJOLES_PROJECT: 'acme' })
+  const cwd = mkdtempSync(join(tmpdir(), 'gf-repo-'))
+  const code = await run({
+    argv: ['init', '--ingest'],
+    writer: capture().writer,
+    env,
+    cwd,
+    fetchImpl: initFetch({ ingestMint: 'fail' }),
+  })
+  assert.equal(code, EXIT.SERVER)
+  const file = readFileSync(join(cwd, '.env.local'), 'utf8')
+  assert.equal(
+    readEnvValue(file, ENV_KEYS.flagRead),
+    'gb_key_secret',
+    'the minted flag-read key is held, not lost'
+  )
+  assert.equal(readEnvValue(file, INGEST_ENV_KEYS.key), null)
+})
+
+test('init without --ingest never verifies or mints an ingest key, and writes none', async () => {
+  const env = sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN, GOLDEN_FRIJOLES_PROJECT: 'acme' })
+  const cwd = mkdtempSync(join(tmpdir(), 'gf-repo-'))
+  const seen: Array<{ url: string; body: { type?: string } | undefined }> = []
+  await run({ argv: ['init'], writer: capture().writer, env, cwd, fetchImpl: initFetch({}, seen) })
+  assert.ok(!seen.some((c) => c.url === '/api/v1/cli/keys/verify' || c.body?.type === 'ingest'))
+  assert.equal(readEnvValue(readFileSync(join(cwd, '.env.local'), 'utf8'), INGEST_ENV_KEYS.key), null)
 })

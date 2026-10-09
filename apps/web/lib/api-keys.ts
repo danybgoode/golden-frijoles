@@ -52,6 +52,26 @@ export async function listProjectKeys(projectId: string): Promise<ApiKeyRow[]> {
   }))
 }
 
+/**
+ * setup-instruments-connects D1 — is `key` a live (unrevoked) ingest key of THIS project? A key of another project, a
+ * revoked key and an unknown string are all `false`, one answer: the caller learns nothing about any other project.
+ * Throws on a query failure, so "could not check" is never read as "not live" (a re-mint would then pile up keys).
+ */
+export async function isLiveIngestKeyOf(projectId: string, key: string): Promise<boolean> {
+  const supabase = getSupabaseServiceClient()
+  const { data, error } = await supabase
+    .from('active_ingest_keys')
+    .select('id')
+    .eq('key_hash', hashApiKey(key))
+    .eq('project_id', projectId)
+    .maybeSingle()
+  if (error) {
+    console.error('[api-keys] verify failed:', error)
+    throw new Error('Could not verify the key')
+  }
+  return data !== null
+}
+
 // Issues a new key for the project and returns the PLAINTEXT once. Callers must have already
 // authorized the acting user against `projectId` (see requireProjectMembership).
 export async function issueApiKey(
