@@ -4,8 +4,8 @@ import { getDeliveryHealth } from '@/lib/deliveries'
 import { getTaskLifecycleFacts } from '@/lib/task-lifecycle-facts'
 import { listTasksByProjectId, type TaskRow } from '@/lib/tasks'
 import { isFirstEventBandEnabled, isSignalsEnabled } from '@/lib/flags'
-import { getProductEventMarks } from '@/lib/event-catalog-query'
-import { firstEventBand } from '@/lib/first-event-band'
+import { getFirstEventForBand } from '@/lib/event-catalog-query'
+import { FIRST_EVENT_WINDOW_DAYS, firstEventBand } from '@/lib/first-event-band'
 import { formatUtc } from '@/lib/format-utc'
 import { projectFlagRows, summariseFlagList } from '@/lib/flag-list-view'
 import { splitTaskBands } from '@/lib/today-bands'
@@ -88,7 +88,7 @@ export async function CommandCenter({ project }: { project: CommandCenterProject
       .then((artifact) => readsDue(artifact?.payload ?? null))
       .catch((): EpicResult[] => []),
     // setup-instruments-connects D4 — read only with the band's switch on; a failed read shows no band, never "waiting".
-    firstEventOn ? getProductEventMarks(project.id).catch(() => null) : Promise.resolve(null),
+    firstEventOn ? getFirstEventForBand(project.id, FIRST_EVENT_WINDOW_DAYS).catch(() => null) : Promise.resolve(null),
   ])
   const firstEvent = firstEventOn ? firstEventBand(eventMarks) : null
 

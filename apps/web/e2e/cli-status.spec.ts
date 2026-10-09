@@ -54,9 +54,10 @@ test.describe('the CLI first-event status', () => {
         return (await res.json()) as {
           firstEvent: { event: string } | null
           latestEvent: { event: string } | null
+          todayMessage: string | null
         }
       }
-      expect(await status()).toMatchObject({ firstEvent: null, latestEvent: null })
+      expect(await status()).toMatchObject({ firstEvent: null, latestEvent: null, todayMessage: 'waiting' })
 
       const minted = await request.post('/api/v1/cli/keys', {
         headers: auth,
@@ -74,6 +75,7 @@ test.describe('the CLI first-event status', () => {
       const after = await status()
       expect(after.firstEvent?.event).toBe('signed_up')
       expect(after.latestEvent?.event).toBe('order_placed')
+      expect(after.todayMessage, 'Today would say the first event arrived').toBe('arrived')
     } finally {
       await account.cleanup()
     }

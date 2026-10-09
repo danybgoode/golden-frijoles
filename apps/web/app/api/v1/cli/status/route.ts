@@ -2,7 +2,8 @@ import 'server-only'
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { cliError, cliOk, requireCliMember } from '@/lib/cli-auth'
-import { getProductEventMarks } from '@/lib/event-catalog-query'
+import { getFirstEventForBand, getProductEventMarks } from '@/lib/event-catalog-query'
+import { FIRST_EVENT_WINDOW_DAYS, firstEventBand } from '@/lib/first-event-band'
 import { isFirstEventBandEnabled } from '@/lib/flags'
 
 // setup-instruments-connects D3 — `frijoles status`: has this project received its first product event, and which was
@@ -17,8 +18,17 @@ export async function GET(req: NextRequest) {
   const context = await requireCliMember(req, url.searchParams.get('project'))
   if (context instanceof NextResponse) return context
   try {
-    const marks = await getProductEventMarks(context.projectId)
-    return cliOk({ project: context.projectSlug, ...marks })
+    // `todayMessage` is what Today shows, from the same bounded read and decision, so the API spec proves the page's
+    // waiting → arrived on a real project (verifier, #338).
+    const [marks, forToday] = await Promise.all([
+      getProductEventMarks(context.projectId),
+      getFirstEventForBand(context.projectId, FIRST_EVENT_WINDOW_DAYS),
+    ])
+    return cliOk({
+      project: context.projectSlug,
+      ...marks,
+      todayMessage: firstEventBand(forToday)?.kind ?? null,
+    })
   } catch {
     return cliError('server_error', 'Could not read this project’s events right now.')
   }

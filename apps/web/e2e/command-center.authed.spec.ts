@@ -336,17 +336,15 @@ test.describe('command center', () => {
   })
 })
 
-// setup-instruments-connects D4 — with the first-event switch on, Today says either that it is waiting for the first
-// product event or that it arrived (the seeded project may have either); with it off, neither.
-test('Today says whether the first event has arrived, and keeps its three bands', async ({ page }) => {
+// setup-instruments-connects D4 — the authed tenant's events were seeded 20 days ago (auth.setup.ts), so it has a history
+// older than the window: Today shows NO first-event message, switch on or off, and keeps its three bands. The waiting
+// and arrived states are pinned by lib/first-event-band.test.ts (the decision), cli-status.spec.ts (the read, on a fresh
+// project) and the production walkthrough; a second project for this user would turn a bare /app into Portfolio and
+// break the specs that share it (verifier, #338).
+test('Today shows no first-event message for a project with a history, and keeps its three bands', async ({
+  page,
+}) => {
   await page.goto('/app')
-  const message = page.locator('main .ds-callout').filter({ hasText: /first event/i })
-  if (process.env.FIRST_EVENT_BAND_ENABLED === 'false') {
-    await expect(message).toHaveCount(0)
-  } else {
-    await expect(message).toHaveCount(1)
-    await expect(message).toContainText(/Waiting for your first event|Your first event arrived: /)
-  }
   await expect(page.locator('main .ds-band')).toHaveCount(3)
+  await expect(page.locator('main .ds-callout').filter({ hasText: /first event/i })).toHaveCount(0)
 })
-

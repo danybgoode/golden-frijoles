@@ -5,12 +5,12 @@
 
 export const FIRST_EVENT_WINDOW_DAYS = 7
 
-export type EventMarks = { firstEvent: { event: string; at: string } | null }
+/** What the bounded read returns (`getFirstEventForBand`). */
+export type FirstEventRead = { hasOlder: boolean; firstInWindow: { event: string; at: string } | null }
 export type FirstEventBand = { kind: 'waiting' } | { kind: 'arrived'; event: string; at: string } | null
 
-export function firstEventBand(marks: EventMarks | null, now: Date = new Date()): FirstEventBand {
-  if (marks === null) return null
-  if (marks.firstEvent === null) return { kind: 'waiting' }
-  const ageMs = now.getTime() - new Date(marks.firstEvent.at).getTime()
-  return ageMs <= FIRST_EVENT_WINDOW_DAYS * 86_400_000 ? { kind: 'arrived', ...marks.firstEvent } : null
+export function firstEventBand(read: FirstEventRead | null): FirstEventBand {
+  if (read === null || read.hasOlder) return null
+  if (read.firstInWindow === null) return { kind: 'waiting' }
+  return { kind: 'arrived', ...read.firstInWindow }
 }
