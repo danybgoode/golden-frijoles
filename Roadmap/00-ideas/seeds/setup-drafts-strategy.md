@@ -1,14 +1,14 @@
 ---
 title: "Setup drafts the strategy: two North Stars from the evidence, and a first bet in one review"
 slug: setup-drafts-strategy
-status: ready
+status: scaffolded
 area: "09"
 type: feature
 appetite: M
-underwritten_by: null
+underwritten_by: wave-2026-10
 risk: low
-epic: null
-build_order: null
+epic: "09-platform-infra/setup-drafts-strategy"
+build_order: 76
 updated: 2026-10-09
 intent_ask: proxy      # reconstructed from the launch-sweep brief and audit §9; Daniel's go: "continue with setup drafts the strategy"
 hypothesis: "We believe that a setup which reads the product, drafts the strategy with two North Star candidates citing their evidence, and ends with a first bet already grounded, for founders setting up Golden Frijoles on an existing repo or a new idea, will turn new workspaces into proving workspaces (from 0 to 2 by 15 December), because a 45-minute workshop before any value is the step founders skip, and an ungrounded first bet can never be proven. We'll know when a new workspace's first funded bet records grounded: true and reaches a verdict by its read date."
@@ -167,3 +167,11 @@ Untraced (trace it to the ask or cut it):
 ```
 
 <!-- intent-match: {"coverage_in":0.96,"coverage_out":0.778,"clarity":0.837,"teach_back":1,"total":89} -->
+
+## Decisions at the Plan gate (Daniel, 2026-10-09)
+- **Approved.**
+- **a.** Approve at the setup review counts as **agreed**: bets against it are grounded; the coaches are optional depth.
+- **b.** Keep the target (`proving_workspaces` 0 → 2 by 2026-12-15). **No automatic reading in this epic.** It would be a
+  count across workspaces, which the tenancy invariant forbids on any request path (and the scheduler exemption
+  excludes counts), and it needs the bet-verdict record (F16). The read on 2026-12-15 is an operator count, by hand; the
+  automatic reading is its own seed (`proving-workspaces-reading`), with the tenancy question put to Daniel there.
