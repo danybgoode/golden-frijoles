@@ -1,7 +1,7 @@
 # Plugin 1.0: five plain skills, the frijoles CLI, and Refining — Retrospective
 
 _Closed: 2026-10-08_
-_Intent: owed to Daniel (yes | mostly | no)_
+_Intent: yes_
 _Quote vs actual: $55–111 (L, n=4, p25–p75) → ≈$56.54 (inside the quote; Claude only, reviewers not measured)_
 
 ## What shipped

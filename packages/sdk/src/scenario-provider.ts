@@ -2,6 +2,7 @@
 //
 // This provider only resolves closed fault data. Executing a delay/error remains the responsibility
 // of one explicit, target-specific application seam.
+import { resolveBaseUrl } from './defaults'
 import {
   evaluateScenario,
   parseScenarioSnapshot,
@@ -86,7 +87,8 @@ export type ScenarioExecutionSettlement =
   | ScenarioExecutionFailure
 
 export interface ScenarioProviderConfig {
-  baseUrl: string
+  /** Golden Frijoles base URL; https://goldenfrijoles.com when omitted. */
+  baseUrl?: string
   /** Reuses the project/environment-scoped flag_read credential; keep it server-side. */
   flagReadKey: string
   refreshIntervalMs?: number
@@ -282,13 +284,13 @@ export function createScenarioProvider(config: ScenarioProviderConfig): Scenario
   }
 
   function snapshotUrl(): string | undefined {
-    if (typeof config.baseUrl !== 'string' || config.baseUrl.trim().length === 0) return undefined
-    return `${config.baseUrl.replace(/\/+$/, '')}/api/v1/scenarios/snapshot`
+    const base = resolveBaseUrl(config)
+    return base === undefined ? undefined : `${base}/api/v1/scenarios/snapshot`
   }
 
   function executionUrl(): string | undefined {
-    if (typeof config.baseUrl !== 'string' || config.baseUrl.trim().length === 0) return undefined
-    return `${config.baseUrl.replace(/\/+$/, '')}/api/v1/scenarios/execution`
+    const base = resolveBaseUrl(config)
+    return base === undefined ? undefined : `${base}/api/v1/scenarios/execution`
   }
 
   async function execute(

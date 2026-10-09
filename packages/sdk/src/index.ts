@@ -30,6 +30,11 @@ import {
   type ScenarioExecutionTelemetryInput,
 } from './scenario-telemetry'
 import { scrubClientText, SDK_MAX_MESSAGE, SDK_MAX_STACK } from './scrub'
+import { DEFAULT_BASE_URL, resolveBaseUrl } from './defaults'
+import { inputValuesProblems, type InputValue, type PushInputValuesResult } from './input-values'
+
+export { DEFAULT_BASE_URL }
+export type { InputValue, PushInputValuesResult } from './input-values'
 
 export type { BucketVariant } from './bucketing'
 export { ERROR_EVENT } from './capture'
@@ -293,12 +298,18 @@ export interface ExperimentGovernanceContext {
 }
 
 export interface GrowthEngineClientConfig {
-  /** e.g. "https://growth.example.com" or "http://localhost:3000" for local dev. */
-  baseUrl: string
+  /**
+   * The engine's URL, e.g. "http://localhost:3000" for local dev. Omit the key for https://goldenfrijoles.com (sdk-1-0
+   * D1). A key that is present but empty (an unset env var) is NOT defaulted: calls return `MISSING_BASE_URL`.
+   */
+  baseUrl?: string
   /** The project's per-project API key (Bearer token) — see Roadmap 01-growth-engine's Story 1.1. */
   apiKey: string
-  /** The acting user's id, auto-appended to every event this client sends. */
-  userId: string
+  /**
+   * The acting user's id, auto-appended to every event this client sends. Optional since 1.0 (sdk-1-0 D2): a browser
+   * app that learns the user at sign-in calls `identify(userId)` instead.
+   */
+  userId?: string
   /** Override for testing; defaults to the global fetch. */
   fetchImpl?: typeof fetch
   /**
@@ -322,7 +333,23 @@ export interface CaptureErrorProps {
   context?: Record<string, unknown>
 }
 
+export type IdentifyResult = { ok: true } | { ok: false; error: string; code: 'INVALID_USER_ID' }
+
 export interface GrowthEngineClient {
+  /**
+   * sdk-1-0 D2 — who future calls are about, from now on (e.g. right after sign-in). Per client instance; nothing
+   * earlier is re-attributed (the engine has no alias table). Bucket AFTER identify when a test must follow the person:
+   * the ungoverned `bucket` resolves from the current id, so an anonymous variant can differ from the identified one.
+   */
+  identify(userId: string): IdentifyResult
+  /** Forget the current user (e.g. at sign-out). Calls that need one return `NO_USER` until the next `identify`. */
+  reset(): void
+  /**
+   * sdk-1-0 D4 — append daily values to a North Star input whose values are pushed (not computed from events), e.g.
+   * revenue. Append-only and idempotent per day on the engine: re-pushing a day is a no-op, and the result lists the
+   * days whose value differed from the one on file. Needs no user. Never throws.
+   */
+  pushInputValues(inputKey: string, values: InputValue[]): Promise<PushInputValuesResult>
   track(event: string, props?: TrackEventProps): Promise<TrackResult>
   trackAdoption(featureKey: string, props?: Omit<TrackEventProps, 'featureId'>): Promise<TrackResult>
   syncFeatures(features: FeatureSyncEntry[]): Promise<SyncResult>
@@ -380,24 +407,108 @@ export interface GrowthEngineClient {
 }
 
 /**
- * const growth = createGrowthEngineClient({ baseUrl, apiKey, userId })
+ * const growth = createGrowthEngineClient({ apiKey, userId })   // baseUrl: https://goldenfrijoles.com unless given
  * await growth.track('signup')
  */
+/** A network error message without any `user:password@` from a URL in it: callers log `result.error`. */
+function safeNetworkMessage(err: unknown): string {
+  const message = err instanceof Error ? err.message : 'Unknown network error'
+  return message.replace(/\/\/[^/\s@]*@/g, '//***@')
+}
+
 export function createGrowthEngineClient(config: GrowthEngineClientConfig): GrowthEngineClient {
   const fetchFn = config.fetchImpl ?? fetch
+  // sdk-1-0 D1/D2 — the config is read on EVERY call, as 0.6.0 did: a config whose baseUrl or userId is a getter, is
+  // inherited, or is filled in after this call must keep working (verifier, #331). Identity set by identify/reset lives
+  // in this closure, per instance and never module-level, so an ESM and a CJS copy (D5) cannot share or disagree on it.
+  // Until identify or reset is called, the client follows config.userId.
+  let identified: { id: string | null } | null = null
+  const currentUserId = (): string | null => {
+    if (identified) return identified.id
+    const fromConfig = config.userId
+    return typeof fromConfig === 'string' && fromConfig.trim().length > 0 ? fromConfig : null
+  }
+  const noUser = {
+    ok: false as const,
+    error: 'No user yet: pass userId when creating the client, or call identify(userId) first',
+    code: 'NO_USER',
+  }
 
-  async function track(event: string, props: TrackEventProps = {}): Promise<TrackResult> {
+  function identify(id: string): IdentifyResult {
+    if (typeof id !== 'string' || id.trim().length === 0) {
+      return { ok: false, error: 'identify needs a non-empty user id', code: 'INVALID_USER_ID' }
+    }
+    identified = { id }
+    return { ok: true }
+  }
+
+  function reset(): void {
+    identified = { id: null }
+  }
+
+  async function pushInputValues(inputKey: string, values: InputValue[]): Promise<PushInputValuesResult> {
+    const problems = inputValuesProblems(inputKey, values)
+    if (problems.length > 0)
+      return { ok: false, error: problems[0], code: 'INVALID_INPUT_VALUES', issues: problems }
+    const baseUrl = resolveBaseUrl(config)
+    if (baseUrl === undefined) return missingBaseUrl
     let res: Response
     try {
-      res = await fetchFn(`${config.baseUrl}/api/v1/track`, {
+      res = await fetchFn(`${baseUrl}/api/v1/inputs/${encodeURIComponent(inputKey)}/values`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.apiKey}` },
-        body: JSON.stringify({ userId: config.userId, event, ...props }),
+        body: JSON.stringify({ values: values.map((v) => ({ occurredOn: v.occurredOn, value: v.value })) }),
+      })
+    } catch (err) {
+      return { ok: false, error: safeNetworkMessage(err), code: 'NETWORK_ERROR' }
+    }
+    const body = (await res.json().catch(() => null)) as {
+      ok?: boolean
+      error?: string
+      issues?: unknown
+      inputKey?: string
+      inserted?: number
+      skippedDuplicates?: number
+      mismatchedDuplicates?: string[]
+    } | null
+    if (!res.ok || !body?.ok) {
+      return {
+        ok: false,
+        error: body?.error ?? `HTTP ${res.status}`,
+        code: String(res.status),
+        issues: body?.issues,
+      }
+    }
+    return {
+      ok: true,
+      inputKey: body.inputKey ?? inputKey,
+      inserted: body.inserted ?? 0,
+      skippedDuplicates: body.skippedDuplicates ?? 0,
+      mismatchedDuplicates: body.mismatchedDuplicates ?? [],
+    }
+  }
+  const missingBaseUrl = {
+    ok: false as const,
+    error: 'baseUrl is empty: pass the engine URL, or omit the key for https://goldenfrijoles.com',
+    code: 'MISSING_BASE_URL',
+  }
+
+  async function track(event: string, props: TrackEventProps = {}): Promise<TrackResult> {
+    const baseUrl = resolveBaseUrl(config)
+    if (baseUrl === undefined) return missingBaseUrl
+    const userId = currentUserId()
+    if (userId === null) return noUser
+    let res: Response
+    try {
+      res = await fetchFn(`${baseUrl}/api/v1/track`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.apiKey}` },
+        body: JSON.stringify({ userId, event, ...props }),
       })
     } catch (err) {
       return {
         ok: false,
-        error: err instanceof Error ? err.message : 'Unknown network error',
+        error: safeNetworkMessage(err),
         code: 'NETWORK_ERROR',
       }
     }
@@ -423,9 +534,11 @@ export function createGrowthEngineClient(config: GrowthEngineClientConfig): Grow
   }
 
   async function syncFeatures(features: FeatureSyncEntry[]): Promise<SyncResult> {
+    const baseUrl = resolveBaseUrl(config)
+    if (baseUrl === undefined) return missingBaseUrl
     let res: Response
     try {
-      res = await fetchFn(`${config.baseUrl}/api/v1/features/sync`, {
+      res = await fetchFn(`${baseUrl}/api/v1/features/sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.apiKey}` },
         body: JSON.stringify({ features }),
@@ -433,7 +546,7 @@ export function createGrowthEngineClient(config: GrowthEngineClientConfig): Grow
     } catch (err) {
       return {
         ok: false,
-        error: err instanceof Error ? err.message : 'Unknown network error',
+        error: safeNetworkMessage(err),
         code: 'NETWORK_ERROR',
       }
     }
@@ -470,7 +583,10 @@ export function createGrowthEngineClient(config: GrowthEngineClientConfig): Grow
           governance.definitionVersion,
           variants
         )
-      : resolveVariant(config.userId, experimentKey, variants)
+      : currentUserId() === null
+        ? null
+        : resolveVariant(currentUserId() as string, experimentKey, variants)
+    if (!governed && currentUserId() === null) return noUser
     if (variant === null) {
       return { ok: false, error: 'No valid variants provided', code: 'INVALID_VARIANTS' }
     }
@@ -697,6 +813,9 @@ export function createGrowthEngineClient(config: GrowthEngineClientConfig): Grow
   }
 
   return {
+    identify,
+    reset,
+    pushInputValues,
     track,
     trackAdoption: (featureKey, props) => track('feature_adopted', { ...props, featureId: featureKey }),
     syncFeatures,

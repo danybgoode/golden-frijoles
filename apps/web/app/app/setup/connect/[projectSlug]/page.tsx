@@ -1,4 +1,5 @@
 import { requireProjectMembership } from '@/lib/dashboard-auth'
+import { sdkQuickstart, SDK_API_KEY_ENV } from '@/lib/sdk-snippet'
 import { isConnectorEnabled, isConnectorWritesEnabled } from '@/lib/flags'
 import { listCliTokens } from '@/lib/cli-tokens'
 import { DEMO_PROJECT_SLUG } from '@/lib/public-demo'
@@ -199,23 +200,15 @@ export default async function SetupConnectPage({ params }: { params: Promise<{ p
               NOT `frijoles init`, which writes a flag-read key only. */}
           <p className="ds-hint">
             Your product reports what its users do; your agent reads it back as funnels and your North Star.
-            Add the SDK where your app runs, with an <b>ingest key</b> in <code>GROWTH_ENGINE_API_KEY</code> —
+            Add the SDK where your app runs, with an <b>ingest key</b> in <code>{SDK_API_KEY_ENV}</code> —
             an owner gets one with <code>frijoles keys create --type ingest --label &quot;my app&quot;</code> or
             under <a href={`/app/setup/keys/${projectSlug}`}>Setup › Keys</a>. It is shown once; keep it in
             your environment, never in code.
           </p>
           <pre className="ds-mono ds-codeblock">
-            {`npm install @golden-frijoles/sdk
-
-import { createGrowthEngineClient } from '@golden-frijoles/sdk'
-
-const engine = createGrowthEngineClient({
-  baseUrl: '${getSiteUrl()}',
-  apiKey: process.env.GROWTH_ENGINE_API_KEY,
-  userId: currentUser.id,
-})
-
-await engine.track('${STARTER_TARGET_EVENT}', { featureId: '${STARTER_FEATURE_KEY}' })`}
+            {sdkQuickstart(getSiteUrl(), [
+              `await engine.track('${STARTER_TARGET_EVENT}', { featureId: '${STARTER_FEATURE_KEY}' })`,
+            ])}
           </pre>
           {/* Hedged (fresh reviewer, #284): the starter feature is registered best-effort at signup, and
               projects made another way never had one. An unregistered feature's funnel is a 404

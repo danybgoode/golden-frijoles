@@ -12,6 +12,7 @@ const registerHooks = (Module as typeof Module & { registerHooks: (hooks: { reso
 registerHooks({
   resolve(specifier, context, nextResolve) {
     if (specifier === './flags') return nextResolve('./flags.ts', context)
+    if (specifier === './defaults') return nextResolve('./defaults.ts', context)
     if (specifier === './scenarios') return nextResolve('./scenarios.ts', context)
     return nextResolve(specifier, context)
   },

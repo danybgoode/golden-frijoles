@@ -15,6 +15,7 @@ const registerHooks = (Module as typeof Module & { registerHooks: (hooks: { reso
 registerHooks({
   resolve(specifier, context, nextResolve) {
     if (specifier === './flags') return nextResolve('./flags.ts', context)
+    if (specifier === './defaults') return nextResolve('./defaults.ts', context)
     return nextResolve(specifier, context)
   },
 })
@@ -166,4 +167,26 @@ test('catalog-sync client surfaces conflict as typed HTTP 409 and does not send 
     assert.ok(invalid.issues.some((issue) => issue.includes('valid flag key')))
   }
   assert.equal(calls, 1)
+})
+
+test('sdk-1-0 D1: no baseUrl key syncs to goldenfrijoles.com; a present-but-empty one fails without a request', async () => {
+  const urls: string[] = []
+  const fetchImpl = async (input: unknown) => {
+    urls.push(String(input))
+    return new Response(JSON.stringify({ ok: true, results: [] }), { status: 200 })
+  }
+  await createFlagDefinitionSyncClient({ flagSyncKey: 'k', fetchImpl: fetchImpl as typeof fetch }).syncFlagDefinitions([
+    { key: 'checkout.fixture', definition },
+  ])
+  assert.equal(urls[0], 'https://goldenfrijoles.com/api/v1/flags/sync')
+
+  urls.length = 0
+  const unset = await createFlagDefinitionSyncClient({
+    baseUrl: '',
+    flagSyncKey: 'k',
+    fetchImpl: fetchImpl as typeof fetch,
+  }).syncFlagDefinitions([{ key: 'checkout.fixture', definition }])
+  assert.equal(unset.ok, false)
+  assert.equal(!unset.ok && unset.kind, 'network')
+  assert.deepEqual(urls, [])
 })

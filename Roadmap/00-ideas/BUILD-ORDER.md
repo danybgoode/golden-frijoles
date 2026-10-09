@@ -27,17 +27,18 @@ _a pitch is waiting at the approval gate._
 - [Analytics visualization — the charting-dependency decision (spike), then the layer](seeds/analytics-visualization-layer.md) — #14 · 01 Growth Engine · seed · Spike · risk: Low · appetite S · _docs: status ready_
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
 
-## Ready (7)
+## Ready (8)
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
-- [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #74 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
-- [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #75 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
-- [Scenarios made PM-operable — define, launch, and kill a scenario from the UI](../01-growth-engine/scenarios-pm-operable/README.md) — #76 · 01 Growth Engine · 10/10 stories · risk: High · appetite M · _docs: status in-progress_
-- [CMS-neutral experiment integration + Payload go/no-go](../01-growth-engine/cms-integration-spike/README.md) — #77 · 01 Growth Engine · 0/6 stories · risk: Low · _docs: status scaffolded_
-- [One plugin, one install — Golden Frijoles ships as a public plugin whose skills run in anyone's repo](../09-platform-infra/golden-frijoles-plugin/README.md) — #78 · 09 Platform Infra · 14/23 stories · risk: High · appetite L · _docs: status in-progress_
-- [One public monorepo — skills/ subtree, a lean install mirror, licences, a private docs repo](../09-platform-infra/public-monorepo/README.md) — #79 · 09 Platform Infra · 13/15 stories · risk: High · appetite M · _docs: status in-progress_
-- [Several North Star metrics, one reading rule](../01-growth-engine/north-star-multi-metric-read/README.md) — #80 · 01 Growth Engine · 0/1 stories · risk: Low · appetite S · _docs: status in-progress_
+- [SDK 1.0: one line to start, who the user is, and North Star inputs](../01-growth-engine/sdk-1-0/README.md) — #74 · 01 Growth Engine · 6/6 stories · risk: High · appetite M · _docs: status in-progress_
+- [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #75 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
+- [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #76 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
+- [Scenarios made PM-operable — define, launch, and kill a scenario from the UI](../01-growth-engine/scenarios-pm-operable/README.md) — #77 · 01 Growth Engine · 10/10 stories · risk: High · appetite M · _docs: status in-progress_
+- [CMS-neutral experiment integration + Payload go/no-go](../01-growth-engine/cms-integration-spike/README.md) — #78 · 01 Growth Engine · 0/6 stories · risk: Low · _docs: status scaffolded_
+- [One plugin, one install — Golden Frijoles ships as a public plugin whose skills run in anyone's repo](../09-platform-infra/golden-frijoles-plugin/README.md) — #79 · 09 Platform Infra · 14/23 stories · risk: High · appetite L · _docs: status in-progress_
+- [One public monorepo — skills/ subtree, a lean install mirror, licences, a private docs repo](../09-platform-infra/public-monorepo/README.md) — #80 · 09 Platform Infra · 13/15 stories · risk: High · appetite M · _docs: status in-progress_
+- [Several North Star metrics, one reading rule](../01-growth-engine/north-star-multi-metric-read/README.md) — #81 · 01 Growth Engine · 0/1 stories · risk: Low · appetite S · _docs: status in-progress_
 
 ## Building — live only
 
@@ -122,4 +123,4 @@ _merged, deployed and closed._
 - [The portfolio loop test fails intermittently in CI and has been quarantined](seeds/portfolio-loop-flake.md) — 02 Commercial · seed · Bug · risk: Low · appetite S · _docs: status shipped_
 
 ---
-_83 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._
+_84 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._

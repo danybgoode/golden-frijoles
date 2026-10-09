@@ -5,10 +5,15 @@
     "moduleResolution": "Node",
     "declaration": true,
     "declarationMap": false,
-    "outDir": "./dist",
+    "outDir": "./dist/cjs",
     "rootDir": "./src",
     "noEmit": false
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "src/**/*.test.ts"]
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "src/**/*.test.ts"
+  ]
 }

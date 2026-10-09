@@ -1,4 +1,5 @@
 import { DEMO_PROJECT_SLUG } from '@/lib/public-demo'
+import { sdkQuickstart } from '@/lib/sdk-snippet'
 import { getActiveConnectorUrl } from '@/lib/connector-tokens'
 import { CLI_BIN, CLI_GLOBAL_INSTALL, CLI_KILL_SWITCH_STORY, CLI_NPX_INIT } from '@/lib/cli-install'
 import { installPrompt, PLUGIN_INSTALL, PLUGIN_MARKETPLACE_ADD, SKILLS_ADD } from '@/lib/install-prompt'
@@ -230,19 +231,14 @@ ${CLI_KILL_SWITCH_STORY.join('\n')}`}
           connector above, not an alternative to it or to the CLI.
         </p>
         <pre className="ds-mono ds-codeblock">
-          {`npm install @golden-frijoles/sdk
-
-import { createGrowthEngineClient } from '@golden-frijoles/sdk'
-
-const engine = createGrowthEngineClient({
-  baseUrl: '${getSiteUrl()}',
-  apiKey: process.env.GROWTH_ENGINE_API_KEY,
-  userId: currentUser.id,
-})
-
-await engine.track('setup_guide_viewed', { featureId: 'setup_guide' })
-await engine.trackAdoption('setup_guide')
-const variant = engine.bucket('quick-upload-ui', ['control', 'treatment'])`}
+          {sdkQuickstart(getSiteUrl(), [
+            "await engine.track('setup_guide_viewed', { featureId: 'setup_guide' })",
+            "await engine.trackAdoption('setup_guide')",
+            "const variant = engine.bucket('quick-upload-ui', [{ key: 'control' }, { key: 'treatment' }])",
+            '// a North Star input you push yourself, one value per day (re-pushing a day is a no-op)',
+            "const today = new Date().toISOString().slice(0, 10) // the UTC day the value belongs to",
+            "await engine.pushInputValues('attributed_revenue', [{ occurredOn: today, value: 1240 }])",
+          ])}
         </pre>
       </ListCard>
 
