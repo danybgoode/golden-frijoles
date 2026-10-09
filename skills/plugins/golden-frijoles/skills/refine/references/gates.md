@@ -47,23 +47,37 @@ know when …"), never as a stage, a button or a status.
 
 ## The Strategy gate (setup's strategy step)
 
-Setup's strategy step writes the three strategy files first, from the conversation and the repo, each by its coach's
-template and write rules with `status: draft`: `pmf-narrative`, `north-star`, `risk-validation`. Then:
+Setup's strategy step drafts the three strategy files first, by setup's `references/draft.md`: the founder's sentence,
+then the reads, then each file by its coach's template with `status: draft` and a source on every claim line, and two
+North Star candidates in `north-star.md`'s `## Candidates`. Then:
 
 ```gate strategy
 Your strategy is written and ready to review.
 
-Read them      Roadmap/00-strategy/  (<n> files, any Markdown viewer)
+Read them      Roadmap/00-strategy/  (<n> files, any Markdown viewer; <k> lines marked assumed)
 
-Decided from the repo, no need to check unless you disagree
+Product & persona (from the repo, no need to check unless you disagree)
+               For: <persona, doing their job>
                The problem: <the problem, one line>
                The promise: <the value proposition, one line>
                How you charge: <the business model, one line>
 
+North Star     A · <name> (<game>, counts <unit>): <metric, one line>
+                   Inputs: <input> (tracked as <event> | needs an event) · <input> (…) · <input> (…)
+                   Builds: <what it would make you build>
+               B · <name> (<game>, counts <unit>): <metric, one line>
+                   Inputs: <input> (…) · <input> (…) · <input> (…)
+                   Builds: <what it would make you build>
+
+Roadmap        <n> shipped, <n> being built, <n> ideas (from the repo)
+
+First idea     <after a: We believe that <the change> for <persona> will <move the input>, because <the insight>.
+               We'll know when <the signal>. | before a: written once you choose A or B>
+
 Decisions only you can make:
-  a. Who first: <the segment question the repo leaves open>
-  b. North Star: <the metric, one line>. Keep it?
-  c. Riskiest assumption: <the assumption, one line>. Test that first?
+  a. North Star: A or B?
+  b. <after a: The first idea's target: <input> from what number, to what, by when? "Not known yet" is an answer.>
+  c. <one more question the repo leaves open, if any>
 
 Answer them here, or:
 
@@ -72,15 +86,36 @@ Answer them here, or:
   3 Coach me through it, one piece at a time
 ```
 
-- **Decided from the repo** comes from what the files say; a line the repo cannot answer becomes a decision instead
-  (never more than three) or is left out. Never invent a fact about the business.
+- **Product & persona** comes from what the files say; a line the repo cannot answer becomes a decision instead (never
+  more than three) or is left out. Never invent a fact about the business. *Read them* counts the `(assumed)` lines.
+- **North Star** shows the two candidates from `## Candidates` **alike**: each with its game and what it counts, its
+  inputs (each marked with the event `read-product` found, or "needs an event") and its *what it would make you build*
+  line. Neither is shown first as the default, and nothing about the first idea appears until the person picks.
+  **Roadmap** is one line from `read-repo` (left out on route 2).
+- **First idea** appears once decision a is answered (show the gate again with it): a bet sentence
+  (`result-record.md`, *We'll know when* included) on one input of the chosen candidate. Its target is decision b, asked
+  as a question: never propose the numbers. "Not known yet" is a full answer.
+- **Decision order:** a coach's proposals first (the rule below), then a, then b once a is answered, then at most one
+  more; the three-decision limit counts a, b and that one.
+- **A strategy with one North Star** (written before candidates existed, or by the North Star coach, which settles
+  the choice in its workshop) shows it as before: "North Star: <metric>. Keep it?" in place of a.
 - **Answers to the decisions** are written into the files before anything else, then the gate is shown again.
 - **A section the coach proposed** (its first line is `_Proposed by the coach, not decided yet._`, refine's
   `references/coaching.md` §5) is a decision only the person can make: list it under *Decisions only you can make*
   as "<file> · <heading>: the coach's proposal. Keep it?", ahead of the others. **List every one**, however many: the
   three-decision limit counts the other decisions, never these, because Approve accepts each proposal it removes.
-- **1 Approve the strategy** sets `status: agreed` in each strategy file's frontmatter and removes the proposed line
-  from every section the gate listed (approving accepts those proposals), and changes nothing else. Then render the
+- **1 Approve the strategy** before decision a is answered asks a first (and then b), in the gate's words, and never
+  picks a candidate for the person; with both answered it writes the chosen candidate into `north-star.md`'s own sections (the game, the metric, the
+  input table) and its `## Sync payload`, and removes `## Candidates`; sets `status: agreed` in each strategy file's
+  frontmatter (Approve is agreement: bets against these inputs are grounded); removes the proposed line from every
+  section the gate listed (approving accepts those proposals); and writes the **first bet** as a seed from refine's
+  `templates/scope-seed.md` in `Roadmap/00-ideas/seeds/`, every `{{…}}` filled: `title` (the change, a few words),
+  `slug` (from the title), `area` (where `read-repo` puts ideas; `01` on a new project), `type: feature`, `appetite: null`
+  (refine sets it), `risk: low`, `status: raw`, `intent_ask: proxy` with the founder's one sentence as the ask; the
+  sentence as `hypothesis`; `persona`; `target_metric` (the input's key), `target_from`, `target_to` and `read_date`
+  (null = 30 days after shipping) from decision b, with `grounded: true`. "Not known yet" leaves the four target fields
+  null with `grounded: false` and `grounded_reason: no baseline yet`, never an invented number. Then run
+  `node scripts/build-order.mjs` (the run rule applies) so the board shows it. It changes nothing else. Then render the
   one-pagers from the approved files (`node scripts/one-pagers.mjs`, run as the coaches' kit rule says), tell the
   person where they are in one line, and offer refining (`refine`). The North Star's sync to the engine stays the person's own step (the North Star chapter of `strategy`).
 - **2 Change something** revises the files in place; they stay `status: draft`. Show the gate again.

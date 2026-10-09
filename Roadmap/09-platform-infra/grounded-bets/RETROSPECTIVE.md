@@ -1,7 +1,7 @@
 # Grounded bets: every Why is a hypothesis traced from the North Star — Retrospective
 
 _Closed: 2026-10-09_
-_Intent: owed to Daniel (yes | mostly | no)_
+_Intent: yes_
 _Quote vs actual: $17–32 (M, n=17, p25–p75) → ≈$15.48 (under the quote; Claude only, reviewers not measured)_
 
 ## What shipped
@@ -35,7 +35,7 @@ _Quote vs actual: $17–32 (M, n=17, p25–p75) → ≈$15.48 (under the quote; 
   red build the moment 1.1.0 was proposed, so the removal could not be forgotten.
 
 ## Gaps / follow-ups
-- **Owed to Daniel:** the `_Intent_` word; Sprint 1's interactive refine walkthrough (step 2).
+- **Owed to Daniel:** Sprint 1's interactive refine walkthrough (step 2).
 - **The security lens** ran on GPT-OSS over three files only; this machine is not signed into Antigravity
   (`agy login`).
 - **The CLI's next release** should pin kit 1.1.x (it pins 0.43.0 today; plugin-1-0 D9).

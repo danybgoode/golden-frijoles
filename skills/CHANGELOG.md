@@ -7,6 +7,27 @@ newest heading are always the same number — `scripts/check-release.mjs` enforc
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-09
+
+**Setup drafts the strategy: two North Stars from the evidence, and a first bet in one review.**
+
+### Added
+- `refine/read-product.mjs`: what the product says and already measures (the README, the landing copy, the routes,
+  analytics calls with their event names, flag reads), each with its `path:line`. Read-only, bounded, and it never
+  opens an environment file or prints a key.
+- Setup asks *"In one sentence: what is this for, and who is it for?"* before it drafts anything, then drafts the three
+  strategy files with a source on every claim line (`(README.md:3)`, `(your words)`, `(assumed)`) and **two** North
+  Star candidates to choose between (`setup/references/draft.md`).
+- The new-idea route offers *Write it now* (about 5 minutes) before the 45-minute coaching.
+- The Strategy gate shows product and persona, the two North Star candidates side by side (each with its inputs and
+  whether each is already tracked), the roadmap, and, once you choose, a first idea as a bet sentence whose target you
+  give ("not known yet" is an answer). Approve writes the chosen North Star, agrees the files, and writes the first
+  idea into the backlog, grounded when it has a target.
+
+### Changed
+- The coaches open on an existing draft and go deeper over it, keeping its sources; they never start from a blank
+  template over a file with content.
+
 ## [1.1.1] - 2026-10-09
 
 ### Fixed
