@@ -1,6 +1,6 @@
 ---
 status: in-progress  # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Building       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+phase: In review     # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
 locked_at: "2026-10-09T19:00:17Z"
 slug: setup-drafts-strategy
@@ -97,7 +97,8 @@ count, which the tenancy invariant forbids, so it is its own seed (`proving-work
   now"*; a draft from the sentence alone cites `(your words)` or `(assumed)` and ends at the same review.
 - **D9 · The coaches go deeper.** A coach opened on an existing file revises it section by section in place, keeps the
   citations it does not change, replaces `(assumed)` with the founder's answer, and never restarts from the template.
-  Plugin 1.2.0 (additive); the kit is unchanged (read-product lives in refine, as read-repo does).
+  Plugin 1.2.0 (additive). read-product lives in refine, as read-repo does; the kit's version still moves to 1.2.0,
+  because `check-release` keeps plugin, kit and CHANGELOG at one number (amended at build).
 
 ## Scope — stories
 | Sprint | Story | Risk |
@@ -109,7 +110,8 @@ count, which the tenancy invariant forbids, so it is its own seed (`proving-work
 | 2 | S2.3 Plugin 1.2.0 | low |
 
 ## Deploy order
-One PR, both sprints. Plugin release with the merge (no kit change, so no npm step unless the kit closure changes).
+One PR, both sprints. Kit 1.2.0 published (Daniel's 2FA) after the gate is green and the reviews are answered, then
+the merge.
 
 ## Definition of Done (epic)
 - [ ] All sprints merged to `main` + smoke-tested (gaps stated — `node scripts/owed-ledger.mjs` counts what is still owed)

@@ -3,7 +3,7 @@ epic: setup-drafts-strategy
 sprint: 2
 title: "One review"
 risk: low
-phase: Shaping
+phase: In review
 stories_total: 3
 stories:
   - id: S2.1
@@ -12,39 +12,39 @@ stories:
     i_want: "one review with five blocks and one Approve"
     so_that: "setup ends with an agreed strategy and a first bet that can be proven"
     risk: low
-    status: planned
+    status: done
   - id: S2.2
     title: "The coaches go deeper over a draft"
     as_a: "a founder who wants more depth later"
     i_want: "a coach that starts from what setup drafted"
     so_that: "the workshop is optional depth, not a blank page"
     risk: low
-    status: planned
+    status: done
   - id: S2.3
     title: "Plugin 1.2.0"
     as_a: "a founder updating the plugin"
     i_want: "the new setup in a release"
     so_that: "I get it with `/plugin update`"
     risk: low
-    status: planned
+    status: done
 ---
 # Setup drafts the strategy: two North Stars from the evidence, and a first bet in one review — Sprint 2: One review
 
-**Status:** ⬜ not started
+**Status:** 🟡 built, in review (one PR for both sprints)
 
 ## Stories
 
-### Story 2.1 — The five-block Strategy gate; Approve writes the choice, agrees the files and seeds a grounded first bet
+### Story 2.1 — The five-block Strategy gate; Approve writes the choice, agrees the files and seeds a grounded first bet ✅ `547329d`
 **As** a founder at the end of setup, **I want** one review with five blocks and one Approve, **so that** setup ends with an agreed strategy and a first bet that can be proven.
 **Acceptance:** `gates.md`'s Strategy gate shows Product & persona, North Star A or B, Measurement plan, Roadmap and First bet; Approve writes the chosen candidate and payload, removes Candidates, sets all three files agreed and writes a raw seed with the bet sentence, persona, `grounded: true` and the confirmed target (or `grounded: false — no baseline yet`); `check-gate-words` passes.
 **Risk:** low
 
-### Story 2.2 — The coaches go deeper over a draft
+### Story 2.2 — The coaches go deeper over a draft ✅ `17f3f72`
 **As** a founder who wants more depth later, **I want** a coach that starts from what setup drafted, **so that** the workshop is optional depth, not a blank page.
 **Acceptance:** each coach, opened on an existing file, revises it section by section in place, keeps citations it does not change, replaces `(assumed)` with the founder's answer and never restarts from the template.
 **Risk:** low
 
-### Story 2.3 — Plugin 1.2.0
+### Story 2.3 — Plugin 1.2.0 ✅ `e9dc231`
 **As** a founder updating the plugin, **I want** the new setup in a release, **so that** I get it with `/plugin update`.
 **Acceptance:** plugin 1.2.0 with a CHANGELOG entry; `check-release` agrees; the kit closure is unchanged unless a kit script changed.
 **Risk:** low

@@ -3,7 +3,7 @@ epic: setup-drafts-strategy
 sprint: 1
 title: "Read and draft"
 risk: low
-phase: Building
+phase: In review
 stories_total: 2
 stories:
   - id: S1.1
@@ -12,27 +12,27 @@ stories:
     i_want: "the agent to read what my product says and already measures"
     so_that: "the draft cites my product, not the agent's impression"
     risk: low
-    status: planned
+    status: done
   - id: S1.2
     title: "The question first; the cited draft with two North Star candidates, on both routes"
     as_a: "a founder starting setup"
     i_want: "to say what the product is for before I see any draft, then get a draft with two North Stars to choose from"
     so_that: "the draft cannot anchor me, and I choose rather than accept"
     risk: low
-    status: planned
+    status: done
 ---
 # Setup drafts the strategy: two North Stars from the evidence, and a first bet in one review — Sprint 1: Read and draft
 
-**Status:** ⬜ not started
+**Status:** 🟡 built, in review (one PR for both sprints)
 
 ## Stories
 
-### Story 1.1 — read-product.mjs: the product facts with their files, bounded, no secrets
+### Story 1.1 — read-product.mjs: the product facts with their files, bounded, no secrets ✅ `24af57d`
 **As** a founder running setup on an existing repo, **I want** the agent to read what my product says and already measures, **so that** the draft cites my product, not the agent's impression.
 **Acceptance:** `node "$REFINE/read-product.mjs"` prints the README, package, landing copy, routes, analytics calls (with event names) and flags, each with `path:line`; `--json` for the agent; bounded (skipped dirs and caps stated); never opens `.env*`/keys or prints a key-shaped line.
 **Risk:** low
 
-### Story 1.2 — The question first; the cited draft with two North Star candidates, on both routes
+### Story 1.2 — The question first; the cited draft with two North Star candidates, on both routes ✅ `a0696c0`
 **As** a founder starting setup, **I want** to say what the product is for before I see any draft, then get a draft with two North Stars to choose from, **so that** the draft cannot anchor me, and I choose rather than accept.
 **Acceptance:** both routes ask the one-sentence question first; the draft's claim lines each end with a source (a printed path, read-repo, your words, assumed); `north-star.md` holds `## Candidates` A and B that differ in game or unit, and its payload stays unfilled until one is chosen; route 2 offers "Draft it now" first.
 **Risk:** low
