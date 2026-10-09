@@ -1,14 +1,14 @@
 ---
 title: "Grounded bets: every Why is a hypothesis traced from the North Star"
 slug: grounded-bets
-status: ready
+status: scaffolded
 area: "09"
 type: feature
 appetite: M
-underwritten_by: null
+underwritten_by: wave-2026-10
 risk: low
-epic: null
-build_order: null
+epic: "09-platform-infra/grounded-bets"
+build_order: 75
 updated: 2026-10-09
 intent_ask: proxy      # verbatim = the product owner's own words below · proxy = reconstructed after the fact
 hypothesis: "We believe that a refine that writes every Why as a hypothesis traced from the North Star, and challenges an ask that names no input, for founders turning an idea into an epic, will raise grounded bets from 0% to 60% of the features funded by 30 November, because today nothing asks which input a bet moves and the strategy files sit unread at the gate. We'll know when a funded bet records grounded: true with a North Star input, a target and a read date."
@@ -182,3 +182,9 @@ Gaps: none
 ```
 
 <!-- intent-match: {"coverage_in":0.83,"coverage_out":0.768,"clarity":0.802,"teach_back":1,"total":85} -->
+
+## Decisions at the Plan gate (Daniel, 2026-10-09)
+- **Approved.**
+- **a.** Push the computed share into `golden-frijoles` as the `grounded_bets_share` input value (SDK 1.0's
+  `pushInputValues`, from the machine that already pushes the roadmap).
+- **b.** Count from October: 0 of 14 is the baseline, shown honestly.

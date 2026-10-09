@@ -20,25 +20,25 @@ _seeds with no pitch yet._
 - [Template scripts run when invoked through a symlinked path](seeds/script-ismain-realpath.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
 - [This repo lints its template scripts the way its consumers do](seeds/foundation-lint-gate.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
 
-## Refining (3)
+## Refining (2)
 
 _a pitch is waiting at the approval gate._
 
 - [Analytics visualization — the charting-dependency decision (spike), then the layer](seeds/analytics-visualization-layer.md) — #14 · 01 Growth Engine · seed · Spike · risk: Low · appetite S · _docs: status ready_
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
-- [Grounded bets: every Why is a hypothesis traced from the North Star](seeds/grounded-bets.md) — 09 Platform Infra · seed · Feature · risk: Low · appetite M · _docs: status ready_
 
-## Ready (7)
+## Ready (8)
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
-- [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #75 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
-- [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #76 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
-- [Scenarios made PM-operable — define, launch, and kill a scenario from the UI](../01-growth-engine/scenarios-pm-operable/README.md) — #77 · 01 Growth Engine · 10/10 stories · risk: High · appetite M · _docs: status in-progress_
-- [CMS-neutral experiment integration + Payload go/no-go](../01-growth-engine/cms-integration-spike/README.md) — #78 · 01 Growth Engine · 0/6 stories · risk: Low · _docs: status scaffolded_
-- [One plugin, one install — Golden Frijoles ships as a public plugin whose skills run in anyone's repo](../09-platform-infra/golden-frijoles-plugin/README.md) — #79 · 09 Platform Infra · 14/23 stories · risk: High · appetite L · _docs: status in-progress_
-- [One public monorepo — skills/ subtree, a lean install mirror, licences, a private docs repo](../09-platform-infra/public-monorepo/README.md) — #80 · 09 Platform Infra · 13/15 stories · risk: High · appetite M · _docs: status in-progress_
-- [Several North Star metrics, one reading rule](../01-growth-engine/north-star-multi-metric-read/README.md) — #81 · 01 Growth Engine · 0/1 stories · risk: Low · appetite S · _docs: status in-progress_
+- [Grounded bets: every Why is a hypothesis traced from the North Star](../09-platform-infra/grounded-bets/README.md) — #75 · 09 Platform Infra · 0/2 stories · risk: Low · appetite M · _docs: status scaffolded_
+- [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #76 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
+- [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #77 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
+- [Scenarios made PM-operable — define, launch, and kill a scenario from the UI](../01-growth-engine/scenarios-pm-operable/README.md) — #78 · 01 Growth Engine · 10/10 stories · risk: High · appetite M · _docs: status in-progress_
+- [CMS-neutral experiment integration + Payload go/no-go](../01-growth-engine/cms-integration-spike/README.md) — #79 · 01 Growth Engine · 0/6 stories · risk: Low · _docs: status scaffolded_
+- [One plugin, one install — Golden Frijoles ships as a public plugin whose skills run in anyone's repo](../09-platform-infra/golden-frijoles-plugin/README.md) — #80 · 09 Platform Infra · 14/23 stories · risk: High · appetite L · _docs: status in-progress_
+- [One public monorepo — skills/ subtree, a lean install mirror, licences, a private docs repo](../09-platform-infra/public-monorepo/README.md) — #81 · 09 Platform Infra · 13/15 stories · risk: High · appetite M · _docs: status in-progress_
+- [Several North Star metrics, one reading rule](../01-growth-engine/north-star-multi-metric-read/README.md) — #82 · 01 Growth Engine · 0/1 stories · risk: Low · appetite S · _docs: status in-progress_
 
 ## Building — live only
 
