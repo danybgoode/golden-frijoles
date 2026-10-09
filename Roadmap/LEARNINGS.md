@@ -1373,6 +1373,17 @@ one-liner + why + date shape.
   1.0.10 incident this repo already paid for. *(2026-07-25.)*
 
 ## Working efficiently
+- **A stacked series merges into its bases, not `main`.** #324–#327 were merged in order; only #324 reached `main`,
+  because GitHub retargets a stacked PR to `main` only when its base branch is deleted at merge. Release instructions
+  for a stack say it: merge the top branch into `main` once, or retarget each PR to `main` before merging it.
+  *(plugin-1-0, 2026-10-08.)*
+- **A bulk rename classifies every hit before replacing it.** Each sweep in plugin-1-0 touched something stored or
+  generated: a localStorage key, generated workflow output, an approved design file, a history attribution, a token
+  prefix it narrowly missed. Grep the old word, then sort the hits (typed command · label · path · stored identifier ·
+  history quote · generated output) and replace only the first three. *(plugin-1-0, 2026-10-08.)*
+- **The local gate must replay the CI that will judge the PR.** The root `test:unit` skips `skills/plugins/**` tests,
+  the skills repo's `cmp` pairs, the networked `check-onboarding-parity --exec` and the e2e specs; three Blocking
+  reds came from those. A script that replays Skills CI step for step stopped them. *(plugin-1-0, 2026-10-08.)*
 - **Rewriting history docs: split instructions from evidence.** A step, an `Env:` line or a curl is an instruction and
   can take a new address; "→ 200", "is live at" or "Daniel opened" is evidence of a past moment and keeps where it was
   observed. A blanket replace keeps every URL working and still falsifies the record. *(launch-trust-sweep, 2026-10-08.)*

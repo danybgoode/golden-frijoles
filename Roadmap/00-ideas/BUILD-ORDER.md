@@ -5,16 +5,15 @@
 
 # Build order — the six stages
 
-> **Generated 2026-10-08 — do not hand-edit.** One stage per initiative, decided in one place
+> **Generated 2026-10-09 — do not hand-edit.** One stage per initiative, decided in one place
 > (`scripts/lib/stage.mjs`): Backlog · Refining · Ready · Building · QA · Shipped.
 > This committed file reads the docs alone, so **Building and QA are not here** — they are facts git
 > and GitHub hold. For the live board run `node scripts/build-order.mjs --live`, or open the Hub board.
 
-## Backlog (6)
+## Backlog (5)
 
 _seeds with no pitch yet._
 
-- [Scenarios freeze: archive the epic, correct the landing's SecOps claim, deprecate the SDK scenario API](seeds/scenarios-freeze.md) — #36 · 01 Growth Engine · seed · Chore · risk: Low · appetite S · _docs: status raw_
 - [Verify module: the verification depth ladder as a product (after the spike)](seeds/verify-module.md) — #54 · 09 Platform Infra · seed · Feature · risk: High · appetite L · _docs: status raw_
 - [A delivery whose settle keeps failing is re-sent every 5 minutes, uncounted and unlogged](seeds/delivery-stale-reclaim-uncounted.md) — 01 Growth Engine · seed · Bug · risk: High · appetite S · _docs: status raw_
 - [perf-probe only requests the hosts a project names](seeds/perf-probe-target-allowlist.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
@@ -28,11 +27,10 @@ _a pitch is waiting at the approval gate._
 - [Analytics visualization — the charting-dependency decision (spike), then the layer](seeds/analytics-visualization-layer.md) — #14 · 01 Growth Engine · seed · Spike · risk: Low · appetite S · _docs: status ready_
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
 
-## Ready (8)
+## Ready (7)
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
-- [Plugin 1.0: five plain skills, the frijoles CLI, and Refining](../09-platform-infra/plugin-1-0/README.md) — #73 · 09 Platform Infra · 11/12 stories · risk: High · appetite L · _docs: status scaffolded_
 - [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #74 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
 - [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #75 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
 - [Scenarios made PM-operable — define, launch, and kill a scenario from the UI](../01-growth-engine/scenarios-pm-operable/README.md) — #76 · 01 Growth Engine · 10/10 stories · risk: High · appetite M · _docs: status in-progress_
@@ -49,10 +47,11 @@ _a work branch is on origin. Not in this committed file: `node scripts/build-ord
 
 _a PR is ready for review, or merged and waiting for its close-out. Not in this committed file: `node scripts/build-order.mjs --live` or the Hub board._
 
-## Shipped (68)
+## Shipped (69)
 
 _merged, deployed and closed._
 
+- [Plugin 1.0: five plain skills, the frijoles CLI, and Refining](../09-platform-infra/plugin-1-0/README.md) — #73 · 09 Platform Infra · 12/12 stories · risk: High · appetite L · _docs: status shipped_
 - [Coaches v2: a cold read first, then coaches that read each other, save as they go and leave one-pagers ✅](../09-platform-infra/coaches-v2/README.md) — #72 · 09 Platform Infra · 9/9 stories · risk: Low · appetite M · _docs: status shipped_
 - [Launch trust sweep: every public surface says Golden Frijoles, on goldenfrijoles.com](../02-commercial/launch-trust-sweep/README.md) — #71 · 02 Commercial · 3/3 stories · risk: Low · appetite S · _docs: status shipped_
 - [Build view upgrade ✅](../02-commercial/build-view-upgrade/README.md) — #70 · 02 Commercial · 4/4 stories · risk: Low · appetite S · _docs: status shipped_
@@ -123,4 +122,4 @@ _merged, deployed and closed._
 - [The portfolio loop test fails intermittently in CI and has been quarantined](seeds/portfolio-loop-flake.md) — 02 Commercial · seed · Bug · risk: Low · appetite S · _docs: status shipped_
 
 ---
-_84 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._
+_83 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._

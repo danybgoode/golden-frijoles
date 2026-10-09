@@ -1,7 +1,7 @@
 ---
 title: "Scenarios freeze: archive the epic, correct the landing's SecOps claim, deprecate the SDK scenario API"
 slug: scenarios-freeze
-status: raw
+status: archived   # dropped 2026-10-08: Daniel reversed D6 — scenarios and drills stay and get switched on (launch-sweep audit, decision 3)
 area: "01"
 type: chore
 appetite: S

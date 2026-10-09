@@ -3,7 +3,7 @@ epic: plugin-1-0
 sprint: 2
 title: "Refine and Refining"
 risk: high
-phase: In review
+phase: Shipped
 stories_total: 3
 stories:
   - id: S2.1
@@ -30,7 +30,7 @@ stories:
 ---
 # Plugin 1.0 — Sprint 2: Refine and Refining
 
-**Status:** 🟡 built, in review (stacked on S1; merges with S1–S4 in one sitting, D7)
+**Status:** ✅ shipped 2026-10-08 (S1 via #324 `f05bc81`; S2–S4 via #328 `f20076a`)
 
 ## Stories
 

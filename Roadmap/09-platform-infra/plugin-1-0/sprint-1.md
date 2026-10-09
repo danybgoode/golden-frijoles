@@ -30,7 +30,7 @@ stories:
 ---
 # Plugin 1.0 — Sprint 1: The CLI is frijoles
 
-**Status:** 🟡 built, in review (stacked; merges with S2–S4 in one sitting, D7)
+**Status:** ✅ shipped 2026-10-08 (S1 via #324 `f05bc81`; S2–S4 via #328 `f20076a`)
 
 ## Stories
 
