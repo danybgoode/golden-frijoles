@@ -939,11 +939,11 @@ function initFetch(
       return json(200, { ok: true, contractVersion: 1, environment: 'development', flags: [] })
     if (url.pathname === '/api/v1/cli/keys/verify')
       return opts.verifyState === 'down'
-        ? json(500, { ok: false, error: { code: 'server_error', message: 'down' } })
+        ? json(500, { ok: false, code: 'server_error', error: 'down' })
         : json(200, { ok: true, type: 'ingest', state: opts.verifyState ?? 'live' })
     if (url.pathname === '/api/v1/cli/keys' && body?.type === 'ingest')
       return opts.ingestMint === 'fail'
-        ? json(500, { ok: false, error: { code: 'server_error', message: 'mint failed' } })
+        ? json(500, { ok: false, code: 'server_error', error: 'mint failed' })
         : json(200, { ok: true, id: 'ingest-1', key: 'gk_ingest_secret', type: 'ingest', expiresAt: null })
     if (url.pathname === '/api/v1/cli/keys')
       return json(200, { ok: true, id: 'key-1', key: 'gb_key_secret', type: 'flag_read', expiresAt: null })
@@ -1058,4 +1058,74 @@ test('init without --ingest never verifies or mints an ingest key, and writes no
   await run({ argv: ['init'], writer: capture().writer, env, cwd, fetchImpl: initFetch({}, seen) })
   assert.ok(!seen.some((c) => c.url === '/api/v1/cli/keys/verify' || c.body?.type === 'ingest'))
   assert.equal(readEnvValue(readFileSync(join(cwd, '.env.local'), 'utf8'), INGEST_ENV_KEYS.key), null)
+})
+
+// ── setup-instruments-connects D3 · `frijoles status` ────────────────────────────────────────────
+test('frijoles status says waiting, or the first and latest event, and --json carries the timestamps', async () => {
+  const env = sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN, GOLDEN_FRIJOLES_PROJECT: 'acme' })
+  const waiting = capture()
+  assert.equal(
+    await run({
+      argv: ['status'],
+      writer: waiting.writer,
+      env,
+      fetchImpl: stubFetch({
+        '/api/v1/cli/status': { body: { ok: true, project: 'acme', firstEvent: null, latestEvent: null } },
+      }),
+    }),
+    EXIT.OK
+  )
+  assert.match(waiting.out.join('\n'), /acme: waiting for the first event\./)
+  const arrived = capture()
+  const at = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+  await run({
+    argv: ['status', '--json'],
+    writer: arrived.writer,
+    env,
+    fetchImpl: stubFetch({
+      '/api/v1/cli/status': {
+        body: {
+          ok: true,
+          project: 'acme',
+          firstEvent: { event: 'signed_up', at },
+          latestEvent: { event: 'order_placed', at },
+        },
+      },
+    }),
+  })
+  assert.equal(
+    (JSON.parse(arrived.out.join('\n')) as { firstEvent: { event: string } }).firstEvent.event,
+    'signed_up'
+  )
+  const { statusLines } = await import('./commands/status.ts')
+  assert.match(
+    statusLines({
+      project: 'acme',
+      firstEvent: { event: 'signed_up', at },
+      latestEvent: { event: 'order_placed', at },
+    }),
+    /First event \.+ signed_up, 5 minutes ago\n {2}Latest \.+ order_placed, 5 minutes ago/
+  )
+})
+
+test("frijoles status off (the kill switch) is the server's 404, said plainly", async () => {
+  const env = sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN, GOLDEN_FRIJOLES_PROJECT: 'acme' })
+  const captured = capture()
+  const code = await run({
+    argv: ['status'],
+    writer: captured.writer,
+    env,
+    fetchImpl: stubFetch({
+      '/api/v1/cli/status': {
+        status: 404,
+        body: {
+          ok: false,
+          code: 'disabled',
+          error: 'The first-event status is not switched on here.',
+        },
+      },
+    }),
+  })
+  assert.notEqual(code, EXIT.OK)
+  assert.match(captured.all(), /not switched on here/)
 })

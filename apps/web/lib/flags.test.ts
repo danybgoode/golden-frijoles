@@ -37,6 +37,7 @@ const singles: Record<string, keyof typeof GATES> = {
   isAgentRailEnabled: 'agentRail',
   isFlagRuleBuilderEnabled: 'flagRuleBuilder',
   isFlagConsoleEnabled: 'flagConsole',
+  isFirstEventBandEnabled: 'firstEventBand',
 }
 
 test('every gate in GATES but terminal sign-in (its own seam) has exactly one function here, reading its own entry', () => {

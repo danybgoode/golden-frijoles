@@ -21,7 +21,7 @@ const OFF: Gate = { key: 'x.off_enabled', envVar: 'X_OFF_ENABLED', fallback: fal
 
 // D5 — each fallback IS the production value on 2026-10-08 (the epic README's gate table, masked values read from
 // live behaviour). Pinned as a literal so changing a fallback is a decision that shows up in review, not a typo.
-test('the gate table: 18 gates, their keys, the variables they replaced, and each fallback (D3, D5)', () => {
+test('the gate table: 19 gates, their keys, the variables they replaced, and each fallback (D3, D5)', () => {
   const table = Object.values(GATES).map((gate) => [gate.key, gate.envVar, gate.fallback])
   assert.deepEqual(table.sort(), [
     ['auth.signup_enabled', 'SIGNUP_ENABLED', true],
@@ -36,6 +36,7 @@ test('the gate table: 18 gates, their keys, the variables they replaced, and eac
     ['flags.definition_sync_enabled', 'FLAG_DEFINITION_SYNC_ENABLED', true],
     ['flags.rule_builder_enabled', 'FLAG_RULE_BUILDER_ENABLED', true],
     ['journeys.projections_enabled', 'JOURNEY_PROJECTIONS_ENABLED', true],
+    ['onboarding.first_event_band_enabled', 'FIRST_EVENT_BAND_ENABLED', true],
     ['ops.automatic_circuit_breakers_enabled', 'AUTOMATIC_CIRCUIT_BREAKERS_ENABLED', false],
     ['ops.resilience_scenarios_enabled', 'RESILIENCE_SCENARIOS_ENABLED', false],
     ['ops.scenario_authoring_enabled', 'SCENARIO_AUTHORING_ENABLED', false],

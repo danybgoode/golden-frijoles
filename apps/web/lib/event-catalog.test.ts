@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { buildEventCatalog, type EventCatalogRow } from './event-catalog.ts'
+import {
+  RESERVED_EVENTS,
+  buildEventCatalog,
+  reservedEventsInFilter,
+  type EventCatalogRow,
+} from './event-catalog.ts'
 
 const asOf = new Date('2026-09-24T12:00:00.000Z')
 
@@ -190,4 +195,11 @@ test('segment combinations keep what arrives TOGETHER, and observedDays is the r
   // 1 and "1" are different values, so they are different combinations.
   assert.equal(result.segmentCombos.combos.filter((combo) => String(combo.values.region) === '1').length, 2)
   assert.equal(result.observedDays, 13.5) // 13 whole days + 12 hours of 2026-09-24
+})
+
+test('setup-instruments-connects D2: the product-events filter names every reserved event, quoted', () => {
+  const filter = reservedEventsInFilter()
+  assert.match(filter, /^\(.*\)$/)
+  for (const event of RESERVED_EVENTS) assert.ok(filter.includes(`"${event}"`), event)
+  assert.ok(filter.includes('"$error"') && filter.includes('"flag_evaluated"'))
 })

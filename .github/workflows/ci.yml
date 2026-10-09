@@ -141,6 +141,7 @@ jobs:
             apps/web/e2e/scenario-dark.spec.ts \
             apps/web/e2e/setup-routes-dark.spec.ts \
             apps/web/e2e/flag-console-dark.spec.ts \
+            apps/web/e2e/first-event-dark.spec.ts \
             apps/web/e2e/signup.spec.ts \
             || { cat /tmp/off-server.log; exit 1; }
 
