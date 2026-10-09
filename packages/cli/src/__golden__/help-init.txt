@@ -1,7 +1,7 @@
 frijoles init — project, key, .env.local and the snippet — in one verb
 
 Usage
-  frijoles init [--env <environment>] [--json] [--yes]
+  frijoles init [--env <environment>] [--ingest] [--json] [--yes]
 
 Idempotent. Re-running it does not mint a second key when .env.local already
   carries one; it says so and leaves the file alone.
@@ -13,6 +13,7 @@ Idempotent. Re-running it does not mint a second key when .env.local already
 Flags
   --env <environment>  development | preview | production (default: development)
   --project <slug>     the project (default: the remembered one)
+  --ingest             also write an ingest key (GROWTH_ENGINE_API_KEY) for sending events; kept when it is already a live key of the project
   --yes                accepted and ignored — this verb never prompts
 
 Exit codes

@@ -85,7 +85,7 @@
       {
         "command": "init",
         "summary": "project, key, .env.local and the snippet — in one verb",
-        "usage": "frijoles init [--env <environment>] [--json] [--yes]",
+        "usage": "frijoles init [--env <environment>] [--ingest] [--json] [--yes]",
         "needsAuth": true,
         "flags": [
           {
@@ -97,6 +97,11 @@
             "flag": "--project",
             "takesValue": true,
             "describe": "the project (default: the remembered one)"
+          },
+          {
+            "flag": "--ingest",
+            "takesValue": false,
+            "describe": "also write an ingest key (GROWTH_ENGINE_API_KEY) for sending events; kept when it is already a live key of the project"
           },
           {
             "flag": "--yes",
