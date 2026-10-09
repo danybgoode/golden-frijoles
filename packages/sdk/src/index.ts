@@ -30,6 +30,9 @@ import {
   type ScenarioExecutionTelemetryInput,
 } from './scenario-telemetry'
 import { scrubClientText, SDK_MAX_MESSAGE, SDK_MAX_STACK } from './scrub'
+import { DEFAULT_BASE_URL, resolveBaseUrl } from './defaults'
+
+export { DEFAULT_BASE_URL }
 
 export type { BucketVariant } from './bucketing'
 export { ERROR_EVENT } from './capture'
@@ -293,8 +296,11 @@ export interface ExperimentGovernanceContext {
 }
 
 export interface GrowthEngineClientConfig {
-  /** e.g. "https://growth.example.com" or "http://localhost:3000" for local dev. */
-  baseUrl: string
+  /**
+   * The engine's URL, e.g. "http://localhost:3000" for local dev. Omit the key for https://goldenfrijoles.com (sdk-1-0
+   * D1). A key that is present but empty (an unset env var) is NOT defaulted: calls return `MISSING_BASE_URL`.
+   */
+  baseUrl?: string
   /** The project's per-project API key (Bearer token) — see Roadmap 01-growth-engine's Story 1.1. */
   apiKey: string
   /** The acting user's id, auto-appended to every event this client sends. */
@@ -380,16 +386,23 @@ export interface GrowthEngineClient {
 }
 
 /**
- * const growth = createGrowthEngineClient({ baseUrl, apiKey, userId })
+ * const growth = createGrowthEngineClient({ apiKey, userId })   // baseUrl: https://goldenfrijoles.com unless given
  * await growth.track('signup')
  */
 export function createGrowthEngineClient(config: GrowthEngineClientConfig): GrowthEngineClient {
   const fetchFn = config.fetchImpl ?? fetch
+  const baseUrl = resolveBaseUrl(config)
+  const missingBaseUrl = {
+    ok: false as const,
+    error: 'baseUrl is empty: pass the engine URL, or omit the key for https://goldenfrijoles.com',
+    code: 'MISSING_BASE_URL',
+  }
 
   async function track(event: string, props: TrackEventProps = {}): Promise<TrackResult> {
+    if (baseUrl === undefined) return missingBaseUrl
     let res: Response
     try {
-      res = await fetchFn(`${config.baseUrl}/api/v1/track`, {
+      res = await fetchFn(`${baseUrl}/api/v1/track`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.apiKey}` },
         body: JSON.stringify({ userId: config.userId, event, ...props }),
@@ -423,9 +436,10 @@ export function createGrowthEngineClient(config: GrowthEngineClientConfig): Grow
   }
 
   async function syncFeatures(features: FeatureSyncEntry[]): Promise<SyncResult> {
+    if (baseUrl === undefined) return missingBaseUrl
     let res: Response
     try {
-      res = await fetchFn(`${config.baseUrl}/api/v1/features/sync`, {
+      res = await fetchFn(`${baseUrl}/api/v1/features/sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.apiKey}` },
         body: JSON.stringify({ features }),

@@ -59,7 +59,11 @@ No engine change: the inputs route, the track route and the flag snapshot alread
 - **D1 — One default URL for every config.** `DEFAULT_BASE_URL = 'https://goldenfrijoles.com'` in `src/defaults.ts`,
   used by `createGrowthEngineClient`, `createFlagProvider`, the flag sync and `createScenarioProvider` when `baseUrl`
   is omitted; a trailing slash is stripped everywhere (only the providers stripped it before). `baseUrl` becomes
-  optional in all four config types: widening a required field is additive.
+  optional in all four config types: widening a required field is additive. **Corrected at build:** the default
+  applies only when the `baseUrl` KEY is absent. Today's snippets pass `baseUrl: process.env.GOLDEN_FRIJOLES_URL!`; if
+  that variable is unset the key is present and `undefined`, and a naive default would send a developer's local or
+  test events to production instead of failing. Present-but-empty keeps failing, as in 0.6.0 (the client returns
+  `MISSING_BASE_URL` instead of a `NETWORK_ERROR` to a malformed URL; the providers stay unconfigured, as before).
 - **D2 — Identity is per client instance.** A closure `let userId = config.userId ?? null`; `identify(id)` sets it
   (a non-empty string, else it returns `{ ok: false, code: 'INVALID_USER_ID' }`), `reset()` clears it. Nothing
   module-level, so the ESM and CJS copies (D5) cannot share or disagree on state. Every reader of `config.userId`

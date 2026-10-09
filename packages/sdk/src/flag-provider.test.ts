@@ -16,6 +16,7 @@ if (!registerHooks) throw new Error('Native module hooks are required to test th
 registerHooks({
   resolve(specifier, context, nextResolve) {
     if (specifier === './flags') return nextResolve('./flags.ts', context)
+    if (specifier === './defaults') return nextResolve('./defaults.ts', context)
     return nextResolve(specifier, context)
   },
 })
@@ -273,4 +274,31 @@ test('times out, honors the stale bound, and makes shutdown final without throwi
     errorMessage: 'Flag provider has been shut down.',
   })
   assert.equal(provider.resolveBooleanEvaluation('checkout.enabled', true).value, true)
+})
+
+test('sdk-1-0 D1: with no baseUrl key the snapshot comes from goldenfrijoles.com; a present-but-empty one stays unconfigured', async () => {
+  const urls: string[] = []
+  const provider = createFlagProvider({
+    flagReadKey: 'read-key',
+    refreshIntervalMs: 0,
+    fetchImpl: async (input) => {
+      urls.push(String(input))
+      return new Response(null, { status: 500 })
+    },
+  })
+  await provider.initialize()
+  assert.equal(urls[0], 'https://goldenfrijoles.com/api/v1/flags/snapshot')
+
+  const none: string[] = []
+  const unset = createFlagProvider({
+    baseUrl: undefined,
+    flagReadKey: 'read-key',
+    refreshIntervalMs: 0,
+    fetchImpl: async (input) => {
+      none.push(String(input))
+      return new Response(null, { status: 500 })
+    },
+  })
+  assert.equal((await unset.initialize()).ok, false)
+  assert.deepEqual(none, [], 'an unset env var never reaches production')
 })

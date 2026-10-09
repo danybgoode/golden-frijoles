@@ -4,6 +4,7 @@
 // definition is a control-plane write, while telemetry ingest is a data-plane write; using one
 // credential for both would make an accidental SDK call materially more powerful than it looks.
 // The Golden route repeats every validation and derives the tenant from the dedicated credential.
+import { resolveBaseUrl } from './defaults'
 import { parseFlagDefinition, validateFlagKey, type FlagDefinition } from './flags'
 
 export const FLAG_DEFINITION_SYNC_CONTRACT_VERSION = 1 as const
@@ -48,8 +49,8 @@ export type FlagDefinitionSyncFailure =
 export type FlagDefinitionSyncResult = FlagDefinitionSyncSuccess | FlagDefinitionSyncFailure
 
 export interface FlagDefinitionSyncClientConfig {
-  /** Golden Frijoles base URL, for example https://growth.example.com. */
-  baseUrl: string
+  /** Golden Frijoles base URL, for example https://growth.example.com; https://goldenfrijoles.com when omitted. */
+  baseUrl?: string
   /** Dedicated revocable `flag_sync` credential. Keep it in server-only/operator configuration. */
   flagSyncKey: string
   /** Test seam; defaults to the runtime global fetch. */
@@ -205,9 +206,14 @@ export function createFlagDefinitionSyncClient(
         }
       }
 
+      const base = resolveBaseUrl(config)
+      if (base === undefined) {
+        // A baseUrl key that is present but empty (an unset env var) fails here, never defaults (defaults.ts).
+        return { ok: false, kind: 'network', error: 'baseUrl is empty: pass a URL, or omit the key for https://goldenfrijoles.com' }
+      }
       let response: Response
       try {
-        response = await fetchFn(`${config.baseUrl.replace(/\/+$/, '')}/api/v1/flags/sync`, {
+        response = await fetchFn(`${base}/api/v1/flags/sync`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

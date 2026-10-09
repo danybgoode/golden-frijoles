@@ -3,6 +3,7 @@
 // The read credential is intentionally separate from telemetry credentials. This provider never
 // logs it (or transport errors that might contain it), and it only evaluates the last accepted,
 // typed snapshot synchronously.
+import { resolveBaseUrl } from './defaults'
 import {
   evaluateFlag,
   parseFlagSnapshot,
@@ -53,8 +54,8 @@ export type FlagProviderStatus = {
 }
 
 export interface FlagProviderConfig {
-  /** Golden Frijoles base URL. The snapshot route is always `/api/v1/flags/snapshot`. */
-  baseUrl: string
+  /** Golden Frijoles base URL (default https://goldenfrijoles.com when omitted). The snapshot route is always `/api/v1/flags/snapshot`. */
+  baseUrl?: string
   /** Revocable, project- and environment-scoped `flag_read` credential. Keep this server-side. */
   flagReadKey: string
   /** Periodic refresh cadence; `0` disables the timer and leaves explicit refreshes available. */
@@ -175,8 +176,8 @@ export function createFlagProvider(config: FlagProviderConfig): FlagProvider {
   }
 
   function snapshotUrl(): string | undefined {
-    if (typeof config.baseUrl !== 'string' || config.baseUrl.trim().length === 0) return undefined
-    return `${config.baseUrl.replace(/\/+$/, '')}/api/v1/flags/snapshot`
+    const base = resolveBaseUrl(config)
+    return base === undefined ? undefined : `${base}/api/v1/flags/snapshot`
   }
 
   function startRefreshTimer(): void {
