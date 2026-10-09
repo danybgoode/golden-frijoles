@@ -7,9 +7,11 @@
 
 export const DEFAULT_BASE_URL = 'https://goldenfrijoles.com'
 
-/** The base URL a config resolves to, without a trailing slash, or `undefined` when it is present but unusable. */
+/** The base URL a config resolves to, without a trailing slash, or `undefined` when it is present but unusable. Read it
+ * per call: the config may be filled in later. */
 export function resolveBaseUrl(config: object): string | undefined {
-  if (!Object.prototype.hasOwnProperty.call(config, 'baseUrl')) return DEFAULT_BASE_URL
+  // `in`, not hasOwnProperty: a getter on a class or an inherited baseUrl is a configured URL (verifier, #331).
+  if (!('baseUrl' in config)) return DEFAULT_BASE_URL
   const value = (config as { baseUrl?: unknown }).baseUrl
   if (typeof value !== 'string' || value.trim().length === 0) return undefined
   return value.trim().replace(/\/+$/, '')

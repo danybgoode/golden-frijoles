@@ -412,10 +412,16 @@ export interface GrowthEngineClient {
  */
 export function createGrowthEngineClient(config: GrowthEngineClientConfig): GrowthEngineClient {
   const fetchFn = config.fetchImpl ?? fetch
-  const baseUrl = resolveBaseUrl(config)
-  // sdk-1-0 D2 — identity lives in this closure: per instance, never module-level, so an ESM and a CJS copy of the
-  // package (D5) cannot share or disagree on it.
-  let userId: string | null = typeof config.userId === 'string' && config.userId.length > 0 ? config.userId : null
+  // sdk-1-0 D1/D2 — the config is read on EVERY call, as 0.6.0 did: a config whose baseUrl or userId is a getter, is
+  // inherited, or is filled in after this call must keep working (verifier, #331). Identity set by identify/reset lives
+  // in this closure, per instance and never module-level, so an ESM and a CJS copy (D5) cannot share or disagree on it.
+  // Until identify or reset is called, the client follows config.userId.
+  let identified: { id: string | null } | null = null
+  const currentUserId = (): string | null => {
+    if (identified) return identified.id
+    const fromConfig = config.userId
+    return typeof fromConfig === 'string' && fromConfig.trim().length > 0 ? fromConfig : null
+  }
   const noUser = {
     ok: false as const,
     error: 'No user yet: pass userId when creating the client, or call identify(userId) first',
@@ -426,17 +432,18 @@ export function createGrowthEngineClient(config: GrowthEngineClientConfig): Grow
     if (typeof id !== 'string' || id.trim().length === 0) {
       return { ok: false, error: 'identify needs a non-empty user id', code: 'INVALID_USER_ID' }
     }
-    userId = id
+    identified = { id }
     return { ok: true }
   }
 
   function reset(): void {
-    userId = null
+    identified = { id: null }
   }
 
   async function pushInputValues(inputKey: string, values: InputValue[]): Promise<PushInputValuesResult> {
     const problems = inputValuesProblems(inputKey, values)
     if (problems.length > 0) return { ok: false, error: problems[0], code: 'INVALID_INPUT_VALUES', issues: problems }
+    const baseUrl = resolveBaseUrl(config)
     if (baseUrl === undefined) return missingBaseUrl
     let res: Response
     try {
@@ -475,7 +482,9 @@ export function createGrowthEngineClient(config: GrowthEngineClientConfig): Grow
   }
 
   async function track(event: string, props: TrackEventProps = {}): Promise<TrackResult> {
+    const baseUrl = resolveBaseUrl(config)
     if (baseUrl === undefined) return missingBaseUrl
+    const userId = currentUserId()
     if (userId === null) return noUser
     let res: Response
     try {
@@ -513,6 +522,7 @@ export function createGrowthEngineClient(config: GrowthEngineClientConfig): Grow
   }
 
   async function syncFeatures(features: FeatureSyncEntry[]): Promise<SyncResult> {
+    const baseUrl = resolveBaseUrl(config)
     if (baseUrl === undefined) return missingBaseUrl
     let res: Response
     try {
@@ -561,10 +571,10 @@ export function createGrowthEngineClient(config: GrowthEngineClientConfig): Grow
           governance.definitionVersion,
           variants
         )
-      : userId === null
+      : currentUserId() === null
         ? null
-        : resolveVariant(userId, experimentKey, variants)
-    if (!governed && userId === null) return noUser
+        : resolveVariant(currentUserId() as string, experimentKey, variants)
+    if (!governed && currentUserId() === null) return noUser
     if (variant === null) {
       return { ok: false, error: 'No valid variants provided', code: 'INVALID_VARIANTS' }
     }
