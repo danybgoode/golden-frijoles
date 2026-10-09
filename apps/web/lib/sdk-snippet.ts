@@ -5,7 +5,7 @@
 // it from a preview never sends events to production.
 import { DEFAULT_BASE_URL } from '@golden-frijoles/sdk'
 
-export const SDK_API_KEY_ENV = 'GOLDEN_FRIJOLES_API_KEY'
+export const SDK_API_KEY_ENV = 'GROWTH_ENGINE_API_KEY' // the name the plugin's roadmap push and finops hooks read (verifier, #331)
 
 /** Pure: the client line, with `baseUrl` only when `siteUrl` is not the SDK's default. */
 export function sdkClientLine(siteUrl: string): string {

@@ -14,7 +14,7 @@ test('anywhere else the snippet names baseUrl, so a preview copy never reaches p
   assert.match(sdkClientLine('http://localhost:3000'), /baseUrl: 'http:\/\/localhost:3000'/)
 })
 
-test('the quickstart identifies after sign-in and ends with the page\'s own calls', () => {
+test("the quickstart identifies after sign-in and ends with the page's own calls", () => {
   const text = sdkQuickstart('https://goldenfrijoles.com', ["await engine.track('signup')"])
   assert.match(text, /engine\.identify\(currentUser\.id\)/)
   assert.ok(text.endsWith("await engine.track('signup')"))

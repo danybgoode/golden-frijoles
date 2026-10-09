@@ -15,7 +15,7 @@ npm install @golden-frijoles/sdk
 import { createGrowthEngineClient } from '@golden-frijoles/sdk'
 
 // One line: with no `baseUrl` key the client talks to https://goldenfrijoles.com.
-const growth = createGrowthEngineClient({ apiKey: process.env.GOLDEN_FRIJOLES_API_KEY! })
+const growth = createGrowthEngineClient({ apiKey: process.env.GROWTH_ENGINE_API_KEY! })
 
 growth.identify(currentUser.id) // after sign-in; growth.reset() at sign-out
 await growth.track('checkout_completed', { featureId: 'checkout' })
@@ -127,7 +127,7 @@ Either set of names works. Pick one per project.
 import { createGrowthEngineClient } from '@golden-frijoles/sdk'
 
 const growth = createGrowthEngineClient({
-  apiKey: process.env.GOLDEN_FRIJOLES_API_KEY!,
+  apiKey: process.env.GROWTH_ENGINE_API_KEY!,
   userId: 'opaque-user-id', // or growth.identify(id) later
 })
 

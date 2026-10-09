@@ -26,7 +26,6 @@
 //   MIYAGI_DATABASE_URL         — Medusa's own primary Postgres connection string (read financial_event)
 //   GROWTH_ENGINE_URL / GROWTH_ENGINE_API_KEY — push the aggregated payload
 import pg from 'pg'
-import { createGrowthEngineClient } from '@golden-frijoles/sdk'
 import { aggregateDailyRevenue } from './lib/revenue-sync-payload.mjs'
 
 const ATTRIBUTED_REVENUE_INPUT_KEY = 'attributed_revenue'
@@ -93,18 +92,19 @@ async function fetchMiyagiRevenueEvents() {
   }
 }
 
-// sdk-1-0 S2.2: the push goes through the SDK (AGENTS rule 1: the SDK is the app→engine path). The URL stays
-// required and explicit: money data never falls back to a default deployment.
 async function pushValues(values) {
-  const engine = createGrowthEngineClient({
-    baseUrl: requireEnv('GROWTH_ENGINE_URL'),
-    apiKey: requireEnv('GROWTH_ENGINE_API_KEY'),
+  const baseUrl = requireEnv('GROWTH_ENGINE_URL')
+  const apiKey = requireEnv('GROWTH_ENGINE_API_KEY')
+  const res = await fetch(`${baseUrl}/api/v1/inputs/${ATTRIBUTED_REVENUE_INPUT_KEY}/values`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({ values }),
   })
-  const result = await engine.pushInputValues(ATTRIBUTED_REVENUE_INPUT_KEY, values)
-  if (!result.ok) {
-    throw new Error(`Revenue sync failed: ${result.code ?? ''} ${result.error}`)
+  const body = await res.json().catch(() => null)
+  if (!res.ok || !body?.ok) {
+    throw new Error(`Revenue sync failed: HTTP ${res.status} ${JSON.stringify(body)}`)
   }
-  return result
+  return body
 }
 
 export async function main() {
