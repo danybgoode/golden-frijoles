@@ -303,8 +303,11 @@ export interface GrowthEngineClientConfig {
   baseUrl?: string
   /** The project's per-project API key (Bearer token) — see Roadmap 01-growth-engine's Story 1.1. */
   apiKey: string
-  /** The acting user's id, auto-appended to every event this client sends. */
-  userId: string
+  /**
+   * The acting user's id, auto-appended to every event this client sends. Optional since 1.0 (sdk-1-0 D2): a browser
+   * app that learns the user at sign-in calls `identify(userId)` instead.
+   */
+  userId?: string
   /** Override for testing; defaults to the global fetch. */
   fetchImpl?: typeof fetch
   /**
@@ -328,7 +331,17 @@ export interface CaptureErrorProps {
   context?: Record<string, unknown>
 }
 
+export type IdentifyResult = { ok: true } | { ok: false; error: string; code: 'INVALID_USER_ID' }
+
 export interface GrowthEngineClient {
+  /**
+   * sdk-1-0 D2 — who future calls are about, from now on (e.g. right after sign-in). Per client instance; nothing
+   * earlier is re-attributed (the engine has no alias table). Bucket AFTER identify when a test must follow the person:
+   * the ungoverned `bucket` resolves from the current id, so an anonymous variant can differ from the identified one.
+   */
+  identify(userId: string): IdentifyResult
+  /** Forget the current user (e.g. at sign-out). Calls that need one return `NO_USER` until the next `identify`. */
+  reset(): void
   track(event: string, props?: TrackEventProps): Promise<TrackResult>
   trackAdoption(featureKey: string, props?: Omit<TrackEventProps, 'featureId'>): Promise<TrackResult>
   syncFeatures(features: FeatureSyncEntry[]): Promise<SyncResult>
@@ -392,6 +405,26 @@ export interface GrowthEngineClient {
 export function createGrowthEngineClient(config: GrowthEngineClientConfig): GrowthEngineClient {
   const fetchFn = config.fetchImpl ?? fetch
   const baseUrl = resolveBaseUrl(config)
+  // sdk-1-0 D2 — identity lives in this closure: per instance, never module-level, so an ESM and a CJS copy of the
+  // package (D5) cannot share or disagree on it.
+  let userId: string | null = typeof config.userId === 'string' && config.userId.length > 0 ? config.userId : null
+  const noUser = {
+    ok: false as const,
+    error: 'No user yet: pass userId when creating the client, or call identify(userId) first',
+    code: 'NO_USER',
+  }
+
+  function identify(id: string): IdentifyResult {
+    if (typeof id !== 'string' || id.trim().length === 0) {
+      return { ok: false, error: 'identify needs a non-empty user id', code: 'INVALID_USER_ID' }
+    }
+    userId = id
+    return { ok: true }
+  }
+
+  function reset(): void {
+    userId = null
+  }
   const missingBaseUrl = {
     ok: false as const,
     error: 'baseUrl is empty: pass the engine URL, or omit the key for https://goldenfrijoles.com',
@@ -400,12 +433,13 @@ export function createGrowthEngineClient(config: GrowthEngineClientConfig): Grow
 
   async function track(event: string, props: TrackEventProps = {}): Promise<TrackResult> {
     if (baseUrl === undefined) return missingBaseUrl
+    if (userId === null) return noUser
     let res: Response
     try {
       res = await fetchFn(`${baseUrl}/api/v1/track`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.apiKey}` },
-        body: JSON.stringify({ userId: config.userId, event, ...props }),
+        body: JSON.stringify({ userId, event, ...props }),
       })
     } catch (err) {
       return {
@@ -484,7 +518,10 @@ export function createGrowthEngineClient(config: GrowthEngineClientConfig): Grow
           governance.definitionVersion,
           variants
         )
-      : resolveVariant(config.userId, experimentKey, variants)
+      : userId === null
+        ? null
+        : resolveVariant(userId, experimentKey, variants)
+    if (!governed && userId === null) return noUser
     if (variant === null) {
       return { ok: false, error: 'No valid variants provided', code: 'INVALID_VARIANTS' }
     }
@@ -711,6 +748,8 @@ export function createGrowthEngineClient(config: GrowthEngineClientConfig): Grow
   }
 
   return {
+    identify,
+    reset,
     track,
     trackAdoption: (featureKey, props) => track('feature_adopted', { ...props, featureId: featureKey }),
     syncFeatures,
