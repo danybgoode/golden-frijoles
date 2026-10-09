@@ -1,7 +1,7 @@
 # SDK 1.0: one line to start, who the user is, and North Star inputs — Retrospective
 
 _Closed: 2026-10-09_
-_Intent: owed to Daniel (yes | mostly | no)_
+_Intent: yes_
 _Quote vs actual: $16–32 (M, n=16, p25–p75) → ≈$29.55 (inside the quote; Claude only, reviewers not measured)_
 
 ## What shipped
@@ -30,7 +30,7 @@ _Quote vs actual: $16–32 (M, n=16, p25–p75) → ≈$29.55 (inside the quote;
   cross-family lens ran", the verifier stood in, and Daniel accepted it explicitly.
 
 ## Gaps / follow-ups
-- **Owed to Daniel:** the `_Intent_` word; walkthrough step 3 (a real `identify` + `track` seen in the catalog).
+- **Owed to Daniel:** walkthrough step 3 (a real `identify` + `track` seen in the catalog).
 - **agy in worktrees** reports "not logged in", and in the main checkout it fails on untracked `.claude/skills/`
   symlinks; a cross-family security lens needs one of the two fixed.
 - **CLI:** its next release picks up the widened SDK range (<2.0.0) and the kit 1.0.x pin (plugin-1-0 D9).

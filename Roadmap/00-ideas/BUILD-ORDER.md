@@ -20,12 +20,13 @@ _seeds with no pitch yet._
 - [Template scripts run when invoked through a symlinked path](seeds/script-ismain-realpath.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
 - [This repo lints its template scripts the way its consumers do](seeds/foundation-lint-gate.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
 
-## Refining (2)
+## Refining (3)
 
 _a pitch is waiting at the approval gate._
 
 - [Analytics visualization — the charting-dependency decision (spike), then the layer](seeds/analytics-visualization-layer.md) — #14 · 01 Growth Engine · seed · Spike · risk: Low · appetite S · _docs: status ready_
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
+- [Grounded bets: every Why is a hypothesis traced from the North Star](seeds/grounded-bets.md) — 09 Platform Infra · seed · Feature · risk: Low · appetite M · _docs: status ready_
 
 ## Ready (7)
 
@@ -123,4 +124,4 @@ _merged, deployed and closed._
 - [The portfolio loop test fails intermittently in CI and has been quarantined](seeds/portfolio-loop-flake.md) — 02 Commercial · seed · Bug · risk: Low · appetite S · _docs: status shipped_
 
 ---
-_84 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._
+_85 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._
