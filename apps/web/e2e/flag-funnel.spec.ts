@@ -81,7 +81,7 @@ test('a measured flag fills its funnel from its own evaluations, on a fresh proj
       satisfied: null,
       adoptedWithoutExposure: 1,
     })
-    expect(read.truncated).toBe(false)
+    expect(read.truncated).toEqual({ exposures: false, events: false, base: false })
 
     const none = await readFlagFunnel(client, project!.id as string, {
       flagKey: 'never.evaluated_enabled',

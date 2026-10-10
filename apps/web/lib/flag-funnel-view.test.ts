@@ -20,7 +20,7 @@ test('one-bet-wired D7: each stage with its share; satisfied not measured; outsi
     funnel,
     from: '2026-10-01T00:00:00Z',
     to: '2026-10-10T00:00:00Z',
-    truncated: false,
+    truncated: { exposures: false, events: false, base: false },
   })
   assert.equal(v.kind, 'measured')
   if (v.kind !== 'measured') return
@@ -63,4 +63,18 @@ test('one-bet-wired D7: a funnel shows only for an Epic with a flag and an adopt
   assert.equal(funnelBetOf({ grain: 'Epic', flagKey: null, measure }), null)
   assert.equal(funnelBetOf({ grain: 'Epic', flagKey: 'a.b_enabled', measure: null }), null)
   assert.equal(funnelBetOf({ grain: 'Seed', flagKey: 'a.b_enabled', measure }), null)
+})
+
+test('verifier #341: a capped read says which numbers it skews', () => {
+  const view = flagFunnelView({
+    state: 'measured',
+    flagKey: 'k',
+    funnel,
+    from: '2026-10-01T00:00:00Z',
+    to: '2026-10-10T00:00:00Z',
+    truncated: { exposures: true, events: false, base: true },
+  })
+  assert.equal(view.kind, 'measured')
+  if (view.kind !== 'measured') return
+  assert.match(view.note ?? '', /got-the-flag-on and adopted read low.*the first two shares may read high/)
 })

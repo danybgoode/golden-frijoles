@@ -42,8 +42,15 @@ export function flagFunnelView(read: FlagFunnelRead | null): FunnelView {
     f.adoptedWithoutExposure === 0
       ? 'Nobody adopted without the flag on.'
       : `${f.adoptedWithoutExposure} ${f.adoptedWithoutExposure === 1 ? 'person' : 'people'} adopted without the flag on: evidence the feature is wanted, not counted in the rates.`
-  const note = read.truncated
-    ? `More events since ${read.from.slice(0, 10)} than one read covers: active users is a lower bound, so the first two shares may read high.`
-    : null
+  // Each capped read skews different numbers; say which (verifier, #341).
+  const notes = [
+    read.truncated.exposures &&
+      'Only the earliest exposures could be read: people first exposed later count as adopting without the flag, so got-the-flag-on and adopted read low.',
+    read.truncated.events &&
+      `More adoption and retention events since ${read.from.slice(0, 10)} than one read covers: adopted and retained may read low.`,
+    read.truncated.base &&
+      'More active users than one read covers: active users is a lower bound, so the first two shares may read high.',
+  ].filter((n): n is string => typeof n === 'string')
+  const note = notes.length ? notes.join(' ') : null
   return { kind: 'measured', rows, beside, note }
 }

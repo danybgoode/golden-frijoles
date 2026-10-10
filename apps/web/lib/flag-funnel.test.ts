@@ -164,3 +164,8 @@ test('verifier #341: a separately read base joins the funnel people, without sys
   assert.equal(f.base, 3)
   assert.equal(f.rates.exposed, 1 / 3)
 })
+
+test('verifier #341: the base is the union of the separate read and the funnel people', () => {
+  const f = computeFlagFunnel([on('a', 1), ev('a', 'order_placed', 2)], bet, { basePeople: new Set(['b']) })
+  assert.equal(f.base, 2, 'a is in the funnel even when the (newest-first, capped) base read missed them')
+})

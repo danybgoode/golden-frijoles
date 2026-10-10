@@ -20,9 +20,9 @@ import {
 //      most FLAG_FUNNEL_MAX_DAYS.
 //   3. BASE: the people active in that period, newest first, people only; past the cap the base is "at least".
 //
-// The person is the event's subject when it has one (a flag evaluation names whom it was evaluated FOR; a shared server
-// client's user is not that person), else its user id; the time is `occurred_at` when the event carries one, else
-// `created_at`: the same keys the journey and experiment reads use.
+// The person is the event's subject when that subject is a USER (a flag evaluation names whom it was evaluated for; a
+// shared server client's user is not that person), else the event's user id: an order, a merchant or a task as subject
+// is not a person (verifier, #341). The time is `occurred_at` when the event carries one, else `created_at`.
 
 export const FLAG_FUNNEL_MAX_DAYS = 90
 export const FLAG_FUNNEL_ROW_CAP = 50_000
@@ -35,12 +35,13 @@ export type FlagFunnelRead =
       funnel: FlagFunnel
       from: string
       to: string
-      /** A read hit its cap: the base (and so the first rate) is a lower bound. */
-      truncated: boolean
+      /** Which read hit its cap, if any; each skews different numbers (flag-funnel-view says how). */
+      truncated: { exposures: boolean; events: boolean; base: boolean }
     }
 
 type Row = {
   user_id: string
+  subject_type: string | null
   subject_id: string | null
   event: string
   created_at: string
@@ -49,7 +50,7 @@ type Row = {
   variant?: string | null
 }
 
-const person = (r: Row) => r.subject_id ?? r.user_id
+const person = (r: Row) => (r.subject_type === 'user' && r.subject_id ? r.subject_id : r.user_id)
 const when = (r: Row) => r.occurred_at ?? r.created_at
 
 /** Page a query (1,000 rows a request, PostgREST's max) up to the cap; `truncated` only when a row exists past it. */
@@ -80,7 +81,7 @@ export async function readFlagFunnel(
   bet: BetMeasure,
   now: Date = new Date()
 ): Promise<FlagFunnelRead> {
-  const cols = 'user_id, subject_id, event, created_at, occurred_at, feature_id'
+  const cols = 'user_id, subject_type, subject_id, event, created_at, occurred_at, feature_id'
   const exposures = await paged((a, b) =>
     client
       .from('events')
@@ -116,7 +117,7 @@ export async function readFlagFunnel(
   const base = await paged((a, b) =>
     client
       .from('events')
-      .select('user_id, subject_id')
+      .select('user_id, subject_type, subject_id')
       .eq('project_id', projectId)
       .gte('created_at', from)
       .lte('created_at', to)
@@ -141,6 +142,6 @@ export async function readFlagFunnel(
     funnel,
     from,
     to,
-    truncated: exposures.truncated || funnelEvents.truncated || base.truncated,
+    truncated: { exposures: exposures.truncated, events: funnelEvents.truncated, base: base.truncated },
   }
 }
