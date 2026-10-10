@@ -3,7 +3,7 @@ epic: brand-reveal-error-pages
 sprint: 2
 title: "S2 Branded recovery pages"
 risk: high
-phase: Verifying
+phase: In review
 stories_total: 1
 stories:
   - id: S2.1
@@ -16,7 +16,7 @@ stories:
 ---
 # A golden welcome and recovery pages — Sprint 2: S2 Branded recovery pages
 
-**Status:** 🟨 Verifying — S2.1 `1d6ab59`; awaiting PR CI and preview
+**Status:** 🟦 In review — S2.1 `1d6ab59`; PR #340 CI and preview passed
 
 ## Stories
 <!-- One block per story. Thinnest shippable slice first.

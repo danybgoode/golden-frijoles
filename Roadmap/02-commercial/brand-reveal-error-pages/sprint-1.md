@@ -3,7 +3,7 @@ epic: brand-reveal-error-pages
 sprint: 1
 title: "S1 Golden terminal welcome"
 risk: high
-phase: Verifying
+phase: In review
 stories_total: 1
 stories:
   - id: S1.1
@@ -16,7 +16,7 @@ stories:
 ---
 # A golden welcome and recovery pages — Sprint 1: S1 Golden terminal welcome
 
-**Status:** 🟨 Verifying — S1.1 `5a353d0`; CLI 1.2.0 release prepared separately
+**Status:** 🟦 In review — S1.1 `5a353d0`; CLI 1.2.0 release prepared separately
 
 ## Stories
 <!-- One block per story. Thinnest shippable slice first.
