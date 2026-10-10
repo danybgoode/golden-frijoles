@@ -1,6 +1,8 @@
 import 'server-only'
 import { reservedEventsInFilter, type EventCatalog } from './event-catalog'
 import { readEventCatalog } from './event-catalog-read'
+import { readFlagFunnel, type FlagFunnelRead } from './flag-funnel-read'
+import type { BetMeasure } from './flag-funnel'
 import { getSupabaseServiceClient } from './supabase'
 
 /**
@@ -80,4 +82,13 @@ export async function getFirstEventForBand(
       ? { event: first.data.event as string, at: first.data.created_at as string }
       : null,
   }
+}
+
+/** one-bet-wired D3 — a measured flag's funnel for ONE project (the caller resolved it). Throws on a failed read. */
+export function getFlagFunnel(
+  projectId: string,
+  bet: BetMeasure,
+  now: Date = new Date()
+): Promise<FlagFunnelRead> {
+  return readFlagFunnel(getSupabaseServiceClient(), projectId, bet, now)
 }

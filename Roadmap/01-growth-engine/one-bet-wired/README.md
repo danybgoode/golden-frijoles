@@ -89,7 +89,9 @@ project's (the epic page's access gate, the console's membership).
   adopting.
 - **D3 · The read**, in the canonical event module: `getFlagFunnelEvents(projectId, flagKey, events, period)`. ONE
   project. The period runs from the flag's first `on` evaluation to now, at most 90 days. Rows are capped (as the event
-  catalog caps), and a truncated read says so. Base is the distinct users of any non-reserved event in the period.
+  catalog caps), and a truncated read says so. Base is the distinct users of any event in the period (system users
+  excluded). No `(project_id, created_at)` index exists, so like the event catalog's window it scans the period's rows:
+  bounded by the 90 days and the cap, and run only when a measured flag's funnel is shown.
 - **D4 · `frijoles bet sync <epic README>`**: reads the README's frontmatter and creates the flag when it does not exist
   (`--enablement --all-envs`: a Measure flag is off until you roll it out; the hypothesis and epic as its description),
   or says it exists and leaves it. It never changes a flag's rules or rollout. The funnel needs nothing more: the bet
