@@ -47,3 +47,21 @@ test('machine mode calls no writer', async () => {
   })
   assert.equal(output, '')
 })
+
+test('animated frames sweep to gold without hiding the shell cursor', async () => {
+  const writes: string[] = []
+  await playSetupReveal({
+    enabled: true,
+    noMotion: false,
+    noColor: false,
+    env: { TERM: 'xterm-256color' },
+    width: 80,
+    write: (text) => writes.push(text),
+  })
+  assert.equal(writes.length, 12)
+  assert.match(writes[0], /green bean/)
+  assert.match(writes.at(-1)!, /golden frijol/)
+  assert.ok(writes.some((frame) => frame.includes('\x1b[38;2;85;75;60m')))
+  assert.ok(writes.every((frame) => !frame.includes('\x1b[?25l')))
+  assert.ok(writes.every((frame) => !frame.includes('\x1b[?25h')))
+})

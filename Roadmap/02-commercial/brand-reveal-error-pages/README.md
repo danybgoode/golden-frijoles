@@ -65,11 +65,12 @@ This is presentation at existing CLI and Next.js seams. It does not create telem
 | 2 | S2 Branded recovery pages | high |
 
 ## Deploy order
-Ship CLI and web from this branch after verification. The web pages deploy on merge to `main`. The plugin and kit advance together to 1.4.0 through the skills mirror and release workflow; CLI 1.2.0 has a separate npm publish that requires Daniel's 2FA. Check the packed CLI locally and web behavior on preview before merge. Keep API JSON responses, auth-gated 404s, and shared-link failure text intact.
+Ship CLI and web from this branch after verification. The web pages deploy on merge to `main`. The plugin and kit advance together to 1.4.0 through the skills mirror and release workflow; CLI 1.2.0 pins the already-published kit 1.3.0 and has a separate npm publish that requires Daniel's 2FA before merge. Check the packed CLI locally and web behavior on preview before merge. Keep API JSON responses, auth-gated 404s, and shared-link failure text intact.
 
 ## Verification record
 - CLI `tsc`, build, 119 focused tests, and a real PTY run showed the gold sweep finishing before the first setup prompt.
 - Web `tsc`, production build, lint, design-drift, and 3,329 unit tests passed. A browser spec checked desktop/mobile 404 rendering and HTTP 404; a temporary throwing route showed the production 500 boundary and HTTP 500, then was removed.
+- Each new recovery spec failed against the live pre-change 404, then passed against the local production build. The animated-frame spec failed against the pre-fix cursor-hiding implementation and passed after it was corrected.
 - The full API suite needs this checkout's local Supabase credentials and instance. The focused recovery API spec passed; CI's database-backed gate remains the full-suite check.
 
 ## Definition of Done (epic)

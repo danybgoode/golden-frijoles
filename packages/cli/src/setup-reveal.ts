@@ -73,19 +73,15 @@ export async function playSetupReveal(options: RevealOptions): Promise<void> {
     ),
   ]
   const height = revealFrame(0, 0, color).split('\n').length
-  write('\x1b[?25l')
-  try {
-    for (const [index, [ripeness, sweep, delay]] of frames.entries()) {
-      const frame = revealFrame(ripeness, sweep, color)
-      write(
-        `${index === 0 ? '' : `\x1b[${height}A`}${frame
-          .split('\n')
-          .map((line) => `\x1b[2K${line}`)
-          .join('\n')}\n`
-      )
-      await sleep(delay)
-    }
-  } finally {
-    write('\x1b[?25h')
+  // Keep the cursor visible. SIGINT during a sleep can exit before a hidden cursor is restored.
+  for (const [index, [ripeness, sweep, delay]] of frames.entries()) {
+    const frame = revealFrame(ripeness, sweep, color)
+    write(
+      `${index === 0 ? '' : `\x1b[${height}A`}${frame
+        .split('\n')
+        .map((line) => `\x1b[2K${line}`)
+        .join('\n')}\n`
+    )
+    await sleep(delay)
   }
 }
