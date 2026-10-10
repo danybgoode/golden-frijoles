@@ -71,6 +71,9 @@ defend. The plan also says who does the work, and cheaper builders really get it
 - **D3 · The story question**, advisory: `intent-match` asks Jev one more question about the hypothesis ("would a
   stranger follow this as a short story: who has the problem, what changes, why it matters?"). Its own report line,
   outside the total, so the calibration does not move. A wording in `lib/jev-questions/intent.json`.
+- *(Amended at build, 2026-10-10: a 320-character Why takes **five** lines at the view's 69 columns, not four as the
+  Plan gate said; 273 characters already needed five. The view shows up to five, and the guard's limit is "fits five
+  lines" through the view's own wrap (`wrapWords`), not a character count. One constant, `WHY_LINES_MAX`.)*
 - **D4 · The Why in full** (`whyLines` in `scripts/build-state.mjs` and the hooks' vendor copy): the hypothesis wraps
   at word boundaries to the view's width, up to four lines; only a Why longer than that (a shipped one) ends in "…".
 - **D5 · The planned crew** at the Plan gate (`refine/references/gates.md`): a **Crew (planned, may change)** block
