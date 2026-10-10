@@ -109,7 +109,8 @@ project's (the epic page's access gate, the console's membership).
   per measured flag, named by its epic. Creating a journey never creates a flag.
 - **D8 · The gate**: `bets.flag_funnels_enabled`, a kill switch (GATES row, `FLAG_FUNNELS_ENABLED` off Vercel, fallback
   on; CI on/off lines; dark spec). It gates the funnel on the epic page and on Journeys.
-- **D9 · Releases**: CLI 1.2.0 (`bet sync`), plugin + kit 1.4.0; npm publishes are Daniel's, before the merge.
+- **D9 · Releases**: CLI **1.3.0** (`bet sync`), plugin + kit **1.5.0** *(amended at build: brand-reveal-error-pages,
+  merged meanwhile, took CLI 1.2.0 and plugin 1.4.0)*; npm publishes are Daniel's, before the merge.
 
 ## Scope — stories
 | Sprint | Story | Risk |
@@ -119,11 +120,11 @@ project's (the epic page's access gate, the console's membership).
 | 1 | S1.3 `frijoles bet sync` | high |
 | 2 | S2.1 Refine's Measure and Safety questions, and sign-in where it adds value | high |
 | 2 | S2.2 The funnel on the epic page and Journeys' From your flags, behind its kill switch | high |
-| 2 | S2.3 CLI 1.2.0, plugin + kit 1.4.0 | low |
+| 2 | S2.3 CLI 1.3.0, plugin + kit 1.5.0 | low |
 
 ## Deploy order
-One PR. The flag `bets.flag_funnels_enabled` is created and serving in every environment before the merge. Kit 1.4.0
-and CLI 1.2.0 published by Daniel after the gate and reviews, then the merge.
+One PR. The flag `bets.flag_funnels_enabled` is created and serving in every environment before the merge. Kit 1.5.0
+and CLI 1.3.0 published by Daniel after the gate and reviews, then the merge.
 
 ## Definition of Done (epic)
 - [ ] All sprints merged to `main` + smoke-tested (gaps stated — `node scripts/owed-ledger.mjs` counts what is still owed)

@@ -57,9 +57,9 @@ stories:
 ## Sprint 1 — Smoke walkthrough (do these in order)
 Env: production · https://goldenfrijoles.com, signed in.
 
-1. Pick an epic with a `flag_key` and a bet, run `npx -y @golden-frijoles/cli@1.2.0 bet sync Roadmap/<area>/<slug>/README.md`
+1. Pick an epic with a `flag_key` and a bet, run `npx -y @golden-frijoles/cli@1.3.0 bet sync Roadmap/<area>/<slug>/README.md`
    → "created <flag> (Measure: off until you roll it out)" or "<flag> exists; left it".
-2. Run `npx -y @golden-frijoles/cli@1.2.0 flags get <flag>`
+2. Run `npx -y @golden-frijoles/cli@1.3.0 flags get <flag>`
    → the flag in every environment, its description the bet's hypothesis.
 
 If any step fails, note the step number + what you saw — that's the bug report.

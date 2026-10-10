@@ -21,7 +21,7 @@ stories:
     risk: high
     status: planned
   - id: S2.3
-    title: "CLI 1.2.0, plugin + kit 1.4.0"
+    title: "CLI 1.3.0, plugin + kit 1.5.0"
     as_a: "a founder updating"
     i_want: "the new command and refine in a release"
     so_that: "I get them with npx and /plugin update"
@@ -44,9 +44,9 @@ stories:
 **Acceptance:** with `bets.flag_funnels_enabled` on, the epic page shows the funnel under the flag's state (rates, adopted without exposure beside, satisfied or not measured) and Journeys lists From your flags, one read-only funnel per measured flag; off, neither; a failed read says so and never shows zeros.
 **Risk:** high
 
-### Story 2.3 — CLI 1.2.0, plugin + kit 1.4.0
+### Story 2.3 — CLI 1.3.0, plugin + kit 1.5.0
 **As** a founder updating, **I want** the new command and refine in a release, **so that** I get them with npx and /plugin update.
-**Acceptance:** CLI 1.2.0 with `bet sync`, pinning the published kit; plugin + kit 1.4.0; CHANGELOG entries; check-release agrees.
+**Acceptance:** CLI 1.3.0 with `bet sync`, pinning the published kit; plugin + kit 1.5.0; CHANGELOG entries; check-release agrees.
 **Risk:** low
 
 ## Sprint QA
