@@ -4,14 +4,28 @@ sprint: 2
 title: "Measure by default, and seen"
 risk: high
 phase: Shaping
-stories_total: 1
+stories_total: 3
 stories:
   - id: S2.1
-    title: "<title>"
-    as_a: "a <role>"
-    i_want: "<capability>"
-    so_that: "<outcome>"
+    title: "Refine's Measure and Safety questions, and sign-in where it adds value"
+    as_a: "a founder refining a feature"
+    i_want: "to be asked whether I want to know it worked, and to sign in only when that is the reason"
+    so_that: "measuring is the default and an account is offered when it pays off"
     risk: high
+    status: planned
+  - id: S2.2
+    title: "The funnel on the epic page and Journeys' From your flags"
+    as_a: "a founder reading a bet or browsing journeys"
+    i_want: "each measured flag's funnel where I already look"
+    so_that: "I see whether the bet worked without assembling it"
+    risk: high
+    status: planned
+  - id: S2.3
+    title: "CLI 1.2.0, plugin + kit 1.4.0"
+    as_a: "a founder updating"
+    i_want: "the new command and refine in a release"
+    so_that: "I get them with npx and /plugin update"
+    risk: low
     status: planned
 ---
 # One bet, wired: the flag knows its epic, its funnel and its read — Sprint 2: Measure by default, and seen
@@ -19,44 +33,35 @@ stories:
 **Status:** ⬜ not started
 
 ## Stories
-<!-- One block per story. Thinnest shippable slice first.
-     Each story ALSO has an entry in the frontmatter `stories:` list above — that entry is what tools
-     read (the build view, build-state.mjs); the prose below is what people read. Add both, and keep
-     `stories_total` (here and in the epic README) equal to the number of entries.
-     Story `status:` is planned | in-progress | done. The sprint's `phase:` is the executive ladder
-     (Shaping | Locking architecture | Building | Verifying | In review | Shipped), WRITTEN at each
-     cadence event. Name the story in each commit subject (`S2.1 …`): that is how the build view
-     knows which story is in flight.
-     Keep the heading shape `### Story 2.M — <title>` (this is what the status board counts).
-     When a story ships, append ✅ + its commit ref to the heading, e.g.
-       ### Story 2.1 — <title> ✅ `abc1234`
-     Note: the epic README frontmatter `status:` is the AUTHORITATIVE epic status; this ✅ marker only
-     feeds the cosmetic per-sprint progress count, so a format slip can't mis-state shipped/not-shipped. -->
 
-### Story 2.1 — <title>
-**As a** <role>, **I want** <capability>, **so that** <outcome>.
-**Acceptance:** <plain-language checks the product owner can run>
+### Story 2.1 — Refine's Measure and Safety questions, and sign-in where it adds value
+**As** a founder refining a feature, **I want** to be asked whether I want to know it worked, and to sign in only when that is the reason, **so that** measuring is the default and an account is offered when it pays off.
+**Acceptance:** Stage 6b asks Measure first (suggested yes for every Feature epic; the adoption, retention and optional satisfaction events) and Safety second (by risk); a yes to Measure when not signed in shows the one-sentence value and Sign in now / Later, once per project; the Plan gate's Flag line says "measured once you sign in" while pending; check-gate-words passes.
 **Risk:** high
 
+### Story 2.2 — The funnel on the epic page and Journeys' From your flags
+**As** a founder reading a bet or browsing journeys, **I want** each measured flag's funnel where I already look, **so that** I see whether the bet worked without assembling it.
+**Acceptance:** with `bets.flag_funnels_enabled` on, the epic page shows the funnel under the flag's state (rates, adopted without exposure beside, satisfied or not measured) and Journeys lists From your flags, one read-only funnel per measured flag; off, neither; a failed read says so and never shows zeros.
+**Risk:** high
+
+### Story 2.3 — CLI 1.2.0, plugin + kit 1.4.0
+**As** a founder updating, **I want** the new command and refine in a release, **so that** I get them with npx and /plugin update.
+**Acceptance:** CLI 1.2.0 with `bet sync`, pinning the published kit; plugin + kit 1.4.0; CHANGELOG entries; check-release agrees.
+**Risk:** low
+
 ## Sprint QA
-- **api spec(s):** <which testable story → which `e2e/*.spec.ts`>
-- **browser smoke owed:** <no · or: yes, to the product owner — name the money/auth step>
-- **deterministic gate:** `tsc --noEmit` + `npm run build` + Playwright `api` green before merge
+- **unit:** check-gate-words, onboarding parity, the funnel's render decision; the authed epic page and Journeys
+- **browser smoke owed:** the signed-in epic page and Journeys on production (Daniel)
+- **deterministic gate:** as sprint 1
 
 ## Sprint 2 — Smoke walkthrough (do these in order)
-Env: production · https://<your-domain>   (or the preview URL while testing pre-merge)
+Env: production, signed in, a project with a measured flag that has been evaluated.
 
-1. Go to https://<your-domain>/<page-or-path>
-   → <observable expected result>
-2. In <the relevant authed area>, go to https://<your-domain>/<authed-path>
-   → <observable expected result>
-3. (money path — owed to <product owner> by name) <the money-path steps for your project> using a
-   test-mode payment credential.
-   → <observable expected result>
-
-<!-- Delete whichever pre-filled steps don't apply to this sprint; add more using the same shape
-     (real clickable URL + one observable result). Flag any money/auth/checkout step by name —
-     those are owed to your project's product owner (an automated browser smoke can't fully cover
-     them). -->
+1. (owed to Daniel — interactive) Refine a small feature: at Stage 6b, answer yes to "Do you want to know if this worked?" while signed out
+   → one sentence on why measuring needs an account, Sign in now / Later; Later keeps the bet, and the Plan gate says "measured once you sign in".
+2. Open the epic's page at https://goldenfrijoles.com/hub/<project>/epic/<slug>
+   → under the flag: base → targeted → exposed → adopted → retained → satisfied (or "not measured"), with "adopted without exposure" beside.
+3. Open https://goldenfrijoles.com/app/journeys/<project>
+   → From your flags: the same funnel, named by the epic.
 
 If any step fails, note the step number + what you saw — that's the bug report.

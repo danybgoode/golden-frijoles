@@ -4,13 +4,27 @@ sprint: 1
 title: "The funnel fills itself"
 risk: high
 phase: Building
-stories_total: 1
+stories_total: 3
 stories:
   - id: S1.1
-    title: "<title>"
-    as_a: "a <role>"
-    i_want: "<capability>"
-    so_that: "<outcome>"
+    title: "The flag funnel on the agreed TARS model, and its bounded read"
+    as_a: "a founder reading a shipped bet"
+    i_want: "its flag's funnel computed the way TARS means it"
+    so_that: "the read date has a number I can trust"
+    risk: high
+    status: planned
+  - id: S1.2
+    title: "The bet's measurement through seed, scaffold, contract and the push"
+    as_a: "a founder whose epic carries a bet"
+    i_want: "the measurement to travel with the epic"
+    so_that: "the engine reads it without hand registration"
+    risk: high
+    status: planned
+  - id: S1.3
+    title: "frijoles bet sync"
+    as_a: "an agent at the Build gate"
+    i_want: "one command that creates the bet's flag from the epic"
+    so_that: "the flag exists before the code reads it"
     risk: high
     status: planned
 ---
@@ -19,44 +33,33 @@ stories:
 **Status:** ⬜ not started
 
 ## Stories
-<!-- One block per story. Thinnest shippable slice first.
-     Each story ALSO has an entry in the frontmatter `stories:` list above — that entry is what tools
-     read (the build view, build-state.mjs); the prose below is what people read. Add both, and keep
-     `stories_total` (here and in the epic README) equal to the number of entries.
-     Story `status:` is planned | in-progress | done. The sprint's `phase:` is the executive ladder
-     (Shaping | Locking architecture | Building | Verifying | In review | Shipped), WRITTEN at each
-     cadence event. Name the story in each commit subject (`S1.1 …`): that is how the build view
-     knows which story is in flight.
-     Keep the heading shape `### Story 1.M — <title>` (this is what the status board counts).
-     When a story ships, append ✅ + its commit ref to the heading, e.g.
-       ### Story 1.1 — <title> ✅ `abc1234`
-     Note: the epic README frontmatter `status:` is the AUTHORITATIVE epic status; this ✅ marker only
-     feeds the cosmetic per-sprint progress count, so a format slip can't mis-state shipped/not-shipped. -->
 
-### Story 1.1 — <title>
-**As a** <role>, **I want** <capability>, **so that** <outcome>.
-**Acceptance:** <plain-language checks the product owner can run>
+### Story 1.1 — The flag funnel on the agreed TARS model, and its bounded read
+**As** a founder reading a shipped bet, **I want** its flag's funnel computed the way TARS means it, **so that** the read date has a number I can trust.
+**Acceptance:** `lib/flag-funnel.ts` returns base, targeted (everyone), exposed (variant `on`), adopted at or after exposure, retained within the window, satisfied or null, and adopted-without-exposure, from a synthetic event list in tests; the bounded read covers one project's period (first `on` to now, at most 90 days), capped and saying so.
+**Risk:** high
+
+### Story 1.2 — The bet's measurement through seed, scaffold, contract and the push
+**As** a founder whose epic carries a bet, **I want** the measurement to travel with the epic, **so that** the engine reads it without hand registration.
+**Acceptance:** seed and epic templates carry `target_segment`, `adopted_event`, `retained_event`, `retention_days`, `satisfied_event`; scaffold copies them; the contract refuses a segment other than `everyone`, a bad window, or measurement without a flag; the extract and push schema carry them nullish; the board card holds them.
+**Risk:** high
+
+### Story 1.3 — frijoles bet sync
+**As** an agent at the Build gate, **I want** one command that creates the bet's flag from the epic, **so that** the flag exists before the code reads it.
+**Acceptance:** `frijoles bet sync <README>` creates a missing flag as enablement in every environment with the hypothesis and epic as its description, or reports it exists and changes nothing; a README without `flag_key` or with a bad bet is a usage error naming the field; `--json` carries what happened.
 **Risk:** high
 
 ## Sprint QA
-- **api spec(s):** <which testable story → which `e2e/*.spec.ts`>
-- **browser smoke owed:** <no · or: yes, to the product owner — name the money/auth step>
-- **deterministic gate:** `tsc --noEmit` + `npm run build` + Playwright `api` green before merge
+- **unit:** `flag-funnel.test.ts` (each stage, exposure ordering, retention window, satisfied null, outside adopters, rates); the contract's bet check; scaffold's copy; the extract and push schema; CLI `bet sync` tests
+- **api spec:** the funnel read on a fresh project (flag evaluated on, adoption, retention)
+- **deterministic gate:** typecheck + build + Playwright api + authed + the Skills CI replay
 
 ## Sprint 1 — Smoke walkthrough (do these in order)
-Env: production · https://<your-domain>   (or the preview URL while testing pre-merge)
+Env: production · https://goldenfrijoles.com, signed in.
 
-1. Go to https://<your-domain>/<page-or-path>
-   → <observable expected result>
-2. In <the relevant authed area>, go to https://<your-domain>/<authed-path>
-   → <observable expected result>
-3. (money path — owed to <product owner> by name) <the money-path steps for your project> using a
-   test-mode payment credential.
-   → <observable expected result>
-
-<!-- Delete whichever pre-filled steps don't apply to this sprint; add more using the same shape
-     (real clickable URL + one observable result). Flag any money/auth/checkout step by name —
-     those are owed to your project's product owner (an automated browser smoke can't fully cover
-     them). -->
+1. Pick an epic with a `flag_key` and a bet, run `npx -y @golden-frijoles/cli@1.2.0 bet sync Roadmap/<area>/<slug>/README.md`
+   → "created <flag> (Measure: off until you roll it out)" or "<flag> exists; left it".
+2. Run `npx -y @golden-frijoles/cli@1.2.0 flags get <flag>`
+   → the flag in every environment, its description the bet's hypothesis.
 
 If any step fails, note the step number + what you saw — that's the bug report.
