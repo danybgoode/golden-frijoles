@@ -3,7 +3,7 @@ epic: setup-instruments-connects
 sprint: 2
 title: "Instrument"
 risk: high
-phase: In review
+phase: Shipped
 stories_total: 3
 stories:
   - id: S2.1
@@ -30,7 +30,7 @@ stories:
 ---
 # Setup instruments and connects: the events the North Star needs, in a pull request, and the first one seen — Sprint 2: Instrument
 
-**Status:** 🟡 built, in review (one PR for both sprints)
+**Status:** ✅ shipped 2026-10-10 (#338, merge `37bb5e0`; CLI 1.1.0, plugin + kit 1.3.0)
 
 ## Stories
 
