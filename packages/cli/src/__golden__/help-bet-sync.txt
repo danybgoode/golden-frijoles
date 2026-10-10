@@ -1,0 +1,21 @@
+frijoles bet sync — create the bet's flag from its epic (a Measure flag, off until you roll it out)
+
+Usage
+  frijoles bet sync <epic README> [--project <slug>] [--json]
+
+Reads the epic's frontmatter: flag_key, the hypothesis, and the measurement (adopted_event, retained_event,
+  retention_days, satisfied_event). A missing flag is created as an enablement flag in every environment, off until
+  you roll it out, with the hypothesis as its description; an existing flag is left as it is. The funnel itself
+  arrives with the roadmap push.
+
+Flags
+  --project <slug>  the project (default: the remembered one)
+
+Exit codes
+  0  ok         it worked
+  1  usage      the command is wrong — nothing was sent
+  2  auth       the credential is not accepted — run `frijoles login`
+  3  not-found  no such thing, or not yours
+  4  conflict   someone else changed it — re-read and retry
+  5  partial    some environments changed and some did not
+  6  server     the server or the network is unwell — retry

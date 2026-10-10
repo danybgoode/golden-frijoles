@@ -471,6 +471,19 @@
         ]
       },
       {
+        "command": "bet sync",
+        "summary": "create the bet's flag from its epic (a Measure flag, off until you roll it out)",
+        "usage": "frijoles bet sync <epic README> [--project <slug>] [--json]",
+        "needsAuth": true,
+        "flags": [
+          {
+            "flag": "--project",
+            "takesValue": true,
+            "describe": "the project (default: the remembered one)"
+          }
+        ]
+      },
+      {
         "command": "experiments decision",
         "summary": "an experiment's decision record (the latest version unless --version)",
         "usage": "frijoles experiments decision <key> [--version <n>] [--project <slug>] [--json]",
