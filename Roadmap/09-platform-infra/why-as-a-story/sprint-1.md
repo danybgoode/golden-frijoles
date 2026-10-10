@@ -46,7 +46,7 @@ stories:
 
 ### Story 1.3 — The Why shows in full
 **As** a founder following a build, **I want** the whole Why in the build view, **so that** I never read half a sentence.
-**Acceptance:** `whyLines` wraps to four lines, tested at 80 columns with this epic's Why and a long one.
+**Acceptance:** `whyLines` wraps to five lines, tested at 80 columns with this epic's Why and a long one.
 **Risk:** low · **Builder (planned):** Opus
 
 ## Sprint QA

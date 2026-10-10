@@ -64,10 +64,13 @@ defend. The plan also says who does the work, and cheaper builders really get it
   changes → why it matters to them (the value proposition) → "We'll know when …". At most 320 characters. A worked
   before/after: one-bet-wired's parts list, and the story version. A Bug or Chore keeps `Why: keeps <X> working`.
 - **D2 · The Why guard**, deterministic, `whyProblems(text)` in `scripts/lib/roadmap-contract.mjs` (and its copies):
-  longer than 320 characters; a file path or extension; a backtick; a snake_case or dotted identifier (`flag_key`,
-  `bets.flag_funnels_enabled`); a word from a short internal list (wiring, seam, endpoint, frontmatter, schema, route,
-  payload, hook). Refine runs it at the bet step through the kit (`why-check "<text>"`, exit 1 with the problems);
-  `scaffold-epic.mjs` refuses a Feature hypothesis that fails it. Shipped epics are never re-checked.
+  more lines than the view shows (D4) or one word wider than a line; a file with a code extension or a rooted path; a
+  backtick; a snake_case or camelCase code name (`flag_key`, `getWorkspaceProjects`; brand names such as iPhone, eBay
+  and macOS are prose); a word from a short internal list (wiring, wired, seam, endpoint, frontmatter, schema, payload,
+  middleware, refactor). Refine runs it at the bet step through the kit (`why-check "<text>"`, exit 1 with the
+  problems); `scaffold-epic.mjs` refuses a Feature hypothesis that fails it. Shipped epics are never re-checked.
+  *(Amended at build: the limit is the view's own wrap, not 320 characters; route and hook left the list because
+  ordinary product prose uses them; verifier #343 narrowed the code-name and path rules.)*
 - **D3 · The story question**, advisory: `intent-match` asks Jev one more question about the hypothesis ("would a
   stranger follow this as a short story: who has the problem, what changes, why it matters?"). Its own report line,
   outside the total, so the calibration does not move. A wording in `lib/jev-questions/intent.json`.
@@ -75,7 +78,7 @@ defend. The plan also says who does the work, and cheaper builders really get it
   Plan gate said; 273 characters already needed five. The view shows up to five, and the guard's limit is "fits five
   lines" through the view's own wrap (`wrapWords`), not a character count. One constant, `WHY_LINES_MAX`.)*
 - **D4 · The Why in full** (`whyLines` in `scripts/build-state.mjs` and the hooks' vendor copy): the hypothesis wraps
-  at word boundaries to the view's width, up to four lines; only a Why longer than that (a shipped one) ends in "…".
+  at word boundaries to the view's width, up to **five** lines; only a Why longer than that (a shipped one) ends in "…".
 - **D5 · The planned crew** at the Plan gate (`refine/references/gates.md`): a **Crew (planned, may change)** block
   with four roles: plans · orchestrates, builds (which stories), reviews, writes prose. Filled from WAYS-OF-WORKING's
   routing table and D7's dispatch rule; check-gate-words stays clean.
