@@ -335,3 +335,16 @@ test.describe('command center', () => {
     // Today lost is a second telling of it, on a screen the design keeps for three bands.
   })
 })
+
+// setup-instruments-connects D4 — the authed tenant's events were seeded 20 days ago (auth.setup.ts), so it has a history
+// older than the window: Today shows NO first-event message, switch on or off, and keeps its three bands. The waiting
+// and arrived states are pinned by lib/first-event-band.test.ts (the decision), cli-status.spec.ts (the read, on a fresh
+// project) and the production walkthrough; a second project for this user would turn a bare /app into Portfolio and
+// break the specs that share it (verifier, #338).
+test('Today shows no first-event message for a project with a history, and keeps its three bands', async ({
+  page,
+}) => {
+  await page.goto('/app')
+  await expect(page.locator('main .ds-band')).toHaveCount(3)
+  await expect(page.locator('main .ds-callout').filter({ hasText: /first event/i })).toHaveCount(0)
+})

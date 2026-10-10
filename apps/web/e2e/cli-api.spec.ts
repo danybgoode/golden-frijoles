@@ -367,3 +367,64 @@ test.describe('the CLI API', () => {
     }
   })
 })
+
+// ── setup-instruments-connects D1 · verifying an ingest key, one bit ───────────────────────────────
+test.describe('the CLI key check', () => {
+  test("a live key of THIS project is live; another project's, a revoked one and an unknown string are one answer", async ({
+    request,
+  }) => {
+    const one = await seedTokenOwning('project-one')
+    const two = await seedTokenOwning('project-two')
+    try {
+      const mint = async (token: string, project: string) => {
+        const res = await request.post('/api/v1/cli/keys', {
+          headers: { authorization: `Bearer ${token}` },
+          data: { project, type: 'ingest', label: 'verify spec' },
+        })
+        expect(res.status()).toBe(200)
+        return (await res.json()) as { id: string; key: string }
+      }
+      const verify = async (key: string) => {
+        const res = await request.post('/api/v1/cli/keys/verify', {
+          headers: { authorization: `Bearer ${one.token}` },
+          data: { project: 'project-one', type: 'ingest', key },
+        })
+        expect(res.status()).toBe(200)
+        return ((await res.json()) as { state: string }).state
+      }
+      const own = await mint(one.token, 'project-one')
+      const other = await mint(two.token, 'project-two')
+      expect(await verify(own.key)).toBe('live')
+      expect(await verify(other.key), "another project's key says nothing about that project").toBe(
+        'not-live'
+      )
+      expect(await verify('gk_not_a_real_key_at_all')).toBe('not-live')
+      const revoked = await request.delete(`/api/v1/cli/keys?project=project-one&type=ingest&id=${own.id}`, {
+        headers: { authorization: `Bearer ${one.token}` },
+      })
+      expect(revoked.status()).toBe(200)
+      expect(await verify(own.key), 'a revoked key is not live').toBe('not-live')
+    } finally {
+      await one.cleanup()
+      await two.cleanup()
+    }
+  })
+
+  test('a non-member gets the same 404 a stranger gets, and a bad body is refused', async ({ request }) => {
+    const one = await seedTokenOwning('project-one')
+    try {
+      const foreign = await request.post('/api/v1/cli/keys/verify', {
+        headers: { authorization: `Bearer ${one.token}` },
+        data: { project: 'project-two', type: 'ingest', key: 'gk_x' },
+      })
+      expect(foreign.status()).toBe(404)
+      const badType = await request.post('/api/v1/cli/keys/verify', {
+        headers: { authorization: `Bearer ${one.token}` },
+        data: { project: 'project-one', type: 'flag_read', key: 'x' },
+      })
+      expect(badType.status()).toBe(400)
+    } finally {
+      await one.cleanup()
+    }
+  })
+})

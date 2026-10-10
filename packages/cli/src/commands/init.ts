@@ -22,7 +22,7 @@ import { execFileSync } from 'node:child_process'
 import { appendFileSync, chmodSync, existsSync, lstatSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { isFlagEnvironment } from '@golden-frijoles/sdk'
-import { flagValue } from '../args'
+import { boolFlag, flagValue } from '../args'
 import type { Command, CommandContext } from '../command'
 import { EXIT, exitForServerCode, type ExitCode } from '../exit-codes'
 
@@ -32,6 +32,12 @@ export const ENV_KEYS = {
   flagRead: 'GOLDEN_FRIJOLES_FLAG_READ_KEY',
   environment: 'GOLDEN_FRIJOLES_ENVIRONMENT',
 } as const
+
+/**
+ * setup-instruments-connects D1 — what `--ingest` adds: the names the SDK snippet (`lib/sdk-snippet.ts`), the kit's
+ * `roadmap-push` and the plugin's hooks read. Not `GOLDEN_FRIJOLES_*`: those readers already exist and read these.
+ */
+export const INGEST_ENV_KEYS = { key: 'GROWTH_ENGINE_API_KEY', url: 'GROWTH_ENGINE_URL' } as const
 
 const ENV_FILE = '.env.local'
 const GITIGNORE = '.gitignore'
@@ -117,7 +123,7 @@ const enabled = flags.resolveBooleanEvaluation('checkout.demo_enabled', false, {
 export const initCommand: Command = {
   path: ['init'],
   summary: 'project, key, .env.local and the snippet — in one verb',
-  usage: 'frijoles init [--env <environment>] [--json] [--yes]',
+  usage: 'frijoles init [--env <environment>] [--ingest] [--json] [--yes]',
   needsAuth: true,
   detail: `Idempotent. Re-running it does not mint a second key when ${ENV_FILE} already
   carries one; it says so and leaves the file alone.
@@ -132,6 +138,10 @@ export const initCommand: Command = {
       describe: 'development | preview | production (default: development)',
     },
     { name: 'project', value: '<slug>', describe: 'the project (default: the remembered one)' },
+    {
+      name: 'ingest',
+      describe: `also write an ingest key (${INGEST_ENV_KEYS.key}) for sending events; kept when it is already a live key of the project`,
+    },
     // ⚠️ Accepted and INERT, described as such. This verb never prompts — there is nothing for a
     // --yes to skip — and a flag whose help implies it suppresses a question that does not exist is
     // a small lie in the one document an agent reads to learn the tool. It stays accepted so a
@@ -229,6 +239,33 @@ export const initCommand: Command = {
       return EXIT.SERVER
     }
 
+    // ── 3b. --ingest: the same rule for the ingest key, checked BEFORE anything is minted ─────────
+    // Verified live for THIS project → kept; anything else (revoked, unknown, another project's) → minted; could not
+    // check → refuse with nothing changed, exactly as the flag-read key above (setup-instruments-connects D1).
+    const wantsIngest = boolFlag(context.args, 'ingest')
+    const existingIngest = wantsIngest ? readEnvValue(existingEnv, INGEST_ENV_KEYS.key) : null
+    let ingestState: 'absent' | 'live' | 'not-live' | 'skipped' = wantsIngest ? 'absent' : 'skipped'
+    if (existingIngest !== null) {
+      const verified = await context.api!.post<{ state: 'live' | 'not-live' }>('api/v1/cli/keys/verify', {
+        project,
+        type: 'ingest',
+        key: existingIngest,
+      })
+      if (verified.kind !== 'ok') {
+        context.emit.fail(
+          'server_error',
+          `${ENV_FILE} already holds a ${INGEST_ENV_KEYS.key}, and ${context.api!.baseUrl} could not confirm it belongs ` +
+            `to ${project}. Nothing was changed. Retry when the deployment answers, or remove that line to mint a fresh key.`
+        )
+        return EXIT.SERVER
+      }
+      ingestState = verified.body.state
+      if (ingestState === 'not-live')
+        context.emit.note(
+          `The ${INGEST_ENV_KEYS.key} in ${ENV_FILE} is not a live key of ${project} — minting a replacement.`
+        )
+    }
+
     if (existingKey === null || existingKeyState === 'dead' || existingKeyState === 'wrong-environment') {
       const result = await context.api!.post<{ id: string; key: string; expiresAt: string | null }>(
         'api/v1/cli/keys',
@@ -245,11 +282,38 @@ export const initCommand: Command = {
       minted = result.body
     }
 
+    let mintedIngest: { id: string; key: string } | null = null
+    let ingestFailure: { code: string; message: string; exit: ExitCode } | null = null
+    if (wantsIngest && ingestState !== 'live') {
+      const result = await context.api!.post<{ id: string; key: string }>('api/v1/cli/keys', {
+        project,
+        type: 'ingest',
+        label: 'frijoles init',
+      })
+      // A failure here must not lose the flag-read key minted above: it is written below, then the failure is reported.
+      if (result.kind === 'network')
+        ingestFailure = { code: 'server_error', message: result.message, exit: EXIT.SERVER }
+      else if (result.kind === 'error')
+        ingestFailure = {
+          code: result.code,
+          // Minting is owner-only (the keys route answers a member as it answers a stranger): say who can, rather than
+          // suggest a re-run that cannot help (verifier, #338).
+          message:
+            result.code === 'not_found'
+              ? `Only an owner of ${project} can mint its ingest key: ask one to run \`frijoles init --ingest\`, or to mint one with \`frijoles keys create --type ingest --label "<what holds it>" --project ${project}\` and share it outside this tool.`
+              : result.message,
+          exit: exitForServerCode(result.code),
+        }
+      else mintedIngest = result.body
+    }
+
     // ── 4. write it ───────────────────────────────────────────────────────────────────────────
     let next = existingEnv
     next = upsertEnvValue(next, ENV_KEYS.url, context.api!.baseUrl)
     next = upsertEnvValue(next, ENV_KEYS.environment, environment)
     if (minted) next = upsertEnvValue(next, ENV_KEYS.flagRead, minted.key)
+    if (wantsIngest) next = upsertEnvValue(next, INGEST_ENV_KEYS.url, context.api!.baseUrl)
+    if (mintedIngest) next = upsertEnvValue(next, INGEST_ENV_KEYS.key, mintedIngest.key)
     // 0600 on every write, not only at creation: `writeFileSync`'s mode is ignored for an existing
     // file, which is how a credential file stays world-readable after the second run.
     writeFileSync(envPath, next, { mode: 0o600 })
@@ -259,6 +323,15 @@ export const initCommand: Command = {
       chmodSync(envPath, 0o600)
     } catch {
       /* not every filesystem has modes; the write above is still correct */
+    }
+
+    if (ingestFailure) {
+      context.emit.fail(
+        ingestFailure.code,
+        `${ingestFailure.message} The ingest key was not minted; ${ENV_FILE} was written with everything else.` +
+          (ingestFailure.code === 'not_found' ? '' : ' Run `frijoles init --ingest` again.')
+      )
+      return ingestFailure.exit
     }
 
     // ── 5. say what happened, and hand over the snippet ───────────────────────────────────────
@@ -276,7 +349,11 @@ export const initCommand: Command = {
         // checked and it works" lead to different actions, and an agent handed only `true` cannot
         // tell them apart.
         existingKeyState,
-        variables: Object.values(ENV_KEYS),
+        variables: wantsIngest
+          ? [...Object.values(ENV_KEYS), ...Object.values(INGEST_ENV_KEYS)]
+          : Object.values(ENV_KEYS),
+        // The key ID, never the key; `kept` means the file's key was verified live for this project.
+        ingest: wantsIngest ? { mintedKeyId: mintedIngest?.id ?? null, kept: ingestState === 'live' } : null,
         snippet: snippetFor(environment),
       },
       [
@@ -285,6 +362,13 @@ export const initCommand: Command = {
           : existingKeyState === 'live'
             ? `${ENV_FILE} already has a working ${ENV_KEYS.flagRead}; left it alone and refreshed the other variables.`
             : `${ENV_FILE} already has a ${ENV_KEYS.flagRead}. It could not be verified against ${context.api!.baseUrl}, so it was left alone rather than replaced — check it if flags do not resolve.`,
+        ...(wantsIngest
+          ? [
+              mintedIngest
+                ? `Minted an ingest key for ${project}: ${INGEST_ENV_KEYS.key} and ${INGEST_ENV_KEYS.url} are in ${ENV_FILE}.`
+                : `${ENV_FILE} already has a live ${INGEST_ENV_KEYS.key} for ${project}; kept it.`,
+            ]
+          : []),
         `${ENV_FILE} is ignored by git and set to mode 0600.`,
         '',
         'Read them like this:',

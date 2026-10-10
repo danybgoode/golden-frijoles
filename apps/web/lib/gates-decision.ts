@@ -97,6 +97,12 @@ export const GATES = {
     fallback: false,
   },
   agentRail: { key: 'console.agent_rail_enabled', envVar: 'AGENT_RAIL_ENABLED', fallback: true },
+  // setup-instruments-connects D5 — Today's first-event band and `frijoles status`. A kill switch: born on.
+  firstEventBand: {
+    key: 'onboarding.first_event_band_enabled',
+    envVar: 'FIRST_EVENT_BAND_ENABLED',
+    fallback: true,
+  },
 } as const satisfies Record<string, Gate>
 
 export type GateName = keyof typeof GATES

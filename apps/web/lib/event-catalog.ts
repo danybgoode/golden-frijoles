@@ -28,6 +28,11 @@ export const RESERVED_EVENTS: ReadonlySet<string> = new Set([
   'scenario_executed',
 ])
 
+/** PostgREST's `in` list for RESERVED_EVENTS, quoted: the filter a product-events read excludes them with. */
+export function reservedEventsInFilter(): string {
+  return `(${[...RESERVED_EVENTS].map((e) => `"${e.replace(/"/g, '\\"')}"`).join(',')})`
+}
+
 const SEGMENT_FIELDS = ['source', 'channel', 'campaign', 'plan', 'region'] as const
 
 export type EventCatalogScalar = string | number | boolean

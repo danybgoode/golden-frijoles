@@ -1,0 +1,20 @@
+frijoles status — has the project received its first event yet, and which was the latest
+
+Usage
+  frijoles status [--project <slug>] [--json]
+
+Setup runs this after connecting. "Waiting for the first event" means nothing the product sent has
+  arrived yet (the SDK's own bookkeeping events do not count); check that GROWTH_ENGINE_API_KEY is set where the
+  app runs.
+
+Flags
+  --project <slug>  the project (default: the remembered one)
+
+Exit codes
+  0  ok         it worked
+  1  usage      the command is wrong — nothing was sent
+  2  auth       the credential is not accepted — run `frijoles login`
+  3  not-found  no such thing, or not yours
+  4  conflict   someone else changed it — re-read and retry
+  5  partial    some environments changed and some did not
+  6  server     the server or the network is unwell — retry

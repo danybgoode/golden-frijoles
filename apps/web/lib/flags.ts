@@ -159,3 +159,8 @@ export async function isConnectorWriteToolEnabled(): Promise<boolean> {
 export async function isExperimentGovernanceMcpToolEnabled(): Promise<boolean> {
   return (await isConnectorEnabled()) && (await isExperimentGovernanceEnabled())
 }
+
+/** Today's first-event band and `frijoles status` (setup-instruments-connects D5). A kill switch: born on. */
+export function isFirstEventBandEnabled(): Promise<boolean> {
+  return gate(GATES.firstEventBand)
+}

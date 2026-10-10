@@ -30,11 +30,9 @@ test('the package the install page names is the package that is published', () =
 })
 
 test('the binary the install page names is the binary that is published', () => {
-  // The install page's name comes first. Any other bin is a deprecated alias with a removal date (plugin-1-0 D2–D3,
-  // scripts/check-deprecations.mjs), never a second name to teach.
-  const [primary, ...aliases] = Object.keys(manifest.bin)
-  assert.equal(primary, CLI_BIN)
-  assert.deepEqual(aliases, ['gf'])
+  // The install page's name, and nothing else: the old `gf` alias was retired in CLI 1.1.0 (plugin-1-0 D2–D3,
+  // scripts/check-deprecations.mjs keeps it gone).
+  assert.deepEqual(Object.keys(manifest.bin), [CLI_BIN])
 })
 
 test('every printed command uses those two names and nothing else', () => {

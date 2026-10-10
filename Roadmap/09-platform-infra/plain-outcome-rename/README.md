@@ -13,7 +13,7 @@ intent_match: null   # copied from the seed by scaffold-epic (intent-match); the
 quote_low_usd: 67    # ≈ API $ — copied from the seed's `quote:` by scaffold-epic (finops); null = not quoted, never 0
 quote_high_usd: 144
 quote_basis: "L, n=3, p25–p75"
-build_order: 78    # integer position in the ONE global build sequence — the SSOT once the epic
+build_order: 79    # integer position in the ONE global build sequence — the SSOT once the epic
                      # exists (the seed's value is only a fallback). Fill it in at the betting
                      # table; plain integers, no "#2a" suffixes. See 00-ideas/README.md → Ordering.
 ---
