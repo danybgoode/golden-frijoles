@@ -1257,3 +1257,8 @@ test('bet sync helpers: frontmatter comments and quotes; the description stays w
   const long = betDescription({ hypothesis: 'word '.repeat(300), slug: 'a-long-epic' })
   assert.ok(long.length <= 500 && long.endsWith('(epic a-long-epic)'), String(long.length))
 })
+
+test('bet sync: a long slug still keeps the description within 500 characters', async () => {
+  const { betDescription } = await import('./commands/bet.ts')
+  assert.ok(betDescription({ hypothesis: 'word '.repeat(300), slug: 's'.repeat(200) }).length <= 500)
+})

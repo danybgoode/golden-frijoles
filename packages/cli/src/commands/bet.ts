@@ -53,7 +53,8 @@ export function betProblems(fm: BetFrontmatter): string[] {
 
 /** The flag's description: the bet and its epic, within the provider's 500 characters. */
 export function betDescription(fm: BetFrontmatter): string {
-  const epic = fm.slug ? ` (epic ${fm.slug})` : ''
+  const slug = fm.slug && fm.slug.length > 80 ? `${fm.slug.slice(0, 79)}…` : fm.slug
+  const epic = slug ? ` (epic ${slug})` : ''
   const hypothesis = fm.hypothesis ?? fm.title ?? 'A measured bet'
   const room = 480 - epic.length
   const clipped =
