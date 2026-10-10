@@ -3,7 +3,7 @@ epic: why-as-a-story
 sprint: 2
 title: "The crew"
 risk: low
-phase: Locking architecture
+phase: In review
 stories_total: 4
 stories:
   - id: S2.1
@@ -12,32 +12,32 @@ stories:
     i_want: "to see who plans, builds, reviews and writes, and later who really did"
     so_that: "I know where the work and the money went"
     risk: low
-    status: planned
+    status: done
   - id: S2.2
     title: "Cheaper builders, really used"
     as_a: "a founder paying for agent time"
     i_want: "well-specified stories built by a cheaper model, taken back when it fails"
     so_that: "the strongest model is spent where judgment matters"
     risk: low
-    status: planned
+    status: done
   - id: S2.3
     title: "The checkpoint shape"
     as_a: "a founder checking where things stand"
     i_want: "the same clear checkpoint every time"
     so_that: "I always know what is done, what is next and what you recommend"
     risk: low
-    status: planned
+    status: done
   - id: S2.4
     title: "Release"
     as_a: "a founder using the plugin"
     i_want: "these changes in plugin + kit 1.6.0"
     so_that: "my next refine uses them"
     risk: low
-    status: planned
+    status: done
 ---
 # The Why reads as a story, in full, and the plan names its crew — Sprint 2: The crew
 
-**Status:** ⬜ not started
+**Status:** 🟡 built, in review (one PR for both sprints)
 
 ## Stories
 

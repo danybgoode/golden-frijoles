@@ -3,7 +3,7 @@ epic: why-as-a-story
 sprint: 1
 title: "The Why"
 risk: low
-phase: Building
+phase: In review
 stories_total: 3
 stories:
   - id: S1.1
@@ -12,25 +12,25 @@ stories:
     i_want: "the Why written as a short plain story from my strategy"
     so_that: "I can explain and defend the bet"
     risk: low
-    status: planned
+    status: done
   - id: S1.2
     title: "The Why guard and the story question"
     as_a: "a founder approving a bet"
     i_want: "a Why that is too long or full of internal words caught before I see it"
     so_that: "what I approve reads plainly"
     risk: medium
-    status: planned
+    status: done
   - id: S1.3
     title: "The Why shows in full"
     as_a: "a founder following a build"
     i_want: "the whole Why in the build view"
     so_that: "I never read half a sentence"
     risk: low
-    status: planned
+    status: done
 ---
 # The Why reads as a story, in full, and the plan names its crew — Sprint 1: The Why
 
-**Status:** ⬜ not started
+**Status:** 🟡 built, in review (one PR for both sprints)
 
 ## Stories
 
