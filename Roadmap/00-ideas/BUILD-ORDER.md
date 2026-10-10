@@ -10,7 +10,7 @@
 > This committed file reads the docs alone, so **Building and QA are not here** — they are facts git
 > and GitHub hold. For the live board run `node scripts/build-order.mjs --live`, or open the Hub board.
 
-## Backlog (7)
+## Backlog (9)
 
 _seeds with no pitch yet._
 
@@ -19,15 +19,18 @@ _seeds with no pitch yet._
 - [A reading for proving_workspaces](seeds/proving-workspaces-reading.md) — 01 Growth Engine · seed · Spike · risk: High · appetite S · _docs: status raw_
 - [perf-probe only requests the hosts a project names](seeds/perf-probe-target-allowlist.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
 - [TARS segments: named target segments, and every funnel on the agreed model](seeds/tars-segments.md) — 01 Growth Engine · seed · Feature · risk: High · appetite M · _docs: status raw_
+- [TARS, one model: the older funnels read the way flag funnels do](seeds/tars-one-model.md) — 01 Growth Engine · seed · Feature · risk: High · appetite M · _docs: status raw_
 - [Template scripts run when invoked through a symlinked path](seeds/script-ismain-realpath.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
+- [The build view tells one story: one status, said once](seeds/build-view-one-story.md) — 09 Platform Infra · seed · Feature · risk: Low · appetite M · _docs: status raw_
 - [This repo lints its template scripts the way its consumers do](seeds/foundation-lint-gate.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
 
-## Refining (2)
+## Refining (3)
 
 _a pitch is waiting at the approval gate._
 
 - [Analytics visualization — the charting-dependency decision (spike), then the layer](seeds/analytics-visualization-layer.md) — #14 · 01 Growth Engine · seed · Spike · risk: Low · appetite S · _docs: status ready_
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
+- [The Why reads as a story, in full, and the plan names its crew](seeds/why-as-a-story.md) — 09 Platform Infra · seed · Feature · risk: Low · appetite M · _docs: status ready_
 
 ## Ready (9)
 
@@ -130,4 +133,4 @@ _merged, deployed and closed._
 - [The portfolio loop test fails intermittently in CI and has been quarantined](seeds/portfolio-loop-flake.md) — 02 Commercial · seed · Bug · risk: Low · appetite S · _docs: status shipped_
 
 ---
-_91 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._
+_94 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._
