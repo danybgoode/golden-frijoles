@@ -337,6 +337,10 @@ one-liner + why + date shape.
 
 ## Review quality
 
+- **When a feature reads data someone else must send, test it from the sender's instructions.** One bet, wired passed
+  every unit test while its funnel could never fill: the docs never told the app to report evaluations, and the read
+  keyed them on the server's own user. Write one test that sends the data exactly as the shipped guidance says.
+  *(one-bet-wired, 2026-10-10.)*
 - **A lock decision is most at risk in the NEXT sprint's convenience code.** D19 said "the Hub never computes a
   stage" and S2's board obeyed it; S4's Roadmap tab, written for a different story, quietly derived stages from the old
   `status` field for pre-stage pushes, and linked them to cards the board could not open. Before building a view, grep

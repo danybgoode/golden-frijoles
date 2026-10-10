@@ -34,4 +34,12 @@ base that has the problem, not who was exposed. one-bet-wired builds flag funnel
    way.
 3. **Satisfied** beyond an optional event: a rating or a survey the product can ask, and how it is read.
 
+4. **The funnel on screen, tested on and off** (one-bet-wired retro). The flag funnel's switch
+   (`bets.flag_funnels_enabled`) has only a pure-rule test (`funnelBetOf`): no browser spec renders the epic page and
+   Journeys with it on and off. That needs an authed-fixture epic with an `adopted_event`, which this seed builds
+   anyway to test segments on screen.
+5. **Golden Frijoles measures its own funnel** (one-bet-wired retro). Viewing a flag funnel emits no adoption event, so
+   one-bet-wired has no `adopted_event` and is funded, not grounded. Give the funnel views an event and the epics that
+   built them a measurement, so this feature's own funnel fills.
+
 Each changes numbers people may already read, so the cut-over is said on screen.

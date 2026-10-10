@@ -1,6 +1,6 @@
 ---
-status: in-progress  # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: In review     # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+status: shipped      # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+phase: Shipped       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
 locked_at: "2026-10-10T01:49:39Z"
 slug: one-bet-wired
@@ -30,6 +30,9 @@ flag_key: bets.flag_funnels_enabled   # the epic's flag, decided at refine Stage
 build_order: 79      # integer position in the ONE global build sequence — the SSOT once the epic
                      # exists (the seed's value is only a fallback). Fill it in at the betting
                      # table; plain integers, no "#2a" suffixes. See 00-ideas/README.md → Ordering.
+actual_usd: 42.87
+actual_mtok: 118.1
+actual_basis: "this machine · 2026-10-10 · 1 session · prices 2026-10-02"
 ---
 
 # Epic: One bet, wired: the flag knows its epic, its funnel and its read
