@@ -64,7 +64,7 @@ const card = (over: Partial<BoardCard>): BoardCard => ({
   result: null,
   finops: null,
   flagKey: null,
-  flagNote: null, grounded: null, groundedReason: null,
+  flagNote: null, grounded: null, groundedReason: null, measure: null,
   ...over,
 })
 

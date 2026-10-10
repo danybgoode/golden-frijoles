@@ -143,7 +143,7 @@ We'll know when <the signal>.
   Read date .... <read date, or: 30 days after it ships>
   Size ......... <appetite>, about $<lo>–<hi> of agent time
   Sprints ...... <1 title  2 title …>. <n> user stories
-  Flag ......... <flag key>, <on, so you can switch it off | off until you try it> | none: <why>
+  Flag ......... <flag key>, <on, so you can switch it off | off until you roll it out, measured by <event>> | none: <why>
   Measured by .. <the event the target metric counts>
 
 Decisions only you can make:
@@ -169,8 +169,9 @@ What this pushes back: <what waits>. It builds next | It builds after <title>.
 - **Not grounded.** When `strategy.mjs` printed nothing (no strategy yet), the Moves line always shows, target or not:
   `<the target metric's name> (not grounded: no strategy yet)`, or `not grounded: no strategy yet` with no target. It is
   read at each gate, so it stops showing once a strategy exists.
-- **Flag** says what Stage 6b decided (`kill-switch.md`): a kill switch ships **on, so you can switch it off**; an
-  enablement flag ships **off until you try it**. "none: <why>" only when Stage 6b wrote a carve-out; an epic that never
+- **Flag** says what Stage 6b decided (`kill-switch.md`): a kill switch ships **on, so you can switch it off**; a
+  Measure flag (enablement) ships **off until you roll it out, measured by <the bet's adopted_event>**, and while the
+  founder chose "Later" at the sign-in suggestion it adds "(measured once you sign in)". "none: <why>" only when Stage 6b wrote a carve-out; an epic that never
   reached Stage 6b leaves the line out. When the seed does not say which polarity, leave out on/off rather than guess.
 - **Measured by** is the event `strategy.mjs` prints beside the target metric's input (`event <name>`), only when it
   prints one. Otherwise leave the line out; never invent an event name.
@@ -211,7 +212,10 @@ Setup is done. Optional, only if you want them:
 ```
 
 - **The flag line** only when the seed has a `flag_key`, on or off as the Plan gate said (left out when it did not say). Refine never creates a flag;
-  its user story does (`kill-switch.md`).
+  its user story does (`kill-switch.md`), with one exception: **a measured bet** (the epic has an `adopted_event`) when
+  the founder is signed in. Then, before showing this gate, run `frijoles bet sync <epic README>` and end the line with
+  what it said: "created, off until you roll it out" or "already there". Signed out, end it with "(measured once you
+  sign in)".
 - **`/build <slug>`** is the line in Claude Code with the plugin. Anywhere else it is Stage 8's generator command (or
   `npx -y @golden-frijoles/kit emit-epic-kickoff --epic <slug>` from the project root), shown as a command; its output
   is the prompt to paste into the building session.

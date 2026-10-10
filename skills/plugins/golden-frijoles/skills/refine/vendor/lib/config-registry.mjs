@@ -45,6 +45,19 @@ export const REGISTRY = Object.freeze([
       'An account adds flags you can roll out and turn off, each bet measured on its read date, every product in one place and an outcome report you can send. Sign in now (recommended: frijoles login, then frijoles init), or later?',
   },
   {
+    // one-bet-wired D6 — the one place an account is suggested outside setup: refine's Measure question, when the
+    // founder wants to know if a feature worked and is not signed in. Asked once per project; the answer is kept here.
+    key: 'measure.signIn',
+    module: 'Measure',
+    // Asked by refine's Measure step, never by setup, and only when the founder is signed out: `never-yet` keeps
+    // `frijoles doctor` from reporting Measure as unconfigured for everyone (verifier, #341).
+    askWhen: 'never-yet',
+    default: null,
+    choices: ['later', 'now'],
+    question:
+      'Measuring needs a Golden Frijoles account: it serves the flag and counts who used it. Sign in now (opens your browser once), or later (the bet is saved here either way)?',
+  },
+  {
     key: 'board.sink',
     module: 'Plan',
     askWhen: 'never-yet',

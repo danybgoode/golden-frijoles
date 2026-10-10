@@ -8,6 +8,10 @@ import { readEpicFlag } from '@/lib/epic-flag'
 import { Crumb, Crumbs } from '@/design-system/primitives'
 import { HubShell } from '../../../hub-shell'
 import { EmptyBoard } from '../../board/board-components'
+import { FlagFunnel } from '@/components/product/FlagFunnel'
+import { getFlagFunnel } from '@/lib/event-catalog-query'
+import { flagFunnelView, funnelBetOf } from '@/lib/flag-funnel-view'
+import { isFlagFunnelsEnabled } from '@/lib/flags'
 import {
   EpicBars,
   EpicDocs,
@@ -84,6 +88,12 @@ export default async function HubEpicPage({
   const repo = (artifact.payload as { board?: { repo?: string } }).board?.repo ?? null
   // D12 — this project's registry only, by the id the read above resolved after the access gate (D2).
   const flag = await readEpicFlag(result.projectId, card.flagKey, card.flagNote)
+  // one-bet-wired D7 — the measured flag's funnel, for THIS project (the id the access gate resolved), behind its switch.
+  const funnelBet = funnelBetOf(card)
+  const funnel =
+    funnelBet && (await isFlagFunnelsEnabled())
+      ? flagFunnelView(await getFlagFunnel(result.projectId, funnelBet).catch(() => null))
+      : null
   const freshness = formatFreshness(artifact.generatedAt, new Date(), artifact.sourceCommit)
 
   return (
@@ -98,6 +108,12 @@ export default async function HubEpicPage({
       <EpicBars card={card} />
       {/* A seed has no flag and no spend (S1.1): those come with refining. */}
       {card.grain === 'Epic' ? <EpicFlag flag={flag} projectSlug={projectSlug} /> : null}
+      {funnel ? (
+        <section className="ds-epic-section" aria-label="The flag's funnel">
+          <h2 className="ds-label">The flag&apos;s funnel</h2>
+          <FlagFunnel view={funnel} />
+        </section>
+      ) : null}
       {card.grain === 'Epic' && card.finops ? (
         <EpicSpend finops={epicFinops(card.finops)} projectSlug={projectSlug} slug={card.slug} />
       ) : null}

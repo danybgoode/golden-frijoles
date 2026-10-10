@@ -70,6 +70,16 @@ export type BoardCard = {
   grounded: boolean | null
   /** Why it was funded anyway; only with `grounded: false`. */
   groundedReason: string | null
+  /** one-bet-wired D1 — the bet's measurement: what its flag funnel reads; null when the epic measures nothing. */
+  measure: BetMeasureCard | null
+}
+
+export type BetMeasureCard = {
+  targetSegment: 'everyone'
+  adoptedEvent: string
+  retainedEvent: string | null
+  retentionDays: number
+  satisfiedEvent: string | null
 }
 
 /** The row fields `epicResult` reads. ⚠️ Kept in step with `lib/roadmap-result.ts` by `hub-board.test.ts`. */
@@ -183,7 +193,20 @@ export function toCard(row: RoadmapRow, project: string | null = null): BoardCar
     flagNote: row.grain === 'Epic' && typeof r.flag_note === 'string' ? r.flag_note : null,
     grounded: row.grain === 'Epic' && typeof r.grounded === 'boolean' ? r.grounded : null,
     groundedReason:
-      row.grain === 'Epic' && r.grounded === false && typeof r.grounded_reason === 'string' ? r.grounded_reason : null,
+      row.grain === 'Epic' && r.grounded === false && typeof r.grounded_reason === 'string'
+        ? r.grounded_reason
+        : null,
+    // A measured bet needs a flag and an adoption event; the window defaults to 7 days, the segment to everyone.
+    measure:
+      row.grain === 'Epic' && typeof r.flag_key === 'string' && typeof r.adopted_event === 'string'
+        ? {
+            targetSegment: 'everyone' as const,
+            adoptedEvent: r.adopted_event,
+            retainedEvent: typeof r.retained_event === 'string' ? r.retained_event : null,
+            retentionDays: typeof r.retention_days === 'number' ? r.retention_days : 7,
+            satisfiedEvent: typeof r.satisfied_event === 'string' ? r.satisfied_event : null,
+          }
+        : null,
   }
 }
 

@@ -15,6 +15,7 @@ export const isExperimentGovernanceEnabled = () => on(GATES.experimentGovernance
 export const isSignalsEnabled = () => on(GATES.signals)
 export const isConnectorWritesEnabled = () => on(GATES.connectorWrites)
 export const isFirstEventBandEnabled = () => on(GATES.firstEventBand)
+export const isFlagFunnelsEnabled = () => on(GATES.flagFunnels)
 export const isAgentRailEnabled = () => on(GATES.agentRail)
 export const isFlagConsoleEnabled = () => on(GATES.flagConsole)
 export const isFlagRuleBuilderEnabled = () => on(GATES.flagRuleBuilder)

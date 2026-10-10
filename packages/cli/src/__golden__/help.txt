@@ -41,6 +41,9 @@ Commands
   north-star set        send a North Star workshop's metric and inputs to the project
   north-star readings   one North Star input's readings, and the latest on or before a day
 
+  bet
+  bet sync              create the bet's flag from its epic (a Measure flag, off until you roll it out)
+
   experiments
   experiments decision  an experiment's decision record (the latest version unless --version)
 

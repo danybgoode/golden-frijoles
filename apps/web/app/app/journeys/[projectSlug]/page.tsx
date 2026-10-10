@@ -15,6 +15,46 @@ import { JourneyRows } from './journey-rows'
 import { ProductShell } from '@/components/product/ProductShell'
 import { NewThingDialog } from '@/components/product/NewThingDialog'
 import { Answer, PageHead, Tile } from '@/design-system/primitives'
+import { FlagFunnel } from '@/components/product/FlagFunnel'
+import { getFlagFunnel } from '@/lib/event-catalog-query'
+import { flagFunnelView, funnelBetOf, type FunnelView } from '@/lib/flag-funnel-view'
+import { isFlagFunnelsEnabled } from '@/lib/flags'
+import { getLatestArtifact } from '@/lib/report-artifacts'
+import { toCard } from '@/lib/hub-board'
+import type { RoadmapRow } from '@/lib/roadmap-artifact-schema'
+
+/** one-bet-wired D7 — at most this many measured flags are read per page view, so the page stays bounded. */
+const FROM_YOUR_FLAGS_CAP = 12
+
+/**
+ * Journeys' From your flags: one read-only funnel per measured flag in this project's latest roadmap, named by its epic.
+ * They are views, not journey definitions: creating a journey never creates a flag. A failed read shows nothing here
+ * rather than an empty section that reads as "no measured flags".
+ */
+async function fromYourFlags(
+  projectId: string
+): Promise<Array<{ slug: string; name: string; flagKey: string; view: FunnelView }> | null> {
+  try {
+    const artifact = await getLatestArtifact<{ items?: RoadmapRow[] }>(projectId, 'roadmap')
+    const measured = (artifact?.payload?.items ?? [])
+      .map((row) => toCard(row))
+      .flatMap((card) => {
+        const bet = card ? funnelBetOf(card) : null
+        return card && bet ? [{ card, bet }] : []
+      })
+      .slice(0, FROM_YOUR_FLAGS_CAP)
+    return await Promise.all(
+      measured.map(async ({ card, bet }) => ({
+        slug: card.slug,
+        name: card.name,
+        flagKey: bet.flagKey,
+        view: flagFunnelView(await getFlagFunnel(projectId, bet).catch(() => null)),
+      }))
+    )
+  } catch {
+    return null
+  }
+}
 
 // design-system-rails · Sprint 5, Story 5.5 — reference state `measure-journeys`.
 //
@@ -67,6 +107,7 @@ export default async function JourneysPage({ params }: { params: Promise<{ proje
   }))
   const rows = projectJourneyRows(inputs, new Map())
   const summary = summariseJourneys(rows)
+  const flagFunnels = (await isFlagFunnelsEnabled()) ? await fromYourFlags(membership.projectId) : null
 
   return (
     <ProductShell projectSlug={projectSlug} section="measure" railActive={'journeys'}>
@@ -129,6 +170,23 @@ export default async function JourneysPage({ params }: { params: Promise<{ proje
         )}
 
         <JourneyRows slug={projectSlug} rows={rows} />
+        {flagFunnels && flagFunnels.length > 0 ? (
+          <section aria-label="From your flags">
+            <h2 className="ds-label">From your flags</h2>
+            <p className="ds-hint">
+              Each measured flag&apos;s funnel, read from your bets. They are views: a new journey never
+              creates a flag.
+            </p>
+            {flagFunnels.map((f) => (
+              <div key={f.slug}>
+                <h3>
+                  {f.name} <span className="ds-mono">{f.flagKey}</span>
+                </h3>
+                <FlagFunnel view={f.view} />
+              </div>
+            ))}
+          </section>
+        ) : null}
       </main>
     </ProductShell>
   )

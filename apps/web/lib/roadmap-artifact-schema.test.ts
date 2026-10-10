@@ -387,3 +387,27 @@ test('codex #334: a grounded_reason without grounded: false is refused, naming i
     if (!res.ok) assert.match(JSON.stringify(res.issues), /grounded_reason is only for grounded: false/)
   }
 })
+
+// one-bet-wired D1 — the bet's measurement rides the push, nullish; a bad value is refused, naming the field.
+test('a push carrying a bet measurement stores it; a named segment and a bad window are refused', () => {
+  const ok = parseRoadmapPush(
+    push({
+      items: [
+        row({
+          target_segment: 'everyone',
+          adopted_event: 'order_placed',
+          retention_days: 14,
+        } as Partial<RoadmapRow>),
+      ],
+    })
+  )
+  assert.equal(ok.ok, true)
+  for (const bad of [
+    { target_segment: 'power_users' },
+    { retention_days: 0 },
+    { adopted_event: 'has space' },
+  ]) {
+    const res = parseRoadmapPush(push({ items: [row(bad as unknown as Partial<RoadmapRow>)] }))
+    assert.equal(res.ok, false, JSON.stringify(bad))
+  }
+})

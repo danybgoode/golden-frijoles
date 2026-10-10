@@ -191,6 +191,28 @@ const roadmapRowSchema = z
     // asked" (a Bug, a Chore, or an epic refined before it), never "no".
     grounded: z.boolean({ invalid_type_error: 'grounded must be true, false or null' }).nullish(),
     grounded_reason: z.string().max(300).nullish(),
+    // one-bet-wired D1 — the bet's measurement, nullish so an older pusher stays valid.
+    target_segment: z
+      .enum(['everyone'], { errorMap: () => ({ message: 'target_segment must be everyone (or null)' }) })
+      .nullish(),
+    adopted_event: z
+      .string()
+      .regex(/^[A-Za-z0-9_.:$-]{1,200}$/, 'adopted_event must be an event name')
+      .nullish(),
+    retained_event: z
+      .string()
+      .regex(/^[A-Za-z0-9_.:$-]{1,200}$/, 'retained_event must be an event name')
+      .nullish(),
+    retention_days: z
+      .number({ invalid_type_error: 'retention_days must be a number' })
+      .int()
+      .min(1)
+      .max(90)
+      .nullish(),
+    satisfied_event: z
+      .string()
+      .regex(/^[A-Za-z0-9_.:$-]{1,200}$/, 'satisfied_event must be an event name')
+      .nullish(),
   })
   .passthrough()
   // The contract's own rule (validateGrounded), held here too so a hand-written push cannot store a reason the board

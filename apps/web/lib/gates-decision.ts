@@ -97,6 +97,8 @@ export const GATES = {
     fallback: false,
   },
   agentRail: { key: 'console.agent_rail_enabled', envVar: 'AGENT_RAIL_ENABLED', fallback: true },
+  // one-bet-wired D8 — a measured flag's funnel on the epic page and Journeys' From your flags. A kill switch: born on.
+  flagFunnels: { key: 'bets.flag_funnels_enabled', envVar: 'FLAG_FUNNELS_ENABLED', fallback: true },
   // setup-instruments-connects D5 — Today's first-event band and `frijoles status`. A kill switch: born on.
   firstEventBand: {
     key: 'onboarding.first_event_band_enabled',

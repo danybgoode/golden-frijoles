@@ -1149,3 +1149,116 @@ test('init --ingest as a member who is not an owner says who can mint the key, n
   assert.match(captured.all(), /Only an owner of acme can mint its ingest key/)
   assert.doesNotMatch(captured.all(), /again\./)
 })
+
+// ── one-bet-wired D4 · `frijoles bet sync` ───────────────────────────────────────────────────────
+const BET_README = [
+  '---',
+  'slug: one-step-checkout',
+  'title: "One-step checkout"',
+  'hypothesis: "We believe that a one-step checkout for small shop owners will raise orders. We\'ll know when order_placed rises."',
+  'flag_key: checkout.one_step_enabled   # the flag',
+  'target_segment: everyone',
+  'adopted_event: order_placed',
+  'retained_event: null',
+  'retention_days: 14',
+  'satisfied_event: null',
+  '---',
+  '# Epic',
+  '',
+].join('\n')
+
+test('bet sync creates a missing flag as a Measure flag in every environment, the bet as its description', async () => {
+  const env = sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN, GOLDEN_FRIJOLES_PROJECT: 'acme' })
+  const cwd = mkdtempSync(join(tmpdir(), 'gf-repo-'))
+  writeFileSync(join(cwd, 'README.md'), BET_README)
+  const seen: Array<{ method: string; url: string; body: unknown }> = []
+  const captured = capture()
+  const code = await run({
+    argv: ['bet', 'sync', 'README.md', '--json'],
+    writer: captured.writer,
+    env,
+    cwd,
+    fetchImpl: stubFetch(
+      {
+        '/api/v1/cli/flags': { status: 404, body: { ok: false, code: 'not_found', error: 'No such flag.' } },
+        '/api/v1/cli/flags/write': {
+          body: {
+            ok: true,
+            flagKey: 'checkout.one_step_enabled',
+            version: 1,
+            outcome: 'applied',
+            environments: [],
+          },
+        },
+      },
+      seen
+    ),
+  })
+  assert.equal(code, EXIT.OK)
+  const write = seen.find((c) => c.url === '/api/v1/cli/flags/write')?.body as Record<string, unknown>
+  assert.deepEqual(
+    { command: write.command, polarity: write.polarity, allEnvs: write.allEnvs, key: write.key },
+    { command: 'create', polarity: 'enablement', allEnvs: true, key: 'checkout.one_step_enabled' }
+  )
+  assert.match(String(write.description), /^We believe that a one-step checkout.*\(epic one-step-checkout\)$/)
+  const out = JSON.parse(captured.out.join('\n')) as { action: string; measure: { retentionDays: number } }
+  assert.equal(out.action, 'created')
+  assert.equal(out.measure.retentionDays, 14)
+})
+
+test('bet sync leaves an existing flag as it is, and never writes', async () => {
+  const env = sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN, GOLDEN_FRIJOLES_PROJECT: 'acme' })
+  const cwd = mkdtempSync(join(tmpdir(), 'gf-repo-'))
+  writeFileSync(join(cwd, 'README.md'), BET_README)
+  const seen: Array<{ method: string; url: string; body: unknown }> = []
+  const captured = capture()
+  const code = await run({
+    argv: ['bet', 'sync', 'README.md'],
+    writer: captured.writer,
+    env,
+    cwd,
+    fetchImpl: stubFetch(
+      { '/api/v1/cli/flags': { body: { ok: true, flag: { key: 'checkout.one_step_enabled' } } } },
+      seen
+    ),
+  })
+  assert.equal(code, EXIT.OK)
+  assert.ok(!seen.some((c) => c.url === '/api/v1/cli/flags/write'), 'an existing flag is never written')
+  assert.match(captured.all(), /exists in acme; left it as it is/)
+})
+
+test('bet sync refuses a bet with no flag or no adoption event, naming each field, before any request', async () => {
+  const env = sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN, GOLDEN_FRIJOLES_PROJECT: 'acme' })
+  const cwd = mkdtempSync(join(tmpdir(), 'gf-repo-'))
+  writeFileSync(join(cwd, 'README.md'), '---\nslug: x\nflag_key: null\ntarget_segment: power_users\n---\n')
+  const seen: Array<{ method: string; url: string; body: unknown }> = []
+  const captured = capture()
+  const code = await run({
+    argv: ['bet', 'sync', 'README.md'],
+    writer: captured.writer,
+    env,
+    cwd,
+    fetchImpl: stubFetch({}, seen),
+  })
+  assert.equal(code, EXIT.USAGE)
+  assert.equal(seen.length, 0)
+  assert.match(
+    captured.all(),
+    /flag_key is missing.*adopted_event is missing.*target_segment "power_users" is not supported yet/
+  )
+})
+
+test('bet sync helpers: frontmatter comments and quotes; the description stays within 500 characters', async () => {
+  const { readBetFrontmatter, betDescription } = await import('./commands/bet.ts')
+  const fm = readBetFrontmatter(BET_README)
+  assert.equal(fm.flag_key, 'checkout.one_step_enabled')
+  assert.equal(fm.retained_event, null)
+  assert.ok(fm.hypothesis?.includes("We'll know when"))
+  const long = betDescription({ hypothesis: 'word '.repeat(300), slug: 'a-long-epic' })
+  assert.ok(long.length <= 500 && long.endsWith('(epic a-long-epic)'), String(long.length))
+})
+
+test('bet sync: a long slug still keeps the description within 500 characters', async () => {
+  const { betDescription } = await import('./commands/bet.ts')
+  assert.ok(betDescription({ hypothesis: 'word '.repeat(300), slug: 's'.repeat(200) }).length <= 500)
+})
