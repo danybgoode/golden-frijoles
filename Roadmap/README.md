@@ -90,6 +90,12 @@ independently shippable slice of value.
   Miyagi's 13-stage founding-merchant lifecycle is the first proof. Measured production p95 stayed
   under 120 ms with 13 relevant events, so the engine keeps its simpler query-time architecture.
 
+- ✅ [One bet, wired: the flag knows its epic, its funnel and its read](01-growth-engine/one-bet-wired/README.md) —
+  **shipped 2026-10-10** (#341; CLI 1.3.0, plugin + kit 1.5.0). A measured bet's flag funnel on the TARS model
+  (Targeted is a segment, exposure is the flag `on`, adopters outside it counted beside), on the epic page and
+  Journeys; `frijoles bet sync` creates the Measure flag; refine suggests Measure for every feature and sign-in once,
+  where it pays off. **Owed:** a signed-in look at a live funnel; `tars-segments` next.
+
 ### 02 · Commercial
 - ✅ [Golden Frijoles CLI v1 — a write surface an agent can drive](02-commercial/golden-frijoles-cli/README.md)
   — `gf`, published as `@golden-frijoles/cli`. An agent can create a flag **in every environment**,
@@ -583,6 +589,8 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-10**: `one-bet-wired` **shipped**: ≈$42.87, under its $56–79 quote, three verifier rounds. A bet's flag now
+  carries its own TARS funnel, from the seed to the epic page.
 - **2026-10-10**: `setup-instruments-connects` **shipped**: ≈$39.86, over its $15–31 quote (five review rounds, four on
   one paragraph of error-capture instructions). Setup now ends with the measuring code in a pull request, the project
   connected, and the first event visible.
