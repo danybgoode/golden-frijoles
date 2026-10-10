@@ -43,8 +43,18 @@ test('a measured flag fills its funnel from its own evaluations, on a fresh proj
       expect(res.status(), `${userId} ${event}`).toBeLessThan(300)
     }
     const flagKey = 'checkout.one_step_enabled'
+    // Exposures as the server sends them: a `system:server` client naming the person evaluated in `subject` (the
+    // funnel keys on the subject, verifier #341), each evaluation with its own idempotency key, as the SDK sends it.
     const on = (u: string) =>
-      track(u, 'flag_evaluated', { featureId: flagKey, tags: { flag_key: flagKey, variant: 'on' } })
+      track('system:server', 'flag_evaluated', {
+        featureId: flagKey,
+        tags: { flag_key: flagKey, variant: 'on' },
+        context: {
+          version: 1,
+          subject: { type: 'user', id: u },
+          idempotencyKey: `flag_eval:spec:${u}:${randomBytes(4).toString('hex')}`,
+        },
+      })
     await track('a', 'page_viewed')
     await on('a')
     await track('a', 'order_placed')

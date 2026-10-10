@@ -52,9 +52,19 @@ export type FlagFunnel = {
 const ms = (iso: string) => new Date(iso).getTime()
 const rate = (part: number, whole: number) => (whole === 0 ? null : part / whole)
 
-export function computeFlagFunnel(events: FunnelEvent[], bet: BetMeasure): FlagFunnel {
+/**
+ * `basePeople`: the period's active people when the caller read them separately (the bounded read does); the people in
+ * `events` always count too, so the base can never be smaller than the funnel.
+ */
+export function computeFlagFunnel(
+  events: FunnelEvent[],
+  bet: BetMeasure,
+  options: { basePeople?: ReadonlySet<string> } = {}
+): FlagFunnel {
   const people = events.filter((e) => !isSystemUser(e.userId))
-  const base = new Set(people.map((e) => e.userId))
+  const base = new Set(
+    [...(options.basePeople ?? []), ...people.map((e) => e.userId)].filter((u) => !isSystemUser(u))
+  )
   const targeted = base // `everyone` (D1): the whole base
 
   const firstExposure = new Map<string, number>()

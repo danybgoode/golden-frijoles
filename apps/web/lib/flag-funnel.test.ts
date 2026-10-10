@@ -109,3 +109,58 @@ test('one-bet-wired D2: another flag, an off evaluation and an empty period give
     satisfied: null,
   })
 })
+
+test('verifier #341: the retention window is inclusive at its edge; satisfied counts at the adoption instant and only among the retained', () => {
+  const measured = { ...bet, satisfiedEvent: 'rated_5' }
+  const adoptAt = Date.UTC(2026, 9, 1, 12)
+  const iso = (ms: number) => new Date(ms).toISOString()
+  const f = computeFlagFunnel(
+    [
+      {
+        userId: 'edge',
+        event: 'flag_evaluated',
+        createdAt: iso(adoptAt - 1),
+        featureId: 'checkout.one_step',
+        variant: 'on',
+      },
+      { userId: 'edge', event: 'order_placed', createdAt: iso(adoptAt), featureId: null, variant: null },
+      {
+        userId: 'edge',
+        event: 'order_placed',
+        createdAt: iso(adoptAt + 7 * 86_400_000),
+        featureId: null,
+        variant: null,
+      },
+      { userId: 'edge', event: 'rated_5', createdAt: iso(adoptAt), featureId: null, variant: null },
+      {
+        userId: 'late',
+        event: 'flag_evaluated',
+        createdAt: iso(adoptAt - 1),
+        featureId: 'checkout.one_step',
+        variant: 'on',
+      },
+      { userId: 'late', event: 'order_placed', createdAt: iso(adoptAt), featureId: null, variant: null },
+      {
+        userId: 'late',
+        event: 'order_placed',
+        createdAt: iso(adoptAt + 7 * 86_400_000 + 1),
+        featureId: null,
+        variant: null,
+      },
+      { userId: 'late', event: 'rated_5', createdAt: iso(adoptAt + 1), featureId: null, variant: null },
+    ],
+    measured
+  )
+  assert.equal(f.retained, 1, 'a repeat exactly at the window edge counts; one millisecond past it does not')
+  assert.equal(
+    f.satisfied,
+    1,
+    'satisfied at the adoption instant counts, and only for the retained (late is not)'
+  )
+})
+
+test('verifier #341: a separately read base joins the funnel people, without system users', () => {
+  const f = computeFlagFunnel([on('a', 1)], bet, { basePeople: new Set(['a', 'b', 'c', 'system:server']) })
+  assert.equal(f.base, 3)
+  assert.equal(f.rates.exposed, 1 / 3)
+})

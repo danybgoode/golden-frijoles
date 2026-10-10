@@ -1,4 +1,5 @@
 import 'server-only'
+import { unstable_cache } from 'next/cache'
 import { reservedEventsInFilter, type EventCatalog } from './event-catalog'
 import { readEventCatalog } from './event-catalog-read'
 import { readFlagFunnel, type FlagFunnelRead } from './flag-funnel-read'
@@ -84,11 +85,23 @@ export async function getFirstEventForBand(
   }
 }
 
-/** one-bet-wired D3 — a measured flag's funnel for ONE project (the caller resolved it). Throws on a failed read. */
-export function getFlagFunnel(
-  projectId: string,
-  bet: BetMeasure,
-  now: Date = new Date()
-): Promise<FlagFunnelRead> {
-  return readFlagFunnel(getSupabaseServiceClient(), projectId, bet, now)
+/**
+ * one-bet-wired D3 — a measured flag's funnel for ONE project (the caller resolved it). Cached for FLAG_FUNNEL_CACHE_SECONDS
+ * per project and bet (verifier, #341): the public Hub page and Journeys must not re-read the same events on every view.
+ * Throws on a failed read (a thrown read is not cached).
+ */
+export const FLAG_FUNNEL_CACHE_SECONDS = 300
+export function getFlagFunnel(projectId: string, bet: BetMeasure): Promise<FlagFunnelRead> {
+  const key = [
+    'flag-funnel',
+    projectId,
+    bet.flagKey,
+    bet.adoptedEvent,
+    bet.retainedEvent ?? '',
+    String(bet.retentionDays),
+    bet.satisfiedEvent ?? '',
+  ]
+  return unstable_cache(() => readFlagFunnel(getSupabaseServiceClient(), projectId, bet), key, {
+    revalidate: FLAG_FUNNEL_CACHE_SECONDS,
+  })()
 }
