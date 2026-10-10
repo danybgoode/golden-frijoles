@@ -20,7 +20,10 @@ flag_key: null
 intent_match: null
 ---
 
-# Raw — TARS segments
+# Raw — TARS segments (after launch)
+
+> Items 2 and 4 moved to `tars-one-model`, before launch (Daniel, 2026-10-10). Named segments (1), Satisfied (3) and
+> measuring the funnel itself (5) stay here.
 
 From one-bet-wired's Plan gate (Daniel, 2026-10-10): TARS's **Targeted** is a strategy decision, the share of the user
 base that has the problem, not who was exposed. one-bet-wired builds flag funnels on that model with

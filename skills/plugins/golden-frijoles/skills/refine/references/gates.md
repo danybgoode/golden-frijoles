@@ -37,8 +37,8 @@ script names never change, so a gate may show one as a path or in `code`, never 
 | Proven · Disproven · Unclear | `verdict:` in the epic README | — |
 | Flag | `flag_key:`, a flag in Golden Frijoles | — |
 
-"Bet" is the idea behind an epic and appears only as its sentence ("We believe that … for … will … because … We'll
-know when …"), never as a stage, a button or a status.
+"Bet" is the idea behind an epic and appears only as its Why, the short story `result-record.md` describes (what is
+wrong today and for whom, what changes, why it matters, "We'll know when …"), never as a stage, a button or a status.
 
 | Was | Now |
 |---|---|
@@ -71,7 +71,7 @@ North Star     A · <name> (<game>, counts <unit>): <metric, one line>
 
 Roadmap        <n> shipped, <n> being built, <n> ideas (from the repo)
 
-First idea     <after a: We believe that <the change> for <persona> will <move the input>, because <the insight>.
+First idea     <after a: <what is wrong today and for whom>. <what changes>, <why it matters to them>.
                We'll know when <the signal>. | before a: written once you choose A or B>
 
 Decisions only you can make:
@@ -134,7 +134,7 @@ Answer them here, or:
 ```gate plan
 The plan is ready: <path to the seed>
 
-We believe that <the change> for <persona> will <move the input>, because <the insight>.
+<what is wrong today and for whom>. <what changes>, <why it matters to them>.
 We'll know when <the signal>.
 
   Moves ........ <the target metric's name> (your North Star input)
@@ -145,6 +145,12 @@ We'll know when <the signal>.
   Sprints ...... <1 title  2 title …>. <n> user stories
   Flag ......... <flag key>, <on, so you can switch it off | off until you roll it out, measured by <event>> | none: <why>
   Measured by .. <the event the target metric counts>
+
+  Crew (planned, may change):
+    plans · orchestrates   <the strongest model in use> (this session)
+    builds                 <a Sonnet-class model> builders: <story ids>; <the orchestrator>: <story ids>
+    reviews                <the fresh verifier · the external reviewers the project routes to>
+    writes prose           <the prose writer the project names, and its fallback>
 
 Decisions only you can make:
   a. <question>
@@ -175,6 +181,11 @@ What this pushes back: <what waits>. It builds next | It builds after <title>.
   reached Stage 6b leaves the line out. When the seed does not say which polarity, leave out on/off rather than guess.
 - **Measured by** is the event `strategy.mjs` prints beside the target metric's input (`event <name>`), only when it
   prints one. Otherwise leave the line out; never invent an event name.
+- **Crew** is who plans, builds, reviews and writes this epic. Fill it from the project's `WAYS-OF-WORKING.md` routing
+  table and the kickoff's dispatch rule (`references/per-sprint-kickoff.md`). A story goes to a Sonnet-class builder
+  when it has a clear acceptance check, touches no shared surface, is risk low or medium, and is not money, auth,
+  migrations, tenancy or concurrency; every other story is the orchestrator's. Name each story by id. It says "may change" because a
+  failed attempt returns a story to the orchestrator; the retrospective records the actual crew.
 - **What this pushes back** is what you propose stays waiting because of this epic (from the month's
   `Roadmap/bets/` file and *Ready* in `BUILD-ORDER.md`), and where it goes in the queue. The person edits either.
 - **1 Approve the plan** runs refine Stage 7.3: `fund.mjs --slug <slug> --displaced "<what waits>" --next` (or

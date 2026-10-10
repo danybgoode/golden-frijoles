@@ -283,7 +283,7 @@ is mechanical — not to use one tier for everything.
 |---|---|---|
 | Grooming, architecture, the epic plan, merge decisions, review triage | **Strongest** (the coordinating agent) | These are the decisions everything else inherits. |
 | Shared-surface changes: CI, lint config, `package.json`, a `lib/` seam many stories import | **Strongest**, done FIRST | Highest blast radius; a mistake here breaks every later branch. |
-| A well-specified story with a clear acceptance check | **Mid** (Sonnet-class subagent) | Bounded, verifiable, cheap to re-run. |
+| A well-specified story with a clear acceptance check | **Mid** (Sonnet-class subagent) | Bounded, verifiable, cheap to re-run. The kickoff's dispatch rule carries this out. |
 | Read-only research / data-availability reports over a large or foreign codebase | **Mid**, background, parallel | Fan-out with no write conflicts. Ask for an explicit "NOT DERIVABLE" list — an honest gap beats an optimistic guess. |
 | Money · auth · migrations · tenancy · concurrency | **Strongest**, never delegated | Same tier that decides who merges. |
 | PR review — the judgment layers (CI is the gate; reviews authorize nothing) | **The routed external pass**, the fresh `verifier` and, when paths trigger it, the security lens | See *Review & merge*. Findings are resolved or answered before merge. |
