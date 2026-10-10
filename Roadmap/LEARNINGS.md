@@ -1373,6 +1373,9 @@ one-liner + why + date shape.
   1.0.10 incident this repo already paid for. *(2026-07-25.)*
 
 ## Working efficiently
+- **Probe agent instructions against the real framework before review.** A snippet an agent will paste into a
+  stranger's app is code: four review rounds went to one error-capture paragraph whose every flaw reproduced in
+  seconds against the installed Node, Hono and Next. *(setup-instruments-connects, 2026-10-10.)*
 - **Instructions an agent will execute are code: run them.** Approve's seed spec read fine and broke the board the
   first time a reviewer wrote a seed exactly as it said. *(setup-drafts-strategy, 2026-10-09.)*
 - **After changing a pattern list, re-run every earlier probe against it.** Three regressions in one epic were fixes

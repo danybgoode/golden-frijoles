@@ -464,6 +464,10 @@ independently shippable slice of value.
   "Approve, don't fund" leaves the pitch `ready`. `build-order.mjs` fails any live bet with no funding record, after
   an honest 45-row `wave-backfill`. `priority:` is retired. A fixed-scope seed scaffolds from its slug alone, with its
   acceptance criteria as the stories (dogfood F33). **Shipped 2026-10-04** (#271, plugin + kit 0.28.0).
+- ✅ [Setup instruments and connects: the events the North Star needs, in a pull request, and the first one seen](09-platform-infra/setup-instruments-connects/README.md) —
+  **shipped 2026-10-10** (#338; CLI 1.1.0, plugin + kit 1.3.0). Setup adds the measuring code as a pull request, connects
+  in one step (`frijoles init --ingest`, the North Star, the roadmap), and `frijoles status` and Today show the first
+  event arrive. **Owed:** the interactive setup walkthrough.
 - ✅ [Setup drafts the strategy: two North Stars from the evidence, and a first bet in one review](09-platform-infra/setup-drafts-strategy/README.md) —
   **shipped 2026-10-09** (#336; plugin + kit 1.2.0). Setup asks what the product is for first, reads the product
   (`read-product.mjs`: README, landing copy, routes, analytics calls, flags, each with its file), drafts the strategy
@@ -579,6 +583,9 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-10**: `setup-instruments-connects` **shipped**: ≈$39.86, over its $15–31 quote (five review rounds, four on
+  one paragraph of error-capture instructions). Setup now ends with the measuring code in a pull request, the project
+  connected, and the first event visible.
 - **2026-10-09**: `setup-drafts-strategy` **shipped**: ≈$15.50 against a $15–32 quote, four verifier rounds to clean.
   Setup now drafts the strategy from the product's own evidence, with two North Stars to choose between, and ends with
   a first idea already grounded.
