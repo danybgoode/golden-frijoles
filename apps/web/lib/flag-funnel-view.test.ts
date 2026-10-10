@@ -40,6 +40,27 @@ test('one-bet-wired D7: each stage with its share; satisfied not measured; outsi
   assert.equal(flagFunnelView(null).kind, 'unreadable')
   assert.match(
     (flagFunnelView({ state: 'not_exposed', flagKey: 'k' }) as { text: string }).text,
-    /Nobody has had this flag on yet/
+    /No one has been counted with this flag on yet/
   )
+})
+
+test('one-bet-wired D7: a funnel shows only for an Epic with a flag and an adoption event (both pages use this)', async () => {
+  const { funnelBetOf } = await import('./flag-funnel-view.ts')
+  const measure = {
+    targetSegment: 'everyone' as const,
+    adoptedEvent: 'order_placed',
+    retainedEvent: null,
+    retentionDays: 7,
+    satisfiedEvent: null,
+  }
+  assert.deepEqual(funnelBetOf({ grain: 'Epic', flagKey: 'a.b_enabled', measure }), {
+    flagKey: 'a.b_enabled',
+    adoptedEvent: 'order_placed',
+    retainedEvent: null,
+    retentionDays: 7,
+    satisfiedEvent: null,
+  })
+  assert.equal(funnelBetOf({ grain: 'Epic', flagKey: null, measure }), null)
+  assert.equal(funnelBetOf({ grain: 'Epic', flagKey: 'a.b_enabled', measure: null }), null)
+  assert.equal(funnelBetOf({ grain: 'Seed', flagKey: 'a.b_enabled', measure }), null)
 })

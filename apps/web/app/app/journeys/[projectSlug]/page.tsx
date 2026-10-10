@@ -17,7 +17,7 @@ import { NewThingDialog } from '@/components/product/NewThingDialog'
 import { Answer, PageHead, Tile } from '@/design-system/primitives'
 import { FlagFunnel } from '@/components/product/FlagFunnel'
 import { getFlagFunnel } from '@/lib/event-catalog-query'
-import { flagFunnelView, type FunnelView } from '@/lib/flag-funnel-view'
+import { flagFunnelView, funnelBetOf, type FunnelView } from '@/lib/flag-funnel-view'
 import { isFlagFunnelsEnabled } from '@/lib/flags'
 import { getLatestArtifact } from '@/lib/report-artifacts'
 import { toCard } from '@/lib/hub-board'
@@ -33,20 +33,22 @@ const FROM_YOUR_FLAGS_CAP = 12
  */
 async function fromYourFlags(
   projectId: string
-): Promise<Array<{ name: string; flagKey: string; view: FunnelView }> | null> {
+): Promise<Array<{ slug: string; name: string; flagKey: string; view: FunnelView }> | null> {
   try {
     const artifact = await getLatestArtifact<{ items?: RoadmapRow[] }>(projectId, 'roadmap')
     const measured = (artifact?.payload?.items ?? [])
       .map((row) => toCard(row))
-      .filter((card) => card !== null && card.grain === 'Epic' && card.flagKey && card.measure)
+      .flatMap((card) => {
+        const bet = card ? funnelBetOf(card) : null
+        return card && bet ? [{ card, bet }] : []
+      })
       .slice(0, FROM_YOUR_FLAGS_CAP)
     return await Promise.all(
-      measured.map(async (card) => ({
-        name: card!.name,
-        flagKey: card!.flagKey!,
-        view: flagFunnelView(
-          await getFlagFunnel(projectId, { flagKey: card!.flagKey!, ...card!.measure! }).catch(() => null)
-        ),
+      measured.map(async ({ card, bet }) => ({
+        slug: card.slug,
+        name: card.name,
+        flagKey: bet.flagKey,
+        view: flagFunnelView(await getFlagFunnel(projectId, bet).catch(() => null)),
       }))
     )
   } catch {
@@ -176,7 +178,7 @@ export default async function JourneysPage({ params }: { params: Promise<{ proje
               creates a flag.
             </p>
             {flagFunnels.map((f) => (
-              <div key={f.flagKey}>
+              <div key={f.slug}>
                 <h3>
                   {f.name} <span className="ds-mono">{f.flagKey}</span>
                 </h3>

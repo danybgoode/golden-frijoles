@@ -10,7 +10,7 @@ import { HubShell } from '../../../hub-shell'
 import { EmptyBoard } from '../../board/board-components'
 import { FlagFunnel } from '@/components/product/FlagFunnel'
 import { getFlagFunnel } from '@/lib/event-catalog-query'
-import { flagFunnelView } from '@/lib/flag-funnel-view'
+import { flagFunnelView, funnelBetOf } from '@/lib/flag-funnel-view'
 import { isFlagFunnelsEnabled } from '@/lib/flags'
 import {
   EpicBars,
@@ -89,11 +89,10 @@ export default async function HubEpicPage({
   // D12 — this project's registry only, by the id the read above resolved after the access gate (D2).
   const flag = await readEpicFlag(result.projectId, card.flagKey, card.flagNote)
   // one-bet-wired D7 — the measured flag's funnel, for THIS project (the id the access gate resolved), behind its switch.
+  const funnelBet = funnelBetOf(card)
   const funnel =
-    card.grain === 'Epic' && card.flagKey && card.measure && (await isFlagFunnelsEnabled())
-      ? flagFunnelView(
-          await getFlagFunnel(result.projectId, { flagKey: card.flagKey, ...card.measure }).catch(() => null)
-        )
+    funnelBet && (await isFlagFunnelsEnabled())
+      ? flagFunnelView(await getFlagFunnel(result.projectId, funnelBet).catch(() => null))
       : null
   const freshness = formatFreshness(artifact.generatedAt, new Date(), artifact.sourceCommit)
 
