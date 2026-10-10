@@ -164,3 +164,8 @@ export async function isExperimentGovernanceMcpToolEnabled(): Promise<boolean> {
 export function isFirstEventBandEnabled(): Promise<boolean> {
   return gate(GATES.firstEventBand)
 }
+
+/** A measured flag's funnel on the epic page and Journeys (one-bet-wired D8). A kill switch: born on. */
+export function isFlagFunnelsEnabled(): Promise<boolean> {
+  return gate(GATES.flagFunnels)
+}
