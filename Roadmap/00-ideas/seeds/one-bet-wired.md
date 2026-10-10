@@ -8,7 +8,7 @@ appetite: L
 underwritten_by: wave-2026-10
 risk: high
 epic: "01-growth-engine/one-bet-wired"
-build_order: 78
+build_order: 79
 updated: 2026-10-10
 intent_ask: proxy      # reconstructed from the launch-sweep brief and audit §7; Daniel's go: "go ahead one bet wired"
 hypothesis: "We believe that wiring each bet's flag to its epic, its adoption event and its funnel with one command, and suggesting a Measure flag for every feature, for founders who build with agents, will make every shipped bet readable on its read date, because today a flag knows nothing about the bet behind it and its funnel stays empty unless someone registers a feature by hand. We'll know when a shipped feature's flag shows a non-empty funnel (targeted, adopted, retained) on its epic page by the read date."

@@ -15,6 +15,7 @@ import { boolFlag } from '../args'
 import type { Command, CommandContext } from '../command'
 import { kitVersion, loadConfigCore, parseValue, type ConfigCore, type RegistryEntry } from '../config-core'
 import { EXIT, type ExitCode } from '../exit-codes'
+import { playSetupReveal } from '../setup-reveal'
 
 /** Load the core, or say plainly why it could not be loaded. `null` means the failure was already emitted. */
 async function coreOrFail(context: CommandContext): Promise<{ core: ConfigCore; root: string } | null> {
@@ -193,21 +194,25 @@ const ttyChooser =
     })
 
 /** Swapped by the unit tests; production uses the TTY chooser. */
-export const setupIo: { isInteractive: () => boolean; chooser: (context: CommandContext) => Chooser } = {
+export const setupIo: { isInteractive: () => boolean; chooser: (context: CommandContext) => Chooser; reveal: typeof playSetupReveal } = {
   isInteractive: () => Boolean(process.stdin.isTTY && process.stderr.isTTY),
   chooser: ttyChooser,
+  reveal: playSetupReveal,
 }
 
 export const setupCommand: Command = {
   path: ['setup'],
   summary: 'answer the setup questions (each has a default; only the first is required)',
-  usage: 'frijoles setup [--yes] [--json]',
+  usage: 'frijoles setup [--yes] [--no-motion] [--json]',
   needsAuth: false,
   detail: `Asks what you are working on and whether to connect an account now — arrow keys to
   choose, Esc to take the default. --yes takes every default without asking. Answers go to
   golden-frijoles.config.json; an account is connected with \`frijoles login\` and \`frijoles init\`, which
   write .env.local, never the config file.`,
-  flags: [{ name: 'yes', describe: 'take every default without asking (required when not on a terminal)' }],
+  flags: [
+    { name: 'yes', describe: 'take every default without asking (required when not on a terminal)' },
+    { name: 'no-motion', describe: 'show the welcome without animation' },
+  ],
   async run(context): Promise<ExitCode> {
     const yes = boolFlag(context.args, 'yes')
     if (context.args.positionals.length > 0) {
@@ -225,6 +230,14 @@ export const setupCommand: Command = {
     const loaded = await coreOrFail(context)
     if (!loaded) return EXIT.SERVER
     const { core, root } = loaded
+    await setupIo.reveal({
+      enabled: !yes && !context.args.json && setupIo.isInteractive() && Boolean(process.stderr.isTTY),
+      noMotion: boolFlag(context.args, 'no-motion'),
+      noColor: boolFlag(context.args, 'no-color'),
+      env: context.env,
+      width: process.stderr.columns || 80,
+      write: (text) => process.stderr.write(text),
+    })
     const choose = yes ? null : setupIo.chooser(context)
     const answers: Record<string, unknown> = {}
     try {
