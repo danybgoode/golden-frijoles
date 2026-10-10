@@ -3,7 +3,7 @@ epic: why-as-a-story
 sprint: 1
 title: "The Why"
 risk: low
-phase: Locking architecture
+phase: Building
 stories_total: 3
 stories:
   - id: S1.1
