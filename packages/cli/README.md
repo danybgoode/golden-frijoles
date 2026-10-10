@@ -9,6 +9,9 @@ npx @golden-frijoles/cli --version
 
 ## The one-minute version
 
+Run `frijoles setup` in an interactive terminal for the Golden Frijoles welcome and guided defaults.
+Use `--no-motion` or `FRIJOLES_NO_MOTION=1` for a still welcome. `--yes --json` remains suitable for scripts.
+
 ```bash
 npm i -g @golden-frijoles/cli          # or use npx for everything below
 

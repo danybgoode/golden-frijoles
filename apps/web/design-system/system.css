@@ -3761,6 +3761,105 @@
  * Finding F2. `app/s/[token]/page.tsx` calls `notFound()` for all four, so the page cannot tell an
  * attacker which one a token is. There is deliberately no expired state; do not add one to satisfy
  * a doc. */
+.ds .ds-recovery {
+  max-width: 660px;
+  margin: clamp(48px, 10vh, 116px) auto 80px;
+  text-align: center;
+}
+
+.ds .ds-recovery-art {
+  position: relative;
+  width: 156px;
+  height: 144px;
+  margin: 0 auto 28px;
+  display: grid;
+  place-items: center;
+}
+
+.ds .ds-recovery-orbit {
+  position: absolute;
+  inset: 14px 8px;
+  border: 1px dashed var(--gold-deep);
+  border-radius: 50%;
+  transform: rotate(-27deg);
+}
+
+.ds .ds-recovery-orbit--two {
+  inset: 27px -2px;
+  transform: rotate(27deg);
+  opacity: .52;
+}
+
+.ds .ds-recovery-bean {
+  position: relative;
+  width: 70px;
+  height: 96px;
+  display: grid;
+  place-items: center;
+  border-radius: 54% 46% 51% 49% / 60% 42% 58% 40%;
+  transform: rotate(-27deg);
+  background: linear-gradient(105deg, var(--gold-deep), var(--gold-hot), var(--gold), var(--gold-deep));
+  box-shadow: inset -11px -9px 0 color-mix(in srgb, var(--roast) 23%, transparent), var(--elevation-raised);
+  color: var(--roast);
+  font-family: var(--sans);
+  font-size: 30px;
+}
+
+.ds .ds-recovery-bean::after {
+  content: '';
+  position: absolute;
+  top: 13px;
+  bottom: 14px;
+  left: 47%;
+  border-left: 2px solid color-mix(in srgb, var(--roast) 53%, transparent);
+  border-radius: 50%;
+  transform: rotate(14deg);
+}
+
+.ds .ds-recovery-kicker {
+  color: var(--gold);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .18em;
+  margin-bottom: 12px;
+}
+
+.ds .ds-recovery h1 {
+  color: var(--crema);
+  font-size: clamp(36px, 7vw, 62px);
+  line-height: 1.07;
+  letter-spacing: -.035em;
+  margin-bottom: 16px;
+}
+
+.ds .ds-recovery p.ds-recovery-copy {
+  max-width: 470px;
+  color: var(--dim);
+  font-size: 16px;
+  line-height: 1.65;
+  margin: 0 auto;
+}
+
+.ds .ds-recovery-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 30px;
+}
+
+.ds .ds-recovery p.ds-recovery-footnote {
+  margin-top: 32px;
+  color: var(--dim-2);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+@media (max-width: 480px) {
+  .ds .ds-recovery-actions > * { width: 100%; }
+}
+
 .ds .ds-gone {
   max-width: 520px;
   margin: 96px auto 0;

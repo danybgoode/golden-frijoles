@@ -51,13 +51,18 @@
       {
         "command": "setup",
         "summary": "answer the setup questions (each has a default; only the first is required)",
-        "usage": "frijoles setup [--yes] [--json]",
+        "usage": "frijoles setup [--yes] [--no-motion] [--json]",
         "needsAuth": false,
         "flags": [
           {
             "flag": "--yes",
             "takesValue": false,
             "describe": "take every default without asking (required when not on a terminal)"
+          },
+          {
+            "flag": "--no-motion",
+            "takesValue": false,
+            "describe": "show the welcome without animation"
           }
         ]
       },

@@ -45,6 +45,7 @@ const BOOLEAN_FLAGS = new Set([
   'dry-run',
   'yes',
   'no-color',
+  'no-motion',
   'ingest',
 ])
 

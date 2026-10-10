@@ -1,7 +1,7 @@
 frijoles setup — answer the setup questions (each has a default; only the first is required)
 
 Usage
-  frijoles setup [--yes] [--json]
+  frijoles setup [--yes] [--no-motion] [--json]
 
 Asks what you are working on and whether to connect an account now — arrow keys to
   choose, Esc to take the default. --yes takes every default without asking. Answers go to
@@ -9,7 +9,8 @@ Asks what you are working on and whether to connect an account now — arrow key
   write .env.local, never the config file.
 
 Flags
-  --yes  take every default without asking (required when not on a terminal)
+  --yes        take every default without asking (required when not on a terminal)
+  --no-motion  show the welcome without animation
 
 Exit codes
   0  ok         it worked
