@@ -291,3 +291,18 @@ test('toCard carries grounded and its reason for an Epic; a Seed, a non-boolean 
   )
   assert.deepEqual([seed?.grounded, seed?.groundedReason], [null, null])
 })
+
+// one-bet-wired D1 — the card holds the bet's measurement only when there is a flag and an adoption event.
+test('toCard carries the bet measurement for an Epic with a flag and an adoption event; defaults are the reader’s', () => {
+  const card = (over: Record<string, unknown>) =>
+    toCard(row({ name: 'E', slug: 'e', grain: 'Epic', stage: 'Building', ...over }))
+  assert.deepEqual(card({ flag_key: 'a.b_enabled', adopted_event: 'order_placed' })?.measure, {
+    targetSegment: 'everyone',
+    adoptedEvent: 'order_placed',
+    retainedEvent: null,
+    retentionDays: 7,
+    satisfiedEvent: null,
+  })
+  assert.equal(card({ adopted_event: 'order_placed' })?.measure, null, 'no flag, nothing to measure')
+  assert.equal(card({ flag_key: 'a.b_enabled' })?.measure, null, 'no adoption event, nothing to measure')
+})

@@ -36,7 +36,7 @@ const card = (result: Record<string, unknown> | null): BoardCard => ({
   result,
   finops: null,
   flagKey: null,
-  flagNote: null, grounded: null, groundedReason: null,
+  flagNote: null, grounded: null, groundedReason: null, measure: null,
 })
 
 const shipped = {
