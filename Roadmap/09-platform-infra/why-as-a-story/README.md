@@ -61,7 +61,8 @@ defend. The plan also says who does the work, and cheaper builders really get it
 - **D1 · The story rule** (`refine/references/result-record.md`, the bet sentence). Before drafting, read what exists
   of `Roadmap/00-strategy/` (`pmf-narrative.md` for the persona and value proposition, `brand-platform.md`, the
   business model). Then write two or three plain sentences in this order: what is wrong today and for whom → what
-  changes → why it matters to them (the value proposition) → "We'll know when …". At most 320 characters. A worked
+  changes → why it matters to them (the value proposition) → "We'll know when …". What the view shows in full: five
+  lines, about 320 characters (D2, D4). A worked
   before/after: one-bet-wired's parts list, and the story version. A Bug or Chore keeps `Why: keeps <X> working`.
 - **D2 · The Why guard**, deterministic, `whyProblems(text)` in `scripts/lib/roadmap-contract.mjs` (and its copies):
   more lines than the view shows (D4) or one word wider than a line; a file with a code extension or a rooted path; a
