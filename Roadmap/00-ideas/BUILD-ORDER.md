@@ -34,7 +34,7 @@ _a pitch is waiting at the approval gate._
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
 - [A golden welcome and recovery pages](../02-commercial/brand-reveal-error-pages/README.md) — #78 · 02 Commercial · 2/2 stories · risk: High · appetite M · _docs: status in-progress_
-- [One bet, wired: the flag knows its epic, its funnel and its read](../01-growth-engine/one-bet-wired/README.md) — #79 · 01 Growth Engine · 0/6 stories · risk: High · appetite L · _docs: status in-progress_
+- [One bet, wired: the flag knows its epic, its funnel and its read](../01-growth-engine/one-bet-wired/README.md) — #79 · 01 Growth Engine · 6/6 stories · risk: High · appetite L · _docs: status in-progress_
 - [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #80 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
 - [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #81 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
 - [Scenarios made PM-operable — define, launch, and kill a scenario from the UI](../01-growth-engine/scenarios-pm-operable/README.md) — #82 · 01 Growth Engine · 10/10 stories · risk: High · appetite M · _docs: status in-progress_

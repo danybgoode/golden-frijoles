@@ -3,7 +3,7 @@ epic: one-bet-wired
 sprint: 1
 title: "The funnel fills itself"
 risk: high
-phase: Building
+phase: In review
 stories_total: 3
 stories:
   - id: S1.1
@@ -12,39 +12,39 @@ stories:
     i_want: "its flag's funnel computed the way TARS means it"
     so_that: "the read date has a number I can trust"
     risk: high
-    status: planned
+    status: done
   - id: S1.2
     title: "The bet's measurement through seed, scaffold, contract and the push"
     as_a: "a founder whose epic carries a bet"
     i_want: "the measurement to travel with the epic"
     so_that: "the engine reads it without hand registration"
     risk: high
-    status: planned
+    status: done
   - id: S1.3
     title: "frijoles bet sync"
     as_a: "an agent at the Build gate"
     i_want: "one command that creates the bet's flag from the epic"
     so_that: "the flag exists before the code reads it"
     risk: high
-    status: planned
+    status: done
 ---
 # One bet, wired: the flag knows its epic, its funnel and its read — Sprint 1: The funnel fills itself
 
-**Status:** ⬜ not started
+**Status:** 🟡 built, in review (one PR for both sprints)
 
 ## Stories
 
-### Story 1.1 — The flag funnel on the agreed TARS model, and its bounded read
+### Story 1.1 — The flag funnel on the agreed TARS model, and its bounded read ✅ `34603f0`
 **As** a founder reading a shipped bet, **I want** its flag's funnel computed the way TARS means it, **so that** the read date has a number I can trust.
 **Acceptance:** `lib/flag-funnel.ts` returns base, targeted (everyone), exposed (variant `on`), adopted at or after exposure, retained within the window, satisfied or null, and adopted-without-exposure, from a synthetic event list in tests; the bounded read covers one project's period (first `on` to now, at most 90 days), capped and saying so.
 **Risk:** high
 
-### Story 1.2 — The bet's measurement through seed, scaffold, contract and the push
+### Story 1.2 — The bet's measurement through seed, scaffold, contract and the push ✅ `2a28c15`
 **As** a founder whose epic carries a bet, **I want** the measurement to travel with the epic, **so that** the engine reads it without hand registration.
 **Acceptance:** seed and epic templates carry `target_segment`, `adopted_event`, `retained_event`, `retention_days`, `satisfied_event`; scaffold copies them; the contract refuses a segment other than `everyone`, a bad window, or measurement without a flag; the extract and push schema carry them nullish; the board card holds them.
 **Risk:** high
 
-### Story 1.3 — frijoles bet sync
+### Story 1.3 — frijoles bet sync ✅ `3b02d84`
 **As** an agent at the Build gate, **I want** one command that creates the bet's flag from the epic, **so that** the flag exists before the code reads it.
 **Acceptance:** `frijoles bet sync <README>` creates a missing flag as enablement in every environment with the hypothesis and epic as its description, or reports it exists and changes nothing; a README without `flag_key` or with a bad bet is a usage error naming the field; `--json` carries what happened.
 **Risk:** high
