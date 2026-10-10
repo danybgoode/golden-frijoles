@@ -11,6 +11,18 @@ export const FLAG_EVALUATED_EVENT = 'flag_evaluated'
 /** Users the instrumentation guide gives to the server itself: not people, never in the base. */
 const isSystemUser = (userId: string) => userId.startsWith('system:')
 
+/**
+ * The person an event is about: its subject when that subject is a USER (a flag evaluation names whom it was evaluated
+ * for), else the event's own user; an order, merchant or task subject is not a person (verifier, #341).
+ */
+export function personOf(row: {
+  user_id: string
+  subject_type: string | null
+  subject_id: string | null
+}): string {
+  return row.subject_type === 'user' && row.subject_id ? row.subject_id : row.user_id
+}
+
 export type FunnelEvent = {
   userId: string
   event: string

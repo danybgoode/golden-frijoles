@@ -3,6 +3,7 @@ import { EVENT_CATALOG_PAGE_SIZE } from './event-catalog-read'
 import {
   computeFlagFunnel,
   FLAG_EVALUATED_EVENT,
+  personOf as person,
   type BetMeasure,
   type FlagFunnel,
   type FunnelEvent,
@@ -50,7 +51,6 @@ type Row = {
   variant?: string | null
 }
 
-const person = (r: Row) => (r.subject_type === 'user' && r.subject_id ? r.subject_id : r.user_id)
 const when = (r: Row) => r.occurred_at ?? r.created_at
 
 /** Page a query (1,000 rows a request, PostgREST's max) up to the cap; `truncated` only when a row exists past it. */

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { computeFlagFunnel, type BetMeasure, type FunnelEvent } from './flag-funnel.ts'
+import { computeFlagFunnel, personOf, type BetMeasure, type FunnelEvent } from './flag-funnel.ts'
 
 const bet: BetMeasure = {
   flagKey: 'checkout.one_step',
@@ -168,4 +168,12 @@ test('verifier #341: a separately read base joins the funnel people, without sys
 test('verifier #341: the base is the union of the separate read and the funnel people', () => {
   const f = computeFlagFunnel([on('a', 1), ev('a', 'order_placed', 2)], bet, { basePeople: new Set(['b']) })
   assert.equal(f.base, 2, 'a is in the funnel even when the (newest-first, capped) base read missed them')
+})
+
+test('verifier #341: the person is a user subject, else the event’s own user (an order or merchant subject is not a person)', () => {
+  assert.equal(personOf({ user_id: 'system:server', subject_type: 'user', subject_id: 'u1' }), 'u1')
+  assert.equal(personOf({ user_id: 'u1', subject_type: 'order', subject_id: 'o1' }), 'u1')
+  assert.equal(personOf({ user_id: 'u1', subject_type: 'merchant', subject_id: 'm1' }), 'u1')
+  assert.equal(personOf({ user_id: 'u1', subject_type: null, subject_id: null }), 'u1')
+  assert.equal(personOf({ user_id: 'u1', subject_type: 'user', subject_id: null }), 'u1')
 })
