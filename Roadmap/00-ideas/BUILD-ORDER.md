@@ -35,7 +35,7 @@ _a pitch is waiting at the approval gate._
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
-- [The Why reads as a story, in full, and the plan names its crew](../09-platform-infra/why-as-a-story/README.md) — #78 · 09 Platform Infra · 0/7 stories · risk: Low · appetite M · _docs: status scaffolded_
+- [The Why reads as a story, in full, and the plan names its crew](../09-platform-infra/why-as-a-story/README.md) — #78 · 09 Platform Infra · 0/7 stories · risk: Low · appetite M · _docs: status in-progress_
 - [A golden welcome and recovery pages](../02-commercial/brand-reveal-error-pages/README.md) — #79 · 02 Commercial · 2/2 stories · risk: High · appetite M · _docs: status in-progress_
 - [One bet, wired: the flag knows its epic, its funnel and its read](../01-growth-engine/one-bet-wired/README.md) — #80 · 01 Growth Engine · 6/6 stories · risk: High · appetite L · _docs: status in-progress_
 - [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #81 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
