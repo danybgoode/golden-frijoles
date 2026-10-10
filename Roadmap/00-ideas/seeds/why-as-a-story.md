@@ -1,14 +1,14 @@
 ---
 title: "The Why reads as a story, in full, and the plan names its crew"
 slug: why-as-a-story
-status: ready
+status: scaffolded
 area: "09"
 type: feature
 appetite: M
-underwritten_by: null
+underwritten_by: wave-2026-10
 risk: low
-epic: null
-build_order: null
+epic: "09-platform-infra/why-as-a-story"
+build_order: 78
 updated: 2026-10-10
 intent_ask: verbatim
 hypothesis: "Today the Why lists the parts being built and is cut off on screen, so a founder approves bets they cannot easily explain. Written as a short story from the strategy we already agreed, and shown in full, it becomes a bet they can defend. We'll know when every new Why is read in full and approved without a rewrite."
@@ -147,3 +147,13 @@ Untraced (trace it to the ask or cut it):
 ```
 
 <!-- intent-match: {"coverage_in":0.94,"coverage_out":0.811,"clarity":0.77,"teach_back":1,"total":88} -->
+
+## Decisions at the Plan gate (Daniel, 2026-10-10)
+- **Approved**, all as recommended ("approved across the board, all suggested items"):
+- **a.** The build view **wraps the full Why** (up to four lines; the story rule keeps it ≤320 characters). No separate
+  `why_short`.
+- **b.** Crew (actual) in the retrospective is **stamped from the session records** (the models finops already reads),
+  with the orchestrator's note beside it.
+- **c.** **Funded, not grounded.**
+- The crew as planned: Opus orchestrates and builds the shared surface; Sonnet subagents build S1.1, S2.1, S2.2, S2.3,
+  escalating to Opus after one failed attempt; verifier + agy review (Codex capped); Devin writes the prose.

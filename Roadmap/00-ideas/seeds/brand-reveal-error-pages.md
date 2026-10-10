@@ -8,7 +8,7 @@ appetite: M
 underwritten_by: wave-2026-10
 risk: high
 epic: "02-commercial/brand-reveal-error-pages"
-build_order: 78
+build_order: 79
 updated: 2026-10-09
 intent_ask: verbatim
 hypothesis: "We believe that a branded interactive setup reveal and useful, consistent recovery pages for installers and visitors will make Golden Frijoles feel coherent at its edges, because setup and failure states are often their first encounter with the product. We'll know when the approved reveal and every browser recovery path render and keep their correct behavior."

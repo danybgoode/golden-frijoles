@@ -26,7 +26,7 @@ persona: "A person installing Golden Frijoles or recovering from a broken page" 
 grounded: false   # true = traced to a North Star input · false = funded anyway (reason below) · null = Bug/Chore or never asked
 grounded_reason: "This is a brand and usability improvement; the product owner approved visual behavior, without a numeric baseline."   # only with grounded: false
 flag_key: null   # the epic's flag, decided at refine Stage 6b and copied from the seed; null = no flag. The epic page shows its state
-build_order: 78      # integer position in the ONE global build sequence — the SSOT once the epic
+build_order: 79      # integer position in the ONE global build sequence — the SSOT once the epic
                      # exists (the seed's value is only a fallback). Fill it in at the betting
                      # table; plain integers, no "#2a" suffixes. See 00-ideas/README.md → Ordering.
 ---
