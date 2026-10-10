@@ -77,11 +77,11 @@ export async function playSetupReveal(options: RevealOptions): Promise<void> {
   for (const [index, [ripeness, sweep, delay]] of frames.entries()) {
     const frame = revealFrame(ripeness, sweep, color)
     write(
-      `${index === 0 ? '' : `\x1b[${height}A`}${frame
+      `\r${index === 0 ? '' : `\x1b[${height}A`}${frame
         .split('\n')
         .map((line) => `\x1b[2K${line}`)
         .join('\n')}\n`
     )
-    await sleep(delay)
+    if (index < frames.length - 1) await sleep(delay)
   }
 }

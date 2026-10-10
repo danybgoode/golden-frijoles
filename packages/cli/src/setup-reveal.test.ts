@@ -62,6 +62,10 @@ test('animated frames sweep to gold without hiding the shell cursor', async () =
   assert.match(writes[0], /green bean/)
   assert.match(writes.at(-1)!, /golden frijol/)
   assert.ok(writes.some((frame) => frame.includes('\x1b[38;2;85;75;60m')))
+  assert.ok(
+    writes.every((frame) => frame.startsWith('\r')),
+    'every redraw starts at column one'
+  )
   assert.ok(writes.every((frame) => !frame.includes('\x1b[?25l')))
   assert.ok(writes.every((frame) => !frame.includes('\x1b[?25h')))
 })
