@@ -13,12 +13,11 @@ import { Frame, FrameLink } from '@/design-system/Frame'
 // refuses, because a reader who is not an attacker deserves to know the page is being careful
 // rather than vague.
 //
-// ── Why this is scoped to `/s/[token]` and is not a root `not-found.tsx` ──────────────────────
+// ── Why this remains scoped to `/s/[token]` ──────────────────────────────────────────────────
 //
-// A root one would change every 404 in the product, including the ones the dark routes serve as
-// their gate (`isReportSharesEnabled`, `isSignupEnabled`, the console's per-feature guards). Those
-// 404s are a security boundary rather than a page, and redesigning them is not this story. The
-// epic's own platform-first note is the rule: *every route keeps the gate it has today.*
+// The later root not-found page covers other browser paths. Shared links still render this exact
+// indistinguishable message. Route-level gates continue to make their own 404 decisions; the
+// root page only changes the presentation of a browser response.
 export default function ShareNotFound() {
   return (
     <Frame variant="public" brandHref="/" actions={<FrameLink href="/login">Sign in</FrameLink>}>
