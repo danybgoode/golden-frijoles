@@ -3,7 +3,7 @@ epic: brand-reveal-error-pages
 sprint: 1
 title: "S1 Golden terminal welcome"
 risk: high
-phase: Building
+phase: Verifying
 stories_total: 1
 stories:
   - id: S1.1
@@ -12,11 +12,11 @@ stories:
     i_want: "a short green-to-gold bean and lettering reveal"
     so_that: "the first setup moment feels recognizably Golden Frijoles"
     risk: high
-    status: planned
+    status: done
 ---
 # A golden welcome and recovery pages — Sprint 1: S1 Golden terminal welcome
 
-**Status:** ⬜ not started
+**Status:** 🟨 Verifying — S1.1 `5a353d0`; CLI 1.2.0 release prepared separately
 
 ## Stories
 <!-- One block per story. Thinnest shippable slice first.
@@ -33,7 +33,7 @@ stories:
      Note: the epic README frontmatter `status:` is the AUTHORITATIVE epic status; this ✅ marker only
      feeds the cosmetic per-sprint progress count, so a format slip can't mis-state shipped/not-shipped. -->
 
-### Story 1.1 — Reveal FRIJOLES during interactive setup
+### Story 1.1 — Reveal FRIJOLES during interactive setup ✅ `5a353d0`
 **As a** person setting up the CLI, **I want** a short green-to-gold bean and lettering reveal, **so that** the first setup moment feels recognizably Golden Frijoles.
 **Acceptance:** Interactive `frijoles setup` shows a green bean ripening to gold and a left-to-right gold sweep that reveals legible FRIJOLES before setup prompts. A no-motion setting shows a static branded mark. JSON, `--yes`, non-TTY, CI, and narrow/dumb terminals remain readable and do not emit animation control sequences. Existing setup choices and results stay unchanged.
 **Risk:** high

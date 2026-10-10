@@ -3,7 +3,7 @@ epic: brand-reveal-error-pages
 sprint: 2
 title: "S2 Branded recovery pages"
 risk: high
-phase: Building
+phase: Verifying
 stories_total: 1
 stories:
   - id: S2.1
@@ -12,11 +12,11 @@ stories:
     i_want: "a branded explanation and useful next step"
     so_that: "I can recover without guessing what happened"
     risk: high
-    status: planned
+    status: done
 ---
 # A golden welcome and recovery pages — Sprint 2: S2 Branded recovery pages
 
-**Status:** ⬜ not started
+**Status:** 🟨 Verifying — S2.1 `1d6ab59`; awaiting PR CI and preview
 
 ## Stories
 <!-- One block per story. Thinnest shippable slice first.
@@ -33,7 +33,7 @@ stories:
      Note: the epic README frontmatter `status:` is the AUTHORITATIVE epic status; this ✅ marker only
      feeds the cosmetic per-sprint progress count, so a format slip can't mis-state shipped/not-shipped. -->
 
-### Story 2.1 — Recover from missing and broken web pages
+### Story 2.1 — Recover from missing and broken web pages ✅ `1d6ab59`
 **As a** visitor who reaches an error, **I want** a branded explanation and useful next step, **so that** I can recover without guessing what happened.
 **Acceptance:** Unknown pages and explicit browser 404s display the approved playful bean visual and working home/back links. Route crashes show a similarly branded retry state; root crashes also render when the normal layout fails. Mobile and desktop layouts are legible. Existing shared-link missing/expired/revoked states stay indistinguishable and existing API/auth statuses stay correct.
 **Risk:** high

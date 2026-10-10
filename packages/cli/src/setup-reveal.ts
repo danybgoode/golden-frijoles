@@ -53,21 +53,36 @@ export async function playSetupReveal(options: RevealOptions): Promise<void> {
     return
   }
   const color = !options.noColor && env.NO_COLOR === undefined
-  const staticOnly = options.noMotion || options.noColor || env.NO_COLOR !== undefined || env.FRIJOLES_NO_MOTION === '1' || env.CI !== undefined
+  const staticOnly =
+    options.noMotion ||
+    options.noColor ||
+    env.NO_COLOR !== undefined ||
+    env.FRIJOLES_NO_MOTION === '1' ||
+    env.CI !== undefined
   if (staticOnly) {
     write(`${revealFrame(2, REVEAL_WIDTH, color)}\n`)
     return
   }
   const frames: Array<[0 | 1 | 2, number, number]> = [
-    [0, 0, 170], [1, 0, 170], [2, 0, 120],
-    ...Array.from({ length: 9 }, (_, index) => [2, Math.ceil(((index + 1) / 9) * REVEAL_WIDTH), 65] as [2, number, number]),
+    [0, 0, 170],
+    [1, 0, 170],
+    [2, 0, 120],
+    ...Array.from(
+      { length: 9 },
+      (_, index) => [2, Math.ceil(((index + 1) / 9) * REVEAL_WIDTH), 65] as [2, number, number]
+    ),
   ]
   const height = revealFrame(0, 0, color).split('\n').length
   write('\x1b[?25l')
   try {
     for (const [index, [ripeness, sweep, delay]] of frames.entries()) {
       const frame = revealFrame(ripeness, sweep, color)
-      write(`${index === 0 ? '' : `\x1b[${height}A`}${frame.split('\n').map((line) => `\x1b[2K${line}`).join('\n')}\n`)
+      write(
+        `${index === 0 ? '' : `\x1b[${height}A`}${frame
+          .split('\n')
+          .map((line) => `\x1b[2K${line}`)
+          .join('\n')}\n`
+      )
       await sleep(delay)
     }
   } finally {

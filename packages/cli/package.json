@@ -1,7 +1,7 @@
 {
   "name": "@golden-frijoles/cli",
   "private": false,
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "The Golden Frijoles CLI — create, roll out and kill feature flags from a terminal, or from an agent.",
   "bin": {
     "frijoles": "./dist/bin.js"

@@ -20,7 +20,12 @@ test('no-motion, no-color and narrow terminals stay readable without cursor cont
   ]) {
     let output = ''
     await playSetupReveal({
-      enabled: true, env: {}, ...mode, write: (text) => { output += text },
+      enabled: true,
+      env: {},
+      ...mode,
+      write: (text) => {
+        output += text
+      },
     })
     assert.match(output, /FRIJOLES/)
     assert.ok(!output.includes('\x1b[?25l'))
@@ -31,8 +36,14 @@ test('no-motion, no-color and narrow terminals stay readable without cursor cont
 test('machine mode calls no writer', async () => {
   let output = ''
   await playSetupReveal({
-    enabled: false, noMotion: false, noColor: false, env: {}, width: 80,
-    write: (text) => { output += text },
+    enabled: false,
+    noMotion: false,
+    noColor: false,
+    env: {},
+    width: 80,
+    write: (text) => {
+      output += text
+    },
   })
   assert.equal(output, '')
 })

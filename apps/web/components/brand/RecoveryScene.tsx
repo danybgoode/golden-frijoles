@@ -28,7 +28,9 @@ export function RecoveryScene({ code, title, message, onRetry }: RecoveryScenePr
               Try again
             </button>
           )}
-          <FrameLink href="/" variant="primary">Back to Golden Frijoles</FrameLink>
+          <FrameLink href="/" variant="primary">
+            Back to Golden Frijoles
+          </FrameLink>
         </div>
         <p className="ds-recovery-footnote">Every good harvest has a stray bean.</p>
       </div>
