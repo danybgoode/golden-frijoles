@@ -87,7 +87,10 @@ project's (the epic page's access gate, the console's membership).
   `adoptedWithoutExposure`. Adopted counts users whose adoption event comes at or after their first `on` exposure;
   retained a repeat of the retention event within `retention_days` of adopting; satisfied a satisfied event after
   adopting.
-- **D3 · The read**, in the canonical event module: `getFlagFunnelEvents(projectId, flagKey, events, period)`. ONE
+- **D3 · The read**, in the canonical event module: `getFlagFunnel(projectId, bet)`, cached 5 minutes per project and
+  bet. *(Amended at build, verifier on #341: three bounded reads (exposures through the feature index with no age
+  floor; only the bet's own events in the period; a people-only base, newest first); the person is the event's
+  `subject_id`, else its user; the time `occurred_at`, else `created_at`.)* ONE
   project. The period runs from the flag's first `on` evaluation to now, at most 90 days. Rows are capped (as the event
   catalog caps), and a truncated read says so. Base is the distinct users of any event in the period (system users
   excluded). No `(project_id, created_at)` index exists, so like the event catalog's window it scans the period's rows:
@@ -100,7 +103,8 @@ project's (the epic page's access gate, the console's membership).
   **Measure**: "Do you want to know if this worked?" (suggested yes for every Feature epic: an enablement flag rolled
   out you → 10% → 50% → everyone; then the adoption event, the retention event and window, optionally a satisfaction
   event); **Safety**: "Do you need to be able to switch it off fast?" (by risk, a kill switch, as today).
-- **D6 · Sign-in where it adds value** (Daniel, b): when the founder answers yes to Measure and is not signed in, one
+- **D6 · Sign-in where it adds value** (Daniel, b): *(Amended at build: "once per project" is the kit setting
+  `measure.signIn`; signed in means `frijoles whoami` exits 0; yes to Measure and Safety is one enablement flag.)* when the founder answers yes to Measure and is not signed in, one
   sentence and a choice: "Measuring needs a Golden Frijoles account: it serves the flag and counts who used it. Sign in
   now (opens your browser once), or later: the bet is saved here either way." Once per project. While pending, the Plan
   gate's Flag line reads "measured once you sign in". Signed in, the agent runs `bet sync` at the Build gate.
