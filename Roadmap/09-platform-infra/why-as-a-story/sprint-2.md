@@ -3,7 +3,7 @@ epic: why-as-a-story
 sprint: 2
 title: "The crew"
 risk: low
-phase: In review
+phase: Shipped
 stories_total: 4
 stories:
   - id: S2.1
@@ -37,7 +37,7 @@ stories:
 ---
 # The Why reads as a story, in full, and the plan names its crew — Sprint 2: The crew
 
-**Status:** 🟡 built, in review (one PR for both sprints)
+**Status:** ✅ shipped 2026-10-10 (#343, merge `d70de64`; plugin + kit 1.6.0)
 
 ## Stories
 
