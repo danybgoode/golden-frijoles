@@ -1,14 +1,14 @@
 ---
 title: "TARS, one model: every funnel reads the same stages"
 slug: tars-one-model
-status: ready
+status: scaffolded
 area: "01"
 type: feature
 appetite: M
-underwritten_by: null
+underwritten_by: wave-2026-10
 risk: high
-epic: null
-build_order: null
+epic: "01-growth-engine/tars-one-model"
+build_order: 78
 updated: 2026-10-10
 intent_ask: verbatim
 hypothesis: "Today one project reads the same funnel two ways: older features count anyone who saw them as targeted, and newer ones count everyone. Founders cannot compare their features or trust the numbers. Read every funnel one way and say so on screen. We will know when every funnel a founder opens uses the same stages."
@@ -20,7 +20,7 @@ target_from: null
 target_to: null
 read_date: null
 flag_key: null
-intent_match: 87
+intent_match: 88
 ---
 
 # Pitch — TARS, one model: every funnel reads the same stages
@@ -63,7 +63,12 @@ quote: $15–32 (M, n=20, p25–p75)
 `target_event`. `getFeatureFunnel` reads through it (the same bounded, cached reads as flag funnels) and returns the
 stages: active users → targeted (everyone) → exposed → adopted → retained → satisfied ("not measured" for a registry
 feature) with adopters-without-exposure beside. Every consumer shows those stages, and a one-time note says the
-numbers moved and why. The API returns the new `funnel`; the old `tars` object stays one release, marked deprecated.
+numbers moved and why. The API returns the new `funnel` in place of the old `tars` object.
+
+**The period** (Daniel, b): a funnel follows the people who **first got the feature in a period** through adoption and
+return. The default period is the feature's **whole life**, from when it first turned on until today, with **last 30
+days** and **last 90 days** to choose from. This replaces one-bet-wired's 90-day cap, which read exposure all-time but
+behaviour only for the last 90 days, so a feature older than three months read adoption too low.
 
 ## Bill of materials (What / Why)
 
@@ -72,7 +77,8 @@ numbers moved and why. The API returns the new `funnel`; the old `tars` object s
 | `computeFlagFunnel` → a model with an exposure rule (flag `on`, or a registry `target_event`) | one model, two sources of exposure |
 | `getFeatureFunnel` reads through it: bounded reads, 5-minute cache, the flag funnel's window | one read path, same cost limits |
 | Feature pane, funnel page, Pod Report table and friction rule read the new stages | one project reads one way |
-| API and connector: `funnel` added; `tars` kept one release, deprecated (a check-deprecations promise) | callers are not broken without warning |
+| API and connector return `funnel`; `tars` is removed (Daniel, a: no outside caller) | one shape, no deprecation to carry |
+| The period: whole life by default, last 30 or 90 days to choose; cohort by first exposure | a feature reads across its life, and every stage is the same people |
 | A one-time "the numbers moved" note where a TAR funnel shows | the cut-over is said on screen |
 | A browser spec: an authed-fixture epic with an `adopted_event` renders its funnel with `bets.flag_funnels_enabled` on, and not off | the switch is tested where people see it |
 
@@ -100,9 +106,9 @@ project's) · the public demo stays demo-only (rule 2).
 
 ## Acceptance criteria
 - S1.1 One pure funnel model counts exposure from a flag's on evaluation or a registry feature's target event, with adopters outside exposure beside it (high)
-- S1.2 A feature's funnel reads through that model with the flag funnel's bounded, cached reads (high)
-- S1.3 The funnel API and the connector return the new stages, and the old shape stays one release marked deprecated (high)
-- S2.1 The flag's feature pane and the funnel page show the new stages (medium)
+- S1.2 A feature's funnel, and a flag's, follows the people first exposed in a period (whole life by default, last 30 or 90 days) through that model with bounded, cached reads (high)
+- S1.3 The funnel API and the connector return the new stages in place of the old shape (high)
+- S2.1 The flag's feature pane, the funnel page and the epic page show the new stages and let the founder choose the period (medium)
 - S2.2 The Pod Report table and the friction rule read the new stages (medium)
 - S2.3 Where a feature funnel shows, a one-time note says the numbers moved and why (low)
 - S2.4 A browser spec renders a measured epic's funnel with its switch on, and not with it off (medium)
@@ -119,15 +125,25 @@ _Advisory and uncalibrated (intent-match D1, D3): it can add a step, never block
 
 ```text
 Intent match — Roadmap/00-ideas/seeds/tars-one-model.md
-  coverage in   0.95  (4 claims)
-  coverage out  0.83  (7 criteria)
-  clarity       0.70  (7 criteria)
+  coverage in   0.94  (4 claims)
+  coverage out  0.86  (7 criteria)
+  clarity       0.73  (7 criteria)
   teach-back    1.00  (yes)
   agreement     pending  (the optional reader at the architecture lock)
-  why story     0.66  (advisory, not in the total)
-Total 87 / 100 — uncalibrated · signals: coverage in, coverage out, clarity, teach-back
+  why story     0.68  (advisory, not in the total)
+Total 88 / 100 — uncalibrated · signals: coverage in, coverage out, clarity, teach-back
 Band: build (placeholder bands: 80 build · 60 resolve follow-ups · below 60 sketch or spike)
 Gaps: none
 ```
 
-<!-- intent-match: {"coverage_in":0.952,"coverage_out":0.826,"clarity":0.698,"teach_back":1,"total":87} -->
+<!-- intent-match: {"coverage_in":0.94,"coverage_out":0.859,"clarity":0.728,"teach_back":1,"total":88} -->
+
+## Decisions at the Plan gate (Daniel, 2026-10-12)
+- **Approved.**
+- **a.** **Replace** the API's `tars` object with `funnel` now: "no one else is using it but me".
+- **b.** **The same window as flag funnels, made right**: a funnel follows the people first exposed in a period; the
+  default is the feature's whole life, with last 30 and last 90 days to choose. The 90-day cap goes (it read behaviour
+  for 90 days against exposure for all time). A trend over time (adoption by month of exposure) is seeded for after
+  launch (`funnel-trend`).
+- **c.** **Funded, not grounded** (a launch fix).
+- Crew as planned: Opus S1.1–S1.3 and S2.4; Sonnet builders S2.1–S2.3.

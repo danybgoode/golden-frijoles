@@ -5,7 +5,7 @@
 
 # Build order — the six stages
 
-> **Generated 2026-10-10 — do not hand-edit.** One stage per initiative, decided in one place
+> **Generated 2026-10-12 — do not hand-edit.** One stage per initiative, decided in one place
 > (`scripts/lib/stage.mjs`): Backlog · Refining · Ready · Building · QA · Shipped.
 > This committed file reads the docs alone, so **Building and QA are not here** — they are facts git
 > and GitHub hold. For the live board run `node scripts/build-order.mjs --live`, or open the Hub board.
@@ -17,9 +17,9 @@ _seeds with no pitch yet._
 - [Verify module: the verification depth ladder as a product (after the spike)](seeds/verify-module.md) — #54 · 09 Platform Infra · seed · Feature · risk: High · appetite L · _docs: status raw_
 - [A delivery whose settle keeps failing is re-sent every 5 minutes, uncounted and unlogged](seeds/delivery-stale-reclaim-uncounted.md) — 01 Growth Engine · seed · Bug · risk: High · appetite S · _docs: status raw_
 - [A reading for proving_workspaces](seeds/proving-workspaces-reading.md) — 01 Growth Engine · seed · Spike · risk: High · appetite S · _docs: status raw_
+- [Funnel trend: how a feature performed over time](seeds/funnel-trend.md) — 01 Growth Engine · seed · Feature · risk: Low · appetite M · _docs: status raw_
 - [perf-probe only requests the hosts a project names](seeds/perf-probe-target-allowlist.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
 - [TARS segments: named target segments, and every funnel on the agreed model](seeds/tars-segments.md) — 01 Growth Engine · seed · Feature · risk: High · appetite M · _docs: status raw_
-- [TARS, one model: the older funnels read the way flag funnels do](seeds/tars-one-model.md) — 01 Growth Engine · seed · Feature · risk: High · appetite M · _docs: status raw_
 - [Template scripts run when invoked through a symlinked path](seeds/script-ismain-realpath.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
 - [The build view tells one story: one status, said once](seeds/build-view-one-story.md) — 09 Platform Infra · seed · Feature · risk: Low · appetite M · _docs: status raw_
 - [This repo lints its template scripts the way its consumers do](seeds/foundation-lint-gate.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
@@ -31,20 +31,21 @@ _a pitch is waiting at the approval gate._
 - [Analytics visualization — the charting-dependency decision (spike), then the layer](seeds/analytics-visualization-layer.md) — #14 · 01 Growth Engine · seed · Spike · risk: Low · appetite S · _docs: status ready_
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
 
-## Ready (10)
+## Ready (11)
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
-- [The Why reads as a story, in full, and the plan names its crew](../09-platform-infra/why-as-a-story/README.md) — #78 · 09 Platform Infra · 0/7 stories · risk: Low · appetite M · _docs: status in-progress_
-- [A golden welcome and recovery pages](../02-commercial/brand-reveal-error-pages/README.md) — #79 · 02 Commercial · 2/2 stories · risk: High · appetite M · _docs: status in-progress_
-- [One bet, wired: the flag knows its epic, its funnel and its read](../01-growth-engine/one-bet-wired/README.md) — #80 · 01 Growth Engine · 6/6 stories · risk: High · appetite L · _docs: status in-progress_
-- [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #81 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
-- [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #82 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
-- [Scenarios made PM-operable — define, launch, and kill a scenario from the UI](../01-growth-engine/scenarios-pm-operable/README.md) — #83 · 01 Growth Engine · 10/10 stories · risk: High · appetite M · _docs: status in-progress_
-- [CMS-neutral experiment integration + Payload go/no-go](../01-growth-engine/cms-integration-spike/README.md) — #84 · 01 Growth Engine · 0/6 stories · risk: Low · _docs: status scaffolded_
-- [One plugin, one install — Golden Frijoles ships as a public plugin whose skills run in anyone's repo](../09-platform-infra/golden-frijoles-plugin/README.md) — #85 · 09 Platform Infra · 14/23 stories · risk: High · appetite L · _docs: status in-progress_
-- [One public monorepo — skills/ subtree, a lean install mirror, licences, a private docs repo](../09-platform-infra/public-monorepo/README.md) — #86 · 09 Platform Infra · 13/15 stories · risk: High · appetite M · _docs: status in-progress_
-- [Several North Star metrics, one reading rule](../01-growth-engine/north-star-multi-metric-read/README.md) — #87 · 01 Growth Engine · 0/1 stories · risk: Low · appetite S · _docs: status in-progress_
+- [TARS, one model: every funnel reads the same stages](../01-growth-engine/tars-one-model/README.md) — #78 · 01 Growth Engine · 0/7 stories · risk: High · appetite M · _docs: status scaffolded_
+- [The Why reads as a story, in full, and the plan names its crew](../09-platform-infra/why-as-a-story/README.md) — #79 · 09 Platform Infra · 0/7 stories · risk: Low · appetite M · _docs: status in-progress_
+- [A golden welcome and recovery pages](../02-commercial/brand-reveal-error-pages/README.md) — #80 · 02 Commercial · 2/2 stories · risk: High · appetite M · _docs: status in-progress_
+- [One bet, wired: the flag knows its epic, its funnel and its read](../01-growth-engine/one-bet-wired/README.md) — #81 · 01 Growth Engine · 6/6 stories · risk: High · appetite L · _docs: status in-progress_
+- [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #82 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
+- [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #83 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
+- [Scenarios made PM-operable — define, launch, and kill a scenario from the UI](../01-growth-engine/scenarios-pm-operable/README.md) — #84 · 01 Growth Engine · 10/10 stories · risk: High · appetite M · _docs: status in-progress_
+- [CMS-neutral experiment integration + Payload go/no-go](../01-growth-engine/cms-integration-spike/README.md) — #85 · 01 Growth Engine · 0/6 stories · risk: Low · _docs: status scaffolded_
+- [One plugin, one install — Golden Frijoles ships as a public plugin whose skills run in anyone's repo](../09-platform-infra/golden-frijoles-plugin/README.md) — #86 · 09 Platform Infra · 14/23 stories · risk: High · appetite L · _docs: status in-progress_
+- [One public monorepo — skills/ subtree, a lean install mirror, licences, a private docs repo](../09-platform-infra/public-monorepo/README.md) — #87 · 09 Platform Infra · 13/15 stories · risk: High · appetite M · _docs: status in-progress_
+- [Several North Star metrics, one reading rule](../01-growth-engine/north-star-multi-metric-read/README.md) — #88 · 01 Growth Engine · 0/1 stories · risk: Low · appetite S · _docs: status in-progress_
 
 ## Building — live only
 
@@ -133,4 +134,4 @@ _merged, deployed and closed._
 - [The portfolio loop test fails intermittently in CI and has been quarantined](seeds/portfolio-loop-flake.md) — 02 Commercial · seed · Bug · risk: Low · appetite S · _docs: status shipped_
 
 ---
-_94 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._
+_95 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._
