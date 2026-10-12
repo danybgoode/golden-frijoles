@@ -207,7 +207,12 @@ test.describe('the feature destination answers the whole loop', () => {
     const stageRow = (stage: RegExp) => page.locator('.ds-table-row', { hasText: stage })
     await expect(stageRow(/^Saw it/)).toContainText(String(FUNNEL_SUBJECTS.length))
     await expect(stageRow(/^Adopted/)).toContainText('2')
-    await expect(stageRow(/^Retained/)).toContainText('1')
+    // The people cell exactly, not a substring: '1' also matches '100%' (verifier, #344).
+    await expect(
+      stageRow(/^Retained/)
+        .locator('[role="cell"]')
+        .nth(1)
+    ).toHaveText('1')
     // The period choice is on the pane, whole life being the default.
     await expect(
       page.getByRole('navigation', { name: 'Funnel period' }).getByText('Whole life')

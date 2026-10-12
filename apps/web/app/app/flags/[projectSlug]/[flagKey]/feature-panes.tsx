@@ -111,7 +111,7 @@ export function FunnelPane({
   return (
     <>
       {/* tars-one-model D1/D6 — the same table the epic page draws, from the one model: the people who got the
-          feature, followed over the chosen period. The counts are registry-declared, not gateway-observed. */}
+          feature, followed over the chosen period. */}
       <PeriodChoice period={period} hrefFor={hrefFor} />
       {feature.enabled ? null : (
         <p className="ds-hint">

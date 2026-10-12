@@ -69,7 +69,9 @@ export default async function FunnelPage({
           flagKey={featureKey}
           result={result}
           period={period}
-          hrefFor={(p) => `/app/funnel/${projectSlug}/${encodeURIComponent(featureKey)}?period=${p}`}
+          hrefFor={(p) =>
+            `/app/funnel/${encodeURIComponent(projectSlug)}/${encodeURIComponent(featureKey)}?period=${p}`
+          }
         />
       </main>
     </ProductShell>
