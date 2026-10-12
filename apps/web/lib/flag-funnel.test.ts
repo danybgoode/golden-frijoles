@@ -267,4 +267,16 @@ test('verifier #344: the cohort is decided by the EARLIEST exposure, whatever or
     since: Date.parse(day(2026, 9, 1)),
   })
   assert.equal(recent.exposed, 0, 'first exposed last year, so not in this period’s cohort')
+  const newestFirst = computeFlagFunnel(
+    [...[...events].reverse(), at2('late', 'page_viewed', day(2026, 9, 21))],
+    bet,
+    {
+      since: Date.parse(day(2026, 9, 1)),
+    }
+  )
+  assert.equal(
+    newestFirst.exposed,
+    0,
+    'and newest first: a rule that keeps the FIRST exposure seen is wrong too'
+  )
 })

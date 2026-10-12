@@ -170,7 +170,7 @@ async function loadProjectFunnels(projectId: string, projectSlug: string): Promi
   const supabase = getSupabaseServiceClient()
   const { data: features, error } = await supabase
     .from('features')
-    .select('key')
+    .select('key, enabled')
     .eq('project_id', projectId)
     .order('key', { ascending: true })
 
@@ -182,6 +182,8 @@ async function loadProjectFunnels(projectId: string, projectSlug: string): Promi
   const funnels: FunnelCounts[] = []
   for (const feature of features) {
     const key = feature.key as string
+    // A switched-off feature has no live funnel to fix, so its funnel is not even read (verifier, #344).
+    if (feature.enabled === false) continue
     // Whole life, without the active-users read: friction compares exposed → adopted → retained only (verifier, #344).
     const result = await getFeatureFunnelByProjectId(projectId, projectSlug, key, 'all', { base: false })
     // A feature with no resolvable funnel has no funnel to have friction in. Skipped rather than

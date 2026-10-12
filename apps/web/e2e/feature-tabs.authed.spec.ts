@@ -205,8 +205,10 @@ test.describe('the feature destination answers the whole loop', () => {
     // tars-one-model D1/D6 — the shared stage table (the epic page draws the same one), not three tiles and bars.
     // The numbers the fixture seeded, asserted as VALUES: three saw it, two adopted, one retained.
     const stageRow = (stage: RegExp) => page.locator('.ds-table-row', { hasText: stage })
-    await expect(stageRow(/^Saw it/)).toContainText(String(FUNNEL_SUBJECTS.length))
-    await expect(stageRow(/^Adopted/)).toContainText('2')
+    // The people cell exactly, never a substring: '2' also matches '25%' (verifier, #344).
+    const people = (stage: RegExp) => stageRow(stage).locator('[role="cell"]').nth(1)
+    await expect(people(/^Saw it/)).toHaveText(String(FUNNEL_SUBJECTS.length))
+    await expect(people(/^Adopted/)).toHaveText('2')
     // The people cell exactly, not a substring: '1' also matches '100%' (verifier, #344).
     await expect(
       stageRow(/^Retained/)

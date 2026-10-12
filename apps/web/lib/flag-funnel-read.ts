@@ -133,7 +133,8 @@ export async function readFunnel(
         })
   // The BASE (every project event in the period) is the costliest read: there is no (project_id, created_at) index and a
   // whole life can be long (verifier, #344). Only a page that shows "active users" and "targeted" needs it; the reports
-  // and the friction alerts read exposed → adopted → retained and pass `base: false`, so per-feature loops never pay it.
+  // and the friction alerts read exposed → adopted → retained and pass `base: false`; only a view that shows active users
+  // pays it (the feature pages, the epic page, Journeys' flags).
   // Without it, base and targeted count only the people in the funnel's own events.
   const base =
     options.base === false
