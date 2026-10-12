@@ -112,6 +112,15 @@ test('a measured flag fills its funnel from its own evaluations, on a fresh proj
     expect(feature.period).toBe('all')
     const lately = await readFunnel(client, project!.id as string, source, measure, '30d')
     expect(lately.state === 'measured' && lately.funnel.exposed).toBe(1)
+    // verifier #344: the reports read without the active-users base; the funnel stages are the same.
+    const noBase = await readFunnel(client, project!.id as string, source, measure, 'all', new Date(), {
+      base: false,
+    })
+    expect(noBase.state === 'measured' && noBase.funnel).toMatchObject({
+      exposed: 1,
+      adopted: 1,
+      adoptedWithoutExposure: 1,
+    })
     const unnamed = await readFunnel(client, project!.id as string, source, {
       ...measure,
       adoptedEvent: null,

@@ -65,7 +65,9 @@ export async function getFeatureFunnelByProjectId(
   projectId: string,
   projectSlug: string,
   featureKey: string,
-  period: FunnelPeriod = 'all'
+  period: FunnelPeriod = 'all',
+  /** `base: false` for the reports and friction loops: they never show active users (verifier, #344). */
+  options: { base?: boolean } = {}
 ): Promise<FunnelResult> {
   const supabase = getSupabaseServiceClient()
   const project = { id: projectId, slug: projectSlug }
@@ -111,7 +113,8 @@ export async function getFeatureFunnelByProjectId(
         retentionDays: feature.retention_days,
         satisfiedEvent: null, // the registry names no satisfaction event yet (tars-segments)
       },
-      period
+      period,
+      options
     )
   } catch (e) {
     console.error('[tars-query] funnel read failed:', e)

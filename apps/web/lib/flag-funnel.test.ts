@@ -259,3 +259,12 @@ test('tars-one-model D2: an earlier cohort active in the period is not exposed i
     'over the whole life, old is beside it'
   )
 })
+
+test('verifier #344: the cohort is decided by the EARLIEST exposure, whatever order the events arrive in', () => {
+  // Older first, then newer: a rule that keeps the LAST exposure seen would wrongly put them in this period.
+  const events = [onAt('late', day(2025, 11, 3)), onAt('late', day(2026, 9, 20))]
+  const recent = computeFlagFunnel([...events, at2('late', 'page_viewed', day(2026, 9, 21))], bet, {
+    since: Date.parse(day(2026, 9, 1)),
+  })
+  assert.equal(recent.exposed, 0, 'first exposed last year, so not in this period’s cohort')
+})

@@ -91,7 +91,8 @@ export async function readFunnel(
   source: ExposureRule,
   measure: FunnelMeasure,
   period: FunnelPeriod = 'all',
-  now: Date = new Date()
+  now: Date = new Date(),
+  options: { base?: boolean } = {}
 ): Promise<FunnelRead> {
   const cols = 'user_id, subject_type, subject_id, event, created_at, occurred_at, feature_id'
   const key = source.kind === 'flag' ? source.flagKey : source.featureKey
@@ -130,17 +131,24 @@ export async function readFunnel(
             .order('id', { ascending: true })
             .range(a, b)
         })
-  const base = await paged((a, b) =>
-    client
-      .from('events')
-      .select('user_id, subject_type, subject_id')
-      .eq('project_id', projectId)
-      .gte('created_at', from)
-      .lte('created_at', to)
-      .order('created_at', { ascending: false })
-      .order('id', { ascending: false })
-      .range(a, b)
-  )
+  // The BASE (every project event in the period) is the costliest read: there is no (project_id, created_at) index and a
+  // whole life can be long (verifier, #344). Only a page that shows "active users" and "targeted" needs it; the reports
+  // and the friction alerts read exposed → adopted → retained and pass `base: false`, so per-feature loops never pay it.
+  // Without it, base and targeted count only the people in the funnel's own events.
+  const base =
+    options.base === false
+      ? { rows: [] as Row[], truncated: false }
+      : await paged((a, b) =>
+          client
+            .from('events')
+            .select('user_id, subject_type, subject_id')
+            .eq('project_id', projectId)
+            .gte('created_at', from)
+            .lte('created_at', to)
+            .order('created_at', { ascending: false })
+            .order('id', { ascending: false })
+            .range(a, b)
+        )
 
   const toEvent = (r: Row): FunnelEvent => ({
     userId: person(r),

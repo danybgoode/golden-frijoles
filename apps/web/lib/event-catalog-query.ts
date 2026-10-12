@@ -96,8 +96,10 @@ export function getFunnel(
   projectId: string,
   source: ExposureRule,
   measure: FunnelMeasure,
-  period: FunnelPeriod = 'all'
+  period: FunnelPeriod = 'all',
+  options: { base?: boolean } = {}
 ): Promise<FunnelRead> {
+  const withBase = options.base !== false
   const key = [
     'funnel',
     projectId,
@@ -109,9 +111,13 @@ export function getFunnel(
     String(measure.retentionDays),
     measure.satisfiedEvent ?? '',
     period,
+    withBase ? 'base' : 'no-base',
   ]
   return unstable_cache(
-    () => readFunnel(getSupabaseServiceClient(), projectId, source, measure, period),
+    () =>
+      readFunnel(getSupabaseServiceClient(), projectId, source, measure, period, new Date(), {
+        base: withBase,
+      }),
     key,
     {
       revalidate: FLAG_FUNNEL_CACHE_SECONDS,
