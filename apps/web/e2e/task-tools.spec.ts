@@ -258,6 +258,49 @@ test.describe('connector task read tools', () => {
     expect(JSON.stringify(after)).toContain('setup_guide')
   })
 
+  test('tars-one-model: a SWITCHED-OFF feature with the same bad funnel raises no friction', async ({
+    request,
+  }) => {
+    // The one model shows a switched-off feature's history (D6), so the friction loader skips it itself: an alert
+    // asking a founder to fix a funnel they turned off is noise (verifier, #344). Same 60 → 3 funnel as above.
+    const db = dbClient()
+    const tenant = await createTenant(db, 'friction-off')
+    await db.from('features').insert({
+      project_id: tenant.projectId,
+      key: 'setup_guide',
+      enabled: false,
+      target_event: 'guide_seen',
+      adopted_event: 'guide_done',
+      retained_event: 'guide_again',
+      retention_days: 14,
+    })
+    const events = []
+    for (let i = 0; i < 60; i += 1)
+      events.push({
+        project_id: tenant.projectId,
+        user_id: `f${i}`,
+        event: 'guide_seen',
+        feature_id: 'setup_guide',
+      })
+    for (let i = 0; i < 3; i += 1)
+      events.push({
+        project_id: tenant.projectId,
+        user_id: `f${i}`,
+        event: 'guide_done',
+        feature_id: 'setup_guide',
+      })
+    await db.from('events').insert(events)
+
+    await callTool(request, tenant.connectorToken, 'list_tasks', {})
+
+    const { data: after } = await db
+      .from('signals')
+      .select('kind')
+      .eq('project_id', tenant.projectId)
+      .eq('kind', 'friction')
+    expect(after ?? []).toHaveLength(0)
+  })
+
   test('a RESOLVED task does not rise from the dead on the next queue read', async ({ request }) => {
     // ── The zombie bug, pinned ──────────────────────────────────────────────────────────────
     // Cross-review (Codex round 1) found this and it was severe: the partial unique index only

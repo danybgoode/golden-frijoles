@@ -257,7 +257,7 @@ export async function getProjectOutcome(projectId: string, projectSlug: string):
   const keys = (features ?? []).map((f) => f.key as string)
   const rows = await Promise.all(
     keys.map(async (key) => {
-      const funnel = await getFeatureFunnelByProjectId(projectId, projectSlug, key)
+      const funnel = await getFeatureFunnelByProjectId(projectId, projectSlug, key, 'all', { base: false })
       if (!funnel.ok) return { key, funnel: null }
       return { key, funnel: stagesOfRead(funnel.funnel, funnel.feature.adoptedEvent) }
     })
