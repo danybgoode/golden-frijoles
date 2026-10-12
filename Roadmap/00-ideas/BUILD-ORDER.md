@@ -35,7 +35,7 @@ _a pitch is waiting at the approval gate._
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
-- [TARS, one model: every funnel reads the same stages](../01-growth-engine/tars-one-model/README.md) — #78 · 01 Growth Engine · 0/7 stories · risk: High · appetite M · _docs: status scaffolded_
+- [TARS, one model: every funnel reads the same stages](../01-growth-engine/tars-one-model/README.md) — #78 · 01 Growth Engine · 0/7 stories · risk: High · appetite M · _docs: status in-progress_
 - [The Why reads as a story, in full, and the plan names its crew](../09-platform-infra/why-as-a-story/README.md) — #79 · 09 Platform Infra · 0/7 stories · risk: Low · appetite M · _docs: status in-progress_
 - [A golden welcome and recovery pages](../02-commercial/brand-reveal-error-pages/README.md) — #80 · 02 Commercial · 2/2 stories · risk: High · appetite M · _docs: status in-progress_
 - [One bet, wired: the flag knows its epic, its funnel and its read](../01-growth-engine/one-bet-wired/README.md) — #81 · 01 Growth Engine · 6/6 stories · risk: High · appetite L · _docs: status in-progress_

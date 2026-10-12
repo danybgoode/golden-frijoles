@@ -3,7 +3,7 @@ epic: tars-one-model
 sprint: 1
 title: "One model"
 risk: high
-phase: Building
+phase: In review
 stories_total: 3
 stories:
   - id: S1.1
@@ -12,25 +12,25 @@ stories:
     i_want: "every funnel counted the same way, for the people who got the feature in a period"
     so_that: "I can compare features and trust the numbers"
     risk: high
-    status: planned
+    status: done
   - id: S1.2
     title: "One read for flags and features"
     as_a: "a founder reading whether a feature worked"
     i_want: "a feature's funnel read the same bounded way a flag's is"
     so_that: "the page stays fast and the numbers are complete"
     risk: high
-    status: planned
+    status: done
   - id: S1.3
     title: "The API and connector return the funnel"
     as_a: "a founder asking my agent how a feature did"
     i_want: "the API and the connector to answer with the same stages"
     so_that: "my agent and my screens agree"
     risk: high
-    status: planned
+    status: done
 ---
 # TARS, one model: every funnel reads the same stages — Sprint 1: One model
 
-**Status:** ⬜ not started
+**Status:** 🟡 built, in review (one PR for both sprints)
 
 ## Stories
 

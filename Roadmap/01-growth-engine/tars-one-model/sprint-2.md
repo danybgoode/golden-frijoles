@@ -3,7 +3,7 @@ epic: tars-one-model
 sprint: 2
 title: "Everywhere it shows"
 risk: high
-phase: Locking architecture
+phase: In review
 stories_total: 4
 stories:
   - id: S2.1
@@ -12,32 +12,32 @@ stories:
     i_want: "the same table on the feature pane, the funnel page and the epic page, and a choice of whole life, 90 or 30 days"
     so_that: "I can see how it did across its life or lately"
     risk: medium
-    status: planned
+    status: done
   - id: S2.2
     title: "Reports read the same stages"
     as_a: "a founder reading my Pod Report"
     i_want: "the report, the portfolio and the friction alert on the new stages"
     so_that: "they agree with the funnel pages"
     risk: medium
-    status: planned
+    status: done
   - id: S2.3
     title: "Say the numbers moved"
     as_a: "a founder reading whether a feature worked"
     i_want: "a short note that funnels now count differently"
     so_that: "a lower adoption number does not look like a drop"
     risk: low
-    status: planned
+    status: done
   - id: S2.4
     title: "The switch tested in a browser"
     as_a: "a founder relying on the funnel switch"
     i_want: "the funnel to show when the switch is on and not when it is off"
     so_that: "switching it off really hides it"
     risk: medium
-    status: planned
+    status: done
 ---
 # TARS, one model: every funnel reads the same stages — Sprint 2: Everywhere it shows
 
-**Status:** ⬜ not started
+**Status:** 🟡 built, in review (one PR for both sprints)
 
 ## Stories
 
