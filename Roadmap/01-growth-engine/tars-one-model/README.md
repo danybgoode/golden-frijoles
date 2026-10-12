@@ -87,6 +87,10 @@ across the feature's whole life by default, and the change is said on screen.
 - **D8 · The note**: where a feature funnel shows, "Funnels now count adoption among the people who got the feature,
   across its whole life. Numbers before 12 Oct 2026 counted it differently." Shown until 30 days after this ships
   (`FUNNEL_MODEL_NOTE_UNTIL`), then gone by itself.
+- *(D9 amended at build: CI's signed-in suite runs only with the gates on, so the switch cannot be flipped there. Both
+  halves read the public demo epic page's server-rendered HTML instead: ON in `hub.spec.ts` (the one file allowed to
+  push the demo roadmap, serially), OFF in `flag-funnel-dark.spec.ts` in the gates-off pass. The page is a server
+  component, so its HTML is what a browser receives.)*
 - **D9 · The browser spec** (`e2e/flag-funnel-ui.spec.ts`, authed): an epic in the fixture project with a flag and an
   `adopted_event`, pushed with the roadmap; with `bets.flag_funnels_enabled` on, the epic page shows its funnel and the
   period choice; off, no funnel. Runs in the gates-on and gates-off passes. No plugin or CLI release (web only).
