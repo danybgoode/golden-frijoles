@@ -21,6 +21,7 @@ import { isFlagConsoleEnabled, isFlagRuleBuilderEnabled } from '@/lib/flags'
 import { isOwner } from '@/lib/roles'
 import { getFlagRegistryView } from '@/lib/flag-registry'
 import { getFeatureFunnelByProjectId } from '@/lib/tars-query'
+import { asPeriod } from '@/lib/flag-funnel'
 import { getFeatureImpactByProjectId } from '@/lib/north-star-query'
 import { FLAG_ENVIRONMENTS } from '@/lib/flag-definition'
 import { projectFlagRows } from '@/lib/flag-list-view'
@@ -181,8 +182,12 @@ export default async function FlagDetailPage({
   // server-side, and re-resolving a tenant from a URL string when you are holding its id is the
   // shape AGENTS rule #1 exists to keep out of this codebase. Same id, one fewer query, and no
   // second place where a slug becomes a tenant.
+  const rawPeriod = (await searchParams).period
+  const period = asPeriod(Array.isArray(rawPeriod) ? rawPeriod[0] : rawPeriod)
   const funnel =
-    tab === 'funnel' ? await getFeatureFunnelByProjectId(membership.projectId, projectSlug, flag.key) : null
+    tab === 'funnel'
+      ? await getFeatureFunnelByProjectId(membership.projectId, projectSlug, flag.key, period)
+      : null
   const impact =
     tab === 'impact' ? await getFeatureImpactByProjectId(membership.projectId, projectSlug, flag.key) : null
 
@@ -337,7 +342,12 @@ export default async function FlagDetailPage({
             the result and render the absence. */}
         {tab === 'funnel' && funnel !== null && (
           <Pane>
-            <FunnelPane flagKey={flag.key} result={funnel} />
+            <FunnelPane
+              flagKey={flag.key}
+              result={funnel}
+              period={period}
+              hrefFor={(p) => `${basePath}?tab=funnel&period=${p}`}
+            />
           </Pane>
         )}
 

@@ -202,38 +202,21 @@ test.describe('the feature destination answers the whole loop', () => {
     const response = await page.goto(`${base}?tab=funnel`)
     expect(response?.status(), 'the Funnel tab must not 404 a feature that exists').toBe(200)
 
-    // Three tiles, and the numbers the fixture seeded. Asserted as VALUES, not as a count: a pane
-    // rendering the right shape with the wrong numbers is the failure a count alone misses, and the
-    // fixture's three counts are deliberately all different so one number cannot satisfy three
-    // assertions.
-    const tiles = page.locator('.ds-kpis .ds-stat')
-    await expect(tiles).toHaveCount(3)
-    const targeted = FUNNEL_SUBJECTS.length
-    await expect(tiles.nth(0).locator('.ds-stat-value')).toHaveText(String(targeted))
-    await expect(tiles.nth(1).locator('.ds-stat-value')).toHaveText('2')
-    await expect(tiles.nth(2).locator('.ds-stat-value')).toHaveText('1')
+    // tars-one-model D1/D6 — the shared stage table (the epic page draws the same one), not three tiles and bars.
+    // The numbers the fixture seeded, asserted as VALUES: three saw it, two adopted, one retained.
+    const stageRow = (stage: RegExp) => page.locator('.ds-table-row', { hasText: stage })
+    await expect(stageRow(/^Saw it/)).toContainText(String(FUNNEL_SUBJECTS.length))
+    await expect(stageRow(/^Adopted/)).toContainText('2')
+    await expect(stageRow(/^Retained/)).toContainText('1')
+    // The period choice is on the pane, whole life being the default.
+    await expect(
+      page.getByRole('navigation', { name: 'Funnel period' }).getByText('Whole life')
+    ).toBeVisible()
 
     // ⚠️ **The empty state must be ABSENT**, and this is the assertion that makes the two halves a
     // pair. Without it a pane rendering both — numbers above an "and also nothing is measuring
     // this" — would pass.
     await expect(page.getByText('Nothing is measuring this yet')).toHaveCount(0)
-
-    // Rendered GEOMETRY, which is the whole reason this is a browser spec: the bars must actually
-    // get shorter. A funnel drawn with three equal bars is a decoration.
-    //
-    // ⚠️ `.ds-chart-fill`, not `.ds-bar-fill` — Story 5.3 replaced this pane's hand-rolled bar
-    // markup with `StageBars`, and the old locator would have read ZERO bars. It went red loudly
-    // here rather than quietly, which is what `toHaveLength(3)` is for: an `evaluateAll` over a
-    // locator that matches nothing returns `[]`, and a length assertion is the only thing between
-    // that and three vacuous comparisons over `undefined`.
-    const widths = await page
-      .locator('.ds-chart-fill')
-      .evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().width))
-    expect(widths, 'the funnel drew no bars').toHaveLength(3)
-    expect(widths[0]).toBeGreaterThan(widths[1])
-    expect(widths[1]).toBeGreaterThan(widths[2])
-    // DD4: a nonzero value never rounds to zero pixels — the fill carries a floor.
-    expect(widths[2]).toBeGreaterThan(0)
 
     // ── The fourteen-day series, which is new with Story 5.3 ────────────────────────────────
     // ⚠️ Fourteen columns, including the empty days. A series that omitted them would draw a row of

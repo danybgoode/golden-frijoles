@@ -19,8 +19,12 @@
 // (`app/app/funnel/[projectSlug]/[featureKey]/page.tsx:26`), and a tab that 404s the whole feature
 // page because the OTHER registry has no row would be a regression caused by a missing measurement.
 
-import { Empty as DsEmpty, Field, Stat } from '@/design-system/primitives'
-import { DayColumns, SmallMultiple, StageBars } from '@/design-system/charts'
+import { Empty as DsEmpty, Field } from '@/design-system/primitives'
+import { DayColumns, SmallMultiple } from '@/design-system/charts'
+import { FlagFunnel } from '@/components/product/FlagFunnel'
+import { PeriodChoice } from '@/components/product/PeriodChoice'
+import { flagFunnelView } from '@/lib/flag-funnel-view'
+import type { FunnelPeriod } from '@/lib/flag-funnel'
 import { ImpactSeriesTable } from '@/app/app/impact/[projectSlug]/[featureKey]/series-table'
 import { formatUtc } from '@/lib/format-utc'
 import type { FunnelResult } from '@/lib/tars-query'
@@ -84,84 +88,41 @@ function Empty({ head, body }: { head: string; body: string }) {
   return <DsEmpty title={head} body={body} />
 }
 
-export function FunnelPane({ flagKey, result }: { flagKey: string; result: FunnelResult }) {
+export function FunnelPane({
+  flagKey,
+  result,
+  period,
+  hrefFor,
+}: {
+  flagKey: string
+  result: FunnelResult
+  period: FunnelPeriod
+  /** The pane's own URL for a period: the page keeps its other params (tars-one-model D2). */
+  hrefFor: (period: FunnelPeriod) => string
+}) {
   if (!result.ok) {
     const { head, body } = absence(result.reason, flagKey, 'funnel')
     return <Empty head={head} body={body} />
   }
-  const { feature, tars, servedDaily } = result
-  // Percentages are OF THE TARGETED population, which is what makes the three numbers a funnel
-  // rather than three unrelated counts. Guarded at zero: `0/0` is `NaN`, and a funnel reading
-  // "NaN%" is worse than one reading nothing.
-  const share = (value: number) => (tars.targeted === 0 ? null : Math.round((value / tars.targeted) * 100))
-  const rows: Array<[string, number]> = [
-    ['Targeted', tars.targeted],
-    ['Adopted', tars.adopted],
-    ['Retained', tars.retained],
-  ]
-  // How many did not continue from the previous stage, with its own share. The number the design
-  // puts under each bar, and it is subtraction rather than a second measurement — so it can never
-  // disagree with the two counts it sits between.
-  const dropped = (index: number) => {
-    if (index === 0) return null
-    const previous = rows[index - 1][1]
-    const here = rows[index][1]
-    if (previous <= 0 || here >= previous) return null
-    return { count: previous - here, percent: ((previous - here) / previous) * 100 }
-  }
+  const { feature, funnel, servedDaily } = result
 
   return (
     <>
-      <div className="ds-kpis">
-        {rows.map(([label, value]) => (
-          <Stat
-            key={label}
-            value={value.toLocaleString('en-US')}
-            label={`${label}${share(value) === null ? '' : ` · ${share(value)}%`}`}
-          />
-        ))}
-      </div>
-      <Field label="Targeted → adopted → retained">
-        {/* ⚠️ **`StageBars`, which replaces this pane's hand-rolled `.ds-bar-*` markup and
-            `components/ui/FunnelBars.tsx` in the same commit** (Story 5.1, `console-ia-overhaul` A3).
-            The three rules DD4 states now come from one place instead of three: one hue light to
-            dark, the exact count beside every bar, and a 4px floor so a stage with three people in
-            it is not indistinguishable from a stage with none.
-
-            ⚠️ The BAR is scaled and the PERCENTAGE is not clamped, deliberately (cross-review, agy):
-            an anomalous `adopted > targeted` must not paint outside its track, but "133%" beside it
-            is information — it tells a reader a count is impossible, and clamping would hide the one
-            signal that something upstream is wrong. `sharePercent` clamps the geometry; `share()`
-            above does not touch the number. */}
-        <StageBars
-          size="slim"
-          stages={rows.map(([label, value], index) => ({
-            label,
-            value,
-            sharePercent: share(value),
-            dropped: dropped(index),
-          }))}
-          note={
-            <>
-              Targeted, adopted and retained are declared by the registry, not observed at a gateway — this
-              engine counts the events a signal names. Last synced {formatUtc(feature.syncedAt)}.
-            </>
-          }
-        />
-        {/* Preserved from the page this pane replaces, verbatim in substance: the counts are
-            registry-declared, not gateway-observed. Dropping it while moving the numbers would
-            quietly upgrade what they claim.
-            ⚠️ `formatUtc`, not `new Date(…).toLocaleString()`. The raw form renders the literal
-            string "Invalid Date" for a malformed or missing timestamp — a bad historical row making
-            a dashboard unreadable is exactly what that helper exists to prevent, and it says
-            "Unknown time" instead (cross-review, agy). It is also timezone-stable, which
-            `toLocaleString` on a server-rendered page is not. */}
-      </Field>
+      {/* tars-one-model D1/D6 — the same table the epic page draws, from the one model: the people who got the
+          feature, followed over the chosen period. The counts are registry-declared, not gateway-observed. */}
+      <PeriodChoice period={period} hrefFor={hrefFor} />
+      {feature.enabled ? null : (
+        <p className="ds-hint">
+          This feature is switched off; the funnel shows what happened while it was on.
+        </p>
+      )}
+      <FlagFunnel view={flagFunnelView(funnel)} />
+      <p className="ds-hint">Last synced {formatUtc(feature.syncedAt)}.</p>
       <Field label="Times served, last 14 days">
         <DayColumns
           series={servedDaily}
           unreadable="This feature has never been served, so there is no daily history to draw."
-          note="If this drops to zero without anybody turning it off, something upstream stopped asking. A day with nothing in it is drawn in the inert token rather than omitted — the gap is the signal. Counts events, not people; the distinct-user figures are the three above."
+          note="If this drops to zero without anybody turning it off, something upstream stopped asking. A day with nothing in it is drawn in the inert token rather than omitted — the gap is the signal. Counts events, not people; the distinct-user figures are the funnel above."
         />
       </Field>
     </>
