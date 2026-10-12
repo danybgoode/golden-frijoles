@@ -4,7 +4,7 @@
 import { test, expect } from '@playwright/test'
 import { createClient } from '@supabase/supabase-js'
 import { createHash, randomBytes } from 'node:crypto'
-import { readFlagFunnel } from '../lib/flag-funnel-read'
+import { readFlagFunnel, readFunnel } from '../lib/flag-funnel-read'
 
 const sha256 = (value: string) => createHash('sha256').update(value).digest('hex')
 function db() {
@@ -91,6 +91,32 @@ test('a measured flag fills its funnel from its own evaluations, on a fresh proj
       satisfiedEvent: null,
     })
     expect(none.state).toBe('not_exposed')
+
+    // tars-one-model D1/D3: a registry feature through the same read — exposure is its target event, scoped to the
+    // feature; another feature's event of the same name is not this exposure.
+    await track('d', 'export_viewed', { featureId: 'export' })
+    await track('d', 'export_done', { featureId: 'export' })
+    await track('e', 'export_done', { featureId: 'export' }) // adopted, never saw it: beside
+    await track('f', 'export_viewed', { featureId: 'other' })
+    const measure = {
+      adoptedEvent: 'export_done',
+      retainedEvent: null,
+      retentionDays: 7,
+      satisfiedEvent: null,
+    }
+    const source = { kind: 'feature', featureKey: 'export', targetEvent: 'export_viewed' } as const
+    const feature = await readFunnel(client, project!.id as string, source, measure, 'all')
+    expect(feature.state).toBe('measured')
+    if (feature.state !== 'measured') return
+    expect(feature.funnel).toMatchObject({ exposed: 1, adopted: 1, retained: 0, adoptedWithoutExposure: 1 })
+    expect(feature.period).toBe('all')
+    const lately = await readFunnel(client, project!.id as string, source, measure, '30d')
+    expect(lately.state === 'measured' && lately.funnel.exposed).toBe(1)
+    const unnamed = await readFunnel(client, project!.id as string, source, {
+      ...measure,
+      adoptedEvent: null,
+    })
+    expect(unnamed.state === 'measured' && unnamed.funnel.adopted).toBeNull()
   } finally {
     await client.from('project_members').delete().eq('user_id', userId)
     await client.auth.admin.deleteUser(userId)
