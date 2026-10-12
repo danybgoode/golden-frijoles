@@ -1,7 +1,8 @@
 ---
 status: scaffolded   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Locking architecture # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+phase: Building             # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
+locked_at: "2026-10-12T20:41:52Z"
 slug: tars-one-model
 title: "TARS, one model: every funnel reads the same stages"
 area: 01-growth-engine
