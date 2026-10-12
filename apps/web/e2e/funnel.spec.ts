@@ -5,7 +5,12 @@ import { test, expect } from '@playwright/test'
 // events via /v1/track, then asserts both the JSON endpoint and the SSR page's HTML.
 const PROJECT_ONE_KEY = 'local-test-key-do-not-use-in-prod'
 
-async function track(request: import('@playwright/test').APIRequestContext, userId: string, event: string, featureId: string) {
+async function track(
+  request: import('@playwright/test').APIRequestContext,
+  userId: string,
+  event: string,
+  featureId: string
+) {
   const res = await request.post('/api/v1/track', {
     headers: { Authorization: `Bearer ${PROJECT_ONE_KEY}` },
     data: { userId, event, featureId },
@@ -40,7 +45,7 @@ test('funnel endpoint + page reflect a real event sequence for a registered feat
   })
   expect(sync.status()).toBe(200)
 
-  // alice: viewed -> completed -> shared -> fully retained. bob: viewed only -> targeted, not adopted.
+  // alice: viewed -> completed -> shared -> fully retained. bob: viewed only -> exposed, not adopted.
   await track(request, 'alice', 'spec_viewed', featureKey)
   await track(request, 'alice', 'spec_completed', featureKey)
   await track(request, 'alice', 'spec_shared', featureKey)
@@ -52,8 +57,20 @@ test('funnel endpoint + page reflect a real event sequence for a registered feat
   expect(funnelRes.status()).toBe(200)
   const funnelBody = await funnelRes.json()
   expect(funnelBody.ok).toBe(true)
-  expect(funnelBody.tars).toEqual({ targeted: 2, adopted: 1, retained: 1 })
-  expect(funnelBody.note).toContain('registry-declared')
+  // tars-one-model D5: the one model — the target event is exposure, adoption is counted among the exposed.
+  expect(funnelBody.tars).toBeUndefined()
+  expect(funnelBody.funnel.state).toBe('measured')
+  expect(funnelBody.funnel.funnel).toMatchObject({
+    exposed: 2,
+    adopted: 1,
+    retained: 1,
+    adoptedWithoutExposure: 0,
+  })
+  expect(funnelBody.note).toContain('whole life')
+  const lately = await request.get(`/api/v1/features/${featureKey}/funnel?period=30d`, {
+    headers: { Authorization: `Bearer ${PROJECT_ONE_KEY}` },
+  })
+  expect((await lately.json()).funnel.period).toBe('30d')
 
   // Story 1.2 (multi-tenant-activation): the dashboard page moved behind per-tenant auth. Unauthed
   // access to a NON-demo project's page now bounces to /login — the authed content render (the HTML
@@ -64,7 +81,9 @@ test('funnel endpoint + page reflect a real event sequence for a registered feat
   expect(pageRes.headers()['location']).toContain('/login')
 })
 
-test('the demo funnel page 404s for an unregistered feature (anonymous carve-out still resolves)', async ({ request }) => {
+test('the demo funnel page 404s for an unregistered feature (anonymous carve-out still resolves)', async ({
+  request,
+}) => {
   // The demo project renders anonymously, so a missing feature reaches notFound() (404) rather than
   // the /login bounce a non-demo slug would get — proving both the carve-out and the 404 path.
   const res = await request.get(`/app/funnel/golden-frijoles/spec-unregistered-page-${Date.now()}`, {
