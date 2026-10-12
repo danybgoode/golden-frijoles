@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import type { Funnel } from './flag-funnel.ts'
 import { flagFunnelView, funnelModelNote, FUNNEL_MODEL_NOTE_UNTIL, periodLinks } from './flag-funnel-view.ts'
 
-const funnel = {
+const funnel: Funnel = {
   base: 10,
   targeted: 10,
   exposed: 4,
