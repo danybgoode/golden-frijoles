@@ -18,6 +18,11 @@ export type FunnelView =
   | { kind: 'measured'; rows: FunnelRow[]; beside: string; note: string | null }
 
 const pct = (rate: number | null) => (rate === null ? '—' : `${Math.round(rate * 100)}%`)
+/** A stage's count, or "not measured" (tars-one-model D1: a feature naming no adoption event), never a zero. */
+const stageRow = (stage: string, people: number | null, rate: number | null): FunnelRow =>
+  people === null
+    ? { stage, people: 'not measured', share: '' }
+    : { stage, people: String(people), share: pct(rate) }
 
 export function flagFunnelView(read: FlagFunnelRead | null): FunnelView {
   if (read === null)
@@ -32,11 +37,9 @@ export function flagFunnelView(read: FlagFunnelRead | null): FunnelView {
     { stage: 'Active users', people: String(f.base), share: '' },
     { stage: 'Targeted (everyone)', people: String(f.targeted), share: pct(f.rates.targeted) },
     { stage: 'Got the flag on', people: String(f.exposed), share: pct(f.rates.exposed) },
-    { stage: 'Adopted', people: String(f.adopted), share: pct(f.rates.adopted) },
-    { stage: 'Retained', people: String(f.retained), share: pct(f.rates.retained) },
-    f.satisfied === null
-      ? { stage: 'Satisfied', people: 'not measured', share: '' }
-      : { stage: 'Satisfied', people: String(f.satisfied), share: pct(f.rates.satisfied) },
+    stageRow('Adopted', f.adopted, f.rates.adopted),
+    stageRow('Retained', f.retained, f.rates.retained),
+    stageRow('Satisfied', f.satisfied, f.rates.satisfied),
   ]
   const beside =
     f.adoptedWithoutExposure === 0

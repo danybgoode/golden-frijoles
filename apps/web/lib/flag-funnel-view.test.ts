@@ -78,3 +78,28 @@ test('verifier #341: a capped read says which numbers it skews', () => {
   if (view.kind !== 'measured') return
   assert.match(view.note ?? '', /got-the-flag-on and adopted read low.*the first two shares may read high/)
 })
+
+test('tars-one-model D1: a stage with no event named reads "not measured", never 0 or "null"', () => {
+  const unmeasured = {
+    ...funnel,
+    adopted: null,
+    retained: null,
+    satisfied: null,
+    rates: { ...funnel.rates, adopted: null, retained: null, satisfied: null },
+  }
+  const view = flagFunnelView({
+    state: 'measured',
+    flagKey: 'k',
+    funnel: unmeasured,
+    from: '2026-10-01T00:00:00Z',
+    to: '2026-10-10T00:00:00Z',
+    truncated: { exposures: false, events: false, base: false },
+  })
+  assert.equal(view.kind, 'measured')
+  if (view.kind !== 'measured') return
+  for (const stage of ['Adopted', 'Retained', 'Satisfied'])
+    assert.deepEqual(
+      view.rows.find((r) => r.stage === stage),
+      { stage, people: 'not measured', share: '' }
+    )
+})
