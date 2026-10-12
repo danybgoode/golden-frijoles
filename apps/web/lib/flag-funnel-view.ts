@@ -40,6 +40,14 @@ export function periodLinks(
   }))
 }
 
+/** Tars-one-model D8: the one-time note that feature funnels changed how they count, shown until this date. */
+export const FUNNEL_MODEL_NOTE_UNTIL = '2026-11-12'
+export const FUNNEL_MODEL_NOTE =
+  'Funnels now count adoption among the people who got the feature, across its whole life. Numbers before 12 Oct 2026 counted it differently.'
+export function funnelModelNote(now: Date): string | null {
+  return now.getTime() < new Date(`${FUNNEL_MODEL_NOTE_UNTIL}T00:00:00Z`).getTime() ? FUNNEL_MODEL_NOTE : null
+}
+
 export function flagFunnelView(read: FlagFunnelRead | null): FunnelView {
   if (read === null)
     return { kind: 'unreadable', text: 'The funnel could not be read right now. This is not a zero.' }

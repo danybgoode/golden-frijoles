@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { flagFunnelView, periodLinks } from './flag-funnel-view.ts'
+import { flagFunnelView, funnelModelNote, FUNNEL_MODEL_NOTE_UNTIL, periodLinks } from './flag-funnel-view.ts'
 
 const funnel = {
   base: 10,
@@ -161,4 +161,14 @@ test('tars-one-model S2.1: the three period choices, with the current one marked
     { period: '90d', label: 'Last 90 days', current: true },
     { period: '30d', label: 'Last 30 days', current: false },
   ])
+})
+
+test('tars-one-model S2.3 D8: the model note shows until FUNNEL_MODEL_NOTE_UNTIL, then nothing', () => {
+  assert.equal(FUNNEL_MODEL_NOTE_UNTIL, '2026-11-12')
+  assert.match(
+    funnelModelNote(new Date('2026-11-11T23:59:59Z')) ?? '',
+    /^Funnels now count adoption among the people who got the feature, across its whole life\. Numbers before 12 Oct 2026 counted it differently\.$/
+  )
+  assert.equal(funnelModelNote(new Date('2026-11-12T00:00:00Z')), null)
+  assert.equal(funnelModelNote(new Date('2027-01-01T00:00:00Z')), null)
 })

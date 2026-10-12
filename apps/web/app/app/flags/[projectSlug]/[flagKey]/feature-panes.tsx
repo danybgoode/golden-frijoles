@@ -23,7 +23,7 @@ import { Empty as DsEmpty, Field } from '@/design-system/primitives'
 import { DayColumns, SmallMultiple } from '@/design-system/charts'
 import { FlagFunnel } from '@/components/product/FlagFunnel'
 import { PeriodChoice } from '@/components/product/PeriodChoice'
-import { flagFunnelView } from '@/lib/flag-funnel-view'
+import { flagFunnelView, funnelModelNote } from '@/lib/flag-funnel-view'
 import type { FunnelPeriod } from '@/lib/flag-funnel'
 import { ImpactSeriesTable } from '@/app/app/impact/[projectSlug]/[featureKey]/series-table'
 import { formatUtc } from '@/lib/format-utc'
@@ -105,6 +105,8 @@ export function FunnelPane({
     return <Empty head={head} body={body} />
   }
   const { feature, funnel, servedDaily } = result
+  // tars-one-model D8: said once, here, where a FEATURE funnel shows, until the date passes.
+  const modelNote = funnelModelNote(new Date())
 
   return (
     <>
@@ -116,6 +118,7 @@ export function FunnelPane({
           This feature is switched off; the funnel shows what happened while it was on.
         </p>
       )}
+      {modelNote ? <p className="ds-hint">{modelNote}</p> : null}
       <FlagFunnel view={flagFunnelView(funnel)} />
       <p className="ds-hint">Last synced {formatUtc(feature.syncedAt)}.</p>
       <Field label="Times served, last 14 days">
