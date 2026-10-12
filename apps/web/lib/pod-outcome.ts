@@ -19,12 +19,29 @@
 // No `server-only` import here on purpose: the shaping below is pure and unit-tested, and the
 // Supabase-touching callers live in the query libs it consumes.
 
+import type { FunnelRead } from './flag-funnel-read'
+
+/** Whole-life stages of one feature: adopted and retained are null when the feature names no adoption event. */
+export type OutcomeStages = { exposed: number; adopted: number | null; retained: number | null }
+
+/**
+ * A funnel read as the row's stages. A `not_exposed` read is a real zero for exposure, and for the stages past it
+ * when the feature measures them; a feature naming no adoption event measures nothing past exposure (null).
+ */
+export function stagesOfRead(read: FunnelRead, adoptedEvent: string | null): OutcomeStages {
+  if (read.state === 'not_exposed') {
+    return { exposed: 0, adopted: adoptedEvent ? 0 : null, retained: adoptedEvent ? 0 : null }
+  }
+  const { exposed, adopted, retained } = read.funnel
+  return { exposed, adopted, retained }
+}
+
 /** What the outcome layer can say about one registered feature. */
 export type OutcomeRow = {
   featureKey: string
-  /** Registry-declared funnel counts. Null when the funnel could not be read at all. */
-  tars: { targeted: number; adopted: number; retained: number } | null
-  /** Adopted ÷ targeted, as a fraction. Null when targeted is zero — never 0, which would read as failure. */
+  /** The one model's whole-life stages. Null when the funnel could not be read at all; a null stage is "not measured". */
+  funnel: OutcomeStages | null
+  /** Adopted ÷ got it (exposed), as a fraction. Null when either is missing or exposed is zero — never 0, which would read as failure. */
   adoptionRate: number | null
   /** Retained ÷ adopted. Same null-not-zero rule. */
   retentionRate: number | null
@@ -100,19 +117,16 @@ export function rate(numerator: number, denominator: number): number | null {
 /**
  * Shape one feature's funnel into an outcome row.
  *
- * The TARS caveat is attached unconditionally and deliberately. Targeted/Adopted/Retained are
+ * The TARS caveat is attached unconditionally and deliberately. Got it/Adopted/Retained are
  * REGISTRY-DECLARED — they count events the tenant chose to map to those stages — not
  * gateway-observed truth. Every other surface in this product says so, and a sales artifact is the
  * last place that caveat should quietly disappear.
  */
-export function buildOutcomeRow(
-  featureKey: string,
-  tars: { targeted: number; adopted: number; retained: number } | null
-): OutcomeRow {
-  if (!tars) {
+export function buildOutcomeRow(featureKey: string, funnel: OutcomeStages | null): OutcomeRow {
+  if (!funnel) {
     return {
       featureKey,
-      tars: null,
+      funnel: null,
       adoptionRate: null,
       retentionRate: null,
       provenance: 'lib/tars-query.ts',
@@ -121,12 +135,13 @@ export function buildOutcomeRow(
   }
   return {
     featureKey,
-    tars,
-    adoptionRate: rate(tars.adopted, tars.targeted),
-    retentionRate: rate(tars.retained, tars.adopted),
+    funnel,
+    adoptionRate: funnel.adopted === null ? null : rate(funnel.adopted, funnel.exposed),
+    retentionRate:
+      funnel.adopted === null || funnel.retained === null ? null : rate(funnel.retained, funnel.adopted),
     provenance: 'lib/tars-query.ts (registry-declared funnel over ingested events)',
     caveat:
-      'Targeted, adopted and retained are REGISTRY-DECLARED: they count the events this tenant mapped to ' +
+      'Got it, adopted and retained are REGISTRY-DECLARED: they count the events this tenant mapped to ' +
       'each stage, not gateway-observed behaviour.',
   }
 }
@@ -139,7 +154,7 @@ export function buildOutcomeRow(
  */
 export function buildOutcomeSection(input: {
   tenant: string
-  features: Array<{ key: string; tars: { targeted: number; adopted: number; retained: number } | null }>
+  features: Array<{ key: string; funnel: OutcomeStages | null }>
   northStar?: {
     metric: string | null
     inputCount: number | null
@@ -149,7 +164,7 @@ export function buildOutcomeSection(input: {
   /** Set by the caller when a read FAILED. Defaults false — an absent flag means "we looked". */
   unavailable?: boolean
 }): OutcomeSection {
-  const rows = input.features.map((f) => buildOutcomeRow(f.key, f.tars))
+  const rows = input.features.map((f) => buildOutcomeRow(f.key, f.funnel))
 
   let northStar: OutcomeSection['northStar'] = null
   if (input.northStar) {

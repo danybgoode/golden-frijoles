@@ -17,7 +17,7 @@
 /** One figure on a row (D2). `as_of` is present exactly when the figure came from a pushed artifact (D4). */
 export type Cell<T> = { value: T; as_of?: string } | { value: null; reason: string } | { error: true }
 
-export type FunnelStage = 'targeted' | 'adopted' | 'retained'
+export type FunnelStage = 'reached' | 'adopted' | 'retained'
 
 export type NorthStarValue = { metric: string; inputs: number | null }
 export type SpendValue = { usd: number; deltaPct: number | null; epics: number }
@@ -42,7 +42,7 @@ export type PortfolioRow = {
 /** `getProjectOutcome` (lib/pod-report-query.ts), the subset this reads. */
 export type OutcomeFacts = {
   unavailable: boolean
-  rows: ReadonlyArray<{ tars: { targeted: number; adopted: number; retained: number } | null }>
+  rows: ReadonlyArray<{ funnel: { exposed: number; adopted: number | null; retained: number | null } | null }>
   northStar: { metric: string | null; unavailable?: boolean; inputCount: number | null } | null
 }
 /** `listExperimentRegistries` (lib/experiments.ts), the subset this reads. */
@@ -72,7 +72,7 @@ export const REASONS = {
   notPlaced: 'Not placed',
   noNorthStar: 'no North Star set',
   noFeatures: 'no features registered',
-  nobodyTargeted: 'nobody targeted yet',
+  nobodyTargeted: 'nobody has got a feature yet',
   noExperiments: 'no experiments defined',
   noKillSwitches: 'no kill switches registered',
   noReport: 'no report pushed',
@@ -132,17 +132,17 @@ export function northStarCell(outcome: OutcomeFacts): Cell<NorthStarValue> {
 
 /**
  * C6: the furthest TARS stage ANY registered feature has reached. If ANY feature's funnel could not be read, the cell
- * could not be read: the unread feature may be the one that got further, and "nobody targeted yet" would be a claim
+ * could not be read: the unread feature may be the one that got further, and "nobody has got a feature yet" would be a claim
  * about a feature nobody looked at (fresh reviewer, PR #234).
  */
 export function funnelStageCell(outcome: OutcomeFacts): Cell<FunnelStage> {
   if (outcome.unavailable) return ERROR
   if (outcome.rows.length === 0) return absent(REASONS.noFeatures)
-  if (outcome.rows.some((row) => row.tars === null)) return ERROR
-  const read = outcome.rows.flatMap((row) => (row.tars ? [row.tars] : []))
-  if (read.some((t) => t.retained > 0)) return { value: 'retained' }
-  if (read.some((t) => t.adopted > 0)) return { value: 'adopted' }
-  if (read.some((t) => t.targeted > 0)) return { value: 'targeted' }
+  if (outcome.rows.some((row) => row.funnel === null)) return ERROR
+  const read = outcome.rows.flatMap((row) => (row.funnel ? [row.funnel] : []))
+  if (read.some((t) => (t.retained ?? 0) > 0)) return { value: 'retained' }
+  if (read.some((t) => (t.adopted ?? 0) > 0)) return { value: 'adopted' }
+  if (read.some((t) => t.exposed > 0)) return { value: 'reached' }
   return absent(REASONS.nobodyTargeted)
 }
 

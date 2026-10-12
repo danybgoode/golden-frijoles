@@ -156,7 +156,7 @@ export async function evaluateFrictionForProject(
  * ab}-query.ts` are "the canonical read paths; never re-query `events` ad hoc" — and the finding was
  * right about the consequence, not just the rule. `computeTars` is not a pair of COUNT DISTINCTs: it
  * applies fallback semantics when `adoptedEvent`/`retainedEvent` are absent, anchors the retention
- * window to each user's own adoption, and honours `feature.enabled` by zeroing the targeted set. A
+ * window to each user's own adoption, and honours `feature.enabled` by zeroing the exposed set. A
  * hand-rolled count agrees with it only for the simplest feature, and diverges silently for every
  * other — so friction would have fired on numbers no dashboard in the product could reproduce, which
  * is the fastest possible way to destroy trust in the queue.
@@ -185,12 +185,10 @@ async function loadProjectFunnels(projectId: string, projectSlug: string): Promi
     // counted as zeros, which would make every unconfigured feature look like a dead end — the
     // false-positive class the epic names as its own biggest risk to trust.
     if (!result.ok) continue
-    funnels.push({
-      featureKey: key,
-      targeted: result.tars.targeted,
-      adopted: result.tars.adopted,
-      retained: result.tars.retained,
-    })
+    // Nobody exposed yet is not a funnel with friction in it either.
+    if (result.funnel.state !== 'measured') continue
+    const { exposed, adopted, retained } = result.funnel.funnel
+    funnels.push({ featureKey: key, exposed, adopted, retained })
   }
 
   // Already ordered by key from the query above, so two evaluations over the same data emit findings

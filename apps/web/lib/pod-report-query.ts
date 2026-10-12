@@ -6,7 +6,7 @@ import { nextStepOf } from './adoption-steps'
 import { getFeatureFunnelByProjectId } from './tars-query'
 import { currentNorthStar } from './north-star-query'
 import { buildPodReportView, type PodReportView } from './pod-report-view'
-import { buildOutcomeSection, type OutcomeSection } from './pod-outcome'
+import { buildOutcomeSection, stagesOfRead, type OutcomeSection } from './pod-outcome'
 import { applyLens, applyPayingOffLens, type PodReportLens } from './pod-report-lens'
 import { getProjectNorthStarByProjectId } from './north-star-query'
 import { epicResult } from './roadmap-result'
@@ -258,15 +258,8 @@ export async function getProjectOutcome(projectId: string, projectSlug: string):
   const rows = await Promise.all(
     keys.map(async (key) => {
       const funnel = await getFeatureFunnelByProjectId(projectId, projectSlug, key)
-      if (!funnel.ok) return { key, tars: null }
-      return {
-        key,
-        tars: {
-          targeted: funnel.tars.targeted,
-          adopted: funnel.tars.adopted,
-          retained: funnel.tars.retained,
-        },
-      }
+      if (!funnel.ok) return { key, funnel: null }
+      return { key, funnel: stagesOfRead(funnel.funnel, funnel.feature.adoptedEvent) }
     })
   )
 

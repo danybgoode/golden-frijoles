@@ -1,20 +1,30 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { rate, buildOutcomeRow, buildOutcomeSection, OUTCOME_NOT_INSTRUMENTED } from './pod-outcome.ts'
+import {
+  rate,
+  stagesOfRead,
+  buildOutcomeRow,
+  buildOutcomeSection,
+  OUTCOME_NOT_INSTRUMENTED,
+} from './pod-outcome.ts'
 
 // The outcome layer answers "did it matter?", which is the half a buyer weighs most. Its failure
 // mode is the mirror of the delivery half's: there, a fabricated number flattered us; here, a
 // fabricated ZERO would damn a feature that simply has not been measured yet. Both are lies, and
 // the tests below pin the difference between "no data" and "a real zero" in every direction.
 
-const tars = (targeted: number, adopted: number, retained: number) => ({ targeted, adopted, retained })
+const stages = (exposed: number, adopted: number | null, retained: number | null) => ({
+  exposed,
+  adopted,
+  retained,
+})
 
 test('rate returns NULL on a zero denominator — never 0, which would read as total failure', () => {
-  // The distinction that matters: 0 adopted out of 0 targeted means "nobody was targeted yet",
-  // not "everyone we targeted refused".
+  // The distinction that matters: 0 adopted out of 0 got it means "nobody was got it yet",
+  // not "everyone we got it refused".
   assert.equal(rate(0, 0), null)
   assert.equal(rate(5, 0), null)
-  assert.equal(rate(0, 10), 0, 'a REAL zero — ten targeted, none adopted — must still be reported')
+  assert.equal(rate(0, 10), 0, 'a REAL zero — ten got it, none adopted — must still be reported')
   assert.equal(rate(7, 17), 0.412)
 })
 
@@ -29,7 +39,7 @@ test('rate refuses non-finite input rather than emitting NaN', () => {
 test('an outcome row carries the registry-declared caveat unconditionally', () => {
   // Every other surface in this product says TARS is registry-declared, not gateway-observed. A
   // sales artifact is the last place that caveat should quietly disappear.
-  const row = buildOutcomeRow('setup_guide', tars(17, 7, 2))
+  const row = buildOutcomeRow('setup_guide', stages(17, 7, 2))
   assert.match(row.caveat!, /REGISTRY-DECLARED/i)
   assert.match(row.provenance, /tars-query/)
   assert.equal(row.adoptionRate, 0.412)
@@ -38,17 +48,17 @@ test('an outcome row carries the registry-declared caveat unconditionally', () =
 
 test('an UNREADABLE funnel is reported as unavailable, never as a zeroed funnel', () => {
   const row = buildOutcomeRow('setup_guide', null)
-  assert.equal(row.tars, null)
+  assert.equal(row.funnel, null)
   assert.equal(row.adoptionRate, null)
   assert.match(row.caveat!, /not as zero/i)
 })
 
 test('a genuinely empty funnel keeps its real zeros and does not become null', () => {
-  // The other direction: a feature that was targeted and adopted by nobody is a real, reportable
+  // The other direction: a feature that was got it and adopted by nobody is a real, reportable
   // finding. Nulling it out would hide a true negative.
-  const row = buildOutcomeRow('unused_feature', tars(40, 0, 0))
-  assert.deepEqual(row.tars, tars(40, 0, 0))
-  assert.equal(row.adoptionRate, 0, '0 adopted of 40 targeted is a real zero')
+  const row = buildOutcomeRow('unused_feature', stages(40, 0, 0))
+  assert.deepEqual(row.funnel, stages(40, 0, 0))
+  assert.equal(row.adoptionRate, 0, '0 adopted of 40 got it is a real zero')
   assert.equal(row.retentionRate, null, 'but retention over zero adopters is not measurable')
 })
 
@@ -95,7 +105,7 @@ test('a tenant with no registered features yields an empty row list, not an inve
 test('the section is deterministic for the same input', () => {
   const input = {
     tenant: 'miyagisanchez',
-    features: [{ key: 'setup_guide', tars: tars(17, 7, 2) }],
+    features: [{ key: 'setup_guide', funnel: stages(17, 7, 2) }],
     northStar: { metric: 'm', inputCount: 2, latestValue: null },
   }
   assert.equal(JSON.stringify(buildOutcomeSection(input)), JSON.stringify(buildOutcomeSection(input)))
@@ -141,4 +151,21 @@ test('a null North-Star input count survives as null and is never coerced to zer
     northStar: { metric: 'gmv', inputCount: 0, latestValue: null },
   })
   assert.equal(zero.northStar!.inputCount, 0)
+})
+
+test('a feature naming no adoption event has null adoption and retention, not zeros', () => {
+  const row = buildOutcomeRow('plain', stages(12, null, null))
+  assert.deepEqual(row.funnel, stages(12, null, null))
+  assert.equal(row.adoptionRate, null)
+  assert.equal(row.retentionRate, null)
+})
+
+test('a not_exposed read is exposed 0, with adopted/retained 0 only when an adoption event is named', () => {
+  const read = {
+    state: 'not_exposed',
+    source: { kind: 'feature', featureKey: 'f', targetEvent: null },
+    period: 'all',
+  } as const
+  assert.deepEqual(stagesOfRead(read, 'adopted_evt'), stages(0, 0, 0))
+  assert.deepEqual(stagesOfRead(read, null), stages(0, null, null))
 })

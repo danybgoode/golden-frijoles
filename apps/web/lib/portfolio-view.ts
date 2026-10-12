@@ -25,7 +25,7 @@ export type RowLinks = {
 
 export const COULDNT_LOAD = 'couldn’t load'
 
-const FUNNEL_LABELS = { targeted: 'Targeted', adopted: 'Adopted', retained: 'Retained' } as const
+const FUNNEL_LABELS = { reached: 'Got it', adopted: 'Adopted', retained: 'Retained' } as const
 
 /** `2026-09-30` — the day a pushed figure was pushed, in UTC (D4). */
 export function asOfLabel(iso: string): string {

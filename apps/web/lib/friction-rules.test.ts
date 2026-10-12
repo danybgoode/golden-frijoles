@@ -33,7 +33,7 @@ function rule(overrides: Partial<FrictionRule>): FrictionRule {
 function funnel(overrides: Partial<FunnelCounts>): FunnelCounts {
   return {
     featureKey: 'test_feature',
-    targeted: 0,
+    exposed: 0,
     adopted: 0,
     retained: 0,
     ...overrides,
@@ -42,9 +42,9 @@ function funnel(overrides: Partial<FunnelCounts>): FunnelCounts {
 
 // ── adoption_drop_off ──────────────────────────────────────────────────────────────────────────
 
-test('adoption_drop_off fires when adopted/targeted is below threshold and sample meets minSample', () => {
+test('adoption_drop_off fires when adopted/exposed is below threshold and sample meets minSample', () => {
   const r = rule({ kind: 'adoption_drop_off', threshold: 0.2, minSample: 25 })
-  const f = funnel({ targeted: 100, adopted: 10 }) // 10% < 20%
+  const f = funnel({ exposed: 100, adopted: 10 }) // 10% < 20%
   const finding = evaluateRule(r, f)
   assert.ok(finding)
   assert.equal(finding!.kind, 'adoption_drop_off')
@@ -52,16 +52,16 @@ test('adoption_drop_off fires when adopted/targeted is below threshold and sampl
   assert.equal(finding!.sample, 100)
 })
 
-test('adoption_drop_off does NOT fire when targeted is below minSample, even at 0% adoption', () => {
+test('adoption_drop_off does NOT fire when exposed is below minSample, even at 0% adoption', () => {
   const r = rule({ kind: 'adoption_drop_off', threshold: 0.2, minSample: 25 })
-  // One targeted user who didn't adopt: 0/1 = 0%, well below threshold, but sample is tiny.
-  const f = funnel({ targeted: 1, adopted: 0 })
+  // One exposed user who didn't adopt: 0/1 = 0%, well below threshold, but sample is tiny.
+  const f = funnel({ exposed: 1, adopted: 0 })
   assert.equal(evaluateRule(r, f), null)
 })
 
 test('adoption_drop_off: observed exactly EQUAL to threshold does not fire (strict below)', () => {
   const r = rule({ kind: 'adoption_drop_off', threshold: 0.2, minSample: 25 })
-  const f = funnel({ targeted: 100, adopted: 20 }) // exactly 20%
+  const f = funnel({ exposed: 100, adopted: 20 }) // exactly 20%
   assert.equal(evaluateRule(r, f), null)
 })
 
@@ -130,7 +130,7 @@ test('a disabled rule never fires, regardless of how bad the funnel looks', () =
 // ── rules as data ──────────────────────────────────────────────────────────────────────────────
 
 test('rules as data: the same funnel evaluated against two rule sets differing ONLY in threshold produces different output', () => {
-  const funnels = [funnel({ featureKey: 'reports', targeted: 100, adopted: 18 })] // 18%
+  const funnels = [funnel({ featureKey: 'reports', exposed: 100, adopted: 18 })] // 18%
   const looseRules: FrictionRule[] = [rule({ kind: 'adoption_drop_off', threshold: 0.1, minSample: 25 })]
   const strictRules: FrictionRule[] = [rule({ kind: 'adoption_drop_off', threshold: 0.3, minSample: 25 })]
 
@@ -155,8 +155,8 @@ test('evaluateFriction output order is stable: funnel order, then rule order', (
   // feature_two (retained: 1) fires rule_a + rule_b. That still exercises all 3 rules against
   // both funnels and lets us pin the exact (funnel-order, then rule-order) output sequence.
   const funnels: FunnelCounts[] = [
-    funnel({ featureKey: 'feature_one', targeted: 10, adopted: 5, retained: 0 }),
-    funnel({ featureKey: 'feature_two', targeted: 10, adopted: 5, retained: 1 }),
+    funnel({ featureKey: 'feature_one', exposed: 10, adopted: 5, retained: 0 }),
+    funnel({ featureKey: 'feature_two', exposed: 10, adopted: 5, retained: 1 }),
   ]
   const findings = evaluateFriction(rules, funnels)
   assert.deepEqual(
@@ -185,4 +185,16 @@ test('DEFAULT_FRICTION_RULES: every threshold is in [0,1] and every minSample is
     assert.ok(r.threshold >= 0 && r.threshold <= 1, `${r.key} threshold ${r.threshold} out of [0,1]`)
     assert.ok(r.minSample >= 1, `${r.key} minSample ${r.minSample} is below 1`)
   }
+})
+
+test('a feature with no adoption event (adopted null) raises no alert from any rule, never read as 0%', () => {
+  const f = funnel({ exposed: 500, adopted: null, retained: null })
+  for (const kind of ['adoption_drop_off', 'dead_end', 'abandoned_adoption'] as const) {
+    assert.equal(evaluateRule(rule({ kind, minSample: 1 }), f), null, kind)
+  }
+})
+
+test('adoption_drop_off describes the people who got it', () => {
+  const finding = evaluateRule(rule({}), funnel({ exposed: 100, adopted: 10 }))
+  assert.match(finding!.description, /of the people who got it adopted/)
 })

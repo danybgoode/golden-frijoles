@@ -21,7 +21,7 @@ export type FrictionRule = {
   /** A ratio in [0,1]. Below it (strictly) is friction. Unused by `dead_end`, which tests for zero. */
   threshold: number
   /** The smallest denominator worth an opinion. THE most important field in this module: without
-   *  it, one targeted user who didn't adopt is a 0% adoption rate and a screaming red signal. */
+   *  it, one exposed user who didn't adopt is a 0% adoption rate and a screaming red signal. */
   minSample: number
   enabled: boolean
 }
@@ -34,7 +34,7 @@ export const DEFAULT_FRICTION_RULES: readonly FrictionRule[] = Object.freeze([
   Object.freeze({
     key: 'adoption_drop_off',
     kind: 'adoption_drop_off' as const,
-    // Fewer than 1 in 5 targeted users ever adopting is a funnel problem, not a preference.
+    // Fewer than 1 in 5 of the people who got it ever adopting is a funnel problem, not a preference.
     threshold: 0.2,
     minSample: 25,
     enabled: true,
@@ -61,9 +61,11 @@ export const DEFAULT_FRICTION_RULES: readonly FrictionRule[] = Object.freeze([
  *  new is measured; friction is a reading of numbers the engine has had since v1. */
 export type FunnelCounts = {
   featureKey: string
-  targeted: number
-  adopted: number
-  retained: number
+  /** The people who got the feature. */
+  exposed: number
+  /** null: the feature names no adoption event, so nothing past exposure is measured and no rule has an opinion. */
+  adopted: number | null
+  retained: number | null
 }
 
 export type FrictionFinding = {
@@ -96,8 +98,9 @@ export function evaluateRule(rule: FrictionRule, funnel: FunnelCounts): Friction
   if (!rule.enabled) return null
 
   if (rule.kind === 'adoption_drop_off') {
-    if (funnel.targeted < rule.minSample) return null
-    const observed = ratio(funnel.adopted, funnel.targeted)
+    if (funnel.adopted === null) return null
+    if (funnel.exposed < rule.minSample) return null
+    const observed = ratio(funnel.adopted, funnel.exposed)
     if (observed >= rule.threshold) return null
     return {
       ruleKey: rule.key,
@@ -105,8 +108,8 @@ export function evaluateRule(rule: FrictionRule, funnel: FunnelCounts): Friction
       featureKey: funnel.featureKey,
       observed,
       threshold: rule.threshold,
-      sample: funnel.targeted,
-      description: `Only ${pct(observed)} of targeted users adopted ${funnel.featureKey}`,
+      sample: funnel.exposed,
+      description: `Only ${pct(observed)} of the people who got it adopted ${funnel.featureKey}`,
     }
   }
 
@@ -114,6 +117,7 @@ export function evaluateRule(rule: FrictionRule, funnel: FunnelCounts): Friction
     // Fires only on EXACTLY zero retained out of a meaningful number of adopters. "Some retention,
     // but low" is `abandoned_adoption`'s job; keeping the two distinct is what stops one feature
     // producing two signals that say the same thing.
+    if (funnel.adopted === null || funnel.retained === null) return null
     if (funnel.adopted < rule.minSample) return null
     if (funnel.retained > 0) return null
     return {
@@ -129,6 +133,7 @@ export function evaluateRule(rule: FrictionRule, funnel: FunnelCounts): Friction
 
   // abandoned_adoption — adopted, but retention below the floor. Guarded against overlapping with
   // dead_end: zero retained is dead_end's finding, not this one.
+  if (funnel.adopted === null || funnel.retained === null) return null
   if (funnel.adopted < rule.minSample) return null
   if (funnel.retained === 0) return null
   const observed = ratio(funnel.retained, funnel.adopted)

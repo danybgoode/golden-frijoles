@@ -22,7 +22,7 @@ import {
 
 const outcome = (over: Partial<OutcomeFacts> = {}): OutcomeFacts => ({
   unavailable: false,
-  rows: [{ tars: { targeted: 10, adopted: 4, retained: 0 } }],
+  rows: [{ funnel: { exposed: 10, adopted: 4, retained: 0 } }],
   northStar: { metric: 'payable_sellers', inputCount: 2 },
   ...over,
 })
@@ -97,10 +97,13 @@ test('1.2: each “not set” carries its own reason — never a 0', async () =>
   assert.deepEqual(loopStageCell(null), { value: null, reason: REASONS.notPlaced })
   assert.deepEqual(northStarCell(outcome({ northStar: null })), { value: null, reason: REASONS.noNorthStar })
   assert.deepEqual(funnelStageCell(outcome({ rows: [] })), { value: null, reason: REASONS.noFeatures })
-  assert.deepEqual(funnelStageCell(outcome({ rows: [{ tars: { targeted: 0, adopted: 0, retained: 0 } }] })), {
-    value: null,
-    reason: REASONS.nobodyTargeted,
-  })
+  assert.deepEqual(
+    funnelStageCell(outcome({ rows: [{ funnel: { exposed: 0, adopted: 0, retained: 0 } }] })),
+    {
+      value: null,
+      reason: REASONS.nobodyTargeted,
+    }
+  )
   assert.deepEqual(experimentsRunningCell([]), { value: null, reason: REASONS.noExperiments })
   assert.deepEqual(killSwitchesOffCell([{ polarity: 'enablement', state: 'off' }]), {
     value: null,
@@ -138,15 +141,19 @@ test('1.2: a failed read is “couldn’t load” — distinct from both a value
   assert.deepEqual(funnelStageCell(outcome({ unavailable: true })), { error: true })
   // The shared outcome read failed: getProjectOutcome then reports northStar: null, which must NOT read as "none set".
   assert.deepEqual(northStarCell(outcome({ unavailable: true, rows: [], northStar: null })), { error: true })
-  // Every feature's funnel failed: that is not "nobody targeted".
-  assert.deepEqual(funnelStageCell(outcome({ rows: [{ tars: null }, { tars: null }] })), { error: true })
-  // One failed, one read: the unread one may have got further, so the cell cannot answer — not even "nobody targeted".
+  // Every feature's funnel failed: that is not "nobody has got a feature yet".
+  assert.deepEqual(funnelStageCell(outcome({ rows: [{ funnel: null }, { funnel: null }] })), { error: true })
+  // One failed, one read: the unread one may have got further, so the cell cannot answer — not even "nobody has got a feature yet".
   assert.deepEqual(
-    funnelStageCell(outcome({ rows: [{ tars: null }, { tars: { targeted: 3, adopted: 2, retained: 1 } }] })),
+    funnelStageCell(
+      outcome({ rows: [{ funnel: null }, { funnel: { exposed: 3, adopted: 2, retained: 1 } }] })
+    ),
     { error: true }
   )
   assert.deepEqual(
-    funnelStageCell(outcome({ rows: [{ tars: null }, { tars: { targeted: 0, adopted: 0, retained: 0 } }] })),
+    funnelStageCell(
+      outcome({ rows: [{ funnel: null }, { funnel: { exposed: 0, adopted: 0, retained: 0 } }] })
+    ),
     { error: true }
   )
 })
@@ -228,4 +235,17 @@ test('1.4: no roadmap pushed, or no quoted epics, is “no quotes yet” — nev
 
 test('D7: the per-cell timeout is the locked 5000 ms', () => {
   assert.equal(CELL_TIMEOUT_MS, 5000)
+})
+
+test('tars-one-model S2.2: the funnel cell is the furthest whole-life stage, and a null stage is not a stage', () => {
+  const cell = (funnel: { exposed: number; adopted: number | null; retained: number | null }) =>
+    funnelStageCell(outcome({ rows: [{ funnel }] }))
+  assert.deepEqual(cell({ exposed: 5, adopted: null, retained: null }), { value: 'reached' })
+  assert.deepEqual(cell({ exposed: 5, adopted: 2, retained: null }), { value: 'adopted' })
+  assert.deepEqual(cell({ exposed: 5, adopted: 2, retained: 1 }), { value: 'retained' })
+  assert.deepEqual(cell({ exposed: 0, adopted: null, retained: null }), {
+    value: null,
+    reason: REASONS.nobodyTargeted,
+  })
+  assert.equal(REASONS.nobodyTargeted, 'nobody has got a feature yet')
 })
