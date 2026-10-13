@@ -3,7 +3,7 @@ epic: why-as-a-story
 sprint: 1
 title: "The Why"
 risk: low
-phase: In review
+phase: Shipped
 stories_total: 3
 stories:
   - id: S1.1
@@ -30,7 +30,7 @@ stories:
 ---
 # The Why reads as a story, in full, and the plan names its crew — Sprint 1: The Why
 
-**Status:** 🟡 built, in review (one PR for both sprints)
+**Status:** ✅ shipped 2026-10-10 (#343, merge `d70de64`; plugin + kit 1.6.0)
 
 ## Stories
 

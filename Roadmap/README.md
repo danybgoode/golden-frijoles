@@ -464,6 +464,11 @@ independently shippable slice of value.
   "Approve, don't fund" leaves the pitch `ready`. `build-order.mjs` fails any live bet with no funding record, after
   an honest 45-row `wave-backfill`. `priority:` is retired. A fixed-scope seed scaffolds from its slug alone, with its
   acceptance criteria as the stories (dogfood F33). **Shipped 2026-10-04** (#271, plugin + kit 0.28.0).
+- ✅ [The Why reads as a story, in full, and the plan names its crew](09-platform-infra/why-as-a-story/README.md) —
+  **shipped 2026-10-10** (#343; plugin + kit 1.6.0). Refine writes a feature's Why as a short story from the strategy;
+  `why-check` and scaffolding refuse one that will not show in full or reads as code; the build view shows the whole
+  Why. The Plan gate names the crew, the kickoff sends well-specified stories to a cheaper builder, and the retro stamps
+  who actually worked. **Owed:** the refine walkthrough.
 - ✅ [Setup instruments and connects: the events the North Star needs, in a pull request, and the first one seen](09-platform-infra/setup-instruments-connects/README.md) —
   **shipped 2026-10-10** (#338; CLI 1.1.0, plugin + kit 1.3.0). Setup adds the measuring code as a pull request, connects
   in one step (`frijoles init --ingest`, the North Star, the roadmap), and `frijoles status` and Today show the first
@@ -583,6 +588,8 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-10**: `why-as-a-story` **shipped**: ≈$9.72 against a $15–32 quote, two verifier rounds. The Why reads as a
+  story, in full, and four of its seven stories were built by Sonnet under the new dispatch rule.
 - **2026-10-10**: `setup-instruments-connects` **shipped**: ≈$39.86, over its $15–31 quote (five review rounds, four on
   one paragraph of error-capture instructions). Setup now ends with the measuring code in a pull request, the project
   connected, and the first event visible.

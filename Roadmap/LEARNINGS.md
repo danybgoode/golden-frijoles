@@ -337,6 +337,9 @@ one-liner + why + date shape.
 
 ## Review quality
 
+- **A guard for plain words must be tested on plain words.** why-as-a-story's first Why guard refused iPhone, eBay,
+  Next.js and "reader/writer/editor"; reading the regex looked fine, running a prose corpus did not. Test a text guard
+  against what it must let through, not only what it must catch. *(why-as-a-story, 2026-10-10.)*
 - **A lock decision is most at risk in the NEXT sprint's convenience code.** D19 said "the Hub never computes a
   stage" and S2's board obeyed it; S4's Roadmap tab, written for a different story, quietly derived stages from the old
   `status` field for pre-stage pushes, and linked them to cards the board could not open. Before building a view, grep
@@ -1373,6 +1376,10 @@ one-liner + why + date shape.
   1.0.10 incident this repo already paid for. *(2026-07-25.)*
 
 ## Working efficiently
+- **A delegated builder needs a source map and a re-derive.** Four Sonnet stories cost ≈$0.83 against ≈$8.90 for the
+  orchestrator; two of four came back needing a fix (an edited generated file; a list that drifted from the code).
+  Name each file's source in the brief, and re-run the checks yourself before taking the work.
+  *(why-as-a-story, 2026-10-10.)*
 - **Probe agent instructions against the real framework before review.** A snippet an agent will paste into a
   stranger's app is code: four review rounds went to one error-capture paragraph whose every flaw reproduced in
   seconds against the installed Node, Hono and Next. *(setup-instruments-connects, 2026-10-10.)*

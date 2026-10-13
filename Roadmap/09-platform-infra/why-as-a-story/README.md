@@ -1,6 +1,6 @@
 ---
-status: in-progress   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: In review             # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+status: shipped   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+phase: Shipped             # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
 locked_at: "2026-10-10T13:25:51Z"
 slug: why-as-a-story
@@ -35,6 +35,10 @@ satisfied_event: null
 build_order: 79      # integer position in the ONE global build sequence — the SSOT once the epic
                      # exists (the seed's value is only a fallback). Fill it in at the betting
                      # table; plain integers, no "#2a" suffixes. See 00-ideas/README.md → Ordering.
+actual_usd: 9.72
+actual_mtok: 31.7
+actual_models: "claude-opus-5-5 ≈$8.90 · claude-sonnet-5-5 ≈$0.83"
+actual_basis: "this machine · 2026-10-10 · 1 session · prices 2026-10-02"
 ---
 
 # Epic: The Why reads as a story, in full, and the plan names its crew
