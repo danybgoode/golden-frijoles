@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
   PROBE_MAX_DELAY_MS,
+  engineBaseConfig,
   isSyntheticSubject,
   probeEnvironment,
   runScenarioProbe,
@@ -153,4 +154,14 @@ test('the environment follows Vercel, and anything else is development', () => {
   assert.equal(probeEnvironment('production'), 'production')
   assert.equal(probeEnvironment('preview'), 'preview')
   assert.equal(probeEnvironment(undefined), 'development')
+})
+
+test('with no GOLDEN_FRIJOLES_URL the SDK config has NO baseUrl key, so the SDK uses its default engine', async () => {
+  // The SDK's rule: `'baseUrl' in config` with an empty value means "not configured" (S2.3's production failure).
+  const { resolveBaseUrl } = await import('../../../packages/sdk/src/defaults.ts')
+  for (const unset of [undefined, '', '   ']) {
+    assert.equal('baseUrl' in engineBaseConfig(unset), false)
+    assert.equal(resolveBaseUrl(engineBaseConfig(unset)), 'https://goldenfrijoles.com')
+  }
+  assert.deepEqual(engineBaseConfig(' http://127.0.0.1:3120 '), { baseUrl: 'http://127.0.0.1:3120' })
 })
