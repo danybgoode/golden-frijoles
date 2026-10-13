@@ -104,3 +104,42 @@ test('an owner launches and stops a disclosed synthetic run through the signed-i
   await expect(runRow).toContainText('stopped')
   await expect(runRow).toContainText('finish the owner browser exercise')
 })
+
+test('an owner registers an app as a target, sees its token once, and a failed verify says why', async ({
+  page,
+}) => {
+  test.skip(
+    process.env.SCENARIO_AUTHORING_ENABLED !== 'true',
+    'set SCENARIO_AUTHORING_ENABLED=true to smoke the owner authoring workspace'
+  )
+  const slug = readTenantRecord()?.slug
+  if (!slug) throw new Error('scenario authoring smoke requires the auth-setup project')
+  await page.goto(`/app/scenarios/${slug}`)
+  await page.getByRole('button', { name: '▸ Run a drill' }).click()
+  const workspace = page.locator('dialog[open] .ds-dialog-body')
+
+  // A unique key per run, so a re-run against the same tenant does not hit "already registered".
+  const key = `site.probe${Date.now().toString(36)}`
+  await workspace.getByLabel('Target key').fill(key)
+  await workspace.getByLabel('Origin').fill('https://app.example.invalid')
+  await workspace.getByLabel('Registration reason').fill('smoke: register a target from the page')
+  await workspace.getByRole('button', { name: 'Register target' }).click()
+
+  const tokenBox = workspace.getByRole('region', { name: 'Target token' })
+  await expect(tokenBox).toContainText('Copy it now — it is not shown again')
+  await expect(tokenBox).toContainText(/GOLDEN_FRIJOLES_TARGET_TOKEN=gf_target_/)
+  await expect(tokenBox).toContainText('createScenarioOwnershipHandler')
+  await expect(tokenBox).toContainText(`frijoles scenarios targets verify ${key}`)
+
+  const row = workspace.getByRole('row').filter({ hasText: key })
+  await expect(row).toContainText('awaiting verification')
+  await row.getByRole('button', { name: 'Verify' }).click()
+  await expect(workspace.locator('p.notice[role=status]')).toContainText(/reach|origin/i)
+  await expect(row).toContainText('awaiting verification')
+
+  // Revoke, so the tenant ends clean.
+  await row.getByRole('button', { name: 'Revoke' }).click()
+  await page.getByLabel('Operation reason').fill('smoke cleanup of a throwaway target')
+  await page.locator('.confirm-dialog').getByRole('button', { name: 'Revoke', exact: true }).click()
+  await expect(row).toContainText('revoked')
+})
