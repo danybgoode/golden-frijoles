@@ -121,6 +121,8 @@ test.describe('POST /api/v1/public/mcp/c/:token', () => {
       // would have stopped gating, and this exact-match comparison is what would say so.
       'get_flag',
       'list_flags',
+      // scenarios-light-up S2.1 — the scenario READ, unconditional; no scenario write tool exists on the connector (D6).
+      'list_scenarios',
     ].sort()
     expect(names).toEqual(expected)
   })
@@ -159,6 +161,21 @@ test.describe('POST /api/v1/public/mcp/c/:token', () => {
     expect(payload.project.slug).toBe(DEMO_SLUG)
     expect(payload.funnel.state).toBe('measured')
     expect(payload.funnel.funnel.exposed).toBeGreaterThan(0)
+  })
+
+  test('list_scenarios answers with targets, definitions and runs — and no ids beyond the run id', async ({ request }) => {
+    const token = await demoToken()
+    const res = await rpc(request, token, 'tools/call', { name: 'list_scenarios', arguments: {} })
+    expect(res.status()).toBe(200)
+    const body = await res.json()
+    expect(body.result.isError).toBeFalsy()
+    const payload = JSON.parse(body.result.content[0].text)
+    expect(Array.isArray(payload.targets)).toBe(true)
+    expect(Array.isArray(payload.definitions)).toBe(true)
+    expect(Array.isArray(payload.runs)).toBe(true)
+    expect(payload.note).toMatch(/frijoles scenarios/)
+    expect(payload).not.toHaveProperty('policies')
+    expect(payload).not.toHaveProperty('trips')
   })
 
   test("a token minted for a disposable project cannot read another project's data", async ({ request }) => {

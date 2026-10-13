@@ -56,6 +56,8 @@ test('the /install page renders a live connector URL that actually round-trips',
       // would have stopped gating, and this exact-match comparison is what would say so.
       'get_flag',
       'list_flags',
+      // scenarios-light-up S2.1 — the scenario READ, unconditional; no scenario write tool exists on the connector (D6).
+      'list_scenarios',
     ].sort()
   )
 })

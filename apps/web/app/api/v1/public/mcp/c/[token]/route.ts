@@ -14,6 +14,7 @@ import {
   isTaskMcpToolEnabled,
 } from '@/lib/flags'
 import { registerFlagTools } from '@/lib/mcp-flag-tools'
+import { registerScenarioTools } from '@/lib/mcp-scenario-tools'
 import { resolveCliToken } from '@/lib/cli-tokens'
 import { getMembershipByProjectId } from '@/lib/membership'
 import { isOwner } from '@/lib/roles'
@@ -122,6 +123,8 @@ async function buildMcpServer(
   // anonymous visitor a person's id.
   if (projectSlug === DEMO_PROJECT_SLUG && !writeKeyId && !flagWriteActor) scrubRepliesForPublicReader(server)
   registerFlagTools(server, projectId, projectSlug, flagWriteActor)
+  // scenarios-light-up S2.1 — the scenario READ (D6: the connector never writes scenarios).
+  registerScenarioTools(server, projectId)
 
   server.registerTool(
     'get_tars_funnel',
