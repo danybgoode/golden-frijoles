@@ -1,7 +1,8 @@
 ---
 status: scaffolded   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Shaping       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+phase: Building       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
+locked_at: "2026-10-13T21:22:39Z"
 slug: one-flag-switch
 title: "One flag switch: on or off, the same in the CLI, the SDK, MCP and the page"
 area: 01-growth-engine

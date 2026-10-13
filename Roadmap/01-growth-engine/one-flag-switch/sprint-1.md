@@ -3,7 +3,7 @@ epic: one-flag-switch
 sprint: 1
 title: "One switch"
 risk: high
-phase: Shaping
+phase: Building
 stories_total: 3
 stories:
   - id: S1.1
