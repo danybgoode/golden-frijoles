@@ -3,7 +3,7 @@ frijoles scenarios launch — start a run of the newest version of a scenario
 Usage
   frijoles scenarios launch <scenario-key> [--reason <text>]
 
-Owner only. Starts a run inside the scenario's bounded window. A launch answers "not found" while its
+Owner only. Starts a run inside the scenario's bounded window. A launch answers "disabled" while its
   kind's switch is off for the deployment.
 
   Next: `frijoles scenarios runs --watch`, and `frijoles scenarios stop <run-id>` to end one early.

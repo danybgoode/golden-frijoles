@@ -3,8 +3,8 @@ frijoles scenarios targets revoke — stop an app origin being a drill target
 Usage
   frijoles scenarios targets revoke <key> [--reason <text>]
 
-Owner only. A revoked target cannot be launched against. Register it again with
-  `frijoles scenarios targets add` to start over.
+Owner only. A revoked target cannot be launched against, and its key stays taken: to
+  use the app again, `frijoles scenarios targets add` it under a NEW key.
 
 Flags
   --project <slug>  the project (default: the remembered one)

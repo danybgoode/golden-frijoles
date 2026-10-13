@@ -19,7 +19,6 @@ import { EXIT, exitForServerCode, type ExitCode } from '../exit-codes'
 import { table } from '../output'
 import { missingProject, resolveProject } from './flags-read'
 
-const KINDS = ['resilience', 'security'] as const
 const COHORTS = ['synthetic', 'internal'] as const
 const ENVIRONMENTS = ['production', 'preview', 'development'] as const
 
@@ -273,8 +272,8 @@ export const scenariosTargetsRevokeCommand: Command = {
   summary: 'stop an app origin being a drill target',
   usage: 'frijoles scenarios targets revoke <key> [--reason <text>]',
   needsAuth: true,
-  detail: `Owner only. A revoked target cannot be launched against. Register it again with
-  \`frijoles scenarios targets add\` to start over.`,
+  detail: `Owner only. A revoked target cannot be launched against, and its key stays taken: to
+  use the app again, \`frijoles scenarios targets add\` it under a NEW key.`,
   flags: [PROJECT_FLAG, REASON_FLAG],
   async run(context): Promise<ExitCode> {
     const targetKey = context.args.positionals[0]
@@ -293,19 +292,20 @@ export const scenariosDefineCommand: Command = {
   path: ['scenarios', 'define'],
   summary: 'define a drill: a target, a fault flag version and its bounds',
   usage:
-    'frijoles scenarios define <scenario-key> --target <key> --flag <flagKey>@<version> [--kind resilience|security] [--cohort synthetic|internal] [--env production|preview|development] [--duration <seconds>] [--requests <n>] [--concurrency <n>] [--reason <text>]',
+    'frijoles scenarios define <scenario-key> --target <key> --flag <flagKey>@<version> [--cohort synthetic|internal] [--env production|preview|development] [--duration <seconds>] [--requests <n>] [--concurrency <n>] [--reason <text>]',
   needsAuth: true,
   detail: `Owner only. Defining changes nothing in the app: it records the drill. Bounds you leave out take the
   page's defaults, and the server checks them all (its message is printed as is).
 
   The flag must be a fault flag at an exact version — \`frijoles scenarios ls --json\` lists the compatible ones.
+  A drill defined here is a resilience drill (a delay or a synthetic error at your app's probe). A security drill needs
+  a security template and the founder's own approval, so it is defined on the scenarios page, not here.
 
   Next: \`frijoles scenarios launch <scenario-key>\`.`,
   flags: [
     PROJECT_FLAG,
     { name: 'target', value: '<key>', describe: 'a verified target — required' },
     { name: 'flag', value: '<flagKey>@<version>', describe: 'the fault flag and its exact version — required' },
-    { name: 'kind', value: '<kind>', describe: `${KINDS.join(' | ')} (default: resilience)` },
     { name: 'cohort', value: '<cohort>', describe: `${COHORTS.join(' | ')} (default: synthetic)` },
     { name: 'env', value: '<environment>', describe: `${ENVIRONMENTS.join(' | ')} (default: production)` },
     { name: 'duration', value: '<seconds>', describe: 'how long the window lasts' },
@@ -325,13 +325,8 @@ export const scenariosDefineCommand: Command = {
       )
       return EXIT.USAGE
     }
-    const kind = flagValue(context.args, 'kind')
     const cohort = flagValue(context.args, 'cohort')
     const environment = flagValue(context.args, 'env')
-    if (kind !== undefined && !(KINDS as readonly string[]).includes(kind)) {
-      context.emit.fail('invalid', `--kind must be one of: ${KINDS.join(', ')}.`)
-      return EXIT.USAGE
-    }
     if (cohort !== undefined && !(COHORTS as readonly string[]).includes(cohort)) {
       context.emit.fail('invalid', `--cohort must be one of: ${COHORTS.join(', ')}.`)
       return EXIT.USAGE
@@ -358,7 +353,6 @@ export const scenariosDefineCommand: Command = {
       scenarioKey,
       targetKey,
       ...flagRef,
-      kind,
       cohort,
       environment,
       ...numbers,
@@ -378,7 +372,7 @@ export const scenariosLaunchCommand: Command = {
   summary: 'start a run of the newest version of a scenario',
   usage: 'frijoles scenarios launch <scenario-key> [--reason <text>]',
   needsAuth: true,
-  detail: `Owner only. Starts a run inside the scenario's bounded window. A launch answers "not found" while its
+  detail: `Owner only. Starts a run inside the scenario's bounded window. A launch answers "disabled" while its
   kind's switch is off for the deployment.
 
   Next: \`frijoles scenarios runs --watch\`, and \`frijoles scenarios stop <run-id>\` to end one early.`,
