@@ -1,7 +1,7 @@
 # TARS, one model: every funnel reads the same stages — Retrospective
 
 _Closed: 2026-10-13_
-_Intent: PENDING_
+_Intent: yes_
 <!-- Did we build what the product owner meant? One word, THEIR answer: yes, mostly or no. Required by `epic-dod` only
      when the epic's seed or README carries a numeric `intent_match:` (intent-match D17); the calibration learns from
      it. Keep the line and leave exactly one of the three words between `_Intent: ` and the closing underscore. -->
