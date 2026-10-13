@@ -2,7 +2,7 @@ import 'server-only'
 import { timingSafeEqual } from 'node:crypto'
 import { createGrowthEngineClient, createScenarioProvider, type ScenarioProvider } from '@golden-frijoles/sdk'
 import { isResilienceScenariosEnabled } from '@/lib/flags'
-import { probeEnvironment, runScenarioProbe } from '@/lib/scenario-probe'
+import { engineBaseConfig, probeEnvironment, runScenarioProbe } from '@/lib/scenario-probe'
 
 // scenarios-light-up S2.2 (D7) — the seam a drill's fault lands on, on our own site. Reached only by
 // `scripts/scenario-drill.mjs` with SCENARIO_PROBE_SECRET, for a `synthetic:` subject (lib/scenario-probe.ts). Every
@@ -17,7 +17,7 @@ let provider: ScenarioProvider | null = null
 const MAX_BODY_CHARS = 1024
 // The engine this site reports to, as a customer app would configure it: the SDK's default (goldenfrijoles.com)
 // unless GOLDEN_FRIJOLES_URL points elsewhere (a local or CI run). Not getSiteUrl(): no URL here is handed to anyone.
-const engineUrl = () => process.env.GOLDEN_FRIJOLES_URL?.trim() || undefined
+const engine = () => engineBaseConfig(process.env.GOLDEN_FRIJOLES_URL)
 
 function notFound() {
   return new Response(null, { status: 404 })
@@ -35,7 +35,7 @@ function authorized(request: Request): boolean {
 function scenarioProvider(environment: 'development' | 'preview' | 'production'): ScenarioProvider | null {
   const flagReadKey = process.env.GOLDEN_FRIJOLES_SCENARIO_FLAG_READ_KEY?.trim()
   if (!flagReadKey) return null
-  provider ??= createScenarioProvider({ baseUrl: engineUrl(), flagReadKey, environment })
+  provider ??= createScenarioProvider({ ...engine(), flagReadKey, environment })
   return provider
 }
 
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
   const scenarios = scenarioProvider(environment)
   if (!scenarios) return notFound()
   const apiKey = process.env.SELF_PROJECT_API_KEY?.trim()
-  const growth = apiKey ? createGrowthEngineClient({ apiKey, baseUrl: engineUrl() }) : null
+  const growth = apiKey ? createGrowthEngineClient({ apiKey, ...engine() }) : null
 
   const result = await runScenarioProbe(
     {

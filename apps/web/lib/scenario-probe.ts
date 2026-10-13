@@ -29,6 +29,16 @@ export function isSyntheticSubject(value: unknown): value is string {
   return typeof value === 'string' && SYNTHETIC_SUBJECT.test(value)
 }
 
+/**
+ * The engine this site reports to, as SDK config: `{}` unless GOLDEN_FRIJOLES_URL is set. Never `{ baseUrl: undefined }`:
+ * the SDK reads a PRESENT but empty `baseUrl` as "not configured" (SDK 1.0's rule: an empty URL fails rather than
+ * defaulting), so the provider never fetched and every production probe came back PROVIDER_NOT_READY (S2.3, 2026-10-13).
+ */
+export function engineBaseConfig(value: string | undefined): { baseUrl?: string } {
+  const url = value?.trim()
+  return url ? { baseUrl: url } : {}
+}
+
 export function probeEnvironment(vercelEnv: string | undefined): ProbeEnvironment {
   return vercelEnv === 'production' ? 'production' : vercelEnv === 'preview' ? 'preview' : 'development'
 }
