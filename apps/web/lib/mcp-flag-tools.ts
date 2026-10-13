@@ -80,7 +80,7 @@ export function registerFlagTools(
     'list_flags',
     {
       description:
-        'Read every feature flag in this project and what each environment actually serves. `state` says whether a version is being served; `serving` says what it resolves to — they are different facts.',
+        'Read every feature flag in this project and what each environment serves. `state` is the switch, on or off, exactly as the flags page shows it; `serving` is the value itself.',
       inputSchema: {},
     },
     async () => {
