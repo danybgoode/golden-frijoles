@@ -134,7 +134,7 @@ test('an owner registers an app as a target, sees its token once, and a failed v
   const row = workspace.getByRole('row').filter({ hasText: key })
   await expect(row).toContainText('awaiting verification')
   await row.getByRole('button', { name: 'Verify' }).click()
-  await expect(workspace.locator('p.notice[role=status]')).toContainText(/reach|origin/i)
+  await expect(workspace.locator('p.notice[role=status]')).toContainText(/could not be reached/)
   await expect(row).toContainText('awaiting verification')
 
   // Revoke, so the tenant ends clean.
