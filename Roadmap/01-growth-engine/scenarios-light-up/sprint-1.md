@@ -3,7 +3,7 @@ epic: scenarios-light-up
 sprint: 1
 title: "Anyone can make an app a target, from the terminal or the page"
 risk: high
-phase: In review
+phase: Shipped
 stories_total: 5
 stories:
   - id: S1.1
@@ -44,7 +44,7 @@ stories:
 ---
 # Scenarios, switched on — Sprint 1: Anyone can make an app a target
 
-**Status:** 🟡 built, in review (#348)
+**Status:** ✅ shipped 2026-10-13 (#348, merge `805f5cf`; SDK 1.1.0, CLI 1.4.0)
 
 ## Stories
 
