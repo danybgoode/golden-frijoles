@@ -8,7 +8,7 @@ appetite: L
 underwritten_by: wave-2026-10
 risk: high
 epic: "01-growth-engine/scenarios-light-up"
-build_order: 80
+build_order: 81
 updated: 2026-10-13
 intent_ask: verbatim
 hypothesis: "The landing offers drills, but nobody can run one: only Miyagi can make an app a target, and an agent has no commands for it. Let an agent run a whole drill from the CLI and the SDK, and a founder from the page. We'll know when an agent has run and stopped one drill on goldenfrijoles.com in production."
