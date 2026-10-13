@@ -27,6 +27,8 @@ import { describeTurnOffConsequence } from '@/lib/flag-console-copy'
 export type FlagSwitchEnvironment = {
   environment: FlagEnvironment
   state: FlagSwitchState
+  /** Who it reaches when On (`flagReach`), shown beside the pill. */
+  reach?: string | null
 }
 
 export function FlagSwitch({
@@ -159,6 +161,7 @@ export function FlagSwitch({
             {row.environment}
           </span>
           <Pill state={row.state}>{FLAG_STATE_PRESENTATION[row.state].label}</Pill>
+          {row.state === 'on' && row.reach ? <span className="ds-envwho">{row.reach}</span> : null}
           {control(row)}
         </div>
       ))}

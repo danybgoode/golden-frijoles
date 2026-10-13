@@ -15,6 +15,7 @@ import {
   filterFlagRowsByQuery,
   filterFlagRowsByState,
   filterFlagRowsByType,
+  flagReach,
   flagSwitchState,
   hasFlagSwitch,
   paginateFlagRows,
@@ -62,6 +63,7 @@ function row(overrides: Partial<FlagListRow> & { key: string }): FlagListRow {
     id: `id-${overrides.key}`,
     description: '',
     state: 'off',
+    reach: null,
     polarity: 'enablement',
     criticality: 'low',
     version: null,
@@ -591,6 +593,7 @@ function stateRow(id: string, state: 'on' | 'off'): FlagListRow {
     key: id,
     description: '',
     state,
+    reach: state === 'on' ? 'everyone' : null,
     polarity: 'unclassified',
     criticality: 'unclassified',
     version: state === 'on' ? 1 : null,
@@ -757,4 +760,134 @@ test('runs: On first, then Off, and no row is lost', () => {
     ]
   )
   assert.equal(runsByState([row({ key: 'x', state: 'off' })]).length, 1)
+})
+
+test('an On flag says who it reaches — everyone, a percentage, or the segment placeholder', () => {
+  const variants = [
+    { key: 'off', value: false },
+    { key: 'on', value: true },
+  ]
+  const def = (over: Record<string, unknown>) => ({
+    valueType: 'boolean',
+    variants,
+    defaultVariantKey: 'off',
+    rules: [],
+    ...over,
+  })
+  assert.equal(flagReach(def({ defaultVariantKey: 'on' })), 'everyone')
+  assert.equal(
+    flagReach(
+      def({ rules: [{ priority: 1, clauses: [], rollout: { basisPoints: 2500 }, variantKey: 'on' }] })
+    ),
+    '25% of people'
+  )
+  assert.equal(
+    flagReach(
+      def({
+        rules: [
+          { priority: 1, clauses: [{ field: 'plan', operator: 'equals', value: 'pro' }], variantKey: 'on' },
+        ],
+      })
+    ),
+    'a segment (not named yet)'
+  )
+  assert.equal(
+    flagReach(
+      def({
+        defaultVariantKey: 'on',
+        rules: [
+          { priority: 1, clauses: [{ field: 'plan', operator: 'equals', value: 'free' }], variantKey: 'off' },
+        ],
+      })
+    ),
+    'everyone but a segment (not named yet)'
+  )
+  // Off, or not on/off: no reach line.
+  assert.equal(flagReach(def({})), null)
+  assert.equal(
+    flagReach({ valueType: 'json', variants: [{ key: 'a', value: 1 }], defaultVariantKey: 'a' }),
+    null
+  )
+  // The row carries it, and the list's detail line uses it.
+  const flags = [
+    flag({
+      key: 'pro.only_enabled',
+      versions: [
+        version('v-p', 1, {
+          defaultVariantKey: 'off',
+          rules: [
+            { priority: 1, clauses: [{ field: 'plan', operator: 'equals', value: 'pro' }], variantKey: 'on' },
+          ],
+        }),
+      ],
+      activations: [{ environment: 'production', versionId: 'v-p' }],
+    }),
+  ]
+  const [row] = projectFlagRows(flags, 'production')
+  assert.equal(row.state, 'on')
+  assert.equal(row.reach, 'a segment (not named yet)')
+})
+
+test('reach names the whole audience the evaluator serves true to — not just the first rule (verifier, #352)', () => {
+  const variants = [
+    { key: 'off', value: false },
+    { key: 'on', value: true },
+  ]
+  const pro = [{ field: 'plan', operator: 'equals', value: 'pro' }]
+  const free = [{ field: 'plan', operator: 'equals', value: 'free' }]
+  const def = (defaultVariantKey: string, rules: unknown[]) => ({
+    valueType: 'boolean',
+    variants,
+    defaultVariantKey,
+    rules,
+  })
+  const cases: Array<[string, ReturnType<typeof def>, string]> = [
+    ['A: default true, pro → true', def('on', [{ priority: 1, clauses: pro, variantKey: 'on' }]), 'everyone'],
+    [
+      'B: default true, 25% → true',
+      def('on', [{ priority: 1, clauses: [], rollout: { basisPoints: 2500 }, variantKey: 'on' }]),
+      'everyone',
+    ],
+    [
+      'C: beta first, then everyone',
+      def('off', [
+        { priority: 1, clauses: pro, variantKey: 'on' },
+        { priority: 2, clauses: [], variantKey: 'on' },
+      ]),
+      'everyone',
+    ],
+    [
+      'D: a segment, then 10%',
+      def('off', [
+        { priority: 1, clauses: pro, variantKey: 'on' },
+        { priority: 2, clauses: [], rollout: { basisPoints: 1000 }, variantKey: 'on' },
+      ]),
+      'a segment (not named yet) and 10% of people',
+    ],
+    [
+      'E: default true, pro → true, free → false',
+      def('on', [
+        { priority: 1, clauses: pro, variantKey: 'on' },
+        { priority: 2, clauses: free, variantKey: 'off' },
+      ]),
+      'everyone but a segment (not named yet)',
+    ],
+    [
+      'G: free → false, then 25% → true',
+      def('off', [
+        { priority: 1, clauses: free, variantKey: 'off' },
+        { priority: 2, clauses: [], rollout: { basisPoints: 2500 }, variantKey: 'on' },
+      ]),
+      '25% of people, except a segment (not named yet)',
+    ],
+    [
+      'a catch-all to false below a segment rule ends the walk: only the segment',
+      def('on', [
+        { priority: 1, clauses: pro, variantKey: 'on' },
+        { priority: 2, clauses: [], variantKey: 'off' },
+      ]),
+      'a segment (not named yet)',
+    ],
+  ]
+  for (const [name, definition, expected] of cases) assert.equal(flagReach(definition), expected, name)
 })

@@ -69,8 +69,11 @@ export const FLAG_STATE_PRESENTATION: Record<
   on: {
     badge: 'live',
     label: SPECIMEN_WORDS.on,
+    // Who it reaches, then the version: "everyone · v3", "a segment (not named yet) · v3" (one-flag-switch).
     detail: (row) =>
-      row.version === null ? 'serving a version that could not be read' : `serving v${row.version}`,
+      row.version === null
+        ? 'serving a version that could not be read'
+        : `${row.reach ?? 'serving'} · v${row.version}`,
   },
   off: {
     badge: 'blocked',

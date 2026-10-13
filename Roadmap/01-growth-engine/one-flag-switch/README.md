@@ -9,7 +9,7 @@ area: 01-growth-engine
 risk: high
 type: bug
 sprints_total: 1
-stories_total: 3   # the sum of every sprint's stories_total — keep it in step when a story is added
+stories_total: 4   # the sum of every sprint's stories_total — keep it in step when a story is added
 intent_match: null   # copied from the seed by scaffold-epic (intent-match); the reader at the lock may update it
 quote_low_usd: 15    # ≈ API $ — copied from the seed's `quote:` by scaffold-epic (finops); null = not quoted, never 0
 quote_high_usd: 32
@@ -76,6 +76,7 @@ on or off; whatever an agent changes through the CLI, SDK or MCP is exactly what
 | 1 | S1.1 One rule for on and off | high |
 | 1 | S1.2 The page switch writes what the CLI writes | high |
 | 1 | S1.3 The CLI says on or off by the same rule; a parity spec | high |
+| 1 | S1.4 On says who it reaches (segment, or a placeholder until segments exist) | low |
 
 ## Deploy order
 No migration. Merge = deploy.

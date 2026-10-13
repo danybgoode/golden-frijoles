@@ -4,7 +4,7 @@ sprint: 1
 title: "One switch"
 risk: high
 phase: In review
-stories_total: 3
+stories_total: 4
 stories:
   - id: S1.1
     title: "One rule for on and off"
@@ -26,6 +26,13 @@ stories:
     i_want: "frijoles flags ls/get to say on or off exactly as the page does"
     so_that: "the page and the CLI can never disagree again"
     risk: high
+    status: done
+  - id: S1.4
+    title: "On says who it reaches"
+    as_a: "a founder"
+    i_want: "an On flag to say who gets it — everyone, a percentage, or a named segment"
+    so_that: "On for some is never mistaken for On for all"
+    risk: low
     status: done
 ---
 # One flag switch: on or off, the same in the CLI, the SDK, MCP and the page — Sprint 1: One switch
@@ -53,6 +60,13 @@ serves, with no switch.
 **Acceptance:** the CLI's flag view carries the same on/off from S1.1's rule. A parity spec: CLI `kill` → the page's
 view says Off; the page action off → the CLI view says off and serves `false`; on → on and `true`.
 **Risk:** high · **Builder:** orchestrator
+
+### Story 1.4 — On says who it reaches
+**As a** founder, **I want** an On flag to say who gets it, **so that** On for some is never mistaken for On for all.
+**Acceptance:** beside every On (list, feature page, `frijoles flags ls/get`): `everyone`, `25% of people`, or the
+segment's name — and until named segments exist, the placeholder `a segment (not named yet)` (the product owner,
+2026-10-13). Same rule walk as the switch, so the words never disagree with it. CLI 1.5.1.
+**Risk:** low · **Builder:** orchestrator
 
 ## Sprint QA
 - **api spec(s):** <which testable story → which `e2e/*.spec.ts`>

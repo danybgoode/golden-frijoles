@@ -358,6 +358,13 @@ test('one-flag-switch: the flags page and the CLI say the same On / Off for ever
       const page = projectFlagRows([row as never], environment)[0].state
       const cliState = cli.environments.find((candidate) => candidate.environment === environment)?.state
       assert.equal(cliState, page, `${name} in ${environment}: CLI says ${cliState}, the page says ${page}`)
+      const pageReach = projectFlagRows([row as never], environment)[0].reach
+      const cliReach = cli.environments.find((candidate) => candidate.environment === environment)?.reach
+      assert.equal(
+        cliReach,
+        pageReach,
+        `${name} in ${environment}: CLI reach ${cliReach}, the page ${pageReach}`
+      )
     }
   }
   // And the two that motivated it, pinned by value.
