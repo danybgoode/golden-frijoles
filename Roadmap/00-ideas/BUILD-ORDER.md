@@ -35,7 +35,7 @@ _a pitch is waiting at the approval gate._
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
-- [Scenarios, switched on: an agent can set up a target, run a drill and stop it](../01-growth-engine/scenarios-light-up/README.md) — #80 · 01 Growth Engine · 0/9 stories · risk: High · appetite L · _docs: status scaffolded_
+- [Scenarios, switched on: an agent can set up a target, run a drill and stop it](../01-growth-engine/scenarios-light-up/README.md) — #80 · 01 Growth Engine · 7/9 stories · risk: High · appetite L · _docs: status scaffolded_
 - [A golden welcome and recovery pages](../02-commercial/brand-reveal-error-pages/README.md) — #81 · 02 Commercial · 2/2 stories · risk: High · appetite M · _docs: status in-progress_
 - [One bet, wired: the flag knows its epic, its funnel and its read](../01-growth-engine/one-bet-wired/README.md) — #82 · 01 Growth Engine · 6/6 stories · risk: High · appetite L · _docs: status in-progress_
 - [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #83 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_

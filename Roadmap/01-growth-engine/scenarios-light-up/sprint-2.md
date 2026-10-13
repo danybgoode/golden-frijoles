@@ -3,7 +3,7 @@ epic: scenarios-light-up
 sprint: 2
 title: "Our site, the drill, the switches"
 risk: high
-phase: Shaping
+phase: Building
 stories_total: 4
 stories:
   - id: S2.1
@@ -12,14 +12,14 @@ stories:
     i_want: "to see drills through the connector and find the commands in the plugin"
     so_that: "I know drills exist and how to run one"
     risk: low
-    status: planned
+    status: done
   - id: S2.2
     title: "goldenfrijoles.com as a target, the probe and the drill script"
     as_a: "the product owner"
     i_want: "our own site to be a drill target with a probe nobody else can reach"
     so_that: "the first drill runs on us, not on a customer"
     risk: high
-    status: planned
+    status: done
   - id: S2.3
     title: "The production drill, by an agent; the switches on"
     as_a: "the product owner"
@@ -37,18 +37,18 @@ stories:
 ---
 # Scenarios, switched on — Sprint 2: Our site, the drill, the switches
 
-**Status:** ⬜ not started
+**Status:** 🟡 S2.1–S2.2 built, in review; S2.3–S2.4 after the merge, in production
 
 ## Stories
 
-### Story 2.1 — The connector's scenarios tool and the agent docs
+### Story 2.1 — The connector's scenarios tool and the agent docs ✅ `0f9c389 + dd86ee5`
 **As an** agent in claude.ai or a fresh repo, **I want** to see drills through the connector and find the commands in the plugin, **so that** I know drills exist and how to run one.
 **Acceptance:** a read-only connector tool lists targets, definitions and runs with state and stop reason, member
 scoped like the flag tools (parity test); the public connector scrubs person ids. The plugin's agent docs name the
 `frijoles scenarios` commands and the SDK handler (kit/plugin minor).
 **Risk:** low · **Builder:** Sonnet
 
-### Story 2.2 — goldenfrijoles.com as a target, the probe and the drill script
+### Story 2.2 — goldenfrijoles.com as a target, the probe and the drill script ✅ `685c589`
 **As the** product owner, **I want** our own site to be a drill target with a probe nobody else can reach, **so that** the first drill runs on us, not on a customer.
 **Acceptance:** `/api/internal/resilience/ownership` on our app is the SDK handler with the token from env.
 `/api/internal/resilience/probe` answers only a request signed with `SCENARIO_PROBE_SECRET` for a `synthetic:`
