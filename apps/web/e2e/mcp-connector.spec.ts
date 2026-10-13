@@ -121,6 +121,9 @@ test.describe('POST /api/v1/public/mcp/c/:token', () => {
       // would have stopped gating, and this exact-match comparison is what would say so.
       'get_flag',
       'list_flags',
+      // scenarios-light-up S2.1 — `list_scenarios` is ABSENT here, and that is the assertion: this is the anonymous reader
+      // of the public project, and its drills are members-only administration (verifier, #348). A project's own token
+      // gets it (the disposable-project test below).
     ].sort()
     expect(names).toEqual(expected)
   })
@@ -195,6 +198,18 @@ test.describe('POST /api/v1/public/mcp/c/:token', () => {
       const payload = JSON.parse(body.result.content[0].text)
       expect(payload.ok).toBe(false)
       expect(payload.reason).toBe('feature_not_found')
+
+      // scenarios-light-up S2.1 — a project's own token reads its drills: the allow-listed fields, this project's only.
+      const scenarios = await rpc(request, isolationToken, 'tools/call', {
+        name: 'list_scenarios',
+        arguments: {},
+      })
+      expect(scenarios.status()).toBe(200)
+      const listed = JSON.parse((await scenarios.json()).result.content[0].text)
+      expect(listed).toMatchObject({ targets: [], definitions: [], runs: [] })
+      expect(listed.note).toMatch(/frijoles scenarios/)
+      expect(listed).not.toHaveProperty('policies')
+      expect(listed).not.toHaveProperty('trips')
     } finally {
       await db.from('projects').delete().eq('id', project.id) // cascades connector_tokens
     }

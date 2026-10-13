@@ -7,6 +7,10 @@ import {
   createScenarioTargetResponseProof,
   hashScenarioTargetChallenge,
   scenarioTargetProofMatches,
+  createScenarioOwnerToken,
+  createScenarioOwnerTokenProof,
+  createScenarioOwnerTokenSignature,
+  hashScenarioOwnerToken,
 } from './scenario-target-proof.ts'
 
 const INPUT = {
@@ -61,4 +65,37 @@ test('proofs reject non-origin URLs, weak secrets and malformed identifiers', ()
   ]) {
     assert.throws(() => createScenarioTargetRequestSignature(changed))
   }
+})
+
+// scenarios-light-up D2/D5 — the engine and the SDK handler speak one contract: the engine's signed check is answered
+// by the handler holding the token, with exactly the proof the engine computes; a different token gets no proof.
+test('owner-token v2: the SDK handler answers the engine check with the engine proof', async () => {
+  const { createScenarioOwnershipHandler } = await import('../../../packages/sdk/src/scenario-ownership.ts')
+  const token = createScenarioOwnerToken()
+  assert.match(token, /^gf_target_[0-9a-f]{64}$/)
+  const tokenHash = hashScenarioOwnerToken(token)
+  const challenge = createScenarioTargetChallenge()
+  const target = { targetKey: 'site.probe', origin: 'https://app.example.com' }
+  const request = (signature: string) =>
+    new Request('https://app.example.com/api/internal/resilience/ownership', {
+      method: 'POST',
+      headers: { 'x-golden-beans-ownership-request': signature },
+      body: JSON.stringify({ contractVersion: 2, challenge, ...target }),
+    })
+  const signature = createScenarioOwnerTokenSignature({ tokenHash, challenge, ...target })
+  const response = await createScenarioOwnershipHandler({ token })(request(signature))
+  assert.equal(response?.status, 204)
+  const expected = createScenarioOwnerTokenProof({ tokenHash, challenge, ...target })
+  assert.equal(
+    scenarioTargetProofMatches(expected, response?.headers.get('x-golden-beans-ownership-proof')),
+    true
+  )
+  // The v1 (Miyagi) proof for the same inputs is a different domain: one can never stand in for the other.
+  assert.notEqual(expected, createScenarioTargetResponseProof({ secret: tokenHash, challenge, ...target }))
+
+  const stranger = await createScenarioOwnershipHandler({ token: createScenarioOwnerToken() })(
+    request(signature)
+  )
+  assert.equal(stranger?.status, 404)
+  assert.throws(() => hashScenarioOwnerToken('gf_target_short'), /Invalid scenario owner token/)
 })

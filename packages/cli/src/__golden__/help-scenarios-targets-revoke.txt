@@ -1,0 +1,20 @@
+frijoles scenarios targets revoke — stop an app origin being a drill target
+
+Usage
+  frijoles scenarios targets revoke <key> [--reason <text>]
+
+Owner only. A revoked target cannot be launched against, and its key stays taken: to
+  use the app again, `frijoles scenarios targets add` it under a NEW key.
+
+Flags
+  --project <slug>  the project (default: the remembered one)
+  --reason <text>   why — kept in the audit trail (default: names the command)
+
+Exit codes
+  0  ok         it worked
+  1  usage      the command is wrong — nothing was sent
+  2  auth       the credential is not accepted — run `frijoles login`
+  3  not-found  no such thing, or not yours
+  4  conflict   someone else changed it — re-read and retry
+  5  partial    some environments changed and some did not
+  6  server     the server or the network is unwell — retry

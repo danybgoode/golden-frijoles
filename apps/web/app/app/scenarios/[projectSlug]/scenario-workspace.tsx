@@ -17,6 +17,7 @@ import {
   buildScenarioDefinition,
   firstCompatibleFaultFlag,
   SCENARIO_AUTHORING_COHORTS,
+  SCENARIO_AUTHORING_DEFAULTS,
   SCENARIO_AUTHORING_LIMITS,
   type ScenarioAuthoringDraft,
 } from '@/lib/scenario-authoring-draft'
@@ -26,7 +27,13 @@ import {
   scenarioLaunchBlocker,
   type ScenarioCapabilityGates,
 } from '@/lib/scenario-authoring-policy'
-import { launchScenarioRunAction, scenarioOwnerOperationAction, startScenarioRunAction } from './actions'
+import {
+  launchScenarioRunAction,
+  scenarioOwnerOperationAction,
+  startScenarioRunAction,
+  verifyScenarioTargetAction,
+} from './actions'
+import { TARGET_VERIFY_REASON, TargetRegistration } from './target-setup'
 // ⚠️ **The run table is declared ONCE** (Story 2.5). `DrillEvidence` draws the same eight columns
 // read-only from a drill's own row; this component appends its actions column to them. Two column
 // lists in two files that currently agree is CODE-QUALITY #2.
@@ -93,12 +100,7 @@ export function ScenarioWorkspace({
     targetKey: defaultTarget,
     environment: 'production',
     startAt: localStart(),
-    durationSeconds: 300,
-    requestCap: 10,
-    concurrencyCap: 2,
-    leaseTtlSeconds: 10,
-    abortAfterFailures: 2,
-    maxErrorRatePercent: 10,
+    ...SCENARIO_AUTHORING_DEFAULTS,
     flagKey: defaultFlag?.key ?? '',
     flagVersion: defaultFlag?.version ?? 1,
   })
@@ -146,7 +148,9 @@ export function ScenarioWorkspace({
           {row.status === 'pending' ? (
             <small>
               <br />
-              Someone with target access must complete the challenge at /api/internal/resilience/ownership.
+              {row.kind === 'owner_token_v1'
+                ? "Put the target's token in your app, deploy the route, then press Verify."
+                : 'Verified through its own credential route, not from this page.'}
             </small>
           ) : null}
         </>
@@ -165,16 +169,40 @@ export function ScenarioWorkspace({
             header: 'Actions',
             cell: (row) =>
               row.status === 'revoked' ? null : (
-                <button
-                  className="btn btn-ghost"
-                  type="button"
-                  onClick={() => {
-                    setOperationReason('')
-                    setConfirmation({ kind: 'revoke', id: row.id, label: row.key })
-                  }}
-                >
-                  Revoke
-                </button>
+                <>
+                  {row.status === 'pending' && row.kind === 'owner_token_v1' ? (
+                    <button
+                      className="btn btn-gold"
+                      type="button"
+                      disabled={pending}
+                      onClick={() =>
+                        act(async () => {
+                          const result = await verifyScenarioTargetAction(
+                            projectSlug,
+                            row.id,
+                            TARGET_VERIFY_REASON
+                          )
+                          // The sentence on a failed check comes back as `error`; show it as written.
+                          return result.ok && result.status !== 'verified'
+                            ? { ok: false, error: `${row.key} is still ${String(result.status)}.` }
+                            : result
+                        }, `${row.key} is verified.`)
+                      }
+                    >
+                      Verify
+                    </button>
+                  ) : null}
+                  <button
+                    className="btn btn-ghost"
+                    type="button"
+                    onClick={() => {
+                      setOperationReason('')
+                      setConfirmation({ kind: 'revoke', id: row.id, label: row.key })
+                    }}
+                  >
+                    Revoke
+                  </button>
+                </>
               ),
           } satisfies DataTableColumn<(typeof view.targets)[number]>,
         ]
@@ -337,7 +365,7 @@ export function ScenarioWorkspace({
           >
             <FormSection
               title="Define a scenario"
-              description="Choose a verified target and an existing immutable fault-injector flag version. Target registration and ownership verification remain an engineering handshake."
+              description="Choose a verified target and an existing immutable fault-injector flag version."
             >
               <Field label="Scenario key" error={null}>
                 {(control) => (
@@ -637,6 +665,8 @@ export function ScenarioWorkspace({
           </form>
         </Panel>
       ) : null}
+
+      {canAuthor ? <TargetRegistration projectSlug={projectSlug} onFeedback={setFeedback} /> : null}
 
       <Panel>
         <h2>Registered targets</h2>

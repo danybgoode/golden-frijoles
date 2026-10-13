@@ -2,42 +2,42 @@
 import { revalidatePath } from 'next/cache'
 import { requireProjectOwnership } from '@/lib/dashboard-auth'
 import {
-  isResilienceScenariosEnabled,
-  isScenarioAuthoringEnabled,
-  isSecuritySimulationsEnabled,
-} from '@/lib/flags'
-import { parseScenarioAdminOperation } from '@/lib/scenario-admin-operation'
-import {
-  isOwnerDirectScenarioOperation,
-  isScenarioKindEnabled,
-  scenarioLaunchBlocker,
-  type ScenarioCapabilityGates,
-} from '@/lib/scenario-authoring-policy'
-import {
-  executeScenarioOwnerOperation,
-  getScenarioOwnerDefinitionContext,
-  getScenarioOwnerRunContext,
-  getScenarioOwnerStopContext,
-} from '@/lib/scenario-owner-operations'
+  launchScenarioRun,
+  ownerDirectOperation,
+  registerScenarioTarget,
+  scenarioAuthoringOn,
+  startScenarioDraftRun,
+  verifyScenarioTarget,
+  type ScenarioServiceResult,
+} from '@/lib/scenario-owner-service'
 
-type Environment = 'development' | 'preview' | 'production'
+// scenarios-light-up D1 — these actions only authenticate the owner and refresh the page; every rule lives in
+// `lib/scenario-owner-service.ts`, which `frijoles scenarios` (`/api/v1/cli/scenarios`) calls too.
 
-function environment(value: unknown): Environment | null {
-  return value === 'development' || value === 'preview' || value === 'production' ? value : null
+// Gate first: an OFF deployment cannot reveal project membership or mutate through this seam.
+type OwnerAuth =
+  | { failure: { ok: false; error: string }; slug: null; owner: null }
+  | { failure: null; slug: string; owner: { projectId: string; userId: string } }
+
+async function owner(slug: unknown): Promise<OwnerAuth> {
+  if (!(await scenarioAuthoringOn()))
+    return {
+      failure: { ok: false, error: 'Scenario authoring is unavailable in this deployment.' },
+      slug: null,
+      owner: null,
+    }
+  if (typeof slug !== 'string')
+    return { failure: { ok: false, error: 'Invalid project.' }, slug: null, owner: null }
+  const { projectId, userId } = await requireProjectOwnership(slug)
+  return { failure: null, slug, owner: { projectId, userId } }
 }
 
-async function capabilities(): Promise<ScenarioCapabilityGates> {
-  return {
-    resilience: await isResilienceScenariosEnabled(),
-    security: await isSecuritySimulationsEnabled(),
-  }
-}
+type PageResult = ({ ok: true } & Record<string, unknown>) | { ok: false; error: string; conflict?: true }
 
-function unavailable(kind: 'resilience' | 'security') {
-  return {
-    ok: false as const,
-    error: `${kind === 'resilience' ? 'Resilience scenarios' : 'Security simulations'} are unavailable in this deployment.`,
-  }
+// The service's routing hints (unavailable, notFound) are for the CLI route's status codes; the page shows the words.
+function surface(result: ScenarioServiceResult): PageResult {
+  if (result.ok) return result
+  return { ok: false, error: result.error, ...(result.conflict ? { conflict: true as const } : {}) }
 }
 
 export async function scenarioOwnerOperationAction(
@@ -45,106 +45,23 @@ export async function scenarioOwnerOperationAction(
   selectedEnvironment: unknown,
   rawOperation: unknown
 ) {
-  // Gate first: an OFF deployment cannot reveal project membership or mutate through this seam.
-  if (!(await isScenarioAuthoringEnabled()))
-    return { ok: false as const, error: 'Scenario authoring is unavailable in this deployment.' }
-  if (typeof slug !== 'string') return { ok: false as const, error: 'Invalid project.' }
-  const { projectId, userId } = await requireProjectOwnership(slug)
-  const safeEnvironment = environment(selectedEnvironment)
-  const operation = parseScenarioAdminOperation(rawOperation)
-  if (!safeEnvironment || !operation) {
-    return { ok: false as const, error: 'Invalid scenario command.' }
-  }
-  if (
-    (operation.operation !== 'revoke_target' &&
-      operation.operation !== 'create_definition' &&
-      operation.operation !== 'transition_run') ||
-    !isOwnerDirectScenarioOperation(
-      operation.operation,
-      operation.operation === 'transition_run' ? operation.transition : undefined
-    )
-  )
-    return { ok: false as const, error: 'Invalid scenario command.' }
-  const gates = await capabilities()
-  if (operation.operation === 'create_definition') {
-    if (operation.definition.environment !== safeEnvironment)
-      return { ok: false as const, error: 'The definition environment does not match the command.' }
-    if (operation.definition.cohort === 'external')
-      return { ok: false as const, error: 'External cohorts are unavailable in owner authoring.' }
-    if (!isScenarioKindEnabled(operation.definition.kind, gates))
-      return unavailable(operation.definition.kind)
-  }
-  if (operation.operation === 'revoke_target' && !gates.resilience && !gates.security)
-    return { ok: false as const, error: 'Scenario capabilities are unavailable in this deployment.' }
-  if (operation.operation === 'transition_run') {
-    const context = await getScenarioOwnerStopContext(projectId, operation.runId)
-    if (!context || context.environment !== safeEnvironment)
-      return { ok: false as const, error: 'The scenario run is unavailable.' }
-    if (!isScenarioKindEnabled(context.kind, gates)) return unavailable(context.kind)
-  }
-  const result = await executeScenarioOwnerOperation({
-    projectId,
-    environment: safeEnvironment,
-    actorUserId: userId,
-    operation,
-  })
-  if (result.ok) revalidatePath(`/app/scenarios/${slug}`)
-  return result
+  const auth = await owner(slug)
+  if (auth.failure) return auth.failure
+  const result = await ownerDirectOperation(auth.owner, selectedEnvironment, rawOperation)
+  if (result.ok) revalidatePath(`/app/scenarios/${auth.slug}`)
+  return surface(result)
 }
 
 export async function launchScenarioRunAction(slug: unknown, scenarioVersionId: unknown, reason: unknown) {
-  if (!(await isScenarioAuthoringEnabled()))
-    return { ok: false as const, error: 'Scenario authoring is unavailable in this deployment.' }
-  if (typeof slug !== 'string') return { ok: false as const, error: 'Invalid project.' }
-  const { projectId, userId } = await requireProjectOwnership(slug)
-  const create = parseScenarioAdminOperation({
-    operation: 'create_run',
-    scenarioVersionId,
-    reason,
-  })
-  if (!create || create.operation !== 'create_run')
-    return { ok: false as const, error: 'Invalid launch command.' }
-  const context = await getScenarioOwnerDefinitionContext(projectId, create.scenarioVersionId)
-  if (!context) return { ok: false as const, error: 'The scenario definition is unavailable.' }
-  const blocker = scenarioLaunchBlocker(
-    {
-      ...context.definition,
-      targetVerified: context.targetVerified,
-      productionSecurityApproved: context.productionSecurityApproved,
-      faultSummaryAvailable: context.faultSummary !== null,
-    },
-    await capabilities()
+  const auth = await owner(slug)
+  if (auth.failure) return auth.failure
+  // Starting can still fail after the draft transaction commits. Revalidate then so the honest partial state is
+  // visible and the owner can retry instead of seeing a stale page.
+  const result = await launchScenarioRun(auth.owner, { scenarioVersionId, reason }, () =>
+    revalidatePath(`/app/scenarios/${auth.slug}`)
   )
-  if (blocker) return { ok: false as const, error: blocker }
-  const safeEnvironment = context.definition.environment
-  const draft = await executeScenarioOwnerOperation({
-    projectId,
-    environment: safeEnvironment,
-    actorUserId: userId,
-    operation: create,
-  })
-  if (!draft.ok) return draft
-  if (typeof draft.run_id !== 'string' || typeof draft.revision !== 'number')
-    return { ok: false as const, error: 'The run draft response was incomplete.' }
-  // Starting can still fail after the draft transaction commits. Revalidate now so the honest
-  // partial state is visible and the owner can retry instead of seeing a stale page.
-  revalidatePath(`/app/scenarios/${slug}`)
-  const start = parseScenarioAdminOperation({
-    operation: 'start_run',
-    runId: draft.run_id,
-    expectedRevision: draft.revision,
-    reason,
-  })
-  if (!start || start.operation !== 'start_run')
-    return { ok: false as const, error: 'Could not prepare the run start.' }
-  const result = await executeScenarioOwnerOperation({
-    projectId,
-    environment: safeEnvironment,
-    actorUserId: userId,
-    operation: start,
-  })
-  if (result.ok) revalidatePath(`/app/scenarios/${slug}`)
-  return result
+  if (result.ok) revalidatePath(`/app/scenarios/${auth.slug}`)
+  return surface(result)
 }
 
 export async function startScenarioRunAction(
@@ -153,33 +70,31 @@ export async function startScenarioRunAction(
   expectedRevision: unknown,
   reason: unknown
 ) {
-  if (!(await isScenarioAuthoringEnabled()))
-    return { ok: false as const, error: 'Scenario authoring is unavailable in this deployment.' }
-  if (typeof slug !== 'string') return { ok: false as const, error: 'Invalid project.' }
-  const { projectId, userId } = await requireProjectOwnership(slug)
-  const start = parseScenarioAdminOperation({ operation: 'start_run', runId, expectedRevision, reason })
-  if (!start || start.operation !== 'start_run')
-    return { ok: false as const, error: 'Invalid start command.' }
-  const context = await getScenarioOwnerRunContext(projectId, start.runId)
-  if (!context || context.status !== 'draft' || context.revision !== start.expectedRevision)
-    return { ok: false as const, conflict: true, error: 'This draft run changed. Refresh and try again.' }
-  const blocker = scenarioLaunchBlocker(
-    {
-      ...context.definition,
-      environment: context.environment,
-      targetVerified: context.targetVerified,
-      productionSecurityApproved: context.productionSecurityApproved,
-      faultSummaryAvailable: context.faultSummary !== null,
-    },
-    await capabilities()
-  )
-  if (blocker) return { ok: false as const, error: blocker }
-  const result = await executeScenarioOwnerOperation({
-    projectId,
-    environment: context.environment,
-    actorUserId: userId,
-    operation: start,
-  })
-  if (result.ok) revalidatePath(`/app/scenarios/${slug}`)
-  return result
+  const auth = await owner(slug)
+  if (auth.failure) return auth.failure
+  const result = await startScenarioDraftRun(auth.owner, { runId, expectedRevision, reason })
+  if (result.ok) revalidatePath(`/app/scenarios/${auth.slug}`)
+  return surface(result)
+}
+
+/** scenarios-light-up S1.5 — register an app as a target; the token comes back once, for the owner to copy. */
+export async function registerScenarioTargetAction(
+  slug: unknown,
+  targetKey: unknown,
+  origin: unknown,
+  reason: unknown
+) {
+  const auth = await owner(slug)
+  if (auth.failure) return auth.failure
+  const result = await registerScenarioTarget(auth.owner, { targetKey, origin, reason })
+  if (result.ok) revalidatePath(`/app/scenarios/${auth.slug}`)
+  return surface(result)
+}
+
+export async function verifyScenarioTargetAction(slug: unknown, targetId: unknown, reason: unknown) {
+  const auth = await owner(slug)
+  if (auth.failure) return auth.failure
+  const result = await verifyScenarioTarget(auth.owner, { targetId, reason })
+  if (result.ok) revalidatePath(`/app/scenarios/${auth.slug}`)
+  return surface(result)
 }

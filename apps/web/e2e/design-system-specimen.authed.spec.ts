@@ -102,8 +102,8 @@ test.describe('the design system specimen', () => {
   // the instant the work succeeded and the operator never saw the result.
   //
   // It is asserted HERE, on the specimen, because the product surfaces that exercise it sit behind
-  // capability gates this pipeline turns off (`SCENARIO_AUTHORING_ENABLED: 'false'`) — so the only
-  // suite that could have caught it is one CI skips. This one needs no gate and mutates nothing.
+  // capability gates this pipeline turned off at the time (scenario authoring has been lit in CI since
+  // scenarios-light-up; flag catalog sync still is not) — so the only suite that could have caught it was one CI skipped. This one needs no gate and mutates nothing.
   //
   // Verified by mutation: restore `onClose={() => setOpen(false)}` in `NewThingDialog` and the last
   // assertion goes red.

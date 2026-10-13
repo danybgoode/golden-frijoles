@@ -1,0 +1,25 @@
+frijoles scenarios targets add — register an app origin as a drill target
+
+Usage
+  frijoles scenarios targets add <key> --origin <https-origin> [--reason <text>]
+
+Owner only. Prints the target token ONCE — only its hash is stored. Then:
+
+    1. put the token in the app's server env as GOLDEN_FRIJOLES_TARGET_TOKEN
+    2. serve createScenarioOwnershipHandler from @golden-frijoles/sdk at /api/internal/resilience/ownership
+    3. deploy the app
+    4. run `frijoles scenarios targets verify <key>`
+
+Flags
+  --project <slug>         the project (default: the remembered one)
+  --origin <https-origin>  the app origin — required
+  --reason <text>          why — kept in the audit trail (default: names the command)
+
+Exit codes
+  0  ok         it worked
+  1  usage      the command is wrong — nothing was sent
+  2  auth       the credential is not accepted — run `frijoles login`
+  3  not-found  no such thing, or not yours
+  4  conflict   someone else changed it — re-read and retry
+  5  partial    some environments changed and some did not
+  6  server     the server or the network is unwell — retry

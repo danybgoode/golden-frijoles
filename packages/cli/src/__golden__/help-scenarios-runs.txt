@@ -1,0 +1,22 @@
+frijoles scenarios runs — runs, and with --watch their progress until they end
+
+Usage
+  frijoles scenarios runs [--project <slug>] [--watch] [--json]
+
+Any member can read this. --watch re-reads every 3 seconds, prints only what changed, and returns when no
+  run is still running (or after 10 minutes). Under --json it prints one document: the final runs.
+
+  Stop a run with `frijoles scenarios stop <run-id>`.
+
+Flags
+  --project <slug>  the project (default: the remembered one)
+  --watch           keep reading until no run is running (10 minutes at most)
+
+Exit codes
+  0  ok         it worked
+  1  usage      the command is wrong — nothing was sent
+  2  auth       the credential is not accepted — run `frijoles login`
+  3  not-found  no such thing, or not yours
+  4  conflict   someone else changed it — re-read and retry
+  5  partial    some environments changed and some did not
+  6  server     the server or the network is unwell — retry

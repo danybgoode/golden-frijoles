@@ -56,6 +56,7 @@ test('the /install page renders a live connector URL that actually round-trips',
       // would have stopped gating, and this exact-match comparison is what would say so.
       'get_flag',
       'list_flags',
+      // scenarios-light-up S2.1 — no `list_scenarios` for the public project's anonymous reader (verifier, #348).
     ].sort()
   )
 })

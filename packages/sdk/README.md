@@ -35,6 +35,11 @@ await growth.pushInputValues('attributed_revenue', [{ occurredOn: today, value: 
 - **ESM and CommonJS:** `import` and `require` both work, with types.
 - **Every method returns an envelope** (`{ ok: true, … }` or `{ ok: false, error, code }`) and never throws.
 
+## 1.1 — make your app a drill target
+
+**Added only.** `createScenarioOwnershipHandler({ token })` answers the ownership check that makes an app a drill
+target ([Make your app a drill target](#make-your-app-a-drill-target)). Nothing else changes.
+
 ## 1.0 — a stable surface
 
 **Nothing from 0.6.0 is removed or renamed.** 1.0 adds a default URL, `identify`/`reset`, `pushInputValues` and an
@@ -195,6 +200,35 @@ The v1 request is bounded to 100 definitions and a 4 MiB JSON body. A new key cr
 version 1; an identical definition returns `created: false`; semantic drift is an HTTP `409` for an
 owner to resolve through the normal version lifecycle. Sync never activates, deactivates or deletes
 a flag.
+
+## Make your app a drill target
+
+A drill (a bounded, synthetic fault: a capped delay or a synthetic error) runs only against an app that has proved it
+is yours. An agent does it in three commands:
+
+```sh
+frijoles scenarios targets add site.probe --origin https://your.app   # prints a gf_target_… token, once
+# put the token in the app's server env (GOLDEN_FRIJOLES_TARGET_TOKEN), add the route below, deploy
+frijoles scenarios targets verify site.probe
+```
+
+The route the engine calls is `/api/internal/resilience/ownership` (`SCENARIO_OWNERSHIP_PATH`):
+
+```ts
+// app/api/internal/resilience/ownership/route.ts (Next.js; any Fetch-API runtime works the same)
+import { createScenarioOwnershipHandler } from '@golden-frijoles/sdk'
+
+const answer = createScenarioOwnershipHandler({ token: process.env.GOLDEN_FRIJOLES_TARGET_TOKEN! })
+
+export async function POST(request: Request) {
+  return (await answer(request)) ?? new Response(null, { status: 404 })
+}
+```
+
+The engine keeps only the token's SHA-256, and both sides sign with that hash, so the token never travels again after
+`targets add`. A check not signed by your token gets a plain 404. Lost the token? Revoke the target and add it again
+under a new key. The founder can do the same from the scenarios page; then define and launch drills with
+`frijoles scenarios define` / `launch` / `stop`, and run them through the provider below.
 
 ## Bounded scenario provider
 

@@ -19,6 +19,16 @@ import {
 import { flagsDiffCommand, flagsHistoryCommand } from './flags-history'
 import { flagsSyncCommand } from './flags-sync'
 import { northStarSetCommand } from './north-star'
+import {
+  scenariosDefineCommand,
+  scenariosLaunchCommand,
+  scenariosLsCommand,
+  scenariosRunsCommand,
+  scenariosStopCommand,
+  scenariosTargetsAddCommand,
+  scenariosTargetsRevokeCommand,
+  scenariosTargetsVerifyCommand,
+} from './scenarios'
 import { statusCommand } from './status'
 import { betSyncCommand } from './bet'
 import { experimentsDecisionCommand, northStarReadingsCommand } from './result-reads'
@@ -51,6 +61,14 @@ export const COMMANDS: readonly Command[] = [
   flagsSyncCommand,
   northStarSetCommand,
   northStarReadingsCommand,
+  scenariosLsCommand,
+  scenariosTargetsAddCommand,
+  scenariosTargetsVerifyCommand,
+  scenariosTargetsRevokeCommand,
+  scenariosDefineCommand,
+  scenariosLaunchCommand,
+  scenariosStopCommand,
+  scenariosRunsCommand,
   statusCommand,
   betSyncCommand,
   experimentsDecisionCommand,

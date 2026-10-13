@@ -7,6 +7,7 @@ import {
   isSecuritySimulationsEnabled,
 } from '@/lib/flags'
 import { getScenarioDashboardView } from '@/lib/scenario-dashboard'
+import { canAuthorScenarios } from '@/lib/scenario-authoring-policy'
 import {
   projectScenarioRows,
   scenarioAnswer,
@@ -42,10 +43,11 @@ export default async function ScenariosPage({ params }: { params: Promise<{ proj
     resilience: await isResilienceScenariosEnabled(),
     security: await isSecuritySimulationsEnabled(),
   }
-  const canAuthor =
-    membership.role === 'owner' &&
-    (await isScenarioAuthoringEnabled()) &&
-    (capabilities.resilience || capabilities.security)
+  const canAuthor = canAuthorScenarios({
+    role: membership.role,
+    authoringEnabled: await isScenarioAuthoringEnabled(),
+    capabilities,
+  })
 
   const definitions: ScenarioDefinitionInput[] = view.definitions.map((entry) => ({
     scenarioKey: entry.scenarioKey,
