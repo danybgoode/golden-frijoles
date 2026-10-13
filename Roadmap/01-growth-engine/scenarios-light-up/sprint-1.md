@@ -3,7 +3,7 @@ epic: scenarios-light-up
 sprint: 1
 title: "Anyone can make an app a target, from the terminal or the page"
 risk: high
-phase: Shaping
+phase: Building
 stories_total: 5
 stories:
   - id: S1.1
