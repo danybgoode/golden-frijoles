@@ -31,7 +31,9 @@ export async function checkOwnerTargetAnswer(
     timeoutMs: 5_000,
   })
   if (response.outcome !== 'response') {
-    return { ok: false, reason: 'unreachable', detail: `${target.origin} could not be reached (${response.classification}).` }
+    // One wording for every failure to connect: the classification (DNS, a private address, a timeout) would tell an
+    // owner how a hostname resolves inside our network (verifier, #348).
+    return { ok: false, reason: 'unreachable', detail: `${target.origin} could not be reached. Is the app deployed there?` }
   }
   if (response.status !== 204) {
     return {

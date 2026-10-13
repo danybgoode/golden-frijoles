@@ -17,7 +17,9 @@ type Environment = 'development' | 'preview' | 'production'
 type ScenarioTarget = {
   id: string
   key: string
-  targetKind: 'miyagi_resilience_probe_v1'
+  // scenarios-light-up: a project can hold owner-made targets too, and this snapshot lists every target in the project.
+  // Rejecting the second kind turned the whole Miyagi admin route into a 500 the moment an owner added one (verifier, #348).
+  targetKind: 'miyagi_resilience_probe_v1' | 'owner_token_v1'
   origin: string
   status: 'pending' | 'verified' | 'revoked'
   createdAt: string
@@ -117,7 +119,7 @@ function validTarget(value: unknown): value is ScenarioTarget {
   return (
     typeof value.id === 'string' &&
     typeof value.key === 'string' &&
-    value.targetKind === 'miyagi_resilience_probe_v1' &&
+    (value.targetKind === 'miyagi_resilience_probe_v1' || value.targetKind === 'owner_token_v1') &&
     typeof value.origin === 'string' &&
     (value.status === 'pending' || value.status === 'verified' || value.status === 'revoked') &&
     typeof value.createdAt === 'string' &&
@@ -318,6 +320,8 @@ export async function verifyScenarioTarget(input: {
   if (!snapshot) return { ok: false, status: 401 }
   const target = snapshot.targets.find((candidate) => candidate.id === input.operation.targetId)
   if (!target) return { ok: false, status: 400 }
+  // An owner-made target is verified through the owner path (scenarios-light-up D2), never through this credential one.
+  if (target.targetKind !== 'miyagi_resilience_probe_v1') return { ok: false, status: 409 }
   if (target.status === 'verified') {
     return { ok: true, targetId: target.id, status: target.status, changed: false }
   }
