@@ -45,7 +45,7 @@ export const flagsHistoryCommand: Command = {
   summary: 'every version of a flag, and who changed what',
   usage: 'frijoles flags history <key> [--project <slug>] [--json]',
   needsAuth: true,
-  detail: `Read-only: it creates no version, touches no activation and writes no audit row.
+  detail: `Read-only: it creates no version, switches nothing and writes no audit row.
 
   ⚠️ The audit window is CAPPED by the control plane at the most recent entries, so a flag
   with a very long history shows the newest of them rather than all of them. Saying so is
@@ -97,7 +97,8 @@ export const flagsHistoryCommand: Command = {
 export const flagsDiffCommand: Command = {
   path: ['flags', 'diff'],
   summary: 'what changed between two versions, in words',
-  usage: 'frijoles flags diff <key> --from 3 --to 4    ·    frijoles flags diff <key> --env preview --env production',
+  usage:
+    'frijoles flags diff <key> --from 3 --to 4    ·    frijoles flags diff <key> --env preview --env production',
   needsAuth: true,
   detail: `Two ways to ask:
     --from <n> --to <n>          compare two version numbers

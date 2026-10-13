@@ -3,15 +3,13 @@ frijoles flags create — create a flag, with a polarity, in the environments yo
 Usage
   frijoles flags create <key> --kill-switch|--enablement --all-envs
 
-Polarity decides what the flag serves on the day it is born, and the CLI derives the
-  default variant AND the activation from it — so the wrong combination cannot be typed:
+Polarity decides whether the flag is born on or off, in every environment you name:
 
-    --kill-switch   default "on",  serves TRUE  everywhere    (it is on until you kill it)
-    --enablement    default "off", serves FALSE everywhere    (you open it deliberately later)
+    --kill-switch   on  everywhere   (it is on until you kill it)
+    --enablement    off everywhere   (you switch it on deliberately later)
 
-  ⚠️ BOTH polarities ACTIVATE. A flag that is not activated is absent from the environment's
-  snapshot, so your app falls back to its own literal and the flag is invisible in the
-  provider — which is the failure this tool exists to end. "Disabled" means serving false.
+  The flags page shows the same switch: on is on, off is off. Change it with
+  `frijoles flags set <key> --value true|false` or `frijoles flags kill <key>`.
 
   For a non-boolean flag use --type with --variants and --default; polarity does not apply,
   because "which way is off?" has no answer for a string.

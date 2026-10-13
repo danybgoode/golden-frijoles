@@ -137,15 +137,13 @@ export const flagsCreateCommand: Command = {
   summary: 'create a flag, with a polarity, in the environments you name',
   usage: 'frijoles flags create <key> --kill-switch|--enablement --all-envs',
   needsAuth: true,
-  detail: `Polarity decides what the flag serves on the day it is born, and the CLI derives the
-  default variant AND the activation from it — so the wrong combination cannot be typed:
+  detail: `Polarity decides whether the flag is born on or off, in every environment you name:
 
-    --kill-switch   default "on",  serves TRUE  everywhere    (it is on until you kill it)
-    --enablement    default "off", serves FALSE everywhere    (you open it deliberately later)
+    --kill-switch   on  everywhere   (it is on until you kill it)
+    --enablement    off everywhere   (you switch it on deliberately later)
 
-  ⚠️ BOTH polarities ACTIVATE. A flag that is not activated is absent from the environment's
-  snapshot, so your app falls back to its own literal and the flag is invisible in the
-  provider — which is the failure this tool exists to end. "Disabled" means serving false.
+  The flags page shows the same switch: on is on, off is off. Change it with
+  \`frijoles flags set <key> --value true|false\` or \`frijoles flags kill <key>\`.
 
   For a non-boolean flag use --type with --variants and --default; polarity does not apply,
   because "which way is off?" has no answer for a string.`,
@@ -307,7 +305,10 @@ export const flagsRolloutCommand: Command = {
     const key = context.args.positionals[0]
     const raw = flagValue(context.args, 'percent')
     if (!key || raw === undefined) {
-      context.emit.fail('invalid', 'Usage: `frijoles flags rollout <key> --percent <0-100> --env production`.')
+      context.emit.fail(
+        'invalid',
+        'Usage: `frijoles flags rollout <key> --percent <0-100> --env production`.'
+      )
       return EXIT.USAGE
     }
     const percent = Number(raw)
@@ -340,7 +341,10 @@ export const flagsRulesCommand: Command = {
     const key = context.args.positionals[0]
     const path = flagValue(context.args, 'rules-file')
     if (!key || !path) {
-      context.emit.fail('invalid', 'Usage: `frijoles flags rules <key> --rules-file rules.json --env production`.')
+      context.emit.fail(
+        'invalid',
+        'Usage: `frijoles flags rules <key> --rules-file rules.json --env production`.'
+      )
       return EXIT.USAGE
     }
     let rules: unknown

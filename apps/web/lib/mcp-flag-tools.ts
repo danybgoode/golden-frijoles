@@ -127,7 +127,7 @@ export function registerFlagTools(
     'create_flag',
     {
       description:
-        'Create a feature flag with a polarity, active in the environments you name. `kill_switch` is born serving TRUE (it is on until you kill it); `enablement` is born serving FALSE (you open it later). Both are ACTIVATED — a flag that is not activated is absent from the snapshot and your app falls back to its own literal.',
+        'Create a feature flag with a polarity, in the environments you name. `kill_switch` is born ON (it is on until you kill it); `enablement` is born OFF (you switch it on later). The flags page shows the same On / Off.',
       inputSchema: {
         key: z.string().describe('The flag key, e.g. checkout.demo_enabled'),
         polarity: z.enum(['kill-switch', 'enablement']),

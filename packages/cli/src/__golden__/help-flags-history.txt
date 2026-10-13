@@ -3,7 +3,7 @@ frijoles flags history — every version of a flag, and who changed what
 Usage
   frijoles flags history <key> [--project <slug>] [--json]
 
-Read-only: it creates no version, touches no activation and writes no audit row.
+Read-only: it creates no version, switches nothing and writes no audit row.
 
   ⚠️ The audit window is CAPPED by the control plane at the most recent entries, so a flag
   with a very long history shows the newest of them rather than all of them. Saying so is
