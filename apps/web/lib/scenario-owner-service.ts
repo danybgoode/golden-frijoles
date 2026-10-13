@@ -19,6 +19,7 @@ import {
   type ScenarioCapabilityGates,
 } from './scenario-authoring-policy'
 import { checkOwnerTargetAnswer } from './scenario-owner-target-check'
+import { checkRateLimit } from './rate-limit'
 import {
   executeScenarioOwnerOperation,
   getScenarioOwnerDefinitionContext,
@@ -169,6 +170,11 @@ export async function verifyScenarioTarget(
   if (target.status === 'verified')
     return { ok: true, targetId: target.id, targetKey: target.key, status: 'verified', changed: false }
 
+  // Each verify makes the engine send one request to an origin the owner chose, so it is bounded per owner and project
+  // (verifier, #348): plenty for a person fixing a deploy, never a way to aim the engine at someone.
+  const limited = await checkRateLimit(`scenario-verify:${owner.projectId}:${owner.userId}`, { windowMs: 10 * 60_000, max: 10 })
+  if (!limited.ok) return { ok: false, error: 'Too many verify attempts for this project. Wait a few minutes and try again.' }
+
   const check = await checkOwnerTargetAnswer(guardedHttpOwnershipProofPost, {
     targetKey: target.key,
     origin: target.origin,
@@ -278,6 +284,9 @@ export async function launchScenarioRun(
   if (!create || create.operation !== 'create_run') return { ok: false, error: 'Invalid launch command.' }
   const context = await getScenarioOwnerDefinitionContext(owner.projectId, create.scenarioVersionId)
   if (!context) return { ok: false, notFound: true, error: 'The scenario definition is unavailable.' }
+  const gates = await capabilities()
+  // A switched-off kind is `disabled` (404), the same answer `define` gives, not a 400 (verifier, #348).
+  if (!isScenarioKindEnabled(context.definition.kind, gates)) return unavailable(context.definition.kind)
   const blocker = scenarioLaunchBlocker(
     {
       ...context.definition,
@@ -285,7 +294,7 @@ export async function launchScenarioRun(
       productionSecurityApproved: context.productionSecurityApproved,
       faultSummaryAvailable: context.faultSummary !== null,
     },
-    await capabilities()
+    gates
   )
   if (blocker) return { ok: false, error: blocker }
   const safeEnvironment = context.definition.environment
@@ -332,6 +341,8 @@ export async function startScenarioDraftRun(
   const context = await getScenarioOwnerRunContext(owner.projectId, start.runId)
   if (!context || context.status !== 'draft' || context.revision !== start.expectedRevision)
     return { ok: false, conflict: true, error: 'This draft run changed. Refresh and try again.' }
+  const gates = await capabilities()
+  if (!isScenarioKindEnabled(context.definition.kind, gates)) return unavailable(context.definition.kind)
   const blocker = scenarioLaunchBlocker(
     {
       ...context.definition,
@@ -340,7 +351,7 @@ export async function startScenarioDraftRun(
       productionSecurityApproved: context.productionSecurityApproved,
       faultSummaryAvailable: context.faultSummary !== null,
     },
-    await capabilities()
+    gates
   )
   if (blocker) return { ok: false, error: blocker }
   return fromOperation(

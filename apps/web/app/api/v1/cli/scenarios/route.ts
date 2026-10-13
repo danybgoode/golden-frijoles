@@ -74,10 +74,13 @@ export async function POST(req: NextRequest) {
       return answer(await revokeScenarioTarget(owner, { targetKey: input.targetKey, reason }), project)
 
     case 'define': {
-      // The agent names the drill; the bounds default to the page's, and the same builder and parser check them.
+      // The agent names the drill; the bounds default to the page's, and the same builder and parser check them. A
+      // resilience drill only: a security drill needs a template and the founder's approval, on the page (verifier, #348).
+      if (input.kind !== undefined && input.kind !== 'resilience')
+        return cliError('invalid', 'Only resilience drills are defined here; define a security drill on the scenarios page.')
       const environment = text(input.environment) ?? 'production'
       const built = buildScenarioDefinition({
-        kind: input.kind === 'security' ? 'security' : 'resilience',
+        kind: 'resilience',
         cohort: input.cohort === 'internal' ? 'internal' : 'synthetic',
         targetKey: text(input.targetKey) ?? '',
         environment: environment as 'development' | 'preview' | 'production',

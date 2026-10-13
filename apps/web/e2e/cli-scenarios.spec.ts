@@ -48,11 +48,17 @@ test('owner writes, member reads, stranger sees nothing; a target is registered 
     expect((await request.get(`/api/v1/cli/scenarios?project=${project}`, { headers: stranger.auth })).status()).toBe(404)
 
     const register = { project, command: 'register_target', targetKey: 'site.probe', origin: 'https://app.example.invalid', reason: 'spec' }
-    if (!view.authoring) {
-      // Dark: every write is 404 `disabled` before the credential is even looked at.
-      const dark = await post(request, owner.auth, register)
-      expect(dark.status()).toBe(404)
-      expect(((await dark.json()) as { code: string }).code).toBe('disabled')
+    // The branch comes from the server's own gate file, never from the route's answer (verifier, #348): a route that
+    // misreported its switch would otherwise pick the branch that passes.
+    const authoringOn = process.env.SCENARIO_AUTHORING_ENABLED === 'true'
+    expect(view.authoring).toBe(authoringOn)
+    if (!authoringOn) {
+      // Dark: every write is 404 `disabled`, and BEFORE the credential is looked at: a bad token gets the same answer.
+      for (const auth of [owner.auth, { authorization: 'Bearer gf_pat_not_a_real_token' }]) {
+        const dark = await post(request, auth, register)
+        expect(dark.status()).toBe(404)
+        expect(((await dark.json()) as { code: string }).code).toBe('disabled')
+      }
       return
     }
 
@@ -73,6 +79,23 @@ test('owner writes, member reads, stranger sees nothing; a target is registered 
     }
     expect(listed.targets).toHaveLength(1)
     expect(JSON.stringify(listed)).not.toContain(added.token)
+
+    // A project can hold both kinds: Miyagi's credential snapshot still reads (it listed every target and once refused
+    // this kind, turning the whole admin route into a 500; verifier, #348).
+    const adminKey = `gb_key_${randomBytes(16).toString('hex')}`
+    const minted = await client.rpc('create_flag_admin_key', {
+      p_project_id: row!.id,
+      p_environment: 'production',
+      p_key_hash: sha256(adminKey),
+      p_label: 'spec scenario admin',
+      p_expires_at: null,
+      p_actor_user_id: owner.id,
+    })
+    expect(minted.error).toBeNull()
+    const adminRead = await request.get('/api/v1/scenarios/admin', { headers: { authorization: `Bearer ${adminKey}` } })
+    expect(adminRead.status()).toBe(200)
+    const adminSnapshot = (await adminRead.json()) as { targets: Array<{ key: string; targetKind: string }> }
+    expect(adminSnapshot.targets.map((target) => [target.key, target.targetKind])).toEqual([['site.probe', 'owner_token_v1']])
 
     // Registered once: the token cannot be shown again, so a second registration is a conflict that says what to do.
     const again = await post(request, owner.auth, register)
