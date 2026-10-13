@@ -25,7 +25,10 @@ const target = (token: string) => ({
 
 test('an app serving the SDK handler with this token passes', async () => {
   const token = createScenarioOwnerToken()
-  const result = await checkOwnerTargetAnswer(sendTo(app(createScenarioOwnershipHandler({ token }))), target(token))
+  const result = await checkOwnerTargetAnswer(
+    sendTo(app(createScenarioOwnershipHandler({ token }))),
+    target(token)
+  )
   assert.deepEqual(result, { ok: true })
 })
 
@@ -38,7 +41,11 @@ test('an app holding another token is a wrong answer, with a reason that says wh
 })
 
 test('a 204 without the right proof is a wrong answer', async () => {
-  const liar = (async () => new Response(null, { status: 204, headers: { 'x-golden-beans-ownership-proof': 'a'.repeat(64) } })) as typeof fetch
+  const liar = (async () =>
+    new Response(null, {
+      status: 204,
+      headers: { 'x-golden-beans-ownership-proof': 'a'.repeat(64) },
+    })) as typeof fetch
   const result = await checkOwnerTargetAnswer(sendTo(liar), target(createScenarioOwnerToken()))
   assert.equal(!result.ok && result.reason, 'wrong_answer')
 })

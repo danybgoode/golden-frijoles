@@ -200,7 +200,10 @@ test.describe('POST /api/v1/public/mcp/c/:token', () => {
       expect(payload.reason).toBe('feature_not_found')
 
       // scenarios-light-up S2.1 — a project's own token reads its drills: the allow-listed fields, this project's only.
-      const scenarios = await rpc(request, isolationToken, 'tools/call', { name: 'list_scenarios', arguments: {} })
+      const scenarios = await rpc(request, isolationToken, 'tools/call', {
+        name: 'list_scenarios',
+        arguments: {},
+      })
       expect(scenarios.status()).toBe(200)
       const listed = JSON.parse((await scenarios.json()).result.content[0].text)
       expect(listed).toMatchObject({ targets: [], definitions: [], runs: [] })

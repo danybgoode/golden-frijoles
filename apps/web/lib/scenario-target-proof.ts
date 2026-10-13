@@ -97,7 +97,12 @@ export function hashScenarioOwnerToken(token: string): string {
   return createHash('sha256').update(token, 'utf8').digest('hex')
 }
 
-function ownerTokenMessage(kind: 'request' | 'response', challenge: string, targetKey: string, origin: string): string {
+function ownerTokenMessage(
+  kind: 'request' | 'response',
+  challenge: string,
+  targetKey: string,
+  origin: string
+): string {
   if (!HEX_64.test(challenge)) throw new Error('Invalid scenario target challenge')
   return `golden-frijoles-target-${kind}-v2\n${challenge}\n${canonicalTarget(targetKey, origin)}`
 }

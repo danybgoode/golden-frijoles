@@ -56,7 +56,8 @@ const text = (value: unknown) => (typeof value === 'string' ? value : undefined)
 const int = (value: unknown, fallback: number) => (value === undefined ? fallback : Number(value))
 
 export async function POST(req: NextRequest) {
-  if (!(await scenarioAuthoringOn())) return cliError('disabled', 'Scenario authoring is unavailable in this deployment.')
+  if (!(await scenarioAuthoringOn()))
+    return cliError('disabled', 'Scenario authoring is unavailable in this deployment.')
   const input = await readCliBody(req)
   if (input instanceof NextResponse) return input
   const context = await requireCliOwner(req, text(input.project) ?? null)
@@ -67,7 +68,10 @@ export async function POST(req: NextRequest) {
 
   switch (input.command) {
     case 'register_target':
-      return answer(await registerScenarioTarget(owner, { targetKey: input.targetKey, origin: input.origin, reason }), project)
+      return answer(
+        await registerScenarioTarget(owner, { targetKey: input.targetKey, origin: input.origin, reason }),
+        project
+      )
     case 'verify_target':
       return answer(await verifyScenarioTarget(owner, { targetKey: input.targetKey, reason }), project)
     case 'revoke_target':
@@ -77,7 +81,10 @@ export async function POST(req: NextRequest) {
       // The agent names the drill; the bounds default to the page's, and the same builder and parser check them. A
       // resilience drill only: a security drill needs a template and the founder's approval, on the page (verifier, #348).
       if (input.kind !== undefined && input.kind !== 'resilience')
-        return cliError('invalid', 'Only resilience drills are defined here; define a security drill on the scenarios page.')
+        return cliError(
+          'invalid',
+          'Only resilience drills are defined here; define a security drill on the scenarios page.'
+        )
       const environment = text(input.environment) ?? 'production'
       const built = buildScenarioDefinition({
         kind: 'resilience',
@@ -113,7 +120,8 @@ export async function POST(req: NextRequest) {
         const view = await getScenarioDashboardView(context.projectId)
         const versions = view.definitions.filter((definition) => definition.scenarioKey === input.scenarioKey)
         versionId = versions.sort((a, b) => b.version - a.version)[0]?.id
-        if (!versionId) return cliError('not_found', `No scenario \`${String(input.scenarioKey)}\` in this project.`)
+        if (!versionId)
+          return cliError('not_found', `No scenario \`${String(input.scenarioKey)}\` in this project.`)
       }
       return answer(await launchScenarioRun(owner, { scenarioVersionId: versionId, reason }), project)
     }

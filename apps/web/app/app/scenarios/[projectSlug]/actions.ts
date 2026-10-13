@@ -21,8 +21,13 @@ type OwnerAuth =
 
 async function owner(slug: unknown): Promise<OwnerAuth> {
   if (!(await scenarioAuthoringOn()))
-    return { failure: { ok: false, error: 'Scenario authoring is unavailable in this deployment.' }, slug: null, owner: null }
-  if (typeof slug !== 'string') return { failure: { ok: false, error: 'Invalid project.' }, slug: null, owner: null }
+    return {
+      failure: { ok: false, error: 'Scenario authoring is unavailable in this deployment.' },
+      slug: null,
+      owner: null,
+    }
+  if (typeof slug !== 'string')
+    return { failure: { ok: false, error: 'Invalid project.' }, slug: null, owner: null }
   const { projectId, userId } = await requireProjectOwnership(slug)
   return { failure: null, slug, owner: { projectId, userId } }
 }
@@ -73,7 +78,12 @@ export async function startScenarioRunAction(
 }
 
 /** scenarios-light-up S1.5 — register an app as a target; the token comes back once, for the owner to copy. */
-export async function registerScenarioTargetAction(slug: unknown, targetKey: unknown, origin: unknown, reason: unknown) {
+export async function registerScenarioTargetAction(
+  slug: unknown,
+  targetKey: unknown,
+  origin: unknown,
+  reason: unknown
+) {
   const auth = await owner(slug)
   if (auth.failure) return auth.failure
   const result = await registerScenarioTarget(auth.owner, { targetKey, origin, reason })

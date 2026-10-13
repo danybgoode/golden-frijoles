@@ -69,7 +69,11 @@ export function TargetRegistration({
               />
             )}
           </Field>
-          <Field label="Origin" hint="The app's address with no path, for example https://your.app." error={null}>
+          <Field
+            label="Origin"
+            hint="The app's address with no path, for example https://your.app."
+            error={null}
+          >
             {(control) => (
               <input
                 {...control}
@@ -106,14 +110,16 @@ export function TargetRegistration({
         <section className="notice" role="region" aria-label="Target token">
           <h3>{issued.targetKey} is registered, but not verified yet</h3>
           <p>
-            <strong>Copy it now — it is not shown again.</strong> If you lose it, revoke the target and register it
-            again under a new key.
+            <strong>Copy it now — it is not shown again.</strong> If you lose it, revoke the target and
+            register it again under a new key.
           </p>
           <p>1. Put this line in your app&apos;s server environment:</p>
           <pre>
             <code>{`GOLDEN_FRIJOLES_TARGET_TOKEN=${issued.token}`}</code>
           </pre>
-          <p>2. Add this route to your app and deploy it (it answers at /api/internal/resilience/ownership):</p>
+          <p>
+            2. Add this route to your app and deploy it (it answers at /api/internal/resilience/ownership):
+          </p>
           <pre>
             <code>{ROUTE_SNIPPET}</code>
           </pre>

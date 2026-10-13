@@ -55,7 +55,11 @@ test('the page shows owner controls only to an owner, with authoring on and a ki
   assert.equal(canAuthorScenarios({ role: 'owner', authoringEnabled: false, capabilities: on }), false)
   assert.equal(canAuthorScenarios({ role: 'member', authoringEnabled: true, capabilities: on }), false)
   assert.equal(
-    canAuthorScenarios({ role: 'owner', authoringEnabled: true, capabilities: { resilience: false, security: false } }),
+    canAuthorScenarios({
+      role: 'owner',
+      authoringEnabled: true,
+      capabilities: { resilience: false, security: false },
+    }),
     false
   )
 })

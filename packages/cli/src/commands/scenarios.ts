@@ -25,7 +25,14 @@ const ENVIRONMENTS = ['production', 'preview', 'development'] as const
 const WATCH_INTERVAL_MS = 3_000
 const WATCH_CAP_MS = 10 * 60 * 1_000
 
-type Target = { id: string; key: string; kind: string; origin: string; status: string; verifiedAt: string | null }
+type Target = {
+  id: string
+  key: string
+  kind: string
+  origin: string
+  status: string
+  verifiedAt: string | null
+}
 type DefinitionBody = {
   kind?: string
   cohort?: string
@@ -46,7 +53,13 @@ type Run = {
   requestCount: number
   stopReason: string | null
 }
-type ListBody = { project: string; authoring: boolean; targets: Target[]; definitions: Definition[]; runs: Run[] }
+type ListBody = {
+  project: string
+  authoring: boolean
+  targets: Target[]
+  definitions: Definition[]
+  runs: Run[]
+}
 
 /** `checkout.fault@3` → `{ flagKey: 'checkout.fault', flagVersion: 3 }`, or null for anything else. */
 export function parseFlagRef(text: string): { flagKey: string; flagVersion: number } | null {
@@ -111,7 +124,11 @@ function failWith(context: CommandContext, result: Failure): ExitCode {
   return exitForServerCode(result.code)
 }
 
-const PROJECT_FLAG = { name: 'project', value: '<slug>', describe: 'the project (default: the remembered one)' }
+const PROJECT_FLAG = {
+  name: 'project',
+  value: '<slug>',
+  describe: 'the project (default: the remembered one)',
+}
 const REASON_FLAG = {
   name: 'reason',
   value: '<text>',
@@ -159,7 +176,10 @@ export const scenariosLsCommand: Command = {
       'TARGETS',
       targets.length === 0
         ? '  none yet — `frijoles scenarios targets add <key> --origin <https-origin>`'
-        : table(['KEY', 'ORIGIN', 'STATUS'], targets.map((target) => [target.key, target.origin, target.status])),
+        : table(
+            ['KEY', 'ORIGIN', 'STATUS'],
+            targets.map((target) => [target.key, target.origin, target.status])
+          ),
       '',
       'DEFINITIONS',
       definitions.length === 0
@@ -171,7 +191,9 @@ export const scenariosLsCommand: Command = {
               row.definition.kind ?? '—',
               row.definition.cohort ?? '—',
               row.definition.targetKey ?? '—',
-              row.definition.flag?.key ? `${row.definition.flag.key}@${row.definition.flag.definitionVersion}` : '—',
+              row.definition.flag?.key
+                ? `${row.definition.flag.key}@${row.definition.flag.definitionVersion}`
+                : '—',
               describeWindow(row.definition),
             ])
           ),
@@ -195,7 +217,11 @@ export const scenariosTargetsAddCommand: Command = {
     2. serve createScenarioOwnershipHandler from @golden-frijoles/sdk at /api/internal/resilience/ownership
     3. deploy the app
     4. run \`frijoles scenarios targets verify <key>\``,
-  flags: [PROJECT_FLAG, { name: 'origin', value: '<https-origin>', describe: 'the app origin — required' }, REASON_FLAG],
+  flags: [
+    PROJECT_FLAG,
+    { name: 'origin', value: '<https-origin>', describe: 'the app origin — required' },
+    REASON_FLAG,
+  ],
   async run(context): Promise<ExitCode> {
     const targetKey = context.args.positionals[0]
     const origin = flagValue(context.args, 'origin')?.trim()
@@ -281,7 +307,9 @@ export const scenariosTargetsRevokeCommand: Command = {
       context.emit.fail('invalid', 'Usage: `frijoles scenarios targets revoke <key>`.')
       return EXIT.USAGE
     }
-    const done = await ownerWrite<Record<string, unknown>>(context, 'revoke_target', 'targets revoke', { targetKey })
+    const done = await ownerWrite<Record<string, unknown>>(context, 'revoke_target', 'targets revoke', {
+      targetKey,
+    })
     if (!done.ok) return done.code
     context.emit.ok(done.body, `Target ${targetKey} revoked in ${done.project}.`)
     return EXIT.OK
@@ -305,7 +333,11 @@ export const scenariosDefineCommand: Command = {
   flags: [
     PROJECT_FLAG,
     { name: 'target', value: '<key>', describe: 'a verified target — required' },
-    { name: 'flag', value: '<flagKey>@<version>', describe: 'the fault flag and its exact version — required' },
+    {
+      name: 'flag',
+      value: '<flagKey>@<version>',
+      describe: 'the fault flag and its exact version — required',
+    },
     { name: 'cohort', value: '<cohort>', describe: `${COHORTS.join(' | ')} (default: synthetic)` },
     { name: 'env', value: '<environment>', describe: `${ENVIRONMENTS.join(' | ')} (default: production)` },
     { name: 'duration', value: '<seconds>', describe: 'how long the window lasts' },
@@ -385,7 +417,10 @@ export const scenariosLaunchCommand: Command = {
     }
     const done = await ownerWrite<Record<string, unknown>>(context, 'launch', 'launch', { scenarioKey })
     if (!done.ok) return done.code
-    context.emit.ok(done.body, `Launched ${scenarioKey} in ${done.project}.\nNext: frijoles scenarios runs --watch`)
+    context.emit.ok(
+      done.body,
+      `Launched ${scenarioKey} in ${done.project}.\nNext: frijoles scenarios runs --watch`
+    )
     return EXIT.OK
   },
 }
@@ -420,7 +455,10 @@ export const scenariosRunsCommand: Command = {
   run is still running (or after 10 minutes). Under --json it prints one document: the final runs.
 
   Stop a run with \`frijoles scenarios stop <run-id>\`.`,
-  flags: [PROJECT_FLAG, { name: 'watch', describe: 'keep reading until no run is running (10 minutes at most)' }],
+  flags: [
+    PROJECT_FLAG,
+    { name: 'watch', describe: 'keep reading until no run is running (10 minutes at most)' },
+  ],
   async run(context): Promise<ExitCode> {
     const project = resolveProject(context)
     if (!project) return missingProject(context)

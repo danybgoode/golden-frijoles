@@ -1,10 +1,21 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { PROBE_MAX_DELAY_MS, isSyntheticSubject, probeEnvironment, runScenarioProbe } from './scenario-probe.ts'
+import {
+  PROBE_MAX_DELAY_MS,
+  isSyntheticSubject,
+  probeEnvironment,
+  runScenarioProbe,
+} from './scenario-probe.ts'
 
 const RUN = '11111111-1111-4111-8111-111111111111'
 
-function fakeProvider(fault: { kind: 'none' } | { kind: 'delay'; delayMs: number } | { kind: 'synthetic_error'; errorCode: 'GB_RESILIENCE_503' }, opts: { active?: boolean; admitted?: boolean } = {}) {
+function fakeProvider(
+  fault:
+    | { kind: 'none' }
+    | { kind: 'delay'; delayMs: number }
+    | { kind: 'synthetic_error'; errorCode: 'GB_RESILIENCE_503' },
+  opts: { active?: boolean; admitted?: boolean } = {}
+) {
   const calls: string[] = []
   const provider = {
     refresh: async () => {
@@ -29,20 +40,43 @@ function fakeProvider(fault: { kind: 'none' } | { kind: 'delay'; delayMs: number
     reserveExecution: async () => {
       calls.push('reserve')
       return opts.admitted === false
-        ? ({ ok: true, operation: 'reserve', leaseId: null, runRevision: 2, expiresAt: null, admitted: false, reason: 'REQUEST_CAP' } as const)
-        : ({ ok: true, operation: 'reserve', leaseId: 'lease-1', runRevision: 2, expiresAt: 'x', admitted: true, reason: 'ADMITTED' } as const)
+        ? ({
+            ok: true,
+            operation: 'reserve',
+            leaseId: null,
+            runRevision: 2,
+            expiresAt: null,
+            admitted: false,
+            reason: 'REQUEST_CAP',
+          } as const)
+        : ({
+            ok: true,
+            operation: 'reserve',
+            leaseId: 'lease-1',
+            runRevision: 2,
+            expiresAt: 'x',
+            admitted: true,
+            reason: 'ADMITTED',
+          } as const)
     },
     settleExecution: async (_run: string, _lease: string, succeeded: boolean) => {
       calls.push(`settle:${succeeded}`)
       return { ok: true } as never
     },
     getSnapshot: () =>
-      ({ revision: 7, scenarios: [{ runId: RUN, flag: { key: 'ops.site_fault', definitionVersion: 3 } }] }) as never,
+      ({
+        revision: 7,
+        scenarios: [{ runId: RUN, flag: { key: 'ops.site_fault', definitionVersion: 3 } }],
+      }) as never,
   }
   return { provider, calls }
 }
 
-function deps(provider: ReturnType<typeof fakeProvider>['provider'], tracked: unknown[] = [], slept: number[] = []) {
+function deps(
+  provider: ReturnType<typeof fakeProvider>['provider'],
+  tracked: unknown[] = [],
+  slept: number[] = []
+) {
   let clock = 0
   return {
     provider,

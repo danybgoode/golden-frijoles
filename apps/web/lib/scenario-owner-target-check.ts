@@ -12,28 +12,41 @@ import {
 export const SCENARIO_OWNERSHIP_PATH = '/api/internal/resilience/ownership'
 
 export type OwnerTargetCheck =
-  | { ok: true }
-  | { ok: false; reason: 'unreachable' | 'not_answered' | 'wrong_answer'; detail: string }
+  { ok: true } | { ok: false; reason: 'unreachable' | 'not_answered' | 'wrong_answer'; detail: string }
 
 export async function checkOwnerTargetAnswer(
   send: (input: GuardedHttpPost) => Promise<GuardedHttpOwnershipProofResult>,
   target: { targetKey: string; origin: string; tokenHash: string }
 ): Promise<OwnerTargetCheck> {
   const challenge = createScenarioTargetChallenge()
-  const signed = { tokenHash: target.tokenHash, challenge, targetKey: target.targetKey, origin: target.origin }
+  const signed = {
+    tokenHash: target.tokenHash,
+    challenge,
+    targetKey: target.targetKey,
+    origin: target.origin,
+  }
   const response = await send({
     targetUrl: `${target.origin}${SCENARIO_OWNERSHIP_PATH}`,
     headers: {
       'Content-Type': 'application/json',
       [SCENARIO_TARGET_REQUEST_HEADER]: createScenarioOwnerTokenSignature(signed),
     },
-    body: JSON.stringify({ contractVersion: 2, challenge, targetKey: target.targetKey, origin: target.origin }),
+    body: JSON.stringify({
+      contractVersion: 2,
+      challenge,
+      targetKey: target.targetKey,
+      origin: target.origin,
+    }),
     timeoutMs: 5_000,
   })
   if (response.outcome !== 'response') {
     // One wording for every failure to connect: the classification (DNS, a private address, a timeout) would tell an
     // owner how a hostname resolves inside our network (verifier, #348).
-    return { ok: false, reason: 'unreachable', detail: `${target.origin} could not be reached. Is the app deployed there?` }
+    return {
+      ok: false,
+      reason: 'unreachable',
+      detail: `${target.origin} could not be reached. Is the app deployed there?`,
+    }
   }
   if (response.status !== 204) {
     return {

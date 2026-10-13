@@ -5,10 +5,7 @@
 // through it. It does exactly what the SDK README tells a customer to do: resolve the scenario for this target,
 // reserve a lease, apply the closed fault at this seam, settle, and record the execution. Pure over its dependencies,
 // so the whole sequence is tested without a server (`scenario-probe.test.ts`).
-import type {
-  ScenarioExecutionTelemetryInput,
-  ScenarioProvider,
-} from '@golden-frijoles/sdk'
+import type { ScenarioExecutionTelemetryInput, ScenarioProvider } from '@golden-frijoles/sdk'
 
 /** The most a probe will wait, whatever the fault says. The SDK already caps a delay; this is our own ceiling. */
 export const PROBE_MAX_DELAY_MS = 5_000
@@ -38,7 +35,10 @@ export function probeEnvironment(vercelEnv: string | undefined): ProbeEnvironmen
 
 export async function runScenarioProbe(
   deps: {
-    provider: Pick<ScenarioProvider, 'refresh' | 'resolveScenario' | 'reserveExecution' | 'settleExecution' | 'getSnapshot'>
+    provider: Pick<
+      ScenarioProvider,
+      'refresh' | 'resolveScenario' | 'reserveExecution' | 'settleExecution' | 'getSnapshot'
+    >
     track: ((input: ScenarioExecutionTelemetryInput) => Promise<unknown>) | null
     sleep: (ms: number) => Promise<void>
     now: () => number
@@ -79,7 +79,14 @@ export async function runScenarioProbe(
   const latencyMs = deps.now() - started
 
   const entry = deps.provider.getSnapshot()?.scenarios.find((candidate) => candidate.runId === runId)
-  if (deps.track && entry && resolution.scenarioKey && resolution.scenarioVersion && resolution.variant && resolution.cohort) {
+  if (
+    deps.track &&
+    entry &&
+    resolution.scenarioKey &&
+    resolution.scenarioVersion &&
+    resolution.variant &&
+    resolution.cohort
+  ) {
     // Telemetry never decides the probe's answer: a failed send is the engine's to notice, not the drill's.
     await deps
       .track({
@@ -104,7 +111,12 @@ export async function runScenarioProbe(
           snapshotVersion: deps.provider.getSnapshot()!.revision,
         },
         ...(entry.experiment
-          ? { experiment: { key: entry.experiment.key, definitionVersion: entry.experiment.definitionVersion } }
+          ? {
+              experiment: {
+                key: entry.experiment.key,
+                definitionVersion: entry.experiment.definitionVersion,
+              },
+            }
           : {}),
       })
       .catch(() => undefined)

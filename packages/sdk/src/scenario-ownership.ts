@@ -38,7 +38,9 @@ export function createScenarioOwnershipHandler(
   config: ScenarioOwnershipHandlerConfig
 ): (request: Request) => Promise<Response | null> {
   if (!config || typeof config.token !== 'string' || !TOKEN.test(config.token)) {
-    throw new Error('createScenarioOwnershipHandler needs the gf_target_… token printed when the target was added')
+    throw new Error(
+      'createScenarioOwnershipHandler needs the gf_target_… token printed when the target was added'
+    )
   }
   const keyPromise = sha256Hex(config.token).then((tokenHash) => importHmacKey(tokenHash))
 
@@ -73,7 +75,10 @@ export function createScenarioOwnershipHandler(
     const expected = await hmacHex(key, message('request', challenge, targetKey, origin))
     if (!constantTimeEqual(expected, signature)) return notFound()
     const proof = await hmacHex(key, message('response', challenge, targetKey, origin))
-    return new Response(null, { status: 204, headers: { [PROOF_HEADER]: proof, 'Cache-Control': 'no-store' } })
+    return new Response(null, {
+      status: 204,
+      headers: { [PROOF_HEADER]: proof, 'Cache-Control': 'no-store' },
+    })
   }
 }
 
@@ -157,9 +162,13 @@ async function sha256Hex(value: string): Promise<string> {
 }
 
 function importHmacKey(secret: string): Promise<HmacKey> {
-  return subtle().importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, [
-    'sign',
-  ])
+  return subtle().importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  )
 }
 
 async function hmacHex(key: HmacKey, value: string): Promise<string> {

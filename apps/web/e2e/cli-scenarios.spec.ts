@@ -45,9 +45,17 @@ test('owner writes, member reads, stranger sees nothing; a target is registered 
     expect(read.status()).toBe(200)
     const view = (await read.json()) as { authoring: boolean; targets: unknown[]; runs: unknown[] }
     expect(view.targets).toEqual([])
-    expect((await request.get(`/api/v1/cli/scenarios?project=${project}`, { headers: stranger.auth })).status()).toBe(404)
+    expect(
+      (await request.get(`/api/v1/cli/scenarios?project=${project}`, { headers: stranger.auth })).status()
+    ).toBe(404)
 
-    const register = { project, command: 'register_target', targetKey: 'site.probe', origin: 'https://app.example.invalid', reason: 'spec' }
+    const register = {
+      project,
+      command: 'register_target',
+      targetKey: 'site.probe',
+      origin: 'https://app.example.invalid',
+      reason: 'spec',
+    }
     // The branch comes from the server's own gate file, never from the route's answer (verifier, #348): a route that
     // misreported its switch would otherwise pick the branch that passes.
     const authoringOn = process.env.SCENARIO_AUTHORING_ENABLED === 'true'
@@ -72,9 +80,15 @@ test('owner writes, member reads, stranger sees nothing; a target is registered 
     expect(added.status).toBe('pending')
     expect(added.token).toMatch(/^gf_target_[0-9a-f]{64}$/)
     // Only the token's hash is kept; it is never read back.
-    const { data: stored } = await client.from('scenario_targets').select('ownership_challenge_hash, target_kind').eq('id', added.targetId).single()
+    const { data: stored } = await client
+      .from('scenario_targets')
+      .select('ownership_challenge_hash, target_kind')
+      .eq('id', added.targetId)
+      .single()
     expect(stored).toEqual({ ownership_challenge_hash: sha256(added.token), target_kind: 'owner_token_v1' })
-    const listed = (await (await request.get(`/api/v1/cli/scenarios?project=${project}`, { headers: owner.auth })).json()) as {
+    const listed = (await (
+      await request.get(`/api/v1/cli/scenarios?project=${project}`, { headers: owner.auth })
+    ).json()) as {
       targets: Array<Record<string, unknown>>
     }
     expect(listed.targets).toHaveLength(1)
@@ -92,33 +106,70 @@ test('owner writes, member reads, stranger sees nothing; a target is registered 
       p_actor_user_id: owner.id,
     })
     expect(minted.error).toBeNull()
-    const adminRead = await request.get('/api/v1/scenarios/admin', { headers: { authorization: `Bearer ${adminKey}` } })
+    const adminRead = await request.get('/api/v1/scenarios/admin', {
+      headers: { authorization: `Bearer ${adminKey}` },
+    })
     expect(adminRead.status()).toBe(200)
     const adminSnapshot = (await adminRead.json()) as { targets: Array<{ key: string; targetKind: string }> }
-    expect(adminSnapshot.targets.map((target) => [target.key, target.targetKind])).toEqual([['site.probe', 'owner_token_v1']])
+    expect(adminSnapshot.targets.map((target) => [target.key, target.targetKind])).toEqual([
+      ['site.probe', 'owner_token_v1'],
+    ])
 
     // Registered once: the token cannot be shown again, so a second registration is a conflict that says what to do.
     const again = await post(request, owner.auth, register)
     expect(again.status()).toBe(409)
-    expect(((await again.json()) as { error: string }).error).toMatch(/revoke it and add the app under a new key/)
+    expect(((await again.json()) as { error: string }).error).toMatch(
+      /revoke it and add the app under a new key/
+    )
 
     // Verify asks the app; an origin that cannot be reached is a plain reason, and nothing is verified.
-    const verify = await post(request, owner.auth, { project, command: 'verify_target', targetKey: 'site.probe', reason: 'spec' })
+    const verify = await post(request, owner.auth, {
+      project,
+      command: 'verify_target',
+      targetKey: 'site.probe',
+      reason: 'spec',
+    })
     expect(verify.status()).toBe(400)
     expect(((await verify.json()) as { error: string }).error).toMatch(/could not be reached/)
-    const { data: still } = await client.from('scenario_targets').select('status').eq('id', added.targetId).single()
+    const { data: still } = await client
+      .from('scenario_targets')
+      .select('status')
+      .eq('id', added.targetId)
+      .single()
     expect(still?.status).toBe('pending')
 
     // A launch on a scenario that does not exist, and a stop on a run that does not exist, are "not found".
-    expect((await post(request, owner.auth, { project, command: 'launch', scenarioKey: 'nope', reason: 'spec' })).status()).toBe(404)
     expect(
-      (await post(request, owner.auth, { project, command: 'stop', runId: '00000000-0000-4000-8000-000000000000', reason: 'spec' })).status()
+      (
+        await post(request, owner.auth, { project, command: 'launch', scenarioKey: 'nope', reason: 'spec' })
+      ).status()
     ).toBe(404)
-    expect((await post(request, owner.auth, { project, command: 'teleport', reason: 'spec' })).status()).toBe(400)
+    expect(
+      (
+        await post(request, owner.auth, {
+          project,
+          command: 'stop',
+          runId: '00000000-0000-4000-8000-000000000000',
+          reason: 'spec',
+        })
+      ).status()
+    ).toBe(404)
+    expect((await post(request, owner.auth, { project, command: 'teleport', reason: 'spec' })).status()).toBe(
+      400
+    )
 
-    const revoke = await post(request, owner.auth, { project, command: 'revoke_target', targetKey: 'site.probe', reason: 'spec' })
+    const revoke = await post(request, owner.auth, {
+      project,
+      command: 'revoke_target',
+      targetKey: 'site.probe',
+      reason: 'spec',
+    })
     expect(revoke.status()).toBe(200)
-    const { data: gone } = await client.from('scenario_targets').select('status').eq('id', added.targetId).single()
+    const { data: gone } = await client
+      .from('scenario_targets')
+      .select('status')
+      .eq('id', added.targetId)
+      .single()
     expect(gone?.status).toBe('revoked')
   } finally {
     for (const who of [owner, member, stranger]) {
