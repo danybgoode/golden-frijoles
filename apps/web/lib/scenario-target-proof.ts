@@ -79,3 +79,45 @@ export function scenarioTargetProofMatches(expected: string, received: unknown):
   if (!HEX_64.test(expected) || typeof received !== 'string' || !HEX_64.test(received)) return false
   return timingSafeEqual(Buffer.from(expected, 'hex'), Buffer.from(received, 'hex'))
 }
+
+// scenarios-light-up D2 — the `owner_token_v1` contract. The owner's app holds a one-time token; the engine keeps only
+// its SHA-256 (`ownership_challenge_hash`). Both sides key their HMACs with that hash, so the token never travels
+// after registration, and a fresh challenge per verify means an answer cannot be replayed. The SDK's
+// `createScenarioOwnershipHandler` is the app's side; `scenario-target-proof.test.ts` pins both to the same vectors.
+export const SCENARIO_OWNER_TOKEN_PREFIX = 'gf_target_'
+const OWNER_TOKEN = /^gf_target_[0-9a-f]{64}$/
+
+export function createScenarioOwnerToken(): string {
+  return `${SCENARIO_OWNER_TOKEN_PREFIX}${randomBytes(SCENARIO_TARGET_CHALLENGE_BYTES).toString('hex')}`
+}
+
+/** The stored hash, and the key both sides sign with. */
+export function hashScenarioOwnerToken(token: string): string {
+  if (!OWNER_TOKEN.test(token)) throw new Error('Invalid scenario owner token')
+  return createHash('sha256').update(token, 'utf8').digest('hex')
+}
+
+function ownerTokenMessage(kind: 'request' | 'response', challenge: string, targetKey: string, origin: string): string {
+  if (!HEX_64.test(challenge)) throw new Error('Invalid scenario target challenge')
+  return `golden-frijoles-target-${kind}-v2\n${challenge}\n${canonicalTarget(targetKey, origin)}`
+}
+
+export function createScenarioOwnerTokenSignature(input: {
+  tokenHash: string
+  challenge: string
+  targetKey: string
+  origin: string
+}): string {
+  if (!HEX_64.test(input.tokenHash)) throw new Error('Invalid scenario owner token hash')
+  return hmac(input.tokenHash, ownerTokenMessage('request', input.challenge, input.targetKey, input.origin))
+}
+
+export function createScenarioOwnerTokenProof(input: {
+  tokenHash: string
+  challenge: string
+  targetKey: string
+  origin: string
+}): string {
+  if (!HEX_64.test(input.tokenHash)) throw new Error('Invalid scenario owner token hash')
+  return hmac(input.tokenHash, ownerTokenMessage('response', input.challenge, input.targetKey, input.origin))
+}
