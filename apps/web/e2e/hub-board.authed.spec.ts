@@ -204,8 +204,8 @@ test("an epic's flag: found shows its state and opens it in Ship; a missing key 
   await page.goto(`/hub/${slug()}/epic/fixture-mockups`)
   const found = page.locator('main [data-flag="found"]')
   await expect(found).toContainText(`Flag ${ACTIVITY_FIXTURE_FLAG_KEY}`)
-  // The activity fixture's flag has versions and no activation anywhere: "never activated", in words, per environment.
-  await expect(found.locator('[data-env="production"]')).toHaveText('production: never activated')
+  // The activity fixture's flag has versions and is set nowhere: off, in words, per environment (one-flag-switch).
+  await expect(found.locator('[data-env="production"]')).toHaveText('production: off')
   // D12 — production is the headline: first, before the other environments.
   await expect(found.locator('[data-env]').first()).toHaveAttribute('data-env', 'production')
   const ship = found.getByRole('link', { name: 'Open in Ship' })

@@ -217,7 +217,7 @@ function reachOf(rules: FlagRule[]): { reach: FlagRolloutReach; deadAfter: numbe
 }
 
 function labelOf(reach: FlagRolloutReach): string {
-  if (reach.kind === 'inactive') return 'not active'
+  if (reach.kind === 'inactive') return 'off'
   if (reach.kind === 'no-rules') return 'default only'
   if (reach.kind === 'unreadable') return 'unreadable'
   if (reach.kind === 'everyone') return formatRolloutPercent(null)
@@ -250,25 +250,10 @@ function summarise(flag: FlagView, environment: FlagEnvironment): FlagEnvironmen
     detail,
   })
 
-  // ── Story 2.3 / Amendment 2: "turned off" and "never turned on here" are DIFFERENT ────────────
-  // This used to be `activations.find(…)?.versionId ?? null`, which mapped BOTH "no activation row
-  // has ever existed" and "a row exists holding NULL" to the same value, and rendered both as
-  // "Nothing is activated here."
-  //
-  // They are not the same fact. `deactivate_flag` keeps the row and nulls its version, so a row
-  // holding NULL is the fingerprint of a deliberate act by a named actor with a stated reason,
-  // recorded in the lifecycle audit. No row at all means nobody has ever switched this on or off
-  // here — there is nothing in the audit because nothing happened.
-  //
-  // At this project's live scale the collapse was not a small imprecision: 40 of 42 flags have no
-  // activation row in ANY environment, so the old wording described forty untouched features and
-  // one deliberate kill with one sentence.
-  //
-  // `resolveActivationState` is imported rather than reimplemented — it is exported from
-  // `flag-list-view` for exactly this, so the list and this seam cannot drift about what "on" means.
+  // one-flag-switch D1: nothing served here is Off, whether it was never set or taken out. `resolveActivationState`
+  // is used only to find the served version; On / Off on every screen is `flagSwitchState`.
   const { state, versionId } = resolveActivationState(flag.activations, environment)
-  if (state === 'never') return inactive('No one has switched this on or off in this environment.')
-  if (state === 'off') return inactive('Switched off here.')
+  if (state !== 'on') return inactive('Off here.')
   const version = flag.versions.find((row) => row.id === versionId)
   // An activation pointing at a version this view does not carry. Not reachable through the app's
   // own write path, and named rather than crashed on: an environment whose activation cannot be

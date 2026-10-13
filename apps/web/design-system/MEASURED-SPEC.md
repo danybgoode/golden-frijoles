@@ -21,15 +21,13 @@ Source: `apps/web/design-system/console-prototype.html`, the 32 states approved 
 | Property | Measured |
 |---|---|
 | Ground | `rgb(22, 18, 13)` |
-| No vertical page scroll | **true** |
+| No vertical page scroll | **false** |
 | No horizontal page scroll | **true** |
-| Feature rows rendered | **2** |
-| Dormant summary line present | **yes** |
+| Feature rows rendered | **42** |
 
-⚠️ **`2` rows is the PROTOTYPE's dataset, not production's.** Production
-`miyagisanchez` carries 42 flags with **3** active in Production and **39** never activated
-(queried 2026-08-29 — epic README, D10). The gate asserts the *shape* — rows plus at most one
-summary line, the summary standing for rows that are not also listed — never the literal number.
+⚠️ **`42` rows is the PROTOTYPE's dataset, not production's.** Every feature is listed, On first then
+Off (one-flag-switch, 2026-10-13: a flag is On or Off, so there is no collapsed group). The gate asserts the *shape*,
+never the literal number.
 
 ## Uppercase
 
@@ -42,8 +40,8 @@ reads as the generated file contradicting itself (cross-family review, agy). The
 one place rendered as four elements (the row plus its three column labels), and the group heading is
 the second. Two places, six elements.
 
-**6** uppercase elements in the content column:
-`listhead` · `SPAN` · `h-state` · `h-meta` · `h-act` · `grp on`
+**7** uppercase elements in the content column:
+`listhead` · `SPAN` · `h-state` · `h-meta` · `h-act` · `grp on` · `grp off`
 
 ## The spec
 
@@ -69,16 +67,15 @@ the second. Two places, six elements.
 | Content column | 14 / 400 | Archivo | 1180 × _text-sized_ | none |
 | Page h1 | 23 / 700 | Archivo | _text-sized_ × 35 | none |
 | Page subtitle | 13.5 / 400 | Archivo | _text-sized_ × 41 | none |
-| The answer line | 13.5 / 400 | Archivo | 1120 × 68 | none |
+| The answer line | 13.5 / 400 | Archivo | 1120 × 47 | none |
 | Stat number | 26 / 600 | IBM Plex Mono | _text-sized_ | none |
-| Stat label | 12.5 / 400 | Archivo | 241 × 19 | none |
+| Stat label | 12.5 / 400 | Archivo | 335 × 19 | none |
 | List header row | 11 / 600 | Archivo | 1118 × 36 | uppercase |
 | Feature row | 14 / 400 | Archivo | 1118 × 71 | none |
 | Feature key | 13.5 / 500 | IBM Plex Mono | 614 × 20 | none |
 | Feature description | 12.5 / 400 | Archivo | _text-sized_ × 19 | none |
 | State pill | 12 / 600 | Archivo | 48 × 26 | none |
 | Switch | 14 / 400 | Archivo | 38 × 21 | none |
-| Dormant summary row | 14 / 400 | Archivo | 1118 × 89 | none |
 | Primary button | 13.5 / 600 | Archivo | _text-sized_ × 38 | none |
 | Secondary button | 13.5 / 600 | Archivo | _text-sized_ × 38 | none |
 
@@ -103,7 +100,7 @@ without letting a one-pixel renderer difference turn the gate red.
 
 ⚠️ **This table replaced an assertion that was green for the wrong reason.** The visual gate used to
 require every covered route to fit 1440 × 960 without scrolling, citing *"a page that scrolls means
-the chrome is eating the viewport"*. Measured against the design itself, **11 of the 23 approved console
+the chrome is eating the viewport"*. Measured against the design itself, **16 of the 24 approved console
 states scroll** — so the gate asserted a property the approved design does not have, and passed only
 because the fixture tenant is thin.
 
@@ -113,15 +110,15 @@ tenant has. The **Chrome** column is the top of the first element carrying data,
 the budget `console-gate-spec.ts` asserts — welded by `console-spec.test.ts`, so the constant
 cannot drift from the design.
 
-**Chrome budget: 458px**, set by `ship-features`.
+**Chrome budget: 438px**, set by `ship-features`.
 
 | State | Chrome | Page height | Fits 960? |
 |---|---|---|---|
-| `ship-features` | 458 | 960 | yes |
-| `ship-features-dormant` | 458 | 2273 | **no** |
-| `feature-value` | 458 | 960 | yes |
-| `feature-environments` | 458 | 960 | yes |
-| `feature-funnel` | 458 | 960 | yes |
+| `ship-features` | 438 | 3839 | **no** |
+| `ship-features-dormant` | 438 | 3839 | **no** |
+| `feature-value` | 438 | 3839 | **no** |
+| `feature-environments` | 438 | 3839 | **no** |
+| `feature-funnel` | 438 | 3839 | **no** |
 | `setup-connect` | 223 | 960 | yes |
 | `setup-keys` | 243 | 960 | yes |
 | `ship-activity` | 223 | 1274 | **no** |
@@ -149,3 +146,4 @@ cannot drift from the design.
 | `public-share` | _no console chrome_ | 960 | yes |
 | `public-gone` | _no console chrome_ | 960 | yes |
 | `public-talk` | _no console chrome_ | 960 | yes |
+| `wizard-new-feature` | 259 | 1021 | **no** |

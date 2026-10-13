@@ -252,7 +252,7 @@ deriving its own fallback.
 through ONE seam — `lib/gates.ts` (the table is `lib/gates-decision.ts → GATES`: key · the env var it replaced ·
 fallback). `frijoles flags kill <key> --env production` is the switch: no Vercel variable and no redeploy, landing within
 the seam's 30 s cache. A new gate is a `GATES` row plus `frijoles flags create <key> --kill-switch|--enablement --all-envs`
-(activation is its own step — `frijoles flags get <key>` must not print `—` in production). Never add a
+(the create sets the switch; `frijoles flags get <key>` must print `on vN` or `off vN` in production, never a bare `off`). Never add a
 `process.env.*_ENABLED` read (`lib/gates-guard.test.ts` fails CI), and always `await` a gate: a bare call is a
 Promise, which is always truthy. Off Vercel (CI, local) a set env var still overrides, so `ci/gates.*.env` drive the
 test servers; on Vercel the env is never read. `FLAG_SERVING_ENABLED` and `CLI_WRITE_API_ENABLED` were retired, not

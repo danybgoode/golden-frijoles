@@ -31,7 +31,7 @@ import { SPECIMEN_WORDS } from '@/design-system/vocabulary'
 // derivation lives in `lib/flag-list-view.ts`, which is where it can be unit-tested.
 
 import type { BadgeStatus } from '@/components/ui/Badge'
-import type { FlagActivationState, FlagListRow, FlagStateFilter } from '@/lib/flag-list-view'
+import type { FlagListRow, FlagStateFilter, FlagSwitchState } from '@/lib/flag-list-view'
 import { formatUtc } from '@/lib/format-utc'
 
 /**
@@ -62,9 +62,10 @@ import { formatUtc } from '@/lib/format-utc'
  * It is exercised by unit tests against a constructed row, and by nothing else (A20).
  */
 export const FLAG_STATE_PRESENTATION: Record<
-  FlagActivationState,
+  FlagSwitchState,
   { badge: BadgeStatus; label: string; detail: (row: FlagListRow) => string }
 > = {
+  // one-flag-switch D1: two states, from what the environment SERVES. The CLI, MCP and this page all say the same.
   on: {
     badge: 'live',
     label: SPECIMEN_WORDS.on,
@@ -74,13 +75,7 @@ export const FLAG_STATE_PRESENTATION: Record<
   off: {
     badge: 'blocked',
     label: SPECIMEN_WORDS.off,
-    detail: (row) =>
-      row.updatedAt === null ? 'switched off here' : `switched off ${formatUtc(row.updatedAt)}`,
-  },
-  never: {
-    badge: 'next',
-    label: SPECIMEN_WORDS.neverActivated,
-    detail: () => 'no one has switched this on or off in this environment',
+    detail: (row) => (row.updatedAt === null ? 'off here' : `off since ${formatUtc(row.updatedAt)}`),
   },
 }
 
@@ -159,7 +154,7 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
 //
 // So the arithmetic is in `lib/flag-list-view.ts`, the words are in `lib/flag-console-copy.ts`, and
 // the flag vocabulary re-exports them so there is still exactly one name to import.
-export { answerLineClauses, dormantGroupLabel, flagListAnswerLine } from '@/lib/flag-console-copy'
+export { answerLineClauses, flagListAnswerLine } from '@/lib/flag-console-copy'
 
 /**
  * The four cards of the summary strip.
@@ -181,15 +176,10 @@ export function summaryCardLabels(
   // ⚠️ `FlagStateFilter`, not `string`. A widened return type forced `as FlagListParams['state']`
   // at the call site — and a cast is exactly where the compiler stops checking that a card links
   // somewhere the filter understands (cross-review, agy, round 2).
-): ReadonlyArray<{ key: 'all' | 'on' | 'off' | 'never'; state: FlagStateFilter; label: string }> {
+): ReadonlyArray<{ key: 'all' | 'on' | 'off'; state: FlagStateFilter; label: string }> {
   return [
     { key: 'all', state: 'all', label: 'All features' },
     { key: 'on', state: 'on', label: `${FLAG_STATE_PRESENTATION.on.label} in ${environment}` },
-    // ⚠️ `state: 'never'`-style EXACTNESS, not `'off'`. The `'off'` filter means **"not on"** — its
-    // chip is labelled "Not on" for that reason — so a card reading "Turned off · 0" linked to a
-    // view listing all 39 never-touched flags. The number and the destination have to mean the same
-    // thing or the card is a lie you can click (fresh reviewer, PR #124).
-    { key: 'off', state: 'switched_off', label: FLAG_STATE_PRESENTATION.off.label },
-    { key: 'never', state: 'never', label: FLAG_STATE_PRESENTATION.never.label },
+    { key: 'off', state: 'off', label: `${FLAG_STATE_PRESENTATION.off.label} in ${environment}` },
   ]
 }

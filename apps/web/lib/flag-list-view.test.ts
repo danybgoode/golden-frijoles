@@ -10,12 +10,13 @@ import assert from 'node:assert/strict'
 import {
   buildFlagListQuery,
   buildFlagListView,
-  groupDormantFlagRows,
   runsByState,
   summariseFlagList,
   filterFlagRowsByQuery,
   filterFlagRowsByState,
   filterFlagRowsByType,
+  flagSwitchState,
+  hasFlagSwitch,
   paginateFlagRows,
   parseFlagListParams,
   projectFlagRows,
@@ -34,6 +35,12 @@ function version(id: string, number_: number, extra: Record<string, unknown> = {
     version: number_,
     definition: {
       valueType: 'boolean',
+      // A switchable flag serving `true` by default: On wherever it is served (one-flag-switch D1).
+      variants: [
+        { key: 'off', value: false },
+        { key: 'on', value: true },
+      ],
+      defaultVariantKey: 'on',
       description: `description for ${id}`,
       metadata: { polarity: 'enablement', criticality: 'low' },
       ...extra,
@@ -54,7 +61,7 @@ function row(overrides: Partial<FlagListRow> & { key: string }): FlagListRow {
   return {
     id: `id-${overrides.key}`,
     description: '',
-    state: 'never',
+    state: 'off',
     polarity: 'enablement',
     criticality: 'low',
     version: null,
@@ -63,7 +70,7 @@ function row(overrides: Partial<FlagListRow> & { key: string }): FlagListRow {
   }
 }
 
-// ── The three states (Story 2.3 / Amendment 2) ────────────────────────────────────────────────
+// ── How activation is STORED (internal: the CLI write core reads it; no screen shows it) ──────────
 
 test('no activation row at all reads as "never", not "off"', () => {
   const resolved = resolveActivationState([], 'production')
@@ -113,7 +120,7 @@ test('the projection answers about the environment it was given, not the flag in
     }),
   ]
   assert.equal(projectFlagRows(flags, 'development')[0].state, 'on')
-  assert.equal(projectFlagRows(flags, 'production')[0].state, 'never')
+  assert.equal(projectFlagRows(flags, 'production')[0].state, 'off')
 })
 
 test('an "on" row is described by the version that environment SERVES, not the newest draft', () => {
@@ -151,7 +158,7 @@ test('when nothing is serving, the row falls back to the highest-numbered versio
   assert.equal(projected.version, null)
 })
 
-test('an activation pointing at a version the view does not carry stays "on" with an unreadable version', () => {
+test('an activation pointing at a version the view does not carry is Off with no version — never a guess at On', () => {
   const flags = [
     flag({
       key: 'a',
@@ -160,7 +167,7 @@ test('an activation pointing at a version the view does not carry stays "on" wit
     }),
   ]
   const [projected] = projectFlagRows(flags, 'production')
-  assert.equal(projected.state, 'on')
+  assert.equal(projected.state, 'off')
   assert.equal(projected.version, null)
 })
 
@@ -238,16 +245,17 @@ test('an all-whitespace query matches everything — a typed space is not an int
 
 // ── Filters ───────────────────────────────────────────────────────────────────────────────────
 
-test('the "off" filter means NOT ON — it includes never-turned-on rows', () => {
+test('the Off filter is every row that is not On; old `never` / `switched_off` bookmarks mean Off', () => {
   const rows = [
     row({ key: 'a', state: 'on' }),
     row({ key: 'b', state: 'off' }),
-    row({ key: 'c', state: 'never' }),
+    row({ key: 'c', state: 'off' }),
   ]
-  assert.deepEqual(
-    filterFlagRowsByState(rows, 'off').map((r) => r.key),
-    ['b', 'c']
-  )
+  for (const off of ['off', 'never', 'switched_off'] as const)
+    assert.deepEqual(
+      filterFlagRowsByState(rows, off).map((r) => r.key),
+      ['b', 'c']
+    )
   assert.deepEqual(
     filterFlagRowsByState(rows, 'on').map((r) => r.key),
     ['a']
@@ -290,16 +298,16 @@ test('key sorting is numeric-aware: key-2 before key-10', () => {
   )
 })
 
-test('state sort orders on → off → never, and ties break alphabetically', () => {
+test('state sort orders on → off, and ties break alphabetically', () => {
   const rows = [
-    row({ key: 'z-never', state: 'never' }),
+    row({ key: 'z-off', state: 'off' }),
     row({ key: 'b-on', state: 'on' }),
     row({ key: 'a-off', state: 'off' }),
     row({ key: 'a-on', state: 'on' }),
   ]
   assert.deepEqual(
     sortFlagRows(rows, 'state').map((r) => r.key),
-    ['a-on', 'b-on', 'a-off', 'z-never']
+    ['a-on', 'b-on', 'a-off', 'z-off']
   )
 })
 
@@ -504,7 +512,7 @@ test('chip counts are computed BEFORE the state filter, so the chips stay a way 
   // One row is rendered, but the chips still report the other two — otherwise "off" would read 0
   // and there would be no way to click back to it.
   assert.equal(view.pageRows.length, 1)
-  assert.deepEqual(view.stateCounts, { all: 3, on: 1, off: 2, never: 2 })
+  assert.deepEqual(view.stateCounts, { all: 3, on: 1, off: 2 })
 })
 
 test('chip counts DO respect the search and type filters — they describe the current search', () => {
@@ -513,11 +521,10 @@ test('chip counts DO respect the search and type filters — they describe the c
     all: 1,
     on: 0,
     off: 1,
-    never: 1,
   })
 })
 
-test('the epic outcome test in miniature: on, in which environment, and which were never turned on', () => {
+test('the epic outcome test in miniature: on, in which environment, and what is off', () => {
   const production = buildFlagListView(
     LIVE_SHAPED,
     parseFlagListParams({ env: 'production' }, ENVIRONMENTS, 'development')
@@ -525,9 +532,9 @@ test('the epic outcome test in miniature: on, in which environment, and which we
   const byKey = new Map(production.pageRows.map((r) => [r.key, r]))
   assert.equal(byKey.get('partners.recruiting_v3_enabled')?.state, 'on')
   assert.equal(byKey.get('partners.recruiting_v3_enabled')?.version, 2)
-  // Not "off" — nobody ever turned these on in production, and the console must say so.
-  assert.equal(byKey.get('checkout.stripe_enabled')?.state, 'never')
-  assert.equal(byKey.get('ml.sync_enabled')?.state, 'never')
+  // Never set in production: Off, as the app gets nothing true from it (one-flag-switch D1).
+  assert.equal(byKey.get('checkout.stripe_enabled')?.state, 'off')
+  assert.equal(byKey.get('ml.sync_enabled')?.state, 'off')
 })
 
 test('typing `stripe` narrows 42-shaped input to the one flag, with nothing above it', () => {
@@ -562,7 +569,7 @@ test('a filter that narrows under a deep page still lands the reader on rows, no
 test('an empty registry produces an empty view rather than throwing', () => {
   const view = buildFlagListView([], parseFlagListParams({}, ENVIRONMENTS, 'development'))
   assert.deepEqual(view.pageRows, [])
-  assert.deepEqual(view.stateCounts, { all: 0, on: 0, off: 0, never: 0 })
+  assert.deepEqual(view.stateCounts, { all: 0, on: 0, off: 0 })
   assert.equal(view.totalPages, 1)
 })
 
@@ -578,7 +585,7 @@ test('the pipeline does not mutate the flags it was handed', () => {
 
 // ── Story 3.1: the answer line's counts, and the dormant collapse ─────────────────────────────
 
-function stateRow(id: string, state: 'on' | 'off' | 'never'): FlagListRow {
+function stateRow(id: string, state: 'on' | 'off'): FlagListRow {
   return {
     id,
     key: id,
@@ -587,225 +594,167 @@ function stateRow(id: string, state: 'on' | 'off' | 'never'): FlagListRow {
     polarity: 'unclassified',
     criticality: 'unclassified',
     version: state === 'on' ? 1 : null,
-    updatedAt: state === 'never' ? null : '2026-08-01T00:00:00Z',
+    updatedAt: '2026-08-01T00:00:00Z',
   }
 }
 
-test('summariseFlagList counts the three states exhaustively', () => {
-  const rows = [stateRow('a', 'on'), stateRow('b', 'never'), stateRow('c', 'never'), stateRow('d', 'off')]
+test('summariseFlagList counts On and Off, and the two account for every row', () => {
+  const rows = [stateRow('a', 'on'), stateRow('b', 'off'), stateRow('c', 'off'), stateRow('d', 'off')]
   const summary = summariseFlagList(rows)
-  assert.deepEqual(summary, { total: 4, serving: 1, switchedOff: 1, neverSwitched: 2 })
-  // The three states must account for every row — a fourth state slipping in silently would make
-  // the answer line under-report without anything going red.
-  assert.equal(
-    summary.serving + summary.switchedOff + summary.neverSwitched,
-    summary.total,
-    'the three counts do not sum to the total'
-  )
+  assert.deepEqual(summary, { total: 4, serving: 1, switchedOff: 3 })
+  assert.equal(summary.serving + summary.switchedOff, summary.total)
 })
 
-test("summariseFlagList reproduces production's ACTUAL shape: nothing switched off", () => {
-  // Measured 2026-08-28 on the live tenant: 3 on, 0 off, 39 never (A20). Pinned as a named case
-  // because it is the shape every reader gets today, and the one a "0 switched off" clause would
-  // have been rendered into.
-  const rows = [
-    ...Array.from({ length: 3 }, (_, index) => stateRow(`on-${index}`, 'on')),
-    ...Array.from({ length: 39 }, (_, index) => stateRow(`never-${index}`, 'never')),
+test('a boolean flag is On only when what it serves gives true — by default or through a rule', () => {
+  const variants = [
+    { key: 'off', value: false },
+    { key: 'on', value: true },
   ]
-  assert.deepEqual(summariseFlagList(rows), {
-    total: 42,
-    serving: 3,
-    switchedOff: 0,
-    neverSwitched: 39,
-  })
-})
-
-test('the dormant group collapses, and takes ONLY the never-touched rows', () => {
-  const rows = [stateRow('a', 'on'), stateRow('b', 'never'), stateRow('c', 'off'), stateRow('d', 'never')]
-  const grouped = groupDormantFlagRows(rows, { narrowed: false })
-  assert.equal(grouped.grouped, true)
-  assert.deepEqual(
-    grouped.active.map((r) => r.id),
-    ['a', 'c'],
-    'a deliberately switched-off flag was collapsed into the dormant group'
-  )
-  assert.deepEqual(
-    grouped.dormant.map((r) => r.id),
-    ['b', 'd']
-  )
-  // Nothing may be lost or duplicated by the split — the reason to assert this separately is that
-  // the two filters are written independently and could both drop a state.
-  assert.equal(grouped.active.length + grouped.dormant.length, rows.length)
-})
-
-test('narrowing the list turns grouping OFF — a filtered view has no majority to summarise', () => {
-  const rows = [stateRow('a', 'never'), stateRow('b', 'never'), stateRow('c', 'never')]
-  const grouped = groupDormantFlagRows(rows, { narrowed: true })
-  assert.equal(grouped.grouped, false)
-  assert.equal(grouped.dormant.length, 0, 'rows the reader just searched for were hidden')
-  assert.equal(grouped.active.length, 3)
-})
-
-test('a single dormant row is NOT collapsed — the disclosure would hide one row and add one', () => {
-  const one = groupDormantFlagRows([stateRow('a', 'on'), stateRow('b', 'never')], { narrowed: false })
-  assert.equal(one.grouped, false)
-  assert.equal(one.active.length, 2)
-
-  // Two dormant rows ARE worth collapsing — but only when there is something for them to be
-  // collapsed away FROM. This case needs an active row; `[never, never]` alone is the
-  // entirely-dormant list, which deliberately does not group (see the regression test below).
-  const two = groupDormantFlagRows([stateRow('a', 'on'), stateRow('b', 'never'), stateRow('c', 'never')], {
-    narrowed: false,
-  })
-  assert.equal(two.grouped, true, 'two dormant rows beside an active one are worth collapsing')
-  assert.deepEqual(
-    two.dormant.map((r) => r.id),
-    ['b', 'c']
-  )
-})
-
-test('the console list does not paginate — one summary row stands for every dormant feature', () => {
-  // Replaces a test asserting `DORMANT_PAGE_SIZE === 15` and `!== FLAG_LIST_PAGE_SIZE`: two
-  // constants compared to each other, which cannot fail and describes nothing a reader sees.
-  //
-  // The property that DOES matter is that the grouping returns every dormant row, so the summary
-  // line can honestly claim all of them. Paging here is what made the collapse impossible.
-  const rows = [
-    stateRow('on', 'on'),
-    ...Array.from({ length: 40 }, (_, index) => stateRow(`never-${index}`, 'never')),
-  ]
-  const grouped = groupDormantFlagRows(rows, { narrowed: false })
-  assert.equal(grouped.dormant.length, 40, 'the summary would under-report what it collapses')
-  assert.equal(grouped.active.length, 1)
-})
-
-test('the `never` filter is EXACT, while `off` stays the union its chip is labelled with', () => {
-  // Added additively by Story 3.1. `off` must keep meaning "not on" — its chip reads "Not on" and
-  // existing bookmarks carry `state=off` — while `never` gives the dormant disclosure an exact
-  // destination. Asserting both in one test is the point: it is the pair that could drift.
-  const rows = [stateRow('a', 'on'), stateRow('b', 'off'), stateRow('c', 'never')]
-  assert.deepEqual(
-    filterFlagRowsByState(rows, 'never').map((r) => r.id),
-    ['c']
-  )
-  assert.deepEqual(
-    filterFlagRowsByState(rows, 'off').map((r) => r.id),
-    ['b', 'c'],
-    '`off` stopped meaning "not on"'
-  )
-  assert.deepEqual(
-    filterFlagRowsByState(rows, 'on').map((r) => r.id),
-    ['a']
-  )
-  assert.equal(filterFlagRowsByState(rows, 'all').length, 3)
-})
-
-test('`state=never` survives a round trip through the URL, so the dormant link is bookmarkable', () => {
-  const parsed = parseFlagListParams({ state: 'never' }, ENVIRONMENTS, 'production')
+  assert.equal(flagSwitchState({ valueType: 'boolean', variants, defaultVariantKey: 'on', rules: [] }), 'on')
   assert.equal(
-    parsed.state,
-    'never',
-    'an unrecognised state falls back to `all` — `never` was not allow-listed'
+    flagSwitchState({ valueType: 'boolean', variants, defaultVariantKey: 'off', rules: [] }),
+    'off'
+  )
+  // A rollout to `true` is on for those it reaches.
+  assert.equal(
+    flagSwitchState({
+      valueType: 'boolean',
+      variants,
+      defaultVariantKey: 'off',
+      rules: [{ priority: 1, clauses: [], rollout: { basisPoints: 2500 }, variantKey: 'on' }],
+    }),
+    'on'
+  )
+  // A rollout of 0% to true reaches nobody: Off.
+  assert.equal(
+    flagSwitchState({
+      valueType: 'boolean',
+      variants,
+      defaultVariantKey: 'off',
+      rules: [{ priority: 1, clauses: [], rollout: { basisPoints: 0 }, variantKey: 'on' }],
+    }),
+    'off'
+  )
+  // A higher-priority unconditional rule to false decides for everyone: Off, whatever the default says.
+  assert.equal(
+    flagSwitchState({
+      valueType: 'boolean',
+      variants,
+      defaultVariantKey: 'on',
+      rules: [{ priority: 1, clauses: [], variantKey: 'off' }],
+    }),
+    'off'
+  )
+  // …but a rule to false that reaches only part of the traffic leaves the default serving the rest: On.
+  assert.equal(
+    flagSwitchState({
+      valueType: 'boolean',
+      variants,
+      defaultVariantKey: 'on',
+      rules: [{ priority: 1, clauses: [], rollout: { basisPoints: 5000 }, variantKey: 'off' }],
+    }),
+    'on'
+  )
+  // Even a 100% rollout to false leaves out contexts with no targeting key, which get the default `true`: On.
+  assert.equal(
+    flagSwitchState({
+      valueType: 'boolean',
+      variants,
+      defaultVariantKey: 'on',
+      rules: [{ priority: 1, clauses: [], rollout: { basisPoints: 10000 }, variantKey: 'off' }],
+    }),
+    'on'
+  )
+  // A clause rule to true (staff) with a false default is on for those it reaches: On.
+  assert.equal(
+    flagSwitchState({
+      valueType: 'boolean',
+      variants,
+      defaultVariantKey: 'off',
+      rules: [
+        {
+          priority: 1,
+          clauses: [{ attribute: 'role', operator: 'equals', values: ['staff'] }],
+          variantKey: 'on',
+        },
+      ],
+    }),
+    'on'
+  )
+  // A kill: default false, rules cleared.
+  assert.equal(
+    flagSwitchState({ valueType: 'boolean', variants, defaultVariantKey: 'off', rules: [] }),
+    'off'
   )
 })
 
-test('a list that is ENTIRELY dormant is not grouped — otherwise the page renders nothing', () => {
-  // The collapse exists to stop dormant rows burying the active ones. With no active rows there is
-  // nothing to bury, and grouping would leave the main table with zero rows and no empty state.
-  // This is a REGRESSION TEST: the first version of `groupDormantFlagRows` did exactly that, and an
-  // existing authed spec timed out clicking a feature link that was no longer rendered.
-  const rows = [stateRow('a', 'never'), stateRow('b', 'never'), stateRow('c', 'never')]
-  const grouped = groupDormantFlagRows(rows, { narrowed: false })
-  assert.equal(grouped.grouped, false, 'the whole list was collapsed behind a disclosure')
-  assert.equal(grouped.active.length, 3, 'no rows would have rendered in the main table')
-  assert.equal(grouped.dormant.length, 0)
+test('nothing served, or a definition that cannot be read, is Off — never a guess at On', () => {
+  for (const definition of [
+    undefined,
+    null,
+    'x',
+    {},
+    { valueType: 'boolean' },
+    { valueType: 'boolean', variants: 'no' },
+  ])
+    assert.equal(flagSwitchState(definition), 'off')
 })
 
-test('grouping never loses a row, in any combination of the three states', () => {
-  // The property behind the bug above, asserted exhaustively rather than at one shape: whatever the
-  // mix, `active` and `dormant` together must still be every row.
-  for (let on = 0; on <= 2; on += 1) {
-    for (let off = 0; off <= 2; off += 1) {
-      for (let never = 0; never <= 3; never += 1) {
-        const rows = [
-          ...Array.from({ length: on }, (_, i) => stateRow(`on${i}`, 'on')),
-          ...Array.from({ length: off }, (_, i) => stateRow(`off${i}`, 'off')),
-          ...Array.from({ length: never }, (_, i) => stateRow(`never${i}`, 'never')),
-        ]
-        const grouped = groupDormantFlagRows(rows, { narrowed: false })
-        assert.equal(
-          grouped.active.length + grouped.dormant.length,
-          rows.length,
-          `rows lost at on=${on} off=${off} never=${never}`
-        )
-        if (grouped.grouped) {
-          assert.ok(grouped.active.length > 0, `everything collapsed at on=${on} off=${off} never=${never}`)
-        }
-      }
-    }
+test('a flag that is not on/off is On while a value is served, and has no switch', () => {
+  const json = {
+    valueType: 'json',
+    variants: [{ key: 'a', value: { kind: 'none' } }],
+    defaultVariantKey: 'a',
   }
+  assert.equal(flagSwitchState(json), 'on')
+  assert.equal(hasFlagSwitch(json), false)
+  assert.equal(
+    hasFlagSwitch({
+      valueType: 'boolean',
+      variants: [
+        { key: 'off', value: false },
+        { key: 'on', value: true },
+      ],
+    }),
+    true
+  )
 })
 
-test('a group header never names a state its rows are not in', () => {
-  // The Blocking bug: one hardcoded "On in <env>" header counting every non-dormant row. On a list
-  // with nothing on, the page said "Nothing is on in production" and then "On in production · 2".
-  const rows = [stateRow('a', 'on'), stateRow('b', 'on'), stateRow('c', 'off')]
-  const runs = runsByState(rows, { grouped: true })
+test('a flag activated with a FALSE default lists as Off — the bug the product owner hit on 2026-10-13', () => {
+  const flags = [
+    flag({
+      key: 'ops.scenario_authoring_enabled',
+      versions: [version('v-k', 2, { defaultVariantKey: 'off', rules: [] })],
+      activations: [{ environment: 'production', versionId: 'v-k', updatedAt: '2026-10-13T00:00:00Z' }],
+    }),
+  ]
+  assert.equal(projectFlagRows(flags, 'production')[0].state, 'off')
+})
+
+test('never set here and taken out are both Off: two states, no third', () => {
+  const flags = [
+    flag({ key: 'never.set', activations: [] }),
+    flag({ key: 'taken.out', activations: [{ environment: 'production', versionId: null }] }),
+  ]
   assert.deepEqual(
-    runs.map((run) => [run.state, run.rows.length]),
+    projectFlagRows(flags, 'production').map((r) => r.state),
+    ['off', 'off']
+  )
+})
+
+test('runs: On first, then Off, and no row is lost', () => {
+  const rows = [
+    row({ key: 'b', state: 'off' }),
+    row({ key: 'a', state: 'on' }),
+    row({ key: 'c', state: 'off' }),
+  ]
+  const runs = runsByState(rows)
+  assert.deepEqual(
+    runs.map((run) => [run.state, run.rows.map((r) => r.key)]),
     [
-      ['on', 2],
-      ['off', 1],
+      ['on', ['a']],
+      ['off', ['b', 'c']],
     ]
   )
-  // The property, stated directly: every row under a header IS in that header's state.
-  for (const run of runs) {
-    for (const row of run.rows) {
-      assert.equal(row.state, run.state, `a ${row.state} row sits under the ${run.state} header`)
-    }
-  }
-})
-
-test('an ungrouped list gets NO headers — a heading over a filtered view restates the filter', () => {
-  const rows = [stateRow('a', 'on'), stateRow('b', 'never')]
-  assert.deepEqual(runsByState(rows, { grouped: false }), [])
-})
-
-test('runs never lose a row, and serving comes first', () => {
-  const rows = [stateRow('a', 'never'), stateRow('b', 'off'), stateRow('c', 'on')]
-  const runs = runsByState(rows, { grouped: true })
-  assert.deepEqual(
-    runs.map((run) => run.state),
-    ['on', 'off', 'never'],
-    'serving is not first'
-  )
-  assert.equal(
-    runs.reduce((total, run) => total + run.rows.length, 0),
-    rows.length,
-    'a row was dropped between the runs'
-  )
-})
-
-test("the dormant collapse holds at production's real shape, which no fixture reproduces", () => {
-  // ⚠️ Story 3.1's headline behaviour is asserted by NOTHING in the browser layer: the authed
-  // fixture is all-dormant, so `groupDormantFlagRows` declines to group and `[data-dormant-summary]`
-  // never renders on any input (fresh reviewer, round 2). Three browser assertions were dead
-  // because of it.
-  //
-  // Rather than bend the shared fixture — which broke three other suites when tried — the behaviour
-  // is pinned here at production's measured shape: 3 serving, 0 switched off, 39 never (A20).
-  const rows = [
-    ...Array.from({ length: 3 }, (_, index) => stateRow(`on-${index}`, 'on')),
-    ...Array.from({ length: 39 }, (_, index) => stateRow(`never-${index}`, 'never')),
-  ]
-  const grouped = groupDormantFlagRows(rows, { narrowed: false })
-  assert.equal(grouped.grouped, true, 'production would render no dormant summary')
-  assert.equal(grouped.active.length, 3, 'the page would show the wrong number of rows')
-  assert.equal(grouped.dormant.length, 39, 'the summary would under-report what it collapses')
-
-  // And searching turns it off, so the rows a reader asked for are never hidden behind a summary.
-  const searched = groupDormantFlagRows(rows, { narrowed: true })
-  assert.equal(searched.grouped, false)
-  assert.equal(searched.dormant.length, 0)
-  assert.equal(searched.active.length, 42, 'a filtered view lost rows')
+  assert.equal(runsByState([row({ key: 'x', state: 'off' })]).length, 1)
 })

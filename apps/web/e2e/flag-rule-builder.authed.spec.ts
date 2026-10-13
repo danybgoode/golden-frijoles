@@ -459,10 +459,13 @@ test.describe('rollout bars and the version diff', () => {
     await expect(development.locator('.rollout-bar__label')).toHaveText('10%')
     await expect(development).not.toContainText('1000')
 
-    // The environments that were NOT activated must not borrow the number.
+    // The environments that serve nothing must not borrow the number: they read off (one-flag-switch).
     await expect(
-      flagOf(page, key).locator('.rollout-bar__row').filter({ hasText: 'production' })
-    ).toContainText('not active')
+      flagOf(page, key)
+        .locator('.rollout-bar__row')
+        .filter({ hasText: 'production' })
+        .locator('.rollout-bar__label')
+    ).toHaveText('off')
   })
 
   test('the diff describes a rollout change in percent on both sides', async ({ page }) => {

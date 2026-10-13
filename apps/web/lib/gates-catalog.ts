@@ -1,7 +1,7 @@
 import 'server-only'
 import { getSupabaseServiceClient } from './supabase'
 import { getFlagRegistryView } from './flag-registry'
-import { toCliFlagView } from './cli-flag-view'
+import { toGateRows } from './cli-flag-view'
 import { GATE_CATALOG_PROJECT_SLUG, type ServedCatalog, type ServedEnvironment } from './gates-decision'
 
 // one-product-project · Sprint 2, Story 2.1 — what Golden Frijoles' own catalog serves, for lib/gates.ts.
@@ -27,7 +27,7 @@ export async function readServedCatalog(): Promise<ServedCatalog> {
     }
     const registry = await getFlagRegistryView(project.id as string)
     const served = new Map<string, readonly ServedEnvironment[]>()
-    for (const flag of registry.flags) served.set(flag.key, toCliFlagView(flag).environments)
+    for (const flag of registry.flags) served.set(flag.key, toGateRows(flag))
     return served
   } catch (err) {
     console.error(

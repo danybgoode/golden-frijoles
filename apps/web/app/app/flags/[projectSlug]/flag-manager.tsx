@@ -18,7 +18,6 @@ import { FlagPreview } from './flag-preview'
 import {
   activateFlagAction,
   createFlagDefinitionVersionAction,
-  deactivateFlagAction,
   mintFlagReadKeyAction,
   mintFlagSyncKeyAction,
   revokeFlagReadKeyAction,
@@ -204,17 +203,10 @@ export function FlagManager({
     const revision = stateByEnvironment.get(environment)?.snapshotVersion ?? 0
     run(
       async () => activateFlagAction(slug, environment, flagId, versionId, revision, reason),
-      `Activated v${version} in ${environment}.`
+      `Now serving v${version} in ${environment}.`
     )
   }
-  function onDeactivate(flagId: string, environment: FlagEnvironment) {
-    setErrorFromBuilder(false)
-    const revision = stateByEnvironment.get(environment)?.snapshotVersion ?? 0
-    run(
-      async () => deactivateFlagAction(slug, environment, flagId, revision, reason),
-      `Deactivated the flag in ${environment}.`
-    )
-  }
+
   function onMint(event: FormEvent) {
     setErrorFromBuilder(false)
     event.preventDefault()
@@ -652,18 +644,16 @@ export function FlagManager({
                         return (
                           <div key={environment}>
                             <strong>{environment}</strong>:{' '}
-                            {active ? `active (snapshot ${revision})` : 'not active'}{' '}
-                            {canManage && servingEnabled && (
+                            {active ? `serving (snapshot ${revision})` : 'not serving'}{' '}
+                            {/* one-flag-switch D2: serving an older version is not switching on or off; the switch is
+                                the feature's own page, through the same core as the CLI. No deactivate here. */}
+                            {canManage && servingEnabled && !active && (
                               <button
                                 type="button"
                                 disabled={pending}
-                                onClick={() =>
-                                  active
-                                    ? onDeactivate(flag.id, environment)
-                                    : onActivate(flag.id, version.id, version.version, environment)
-                                }
+                                onClick={() => onActivate(flag.id, version.id, version.version, environment)}
                               >
-                                {active ? 'Deactivate' : `Activate v${version.version}`}
+                                {`Serve v${version.version}`}
                               </button>
                             )}
                           </div>

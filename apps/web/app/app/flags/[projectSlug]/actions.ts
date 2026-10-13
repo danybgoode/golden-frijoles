@@ -10,12 +10,9 @@ import {
   type FlagEnvironment,
   type FlagEvaluationContext,
 } from '@/lib/flag-definition'
-import {
-  createFlagDefinitionVersion,
-  deactivateFlag,
-  getFlagRegistryView,
-  setFlagActivation,
-} from '@/lib/flag-registry'
+import { createFlagDefinitionVersion, getFlagRegistryView, setFlagActivation } from '@/lib/flag-registry'
+import { executeCliFlagWrite } from '@/lib/cli-flag-write'
+import { resolveActivationState } from '@/lib/flag-list-view'
 import { mintFlagReadKey, revokeFlagReadKey } from '@/lib/flag-read-keys'
 import { mintFlagSyncKey, revokeFlagSyncKey } from '@/lib/flag-sync-keys'
 
@@ -71,6 +68,60 @@ export async function createFlagDefinitionVersionAction(
   return result
 }
 
+/**
+ * one-flag-switch D2 — the page's On / Off switch. It makes EXACTLY the change `frijoles flags set` / `kill` and the
+ * MCP tools make, through their one core (`executeCliFlagWrite`): On serves the flag's `true` variant, Off is a kill
+ * (serves `false` to everyone, rules cleared). So whatever an agent switches through the CLI, the SDK or MCP is what
+ * this page shows, and the reverse. Owner only; there is no other way for this page to switch a flag on or off.
+ */
+export async function setFlagSwitchAction(
+  slug: unknown,
+  flagKey: unknown,
+  environment: unknown,
+  on: unknown
+) {
+  const safeSlug = requireString(slug, 'project')
+  // Ownership before anything about the flag is read: no foreign-project oracle.
+  const { projectId, userId } = await requireProjectOwnership(safeSlug)
+  const safeEnvironment = parseEnvironment(environment)
+  if (!safeEnvironment || typeof flagKey !== 'string' || typeof on !== 'boolean')
+    return { ok: false as const, error: 'Invalid request to switch this feature.' }
+
+  let variantKey: string | null = null
+  if (on) {
+    const registry = await getFlagRegistryView(projectId)
+    const flag = registry.flags.find((candidate) => candidate.key === flagKey)
+    if (!flag) return { ok: false as const, error: 'This feature was not found in this project.' }
+    const servedId = resolveActivationState(flag.activations, safeEnvironment).versionId
+    const base =
+      flag.versions.find((version) => version.id === servedId) ??
+      flag.versions.reduce<(typeof flag.versions)[number] | undefined>(
+        (best, version) => (best === undefined || version.version > best.version ? version : best),
+        undefined
+      )
+    variantKey = base?.definition.variants.find((variant) => variant.value === true)?.key ?? null
+    if (!variantKey) return { ok: false as const, error: 'This feature has no On value to switch to.' }
+  }
+
+  const result = await executeCliFlagWrite({
+    projectId,
+    actorUserId: userId,
+    flagKey,
+    environments: [safeEnvironment],
+    reason: `${on ? 'Switched on' : 'Switched off'} from the flags page.`,
+    command: on ? { command: 'set', variantKey: variantKey! } : { command: 'kill' },
+  })
+  if (!result.ok) return { ok: false as const, error: result.error }
+  const outcome = result.environments[0]
+  if (outcome && (outcome.status === 'conflict' || outcome.status === 'failed'))
+    return {
+      ok: false as const,
+      error: outcome.error ?? 'The change could not be applied. Reload and try again.',
+    }
+  revalidate(safeSlug)
+  return { ok: true as const }
+}
+
 export async function activateFlagAction(
   slug: unknown,
   environment: unknown,
@@ -94,34 +145,6 @@ export async function activateFlagAction(
     environment: safeEnvironment,
     flagId,
     versionId,
-    expectedSnapshotVersion: revision,
-    reason: safeReason,
-    actorUserId: userId,
-  })
-  if (result.ok) revalidate(safeSlug)
-  return result
-}
-
-export async function deactivateFlagAction(
-  slug: unknown,
-  environment: unknown,
-  flagId: unknown,
-  expectedSnapshotVersion: unknown,
-  reason: unknown
-) {
-  const safeSlug = requireString(slug, 'project')
-  const { projectId, userId } = await requireProjectOwnership(safeSlug)
-  const safeEnvironment = parseEnvironment(environment)
-  if (!safeEnvironment || typeof flagId !== 'string')
-    return { ok: false as const, error: 'Invalid request to turn this feature off.' }
-  const revision = parseRevision(expectedSnapshotVersion)
-  const safeReason = parseReason(reason)
-  if (revision === null || !safeReason)
-    return { ok: false as const, error: 'Invalid request to turn this feature off.' }
-  const result = await deactivateFlag({
-    projectId,
-    environment: safeEnvironment,
-    flagId,
     expectedSnapshotVersion: revision,
     reason: safeReason,
     actorUserId: userId,

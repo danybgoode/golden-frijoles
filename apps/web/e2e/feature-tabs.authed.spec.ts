@@ -142,10 +142,20 @@ test.describe('the feature destination answers the whole loop', () => {
     }
   })
 
-  test('the Value tab draws a 38 x 21 switch, and "never" is dashed and empty', async ({ page }) => {
+  test('the Value tab draws a 38 x 21 switch, and a flag never set reads Off — two states, no third', async ({
+    page,
+  }) => {
+    // one-flag-switch: an on/off flag that nobody has switched anywhere. (The drill fixture's flag is JSON-valued, so
+    // it has no switch: D3.) It must read Off, with the plain Off switch, in every environment.
+    const key = `switch.size_${Date.now().toString(36)}_enabled`
+    await seedFlagVersion(
+      key,
+      booleanDefinition('A switch the size check can see.'),
+      'feature-tabs: switch size'
+    )
     const slug = tenantSlug()
     await page.setViewportSize(VIEWPORT)
-    await page.goto(`/app/flags/${slug}/${encodeURIComponent(SCENARIO_FLAG_KEY)}`)
+    await page.goto(`/app/flags/${slug}/${encodeURIComponent(key)}`)
 
     // ⚠️ **The pair, never one number.** The contract states `Switch · 38 × 21`, and a toggle at the
     // right height and the wrong width is not the control that was approved. `globals.css` puts a
@@ -158,25 +168,9 @@ test.describe('the feature destination answers the whole loop', () => {
     expect(Math.round(box?.width ?? 0), 'the switch is not the approved 38px wide').toBe(38)
     expect(Math.round(box?.height ?? 0), 'the switch is not the approved 21px tall').toBe(21)
 
-    // ⚠️ **The DASHED empty state, which is this sprint's named acceptance criterion.** The fixture
-    // flag has never been activated in any environment, so all three read `never` — and a flag
-    // nobody ever switched on is not one somebody deliberately switched off. The distinction is
-    // carried by the border STYLE and by the word in the pill beside it, never by colour alone.
-    const painted = await page.evaluate(() => {
-      const element = document.querySelector('.ds-envlist .ds-switch[data-state="never"]')
-      if (element === null) return null
-      const style = getComputedStyle(element)
-      return { borderStyle: style.borderTopStyle, background: style.backgroundColor }
-    })
-    expect(painted, 'no environment renders the "never" switch state').not.toBeNull()
-    expect(painted?.borderStyle, 'the "never" switch is not dashed').toBe('dashed')
-    // Transparent, not filled: an empty control for a state nothing has happened to.
-    expect(painted?.background, 'the "never" switch is filled rather than empty').toMatch(
-      /rgba\(0, 0, 0, 0\)|transparent/
-    )
-
-    // ...and the word is there too, so the state does not depend on anyone seeing the border.
-    await expect(page.locator('.ds-envlist .ds-pill--never').first()).toBeVisible()
+    await expect(page.locator('.ds-envlist .ds-switch[data-state="off"]')).toHaveCount(3)
+    await expect(page.locator('.ds-envlist .ds-switch[data-state="never"]')).toHaveCount(0)
+    await expect(page.locator('.ds-envlist')).not.toContainText(/never|activated/i)
   })
 
   test('the Funnel tab renders NUMBERS for a feature that actually has a funnel', async ({ page }) => {

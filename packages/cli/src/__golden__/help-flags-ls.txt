@@ -3,12 +3,9 @@ frijoles flags ls — every flag, and what each environment serves
 Usage
   frijoles flags ls [--project <slug>] [--json]
 
-The "serving" column is what a context with no attributes actually GETS — the
-  answer the SDK's own evaluator gives, which is the answer production gives.
-
-  ⚠️ It is NOT the same as "a version is activated here". A definition whose default
-  variant is false is activated AND serves false; reporting those as one fact is how a
-  console once labelled 34 of 42 flags the wrong way round.
+Each environment says on or off, exactly as the flags page does: on when the app gets
+  true, off when it gets false or nothing. A flag that is not on/off shows the value it serves.
+  Switch one with `frijoles flags set <key> --value true|false` or `frijoles flags kill <key>`.
 
 Flags
   --project <slug>  the project (default: the remembered one)

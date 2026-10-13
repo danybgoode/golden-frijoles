@@ -26,6 +26,71 @@
 // Every field below is already carried by `getFlagRegistryView()`. This file takes plain data, and
 // that signature is what makes a stray Supabase call visible as the wrong turn it would be.
 
+// ── one-flag-switch D1 — a flag has ONE switch per environment: On or Off. This is the only rule that decides which.
+//
+// The product owner, 2026-10-13: "I want to turn on or off features … by clicking on or off switch. That's it. I do not
+// want an activated state at all." The page used to show whether a version was ACTIVATED, so a flag activated with a
+// `false` default read "On" while every app got `false`, and `frijoles flags kill` (which serves `false`) never moved
+// it. Every surface — this list, the feature page, `frijoles flags ls/get`, the connector — answers from what the
+// environment actually SERVES:
+//   - boolean flag: On when the served version gives `true`, by default or through any rule; otherwise Off. Never set
+//     here, or taken out, is Off.
+//   - any other type: On while a value is served (the screen shows the value; there is no switch), else Off.
+// Total over unvalidated JSONB: a definition this cannot read is Off, never a guess at On.
+
+export type FlagSwitchState = 'on' | 'off'
+
+type Variant = { key?: unknown; value?: unknown }
+
+function record(value: unknown): Record<string, unknown> | null {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null
+}
+
+/** The value a variant key names in this definition, or `undefined` when it names nothing. */
+function variantValue(variants: readonly Variant[], key: unknown): unknown {
+  return variants.find((variant) => variant.key === key)?.value
+}
+
+/**
+ * @param servedDefinition the definition of the version this environment serves, or `null`/`undefined` when it serves
+ *   nothing (never set here, or taken out).
+ */
+export function flagSwitchState(servedDefinition: unknown): FlagSwitchState {
+  const definition = record(servedDefinition)
+  if (!definition) return 'off'
+  const variants = Array.isArray(definition.variants) ? (definition.variants as Variant[]) : []
+  if (definition.valueType !== 'boolean') return variants.length > 0 ? 'on' : 'off'
+  // Rules in priority order, the way the evaluator walks them. A rule to `true` that can reach someone makes the flag
+  // On (on for those it reaches). An unconditional rule that reaches everyone ends the walk: it decides for all, and
+  // nothing below it — the default included — is ever served (verifier, #351: a top rule to `false` must read Off).
+  const rules = (Array.isArray(definition.rules) ? definition.rules : [])
+    .map((rule) => record(rule))
+    .filter((rule): rule is Record<string, unknown> => rule !== null)
+    .sort((a, b) => Number(a.priority) - Number(b.priority))
+  for (const rule of rules) {
+    const rollout = record(rule.rollout)
+    const basisPoints = rollout && typeof rollout.basisPoints === 'number' ? rollout.basisPoints : null
+    const reachesSomeone = basisPoints === null || basisPoints > 0
+    // Only a rule with NO rollout reaches everyone: even a 100% rollout leaves out a context with no targeting key.
+    const reachesEveryone = basisPoints === null
+    const unconditional = !Array.isArray(rule.clauses) || rule.clauses.length === 0
+    const servesTrue = typeof rule.variantKey === 'string' && variantValue(variants, rule.variantKey) === true
+    if (servesTrue && reachesSomeone) return 'on'
+    if (unconditional && reachesEveryone) return 'off'
+  }
+  return variantValue(variants, definition.defaultVariantKey) === true ? 'on' : 'off'
+}
+
+/** Whether this definition can have a switch at all: a boolean flag with a `true` and a `false` variant. */
+export function hasFlagSwitch(definition: unknown): boolean {
+  const def = record(definition)
+  if (!def || def.valueType !== 'boolean' || !Array.isArray(def.variants)) return false
+  const values = (def.variants as Variant[]).map((variant) => variant.value)
+  return values.includes(true) && values.includes(false)
+}
+
 /**
  * What one environment is doing with one flag. **Three states, not two.**
  *
@@ -58,12 +123,7 @@ export type FlagPolarity = 'killswitch' | 'enablement' | 'unclassified'
 export type FlagCriticality = 'high' | 'medium' | 'low' | 'unclassified'
 
 export type FlagListSort = 'key_asc' | 'key_desc' | 'state' | 'type' | 'recent'
-/**
- * ⚠️ `'off'` means **"not on"** — it includes never-touched flags, and the chip that drives it is
- * labelled "Not on" for exactly that reason. It is NOT the `off` activation STATE. Story 3.1 added
- * `'never'` as the exact filter, additively, so the dormant disclosure has somewhere to link; `'off'`
- * keeps its meaning so no existing bookmark changes what it returns.
- */
+/** `never` and `switched_off` are old bookmarks; since one-flag-switch they mean `off`. */
 export type FlagStateFilter = 'all' | 'on' | 'off' | 'never' | 'switched_off'
 export type FlagTypeFilter = 'all' | 'killswitch' | 'enablement' | 'unclassified'
 
@@ -71,7 +131,18 @@ export type FlagTypeFilter = 'all' | 'killswitch' | 'enablement' | 'unclassified
 export type FlagListVersionInput = {
   id: string
   version: number
-  definition: { description?: unknown; metadata?: unknown } | null | undefined
+  // The served definition decides On / Off (`flagSwitchState`, `flag-list-view.ts`), so its variants and rules are read too.
+  definition:
+    | {
+        description?: unknown
+        metadata?: unknown
+        valueType?: unknown
+        variants?: unknown
+        defaultVariantKey?: unknown
+        rules?: unknown
+      }
+    | null
+    | undefined
 }
 export type FlagListActivationInput = {
   environment: string
@@ -91,7 +162,8 @@ export type FlagListRow = {
   key: string
   /** Empty string when no version carries a readable description — never `undefined` in the markup. */
   description: string
-  state: FlagActivationState
+  /** one-flag-switch D1: On or Off, from what this environment SERVES — never "activated", never "never". */
+  state: FlagSwitchState
   polarity: FlagPolarity
   criticality: FlagCriticality
   /** The version this environment serves, or `null` unless `state === 'on'`. */
@@ -178,8 +250,10 @@ export function resolveActivationState(
  */
 export function projectFlagRows(flags: readonly FlagListFlagInput[], environment: string): FlagListRow[] {
   return flags.map((flag) => {
-    const { state, versionId, updatedAt } = resolveActivationState(flag.activations, environment)
+    const { versionId, updatedAt } = resolveActivationState(flag.activations, environment)
     const served = versionId === null ? undefined : flag.versions.find((row) => row.id === versionId)
+    // one-flag-switch D1: the row says what the environment SERVES. Activation is how it is stored, not what it is.
+    const state = flagSwitchState(served?.definition)
     // `versions` arrives ordered by the registry query, but the fallback must not depend on that:
     // an ordering assumption is invisible until the day it changes.
     const latest = flag.versions.reduce<FlagListVersionInput | undefined>(
@@ -211,10 +285,8 @@ export function projectFlagRows(flags: readonly FlagListFlagInput[], environment
  *  unpinned locale makes row order depend on the machine the code happens to run on. */
 const byKeyAsc = (a: FlagListRow, b: FlagListRow) => a.key.localeCompare(b.key, 'en', { numeric: true })
 
-// Rank, not a boolean, so `state` sorting stays total across THREE states. "On" first is what a
-// reader came to check; "turned off" before "never turned on" because a deliberate act is more
-// interesting than an absence.
-const STATE_RANK: Record<FlagActivationState, number> = { on: 0, off: 1, never: 2 }
+// "On" first: it is what a reader came to check.
+const STATE_RANK: Record<FlagSwitchState, number> = { on: 0, off: 1 }
 // Kill-switches first: their default is ON, so disabling one is the deliberate, dangerous act.
 // Unclassified last — it is the absence of an answer, and absences never sort to the top (the same
 // rule `compareCellValues` applies to `null`).
@@ -271,22 +343,11 @@ export function filterFlagRowsByQuery(rows: readonly FlagListRow[], query: strin
   )
 }
 
-/**
- * Filter by activation state.
- *
- * **`off` means "not on"** — it matches both `off` and `never`. That is the plain reading of the
- * word for someone scanning a list, and at this project's live numbers the alternative is actively
- * misleading: a strict reading would put 40 flags in neither the "on" nor the "off" bucket and show
- * `off (0)`, which reads as a broken filter. The three-way distinction is not lost — it is rendered
- * on the row itself, which is where a reader asks *why* something is not on. The filter answers
- * "what can I not see", the row answers "why".
- */
+/** On or Off (one-flag-switch D1). The old `never` and `switched_off` bookmarks still parse, and mean Off. */
 export function filterFlagRowsByState(rows: readonly FlagListRow[], state: FlagStateFilter): FlagListRow[] {
   if (state === 'all') return [...rows]
-  if (state === 'never') return rows.filter((row) => row.state === 'never')
-  // The EXACT off state, as distinct from `'off'`, which means "not on" and includes `never`.
-  if (state === 'switched_off') return rows.filter((row) => row.state === 'off')
-  return rows.filter((row) => (state === 'on' ? row.state === 'on' : row.state !== 'on'))
+  // one-flag-switch D1: a flag is On or Off. `never` and `switched_off` survive only as old bookmarks, and mean Off.
+  return rows.filter((row) => (state === 'on' ? row.state === 'on' : row.state === 'off'))
 }
 
 export function filterFlagRowsByType(rows: readonly FlagListRow[], type: FlagTypeFilter): FlagListRow[] {
@@ -417,16 +478,13 @@ export function buildFlagListView(
   flags: readonly FlagListFlagInput[],
   params: FlagListParams,
   pageSize: number = FLAG_LIST_PAGE_SIZE
-): FlagPageResult & { stateCounts: { all: number; on: number; off: number; never: number } } {
+): FlagPageResult & { stateCounts: { all: number; on: number; off: number } } {
   const projected = projectFlagRows(flags, params.environment)
   const narrowed = filterFlagRowsByType(filterFlagRowsByQuery(projected, params.q), params.type)
   const stateCounts = {
     all: narrowed.length,
     on: narrowed.filter((row) => row.state === 'on').length,
-    // "Not on" — deliberately the union of `off` and `never`, matching the chip's label and the
-    // `'off'` filter above. `never` is the exact count beside it, not a replacement for it.
-    off: narrowed.filter((row) => row.state !== 'on').length,
-    never: narrowed.filter((row) => row.state === 'never').length,
+    off: narrowed.filter((row) => row.state === 'off').length,
   }
   const ordered = sortFlagRows(filterFlagRowsByState(narrowed, params.state), params.sort)
   return { ...paginateFlagRows(ordered, params.page, pageSize), stateCounts }
@@ -450,8 +508,8 @@ export function buildFlagListView(
 export type FlagListSummary = {
   total: number
   serving: number
+  /** one-flag-switch D1: every flag that is not On. */
   switchedOff: number
-  neverSwitched: number
 }
 
 export function summariseFlagList(rows: readonly FlagListRow[]): FlagListSummary {
@@ -459,100 +517,14 @@ export function summariseFlagList(rows: readonly FlagListRow[]): FlagListSummary
     total: rows.length,
     serving: rows.filter((row) => row.state === 'on').length,
     switchedOff: rows.filter((row) => row.state === 'off').length,
-    neverSwitched: rows.filter((row) => row.state === 'never').length,
   }
 }
 
-/**
- * Split the list into the rows worth reading and the dormant ones that collapse behind a
- * disclosure.
- *
- * **Grouping is OFF whenever the reader has narrowed the list**, which is Story 3.1's own rule: a
- * filtered view has no uniform majority to summarise, and collapsing rows the reader just searched
- * for would hide the answer they asked for. `narrowed` is passed in rather than re-derived, because
- * this module must not guess at what the query string meant.
- */
-export type FlagListGrouping = {
-  /** False when the reader has filtered or searched — then `dormant` is empty and `active` is all. */
-  grouped: boolean
-  active: FlagListRow[]
-  dormant: FlagListRow[]
-}
+export type FlagStateRun = { state: FlagSwitchState; rows: FlagListRow[] }
 
-/**
- * ⚠️ **Pass the FULL projection, never a page of it.**
- *
- * The first version of Story 3.1 grouped `view.pageRows` — the paginated slice — so the disclosure
- * read "23 features have never been turned on" on a tenant with 40 dormant flags, because 23 was
- * how many landed on page one. The collapse then had to coexist with a pager, and the design has
- * neither: one summary row stands for ALL of them, and the list itself does not paginate.
- *
- * Caught by putting the built page beside the approved design, which is the only place a number
- * that plausible shows up as wrong.
- */
-export function groupDormantFlagRows(
-  rows: readonly FlagListRow[],
-  options: { narrowed: boolean }
-): FlagListGrouping {
-  if (options.narrowed) return { grouped: false, active: [...rows], dormant: [] }
-  const dormant = rows.filter((row) => row.state === 'never')
-  // Collapsing a single dormant row saves nothing and costs a click — the disclosure would hide
-  // exactly as many rows as the summary line it adds. Below two, render them inline.
-  if (dormant.length < 2) return { grouped: false, active: [...rows], dormant: [] }
-  const active = rows.filter((row) => row.state !== 'never')
-  // ⚠️ **If EVERY row is dormant, do not group.** The collapse exists to stop dormant rows burying
-  // the active ones; with no active rows there is nothing to bury, and hiding the entire list behind
-  // a disclosure leaves a table with no rows AND no empty state — the page looks broken rather than
-  // tidy. Caught by the authed fixture, whose tenant has only never-touched flags: an existing spec
-  // that clicks a feature link timed out because there was no longer a link to click.
-  if (active.length === 0) return { grouped: false, active: [...rows], dormant: [] }
-  return { grouped: true, active, dormant }
-}
-
-/**
- * ⚠️ **The console's feature list no longer paginates, and that is a removal worth saying out loud.**
- *
- * Story 3.1's acceptance said "expanded, it paginates at 15". The approved design has no pager on
- * this list at all: one summary row stands for every dormant feature, and paging inside it was what
- * made that impossible — a `<details>` that navigates re-collapses on every click.
- *
- * So `DORMANT_PAGE_SIZE` is gone rather than left as an ornament. It had become a constant nothing
- * consumed, asserted only by a test comparing it to another constant — a test that could not fail,
- * about a number with no reader (fresh reviewer, PR #124).
- *
- * `FLAG_LIST_PAGE_SIZE` and `paginateFlagRows` stay: they are still the projection's contract and
- * still unit-tested, and a future surface that needs paging should not have to rebuild them. What
- * changed is that the console does not call them.
- */
-
-/**
- * The active rows, split into runs by state, in the order the design shows them.
- *
- * ⚠️ **The first version rendered ONE hardcoded header reading "On in <env>" with
- * `active.length` as its count.** `active` is "not dormant", so it includes `off` rows — and when
- * grouping is off it is the ENTIRE list. On the fixture tenant the page rendered
- *
- *     Nothing is on in production — 2 features have never been turned on here.
- *     [On in production · 2]
- *     gb.e2e.owner.fault      Never turned on here
- *     gb.e2e.undisclosed      Never turned on here
- *
- * — a header confidently naming a state none of the rows beneath it were in, four elements after
- * the page said nothing was on. That is the exact class of confidently-false line this whole epic
- * exists to remove, on its flagship page (fresh reviewer, PR #124, Blocking).
- *
- * The approved prototype emits a `.grp` per state TRANSITION with a per-state label and a per-state
- * count, and only when grouped. This is that, moved somewhere it can be unit-tested.
- *
- * Returns `[]` when not grouped — the design shows no headers over an ungrouped list, because a
- * filtered view is already one thing and a heading over it would be restating the filter.
- */
-export type FlagStateRun = { state: FlagActivationState; rows: FlagListRow[] }
-
-export function runsByState(rows: readonly FlagListRow[], options: { grouped: boolean }): FlagStateRun[] {
-  if (!options.grouped) return []
-  // `on` before `off` before `never`: serving first, because it is what a reader came to check.
-  const order: FlagActivationState[] = ['on', 'off', 'never']
+/** The rows split into On, then Off, for the list's two headers. Empty runs are dropped. */
+export function runsByState(rows: readonly FlagListRow[]): FlagStateRun[] {
+  const order: FlagSwitchState[] = ['on', 'off']
   return order
     .map((state) => ({ state, rows: rows.filter((row) => row.state === state) }))
     .filter((run) => run.rows.length > 0)

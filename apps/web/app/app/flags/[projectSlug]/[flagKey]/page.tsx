@@ -25,7 +25,7 @@ import { asPeriod } from '@/lib/flag-funnel'
 import { getFeatureImpactByProjectId } from '@/lib/north-star-query'
 import { FLAG_ENVIRONMENTS } from '@/lib/flag-definition'
 import { projectFlagRows } from '@/lib/flag-list-view'
-import { evaluateVersionDefault } from '@/lib/flag-environment-view'
+import { hasFlagSwitch } from '@/lib/flag-list-view'
 import { formatUtc } from '@/lib/format-utc'
 import { PageHead, PageTab, PageTabs, Pane, Pill, Tag } from '@/design-system/primitives'
 import { ProductShell } from '@/components/product/ProductShell'
@@ -135,12 +135,6 @@ export default async function FlagDetailPage({
   // reader is never silently shown two.
   const describedVersion = latest?.version ?? null
   const [descriptive] = projectFlagRows([{ ...flag, activations: [] }], FLAG_ENVIRONMENTS[0])
-  // What "turn on" would actually serve. ACTIVATED IS NOT ON: a version whose default variant is
-  // falsey serves `false` while the page would otherwise report the feature as on — the latest
-  // version of 34 of 42 live flags. Asked of the SDK's evaluator, server-side, so the label and
-  // production cannot disagree (fresh reviewer, PR #120, Blocking).
-  const latestDefault =
-    latest === undefined ? { value: undefined, readable: false } : evaluateVersionDefault(flag.key, latest)
   // The snapshot revision per environment, for the actions' optimistic-concurrency check. Straight
   // off `getFlagRegistryView()` — no query is added (D1). A missing row means the environment has
   // never had a snapshot, whose revision is 0; that is the same default the legacy surface uses, and
@@ -151,7 +145,6 @@ export default async function FlagDetailPage({
   const switchEnvironments: FlagSwitchEnvironment[] = FLAG_ENVIRONMENTS.map((environment) => ({
     environment,
     state: projectFlagRows([flag], environment)[0].state,
-    snapshotVersion: snapshotByEnvironment.get(environment) ?? 0,
   }))
   // Rollback's targets. Same source, one extra field: WHICH version each environment serves, so a
   // row can say "serving in production" instead of offering to re-serve what is already live.
@@ -249,13 +242,9 @@ export default async function FlagDetailPage({
                 under a tab reading "Value" said the same word twice at four times the size. */}
             <FlagSwitch
               slug={projectSlug}
-              flagId={flag.id}
               flagKey={flag.key}
               environments={switchEnvironments}
-              latestVersionId={latest?.id ?? null}
-              latestVersion={latest?.version ?? null}
-              latestDefaultValue={latestDefault.value}
-              latestReadable={latestDefault.readable}
+              switchable={hasFlagSwitch(latest?.definition)}
               canManage={canManage}
               servingEnabled={servingEnabled}
             />
@@ -291,14 +280,9 @@ export default async function FlagDetailPage({
         )}
 
         {/* ── The Environments tab — reference state `feature-environments` ────────────────────
-            One line per environment, the three states named, and the same `projectFlagRows` the
-            list uses asked once per environment — so this page and the list can never disagree
-            about what "on" means.
-
-            ⚠️ **"Never turned on here" is not "off"**, and this is the screen where that
-            distinction is worth the most. Off means somebody decided, and there is a name and a
-            reason beside it. Never means nothing has ever happened to this feature in that
-            environment. Rendering them the same is what made the old page unanswerable. */}
+            One line per environment, On or Off, from the same `projectFlagRows` the list uses —
+            so this page, the list and the CLI can never disagree about what "on" means
+            (one-flag-switch D1). */}
         {tab === 'environments' && (
           <Pane>
             <table className="ds-envtable">

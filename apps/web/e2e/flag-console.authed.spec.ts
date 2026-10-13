@@ -14,6 +14,8 @@
 // outside the merge gate by design. Run it deliberately — `npm run test:e2e:authed`.
 
 import { test, expect } from '@playwright/test'
+import { createClient } from '@supabase/supabase-js'
+import { createHash, randomBytes } from 'node:crypto'
 import {
   IMPACT_FEATURE_KEY,
   IMPACT_SERIES,
@@ -319,70 +321,90 @@ test.describe('Story 3.1 — the features list answers in one line', () => {
     ).toBe(false)
   })
 
-  test('never-turned-on features collapse behind ONE disclosure row', async ({ page }) => {
-    await page.goto(`/app/flags/${tenantSlug()}`)
-
-    // One summary ROW, not a <details> holding fifteen more rows — the approved design collapses
-    // every dormant feature into a single line with a "Show them" link.
-    const disclosure = page.locator('[data-dormant-summary]')
-    const count = await disclosure.count()
-    if (count === 0) {
-      // ⚠️ No dormant summary. On THIS fixture the reason is the ALL-DORMANT rule, not the
-      // fewer-than-two rule — every flag it provisions is untouched, and collapsing all of them
-      // would leave a table with no rows and no empty state. An earlier comment named the wrong
-      // rule (fresh reviewer, PR #124), which mattered because it made the branch read as a
-      // small-data quirk rather than a deliberate behaviour with its own regression test.
-      //
-      // Stated plainly: the meaningful half of this test — "Show them" → `state=never` → rows —
-      // does NOT execute on this fixture. It is covered exhaustively in `flag-list-view.test.ts`,
-      // where the dataset is controlled.
-      const rows = await page.locator('[data-feature-list] .ds-row').count()
-      expect(rows, 'no disclosure AND no rows — the list did not render at all').toBeGreaterThan(0)
-      return
+  // one-flag-switch S1.3 — the page and the CLI change and show ONE switch. Created through the CLI (off), switched on
+  // from the page, read back through the CLI; killed through the CLI, read back on the page. Any split fails here.
+  test('the page switch and the CLI are one switch: a change from either shows in both', async ({
+    page,
+    request,
+  }) => {
+    const record = readTenantRecord()
+    if (!record?.slug || !record.userId)
+      throw new Error('the switch round trip needs the auth-setup user and project')
+    const url = process.env.SUPABASE_URL
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!url || !serviceKey) throw new Error('SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY must be set')
+    const db = createClient(url, serviceKey, { auth: { persistSession: false } })
+    const token = `gf_pat_${randomBytes(32).toString('base64url')}`
+    const tokenHash = createHash('sha256').update(token).digest('hex')
+    await db
+      .from('cli_tokens')
+      .insert({ user_id: record.userId, token_hash: tokenHash, label: 'switch round trip' })
+    const auth = { authorization: `Bearer ${token}` }
+    const key = `switch.round_trip_${randomBytes(4).toString('hex')}_enabled`
+    const cliState = async () => {
+      const response = await request.get(`/api/v1/cli/flags?project=${record.slug}`, { headers: auth })
+      expect(response.status()).toBe(200)
+      const body = (await response.json()) as {
+        flags: Array<{
+          key: string
+          environments: Array<{ environment: string; state: string; serving: unknown }>
+        }>
+      }
+      return body.flags
+        .find((flag) => flag.key === key)
+        ?.environments.find((row) => row.environment === 'production')
     }
+    try {
+      const created = await request.post('/api/v1/cli/flags/write', {
+        headers: auth,
+        data: {
+          project: record.slug,
+          reason: 'switch round trip',
+          command: 'create',
+          key,
+          polarity: 'enablement',
+          allEnvs: true,
+        },
+      })
+      expect(created.status()).toBe(200)
+      expect(await cliState()).toMatchObject({ state: 'off', serving: false })
 
-    // ⚠️ The design does not expand in place — it LINKS. A <details> that pages inside itself
-    // re-collapses on every navigation, so the dormant group is one row plus "Show them", which
-    // goes to the exact `state=never` view where paging already works.
-    //
-    // So the property is no longer "collapsed then expands". It is: one line stands for many, and
-    // it offers a way to see them. Asserting the old behaviour here would be asserting a control
-    // the approved design deliberately does not have.
-    await expect(disclosure).toContainText('never been turned on')
-    const showThem = disclosure.getByRole('link', { name: /Show them/i })
-    await expect(showThem).toBeVisible()
-    await showThem.click()
-    await expect(page).toHaveURL(/state=never/)
-    // And the destination actually lists them, rather than being a link to nowhere.
-    await expect(page.locator('[data-feature-list] .ds-row').first()).toBeVisible()
-  })
+      // The page switch, on — then the CLI reads exactly that.
+      await page.goto(`/app/flags/${record.slug}/${encodeURIComponent(key)}`)
+      const production = page.getByRole('switch', {
+        name: new RegExp(`${key.replace(/[.]/g, '\\.')} on in production`),
+      })
+      await production.click()
+      await expect(page.getByRole('switch', { name: new RegExp(`off in production`) })).toHaveAttribute(
+        'aria-checked',
+        'true'
+      )
+      expect(await cliState()).toMatchObject({ state: 'on', serving: true })
 
-  test('searching turns grouping off — the rows you asked for are never collapsed away', async ({ page }) => {
-    // Story 3.1's own rule. A filtered view has no uniform majority to summarise, and hiding a row
-    // the reader just searched for hides the answer they asked for.
-    await page.goto(`/app/flags/${tenantSlug()}?q=gb`)
-    // ⚠️ Was `locator('details', …)`, which is green on EVERY input — the redesign renders the
-    // dormant summary as a div and there is no `<details>` on this page at all, filtered or not. A
-    // guard that cannot fail is the failure mode `sprint-3.md` warns about in its own build
-    // contract, eight lines from the end.
-    // ⚠️ This asserted `toHaveCount(0)` on `?q=gb` — and the fixture tenant renders NO dormant
-    // summary on any input (it is all-dormant, so `groupDormantFlagRows` declines to group). The
-    // assertion was 0 before the filter and 0 after: green on every input, which is the same
-    // "guard that cannot fail" its own comment claimed to be replacing (fresh reviewer, round 2).
-    //
-    // The honest version compares the two states rather than asserting an absolute. If the unfiltered
-    // page has no summary either, the comparison proves nothing and says so instead of passing.
-    const unfiltered = await page.goto(`/app/flags/${tenantSlug()}`).then(async () => {
-      await page.waitForLoadState('networkidle')
-      return page.locator('[data-dormant-summary]').count()
-    })
-    test.skip(
-      unfiltered === 0,
-      'this tenant renders no dormant summary unfiltered, so "searching turns grouping off" has nothing to compare against — the rule is covered exhaustively in lib/flag-list-view.test.ts'
-    )
-    await page.goto(`/app/flags/${tenantSlug()}?q=gb`)
-    await page.waitForLoadState('networkidle')
-    await expect(page.locator('[data-dormant-summary]')).toHaveCount(0)
+      // The CLI's kill — then the page reads exactly that.
+      const killed = await request.post('/api/v1/cli/flags/write', {
+        headers: auth,
+        data: {
+          project: record.slug,
+          reason: 'switch round trip',
+          command: 'kill',
+          key,
+          environments: ['production'],
+        },
+      })
+      expect(killed.status()).toBe(200)
+      await page.reload()
+      await expect(page.getByRole('switch', { name: new RegExp(`on in production`) })).toHaveAttribute(
+        'aria-checked',
+        'false'
+      )
+      expect(await cliState()).toMatchObject({ state: 'off', serving: false })
+      // And the list says Off for it in production, with no third word anywhere on the page.
+      await page.goto(`/app/flags/${record.slug}?env=production`)
+      await expect(page.locator('main')).not.toContainText(/Never turned on|never been turned on|activated/i)
+    } finally {
+      await db.from('cli_tokens').delete().eq('token_hash', tokenHash)
+    }
   })
 })
 

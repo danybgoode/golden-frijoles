@@ -10,7 +10,8 @@ import { table } from '../output'
 
 export type CliFlagEnvironment = {
   environment: string
-  state: 'on' | 'off' | 'never'
+  /** one-flag-switch: on or off, by the same rule as the flags page. */
+  state: 'on' | 'off'
   version: number | null
   serving: unknown
   readable: boolean
@@ -64,23 +65,23 @@ export function resolveProject(context: CommandContext): string | null {
 }
 
 export function missingProject(context: CommandContext): ExitCode {
-  context.emit.fail('invalid', 'No project chosen. Pass --project <slug>, or run `frijoles projects use <slug>`.')
+  context.emit.fail(
+    'invalid',
+    'No project chosen. Pass --project <slug>, or run `frijoles projects use <slug>`.'
+  )
   return EXIT.USAGE
 }
 
 /**
- * What an environment is serving, as ONE cell of text.
- *
- * ⚠️ Three outcomes, and collapsing any two of them would be the defect this whole area of the
- * product exists to stop making:
- *   • `never` / `off` — nothing is served here. The consumer falls back to its own literal.
- *   • a value — what a context with no attributes actually gets, from the SDK's own evaluator.
+ * What an environment is doing with a flag, as ONE cell: the same On / Off the flags page shows (one-flag-switch).
+ *   • a boolean flag — `on` or `off`, and the version when one is served;
+ *   • any other type — the value served, and its version (`off` when nothing is served);
  *   • `unreadable` — the stored row disagrees with the parser that wrote it. Never a guess.
  */
 export function describeServing(row: CliFlagEnvironment): string {
-  if (row.state === 'never') return '—'
-  if (row.state === 'off') return 'off (nothing served)'
+  if (row.version === null) return 'off'
   if (!row.readable) return 'unreadable'
+  if (typeof row.serving === 'boolean') return `${row.state}  v${row.version}`
   return `${JSON.stringify(row.serving)}  v${row.version}`
 }
 
@@ -89,12 +90,9 @@ export const flagsLsCommand: Command = {
   summary: 'every flag, and what each environment serves',
   usage: 'frijoles flags ls [--project <slug>] [--json]',
   needsAuth: true,
-  detail: `The "serving" column is what a context with no attributes actually GETS — the
-  answer the SDK's own evaluator gives, which is the answer production gives.
-
-  ⚠️ It is NOT the same as "a version is activated here". A definition whose default
-  variant is false is activated AND serves false; reporting those as one fact is how a
-  console once labelled 34 of 42 flags the wrong way round.`,
+  detail: `Each environment says on or off, exactly as the flags page does: on when the app gets
+  true, off when it gets false or nothing. A flag that is not on/off shows the value it serves.
+  Switch one with \`frijoles flags set <key> --value true|false\` or \`frijoles flags kill <key>\`.`,
   flags: [{ name: 'project', value: '<slug>', describe: 'the project (default: the remembered one)' }],
   async run(context): Promise<ExitCode> {
     const project = resolveProject(context)
