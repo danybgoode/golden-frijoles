@@ -121,10 +121,13 @@ async function buildMcpServer(
   // /install for anyone. A reader holding no write credential of either kind gets every reply through ONE scrubber
   // (lib/public-connector-scrub.ts), wired before the first tool registers, so no tool — now or later — hands an
   // anonymous visitor a person's id.
-  if (projectSlug === DEMO_PROJECT_SLUG && !writeKeyId && !flagWriteActor) scrubRepliesForPublicReader(server)
+  const anonymousPublicReader = projectSlug === DEMO_PROJECT_SLUG && !writeKeyId && !flagWriteActor
+  if (anonymousPublicReader) scrubRepliesForPublicReader(server)
   registerFlagTools(server, projectId, projectSlug, flagWriteActor)
-  // scenarios-light-up S2.1 — the scenario READ (D6: the connector never writes scenarios).
-  registerScenarioTools(server, projectId)
+  // scenarios-light-up S2.1 — the scenario READ (D6: the connector never writes scenarios). Not for the anonymous reader
+  // of the public project: its drills are administration, which is members-only (one-product-project D1), and a
+  // running security drill against goldenfrijoles.com is not something to announce to anyone (verifier, #348).
+  if (!anonymousPublicReader) registerScenarioTools(server, projectId)
 
   server.registerTool(
     'get_tars_funnel',

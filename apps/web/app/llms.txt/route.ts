@@ -94,7 +94,7 @@ account.
   the URL was made by an owner (acting as them) or an owner's \`frijoles\` token is sent; tasks only with a
   project write key. \`{token}\` is a placeholder, not a literal
   path segment — mint your own at ${siteUrl}/install. Tools exposed: \`get_tars_funnel\`,
-  \`get_north_star\`, \`compare_experiment\`, \`list_scenarios\` (all scoped to the one project the token resolves to;
+  \`get_north_star\`, \`compare_experiment\`, and \`list_scenarios\` on a project's own token (all scoped to the one project the token resolves to;
   no tool accepts a project parameter). Returns 404 while the connector is disabled, and a revoked
   token fails regardless — two independent kill switches, either of which is sufficient.
 
