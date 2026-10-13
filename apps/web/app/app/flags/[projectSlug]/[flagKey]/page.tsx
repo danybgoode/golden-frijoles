@@ -280,14 +280,9 @@ export default async function FlagDetailPage({
         )}
 
         {/* ── The Environments tab — reference state `feature-environments` ────────────────────
-            One line per environment, the three states named, and the same `projectFlagRows` the
-            list uses asked once per environment — so this page and the list can never disagree
-            about what "on" means.
-
-            ⚠️ **"Never turned on here" is not "off"**, and this is the screen where that
-            distinction is worth the most. Off means somebody decided, and there is a name and a
-            reason beside it. Never means nothing has ever happened to this feature in that
-            environment. Rendering them the same is what made the old page unanswerable. */}
+            One line per environment, On or Off, from the same `projectFlagRows` the list uses —
+            so this page, the list and the CLI can never disagree about what "on" means
+            (one-flag-switch D1). */}
         {tab === 'environments' && (
           <Pane>
             <table className="ds-envtable">

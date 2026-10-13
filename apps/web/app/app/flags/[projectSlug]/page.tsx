@@ -158,8 +158,7 @@ export default async function FlagsPage({
             </p>
             <p>
               Definitions, immutable versions and their audit remain visible while flag serving is dark.
-              Activating or deactivating a flag changes one environment snapshot with optimistic revision
-              protection.
+              Switching a flag on or off changes one environment snapshot with optimistic revision protection.
             </p>
           </>
         )}

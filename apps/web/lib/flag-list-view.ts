@@ -62,19 +62,24 @@ export function flagSwitchState(servedDefinition: unknown): FlagSwitchState {
   if (!definition) return 'off'
   const variants = Array.isArray(definition.variants) ? (definition.variants as Variant[]) : []
   if (definition.valueType !== 'boolean') return variants.length > 0 ? 'on' : 'off'
-  if (variantValue(variants, definition.defaultVariantKey) === true) return 'on'
-  const rules = Array.isArray(definition.rules) ? definition.rules : []
-  // A rule counts only if it can reach someone: a rollout of 0% to `true` serves `true` to nobody.
-  const reaches = (rule: Record<string, unknown> | null) => {
-    const rollout = record(rule?.rollout)
-    return !rollout || typeof rollout.basisPoints !== 'number' || rollout.basisPoints > 0
+  // Rules in priority order, the way the evaluator walks them. A rule to `true` that can reach someone makes the flag
+  // On (on for those it reaches). An unconditional rule that reaches everyone ends the walk: it decides for all, and
+  // nothing below it — the default included — is ever served (verifier, #351: a top rule to `false` must read Off).
+  const rules = (Array.isArray(definition.rules) ? definition.rules : [])
+    .map((rule) => record(rule))
+    .filter((rule): rule is Record<string, unknown> => rule !== null)
+    .sort((a, b) => Number(a.priority) - Number(b.priority))
+  for (const rule of rules) {
+    const rollout = record(rule.rollout)
+    const basisPoints = rollout && typeof rollout.basisPoints === 'number' ? rollout.basisPoints : null
+    const reachesSomeone = basisPoints === null || basisPoints > 0
+    const reachesEveryone = basisPoints === null || basisPoints >= 10_000
+    const unconditional = !Array.isArray(rule.clauses) || rule.clauses.length === 0
+    const servesTrue = typeof rule.variantKey === 'string' && variantValue(variants, rule.variantKey) === true
+    if (servesTrue && reachesSomeone) return 'on'
+    if (unconditional && reachesEveryone) return 'off'
   }
-  return rules.some((rule) => {
-    const r = record(rule)
-    return variantValue(variants, r?.variantKey) === true && reaches(r)
-  })
-    ? 'on'
-    : 'off'
+  return variantValue(variants, definition.defaultVariantKey) === true ? 'on' : 'off'
 }
 
 /** Whether this definition can have a switch at all: a boolean flag with a `true` and a `false` variant. */

@@ -253,7 +253,7 @@ export function EpicBars({ card }: { card: BoardCard }) {
   )
 }
 
-const ENV_WORD: Record<string, string> = { on: 'serving', off: 'switched off', never: 'never activated' }
+const ENV_WORD: Record<string, string> = { on: 'on', off: 'off' }
 
 /** S2.3 (D12) — the flag's state, from this project's registry; changed in Ship, never here. */
 export function EpicFlag({ flag, projectSlug }: { flag: EpicFlagView; projectSlug: string }) {

@@ -635,6 +635,42 @@ test('a boolean flag is On only when what it serves gives true — by default or
     }),
     'off'
   )
+  // A higher-priority unconditional rule to false decides for everyone: Off, whatever the default says.
+  assert.equal(
+    flagSwitchState({
+      valueType: 'boolean',
+      variants,
+      defaultVariantKey: 'on',
+      rules: [{ priority: 1, clauses: [], variantKey: 'off' }],
+    }),
+    'off'
+  )
+  // …but a rule to false that reaches only part of the traffic leaves the default serving the rest: On.
+  assert.equal(
+    flagSwitchState({
+      valueType: 'boolean',
+      variants,
+      defaultVariantKey: 'on',
+      rules: [{ priority: 1, clauses: [], rollout: { basisPoints: 5000 }, variantKey: 'off' }],
+    }),
+    'on'
+  )
+  // A clause rule to true (staff) with a false default is on for those it reaches: On.
+  assert.equal(
+    flagSwitchState({
+      valueType: 'boolean',
+      variants,
+      defaultVariantKey: 'off',
+      rules: [
+        {
+          priority: 1,
+          clauses: [{ attribute: 'role', operator: 'equals', values: ['staff'] }],
+          variantKey: 'on',
+        },
+      ],
+    }),
+    'on'
+  )
   // A kill: default false, rules cleared.
   assert.equal(
     flagSwitchState({ valueType: 'boolean', variants, defaultVariantKey: 'off', rules: [] }),

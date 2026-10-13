@@ -100,7 +100,7 @@ test('an environment with nothing activated says so — it does not render as a 
 
   assert.equal(development.active, false)
   assert.equal(development.fillPercent, null, 'an inactive environment must not draw a bar at all')
-  assert.equal(development.label, 'not active')
+  assert.equal(development.label, 'off')
   assert.equal(development.version, null)
 })
 
