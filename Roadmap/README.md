@@ -48,6 +48,12 @@ independently shippable slice of value.
      `### <NN> · <name>` heading per macro-section row above. -->
 
 ### 01 · Growth Engine
+- ✅ [TARS, one model: every funnel reads the same stages](01-growth-engine/tars-one-model/README.md) —
+  **shipped 2026-10-13** (#344, web only). Registry features and bet flags read one funnel: everyone, got it, adopted,
+  retained, satisfied, with adoption counted only among the people who got it. A funnel reads the feature's whole life,
+  or follows the people who first got it in the last 90 or 30 days (the 90-day cap is gone). The feature pane, funnel
+  page, epic page, reports, alerts, API and connector all read it; `tars` in the API is replaced by `funnel`.
+  **Owed:** the signed-in look with the period choice.
 - 🚧 [Scenarios made PM-operable](01-growth-engine/scenarios-pm-operable/README.md) (owner define ·
   bounded launch/retry/stop · explicit target state · honest impact comparison and immutable evidence
   links) — **code and migration are live, authoring remains dark** (2026-08-13, PR #98, `5bca24c`).
@@ -588,6 +594,8 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-13**: `tars-one-model` **shipped**: ≈$12.98 against a $15–32 quote, two verifier rounds. Every funnel
+  reads the same stages, over the feature's whole life or a 90- or 30-day cohort.
 - **2026-10-10**: `why-as-a-story` **shipped**: ≈$9.72 against a $15–32 quote, two verifier rounds. The Why reads as a
   story, in full, and four of its seven stories were built by Sonnet under the new dispatch rule.
 - **2026-10-10**: `setup-instruments-connects` **shipped**: ≈$39.86, over its $15–31 quote (five review rounds, four on

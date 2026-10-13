@@ -1376,6 +1376,10 @@ one-liner + why + date shape.
   1.0.10 incident this repo already paid for. *(2026-07-25.)*
 
 ## Working efficiently
+- **A builder's "typecheck clean" is a claim, and builder branches fall out of the cost stamp.** A Sonnet builder
+  reported a clean typecheck that was not, and an advisory pre-push hook let a non-compiling commit through: re-run
+  the checks before taking delegated work. `epic-actuals` attributes by the session's branch, so builders committing
+  on `build/…` branches are not counted; count them by hand in the retro. *(tars-one-model, 2026-10-13.)*
 - **A delegated builder needs a source map and a re-derive.** Four Sonnet stories cost ≈$0.83 against ≈$8.90 for the
   orchestrator; two of four came back needing a fix (an edited generated file; a list that drifted from the code).
   Name each file's source in the brief, and re-run the checks yourself before taking the work.
