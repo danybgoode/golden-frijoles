@@ -4,7 +4,8 @@
 import { test, expect } from '@playwright/test'
 
 test('the probe is a plain 404 to an unsigned, wrongly signed or non-synthetic request', async ({ request }) => {
-  for (const headers of [{}, { authorization: 'Bearer nope' }, { authorization: `Bearer ${'x'.repeat(40)}` }]) {
+  const attempts: Array<Record<string, string>> = [{}, { authorization: 'Bearer nope' }, { authorization: `Bearer ${'x'.repeat(40)}` }]
+  for (const headers of attempts) {
     const response = await request.post('/api/internal/resilience/probe', {
       headers,
       data: { subject: 'synthetic:spec' },
