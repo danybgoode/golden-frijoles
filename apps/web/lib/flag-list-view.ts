@@ -83,6 +83,44 @@ export function flagSwitchState(servedDefinition: unknown): FlagSwitchState {
   return variantValue(variants, definition.defaultVariantKey) === true ? 'on' : 'off'
 }
 
+/**
+ * Who an On boolean flag reaches, in words, for the line beside the switch (product owner, 2026-10-13: "it should name
+ * the segment, and if none is defined, as right now, just a placeholder"). `null` when the flag is Off, or not on/off.
+ *
+ *   - `everyone` — the default serves `true` and no rule takes anyone away;
+ *   - `25% of people` — a percentage rollout to `true`;
+ *   - `a segment (not named yet)` — a rule with conditions (plan, region, user ids…). Named segments do not exist yet,
+ *     so this is the placeholder; it becomes the segment's name when they do (`tars-segments`);
+ *   - `everyone but a segment (not named yet)` — the default serves `true` and a rule serves `false` to some.
+ *
+ * Walks the rules exactly as `flagSwitchState` does, so the words can never disagree with the switch.
+ */
+export const UNNAMED_SEGMENT = 'a segment (not named yet)'
+export function flagReach(servedDefinition: unknown): string | null {
+  const definition = record(servedDefinition)
+  if (!definition || definition.valueType !== 'boolean' || flagSwitchState(definition) !== 'on') return null
+  const variants = Array.isArray(definition.variants) ? (definition.variants as Variant[]) : []
+  const rules = (Array.isArray(definition.rules) ? definition.rules : [])
+    .map((rule) => record(rule))
+    .filter((rule): rule is Record<string, unknown> => rule !== null)
+    .sort((a, b) => Number(a.priority) - Number(b.priority))
+  let excludesSome = false
+  for (const rule of rules) {
+    const rollout = record(rule.rollout)
+    const basisPoints = rollout && typeof rollout.basisPoints === 'number' ? rollout.basisPoints : null
+    if (basisPoints !== null && basisPoints <= 0) continue
+    const unconditional = !Array.isArray(rule.clauses) || rule.clauses.length === 0
+    const servesTrue = typeof rule.variantKey === 'string' && variantValue(variants, rule.variantKey) === true
+    if (servesTrue) {
+      if (!unconditional) return UNNAMED_SEGMENT
+      if (basisPoints === null) return excludesSome ? `everyone but ${UNNAMED_SEGMENT}` : 'everyone'
+      return `${Math.round(basisPoints) / 100}% of people`
+    }
+    excludesSome = true
+  }
+  return excludesSome ? `everyone but ${UNNAMED_SEGMENT}` : 'everyone'
+}
+
 /** Whether this definition can have a switch at all: a boolean flag with a `true` and a `false` variant. */
 export function hasFlagSwitch(definition: unknown): boolean {
   const def = record(definition)
@@ -164,6 +202,8 @@ export type FlagListRow = {
   description: string
   /** one-flag-switch D1: On or Off, from what this environment SERVES — never "activated", never "never". */
   state: FlagSwitchState
+  /** Who an On flag reaches (`flagReach`): `everyone`, `25% of people`, `a segment (not named yet)`; null when Off. */
+  reach: string | null
   polarity: FlagPolarity
   criticality: FlagCriticality
   /** The version this environment serves, or `null` unless `state === 'on'`. */
@@ -254,6 +294,7 @@ export function projectFlagRows(flags: readonly FlagListFlagInput[], environment
     const served = versionId === null ? undefined : flag.versions.find((row) => row.id === versionId)
     // one-flag-switch D1: the row says what the environment SERVES. Activation is how it is stored, not what it is.
     const state = flagSwitchState(served?.definition)
+    const reach = flagReach(served?.definition)
     // `versions` arrives ordered by the registry query, but the fallback must not depend on that:
     // an ordering assumption is invisible until the day it changes.
     const latest = flag.versions.reduce<FlagListVersionInput | undefined>(
@@ -266,6 +307,7 @@ export function projectFlagRows(flags: readonly FlagListFlagInput[], environment
       key: flag.key,
       description: readDescription(describing?.definition),
       state,
+      reach,
       polarity: readMetadata<'killswitch' | 'enablement'>(describing?.definition, 'polarity', POLARITIES),
       criticality: readMetadata<'high' | 'medium' | 'low'>(
         describing?.definition,

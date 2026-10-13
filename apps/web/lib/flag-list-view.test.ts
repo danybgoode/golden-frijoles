@@ -15,6 +15,7 @@ import {
   filterFlagRowsByQuery,
   filterFlagRowsByState,
   filterFlagRowsByType,
+  flagReach,
   flagSwitchState,
   hasFlagSwitch,
   paginateFlagRows,
@@ -62,6 +63,7 @@ function row(overrides: Partial<FlagListRow> & { key: string }): FlagListRow {
     id: `id-${overrides.key}`,
     description: '',
     state: 'off',
+    reach: null,
     polarity: 'enablement',
     criticality: 'low',
     version: null,
@@ -591,6 +593,7 @@ function stateRow(id: string, state: 'on' | 'off'): FlagListRow {
     key: id,
     description: '',
     state,
+    reach: state === 'on' ? 'everyone' : null,
     polarity: 'unclassified',
     criticality: 'unclassified',
     version: state === 'on' ? 1 : null,
@@ -757,4 +760,70 @@ test('runs: On first, then Off, and no row is lost', () => {
     ]
   )
   assert.equal(runsByState([row({ key: 'x', state: 'off' })]).length, 1)
+})
+
+test('an On flag says who it reaches — everyone, a percentage, or the segment placeholder', () => {
+  const variants = [
+    { key: 'off', value: false },
+    { key: 'on', value: true },
+  ]
+  const def = (over: Record<string, unknown>) => ({
+    valueType: 'boolean',
+    variants,
+    defaultVariantKey: 'off',
+    rules: [],
+    ...over,
+  })
+  assert.equal(flagReach(def({ defaultVariantKey: 'on' })), 'everyone')
+  assert.equal(
+    flagReach(
+      def({ rules: [{ priority: 1, clauses: [], rollout: { basisPoints: 2500 }, variantKey: 'on' }] })
+    ),
+    '25% of people'
+  )
+  assert.equal(
+    flagReach(
+      def({
+        rules: [
+          { priority: 1, clauses: [{ field: 'plan', operator: 'equals', value: 'pro' }], variantKey: 'on' },
+        ],
+      })
+    ),
+    'a segment (not named yet)'
+  )
+  assert.equal(
+    flagReach(
+      def({
+        defaultVariantKey: 'on',
+        rules: [
+          { priority: 1, clauses: [{ field: 'plan', operator: 'equals', value: 'free' }], variantKey: 'off' },
+        ],
+      })
+    ),
+    'everyone but a segment (not named yet)'
+  )
+  // Off, or not on/off: no reach line.
+  assert.equal(flagReach(def({})), null)
+  assert.equal(
+    flagReach({ valueType: 'json', variants: [{ key: 'a', value: 1 }], defaultVariantKey: 'a' }),
+    null
+  )
+  // The row carries it, and the list's detail line uses it.
+  const flags = [
+    flag({
+      key: 'pro.only_enabled',
+      versions: [
+        version('v-p', 1, {
+          defaultVariantKey: 'off',
+          rules: [
+            { priority: 1, clauses: [{ field: 'plan', operator: 'equals', value: 'pro' }], variantKey: 'on' },
+          ],
+        }),
+      ],
+      activations: [{ environment: 'production', versionId: 'v-p' }],
+    }),
+  ]
+  const [row] = projectFlagRows(flags, 'production')
+  assert.equal(row.state, 'on')
+  assert.equal(row.reach, 'a segment (not named yet)')
 })

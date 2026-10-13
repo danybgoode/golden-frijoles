@@ -1,6 +1,6 @@
 import { FLAG_ENVIRONMENTS, type FlagDefinition, type FlagEnvironment } from '@golden-frijoles/sdk'
 import { evaluateVersionDefault } from './flag-environment-view'
-import { flagSwitchState, resolveActivationState, type FlagSwitchState } from './flag-list-view'
+import { flagReach, flagSwitchState, resolveActivationState, type FlagSwitchState } from './flag-list-view'
 import type { FlagLifecycleAuditRow, FlagRegistryRow } from './flag-registry'
 
 // golden-frijoles-cli · Sprint 1, Story 1.5 — the agent-facing projection of the flag registry.
@@ -30,6 +30,8 @@ export type CliFlagEnvironmentView = {
    * is on when what this environment serves gives `true`; nothing served is off. `serving` carries the value itself.
    */
   state: FlagSwitchState
+  /** Who an On boolean flag reaches — `everyone`, `25% of people`, `a segment (not named yet)` — or null. */
+  reach: string | null
   /** The definition version this environment serves, or null when it serves nothing. */
   version: number | null
   /**
@@ -109,6 +111,7 @@ function environmentViews(flag: FlagRegistryRow): CliFlagEnvironmentView[] {
       return {
         environment,
         state: 'off' as const,
+        reach: null,
         version: null,
         serving: null,
         // Nothing is served, which is a fully readable fact — not a corrupt row. Reporting
@@ -122,6 +125,7 @@ function environmentViews(flag: FlagRegistryRow): CliFlagEnvironmentView[] {
     return {
       environment,
       state: flagSwitchState(version.definition),
+      reach: flagReach(version.definition),
       version: version.version,
       serving: resolved.readable ? (resolved.value ?? null) : null,
       readable: resolved.readable,

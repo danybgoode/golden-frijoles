@@ -12,6 +12,8 @@ export type CliFlagEnvironment = {
   environment: string
   /** one-flag-switch: on or off, by the same rule as the flags page. */
   state: 'on' | 'off'
+  /** Who an On flag reaches: `everyone`, `25% of people`, `a segment (not named yet)`. Absent from older servers. */
+  reach?: string | null
   version: number | null
   serving: unknown
   readable: boolean
@@ -81,7 +83,10 @@ export function missingProject(context: CommandContext): ExitCode {
 export function describeServing(row: CliFlagEnvironment): string {
   if (row.version === null) return 'off'
   if (!row.readable) return 'unreadable'
-  if (typeof row.serving === 'boolean') return `${row.state}  v${row.version}`
+  if (typeof row.serving === 'boolean')
+    return row.state === 'on' && row.reach
+      ? `on (${row.reach})  v${row.version}`
+      : `${row.state}  v${row.version}`
   return `${JSON.stringify(row.serving)}  v${row.version}`
 }
 
