@@ -367,7 +367,8 @@ export const SPECIMEN_WORDS = {
   neverActivated: controlPlaneWord('Never turned on'),
   /** The pill's word for a deliberate kill. The SWITCH's label is `switchOff` — they differ. */
   on: 'On',
-  off: 'Turned off',
+  // one-flag-switch D1: the pill says what the switch says. On / Off, nothing else.
+  off: 'Off',
   /**
    * ⚠️ Separate from `off` on purpose. `off` was `'Off'` and became `'Turned off'` to satisfy the
    * pill, which left the key meaning something different from the `<Switch label="Off">` four lines

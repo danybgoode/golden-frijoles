@@ -19,17 +19,16 @@
 
 import { FLAG_ENVIRONMENTS } from '@/lib/flag-definition'
 import type { FlagRegistryRow } from '@/lib/flag-registry'
-import { projectFlagRows, type FlagActivationState } from '@/lib/flag-list-view'
+import { projectFlagRows, type FlagSwitchState } from '@/lib/flag-list-view'
 import { FLAG_STATE_PRESENTATION } from './flag-vocabulary'
 
 /**
  * The mark in a cell.
  *
- * ⚠️ A SHAPE and a `title`, never a colour alone — a filled disc for a state somebody decided, a
- * dashed ring for one nobody has ever touched. Three colours in a 126-cell grid is exactly where a
- * colour-only encoding stops being readable, and `never` is 39 of the 42 rows.
+ * ⚠️ A SHAPE and a `title`, never a colour alone: a filled disc for On, an empty ring for Off. Colour alone stops
+ * being readable in a 126-cell grid.
  */
-function Mark({ state }: { state: FlagActivationState }) {
+function Mark({ state }: { state: FlagSwitchState }) {
   return (
     <span
       className={`ds-mark ds-mark--${state}`}
@@ -53,7 +52,7 @@ export function FlagCompare({ flags }: { flags: FlagRegistryRow[] }) {
   return (
     <>
       <div className="ds-legend">
-        {(['on', 'off', 'never'] as const).map((state) => (
+        {(['on', 'off'] as const).map((state) => (
           <span key={state}>
             <Mark state={state} />
             {FLAG_STATE_PRESENTATION[state].label}
@@ -96,10 +95,8 @@ export function FlagCompare({ flags }: { flags: FlagRegistryRow[] }) {
                     </td>
                     {byEnvironment.map(({ environment, states }) => (
                       <td className="ds-matrix-cell" key={environment}>
-                        {/* `never` is the honest default for a flag with no activation row in an
-                            environment — the same fallback `projectFlagRows` applies, restated here
-                            only because a `Map` lookup can miss. */}
-                        <Mark state={states.get(flag.id) ?? 'never'} />
+                        {/* Off when the lookup misses: nothing served is Off (one-flag-switch D1). */}
+                        <Mark state={states.get(flag.id) ?? 'off'} />
                       </td>
                     ))}
                   </tr>

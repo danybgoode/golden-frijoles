@@ -92,48 +92,6 @@ export function describeRollback(input: {
 }
 
 /**
- * What "turning on" a version will actually serve — said before the click, not after.
- *
- * ── The defect this exists to prevent ─────────────────────────────────────────────────────────
- * "On" in the console means an activation row points at a version. What a PM means by on is "the
- * feature is being served". They come apart whenever a version's `defaultVariantKey` names a
- * falsey variant — which, live, is the LATEST version of **34 of 42** `miyagisanchez` flags.
- *
- * So a button reading "Turn on in production" could activate a version that serves `false`, and the
- * page would then report the feature as on while nothing changed for a user. That is the epic's own
- * outcome test ("which of these are on") answered with the storage fact instead of the operational
- * one, on the surface that kills a live checkout.
- *
- * Returns null when activating is unambiguous — the version serves a truthy default, so "on" means
- * what it says and no dialog is warranted. A string means the caller must confirm.
- */
-export function describeActivationSurprise(input: {
-  flagKey: string
-  environment: string
-  version: number
-  defaultValue: unknown
-  readable: boolean
-}): string | null {
-  if (!input.readable) {
-    return (
-      `v${input.version} of ${input.flagKey} cannot be evaluated, so there is no way to say what ` +
-      `${input.environment} would serve. Turning it on anyway means ${input.environment} starts ` +
-      `serving a definition this console could not read.`
-    )
-  }
-  // Only a literal `false` is called out. A string, a number or a JSON value is not "off" — it is a
-  // non-boolean flag doing its job, and claiming otherwise would make the dialog cry wolf on every
-  // multivariate flag until nobody reads it.
-  if (input.defaultValue !== false) return null
-  return (
-    `Turning ${input.flagKey} on in ${input.environment} makes it serve v${input.version} — and ` +
-    `v${input.version} evaluates to false by default, so the feature it guards still will NOT ` +
-    `appear. "On" here means ${input.environment} is serving this definition, not that the feature ` +
-    `is live. To actually switch the feature on, publish a version whose default variant is true.`
-  )
-}
-
-/**
  * What revoking a snapshot key breaks.
  *
  * ── Why this moved here, VERBATIM ─────────────────────────────────────────────────────────────
@@ -172,8 +130,8 @@ export function describeRevokeSyncKey(source: string): string {
 export type FlagListSummaryCounts = {
   total: number
   serving: number
+  /** Every flag that is not On (one-flag-switch D1). */
   switchedOff: number
-  neverSwitched: number
 }
 
 /**
@@ -194,10 +152,7 @@ export function answerLineClauses(summary: FlagListSummaryCounts): string[] {
     clauses.push(`serving ${summary.serving} ${summary.serving === 1 ? 'feature' : 'features'}`)
   }
   if (summary.switchedOff > 0) {
-    clauses.push(`${summary.switchedOff} deliberately switched off`)
-  }
-  if (summary.neverSwitched > 0) {
-    clauses.push(`${summary.neverSwitched} never turned on here`)
+    clauses.push(`${summary.switchedOff} off`)
   }
   return clauses
 }
@@ -280,38 +235,14 @@ export function flagListAnswerSegments(
     segments.push({ text: '.' })
   }
 
-  // Sentence 2 — only when something was deliberately switched off. On live production this is
-  // never rendered: `off` is 0 in every environment (A20).
+  // Sentence 2 — what is off, as one count. On and Off are the only two states (one-flag-switch D1).
   if (summary.switchedOff > 0) {
-    segments.push({ text: ' ' }, { text: String(summary.switchedOff), emphasis: 'strong' })
-    segments.push({
-      text: `${summary.switchedOff === 1 ? ' feature was' : ' features were'} deliberately switched off here.`,
-    })
-  }
-
-  // Sentence 3 — the dormant majority, said as its own fact rather than appended to the first.
-  if (summary.neverSwitched > 0) {
-    // ⚠️ "The other N" implies a set the previous sentence established. When nothing is serving,
-    // nothing was established — "is serving nothing. The other 40 have never been switched on"
-    // refers back to a baseline that does not exist (cross-review, agy, round 3). That is the
-    // common case on two of this product's three environments, not an edge.
-    // ⚠️ **The whole sentence, not just the verb.** Round 3 made the verb agree and left the rest:
-    // "All 1 has never been switched on … nobody turned THEM off, nobody ever turned THEM on" —
-    // singular verb, plural pronouns, one sentence. And a test pinned that exact string as correct,
-    // which is the failure round 3's own note describes and then repeated (fresh reviewer, round 4).
-    //
-    // Reachable by every tenant whose first sync creates one flag, so it is a first-run sentence.
-    const one = summary.neverSwitched === 1
-    const lead = summary.serving === 0 && summary.switchedOff === 0 ? ' All ' : ' The other '
-    if (one) {
-      // "The other 1" reads as a stub. With exactly one, name it as one thing.
+    const all = summary.serving === 0
+    if (all && summary.switchedOff === 1) segments.push({ text: ' The one feature here is off.' })
+    else {
+      segments.push({ text: all ? ' All ' : ' ' }, { text: String(summary.switchedOff), emphasis: 'strong' })
       segments.push({
-        text: `${lead === ' All ' ? ' The one feature here' : ' The other one'} has never been switched on in ${environment} — nobody turned it off, nobody ever turned it on.`,
-      })
-    } else {
-      segments.push({ text: lead }, { text: String(summary.neverSwitched), emphasis: 'strong' })
-      segments.push({
-        text: ` have never been switched on in ${environment} — nobody turned them off, nobody ever turned them on.`,
+        text: all ? ' are off.' : summary.switchedOff === 1 ? ' feature is off.' : ' features are off.',
       })
     }
   }
@@ -328,11 +259,4 @@ export function flagListAnswerLine(
   return flagListAnswerSegments(summary, environment, servingKeys)
     .map((segment) => segment.text)
     .join('')
-}
-
-/** The one row a collapsed dormant group renders. Plural-safe: "1 feature has", "39 features have". */
-export function dormantGroupLabel(count: number, environment: string): string {
-  return count === 1
-    ? `1 feature has never been turned on in ${environment}`
-    : `${count} features have never been turned on in ${environment}`
 }

@@ -33,21 +33,19 @@ import type { FlagRegistryRow } from '@/lib/flag-registry'
 import {
   buildFlagListQuery,
   buildFlagListView,
-  groupDormantFlagRows,
   runsByState,
   projectFlagRows,
   summariseFlagList,
   type FlagListSummary,
   type FlagListParams,
 } from '@/lib/flag-list-view'
-import { dormantGroupLabel, flagListAnswerSegments } from '@/lib/flag-console-copy'
-import { evaluateVersionDefault } from '@/lib/flag-environment-view'
+import { flagListAnswerSegments } from '@/lib/flag-console-copy'
+import { hasFlagSwitch } from '@/lib/flag-list-view'
 import { Icon } from '@/components/ui/Icon'
 import {
   Answer,
   Callout,
   Col,
-  DormantSummary,
   GroupBanner,
   ListCard,
   ListHead,
@@ -86,22 +84,15 @@ const SORT_LABEL: Array<{ value: FlagListParams['sort']; label: string }> = [
 ]
 
 /** One place the card-to-count mapping lives, so the number and the `data-nonzero` flag agree. */
-function cardCount(key: 'all' | 'on' | 'off' | 'never', summary: FlagListSummary): number {
+function cardCount(key: 'all' | 'on' | 'off', summary: FlagListSummary): number {
   if (key === 'all') return summary.total
   if (key === 'on') return summary.serving
-  if (key === 'off') return summary.switchedOff
-  return summary.neverSwitched
+  return summary.switchedOff
 }
 
-/**
- * Which summary cards the current filter covers.
- *
- * ⚠️ `state=off` (the historic "not on" union) is reachable by URL but has NO card of its own, so a
- * plain equality check left nothing marked current and no card painted — a reader arriving on that
- * link saw a filtered list with no indication of what filtered it (fresh reviewer, round 2).
- */
+/** Which card the current filter is. `never` and `switched_off` are old bookmarks for Off (one-flag-switch D1). */
 function isCurrent(active: FlagListParams['state'], card: FlagListParams['state']): boolean {
-  if (active === 'off') return card === 'switched_off' || card === 'never'
+  if (active === 'never' || active === 'switched_off') return card === 'off'
   return active === card
 }
 
@@ -109,7 +100,6 @@ export function FlagConsole({
   slug,
   flags,
   params,
-  snapshotVersion,
   canManage,
   servingEnabled,
 }: {
@@ -117,19 +107,11 @@ export function FlagConsole({
   flags: FlagRegistryRow[]
   params: FlagListParams
   /**
-   * The selected environment's snapshot revision, for the row switch's optimistic-concurrency
-   * check. Straight off `getFlagRegistryView()` — no query is added. A missing row means the
-   * environment has never had a snapshot, whose revision is 0; the RPC rejects a mismatch either
-   * way, so a wrong guess fails loudly rather than overwriting.
-   */
-  snapshotVersion: number
-  /**
    * Whether the viewer may turn features on and off.
    *
    * ⚠️ **This is about CONTROLS, not about data.** Flag keys, descriptions and activation states
    * stay member-readable — nothing below is hidden by this. What it decides is whether a member
-   * sees a switch the server would refuse them: `activateFlagAction` / `deactivateFlagAction` both
-   * call `requireProjectOwnership`, so the boundary is theirs and this only avoids offering a
+   * sees a switch the server would refuse them: `setFlagSwitchAction` calls `requireProjectOwnership`, so the boundary is theirs and this only avoids offering a
    * control that cannot work.
    */
   canManage: boolean
@@ -151,46 +133,20 @@ export function FlagConsole({
   const projected = projectFlagRows(flags, params.environment)
   const summary = summariseFlagList(projected)
 
-  // Grouping is off the moment the reader narrows the list — collapsing rows somebody just searched
-  // for would hide the answer they asked for.
+  // Headers (On, then Off) only over the whole list: a filtered or searched view is already one thing.
   const narrowed = params.q !== '' || params.state !== 'all' || params.type !== 'all'
-
-  // ⚠️ The FULL projection, not a page of it. This was `view.pageRows`, so the disclosure read
-  // "23 features have never been turned on" on a tenant with 40 — 23 was simply how many landed on
-  // page one. The design has no pager on this list precisely because ONE summary row stands for all
-  // of them, and pagination is what made that impossible.
-  //
-  // `buildFlagListView` applies the filters AND the sort, so it is the right call in both branches;
-  // only the page size differs, and the design has no pager.
+  // `buildFlagListView` applies the filters AND the sort; the design has no pager.
   const visible = buildFlagListView(flags, params, Number.MAX_SAFE_INTEGER).pageRows
-  const grouping = groupDormantFlagRows(visible, { narrowed })
-  // Runs are empty when not grouped: the design shows no headers over a filtered list.
-  const runs = runsByState(grouping.active, { grouped: grouping.grouped })
+  const runs = narrowed ? [] : runsByState(visible)
 
-  // ── What each row's switch needs, resolved ONCE ────────────────────────────────────────────
-  // The list already holds every version of every flag (`getFlagRegistryView`), so this is a
-  // projection, not a fetch. `latestDefault` is carried because ACTIVATED IS NOT ON: a version whose
-  // default variant is falsey serves `false` while the console reports the feature as on, and
-  // `describeActivationSurprise` raises a confirm on exactly that.
+  // A row has a switch only when its flag's value is on/off (one-flag-switch D3): the newest version decides the type.
   const switchable = new Map(
     flags.map((flag) => {
       const latest = flag.versions.reduce<(typeof flag.versions)[number] | undefined>(
         (best, row) => (best === undefined || row.version > best.version ? row : best),
         undefined
       )
-      const evaluated =
-        latest === undefined
-          ? { value: undefined, readable: false }
-          : evaluateVersionDefault(flag.key, latest)
-      return [
-        flag.id,
-        {
-          latestVersionId: latest?.id ?? null,
-          latestVersion: latest?.version ?? null,
-          latestDefaultValue: evaluated.value,
-          latestReadable: evaluated.readable,
-        },
-      ]
+      return [flag.id, hasFlagSwitch(latest?.definition)]
     })
   )
 
@@ -342,7 +298,7 @@ export function FlagConsole({
             )}
           </ListHead>
 
-          {grouping.active.length === 0 && grouping.dormant.length === 0 ? (
+          {visible.length === 0 ? (
             <Row>
               <Col colSpan={columnCount}>
                 {flags.length === 0
@@ -351,7 +307,7 @@ export function FlagConsole({
               </Col>
             </Row>
           ) : (
-            (runs.length > 0 ? runs : [{ state: null, rows: grouping.active }]).map((run) => (
+            (runs.length > 0 ? runs : [{ state: null, rows: visible }]).map((run) => (
               <Fragment key={run.state ?? 'ungrouped'}>
                 {/* One header PER STATE, naming that state and counting only its own rows. A single
                     hardcoded "On in <env>" over every non-dormant row is what shipped first, and on
@@ -359,9 +315,7 @@ export function FlagConsole({
                     page said "Nothing is on in production". */}
                 {run.state !== null && (
                   <GroupBanner state={run.state} count={run.rows.length} columns={columnCount}>
-                    {run.state === 'on'
-                      ? `${FLAG_STATE_PRESENTATION.on.label} in ${params.environment}`
-                      : FLAG_STATE_PRESENTATION[run.state].label}
+                    {`${FLAG_STATE_PRESENTATION[run.state].label} in ${params.environment}`}
                   </GroupBanner>
                 )}
                 {run.rows.map((row) => {
@@ -403,13 +357,9 @@ export function FlagConsole({
                         <Col width="act">
                           <FlagSwitch
                             slug={slug}
-                            flagId={row.id}
                             flagKey={row.key}
-                            environments={[{ environment, state: row.state, snapshotVersion }]}
-                            latestVersionId={switchable.get(row.id)?.latestVersionId ?? null}
-                            latestVersion={switchable.get(row.id)?.latestVersion ?? null}
-                            latestDefaultValue={switchable.get(row.id)?.latestDefaultValue}
-                            latestReadable={switchable.get(row.id)?.latestReadable ?? false}
+                            environments={[{ environment, state: row.state }]}
+                            switchable={switchable.get(row.id) ?? false}
                             canManage={canManage}
                             servingEnabled={servingEnabled}
                             variant="switch"
@@ -422,29 +372,10 @@ export function FlagConsole({
               </Fragment>
             ))
           )}
-
-          {/* ── One line replacing thirty-nine ────────────────────────────────────────────────
-              ⚠️ It stands for EVERY dormant feature, not the ones that happened to land on this
-              page. The first version grouped the paginated slice and read "23 features have never
-              been turned on" on a tenant with 40 — a number plausible enough that only putting the
-              built page beside the design caught it. */}
-          {grouping.grouped && (
-            <DormantSummary
-              title={dormantGroupLabel(grouping.dormant.length, params.environment)}
-              detail="No one has ever switched them on or off here. Nothing is wrong with them — nothing has happened to them."
-              action="Show them"
-              href={linkTo({ state: 'never' })}
-              columns={columnCount}
-            />
-          )}
         </ListCard>
       </div>
 
-      <p className="ds-foot">
-        {grouping.grouped
-          ? `Showing ${grouping.active.length} rows for ${summary.total} features — ${grouping.dormant.length} of them summarised in one line.`
-          : `Showing ${grouping.active.length} of ${summary.total} features.`}
-      </p>
+      <p className="ds-foot">{`Showing ${visible.length} of ${summary.total} features.`}</p>
     </>
   )
 }

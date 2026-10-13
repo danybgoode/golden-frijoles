@@ -570,40 +570,15 @@ function flagWithActivations(activations: Array<{ environment: string; versionId
   }
 }
 
-test('NO activation row reads as never-touched, not as switched off', () => {
-  const summary = summariseFlagEnvironments(flagWithActivations([])).production
-  assert.equal(summary.active, false)
-  assert.match(summary.detail, /No one has switched this on or off/)
-  // The old wording, which described both states at once.
-  assert.doesNotMatch(summary.detail, /Nothing is activated here/)
-})
-
-test('an activation row holding NULL reads as a deliberate switch-off', () => {
-  const summary = summariseFlagEnvironments(
-    flagWithActivations([{ environment: 'production', versionId: null }])
-  ).production
-  assert.equal(summary.active, false)
-  assert.match(summary.detail, /Switched off here/)
-})
-
-test('the two inactive states produce DIFFERENT sentences', () => {
-  // The whole point: a reader must be able to tell a kill from an absence. Asserting they differ,
-  // rather than asserting each string, is what keeps this from passing if both are reworded to the
-  // same thing later.
+test('one-flag-switch: nothing served is Off, whether it was never set or taken out — one sentence, two states', () => {
   const never = summariseFlagEnvironments(flagWithActivations([])).production
-  const off = summariseFlagEnvironments(
+  const takenOut = summariseFlagEnvironments(
     flagWithActivations([{ environment: 'production', versionId: null }])
   ).production
-  assert.notEqual(never.detail, off.detail)
-})
-
-test('the distinction is PER ENVIRONMENT — off in one, never touched in another', () => {
-  // The live shape: something deactivated in production while development was never set up at all.
-  const summaries = summariseFlagEnvironments(
-    flagWithActivations([{ environment: 'production', versionId: null }])
-  )
-  assert.match(summaries.production.detail, /Switched off here/)
-  assert.match(summaries.development.detail, /No one has switched this on or off/)
+  for (const summary of [never, takenOut]) {
+    assert.equal(summary.active, false)
+    assert.equal(summary.detail, 'Off here.')
+  }
 })
 
 test('an active environment is unaffected by the un-collapse', () => {

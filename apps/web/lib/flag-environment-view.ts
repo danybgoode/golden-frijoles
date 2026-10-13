@@ -267,8 +267,8 @@ function summarise(flag: FlagView, environment: FlagEnvironment): FlagEnvironmen
   // `resolveActivationState` is imported rather than reimplemented — it is exported from
   // `flag-list-view` for exactly this, so the list and this seam cannot drift about what "on" means.
   const { state, versionId } = resolveActivationState(flag.activations, environment)
-  if (state === 'never') return inactive('No one has switched this on or off in this environment.')
-  if (state === 'off') return inactive('Switched off here.')
+  // one-flag-switch D1: nothing served here is simply Off, however it came to be.
+  if (state !== 'on') return inactive('Off here.')
   const version = flag.versions.find((row) => row.id === versionId)
   // An activation pointing at a version this view does not carry. Not reachable through the app's
   // own write path, and named rather than crashed on: an environment whose activation cannot be
