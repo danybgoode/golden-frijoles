@@ -14,6 +14,7 @@ export const dynamic = 'force-dynamic'
 
 const TARGET_KEY = process.env.SCENARIO_PROBE_TARGET_KEY?.trim() || 'site.probe'
 let provider: ScenarioProvider | null = null
+const MAX_BODY_CHARS = 1024
 // The engine this site reports to, as a customer app would configure it: the SDK's default (goldenfrijoles.com)
 // unless GOLDEN_FRIJOLES_URL points elsewhere (a local or CI run). Not getSiteUrl(): no URL here is handed to anyone.
 const engineUrl = () => process.env.GOLDEN_FRIJOLES_URL?.trim() || undefined
@@ -41,9 +42,12 @@ function scenarioProvider(environment: 'development' | 'preview' | 'production')
 export async function POST(request: Request) {
   if (!authorized(request)) return notFound()
   if (!(await isResilienceScenariosEnabled())) return notFound()
+  // A probe body is one short subject. Read only after the secret is checked, and bounded anyway (cross-review, #348).
   let body: unknown
   try {
-    body = await request.json()
+    const text = await request.text()
+    if (text.length > MAX_BODY_CHARS) return notFound()
+    body = JSON.parse(text)
   } catch {
     return notFound()
   }
