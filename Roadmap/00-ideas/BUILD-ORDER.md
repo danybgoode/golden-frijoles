@@ -35,7 +35,7 @@ _a pitch is waiting at the approval gate._
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
-- [One flag switch: on or off, the same in the CLI, the SDK, MCP and the page](../01-growth-engine/one-flag-switch/README.md) — #80 · 01 Growth Engine · 3/3 stories · risk: High · appetite M · _docs: status in-progress_
+- [One flag switch: on or off, the same in the CLI, the SDK, MCP and the page](../01-growth-engine/one-flag-switch/README.md) — #80 · 01 Growth Engine · 3/4 stories · risk: High · appetite M · _docs: status in-progress_
 - [Scenarios, switched on: an agent can set up a target, run a drill and stop it](../01-growth-engine/scenarios-light-up/README.md) — #81 · 01 Growth Engine · 7/9 stories · risk: High · appetite L · _docs: status in-progress_
 - [A golden welcome and recovery pages](../02-commercial/brand-reveal-error-pages/README.md) — #82 · 02 Commercial · 2/2 stories · risk: High · appetite M · _docs: status in-progress_
 - [One bet, wired: the flag knows its epic, its funnel and its read](../01-growth-engine/one-bet-wired/README.md) — #83 · 01 Growth Engine · 6/6 stories · risk: High · appetite L · _docs: status in-progress_
