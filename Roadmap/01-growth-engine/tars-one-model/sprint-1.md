@@ -3,7 +3,7 @@ epic: tars-one-model
 sprint: 1
 title: "One model"
 risk: high
-phase: In review
+phase: Shipped
 stories_total: 3
 stories:
   - id: S1.1
@@ -30,7 +30,7 @@ stories:
 ---
 # TARS, one model: every funnel reads the same stages — Sprint 1: One model
 
-**Status:** 🟡 built, in review (one PR for both sprints)
+**Status:** ✅ shipped 2026-10-13 (#344, merge `d0edc51`; web only)
 
 ## Stories
 

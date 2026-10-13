@@ -3,7 +3,7 @@ epic: tars-one-model
 sprint: 2
 title: "Everywhere it shows"
 risk: high
-phase: In review
+phase: Shipped
 stories_total: 4
 stories:
   - id: S2.1
@@ -37,7 +37,7 @@ stories:
 ---
 # TARS, one model: every funnel reads the same stages — Sprint 2: Everywhere it shows
 
-**Status:** 🟡 built, in review (one PR for both sprints)
+**Status:** ✅ shipped 2026-10-13 (#344, merge `d0edc51`; web only)
 
 ## Stories
 
