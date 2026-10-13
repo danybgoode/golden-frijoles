@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
+  canAuthorScenarios,
   isOwnerDirectScenarioOperation,
   isScenarioKindEnabled,
   scenarioLaunchBlocker,
@@ -45,4 +46,16 @@ test('the direct owner action exposes only define, revoke, and stop', () => {
   for (const operation of ['create_run', 'start_run', 'approve_definition'])
     assert.equal(isOwnerDirectScenarioOperation(operation), false)
   assert.equal(isOwnerDirectScenarioOperation('transition_run', 'abort'), false)
+})
+
+test('the page shows owner controls only to an owner, with authoring on and a kind that can run', () => {
+  const on = { resilience: true, security: false }
+  assert.equal(canAuthorScenarios({ role: 'owner', authoringEnabled: true, capabilities: on }), true)
+  // The switched-off page (production's state before the flip, and the kill switch after it): no controls for anyone.
+  assert.equal(canAuthorScenarios({ role: 'owner', authoringEnabled: false, capabilities: on }), false)
+  assert.equal(canAuthorScenarios({ role: 'member', authoringEnabled: true, capabilities: on }), false)
+  assert.equal(
+    canAuthorScenarios({ role: 'owner', authoringEnabled: true, capabilities: { resilience: false, security: false } }),
+    false
+  )
 })

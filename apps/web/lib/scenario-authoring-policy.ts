@@ -37,3 +37,20 @@ export function isOwnerDirectScenarioOperation(operation: string, transition?: s
     (operation === 'transition_run' && transition === 'stop')
   )
 }
+
+/**
+ * Does the scenarios page show the owner's write controls? Only to an owner, only with the authoring switch on, and
+ * only while a kind can run. Pure, so the switched-off page has a test in CI now that CI's lit server runs with
+ * authoring ON (scenarios-light-up, verifier #348); the page and nothing else decides it.
+ */
+export function canAuthorScenarios(input: {
+  role: string
+  authoringEnabled: boolean
+  capabilities: ScenarioCapabilityGates
+}): boolean {
+  return (
+    input.role === 'owner' &&
+    input.authoringEnabled &&
+    (input.capabilities.resilience || input.capabilities.security)
+  )
+}

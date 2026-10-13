@@ -434,7 +434,7 @@ test.describe('the console shell', () => {
     // The gates that decide this are set identically by `run-local-e2e.mjs` and by `ci.yml`'s authed
     // step — verified by diffing both env blocks — so the count cannot differ between the runner
     // that produced it and the pipeline that enforces it. The two gates that DO differ
-    // (`SCENARIO_AUTHORING_ENABLED`, `FLAG_DEFINITION_SYNC_ENABLED` local; `SIGNUP_ENABLED` CI)
+    // (`FLAG_DEFINITION_SYNC_ENABLED` local; `SIGNUP_ENABLED` CI)
     // appear in no inventory row's `gate` field.
     const expected = PROJECT_ROUTE_INVENTORY.filter(
       (surface) =>
