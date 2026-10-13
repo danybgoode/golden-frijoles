@@ -53,7 +53,9 @@
  * Every console state other than the `ship-features` family measures 202–384, so the budget is not
  * slack: it is one page's head plus the variance that page's own text carries.
  */
-export const CHROME_BUDGET_PX = 480
+// one-flag-switch (2026-10-13): the list's lede shrank (it names what is on and counts what is off), so the worst case
+// fell 458 → 438 and the budget follows it down: 438 + 21 = 459.
+export const CHROME_BUDGET_PX = 459
 
 export type SpecRow = {
   what: string
@@ -162,7 +164,7 @@ export const MEASURED_SPEC: SpecRow[] = [
  * rows it left out are exactly the three that fail (fresh reviewer, round 3):
  *
  *   feature row          contract 78   built 90 when the row's state is `never`
- *   dormant summary row  contract 89   built 91
+ *   dormant summary row  (closed 2026-10-13: removed with the dormant group, one-flag-switch)
  *   primary/secondary    contract 38   built 44
  *
  * A gate that asserts what passes and describes what fails is the failure mode this whole layer was
@@ -203,20 +205,8 @@ export const DEFERRED_SPEC_ROWS = [
   //
   // It has a row in `MEASURED_SPEC` above now rather than an entry here, which is the only honest
   // way for a deferral to close (the same move Story 3.3 made with the switch).
-  {
-    what: 'dormant summary row',
-    contract: 89,
-    built: '91',
-    // ⚠️ STILL DEFERRED, and deliberately not swept up with its neighbour. The 2px is the body copy
-    // wrapping to a second line at `max-width: 78ch` — the same wrap the prototype has, which is why
-    // its own measurement is 89 and not 70. Closing it would mean pinning a height on an element
-    // whose height is its text, and Story 4.1's acceptance does not ask for it. What DID change is
-    // that `.ds-dormant` now carries the prototype's own `13px 16px` padding rather than a rounder
-    // number, so the remaining difference is the copy alone.
-    why: 'two-line body copy at 78ch; within 3px of the contract, and the difference is the sentence',
-    owner: 'Daniel',
-    until: '2026-10-15',
-  },
+  // `dormant summary row` is CLOSED by removal — one-flag-switch (2026-10-13) took the dormant group out of the design:
+  // a flag is On or Off, so there is no "never turned on" majority to summarise.
   {
     what: 'primary/secondary button',
     contract: 38,

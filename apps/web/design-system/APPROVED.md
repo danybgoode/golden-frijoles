@@ -26,6 +26,11 @@ That rules out the third state the approved list drew. `console-prototype.html` 
 callout; a feature never set in an environment is **Off** (`stateOf`), the off label reads **Off**, and the answer line
 names what is on and counts what is off. Nothing else in the file moved. The new hash above is this amendment's record.
 
+**One measured property changes with it, and it is stated rather than hidden:** the list no longer collapses 40 rows
+into one line, so `ship-features` (and the feature states drawn over it) now **scroll** at 1440 × 960
+(`MEASURED-SPEC.md`: no vertical page scroll **true → false**, feature rows 2 → 42). The chrome budget follows the
+design's new worst case down (458 → 438, budget 480 → 459), and the deferred `dormant summary row` closes by removal.
+
 ### The 33rd, approved 2026-09-09 (`mockups-as-built`, epic D8)
 
 `wizard-new-feature` — `wizardModal()`, `console-prototype.html:1992`. **It was drawn on

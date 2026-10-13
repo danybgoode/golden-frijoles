@@ -112,7 +112,6 @@ const TARGETS = [
   ['.row-desc', 'Feature description', 'height'],
   ['.pill.on', 'State pill', 'exact'],
   ['.sw', 'Switch', 'exact'],
-  ['.dormant', 'Dormant summary row', 'exact'],
   ['.btn-primary', 'Primary button', 'height'],
   ['.btn-ghost', 'Secondary button', 'height'],
 ];

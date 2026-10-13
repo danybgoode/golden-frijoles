@@ -476,7 +476,8 @@ test('the deferred spec rows are named, so the gate does not look complete', () 
   // 4 → 3: Story 4.1 closed `feature row` by clamping the never-state detail to one line, so that
   // row moved into MEASURED_SPEC. `dormant summary row` deliberately did NOT move with it — its 2px
   // is body copy wrapping, and sweeping it up would have been a claim nothing measured.
-  expect(DEFERRED_SPEC_ROWS.length, 'update this count when a deferred row is closed or found').toBe(3)
+  // 3 → 2: one-flag-switch removed the dormant group from the design, so `dormant summary row` closed with it.
+  expect(DEFERRED_SPEC_ROWS.length, 'update this count when a deferred row is closed or found').toBe(2)
   const today = new Date().toISOString().slice(0, 10)
   for (const row of DEFERRED_SPEC_ROWS) {
     expect(row.why.length, `${row.what} is deferred without a reason`).toBeGreaterThan(20)

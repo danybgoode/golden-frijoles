@@ -112,7 +112,6 @@ const GOVERNED_BY: Record<string, string> = {
 
 /** Which prototype row each DEFERRED row defers from. Same rule: mapping here, numbers imported. */
 const DEFERRAL_GOVERNED_BY: Record<string, string> = {
-  'dormant summary row': 'Dormant summary row',
   'primary/secondary button': 'Primary button',
   'project switcher': 'Project switcher',
 }
@@ -144,7 +143,8 @@ test('the generated spec table parses, and is not silently empty', () => {
   // cannot fail, one layer down. The count is pinned so a format change to the emitter fails HERE
   // rather than by quietly asserting nothing.
   const rows = readMeasuredSpec()
-  assert.equal(rows.size, 23, 'MEASURED-SPEC.md should describe 23 elements')
+  // 23 → 22: one-flag-switch removed the dormant summary row from the design (2026-10-13).
+  assert.equal(rows.size, 22, 'MEASURED-SPEC.md should describe 22 elements')
   // Seven rows carry a text-sized dimension. Pinned so that a change to which dimensions reproduce
   // is a decision somebody makes, not a silent widening of what the contract stops checking.
   const textSized = [...rows.entries()].filter(([, r]) => r.width === null || r.height === null)
@@ -181,7 +181,9 @@ test("the chrome budget is the approved design's own maximum, not a number in a 
   const rows = readChromeBudget()
   // A parser that returns nothing makes every assertion below vacuous — the guard that cannot fail,
   // one layer down. Pinned to the state count so an emitter change fails HERE.
-  assert.equal(rows.length, 32, 'the chrome table should describe all 32 approved states')
+  // 32 → 33: the table is regenerated in full now, and it includes the 33rd approved state (the New feature wizard,
+  // approved 2026-09-09), which the committed copy had missed — `--check` compares only what precedes this table.
+  assert.equal(rows.length, 33, 'the chrome table should describe all 33 approved states')
 
   const measured = rows.filter((row) => row.chrome !== null).map((row) => row.chrome as number)
   assert.ok(measured.length > 20, 'almost every console state should have a chrome measurement')
