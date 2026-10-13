@@ -30,6 +30,16 @@ export const SCENARIO_AUTHORING_LIMITS = {
   errorRateBasisPoints: MAX_SCENARIO_ERROR_RATE_BASIS_POINTS,
 } as const
 
+/** The bounded starting point a new definition gets, on the page and from `frijoles scenarios define` alike. */
+export const SCENARIO_AUTHORING_DEFAULTS = {
+  durationSeconds: 300,
+  requestCap: 10,
+  concurrencyCap: 2,
+  leaseTtlSeconds: 10,
+  abortAfterFailures: 2,
+  maxErrorRatePercent: 10,
+} as const
+
 export type ScenarioAuthoringDraft = {
   kind: ScenarioKind
   cohort: (typeof SCENARIO_AUTHORING_COHORTS)[number]

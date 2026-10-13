@@ -20,12 +20,10 @@ const next = join(root, 'node_modules/.bin/next');
 const playwright = join(root, 'node_modules/.bin/playwright');
 const normalPort = 3110;
 const darkPort = 3111;
-// Where this runner deliberately differs from CI's lit server: it turns two owner-mutation gates ON, so their lit
-// suites run here. The one cost: scenario-authoring-dark.authed.spec.ts skips locally (CI runs it).
+// Where this runner deliberately differs from CI's lit server: it turns one owner-mutation gate ON, so its lit suite
+// runs here (scenario authoring is ON in CI itself since scenarios-light-up).
 const LOCAL_OVERRIDES = {
-  // Both enable owner mutation surfaces CI keeps off; locally they are on so scenario-authoring.authed and the
-  // flag-catalog-sync specs run somewhere.
-  SCENARIO_AUTHORING_ENABLED: 'true',
+  // It enables an owner mutation surface CI keeps off; locally it is on so the flag-catalog-sync specs run somewhere.
   FLAG_DEFINITION_SYNC_ENABLED: 'true',
 };
 // Optional file arguments keep focused local investigation hermetic too. The dark-gate tripwire
@@ -198,6 +196,10 @@ async function main() {
       'apps/web/e2e/setup-routes-dark.spec.ts',
       'apps/web/e2e/flag-console-dark.spec.ts',
       'apps/web/e2e/signup.spec.ts',
+      // The rest of CI's OFF pass (ci.yml), so the two lists do not drift.
+      'apps/web/e2e/first-event-dark.spec.ts',
+      'apps/web/e2e/flag-funnel-dark.spec.ts',
+      'apps/web/e2e/cli-scenarios.spec.ts',
     ]);
   });
 

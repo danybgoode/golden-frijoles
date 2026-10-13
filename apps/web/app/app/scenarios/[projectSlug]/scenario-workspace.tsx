@@ -17,6 +17,7 @@ import {
   buildScenarioDefinition,
   firstCompatibleFaultFlag,
   SCENARIO_AUTHORING_COHORTS,
+  SCENARIO_AUTHORING_DEFAULTS,
   SCENARIO_AUTHORING_LIMITS,
   type ScenarioAuthoringDraft,
 } from '@/lib/scenario-authoring-draft'
@@ -93,12 +94,7 @@ export function ScenarioWorkspace({
     targetKey: defaultTarget,
     environment: 'production',
     startAt: localStart(),
-    durationSeconds: 300,
-    requestCap: 10,
-    concurrencyCap: 2,
-    leaseTtlSeconds: 10,
-    abortAfterFailures: 2,
-    maxErrorRatePercent: 10,
+    ...SCENARIO_AUTHORING_DEFAULTS,
     flagKey: defaultFlag?.key ?? '',
     flagVersion: defaultFlag?.version ?? 1,
   })
