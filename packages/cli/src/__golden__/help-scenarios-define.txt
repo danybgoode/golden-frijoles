@@ -1,0 +1,32 @@
+frijoles scenarios define — define a drill: a target, a fault flag version and its bounds
+
+Usage
+  frijoles scenarios define <scenario-key> --target <key> --flag <flagKey>@<version> [--kind resilience|security] [--cohort synthetic|internal] [--env production|preview|development] [--duration <seconds>] [--requests <n>] [--concurrency <n>] [--reason <text>]
+
+Owner only. Defining changes nothing in the app: it records the drill. Bounds you leave out take the
+  page's defaults, and the server checks them all (its message is printed as is).
+
+  The flag must be a fault flag at an exact version — `frijoles scenarios ls --json` lists the compatible ones.
+
+  Next: `frijoles scenarios launch <scenario-key>`.
+
+Flags
+  --project <slug>            the project (default: the remembered one)
+  --target <key>              a verified target — required
+  --flag <flagKey>@<version>  the fault flag and its exact version — required
+  --kind <kind>               resilience | security (default: resilience)
+  --cohort <cohort>           synthetic | internal (default: synthetic)
+  --env <environment>         production | preview | development (default: production)
+  --duration <seconds>        how long the window lasts
+  --requests <n>              the request cap
+  --concurrency <n>           the concurrency cap
+  --reason <text>             why — kept in the audit trail (default: names the command)
+
+Exit codes
+  0  ok         it worked
+  1  usage      the command is wrong — nothing was sent
+  2  auth       the credential is not accepted — run `frijoles login`
+  3  not-found  no such thing, or not yours
+  4  conflict   someone else changed it — re-read and retry
+  5  partial    some environments changed and some did not
+  6  server     the server or the network is unwell — retry

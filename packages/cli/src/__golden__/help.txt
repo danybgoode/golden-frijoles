@@ -7,50 +7,60 @@ Usage
   frijoles <command> [flags]
 
 Commands
-  login                 sign this machine in (browser), or save a CLI token
-  logout                forget the saved token on this machine
-  whoami                the account, the credential and the projects it reaches
-  doctor                why is it not working — every check, in order
-  setup                 answer the setup questions (each has a default; only the first is required)
-  init                  project, key, .env.local and the snippet — in one verb
-  status                has the project received its first event yet, and which was the latest
+  login                     sign this machine in (browser), or save a CLI token
+  logout                    forget the saved token on this machine
+  whoami                    the account, the credential and the projects it reaches
+  doctor                    why is it not working — every check, in order
+  setup                     answer the setup questions (each has a default; only the first is required)
+  init                      project, key, .env.local and the snippet — in one verb
+  status                    has the project received its first event yet, and which was the latest
 
   config
-  config list           every setting in golden-frijoles.config.json and the legacy files, and which files each section came from
-  config get            one setting's effective value (or its default when nothing sets it)
-  config set            change one setting in golden-frijoles.config.json
+  config list               every setting in golden-frijoles.config.json and the legacy files, and which files each section came from
+  config get                one setting's effective value (or its default when nothing sets it)
+  config set                change one setting in golden-frijoles.config.json
 
   projects
-  projects ls           the projects this credential reaches
-  projects create       make sure this account has a project (idempotent)
-  projects use          remember which project the other commands act on
+  projects ls               the projects this credential reaches
+  projects create           make sure this account has a project (idempotent)
+  projects use              remember which project the other commands act on
 
   flags
-  flags ls              every flag, and what each environment serves
-  flags get             one flag: its definition, its versions and who changed it
-  flags create          create a flag, with a polarity, in the environments you name
-  flags set             change which variant a flag serves by default
-  flags rollout         serve a flag to a percentage of contexts
-  flags rules           replace a flag’s targeting rules from a file
-  flags kill            the 3am verb — serve false, and clear every rule
-  flags diff            what changed between two versions, in words
-  flags history         every version of a flag, and who changed what
-  flags sync            publish a flag catalog from source control
+  flags ls                  every flag, and what each environment serves
+  flags get                 one flag: its definition, its versions and who changed it
+  flags create              create a flag, with a polarity, in the environments you name
+  flags set                 change which variant a flag serves by default
+  flags rollout             serve a flag to a percentage of contexts
+  flags rules               replace a flag’s targeting rules from a file
+  flags kill                the 3am verb — serve false, and clear every rule
+  flags diff                what changed between two versions, in words
+  flags history             every version of a flag, and who changed what
+  flags sync                publish a flag catalog from source control
 
   north-star
-  north-star set        send a North Star workshop's metric and inputs to the project
-  north-star readings   one North Star input's readings, and the latest on or before a day
+  north-star set            send a North Star workshop's metric and inputs to the project
+  north-star readings       one North Star input's readings, and the latest on or before a day
+
+  scenarios
+  scenarios ls              targets, scenario definitions and runs
+  scenarios targets add     register an app origin as a drill target
+  scenarios targets verify  check that the app answers with the target token
+  scenarios targets revoke  stop an app origin being a drill target
+  scenarios define          define a drill: a target, a fault flag version and its bounds
+  scenarios launch          start a run of the newest version of a scenario
+  scenarios stop            stop a run now
+  scenarios runs            runs, and with --watch their progress until they end
 
   bet
-  bet sync              create the bet's flag from its epic (a Measure flag, off until you roll it out)
+  bet sync                  create the bet's flag from its epic (a Measure flag, off until you roll it out)
 
   experiments
-  experiments decision  an experiment's decision record (the latest version unless --version)
+  experiments decision      an experiment's decision record (the latest version unless --version)
 
   keys
-  keys ls               every credential that can reach this project
-  keys create           mint a credential — the kind is required, never guessed
-  keys revoke           kill a credential, immediately and permanently
+  keys ls                   every credential that can reach this project
+  keys create               mint a credential — the kind is required, never guessed
+  keys revoke               kill a credential, immediately and permanently
 
 Global flags
   --json                 machine-readable output on stdout, and nothing else

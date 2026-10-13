@@ -115,6 +115,25 @@ frijoles experiments decision smart-defaults --json                        # the
 `latest` is the last reading on or before `--to`; an input with no reading yet says so rather than reporting zero.
 Cite them as `north-star:<input>@<latest.date>` and `ab:<experiment>`.
 
+## Running a drill: `frijoles scenarios`
+
+A whole scenario drill from a terminal. Any member can read (`ls`, `runs`); the rest is owner-only, and every verb takes
+`--json` and an optional `--reason`.
+
+```bash
+frijoles scenarios targets add my.app --origin https://my.app   # prints the target token ONCE
+# put it in the app's env as GOLDEN_FRIJOLES_TARGET_TOKEN, serve createScenarioOwnershipHandler
+# from @golden-frijoles/sdk at /api/internal/resilience/ownership, deploy, then:
+frijoles scenarios targets verify my.app
+frijoles scenarios define checkout.slow --target my.app --flag checkout.fault@3
+frijoles scenarios launch checkout.slow
+frijoles scenarios runs --watch                                 # until no run is running (10 minutes at most)
+frijoles scenarios stop <run-id>                                # the emergency control
+frijoles scenarios ls                                           # targets, definitions and runs
+```
+
+A deployment with the authoring switch off answers `disabled` to every write, and `ls` says so.
+
 ## Exit codes
 
 | Code | Name | Means |
@@ -173,7 +192,7 @@ refuses — and prints the `@golden-frijoles/sdk` snippet that reads exactly tho
 
 - **Send events.** That is the SDK's path (`@golden-frijoles/sdk`), and a second one would be a
   parallel pipeline.
-- **Experiments, journeys, north star, scenarios, destinations, breakers.** Out of v1 on purpose.
+- **Experiments, journeys, destinations, breakers.** Out of v1 on purpose.
 - **A TUI.** Plain output and `--json`.
 - **Plans and quotas.** Every account is unlimited today; `frijoles` will learn about plans when there is
   a plan to learn about.

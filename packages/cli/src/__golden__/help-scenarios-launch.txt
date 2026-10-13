@@ -1,0 +1,22 @@
+frijoles scenarios launch — start a run of the newest version of a scenario
+
+Usage
+  frijoles scenarios launch <scenario-key> [--reason <text>]
+
+Owner only. Starts a run inside the scenario's bounded window. A launch answers "not found" while its
+  kind's switch is off for the deployment.
+
+  Next: `frijoles scenarios runs --watch`, and `frijoles scenarios stop <run-id>` to end one early.
+
+Flags
+  --project <slug>  the project (default: the remembered one)
+  --reason <text>   why — kept in the audit trail (default: names the command)
+
+Exit codes
+  0  ok         it worked
+  1  usage      the command is wrong — nothing was sent
+  2  auth       the credential is not accepted — run `frijoles login`
+  3  not-found  no such thing, or not yours
+  4  conflict   someone else changed it — re-read and retry
+  5  partial    some environments changed and some did not
+  6  server     the server or the network is unwell — retry

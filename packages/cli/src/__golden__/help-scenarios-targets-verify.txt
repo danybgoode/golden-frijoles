@@ -1,0 +1,22 @@
+frijoles scenarios targets verify — check that the app answers with the target token
+
+Usage
+  frijoles scenarios targets verify <key> [--reason <text>]
+
+Owner only. The engine fetches the token from <origin>/api/internal/resilience/ownership; a match marks the
+  target verified. A wrong token or an unreachable origin changes nothing and says why.
+
+  Next: `frijoles scenarios define <scenario-key> --target <key> --flag <flagKey>@<version>`.
+
+Flags
+  --project <slug>  the project (default: the remembered one)
+  --reason <text>   why — kept in the audit trail (default: names the command)
+
+Exit codes
+  0  ok         it worked
+  1  usage      the command is wrong — nothing was sent
+  2  auth       the credential is not accepted — run `frijoles login`
+  3  not-found  no such thing, or not yours
+  4  conflict   someone else changed it — re-read and retry
+  5  partial    some environments changed and some did not
+  6  server     the server or the network is unwell — retry

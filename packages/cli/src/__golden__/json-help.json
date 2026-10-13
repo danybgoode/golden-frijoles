@@ -458,6 +458,190 @@
         ]
       },
       {
+        "command": "scenarios ls",
+        "summary": "targets, scenario definitions and runs",
+        "usage": "frijoles scenarios ls [--project <slug>] [--json]",
+        "needsAuth": true,
+        "flags": [
+          {
+            "flag": "--project",
+            "takesValue": true,
+            "describe": "the project (default: the remembered one)"
+          }
+        ]
+      },
+      {
+        "command": "scenarios targets add",
+        "summary": "register an app origin as a drill target",
+        "usage": "frijoles scenarios targets add <key> --origin <https-origin> [--reason <text>]",
+        "needsAuth": true,
+        "flags": [
+          {
+            "flag": "--project",
+            "takesValue": true,
+            "describe": "the project (default: the remembered one)"
+          },
+          {
+            "flag": "--origin",
+            "takesValue": true,
+            "describe": "the app origin — required"
+          },
+          {
+            "flag": "--reason",
+            "takesValue": true,
+            "describe": "why — kept in the audit trail (default: names the command)"
+          }
+        ]
+      },
+      {
+        "command": "scenarios targets verify",
+        "summary": "check that the app answers with the target token",
+        "usage": "frijoles scenarios targets verify <key> [--reason <text>]",
+        "needsAuth": true,
+        "flags": [
+          {
+            "flag": "--project",
+            "takesValue": true,
+            "describe": "the project (default: the remembered one)"
+          },
+          {
+            "flag": "--reason",
+            "takesValue": true,
+            "describe": "why — kept in the audit trail (default: names the command)"
+          }
+        ]
+      },
+      {
+        "command": "scenarios targets revoke",
+        "summary": "stop an app origin being a drill target",
+        "usage": "frijoles scenarios targets revoke <key> [--reason <text>]",
+        "needsAuth": true,
+        "flags": [
+          {
+            "flag": "--project",
+            "takesValue": true,
+            "describe": "the project (default: the remembered one)"
+          },
+          {
+            "flag": "--reason",
+            "takesValue": true,
+            "describe": "why — kept in the audit trail (default: names the command)"
+          }
+        ]
+      },
+      {
+        "command": "scenarios define",
+        "summary": "define a drill: a target, a fault flag version and its bounds",
+        "usage": "frijoles scenarios define <scenario-key> --target <key> --flag <flagKey>@<version> [--kind resilience|security] [--cohort synthetic|internal] [--env production|preview|development] [--duration <seconds>] [--requests <n>] [--concurrency <n>] [--reason <text>]",
+        "needsAuth": true,
+        "flags": [
+          {
+            "flag": "--project",
+            "takesValue": true,
+            "describe": "the project (default: the remembered one)"
+          },
+          {
+            "flag": "--target",
+            "takesValue": true,
+            "describe": "a verified target — required"
+          },
+          {
+            "flag": "--flag",
+            "takesValue": true,
+            "describe": "the fault flag and its exact version — required"
+          },
+          {
+            "flag": "--kind",
+            "takesValue": true,
+            "describe": "resilience | security (default: resilience)"
+          },
+          {
+            "flag": "--cohort",
+            "takesValue": true,
+            "describe": "synthetic | internal (default: synthetic)"
+          },
+          {
+            "flag": "--env",
+            "takesValue": true,
+            "describe": "production | preview | development (default: production)"
+          },
+          {
+            "flag": "--duration",
+            "takesValue": true,
+            "describe": "how long the window lasts"
+          },
+          {
+            "flag": "--requests",
+            "takesValue": true,
+            "describe": "the request cap"
+          },
+          {
+            "flag": "--concurrency",
+            "takesValue": true,
+            "describe": "the concurrency cap"
+          },
+          {
+            "flag": "--reason",
+            "takesValue": true,
+            "describe": "why — kept in the audit trail (default: names the command)"
+          }
+        ]
+      },
+      {
+        "command": "scenarios launch",
+        "summary": "start a run of the newest version of a scenario",
+        "usage": "frijoles scenarios launch <scenario-key> [--reason <text>]",
+        "needsAuth": true,
+        "flags": [
+          {
+            "flag": "--project",
+            "takesValue": true,
+            "describe": "the project (default: the remembered one)"
+          },
+          {
+            "flag": "--reason",
+            "takesValue": true,
+            "describe": "why — kept in the audit trail (default: names the command)"
+          }
+        ]
+      },
+      {
+        "command": "scenarios stop",
+        "summary": "stop a run now",
+        "usage": "frijoles scenarios stop <run-id> [--reason <text>]",
+        "needsAuth": true,
+        "flags": [
+          {
+            "flag": "--project",
+            "takesValue": true,
+            "describe": "the project (default: the remembered one)"
+          },
+          {
+            "flag": "--reason",
+            "takesValue": true,
+            "describe": "why — kept in the audit trail (default: names the command)"
+          }
+        ]
+      },
+      {
+        "command": "scenarios runs",
+        "summary": "runs, and with --watch their progress until they end",
+        "usage": "frijoles scenarios runs [--project <slug>] [--watch] [--json]",
+        "needsAuth": true,
+        "flags": [
+          {
+            "flag": "--project",
+            "takesValue": true,
+            "describe": "the project (default: the remembered one)"
+          },
+          {
+            "flag": "--watch",
+            "takesValue": false,
+            "describe": "keep reading until no run is running (10 minutes at most)"
+          }
+        ]
+      },
+      {
         "command": "status",
         "summary": "has the project received its first event yet, and which was the latest",
         "usage": "frijoles status [--project <slug>] [--json]",
