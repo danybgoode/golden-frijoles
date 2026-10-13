@@ -4,7 +4,7 @@ sprint: 1
 title: "One switch"
 risk: high
 phase: In review
-stories_total: 4
+stories_total: 5
 stories:
   - id: S1.1
     title: "One rule for on and off"
@@ -33,6 +33,13 @@ stories:
     i_want: "an On flag to say who gets it — everyone, a percentage, or a named segment"
     so_that: "On for some is never mistaken for On for all"
     risk: low
+    status: done
+  - id: S1.5
+    title: "A synced flag starts at its default"
+    as_a: "a founder whose flags live in their app's code"
+    i_want: "a new flag pushed by frijoles flags sync to start switched to its default"
+    so_that: "the page never says Off while my app runs on its own built-in value"
+    risk: high
     status: done
 ---
 # One flag switch: on or off, the same in the CLI, the SDK, MCP and the page — Sprint 1: One switch
@@ -67,6 +74,14 @@ view says Off; the page action off → the CLI view says off and serves `false`;
 segment's name — and until named segments exist, the placeholder `a segment (not named yet)` (the product owner,
 2026-10-13). Same rule walk as the switch, so the words never disagree with it. CLI 1.5.1.
 **Risk:** low · **Builder:** orchestrator
+
+### Story 1.5 — A synced flag starts at its default
+**As a** founder whose flags live in their app's code, **I want** a new flag pushed by `frijoles flags sync` to start switched to its default, **so that** the page never says Off while my app runs on its own built-in value.
+**Acceptance:** after a sync creates a NEW flag, each environment where it was never switched is set to that version
+(the default from the source file), through `set_flag_activation`, the sync key's owner as actor, the source named in
+the reason. An existing flag's switch is never changed by a sync. The product owner, 2026-10-13: "yes". Migration
+`20261013200000_flag_sync_new_flag_switch.sql` (additive: same signature). CLI 1.5.2, plugin + kit 1.7.3.
+**Risk:** high (a migration; changes what a freshly synced flag serves) · **Builder:** orchestrator
 
 ## Sprint QA
 - **api spec(s):** <which testable story → which `e2e/*.spec.ts`>
