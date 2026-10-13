@@ -1,7 +1,7 @@
 # The Why reads as a story, in full, and the plan names its crew — Retrospective
 
 _Closed: 2026-10-10_
-_Intent: PENDING_
+_Intent: yes_
 _Quote vs actual: $15–32 (M, n=20, p25–p75) → ≈$9.72 (under the quote's bottom by about a third; Claude only, reviewers
 not measured. Two verifier rounds.)_
 _Crew (actual): claude-opus-5-5 ≈$8.90 · claude-sonnet-5-5 ≈$0.83 · reviewers: the fresh verifier (two rounds), agy
