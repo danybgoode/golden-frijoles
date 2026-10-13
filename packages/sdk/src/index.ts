@@ -199,6 +199,8 @@ export type {
   ScenarioSnapshotResult,
 } from './scenarios'
 export { createScenarioProvider } from './scenario-provider'
+export { createScenarioOwnershipHandler, SCENARIO_OWNERSHIP_PATH } from './scenario-ownership'
+export type { ScenarioOwnershipHandlerConfig } from './scenario-ownership'
 export type {
   ScenarioExecutionFailure,
   ScenarioExecutionReservation,
