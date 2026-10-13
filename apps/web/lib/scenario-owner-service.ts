@@ -42,8 +42,7 @@ export type ScenarioServiceFailure = {
   notFound?: boolean
 }
 export type ScenarioServiceResult<T extends Record<string, unknown> = Record<string, unknown>> =
-  | ({ ok: true } & T)
-  | ScenarioServiceFailure
+  ({ ok: true } & T) | ScenarioServiceFailure
 
 const AUTHORING_OFF: ScenarioServiceFailure = {
   ok: false,
@@ -87,9 +86,19 @@ export async function scenarioAuthoringOn(): Promise<boolean> {
 
 // ── Targets ────────────────────────────────────────────────────────────────────────────────────────────────────────
 
-type TargetRow = { id: string; key: string; target_kind: string; origin: string; status: string; ownership_challenge_hash: string }
+type TargetRow = {
+  id: string
+  key: string
+  target_kind: string
+  origin: string
+  status: string
+  ownership_challenge_hash: string
+}
 
-async function findTarget(projectId: string, ref: { targetKey?: string; targetId?: string }): Promise<TargetRow | null> {
+async function findTarget(
+  projectId: string,
+  ref: { targetKey?: string; targetId?: string }
+): Promise<TargetRow | null> {
   let query = getSupabaseServiceClient()
     .from('scenario_targets')
     .select('id, key, target_kind, origin, status, ownership_challenge_hash')
@@ -109,7 +118,15 @@ async function findTarget(projectId: string, ref: { targetKey?: string; targetId
 export async function registerScenarioTarget(
   owner: ScenarioOwner,
   input: { targetKey: unknown; origin: unknown; reason: unknown }
-): Promise<ScenarioServiceResult<{ targetId: string; targetKey: string; origin: string; status: string; token: string }>> {
+): Promise<
+  ScenarioServiceResult<{
+    targetId: string
+    targetKey: string
+    origin: string
+    status: string
+    token: string
+  }>
+> {
   if (!(await scenarioAuthoringOn())) return AUTHORING_OFF
   // The credential parser owns the shape of a key, an exact HTTPS origin and a reason; reuse it, never restate it.
   const parsed = parseScenarioAdminOperation({
@@ -148,7 +165,14 @@ export async function registerScenarioTarget(
   }
   const row = Array.isArray(data) ? data[0] : null
   if (!row || typeof row.target_id !== 'string') return { ok: false, error: 'Could not register the target.' }
-  return { ok: true, targetId: row.target_id, targetKey: parsed.targetKey, origin: parsed.origin, status: 'pending', token }
+  return {
+    ok: true,
+    targetId: row.target_id,
+    targetKey: parsed.targetKey,
+    origin: parsed.origin,
+    status: 'pending',
+    token,
+  }
 }
 
 /** D2: asks the app for its answer, then marks the target verified only if it holds this target's token. */
@@ -158,22 +182,36 @@ export async function verifyScenarioTarget(
 ): Promise<ScenarioServiceResult<{ targetId: string; targetKey: string; status: string; changed: boolean }>> {
   if (!(await scenarioAuthoringOn())) return AUTHORING_OFF
   const reason = typeof input.reason === 'string' ? input.reason.trim() : ''
-  if (reason.length < 1 || reason.length > 500) return { ok: false, error: 'A reason (1–500 characters) is required.' }
+  if (reason.length < 1 || reason.length > 500)
+    return { ok: false, error: 'A reason (1–500 characters) is required.' }
   const target = await findTarget(owner.projectId, {
     targetKey: typeof input.targetKey === 'string' ? input.targetKey : undefined,
     targetId: typeof input.targetId === 'string' ? input.targetId : undefined,
   })
   if (!target) return { ok: false, notFound: true, error: 'No target of that name in this project.' }
   if (target.target_kind !== 'owner_token_v1')
-    return { ok: false, conflict: true, error: 'This target is verified through its own credential route, not here.' }
+    return {
+      ok: false,
+      conflict: true,
+      error: 'This target is verified through its own credential route, not here.',
+    }
   if (target.status === 'revoked') return { ok: false, conflict: true, error: 'This target is revoked.' }
   if (target.status === 'verified')
     return { ok: true, targetId: target.id, targetKey: target.key, status: 'verified', changed: false }
 
   // Each verify makes the engine send one request to an origin the owner chose, so it is bounded per owner and project
   // (verifier, #348): plenty for a person fixing a deploy, never a way to aim the engine at someone.
-  const limited = await checkRateLimit(`scenario-verify:${owner.projectId}:${owner.userId}`, { windowMs: 10 * 60_000, max: 10 })
-  if (!limited.ok) return { ok: false, error: 'Too many verify attempts for this project. Wait a few minutes and try again.' }
+  const limited = await checkRateLimit(`scenario-verify:${owner.projectId}:${owner.userId}`, {
+    windowMs: 10 * 60_000,
+    max: 10,
+  })
+  // `conflict` (retry later), never `invalid`: the command was right, it was just too soon (verifier round 2, #348).
+  if (!limited.ok)
+    return {
+      ok: false,
+      conflict: true,
+      error: 'Too many verify attempts for this project. Wait a few minutes and try again.',
+    }
 
   const check = await checkOwnerTargetAnswer(guardedHttpOwnershipProofPost, {
     targetKey: target.key,
@@ -196,8 +234,15 @@ export async function verifyScenarioTarget(
     return { ok: false, error: 'Could not verify the target.' }
   }
   const row = Array.isArray(data) ? data[0] : null
-  if (!row) return { ok: false, conflict: true, error: 'The target changed while it was being verified. Try again.' }
-  return { ok: true, targetId: target.id, targetKey: target.key, status: String(row.status), changed: Boolean(row.changed) }
+  if (!row)
+    return { ok: false, conflict: true, error: 'The target changed while it was being verified. Try again.' }
+  return {
+    ok: true,
+    targetId: target.id,
+    targetKey: target.key,
+    status: String(row.status),
+    changed: Boolean(row.changed),
+  }
 }
 
 export async function revokeScenarioTarget(
@@ -246,10 +291,15 @@ export async function ownerDirectOperation(
       return { ok: false, error: 'The definition environment does not match the command.' }
     if (operation.definition.cohort === 'external')
       return { ok: false, error: 'External cohorts are unavailable in owner authoring.' }
-    if (!isScenarioKindEnabled(operation.definition.kind, gates)) return unavailable(operation.definition.kind)
+    if (!isScenarioKindEnabled(operation.definition.kind, gates))
+      return unavailable(operation.definition.kind)
   }
   if (operation.operation === 'revoke_target' && !gates.resilience && !gates.security)
-    return { ok: false, unavailable: true, error: 'Scenario capabilities are unavailable in this deployment.' }
+    return {
+      ok: false,
+      unavailable: true,
+      error: 'Scenario capabilities are unavailable in this deployment.',
+    }
   if (operation.operation === 'transition_run') {
     const context = await getScenarioOwnerStopContext(owner.projectId, operation.runId)
     if (!context || context.environment !== safeEnvironment)
@@ -314,7 +364,8 @@ export async function launchScenarioRun(
     expectedRevision: draft.revision,
     reason: input.reason,
   })
-  if (!start || start.operation !== 'start_run') return { ok: false, error: 'Could not prepare the run start.' }
+  if (!start || start.operation !== 'start_run')
+    return { ok: false, error: 'Could not prepare the run start.' }
   return fromOperation(
     await executeScenarioOwnerOperation({
       projectId: owner.projectId,
