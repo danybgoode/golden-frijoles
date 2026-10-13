@@ -237,8 +237,9 @@ export const scenariosTargetsVerifyCommand: Command = {
   summary: 'check that the app answers with the target token',
   usage: 'frijoles scenarios targets verify <key> [--reason <text>]',
   needsAuth: true,
-  detail: `Owner only. The engine fetches the token from <origin>/api/internal/resilience/ownership; a match marks the
-  target verified. A wrong token or an unreachable origin changes nothing and says why.
+  detail: `Owner only. The engine sends a signed check to <origin>/api/internal/resilience/ownership; an app holding
+  this target's token answers it, and the right answer marks the target verified. The token itself never travels. No
+  answer, a wrong one, or an unreachable origin changes nothing and says why.
 
   Next: \`frijoles scenarios define <scenario-key> --target <key> --flag <flagKey>@<version>\`.`,
   flags: [PROJECT_FLAG, REASON_FLAG],

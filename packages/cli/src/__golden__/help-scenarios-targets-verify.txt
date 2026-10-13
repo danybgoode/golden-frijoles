@@ -3,8 +3,9 @@ frijoles scenarios targets verify — check that the app answers with the target
 Usage
   frijoles scenarios targets verify <key> [--reason <text>]
 
-Owner only. The engine fetches the token from <origin>/api/internal/resilience/ownership; a match marks the
-  target verified. A wrong token or an unreachable origin changes nothing and says why.
+Owner only. The engine sends a signed check to <origin>/api/internal/resilience/ownership; an app holding
+  this target's token answers it, and the right answer marks the target verified. The token itself never travels. No
+  answer, a wrong one, or an unreachable origin changes nothing and says why.
 
   Next: `frijoles scenarios define <scenario-key> --target <key> --flag <flagKey>@<version>`.
 
