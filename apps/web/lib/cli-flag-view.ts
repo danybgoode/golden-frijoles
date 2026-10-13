@@ -180,3 +180,18 @@ export function toCliFlagDetailView(
       })),
   }
 }
+
+/**
+ * The rows the product's own gate seam reads (`lib/gates-catalog.ts` → `gates-decision.ts → servedValue`).
+ *
+ * one-flag-switch D4: every screen says On / Off by `flagSwitchState`, but the gate seam keeps one storage fact no
+ * screen shows: whether a flag was EVER set in an environment. Never set → the gate serves its coded fallback (a
+ * born-ON gate stays on if its catalog row is missing); taken out → off; otherwise what it serves. So a gate's
+ * behaviour is unchanged by the one-switch rule (verifier, #351).
+ */
+export function toGateRows(flag: FlagRegistryRow) {
+  return toCliFlagView(flag).environments.map((row) => ({
+    ...row,
+    activation: resolveActivationState(flag.activations, row.environment).state,
+  }))
+}

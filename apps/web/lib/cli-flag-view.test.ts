@@ -367,3 +367,44 @@ test('one-flag-switch: the flags page and the CLI say the same On / Off for ever
   )
   assert.equal(projectFlagRows([cases[1].row as never], 'production')[0].state, 'off')
 })
+
+// one-flag-switch D4 (verifier, #351) — the gate seam reads REAL rows, built the way `gates-catalog.ts` builds them, and
+// its behaviour is unchanged: never set → the coded fallback; taken out → off; killed → off; on → on.
+test('one-flag-switch: product gates keep their fallback for a flag never set, through the real row builder', async () => {
+  const { toGateRows } = await import('./cli-flag-view.ts')
+  const { servedValue } = await import('./gates-decision.ts')
+  const bornOn = { key: 'checkout.demo_enabled', envVar: null, fallback: true }
+  const gate = (row: FlagRegistryRow, environment = 'production') =>
+    servedValue(bornOn, new Map([[row.key, toGateRows(row)]]), environment as 'production')
+  const killed = flag({
+    versions: [
+      {
+        id: 'v1',
+        version: 1,
+        definition: definition({ defaultVariantKey: 'off' }),
+        createdBy: 'user-1',
+        createdAt: '2026-09-01T00:00:00.000Z',
+      },
+    ],
+  })
+  const takenOut = flag({
+    activations: [
+      {
+        environment: 'production',
+        versionId: null,
+        updatedBy: 'user-1',
+        updatedAt: '2026-09-02T00:00:00.000Z',
+      },
+    ],
+  })
+  assert.equal(gate(flag()), true, 'on')
+  assert.equal(gate(killed), false, 'killed')
+  assert.equal(gate(takenOut), false, 'taken out')
+  assert.equal(
+    gate(flag({ activations: [] })),
+    true,
+    'never set: the fallback, unchanged by the one-switch rule'
+  )
+  // …while every screen says Off for that never-set flag.
+  assert.equal(toCliFlagView(flag({ activations: [] })).environments[2].state, 'off')
+})
