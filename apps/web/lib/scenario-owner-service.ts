@@ -81,7 +81,7 @@ function fromOperation(result: ScenarioOwnerOperationResult): ScenarioServiceRes
 
 /** Is the authoring switch on? Every write checks it FIRST, before anything about the project is read. */
 export async function scenarioAuthoringOn(): Promise<boolean> {
-  return isScenarioAuthoringEnabled()
+  return await isScenarioAuthoringEnabled()
 }
 
 // ── Targets ────────────────────────────────────────────────────────────────────────────────────────────────────────
