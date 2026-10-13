@@ -3,7 +3,7 @@ epic: scenarios-light-up
 sprint: 2
 title: "Our site, the drill, the switches"
 risk: high
-phase: Building
+phase: Verifying
 stories_total: 4
 stories:
   - id: S2.1
@@ -37,7 +37,7 @@ stories:
 ---
 # Scenarios, switched on — Sprint 2: Our site, the drill, the switches
 
-**Status:** 🟡 S2.1–S2.2 built, in review; S2.3–S2.4 after the merge, in production
+**Status:** 🟡 S2.1–S2.2 shipped (#348, merge `805f5cf`; SDK 1.1.0, CLI 1.4.0, plugin + kit 1.7.0); S2.3 under way in production
 
 ## Stories
 
