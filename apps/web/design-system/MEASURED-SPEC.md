@@ -24,12 +24,10 @@ Source: `apps/web/design-system/console-prototype.html`, the 32 states approved 
 | No vertical page scroll | **false** |
 | No horizontal page scroll | **true** |
 | Feature rows rendered | **42** |
-| Dormant summary line present | **no** |
 
-⚠️ **`42` rows is the PROTOTYPE's dataset, not production's.** Production
-`miyagisanchez` carries 42 flags with **3** active in Production and **39** never activated
-(queried 2026-08-29 — epic README, D10). The gate asserts the *shape* — rows plus at most one
-summary line, the summary standing for rows that are not also listed — never the literal number.
+⚠️ **`42` rows is the PROTOTYPE's dataset, not production's.** Every feature is listed, On first then
+Off (one-flag-switch, 2026-10-13: a flag is On or Off, so there is no collapsed group). The gate asserts the *shape*,
+never the literal number.
 
 ## Uppercase
 

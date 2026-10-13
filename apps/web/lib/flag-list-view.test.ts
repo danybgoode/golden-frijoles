@@ -655,6 +655,16 @@ test('a boolean flag is On only when what it serves gives true — by default or
     }),
     'on'
   )
+  // Even a 100% rollout to false leaves out contexts with no targeting key, which get the default `true`: On.
+  assert.equal(
+    flagSwitchState({
+      valueType: 'boolean',
+      variants,
+      defaultVariantKey: 'on',
+      rules: [{ priority: 1, clauses: [], rollout: { basisPoints: 10000 }, variantKey: 'off' }],
+    }),
+    'on'
+  )
   // A clause rule to true (staff) with a false default is on for those it reaches: On.
   assert.equal(
     flagSwitchState({

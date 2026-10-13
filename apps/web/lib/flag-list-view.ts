@@ -73,7 +73,8 @@ export function flagSwitchState(servedDefinition: unknown): FlagSwitchState {
     const rollout = record(rule.rollout)
     const basisPoints = rollout && typeof rollout.basisPoints === 'number' ? rollout.basisPoints : null
     const reachesSomeone = basisPoints === null || basisPoints > 0
-    const reachesEveryone = basisPoints === null || basisPoints >= 10_000
+    // Only a rule with NO rollout reaches everyone: even a 100% rollout leaves out a context with no targeting key.
+    const reachesEveryone = basisPoints === null
     const unconditional = !Array.isArray(rule.clauses) || rule.clauses.length === 0
     const servesTrue = typeof rule.variantKey === 'string' && variantValue(variants, rule.variantKey) === true
     if (servesTrue && reachesSomeone) return 'on'

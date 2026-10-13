@@ -175,7 +175,6 @@ async function measureIn(page) {
       noVerticalScroll: document.documentElement.scrollHeight <= window.innerHeight,
       noHorizontalScroll: document.body.scrollWidth <= window.innerWidth,
       featureRows: document.querySelectorAll('.row').length,
-      dormantSummaryPresent: !!document.querySelector('.dormant'),
       uppercaseElements: [...document.querySelectorAll('.content *')]
         .filter((e) => getComputedStyle(e).textTransform === 'uppercase' && e.textContent.trim())
         .map((e) => e.className || e.tagName),
@@ -294,12 +293,10 @@ Source: \`apps/web/design-system/console-prototype.html\`, the 32 states approve
 | No vertical page scroll | ${out.noVerticalScroll ? '**true**' : '**false**'} |
 | No horizontal page scroll | ${out.noHorizontalScroll ? '**true**' : '**false**'} |
 | Feature rows rendered | **${out.featureRows}** |
-| Dormant summary line present | ${out.dormantSummaryPresent ? '**yes**' : '**no**'} |
 
-⚠️ **\`${out.featureRows}\` rows is the PROTOTYPE's dataset, not production's.** Production
-\`miyagisanchez\` carries 42 flags with **3** active in Production and **39** never activated
-(queried 2026-08-29 — epic README, D10). The gate asserts the *shape* — rows plus at most one
-summary line, the summary standing for rows that are not also listed — never the literal number.
+⚠️ **\`${out.featureRows}\` rows is the PROTOTYPE's dataset, not production's.** Every feature is listed, On first then
+Off (one-flag-switch, 2026-10-13: a flag is On or Off, so there is no collapsed group). The gate asserts the *shape*,
+never the literal number.
 
 ## Uppercase
 
