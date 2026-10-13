@@ -342,16 +342,7 @@ export function filterFlagRowsByQuery(rows: readonly FlagListRow[], query: strin
   )
 }
 
-/**
- * Filter by activation state.
- *
- * **`off` means "not on"** — it matches both `off` and `never`. That is the plain reading of the
- * word for someone scanning a list, and at this project's live numbers the alternative is actively
- * misleading: a strict reading would put 40 flags in neither the "on" nor the "off" bucket and show
- * `off (0)`, which reads as a broken filter. The three-way distinction is not lost — it is rendered
- * on the row itself, which is where a reader asks *why* something is not on. The filter answers
- * "what can I not see", the row answers "why".
- */
+/** On or Off (one-flag-switch D1). The old `never` and `switched_off` bookmarks still parse, and mean Off. */
 export function filterFlagRowsByState(rows: readonly FlagListRow[], state: FlagStateFilter): FlagListRow[] {
   if (state === 'all') return [...rows]
   // one-flag-switch D1: a flag is On or Off. `never` and `switched_off` survive only as old bookmarks, and mean Off.
