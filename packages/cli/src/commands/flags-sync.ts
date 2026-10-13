@@ -39,10 +39,10 @@ export const flagsSyncCommand: Command = {
 
   Mint one with: frijoles keys create --type flag_sync --source <name> --label <text>
 
-  ⚠️ Sync never switches a flag on or off and never deletes one. It creates immutable definition
-  versions. A newly synced flag shows Off until someone switches it (\`frijoles flags set\`). A key that already exists with an identical definition reports created: false;
-  semantic drift from an existing version is a conflict for an owner to resolve through the
-  normal version lifecycle.`,
+  ⚠️ A NEW flag starts switched to its default in every environment, from your source file.
+  An existing flag's switch is never changed by a sync, and a sync never deletes a flag. A key
+  that already exists with an identical definition reports created: false; semantic drift from
+  an existing version is a conflict for an owner to resolve through the normal version lifecycle.`,
   flags: [
     { name: 'file', value: '<path>', describe: 'a JSON array of { key, definition } entries' },
     { name: 'sync-key', value: '<key>', describe: 'the flag_sync credential (or set the env var)' },
@@ -146,9 +146,8 @@ export const flagsSyncCommand: Command = {
           ])
         ),
         '',
-        // Said every time, not only when something changed. The absence of this line is how someone
-        // concludes a sync turned a flag on.
-        'Sync creates definitions only. Nothing was switched on or off — use `frijoles flags set` for that.',
+        // Said every time, so nobody concludes a sync switched an EXISTING flag.
+        'New flags start at their default in every environment. Existing flags were not switched — use `frijoles flags set` for that.',
       ].join('\n')
     )
     return EXIT.OK

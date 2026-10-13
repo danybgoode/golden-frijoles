@@ -131,8 +131,18 @@ test('scoped fragments create drafts, no-op when identical, retain omissions, an
     .from('flag_environment_activations')
     .select('environment')
     .eq('project_id', project)
-  expect(states.data).toEqual([])
-  expect(activations.data).toEqual([])
+  // one-flag-switch S1.5 (the product owner, 2026-10-13): a NEW flag starts with its switch set from its source
+  // default in every environment. (This asserted no switch at all before; `flag-sync-switch.spec.ts` covers the rule.)
+  expect((states.data ?? []).map((row) => row.environment).sort()).toEqual([
+    'development',
+    'preview',
+    'production',
+  ])
+  expect((activations.data ?? []).map((row) => row.environment).sort()).toEqual([
+    'development',
+    'preview',
+    'production',
+  ])
 
   const repeat = await sync(request, frontend.plaintext, frontendEntries)
   expect(repeat.status()).toBe(200)
@@ -163,9 +173,16 @@ test('scoped fragments create drafts, no-op when identical, retain omissions, an
     .select('reason')
     .eq('project_id', project)
     .order('created_at')
-  expect(audit.data?.map((row) => row.reason)).toEqual([
+  const reasons = (audit.data ?? []).map((row) => row.reason as string)
+  // The two definitions, in order…
+  expect(reasons.filter((reason) => !reason.includes('a new flag starts at its default'))).toEqual([
     'catalog sync from frontend',
     'catalog sync from backend',
+  ])
+  // …and, since one-flag-switch S1.5, each new flag's switch set in all three environments, naming its source.
+  expect(reasons.filter((reason) => reason.includes('a new flag starts at its default')).sort()).toEqual([
+    ...Array(3).fill('catalog sync from backend: a new flag starts at its default'),
+    ...Array(3).fill('catalog sync from frontend: a new flag starts at its default'),
   ])
 })
 
