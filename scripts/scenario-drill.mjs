@@ -18,9 +18,11 @@ const count = Number(flag('count', '5'))
 const json = args.includes('--json')
 const secret = process.env.SCENARIO_PROBE_SECRET?.trim()
 
-if (!secret || !Number.isSafeInteger(count) || count < 1 || count > 100 || !/^https?:\/\/[^/]+$/.test(origin)) {
+// https only, except a local server: the secret travels in a header and must never cross a network in clear text.
+const originOk = /^https:\/\/[^/]+$/.test(origin) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
+if (!secret || !Number.isSafeInteger(count) || count < 1 || count > 100 || !originOk) {
   process.stderr.write(
-    'usage: SCENARIO_PROBE_SECRET=… node scripts/scenario-drill.mjs [--origin https://host] [--count 1-100] [--json]\n'
+    'usage: SCENARIO_PROBE_SECRET=… node scripts/scenario-drill.mjs [--origin https://host | http://localhost:port] [--count 1-100] [--json]\n'
   )
   process.exit(2)
 }
