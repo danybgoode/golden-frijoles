@@ -1,6 +1,6 @@
 import { FLAG_ENVIRONMENTS, type FlagDefinition, type FlagEnvironment } from '@golden-frijoles/sdk'
 import { evaluateVersionDefault } from './flag-environment-view'
-import { resolveActivationState, type FlagActivationState } from './flag-list-view'
+import { flagSwitchState, resolveActivationState, type FlagSwitchState } from './flag-list-view'
 import type { FlagLifecycleAuditRow, FlagRegistryRow } from './flag-registry'
 
 // golden-frijoles-cli · Sprint 1, Story 1.5 — the agent-facing projection of the flag registry.
@@ -26,14 +26,10 @@ import type { FlagLifecycleAuditRow, FlagRegistryRow } from './flag-registry'
 export type CliFlagEnvironmentView = {
   environment: FlagEnvironment
   /**
-   * `on` — an activation row points at a version, and that version is what this environment serves.
-   * `off` — an activation row exists but holds no version: someone turned this off deliberately.
-   * `never` — no activation row has ever existed here.
-   *
-   * ⚠️ `state: 'on'` says a version is BEING SERVED. It does not say the flag resolves to `true` —
-   * read `serving` for that. Conflating the two is the defect described in this file's header.
+   * one-flag-switch D1 — `on` or `off`, by the SAME rule the flags page uses (`flagSwitchState`, `flag-list-view.ts`): a boolean flag
+   * is on when what this environment serves gives `true`; nothing served is off. `serving` carries the value itself.
    */
-  state: FlagActivationState
+  state: FlagSwitchState
   /** The definition version this environment serves, or null when it serves nothing. */
   version: number | null
   /**
@@ -112,7 +108,7 @@ function environmentViews(flag: FlagRegistryRow): CliFlagEnvironmentView[] {
     if (!version) {
       return {
         environment,
-        state: activation.state,
+        state: 'off' as const,
         version: null,
         serving: null,
         // Nothing is served, which is a fully readable fact — not a corrupt row. Reporting
@@ -125,7 +121,7 @@ function environmentViews(flag: FlagRegistryRow): CliFlagEnvironmentView[] {
     const resolved = evaluateVersionDefault(flag.key, version)
     return {
       environment,
-      state: activation.state,
+      state: flagSwitchState(version.definition),
       version: version.version,
       serving: resolved.readable ? (resolved.value ?? null) : null,
       readable: resolved.readable,
