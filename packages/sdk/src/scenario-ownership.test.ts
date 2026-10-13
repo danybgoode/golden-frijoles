@@ -46,13 +46,22 @@ test('ignores every other path, so it can sit in front of other routes', async (
 
 test('a check not signed by this token, or malformed, is a plain 404 with no proof', async () => {
   const answer = createScenarioOwnershipHandler({ token: TOKEN })
-  const other = createHash('sha256').update(`gf_target_${'cd'.repeat(32)}`).digest('hex')
+  const other = createHash('sha256')
+    .update(`gf_target_${'cd'.repeat(32)}`)
+    .digest('hex')
   for (const request of [
     check({ signature: sign('request', CHALLENGE, other) }),
     check({ signature: 'nope' }),
     check({ body: { contractVersion: 1, challenge: CHALLENGE, ...TARGET } }),
     check({ body: { contractVersion: 2, challenge: 'short', ...TARGET } }),
-    check({ body: { contractVersion: 2, challenge: CHALLENGE, targetKey: 'site.probe', origin: 'http://app.example.com' } }),
+    check({
+      body: {
+        contractVersion: 2,
+        challenge: CHALLENGE,
+        targetKey: 'site.probe',
+        origin: 'http://app.example.com',
+      },
+    }),
     check({ method: 'GET' }),
   ]) {
     const response = await answer(request)
@@ -68,11 +77,14 @@ test('refuses to start without a gf_target_ token', () => {
 test('an oversized body is refused before any signature work, declared or streamed', async () => {
   const answer = createScenarioOwnershipHandler({ token: TOKEN })
   const big = JSON.stringify({ contractVersion: 2, challenge: CHALLENGE, ...TARGET, pad: 'x'.repeat(5000) })
+  // A small, VALID body that declares itself oversized: only the Content-Length check can refuse it (without that
+  // check this answers 204), so the test fails if the check goes (verifier round 2, #348).
+  const small = JSON.stringify({ contractVersion: 2, challenge: CHALLENGE, ...TARGET })
   const declared = await answer(
     new Request(`https://app.example.com${SCENARIO_OWNERSHIP_PATH}`, {
       method: 'POST',
-      headers: { 'x-golden-beans-ownership-request': sign('request'), 'content-length': String(big.length) },
-      body: big,
+      headers: { 'x-golden-beans-ownership-request': sign('request'), 'content-length': '5000' },
+      body: small,
     })
   )
   assert.equal(declared?.status, 404)
