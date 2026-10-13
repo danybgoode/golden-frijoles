@@ -190,13 +190,6 @@ export default async function FlagsPage({
               slug={projectSlug}
               flags={registry.flags}
               params={listParams}
-              // The selected environment's snapshot revision, for the row switch's optimistic
-              // concurrency check. Straight off the registry read above — no query is added. A
-              // missing row means this environment has never had a snapshot, whose revision is 0.
-              snapshotVersion={
-                registry.environments.find((row) => row.environment === listParams.environment)
-                  ?.snapshotVersion ?? 0
-              }
               // What this decides is whether a member is offered a switch `requireProjectOwnership`
               // would refuse them. Nothing about the DATA changes: keys, descriptions and states
               // stay member-readable.
