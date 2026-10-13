@@ -103,10 +103,32 @@ function isExactHttpsOrigin(value: string): boolean {
 }
 
 async function readBoundedJson(request: Request): Promise<Record<string, unknown> | null> {
+  // Bounded BEFORE the signature is checked: anyone can reach this path, so a declared length over the cap is refused
+  // unread, and the stream is cut the moment it passes the cap whatever the header said (verifier, #348).
+  const declared = Number(request.headers.get('content-length'))
+  if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) return null
+  if (!request.body) return null
+  const reader = request.body.getReader()
+  const chunks: Uint8Array[] = []
+  let size = 0
   try {
-    const text = await request.text()
-    if (text.length > MAX_BODY_BYTES) return null
-    const parsed: unknown = JSON.parse(text)
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      size += value.byteLength
+      if (size > MAX_BODY_BYTES) {
+        await reader.cancel().catch(() => undefined)
+        return null
+      }
+      chunks.push(value)
+    }
+    const bytes = new Uint8Array(size)
+    let offset = 0
+    for (const chunk of chunks) {
+      bytes.set(chunk, offset)
+      offset += chunk.byteLength
+    }
+    const parsed: unknown = JSON.parse(new TextDecoder().decode(bytes))
     return parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)
       ? (parsed as Record<string, unknown>)
       : null

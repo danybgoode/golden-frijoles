@@ -64,3 +64,30 @@ test('a check not signed by this token, or malformed, is a plain 404 with no pro
 test('refuses to start without a gf_target_ token', () => {
   assert.throws(() => createScenarioOwnershipHandler({ token: 'secret' }), /gf_target_/)
 })
+
+test('an oversized body is refused before any signature work, declared or streamed', async () => {
+  const answer = createScenarioOwnershipHandler({ token: TOKEN })
+  const big = JSON.stringify({ contractVersion: 2, challenge: CHALLENGE, ...TARGET, pad: 'x'.repeat(5000) })
+  const declared = await answer(
+    new Request(`https://app.example.com${SCENARIO_OWNERSHIP_PATH}`, {
+      method: 'POST',
+      headers: { 'x-golden-beans-ownership-request': sign('request'), 'content-length': String(big.length) },
+      body: big,
+    })
+  )
+  assert.equal(declared?.status, 404)
+  const streamed = await answer(
+    new Request(`https://app.example.com${SCENARIO_OWNERSHIP_PATH}`, {
+      method: 'POST',
+      headers: { 'x-golden-beans-ownership-request': sign('request') },
+      body: new ReadableStream({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode(big))
+          controller.close()
+        },
+      }),
+      duplex: 'half',
+    } as RequestInit)
+  )
+  assert.equal(streamed?.status, 404)
+})
