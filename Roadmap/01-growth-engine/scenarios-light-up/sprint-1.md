@@ -44,16 +44,16 @@ stories:
 ---
 # Scenarios, switched on — Sprint 1: Anyone can make an app a target
 
-**Status:** 🟡 built, in review (#PR)
+**Status:** 🟡 built, in review (#348)
 
 ## Stories
 
 ### Story 1.1 — Owner target setup in the engine ✅ `9862079`
 **As a** founder (or their agent), **I want** to register my app's origin and verify it without a special key, **so that** my app can take a drill.
-**Acceptance:** an additive migration adds the `origin_token_v1` kind and `owner_register_scenario_target` /
+**Acceptance:** an additive migration adds the `owner_token_v1` kind and `owner_register_scenario_target` /
 `owner_verify_scenario_target` (service-role only; grant-denial spec). Registering returns a token once and stores
-only its hash; verifying fetches the token from `<origin>/api/internal/resilience/ownership` through the guarded fetch,
-and a match marks the target verified, audited with the owner as actor. Wrong token, unreachable origin or a
+only its hash; verifying sends a fresh signed challenge to `<origin>/api/internal/resilience/ownership` through the
+guarded fetch, and the right answer (an HMAC only the token's holder can make) marks the target verified, audited with the owner as actor. Wrong token, unreachable origin or a
 non-owner: no change, a plain reason (non-owner = not found). Miyagi's route and kind unchanged (its specs stay green).
 **Risk:** high (migration, auth) · **Builder:** orchestrator
 

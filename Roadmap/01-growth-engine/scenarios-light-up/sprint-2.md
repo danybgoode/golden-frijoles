@@ -62,7 +62,9 @@ unsigned, not synthetic, switches off → 404.
 **Acceptance:** with authoring and resilience on: the agent, using only `frijoles` and the drill script, registers and
 verifies goldenfrijoles.com, makes a `delay` fault flag, defines the drill, launches it, sees probes take the delay,
 stops it, and the run is terminal with its stop reason and no breaker trip; the transcript is in the PR. The product
-owner launches and stops a second run from the page and judges the impact comparison (D11). Then security on.
+owner launches and stops a second run from the page and judges the impact comparison (D11). Then the authoring switch
+is killed and the page's controls are seen to go, and switched back on (the rollback path, checked live). Then
+security on.
 `frijoles flags get` shows the three `true` in production; breakers off.
 **Risk:** high · **Builder:** orchestrator + the product owner
 

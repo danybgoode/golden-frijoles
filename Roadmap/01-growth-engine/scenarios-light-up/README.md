@@ -1,5 +1,5 @@
 ---
-status: scaffolded   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+status: in-progress   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
 phase: In review       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
 locked_at: "2026-10-13T18:44:18Z"
@@ -77,10 +77,12 @@ the existing `owner_*` ones, and the CLI and connector read through the same own
 ## Architecture lock (D1–D10)
 - **D1 — Agents first.** Every write a founder can make on the page, an agent can make with `frijoles scenarios`, and
   the reverse. One owner service in `lib/` backs both; neither surface has logic the other lacks.
-- **D2 — A new target kind, `origin_token_v1`.** Registering returns a one-time token, stored only as its hash in
-  `ownership_challenge_hash`. The app returns it at `/api/internal/resilience/ownership`; verify fetches it through the
-  existing guarded fetch, hashes it and compares. Proof = control of the origin (the ACME HTTP-01 shape). Miyagi's
-  `miyagi_resilience_probe_v1` and its signed contract are untouched.
+- **D2 — A new target kind, `owner_token_v1`** (amended at the build, 2026-10-13: an HMAC challenge, not a token echo).
+  Registering returns a one-time `gf_target_…` token, stored only as its SHA-256 in `ownership_challenge_hash`. Verify
+  sends the app a fresh challenge signed with that hash; the app (the SDK's handler, holding the token) answers with an
+  HMAC over it keyed by the same hash. Proof = holding the token, and the token never travels after registration; a
+  fresh challenge each time means an answer cannot be replayed. The request goes through the existing guarded fetch.
+  Miyagi's `miyagi_resilience_probe_v1` and its signed contract are untouched, and its snapshot reads both kinds.
 - **D3 — Owner RPCs, additive.** `owner_register_scenario_target` and `owner_verify_scenario_target`, service-role
   only, project and actor scoped through `private.assert_scenario_owner`, sharing logic with the existing functions
   where it is the same rule. The kind CHECK widens to two values; nothing is dropped. Grant-denial and tenant specs.
@@ -114,12 +116,13 @@ the existing `owner_*` ones, and the CLI and connector read through the same own
 | 2 | S2.4 Close `scenarios-pm-operable`; poster | low |
 
 ## Deploy order
-1. Migration first (additive), applied to production before the merge (Supabase MCP, or the product owner's
-   `supabase db push`).
-2. Merge = deploy (owner setup, CLI route, connector tool, our ownership route and probe, dark behind the switches).
-3. Publish SDK 1.1.0 and CLI 1.4.0 (product owner, 2FA).
+1. The migration (additive) is applied to production BEFORE the merge, migration-first as every epic here (Supabase
+   MCP, or the product owner's `supabase db push`).
+2. Merge = deploy (owner setup, CLI route, connector tool, our ownership route and probe; all behind the switches).
+3. Publish SDK 1.1.0 and CLI 1.4.0 (product owner, 2FA); plugin and kit 1.7.0 release from CI.
 4. Credentials in Vercel env, then a commit to `main` so they land.
-5. Switches: authoring + resilience on → the agent drill → the product owner's page stop and impact read → security on.
+5. Switches: authoring + resilience on → the agent drill → the product owner's page stop and impact read → a kill of
+   the authoring switch to see the controls go (and come back) → security on.
 
 ## Definition of Done (epic)
 - [ ] All sprints merged to `main` + smoke-tested (gaps stated — `node scripts/owed-ledger.mjs` counts what is still owed)
