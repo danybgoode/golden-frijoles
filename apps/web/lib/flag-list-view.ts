@@ -64,7 +64,17 @@ export function flagSwitchState(servedDefinition: unknown): FlagSwitchState {
   if (definition.valueType !== 'boolean') return variants.length > 0 ? 'on' : 'off'
   if (variantValue(variants, definition.defaultVariantKey) === true) return 'on'
   const rules = Array.isArray(definition.rules) ? definition.rules : []
-  return rules.some((rule) => variantValue(variants, record(rule)?.variantKey) === true) ? 'on' : 'off'
+  // A rule counts only if it can reach someone: a rollout of 0% to `true` serves `true` to nobody.
+  const reaches = (rule: Record<string, unknown> | null) => {
+    const rollout = record(rule?.rollout)
+    return !rollout || typeof rollout.basisPoints !== 'number' || rollout.basisPoints > 0
+  }
+  return rules.some((rule) => {
+    const r = record(rule)
+    return variantValue(variants, r?.variantKey) === true && reaches(r)
+  })
+    ? 'on'
+    : 'off'
 }
 
 /** Whether this definition can have a switch at all: a boolean flag with a `true` and a `false` variant. */

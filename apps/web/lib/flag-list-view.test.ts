@@ -625,6 +625,16 @@ test('a boolean flag is On only when what it serves gives true — by default or
     }),
     'on'
   )
+  // A rollout of 0% to true reaches nobody: Off.
+  assert.equal(
+    flagSwitchState({
+      valueType: 'boolean',
+      variants,
+      defaultVariantKey: 'off',
+      rules: [{ priority: 1, clauses: [], rollout: { basisPoints: 0 }, variantKey: 'on' }],
+    }),
+    'off'
+  )
   // A kill: default false, rules cleared.
   assert.equal(
     flagSwitchState({ valueType: 'boolean', variants, defaultVariantKey: 'off', rules: [] }),
