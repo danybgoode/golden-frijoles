@@ -25,6 +25,7 @@ import { resolveConnectorToken, TOKEN_FORMAT } from '@/lib/connector-tokens'
 import { makerMayWrite } from '@/lib/connector-maker'
 import { DEMO_PROJECT_SLUG } from '@/lib/public-demo'
 import { scrubToolText } from '@/lib/public-connector-scrub'
+import { FUNNEL_PERIODS } from '@/lib/flag-funnel'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { getFeatureFunnelByProjectId } from '@/lib/tars-query'
 import { getFeatureImpactByProjectId, getInputSeriesByKey } from '@/lib/north-star-query'
@@ -125,11 +126,18 @@ async function buildMcpServer(
   server.registerTool(
     'get_tars_funnel',
     {
-      description: "Read this project's Targeted/Adopted/Retained funnel for a feature.",
-      inputSchema: { featureKey: z.string().describe('The feature registry key, e.g. setup_guide') },
+      description:
+        "Read this project's funnel for a feature: active users, targeted (everyone), exposed, adopted, retained, satisfied, and who adopted without exposure. The period follows the people first exposed in it.",
+      inputSchema: {
+        featureKey: z.string().describe('The feature registry key, e.g. setup_guide'),
+        period: z
+          .enum(FUNNEL_PERIODS)
+          .optional()
+          .describe("all (the feature's whole life, the default), 90d or 30d"),
+      },
     },
-    async ({ featureKey }) => {
-      const result = await getFeatureFunnelByProjectId(projectId, projectSlug, featureKey)
+    async ({ featureKey, period }) => {
+      const result = await getFeatureFunnelByProjectId(projectId, projectSlug, featureKey, period ?? 'all')
       if (!result.ok) {
         return { content: [{ type: 'text', text: JSON.stringify(result) }], isError: true }
       }
@@ -139,7 +147,7 @@ async function buildMcpServer(
             type: 'text',
             text: JSON.stringify({
               ...result,
-              note: 'Targeted/Adopted/Retained are registry-declared, not gateway-observed.',
+              note: "Stages: active users, targeted (everyone), exposed (the feature's target event), adopted, retained, satisfied. The period follows the people first exposed in it: all (the feature's whole life), 90d or 30d.",
             }),
           },
         ],

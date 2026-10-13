@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { computeFlagFunnel, personOf, type BetMeasure, type FunnelEvent } from './flag-funnel.ts'
+import {
+  computeFlagFunnel,
+  computeFunnel,
+  personOf,
+  type BetMeasure,
+  type FunnelEvent,
+} from './flag-funnel.ts'
 
 const bet: BetMeasure = {
   flagKey: 'checkout.one_step',
@@ -176,4 +182,101 @@ test('verifier #341: the person is a user subject, else the event’s own user (
   assert.equal(personOf({ user_id: 'u1', subject_type: 'merchant', subject_id: 'm1' }), 'u1')
   assert.equal(personOf({ user_id: 'u1', subject_type: null, subject_id: null }), 'u1')
   assert.equal(personOf({ user_id: 'u1', subject_type: 'user', subject_id: null }), 'u1')
+})
+
+// tars-one-model D2 — Daniel, 2026-10-12: "if i want to check how the features performed over the last year i should".
+const day = (y: number, m: number, d: number) => new Date(Date.UTC(y, m - 1, d)).toISOString()
+const at2 = (userId: string, event: string, iso: string, extra: Partial<FunnelEvent> = {}): FunnelEvent => ({
+  userId,
+  event,
+  createdAt: iso,
+  featureId: null,
+  variant: null,
+  ...extra,
+})
+const onAt = (userId: string, iso: string) =>
+  at2(userId, 'flag_evaluated', iso, { featureId: 'checkout.one_step', variant: 'on' })
+
+test('tars-one-model D2: a year-old feature reads its whole life — an adoption months ago still counts', () => {
+  const events = [
+    onAt('nov', day(2025, 11, 3)),
+    at2('nov', 'order_placed', day(2025, 12, 1)), // adopted 10 months ago
+    onAt('sep', day(2026, 9, 20)),
+    at2('sep', 'order_placed', day(2026, 9, 25)),
+    onAt('idle', day(2026, 1, 5)),
+  ]
+  const whole = computeFlagFunnel(events, bet)
+  assert.equal(whole.exposed, 3)
+  assert.equal(whole.adopted, 2, 'the November adopter is not lost to a 90-day window')
+  const recent = computeFlagFunnel(events, bet, { since: Date.parse(day(2026, 9, 1)) })
+  assert.equal(recent.exposed, 1, 'a period is the people first exposed in it')
+  assert.equal(recent.adopted, 1)
+  assert.equal(
+    recent.adoptedWithoutExposure,
+    0,
+    'an earlier cohort’s adoption is neither in nor beside this period'
+  )
+})
+
+test('tars-one-model D1: a registry feature exposes by its target event, scoped to the feature; no adoption event is not measured', () => {
+  const f = (userId: string, event: string, d: number) => ev(userId, event, d, { featureId: 'export' })
+  const events = [
+    f('a', 'export_viewed', 1),
+    f('a', 'export_done', 2),
+    f('a', 'export_done', 4),
+    f('b', 'export_done', 2), // adopted, never saw it: beside
+    ev('c', 'export_viewed', 1), // another feature's event of the same name: not this exposure
+  ]
+  const rule = { kind: 'feature', featureKey: 'export', targetEvent: 'export_viewed' } as const
+  const measure = { adoptedEvent: 'export_done', retainedEvent: null, retentionDays: 7, satisfiedEvent: null }
+  const funnel = computeFunnel(events, rule, measure)
+  assert.deepEqual(
+    [funnel.exposed, funnel.adopted, funnel.retained, funnel.adoptedWithoutExposure],
+    [1, 1, 1, 1]
+  )
+  const unnamed = computeFunnel(events, rule, { ...measure, adoptedEvent: null })
+  assert.equal(unnamed.exposed, 1)
+  assert.deepEqual([unnamed.adopted, unnamed.retained, unnamed.satisfied], [null, null, null])
+  assert.equal(unnamed.rates.adopted, null, 'not measured, never 0%')
+  const anyEvent = computeFunnel(events, { ...rule, targetEvent: null }, measure)
+  assert.equal(anyEvent.exposed, 2, 'no target event: any event of the feature exposes')
+})
+
+test('tars-one-model D2: an earlier cohort active in the period is not exposed in it; an old unexposed adoption is not beside it', () => {
+  const events = [
+    onAt('nov', day(2025, 11, 3)),
+    at2('nov', 'page_viewed', day(2026, 9, 10)), // active now, but first got it last year
+    at2('old', 'order_placed', day(2025, 12, 1)), // adopted without exposure, last year
+    onAt('sep', day(2026, 9, 20)),
+  ]
+  const recent = computeFlagFunnel(events, bet, { since: Date.parse(day(2026, 9, 1)) })
+  assert.equal(recent.base, 2, 'nov and sep were active in the period')
+  assert.equal(recent.exposed, 1, 'only sep first got it in the period')
+  assert.equal(recent.adoptedWithoutExposure, 0)
+  assert.equal(
+    computeFlagFunnel(events, bet).adoptedWithoutExposure,
+    1,
+    'over the whole life, old is beside it'
+  )
+})
+
+test('verifier #344: the cohort is decided by the EARLIEST exposure, whatever order the events arrive in', () => {
+  // Older first, then newer: a rule that keeps the LAST exposure seen would wrongly put them in this period.
+  const events = [onAt('late', day(2025, 11, 3)), onAt('late', day(2026, 9, 20))]
+  const recent = computeFlagFunnel([...events, at2('late', 'page_viewed', day(2026, 9, 21))], bet, {
+    since: Date.parse(day(2026, 9, 1)),
+  })
+  assert.equal(recent.exposed, 0, 'first exposed last year, so not in this period’s cohort')
+  const newestFirst = computeFlagFunnel(
+    [...[...events].reverse(), at2('late', 'page_viewed', day(2026, 9, 21))],
+    bet,
+    {
+      since: Date.parse(day(2026, 9, 1)),
+    }
+  )
+  assert.equal(
+    newestFirst.exposed,
+    0,
+    'and newest first: a rule that keeps the FIRST exposure seen is wrong too'
+  )
 })

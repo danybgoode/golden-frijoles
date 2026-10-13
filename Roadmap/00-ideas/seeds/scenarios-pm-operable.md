@@ -8,7 +8,7 @@ appetite: M
 underwritten_by: wave-2026-08-13-scenarios
 risk: high
 epic: "01-growth-engine/scenarios-pm-operable"
-build_order: 83
+build_order: 84
 updated: 2026-08-13
 ---
 

@@ -155,8 +155,10 @@ export async function evaluateFrictionForProject(
  * its own `events` queries. That is a direct violation of AGENTS.md rule #1 — `lib/{tars,north-star,
  * ab}-query.ts` are "the canonical read paths; never re-query `events` ad hoc" — and the finding was
  * right about the consequence, not just the rule. `computeTars` is not a pair of COUNT DISTINCTs: it
- * applies fallback semantics when `adoptedEvent`/`retainedEvent` are absent, anchors the retention
- * window to each user's own adoption, and honours `feature.enabled` by zeroing the targeted set. A
+ * applies fallback semantics when `adoptedEvent`/`retainedEvent` are absent and anchors the retention
+ * window to each user's own adoption. (tars-one-model: the one model shows a switched-off feature's history,
+ * so this loader skips switched-off features itself — an alert asking to fix a funnel the founder turned off
+ * is noise.) A
  * hand-rolled count agrees with it only for the simplest feature, and diverges silently for every
  * other — so friction would have fired on numbers no dashboard in the product could reproduce, which
  * is the fastest possible way to destroy trust in the queue.
@@ -168,7 +170,7 @@ async function loadProjectFunnels(projectId: string, projectSlug: string): Promi
   const supabase = getSupabaseServiceClient()
   const { data: features, error } = await supabase
     .from('features')
-    .select('key')
+    .select('key, enabled')
     .eq('project_id', projectId)
     .order('key', { ascending: true })
 
@@ -180,17 +182,20 @@ async function loadProjectFunnels(projectId: string, projectSlug: string): Promi
   const funnels: FunnelCounts[] = []
   for (const feature of features) {
     const key = feature.key as string
-    const result = await getFeatureFunnelByProjectId(projectId, projectSlug, key)
+    // A switched-off feature has no live funnel to fix, so its funnel is not even read (verifier, #344).
+    if (feature.enabled === false) continue
+    // Whole life, without the active-users read: friction compares exposed → adopted → retained only (verifier, #344).
+    const result = await getFeatureFunnelByProjectId(projectId, projectSlug, key, 'all', { base: false })
     // A feature with no resolvable funnel has no funnel to have friction in. Skipped rather than
     // counted as zeros, which would make every unconfigured feature look like a dead end — the
     // false-positive class the epic names as its own biggest risk to trust.
     if (!result.ok) continue
-    funnels.push({
-      featureKey: key,
-      targeted: result.tars.targeted,
-      adopted: result.tars.adopted,
-      retained: result.tars.retained,
-    })
+    // A switched-off feature has no live funnel to fix (verifier, #344).
+    if (!result.feature.enabled) continue
+    // Nobody exposed yet is not a funnel with friction in it either.
+    if (result.funnel.state !== 'measured') continue
+    const { exposed, adopted, retained } = result.funnel.funnel
+    funnels.push({ featureKey: key, exposed, adopted, retained })
   }
 
   // Already ordered by key from the query above, so two evaluations over the same data emit findings

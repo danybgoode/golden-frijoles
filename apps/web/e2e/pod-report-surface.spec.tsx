@@ -47,7 +47,7 @@ const FRESHNESS = formatFreshness('2026-07-26T00:00:00.000Z', new Date('2026-07-
 /** The outcome half a tenant with one registered feature and a registered North Star produces. */
 const OUTCOME = buildOutcomeSection({
   tenant: 'golden-frijoles',
-  features: [{ key: 'setup_guide', tars: { targeted: 40, adopted: 10, retained: 4 } }],
+  features: [{ key: 'setup_guide', funnel: { exposed: 40, adopted: 10, retained: 4 } }],
   northStar: { metric: 'activated_merchants', inputCount: 3, latestValue: null },
 })
 
@@ -388,6 +388,41 @@ test('the outcome half renders TARS with its registry caveat, and admits what it
   const gaps = slice(html, 'outcome-not-instrumented', 4000)
   expect(gaps).toContain('Revenue per feature')
   expect(gaps).toContain('North-Star movement over time')
+})
+
+test('tars-one-model S2.2: the funnel table says Got it / Adopted / Retained, "not measured" for a null stage, "unavailable" for a null row', () => {
+  const mixed = buildOutcomeSection({
+    tenant: 'golden-frijoles',
+    features: [
+      { key: 'plain_feature', funnel: { exposed: 12, adopted: null, retained: null } },
+      { key: 'broken_feature', funnel: null },
+    ],
+    northStar: null,
+  })
+  const html = decodeEntities(
+    renderToStaticMarkup(
+      <PodReportBody
+        projectSlug="golden-frijoles"
+        view={viewFor('team')}
+        outcome={mixed}
+        payingOff={payingOffFor('team')}
+        history={HISTORY}
+        lens="team"
+        artifactVersion={1}
+        freshness={FRESHNESS}
+      />
+    )
+  )
+  expect(html).toContain('>Got it</th>')
+  expect(html).not.toContain('>Targeted</th>')
+  const row = (key: string) =>
+    html.slice(html.indexOf(`data-feature="${key}"`), html.indexOf(`data-feature="${key}"`) + 700)
+  const plain = row('plain_feature')
+  expect(plain).toContain('>12<')
+  expect(plain).toContain('not measured')
+  const broken = row('broken_feature')
+  expect(broken).toContain('unavailable')
+  expect(broken).not.toContain('not measured')
 })
 
 test('a tenant with no registered features renders not-instrumented, never zeros', () => {

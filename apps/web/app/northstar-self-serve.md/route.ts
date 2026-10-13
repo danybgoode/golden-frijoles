@@ -358,7 +358,8 @@ What is live today, and worth naming accurately:
 
 - **Telemetry ingest and a TypeScript SDK** — the data-in layer. Events are schema-validated and
   scoped to one project.
-- **TARS funnels** (Targeted / Adopted / Retained) per feature.
+- **TARS funnels** per feature and per flag: who got it, who adopted it, who came back, across its whole life or
+  the last 30 or 90 days.
 - **A North Star metric with per-feature impact** — the thing this workshop is designing.
 - **A/B experiments** with deterministic bucketing and basic lift. There is no statistical
   significance engine; say "basic lift only" rather than implying significance testing.

@@ -537,7 +537,7 @@ export function OutcomeSectionView({ outcome }: { outcome: OutcomeSection }) {
             <thead>
               <tr>
                 <th scope="col">Feature</th>
-                <th scope="col">Targeted</th>
+                <th scope="col">Got it</th>
                 <th scope="col">Adopted</th>
                 <th scope="col">Retained</th>
                 <th scope="col">Rates &amp; caveat</th>
@@ -549,14 +549,26 @@ export function OutcomeSectionView({ outcome }: { outcome: OutcomeSection }) {
                   <th scope="row" className={styles.metricName}>
                     {row.featureKey}
                   </th>
-                  <td className={row.tars ? styles.metricValue : styles.metricNull}>
-                    {row.tars ? row.tars.targeted : 'unavailable'}
+                  <td
+                    className={
+                      row.funnel && row.funnel.exposed !== null ? styles.metricValue : styles.metricNull
+                    }
+                  >
+                    {row.funnel ? (row.funnel.exposed ?? 'not measured') : 'unavailable'}
                   </td>
-                  <td className={row.tars ? styles.metricValue : styles.metricNull}>
-                    {row.tars ? row.tars.adopted : 'unavailable'}
+                  <td
+                    className={
+                      row.funnel && row.funnel.adopted !== null ? styles.metricValue : styles.metricNull
+                    }
+                  >
+                    {row.funnel ? (row.funnel.adopted ?? 'not measured') : 'unavailable'}
                   </td>
-                  <td className={row.tars ? styles.metricValue : styles.metricNull}>
-                    {row.tars ? row.tars.retained : 'unavailable'}
+                  <td
+                    className={
+                      row.funnel && row.funnel.retained !== null ? styles.metricValue : styles.metricNull
+                    }
+                  >
+                    {row.funnel ? (row.funnel.retained ?? 'not measured') : 'unavailable'}
                   </td>
                   <td className={styles.metricRead}>
                     adoption {pct(row.adoptionRate)} · retention {pct(row.retentionRate)}

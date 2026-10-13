@@ -8,7 +8,7 @@ appetite: M
 underwritten_by: wave-2026-10
 risk: low
 epic: "09-platform-infra/why-as-a-story"
-build_order: 78
+build_order: 79
 updated: 2026-10-10
 intent_ask: verbatim
 hypothesis: "Today the Why lists the parts being built and is cut off on screen, so a founder approves bets they cannot easily explain. Written as a short story from the strategy we already agreed, and shown in full, it becomes a bet they can defend. We'll know when every new Why is read in full and approved without a rewrite."

@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { getFeatureFunnel } from '@/lib/tars-query'
+import { asPeriod } from '@/lib/flag-funnel'
 import { requireDashboardAccess } from '@/lib/dashboard-auth'
 import { ProductShell } from '@/components/product/ProductShell'
 import { Answer, Crumb, Crumbs, PageHead } from '@/design-system/primitives'
@@ -29,12 +30,16 @@ export const dynamic = 'force-dynamic'
 
 export default async function FunnelPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ projectSlug: string; featureKey: string }>
+  searchParams: Promise<{ period?: string | string[] }>
 }) {
   const { projectSlug, featureKey } = await params
   await requireDashboardAccess(projectSlug)
-  const result = await getFeatureFunnel(projectSlug, featureKey)
+  const rawPeriod = (await searchParams).period
+  const period = asPeriod(Array.isArray(rawPeriod) ? rawPeriod[0] : rawPeriod)
+  const result = await getFeatureFunnel(projectSlug, featureKey, period)
   // ⚠️ `query_failed` THROWS and everything else 404s — unchanged. A failed read must not render as
   // an absent feature: `FunnelPane`'s own empty states say which absence they are, and a database
   // outage is not one of them.
@@ -60,7 +65,14 @@ export default async function FunnelPage({
           <strong>This page is a view of a feature, so it also lives on the feature.</strong> The link is
           shareable and the tab is where you will actually find it — same design, two mounts, not two designs.
         </Answer>
-        <FunnelPane flagKey={featureKey} result={result} />
+        <FunnelPane
+          flagKey={featureKey}
+          result={result}
+          period={period}
+          hrefFor={(p) =>
+            `/app/funnel/${encodeURIComponent(projectSlug)}/${encodeURIComponent(featureKey)}?period=${p}`
+          }
+        />
       </main>
     </ProductShell>
   )

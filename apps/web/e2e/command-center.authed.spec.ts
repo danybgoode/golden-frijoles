@@ -254,23 +254,15 @@ test.describe('command center', () => {
 
     const main = page.locator('main')
     // A deliberately LOPSIDED funnel, 8 → 5 → 2: equal counts would let a bug that renders one
-    // number three times pass, and a bug that renders equal-length bars pass with it.
-    await expect(main).toContainText(String(TARGETED_USERS))
-    await expect(main).toContainText(String(ADOPTED_USERS))
-    await expect(main).toContainText(String(RETAINED_USERS))
-
-    // Rendered GEOMETRY, which is the whole reason this is a browser spec and not an API one: the
-    // bars must actually get shorter. A funnel drawn with three equal bars is a decoration.
-    const widths = await page
-      .locator('main .ds-chart-bars .ds-chart-fill')
-      .evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().width))
-    expect(widths, 'the funnel rendered no bars at all').toHaveLength(3)
-    expect(widths[0]).toBeGreaterThan(widths[1])
-    expect(widths[1]).toBeGreaterThan(widths[2])
-    expect(widths[2]).toBeGreaterThan(0)
-
-    // The drop-off is stated, not left to the reader to compute.
-    await expect(main).toContainText('did not continue')
+    // number three times pass. tars-one-model D1/D6: the page draws the one model's table (the same
+    // one the epic page draws), so each count is asserted ON ITS OWN ROW, and the drop-off is stated
+    // as each stage's share of the one before (5 of 8 is 63%, 2 of 5 is 40%), not left to compute.
+    const stageRow = (stage: RegExp) => main.locator('.ds-table-row', { hasText: stage })
+    await expect(stageRow(/^Saw it/)).toContainText(String(TARGETED_USERS))
+    await expect(stageRow(/^Adopted/)).toContainText(String(ADOPTED_USERS))
+    await expect(stageRow(/^Adopted/)).toContainText('63%')
+    await expect(stageRow(/^Retained/)).toContainText(String(RETAINED_USERS))
+    await expect(stageRow(/^Retained/)).toContainText('40%')
   })
 
   test('it reflows on a phone, keeps focus visible, and draws no disclosure', async ({ page }) => {

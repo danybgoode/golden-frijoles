@@ -9,6 +9,8 @@ import { Crumb, Crumbs } from '@/design-system/primitives'
 import { HubShell } from '../../../hub-shell'
 import { EmptyBoard } from '../../board/board-components'
 import { FlagFunnel } from '@/components/product/FlagFunnel'
+import { PeriodChoice } from '@/components/product/PeriodChoice'
+import { asPeriod, type FunnelPeriod } from '@/lib/flag-funnel'
 import { getFlagFunnel } from '@/lib/event-catalog-query'
 import { flagFunnelView, funnelBetOf } from '@/lib/flag-funnel-view'
 import { isFlagFunnelsEnabled } from '@/lib/flags'
@@ -38,7 +40,7 @@ export default async function HubEpicPage({
   searchParams,
 }: {
   params: Promise<{ projectSlug: string; epicSlug: string }>
-  searchParams: Promise<{ type?: string | string[]; risk?: string | string[] }>
+  searchParams: Promise<{ type?: string | string[]; risk?: string | string[]; period?: string | string[] }>
 }) {
   const { projectSlug, epicSlug } = await params
   const query = await searchParams
@@ -90,9 +92,13 @@ export default async function HubEpicPage({
   const flag = await readEpicFlag(result.projectId, card.flagKey, card.flagNote)
   // one-bet-wired D7 — the measured flag's funnel, for THIS project (the id the access gate resolved), behind its switch.
   const funnelBet = funnelBetOf(card)
+  const period = asPeriod(Array.isArray(query.period) ? query.period[0] : query.period)
+  // The period link keeps the filters the page was opened with (they only matter to Back).
+  const periodHref = (p: FunnelPeriod) =>
+    `/hub/${encodeURIComponent(projectSlug)}/epic/${encodeURIComponent(epicSlug)}${boardQuery(parseBoardFilters(query), { period: p })}`
   const funnel =
     funnelBet && (await isFlagFunnelsEnabled())
-      ? flagFunnelView(await getFlagFunnel(result.projectId, funnelBet).catch(() => null))
+      ? flagFunnelView(await getFlagFunnel(result.projectId, funnelBet, period).catch(() => null))
       : null
   const freshness = formatFreshness(artifact.generatedAt, new Date(), artifact.sourceCommit)
 
@@ -111,6 +117,7 @@ export default async function HubEpicPage({
       {funnel ? (
         <section className="ds-epic-section" aria-label="The flag's funnel">
           <h2 className="ds-label">The flag&apos;s funnel</h2>
+          <PeriodChoice period={period} hrefFor={periodHref} />
           <FlagFunnel view={funnel} />
         </section>
       ) : null}

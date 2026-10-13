@@ -157,7 +157,8 @@ test.describe('POST /api/v1/public/mcp/c/:token', () => {
     const payload = JSON.parse(body.result.content[0].text)
     expect(payload.ok).toBe(true)
     expect(payload.project.slug).toBe(DEMO_SLUG)
-    expect(payload.tars.targeted).toBeGreaterThan(0)
+    expect(payload.funnel.state).toBe('measured')
+    expect(payload.funnel.funnel.exposed).toBeGreaterThan(0)
   })
 
   test("a token minted for a disposable project cannot read another project's data", async ({ request }) => {

@@ -2,6 +2,7 @@ import { test, expect, type APIRequestContext } from '@playwright/test'
 import { createClient } from '@supabase/supabase-js'
 import { createHash } from 'node:crypto'
 import { HORIZON_DESTINATIONS } from '../lib/horizon-destinations'
+import { isFlagFunnelsEnabled } from './helpers/gates'
 import { specWorkspaceId } from './helpers/spec-workspace'
 
 // pod-report · Sprint 1, Story 1.2 — the journey view and the epic drill-down.
@@ -398,4 +399,30 @@ test('the anonymous demo Hub carries its own four pages and no console chrome', 
   expect(html).not.toContain('aria-label="Sections"')
   expect(html).not.toContain('console-rail')
   expect(html).not.toContain('Back to the console')
+})
+
+// tars-one-model S2.4 — the funnel switch, ON. A measured epic (a flag and an adoption event) shows "The flag's
+// funnel" on its epic page; the OFF half is e2e/flag-funnel-dark.spec.ts, run against the gates-off server. Here, in
+// this serial file, because the demo roadmap is latest-wins and only this file may push it (see the top).
+test('a measured epic shows its funnel on its epic page while the funnel switch is on', async ({
+  request,
+}) => {
+  test.skip(!isFlagFunnelsEnabled(), 'the ON half; flag-funnel-dark.spec.ts covers the switch off')
+  const slug = `spec-measured-${Date.now()}`
+  await pushRoadmap(request, [
+    epicRow({
+      slug,
+      name: `Measured ${slug}`,
+      stage: 'Building',
+      flag_key: 'spec.measured_enabled',
+      target_segment: 'everyone',
+      adopted_event: 'order_placed',
+      retention_days: 7,
+    }),
+  ])
+  const res = await request.get(`/hub/${DEMO_SLUG}/epic/${slug}`)
+  expect(res.status()).toBe(200)
+  const html = await res.text()
+  expect(html).toMatch(/aria-label="The flag(&#x27;|')s funnel"/)
+  expect(html).toContain('No one has been counted with this flag on yet')
 })

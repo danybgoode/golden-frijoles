@@ -2,8 +2,8 @@ import 'server-only'
 import { unstable_cache } from 'next/cache'
 import { reservedEventsInFilter, type EventCatalog } from './event-catalog'
 import { readEventCatalog } from './event-catalog-read'
-import { readFlagFunnel, type FlagFunnelRead } from './flag-funnel-read'
-import type { BetMeasure } from './flag-funnel'
+import { readFunnel, type FunnelRead } from './flag-funnel-read'
+import type { BetMeasure, ExposureRule, FunnelMeasure, FunnelPeriod } from './flag-funnel'
 import { getSupabaseServiceClient } from './supabase'
 
 /**
@@ -86,22 +86,50 @@ export async function getFirstEventForBand(
 }
 
 /**
- * one-bet-wired D3 — a measured flag's funnel for ONE project (the caller resolved it). Cached for FLAG_FUNNEL_CACHE_SECONDS
- * per project and bet (verifier, #341): the public Hub page and Journeys must not re-read the same events on every view.
- * Throws on a failed read (a thrown read is not cached).
+ * one-bet-wired D3, tars-one-model D4 — a funnel (a flag's or a registry feature's) for ONE project (the caller resolved
+ * it), over a period. Cached for FLAG_FUNNEL_CACHE_SECONDS per project, source, measure and period (verifier, #341): the
+ * public Hub page, Journeys and the feature pages must not re-read the same events on every view. Throws on a failed
+ * read (a thrown read is not cached).
  */
 export const FLAG_FUNNEL_CACHE_SECONDS = 300
-export function getFlagFunnel(projectId: string, bet: BetMeasure): Promise<FlagFunnelRead> {
+export function getFunnel(
+  projectId: string,
+  source: ExposureRule,
+  measure: FunnelMeasure,
+  period: FunnelPeriod = 'all',
+  options: { base?: boolean } = {}
+): Promise<FunnelRead> {
+  const withBase = options.base !== false
   const key = [
-    'flag-funnel',
+    'funnel',
     projectId,
-    bet.flagKey,
-    bet.adoptedEvent,
-    bet.retainedEvent ?? '',
-    String(bet.retentionDays),
-    bet.satisfiedEvent ?? '',
+    source.kind,
+    source.kind === 'flag' ? source.flagKey : source.featureKey,
+    source.kind === 'feature' ? (source.targetEvent ?? '*') : '',
+    measure.adoptedEvent ?? '',
+    measure.retainedEvent ?? '',
+    String(measure.retentionDays),
+    measure.satisfiedEvent ?? '',
+    period,
+    withBase ? 'base' : 'no-base',
   ]
-  return unstable_cache(() => readFlagFunnel(getSupabaseServiceClient(), projectId, bet), key, {
-    revalidate: FLAG_FUNNEL_CACHE_SECONDS,
-  })()
+  return unstable_cache(
+    () =>
+      readFunnel(getSupabaseServiceClient(), projectId, source, measure, period, new Date(), {
+        base: withBase,
+      }),
+    key,
+    {
+      revalidate: FLAG_FUNNEL_CACHE_SECONDS,
+    }
+  )()
+}
+
+/** A measured flag's funnel (one-bet-wired). */
+export function getFlagFunnel(
+  projectId: string,
+  bet: BetMeasure,
+  period: FunnelPeriod = 'all'
+): Promise<FunnelRead> {
+  return getFunnel(projectId, { kind: 'flag', flagKey: bet.flagKey }, bet, period)
 }
