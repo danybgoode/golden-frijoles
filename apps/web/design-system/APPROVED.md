@@ -11,8 +11,20 @@
 | **Approved by** | Daniel (product owner) |
 | **Approved** | 2026-08-29, in four reviewed batches |
 | **Source** | `console-prototype.html` in this folder |
-| **SHA-256 (first 16)** | `5bc7e24ed5e3d0aa` |
+| **SHA-256 (first 16)** | `2a4f6fc3618ddac3` (amended 2026-10-13, below; was `5bc7e24ed5e3d0aa`) |
 | **States** | **33**, rendered by `render-reference.mjs` — verified running, zero page errors |
+
+### Amended 2026-10-13 — one flag switch: On or Off (`one-flag-switch`)
+
+The product owner, 2026-10-13, after `frijoles flags kill` turned a feature off in production while the flags list still
+said **On**: *"I want to turn on or off features or whatever is covered by a flag by clicking on or off switch. That's
+it. I do not want an activated state at all or anything else."* and *"if they do a change via cli it is the same on the
+gui. Always. No alternative, no extra state, no activated no, nothing."*
+
+That rules out the third state the approved list drew. `console-prototype.html` changes only where it drew it:
+`ship-features` / `ship-features-dormant` lose the "Never turned on here" card, the dormant group row and the "is not off"
+callout; a feature never set in an environment is **Off** (`stateOf`), the off label reads **Off**, and the answer line
+names what is on and counts what is off. Nothing else in the file moved. The new hash above is this amendment's record.
 
 ### The 33rd, approved 2026-09-09 (`mockups-as-built`, epic D8)
 

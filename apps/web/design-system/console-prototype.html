@@ -1290,7 +1290,7 @@ const STATE = {
 const REASONS = ["Planned rollout","Rolling back","Incident response","Testing","Cleaning up"];
 const STATE_WORDS = {
   on:{label:"On", detail:r=>`serving v${r.v}`},
-  off:{label:"Turned off", detail:r=>`switched off ${r.when.slice(0,10)}`},
+  off:{label:"Off", detail:r=>r.when ? `off since ${r.when.slice(0,10)}` : "off here"},
   never:{label:"Never turned on here", detail:()=>"nobody has ever switched this"},
 };
 const TYPE_WORDS = {kill:"Kill switch", release:"Release toggle", unclassified:"Not classified"};
@@ -1311,7 +1311,7 @@ const esc = s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;
 
 function stateOf(key, env=APP.env){
   const r = STATE[env][key];
-  if(!r) return {s:"never", v:null, who:null, when:null, reason:null};
+  if(!r) return {s:"off", v:null, who:null, when:null, reason:null}; /* one-flag-switch 2026-10-13: nothing served is Off */
   return r;
 }
 function counts(env=APP.env){
@@ -1464,27 +1464,16 @@ function featuresScreen(){
   const answer = `<div class="answer">
     Right now <b>${env.name}</b> is serving
     ${onKeys.length ? onKeys.map(k=>`<span class="mono">${k}</span>`).join(" and ") : "nothing"}.
-    ${c.off ? `<b>${c.off}</b> ${c.off===1?"feature was":"features were"} deliberately switched off here. ` : ""}
-    The other <b>${c.never}</b> have never been switched on in ${env.name} — nobody turned them off, nobody ever turned them on.
+    ${c.off ? (onKeys.length ? `<b>${c.off}</b> ${c.off===1?"feature is":"features are"} off.` : `All <b>${c.off}</b> are off.`) : ""}
   </div>`;
 
   const stat = (id,label,n,cls)=>`
     <button class="stat ${cls}" aria-pressed="${sf===id}" onclick="setStateFilter('${id}')">
       <span class="n">${n}</span><span class="k">${label}</span></button>`;
 
-  /* ── Why this list is not simply truncated ───────────────────────────────────
-     Truncating 42 identical rows to 15 gives you 15 rows that say the same thing.
-     40 of them are "never turned on here": no information apart, a lot of
-     information together. So the uniform majority collapses to ONE row and the
-     exceptional few stay expanded — and pagination only exists inside the
-     collapsed group, where it is the rare case rather than the default. */
+  /* one-flag-switch (2026-10-13): two states, On and Off, grouped On first when unfiltered. No dormant group. */
   const filtering = APP.q || APP.type!=="all" || APP.risk!=="all" || APP.stateFilter;
   const grouped = APP.sort==="state" && !filtering;
-  const live = grouped ? rows.filter(f=>stateOf(f.key).s!=="never") : rows;
-  const dormant = grouped ? rows.filter(f=>stateOf(f.key).s==="never") : [];
-  const PER = 15;
-  const pages = Math.max(1, Math.ceil(dormant.length/PER));
-  const page = Math.min(APP.page, pages);
 
   let body="", last=null;
   if(!rows.length){
@@ -1492,35 +1481,17 @@ function featuresScreen(){
       <span>Clear the filters to see all ${FEATURES.length} features again.</span>
       <div style="margin-top:14px"><button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear filters</button></div></div>`;
   } else {
-    live.forEach(f=>{
+    rows.forEach(f=>{
       const st = stateOf(f.key);
       if(grouped && st.s!==last){
         last = st.s;
-        const n = live.filter(r=>stateOf(r.key).s===st.s).length;
-        const head = {on:"On in "+env.name, off:"Turned off here", never:"Never turned on here"}[st.s];
+        const n = rows.filter(r=>stateOf(r.key).s===st.s).length;
+        const head = {on:"On in "+env.name, off:"Off in "+env.name}[st.s];
         body += `<div class="grp ${st.s}"><span class="bar"></span>${head}<span class="cnt">${n}</span></div>`;
       }
       body += rowHTML(f, st);
     });
-    if(dormant.length){
-      body += `<button class="dormant" onclick="APP.dormantOpen=!APP.dormantOpen;APP.page=1;render()">
-        <span class="tw">${APP.dormantOpen?"▾":"▸"}</span>
-        <span><span class="t">${dormant.length} features have never been turned on in ${env.name}</span>
-        <span class="d">No one has ever switched them on or off here. Nothing is wrong with them — nothing has happened to them.</span></span>
-        <span class="go">${APP.dormantOpen?"Hide":"Show them"}</span></button>`;
-      if(APP.dormantOpen){
-        dormant.slice((page-1)*PER, page*PER).forEach(f=>{ body += rowHTML(f, stateOf(f.key)); });
-        if(pages>1){
-          body += `<div class="row" style="justify-content:center;gap:14px;background:var(--roast-2)">
-            ${page>1?`<button class="btn btn-ghost btn-sm" onclick="APP.page=${page-1};render()">Previous</button>`:""}
-            <span class="state-detail" style="margin:0">Page ${page} of ${pages}</span>
-            ${page<pages?`<button class="btn btn-ghost btn-sm" onclick="APP.page=${page+1};render()">Next</button>`:""}
-          </div>`;
-        }
-      }
-    }
   }
-  const shown = grouped ? live.length + (APP.dormantOpen ? Math.min(PER, dormant.length-(page-1)*PER) : 0) : rows.length;
 
   if(APP.view==="compare") return compareScreen();
 
@@ -1538,8 +1509,7 @@ function featuresScreen(){
   <div class="summary">
     ${stat("all","All features",FEATURES.length,"all")}
     ${stat("on","On in "+env.name,c.on,"on")}
-    ${stat("off","Turned off here",c.off,"off")}
-    ${stat("never","Never turned on here",c.never,"never")}
+    ${stat("off","Off in "+env.name,c.off,"off")}
   </div>
   <div class="toolbar">
     <label class="search">
@@ -1579,7 +1549,7 @@ function featuresScreen(){
     ${body}
   </div>
   <p style="margin-top:12px;font-size:12.5px;color:var(--dim-2)">
-    Showing ${shown} rows for ${rows.length} features${grouped&&!APP.dormantOpen?` — ${dormant.length} of them summarised in one line`:""}.
+    Showing ${rows.length} of ${FEATURES.length} features.
   </p>`;
 }
 
@@ -1822,10 +1792,7 @@ function envPane(f){
       </tr>`;
     }).join("")}</tbody>
   </table>
-  <div class="callout info" style="margin-top:18px"><span class="ico">◆</span>
-    <span><b>“Never turned on here” is not “off”.</b> Off means somebody decided, and there is a name and a
-    reason next to it. Never means nothing has ever happened to this feature in that environment.
-    ${counts('production').never} of the ${FEATURES.length} features are in that state in Production.</span></div>`;
+`;
 }
 
 /* Was /app/funnel/[projectSlug]/[featureKey] — the page whose nav entry read
