@@ -87,13 +87,14 @@ export function flagSwitchState(servedDefinition: unknown): FlagSwitchState {
  * Who an On boolean flag reaches, in words, for the line beside the switch (product owner, 2026-10-13: "it should name
  * the segment, and if none is defined, as right now, just a placeholder"). `null` when the flag is Off, or not on/off.
  *
- *   - `everyone` — the default serves `true` and no rule takes anyone away;
- *   - `25% of people` — a percentage rollout to `true`;
- *   - `a segment (not named yet)` — a rule with conditions (plan, region, user ids…). Named segments do not exist yet,
- *     so this is the placeholder; it becomes the segment's name when they do (`tars-segments`);
- *   - `everyone but a segment (not named yet)` — the default serves `true` and a rule serves `false` to some.
- *
- * Walks the rules exactly as `flagSwitchState` does, so the words can never disagree with the switch.
+ * The AUDIENCE is everyone the evaluator serves `true` to, so this follows it to the end (verifier, #352), not just to
+ * the first rule that serves `true`: rules in priority order, a context falling through any rule it misses, and the
+ * default (or the first rule that catches everyone) serving whoever is left.
+ *   - the rest get `true` → `everyone`, or `everyone but a segment (not named yet)` when a rule above takes some out;
+ *   - the rest get `false` → the parts served `true` above it: `25% of people`, `a segment (not named yet)` (a rule
+ *     with conditions: the placeholder until named segments exist, `tars-segments`), joined with "and", with
+ *     ", except a segment (not named yet)" when a rule above them takes some out first.
+ * It agrees with `flagSwitchState` on On / Off by construction (null unless the switch reads On).
  */
 export const UNNAMED_SEGMENT = 'a segment (not named yet)'
 export function flagReach(servedDefinition: unknown): string | null {
@@ -104,21 +105,30 @@ export function flagReach(servedDefinition: unknown): string | null {
     .map((rule) => record(rule))
     .filter((rule): rule is Record<string, unknown> => rule !== null)
     .sort((a, b) => Number(a.priority) - Number(b.priority))
-  let excludesSome = false
+  const parts: string[] = []
+  let takesSomeOut = false
+  let restGetTrue = variantValue(variants, definition.defaultVariantKey) === true
   for (const rule of rules) {
     const rollout = record(rule.rollout)
     const basisPoints = rollout && typeof rollout.basisPoints === 'number' ? rollout.basisPoints : null
     if (basisPoints !== null && basisPoints <= 0) continue
     const unconditional = !Array.isArray(rule.clauses) || rule.clauses.length === 0
     const servesTrue = typeof rule.variantKey === 'string' && variantValue(variants, rule.variantKey) === true
-    if (servesTrue) {
-      if (!unconditional) return UNNAMED_SEGMENT
-      if (basisPoints === null) return excludesSome ? `everyone but ${UNNAMED_SEGMENT}` : 'everyone'
-      return `${Math.round(basisPoints) / 100}% of people`
+    if (unconditional && basisPoints === null) {
+      // Catches everyone still here: nothing below it, the default included, is ever served.
+      restGetTrue = servesTrue
+      break
     }
-    excludesSome = true
+    if (servesTrue)
+      parts.push(unconditional ? `${Math.round(basisPoints ?? 0) / 100}% of people` : UNNAMED_SEGMENT)
+    else takesSomeOut = true
   }
-  return excludesSome ? `everyone but ${UNNAMED_SEGMENT}` : 'everyone'
+  if (restGetTrue) return takesSomeOut ? `everyone but ${UNNAMED_SEGMENT}` : 'everyone'
+  const unique = [...new Set(parts)]
+  const named = unique.map((part) =>
+    part === UNNAMED_SEGMENT && parts.filter((p) => p === part).length > 1 ? 'segments (not named yet)' : part
+  )
+  return `${named.join(' and ')}${takesSomeOut ? `, except ${UNNAMED_SEGMENT}` : ''}`
 }
 
 /** Whether this definition can have a switch at all: a boolean flag with a `true` and a `false` variant. */

@@ -381,7 +381,9 @@ test.describe('Story 3.1 — the features list answers in one line', () => {
       )
       expect(await cliState()).toMatchObject({ state: 'on', serving: true, reach: 'everyone' })
       // …and the page says who it reaches, beside the switch.
-      await expect(page.locator('.ds-envrow').filter({ hasText: 'production' })).toContainText('everyone')
+      await expect(
+        page.locator('.ds-envrow').filter({ hasText: 'production' }).locator('.ds-envwho')
+      ).toHaveText('everyone')
 
       // The CLI's kill — then the page reads exactly that.
       const killed = await request.post('/api/v1/cli/flags/write', {

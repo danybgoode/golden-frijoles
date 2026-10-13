@@ -142,11 +142,10 @@ export default async function FlagDetailPage({
   const snapshotByEnvironment = new Map(
     registry.environments.map((row) => [row.environment, row.snapshotVersion])
   )
-  const switchEnvironments: FlagSwitchEnvironment[] = FLAG_ENVIRONMENTS.map((environment) => ({
-    environment,
-    state: projectFlagRows([flag], environment)[0].state,
-    reach: projectFlagRows([flag], environment)[0].reach,
-  }))
+  const switchEnvironments: FlagSwitchEnvironment[] = FLAG_ENVIRONMENTS.map((environment) => {
+    const [row] = projectFlagRows([flag], environment)
+    return { environment, state: row.state, reach: row.reach }
+  })
   // Rollback's targets. Same source, one extra field: WHICH version each environment serves, so a
   // row can say "serving in production" instead of offering to re-serve what is already live.
   const serveTargets: ServeTarget[] = FLAG_ENVIRONMENTS.map((environment) => {

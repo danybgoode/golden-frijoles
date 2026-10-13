@@ -20,19 +20,19 @@ stories:
     so_that: "a change from my agent or from me lands the same way"
     risk: high
     status: done
-  - id: S1.4
-    title: "On says who it reaches"
-    as_a: "a founder"
-    i_want: "an On flag to say who gets it — everyone, a percentage, or a named segment"
-    so_that: "On for some is never mistaken for On for all"
-    risk: low
-    status: done
   - id: S1.3
     title: "The CLI says on or off by the same rule, and a test keeps them together"
     as_a: "an agent"
     i_want: "frijoles flags ls/get to say on or off exactly as the page does"
     so_that: "the page and the CLI can never disagree again"
     risk: high
+    status: done
+  - id: S1.4
+    title: "On says who it reaches"
+    as_a: "a founder"
+    i_want: "an On flag to say who gets it — everyone, a percentage, or a named segment"
+    so_that: "On for some is never mistaken for On for all"
+    risk: low
     status: done
 ---
 # One flag switch: on or off, the same in the CLI, the SDK, MCP and the page — Sprint 1: One switch

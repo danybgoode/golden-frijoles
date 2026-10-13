@@ -28,15 +28,13 @@ import { FLAG_STATE_PRESENTATION } from './flag-vocabulary'
  * ⚠️ A SHAPE and a `title`, never a colour alone: a filled disc for On, an empty ring for Off. Colour alone stops
  * being readable in a 126-cell grid.
  */
-function Mark({ state }: { state: FlagSwitchState }) {
-  return (
-    <span
-      className={`ds-mark ds-mark--${state}`}
-      role="img"
-      aria-label={FLAG_STATE_PRESENTATION[state].label}
-      title={FLAG_STATE_PRESENTATION[state].label}
-    />
-  )
+function Mark({ state, reach = null }: { state: FlagSwitchState; reach?: string | null }) {
+  // On says who it reaches here too, so a cell can never read as "on for all" when it is on for some.
+  const label =
+    state === 'on' && reach
+      ? `${FLAG_STATE_PRESENTATION.on.label} · ${reach}`
+      : FLAG_STATE_PRESENTATION[state].label
+  return <span className={`ds-mark ds-mark--${state}`} role="img" aria-label={label} title={label} />
 }
 
 export function FlagCompare({ flags }: { flags: FlagRegistryRow[] }) {
@@ -44,7 +42,7 @@ export function FlagCompare({ flags }: { flags: FlagRegistryRow[] }) {
   // re-deriving them per cell.
   const byEnvironment = FLAG_ENVIRONMENTS.map((environment) => ({
     environment,
-    states: new Map(projectFlagRows(flags, environment).map((row) => [row.id, row.state])),
+    states: new Map(projectFlagRows(flags, environment).map((row) => [row.id, row])),
   }))
   // The key order the list uses, so a reader moving between the two views sees the same sequence.
   const rows = [...flags].sort((a, b) => a.key.localeCompare(b.key))
@@ -96,7 +94,10 @@ export function FlagCompare({ flags }: { flags: FlagRegistryRow[] }) {
                     {byEnvironment.map(({ environment, states }) => (
                       <td className="ds-matrix-cell" key={environment}>
                         {/* Off when the lookup misses: nothing served is Off (one-flag-switch D1). */}
-                        <Mark state={states.get(flag.id) ?? 'off'} />
+                        <Mark
+                          state={states.get(flag.id)?.state ?? 'off'}
+                          reach={states.get(flag.id)?.reach ?? null}
+                        />
                       </td>
                     ))}
                   </tr>
