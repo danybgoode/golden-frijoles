@@ -6,7 +6,7 @@
 
 _Generated: 2026-10-14_
 
-**83 check(s) owed across 63 file(s)** · 6 cleared.
+**84 check(s) owed across 64 file(s)** · 5 cleared.
 
 | Who can clear it | Count | What it means |
 |---|---|---|
@@ -16,12 +16,12 @@ _Generated: 2026-10-14_
 | judgment | 25 | An answer only the product owner can give: an _Intent_, an approval, a decision |
 | signed-in | 21 | A signed-in production walkthrough: an agent can run it once a smoke account exists |
 | interactive | 19 | An interactive plugin or terminal walkthrough: an agent can script it in a scratch repo |
-| unsorted | 6 | Nothing above matched — **not a bin, a to-triage list** |
+| unsorted | 7 | Nothing above matched — **not a bin, a to-triage list** |
 
 | Category | Count | What it means |
 |---|---|---|
 | money-path | 1 | Touches checkout, payment or order state — run these first |
-| auth-path | 26 | Needs a real signed-in session a script cannot mint against production |
+| auth-path | 27 | Needs a real signed-in session a script cannot mint against production |
 | admin-only | 0 | Behind an admin surface |
 | other | 56 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
 
@@ -117,12 +117,13 @@ _Generated: 2026-10-14_
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:54` · other — The interactive coach runs (S1 smoke steps 1 and 3; S2 smoke step 1).
 - `Roadmap/09-platform-infra/why-as-a-story/RETROSPECTIVE.md:50` · other — **Owed to the product owner:** the refine walkthrough on a new idea (the Why drafted as a story, the guard, the build view showing it in full) and a Plan gate with the Crew block.
 
-## unsorted (6)
+## unsorted (7)
 
 - `apps/web/e2e/app-auth.spec.ts:7` · auth-path — owed to Daniel; here we pin the api-testable negatives that make the boundary real:
 - `Roadmap/01-growth-engine/signals-loop/sprint-1.md:145` · other — throw a real error in the demo app → watch the signal appear (**owed to Daniel by name**)._
 - `Roadmap/01-growth-engine/signals-loop/sprint-2.md:96` · other — `list_tasks` → evidence sanity), **owed to Daniel by name**
 - `Roadmap/01-growth-engine/signals-loop/sprint-3.md:122` · other — resolve → revoke → confirm dead) + the production flip, **owed to Daniel by name**
+- `Roadmap/02-commercial/agent-legible-horizon/RETROSPECTIVE.md:25` · auth-path — **Owed to the product owner:** ~~`npm publish` of `@golden-frijoles/cli@1.7.0`~~ (published 2026-10-14; from npm, `frijoles horizon --project <slug>` and `whoami`'s "remembered on this machine" work); then `frijoles horizon` in a bound repo and the login line on a machine that r…
 - `Roadmap/09-platform-infra/cli-think-skills-followups/RETROSPECTIVE.md:36` · other — **Owed to Daniel by name:** ~~`cd packages/cli && npm publish` (npm 2FA) for `@golden-frijoles/cli@0.4.1`~~ (published; checked 2026-10-14), then smoke steps 4–5 in `sprint-1.md`.
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:53` · other — The live `--yes` against `golden-beans` with that file, then check the North Star surface (S3 smoke steps 2–3).
 
