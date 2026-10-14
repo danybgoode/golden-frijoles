@@ -1,9 +1,14 @@
 frijoles init — project, key, .env.local and the snippet — in one verb
 
 Usage
-  frijoles init [--env <environment>] [--ingest] [--json] [--yes]
+  frijoles init [--project <slug> | --create <slug>] [--env <environment>] [--ingest] [--json] [--yes]
 
-Idempotent. Re-running it does not mint a second key when .env.local already
+Binds this repo to a product — written as project.slug in golden-frijoles.config.json,
+  which every later command in the repo reads. --project <slug> picks one you belong to;
+  --create <slug> makes it first. With neither, a repo already bound keeps its product;
+  otherwise it asks at a terminal, and under --json it stops and names both flags.
+
+  Idempotent. Re-running it does not mint a second key when .env.local already
   carries one; it says so and leaves the file alone.
 
   ⚠️ It REFUSES if it cannot get .env.local into .gitignore. A live credential in a
@@ -12,9 +17,10 @@ Idempotent. Re-running it does not mint a second key when .env.local already
 
 Flags
   --env <environment>  development | preview | production (default: development)
-  --project <slug>     the project (default: the remembered one)
+  --project <slug>     bind this repo to a product you belong to
+  --create <slug>      make the product first, then bind this repo to it
   --ingest             also write an ingest key (GROWTH_ENGINE_API_KEY) for sending events; kept when it is already a live key of the project
-  --yes                accepted and ignored — this verb never prompts
+  --yes                accepted and ignored — name the product with --project or --create instead
 
 Exit codes
   0  ok         it worked

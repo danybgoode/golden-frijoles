@@ -11,6 +11,7 @@ import { createApiClient, type ApiClient } from './api'
 import { matchCommand, type Command, type CommandContext } from './command'
 import { COMMANDS } from './commands'
 import { resolveAuth } from './credentials'
+import { readRepoBinding } from './repo-binding'
 import { EXIT, type ExitCode } from './exit-codes'
 import { commandAsData, helpAsData, renderCommandHelp, renderRootHelp } from './help'
 import { createEmitter, processWriter, type Writer } from './output'
@@ -120,6 +121,7 @@ export async function run(options: RunOptions): Promise<ExitCode> {
     tokenFlag: flagValue(withPositionals, 'token'),
     apiFlag: flagValue(withPositionals, 'api'),
     env,
+    repoProject: (await readRepoBinding(env, cwd))?.slug ?? null,
   })
 
   const clientFor = (token: string): ApiClient =>

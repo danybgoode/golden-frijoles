@@ -1,7 +1,8 @@
 // golden-frijoles-cli · Sprint 1, Story 1.4 — `frijoles init`. The whole onboarding in one verb.
 //
 // ── What it does, in order, and why that order ────────────────────────────────────────────────
-//   1. make sure the account has a project (idempotent — D9)
+//   1. the product: --project <slug> binds an existing one, --create <slug> makes it first, a bound repo uses its
+//      binding, and otherwise a person at a terminal is asked; `--json` never prompts (many-products D7)
 //   2. make sure `.env.local` is ignored by git, or REFUSE
 //   3. mint a `flag_read` key for the chosen environment, unless the file already has a live one
 //   4. write `.env.local` at 0600
@@ -25,6 +26,8 @@ import { isFlagEnvironment } from '@golden-frijoles/sdk'
 import { boolFlag, flagValue } from '../args'
 import type { Command, CommandContext } from '../command'
 import { EXIT, exitForServerCode, type ExitCode } from '../exit-codes'
+import { writeRepoBinding } from '../repo-binding'
+import { createProduct, listProducts } from './projects'
 
 /** The env-var names `frijoles init` writes AND the snippet reads. One definition (D6). */
 export const ENV_KEYS = {
@@ -123,9 +126,14 @@ const enabled = flags.resolveBooleanEvaluation('checkout.demo_enabled', false, {
 export const initCommand: Command = {
   path: ['init'],
   summary: 'project, key, .env.local and the snippet — in one verb',
-  usage: 'frijoles init [--env <environment>] [--ingest] [--json] [--yes]',
+  usage: 'frijoles init [--project <slug> | --create <slug>] [--env <environment>] [--ingest] [--json] [--yes]',
   needsAuth: true,
-  detail: `Idempotent. Re-running it does not mint a second key when ${ENV_FILE} already
+  detail: `Binds this repo to a product — written as project.slug in golden-frijoles.config.json,
+  which every later command in the repo reads. --project <slug> picks one you belong to;
+  --create <slug> makes it first. With neither, a repo already bound keeps its product;
+  otherwise it asks at a terminal, and under --json it stops and names both flags.
+
+  Idempotent. Re-running it does not mint a second key when ${ENV_FILE} already
   carries one; it says so and leaves the file alone.
 
   ⚠️ It REFUSES if it cannot get ${ENV_FILE} into ${GITIGNORE}. A live credential in a
@@ -137,16 +145,16 @@ export const initCommand: Command = {
       value: '<environment>',
       describe: 'development | preview | production (default: development)',
     },
-    { name: 'project', value: '<slug>', describe: 'the project (default: the remembered one)' },
+    { name: 'project', value: '<slug>', describe: 'bind this repo to a product you belong to' },
+    { name: 'create', value: '<slug>', describe: 'make the product first, then bind this repo to it' },
     {
       name: 'ingest',
       describe: `also write an ingest key (${INGEST_ENV_KEYS.key}) for sending events; kept when it is already a live key of the project`,
     },
-    // ⚠️ Accepted and INERT, described as such. This verb never prompts — there is nothing for a
-    // --yes to skip — and a flag whose help implies it suppresses a question that does not exist is
-    // a small lie in the one document an agent reads to learn the tool. It stays accepted so a
-    // script that passes it defensively does not hit "unknown flag".
-    { name: 'yes', describe: 'accepted and ignored — this verb never prompts' },
+    // ⚠️ Accepted and INERT, described as such. The one question this verb can ask is WHICH product, and --yes cannot
+    // answer it — guessing one is the defect many-products exists to remove. It stays accepted so a script that passes
+    // it defensively does not hit "unknown flag".
+    { name: 'yes', describe: 'accepted and ignored — name the product with --project or --create instead' },
   ],
   async run(context): Promise<ExitCode> {
     const environment = (flagValue(context.args, 'env') ?? 'development').trim()
@@ -155,21 +163,10 @@ export const initCommand: Command = {
       return EXIT.USAGE
     }
 
-    // ── 1. a project ──────────────────────────────────────────────────────────────────────────
-    const chosen = flagValue(context.args, 'project')?.trim() || context.auth.activeProject || null
-    let project = chosen
-    if (!project) {
-      const ensured = await context.api!.post<{ created: boolean; slug: string }>('api/v1/cli/projects', {})
-      if (ensured.kind === 'network') {
-        context.emit.fail('server_error', ensured.message)
-        return EXIT.SERVER
-      }
-      if (ensured.kind === 'error') {
-        context.emit.fail(ensured.code, ensured.message)
-        return exitForServerCode(ensured.code)
-      }
-      project = ensured.body.slug
-    }
+    // ── 1. a product, and this repo bound to it (many-products D6/D7) ─────────────────────────
+    const chosen = await chooseProduct(context)
+    if (chosen.kind === 'failed') return chosen.exit
+    const project = chosen.slug
 
     // ── 2. the file must be ignorable BEFORE anything is minted ───────────────────────────────
     const gitignorePath = join(context.cwd, GITIGNORE)
@@ -338,6 +335,8 @@ export const initCommand: Command = {
     context.emit.ok(
       {
         project,
+        created: chosen.created,
+        bound: chosen.bound,
         environment,
         envFile: envPath,
         // ⚠️ The KEY ID, never the key. Under --json this output is captured by CI and by agents,
@@ -357,6 +356,8 @@ export const initCommand: Command = {
         snippet: snippetFor(environment),
       },
       [
+        ...(chosen.created ? [`Created ${project}.`] : []),
+        ...(chosen.bound ? [`This repo is bound to ${project} (project.slug in golden-frijoles.config.json).`] : []),
         minted
           ? `Minted a flag_read key for ${project} (${environment}) and wrote ${ENV_FILE}.`
           : existingKeyState === 'live'
@@ -572,5 +573,109 @@ function ensureIgnored(gitignorePath: string, context: CommandContext): ExitCode
         `outcome this command will not produce. Add the line yourself and re-run.`
     )
     return EXIT.USAGE
+  }
+}
+
+type Chosen = { kind: 'ok'; slug: string; created: boolean; bound: boolean } | { kind: 'failed'; exit: ExitCode }
+
+/**
+ * Which product this repo is — the one question `init` can ask (many-products D7).
+ *
+ * The credentials file's remembered `activeProject` is deliberately NOT an answer: it is machine-wide, and a new repo
+ * inheriting whatever was last used on this machine is the defect this epic removes. The repo's own binding is, and so
+ * is GOLDEN_FRIJOLES_PROJECT (CI names it on purpose; nothing is written for it).
+ */
+async function chooseProduct(context: CommandContext): Promise<Chosen> {
+  const named = flagValue(context.args, 'project')?.trim() || null
+  const toCreate = flagValue(context.args, 'create')?.trim() || null
+  if (named && toCreate) {
+    context.emit.fail('invalid', 'Pass --project <slug> OR --create <slug>, not both.')
+    return { kind: 'failed', exit: EXIT.USAGE }
+  }
+
+  if (toCreate) {
+    const made = await createProduct(context, toCreate)
+    if (made.kind !== 'ok') return made
+    return bind(context, toCreate, made.created)
+  }
+  if (named) {
+    const listed = await listProducts(context)
+    if (listed.kind !== 'ok') return listed
+    if (!listed.projects.some((project) => project.slug === named)) {
+      // Not-a-member and does-not-exist are ONE answer, here as at the server.
+      context.emit.fail('not_found', `No product \`${named}\` is available to this account. Make it with --create.`)
+      return { kind: 'failed', exit: EXIT.NOT_FOUND }
+    }
+    return bind(context, named, false)
+  }
+
+  const { activeProject, projectSource } = context.auth
+  if (activeProject && (projectSource === 'repo' || projectSource === 'env'))
+    return { kind: 'ok', slug: activeProject, created: false, bound: false }
+
+  // ⚠️ Never a prompt an agent can hang on: --json, or nobody at the terminal, stops here and names both answers.
+  if (context.emit.json || !process.stdin.isTTY) {
+    context.emit.fail(
+      'invalid',
+      'This repo is not bound to a product. Re-run with --project <slug> (one you have — `frijoles projects ls`) or --create <slug> (a new one).'
+    )
+    return { kind: 'failed', exit: EXIT.USAGE }
+  }
+
+  const listed = await listProducts(context)
+  if (listed.kind !== 'ok') return listed
+  const slugs = listed.projects.map((project) => project.slug)
+  const answer = await askProduct(context, slugs)
+  if (answer === null) {
+    context.emit.fail('invalid', 'No product chosen. Nothing was changed.')
+    return { kind: 'failed', exit: EXIT.USAGE }
+  }
+  if (answer.create) {
+    const made = await createProduct(context, answer.slug)
+    if (made.kind !== 'ok') return made
+    return bind(context, answer.slug, made.created)
+  }
+  return bind(context, answer.slug, false)
+}
+
+async function bind(context: CommandContext, slug: string, created: boolean): Promise<Chosen> {
+  try {
+    await writeRepoBinding(context.env, context.cwd, slug)
+    return { kind: 'ok', slug, created, bound: true }
+  } catch (err) {
+    context.emit.fail(
+      'invalid',
+      `${created ? `Created ${slug}, but c` : 'C'}ould not write golden-frijoles.config.json ` +
+        `(${err instanceof Error ? err.message : String(err)}). Nothing was minted. Fix it and re-run with --project ${slug}.`
+    )
+    return { kind: 'failed', exit: EXIT.USAGE }
+  }
+}
+
+/** At a terminal: a numbered list of the account's products, then "create one". null = nothing usable answered. */
+async function askProduct(
+  context: CommandContext,
+  slugs: readonly string[]
+): Promise<{ slug: string; create: boolean } | null> {
+  const readline = await import('node:readline/promises')
+  const rl = readline.createInterface({ input: process.stdin, output: process.stderr, terminal: false })
+  try {
+    const lines = rl[Symbol.asyncIterator]()
+    const next = async () => {
+      const line = await lines.next()
+      return typeof line.value === 'string' ? line.value.trim() : ''
+    }
+    context.emit.note(
+      ['Which product is this repo?', ...slugs.map((slug, index) => `  ${index + 1}) ${slug}`), `  ${slugs.length + 1}) create one`].join('\n')
+    )
+    context.emit.note(`Type a number (1–${slugs.length + 1}) and press Enter:`)
+    const pick = Number.parseInt(await next(), 10)
+    if (Number.isInteger(pick) && pick >= 1 && pick <= slugs.length) return { slug: slugs[pick - 1], create: false }
+    if (pick !== slugs.length + 1) return null
+    context.emit.note('Name the new product (lowercase letters, digits and dashes) and press Enter:')
+    const name = await next()
+    return name === '' ? null : { slug: name, create: true }
+  } finally {
+    rl.close()
   }
 }
