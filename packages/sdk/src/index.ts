@@ -200,6 +200,8 @@ export type {
 } from './scenarios'
 export { createScenarioProvider } from './scenario-provider'
 export { createScenarioOwnershipHandler, SCENARIO_OWNERSHIP_PATH } from './scenario-ownership'
+export { flagReach, flagSwitchState, hasFlagSwitch, UNNAMED_SEGMENT } from './flag-switch'
+export type { FlagSwitchState } from './flag-switch'
 export type { ScenarioOwnershipHandlerConfig } from './scenario-ownership'
 export type {
   ScenarioExecutionFailure,

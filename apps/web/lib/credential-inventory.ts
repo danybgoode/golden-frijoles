@@ -66,7 +66,7 @@ const CREDENTIAL_COPY: Record<CredentialKind, { title: string; capability: strin
   flag_sync: {
     title: 'Catalog sync key',
     capability:
-      'Create flag definitions from an outside catalog. Cannot turn a flag on or off in any environment.',
+      'Create flag definitions from an outside catalog; a new flag goes live as written. Cannot turn an existing flag on or off.',
     permits: 'Register features',
   },
   agent_write: {

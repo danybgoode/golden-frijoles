@@ -151,7 +151,7 @@ test('the capability says what the key may NOT do where that is the point', () =
   // Two of the four are defined as much by their limit as by their power, and an owner scanning
   // this column is deciding whether a key is dangerous. Naming the limit is what makes it useful.
   assert.match(credentialCapability('flag_read'), /Cannot change/)
-  assert.match(credentialCapability('flag_sync'), /Cannot turn a flag on or off/)
+  assert.match(credentialCapability('flag_sync'), /Cannot turn an existing flag on or off/)
 })
 
 test('every kind has a human title, distinct from every other', () => {

@@ -9,10 +9,10 @@ Uses a flag_sync key — NOT your CLI token — from --sync-key or
 
   Mint one with: frijoles keys create --type flag_sync --source <name> --label <text>
 
-  ⚠️ Sync never switches a flag on or off and never deletes one. It creates immutable definition
-  versions. A newly synced flag shows Off until someone switches it (`frijoles flags set`). A key that already exists with an identical definition reports created: false;
-  semantic drift from an existing version is a conflict for an owner to resolve through the
-  normal version lifecycle.
+  ⚠️ A NEW flag goes live as written in your source file (default and rules), in every
+  environment, and the output says what it now serves. An existing flag's switch is never changed by a sync, and a sync never deletes a flag. A key
+  that already exists with an identical definition reports created: false; semantic drift from
+  an existing version is a conflict for an owner to resolve through the normal version lifecycle.
 
 Flags
   --file <path>     a JSON array of { key, definition } entries
