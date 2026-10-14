@@ -1,23 +1,23 @@
 ---
 title: "Funnel truth: a feature's funnel over time, and named target segments"
 slug: funnel-truth
-status: ready
+status: scaffolded
 area: "01"
 type: feature
 appetite: L
-underwritten_by: null
+underwritten_by: wave-2026-10
 risk: high
-epic: null
-build_order: null
+epic: "01-growth-engine/funnel-truth"
+build_order: 92
 updated: 2026-10-14
 intent_ask: verbatim
-hypothesis: "We believe that showing a flagged feature's funnel as a trend by the month people first got it, and inside a named target segment, for founders who own the product, will let them judge a bet over its whole life instead of one number, because today a funnel is one figure for a period and Targeted is always everyone. We'll know when members open funnel trends."
+hypothesis: "A funnel today is one number per period, and Targeted is always everyone. Showing it by the month people first got the feature, aimed at a named segment, lets founders judge a bet over its whole life. We'll know when members open funnel trends."
 persona: "A founder who owns the product, judging whether a shipped bet is working"
 grounded: false
 grounded_reason: "It is how a bet's verdict gets read honestly (proven_bets), but no North Star input counts funnel reads directly."
 target_metric: "members who opened a funnel trend in the last 30 days (funnel_trend_viewed)"
 target_from: 0
-target_to: null
+target_to: 3
 read_date: null
 flag_key: bets.funnel_trend_enabled
 target_segment: everyone
@@ -181,7 +181,7 @@ Off: the pages read as today. Segments ride the same flag on screen; the CLI rea
 
 ## Open risks / research
 
-- Decision a (the segment rule) and decision b (the target) at the gate.
+- Decided 2026-10-14 (Daniel): segments by behaviour (a); target 0 → 3 members opening a trend, read 30 days after shipping (b).
 
 ## Intent match
 

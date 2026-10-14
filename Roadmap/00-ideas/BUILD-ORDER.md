@@ -17,9 +17,9 @@ _seeds with no pitch yet._
 - [Verify module: the verification depth ladder as a product (after the spike)](seeds/verify-module.md) — #54 · 09 Platform Infra · seed · Feature · risk: High · appetite L · _docs: status raw_
 - [A reading for proving_workspaces](seeds/proving-workspaces-reading.md) — 01 Growth Engine · seed · Feature · risk: High · appetite S · _docs: status raw_
 - [Drill impact for agents: a drill's effect, recorded and read from the CLI](seeds/drill-impact-for-agents.md) — 01 Growth Engine · seed · Feature · risk: High · appetite M · _docs: status raw_
-- [Funnel truth: named target segments, one model for every funnel, and the trend over time](seeds/funnel-truth.md) — 01 Growth Engine · seed · Feature · risk: High · appetite L · _docs: status raw_
 - [Template scripts hold to the gates their consumers run](seeds/template-scripts-consumer-gates.md) — 09 Platform Infra · seed · Chore · risk: Low · appetite S · _docs: status raw_
 - [The build view tells one story: one status, said once](seeds/build-view-one-story.md) — 09 Platform Infra · seed · Feature · risk: Low · appetite M · _docs: status raw_
+- [The Satisfied ask: a rating the product can ask, read as TARS's last stage](seeds/satisfied-ask.md) — 01 Growth Engine · seed · Feature · risk: Low · _docs: status raw_
 
 ## Refining (1)
 
@@ -27,16 +27,17 @@ _a pitch is waiting at the approval gate._
 
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
 
-## Ready (6)
+## Ready (7)
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
 - [Agent-legible horizon and docs](../02-commercial/agent-legible-horizon/README.md) — #85 · 02 Commercial · 0/5 stories · risk: High · appetite S · _docs: status in-progress_
 - [A delivery whose settle keeps failing is re-sent every 5 minutes, uncounted and unlogged](../01-growth-engine/delivery-stale-reclaim-uncounted/README.md) — #87 · 01 Growth Engine · 0/1 stories · risk: High · appetite S · _docs: status scaffolded_
 - [Owed on screen](../02-commercial/owed-on-screen/README.md) — #88 · 02 Commercial · 0/6 stories · risk: High · appetite M · _docs: status scaffolded_
-- [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #92 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
-- [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #93 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
-- [CMS-neutral experiment integration + Payload go/no-go](../01-growth-engine/cms-integration-spike/README.md) — #94 · 01 Growth Engine · 0/6 stories · risk: Low · _docs: status scaffolded_
+- [Funnel truth](../01-growth-engine/funnel-truth/README.md) — #92 · 01 Growth Engine · 0/8 stories · risk: High · appetite L · _docs: status scaffolded_
+- [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #93 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
+- [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #94 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
+- [CMS-neutral experiment integration + Payload go/no-go](../01-growth-engine/cms-integration-spike/README.md) — #95 · 01 Growth Engine · 0/6 stories · risk: Low · _docs: status scaffolded_
 
 ## Building — live only
 
@@ -136,4 +137,4 @@ _merged, deployed and closed._
 - [The portfolio loop test fails intermittently in CI and has been quarantined](seeds/portfolio-loop-flake.md) — 02 Commercial · seed · Bug · risk: Low · appetite S · _docs: status shipped_
 
 ---
-_97 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._
+_98 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._
