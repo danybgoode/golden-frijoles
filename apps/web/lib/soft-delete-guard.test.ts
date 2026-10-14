@@ -37,7 +37,10 @@ const MAY_SEE_DELETED: Record<string, { reads: number; why: string }> = {
     why: 'the signup race and the create path must see a deleted row: it still holds its slug and creator (D2, D9)',
   },
   'lib/gates-catalog.ts': { reads: 1, why: 'the gate catalog is golden-frijoles, which refuses delete' },
-  'lib/tasks.ts': { reads: 1, why: 'names the project in a notification, by an id the caller already authorized' },
+  'lib/tasks.ts': {
+    reads: 1,
+    why: 'names the project in a notification, by an id the caller already authorized',
+  },
   'lib/loop-stage-store.ts': { reads: 1, why: 'by an id resolved through membership, which filters deleted' },
   'app/api/v1/features/[key]/funnel/route.ts': {
     reads: 1,
@@ -83,7 +86,10 @@ test('every projects read filters deleted_at, or is listed with its reason', () 
       allowed,
       `${file} reads \`projects\` without filtering deleted_at. Add \`.is('deleted_at', null)\` (a deleted product is not found), or list it in MAY_SEE_DELETED with why.`
     )
-    assert.ok(count <= allowed.reads, `${file} has ${count} unfiltered projects reads; ${allowed.reads} are listed.`)
+    assert.ok(
+      count <= allowed.reads,
+      `${file} has ${count} unfiltered projects reads; ${allowed.reads} are listed.`
+    )
   }
 })
 

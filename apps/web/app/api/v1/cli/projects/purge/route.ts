@@ -19,7 +19,8 @@ export async function POST(req: NextRequest) {
   const body = await readCliBody(req)
   if (body instanceof NextResponse) return body
   const slug = typeof body.slug === 'string' ? body.slug.trim() : ''
-  if (!slug) return cliError('invalid', 'Name the product: `frijoles projects purge <slug> --confirm <slug>`.')
+  if (!slug)
+    return cliError('invalid', 'Name the product: `frijoles projects purge <slug> --confirm <slug>`.')
   if (body.confirm !== slug)
     return cliError('invalid', `To purge ${slug}, repeat its name: --confirm ${slug}. Nothing was changed.`)
 

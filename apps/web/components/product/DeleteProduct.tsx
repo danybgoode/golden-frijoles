@@ -27,8 +27,8 @@ export function DeleteProduct({ slug, purgeCommand }: { slug: string; purgeComma
   return (
     <>
       <Callout tone="warn">
-        <b>Delete this product.</b> It is gone at once: its keys, connector URL and share links stop working. Its
-        data is kept for 30 days, then <code>{purgeCommand}</code> removes it for good.
+        <b>Delete this product.</b> It is gone at once: its keys, connector URL and share links stop working.
+        Its data is kept for 30 days, then <code>{purgeCommand}</code> removes it for good.
       </Callout>
       <p>
         <Button type="button" variant="secondary" onClick={() => setOpen(true)} data-delete-product-open>

@@ -69,9 +69,13 @@ test('delete: owner only, gone at once, every credential dead, name still taken;
   const stranger = await person(client, 'del-stranger')
   try {
     const slug = slugFor('del')
-    expect((await request.post('/api/v1/cli/projects', { headers: owner.auth, data: { slug } })).status()).toBe(200)
+    expect(
+      (await request.post('/api/v1/cli/projects', { headers: owner.auth, data: { slug } })).status()
+    ).toBe(200)
     const { data: project } = await client.from('projects').select('id').eq('slug', slug).single()
-    await client.from('project_members').insert({ project_id: project!.id, user_id: member.id, role: 'member' })
+    await client
+      .from('project_members')
+      .insert({ project_id: project!.id, user_id: member.id, role: 'member' })
 
     // Three credentials, each through its own seam.
     const minted = await request.post('/api/v1/cli/keys', {
@@ -99,7 +103,9 @@ test('delete: owner only, gone at once, every credential dead, name still taken;
         schemaVersion: 1,
         generatedAt: new Date().toISOString(),
         source: { commit: 'abc1234', ref: 'main' },
-        items: [{ name: 'A spec epic', slug: 'a-spec-epic', grain: 'Epic', status: 'Shipped', area: '01 Growth' }],
+        items: [
+          { name: 'A spec epic', slug: 'a-spec-epic', grain: 'Epic', status: 'Shipped', area: '01 Growth' },
+        ],
       },
     })
     expect(pushed.status()).toBeLessThan(300)
@@ -130,7 +136,9 @@ test('delete: owner only, gone at once, every credential dead, name still taken;
       }
       expect(listed.projects.map((p) => p.slug)).not.toContain(slug)
     }
-    expect((await request.get(`/api/v1/cli/status?project=${slug}`, { headers: owner.auth })).status()).toBe(404)
+    expect((await request.get(`/api/v1/cli/status?project=${slug}`, { headers: owner.auth })).status()).toBe(
+      404
+    )
     expect((await del(owner, slug)).status()).toBe(404)
 
     // Every credential it issued is dead, and looks like one that never existed.
@@ -143,7 +151,9 @@ test('delete: owner only, gone at once, every credential dead, name still taken;
     if (liveShare !== unknownShare) expect(deadShare).not.toBe(liveShare)
 
     // The name stays taken — even to its owner — until purge.
-    expect((await request.post('/api/v1/cli/projects', { headers: owner.auth, data: { slug } })).status()).toBe(409)
+    expect(
+      (await request.post('/api/v1/cli/projects', { headers: owner.auth, data: { slug } })).status()
+    ).toBe(409)
 
     // Purge refuses before 30 days, naming the date; a stranger is told nothing.
     const purge = (who: Person) =>
@@ -166,11 +176,16 @@ test('delete: owner only, gone at once, every credential dead, name still taken;
     expect(await later.json()).toMatchObject({ ok: true, purged: true, slug })
     const { data: gone } = await client.from('projects').select('id').eq('id', project!.id)
     expect(gone).toEqual([])
-    const { data: artifacts } = await client.from('report_artifacts').select('id').eq('project_id', project!.id)
+    const { data: artifacts } = await client
+      .from('report_artifacts')
+      .select('id')
+      .eq('project_id', project!.id)
     expect(artifacts).toEqual([])
 
     // And the name is free again.
-    expect((await request.post('/api/v1/cli/projects', { headers: owner.auth, data: { slug } })).status()).toBe(200)
+    expect(
+      (await request.post('/api/v1/cli/projects', { headers: owner.auth, data: { slug } })).status()
+    ).toBe(200)
   } finally {
     await cleanup(client, [owner.id, member.id, stranger.id])
   }
@@ -217,7 +232,11 @@ test('deleting the product your signup made frees the signup slot (it is not ado
       .select('id')
       .single()
     await client.from('project_members').insert({ project_id: project!.id, user_id: userId, role: 'owner' })
-    const { data: outcome } = await client.rpc('delete_project', { p_slug: first, p_user_id: userId, p_protected: [] })
+    const { data: outcome } = await client.rpc('delete_project', {
+      p_slug: first,
+      p_user_id: userId,
+      p_protected: [],
+    })
     expect(outcome).toBe('deleted')
     // A new signup row for the same person now inserts: the deleted one no longer holds the slot.
     const again = await client
