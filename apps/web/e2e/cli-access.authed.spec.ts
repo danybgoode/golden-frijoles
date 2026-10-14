@@ -60,7 +60,8 @@ test('a member mints a CLI token in the console, the API accepts it, and revokin
   await reveal.getByRole('button', { name: 'I have saved it' }).click()
   await page.waitForLoadState('networkidle')
   await page.getByRole('button', { name: `Revoke ${label}` }).click()
-  const confirm = page.locator('dialog.confirm-dialog')
+  // Scoped to the token's dialog: an owner's page also holds the Delete-product dialog (many-products S2.1).
+  const confirm = page.locator('dialog.confirm-dialog').filter({ hasText: 'Revoke' }).filter({ hasText: label })
   await expect(confirm).toContainText(label)
   await confirm.getByRole('button', { name: 'Revoke' }).click()
   // Wait for the PAGE to say it is revoked, not for the network to go quiet. `networkidle` settles

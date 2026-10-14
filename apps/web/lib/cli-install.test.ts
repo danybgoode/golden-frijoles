@@ -12,9 +12,13 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { CLI_VERSION } from './plugin-release.generated.ts'
 import {
   CLI_BIN,
   CLI_GLOBAL_INSTALL,
+  CLI_HELP,
+  cliPinnedLogin,
+  cliPurgeCommand,
   CLI_KILL_SWITCH_STORY,
   CLI_NPX_INIT,
   CLI_NPX_LOGIN,
@@ -111,4 +115,18 @@ test('the guard above can fail: a renamed flag is caught', () => {
     /--kill-switchh/
   )
   assert.throws(() => assertRealCommand(`${CLI_BIN} flags obliterate x`), /names no verb/)
+})
+
+// ── many-products S2.1/S2.3 (D9, D11): the console's lifecycle and /connect lines ──────────────────
+
+test('the purge line the Delete dialog prints is a verb and flags the CLI declares', () => {
+  assertRealCommand(cliPurgeCommand('my-shop'))
+  assert.equal(cliPurgeCommand('my-shop'), 'frijoles projects purge my-shop --confirm my-shop')
+})
+
+test('the pinned login names the published package at the version this build ships', () => {
+  assert.equal(CLI_VERSION, (manifest as unknown as { version: string }).version)
+  assert.equal(cliPinnedLogin(CLI_VERSION), `npx -y ${CLI_PACKAGE}@${CLI_VERSION} login`)
+  assertRealCommand(cliPinnedLogin(CLI_VERSION).replace('npx -y', 'npx'))
+  assert.equal(CLI_HELP, `${CLI_BIN} --help`)
 })
