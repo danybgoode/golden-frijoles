@@ -193,7 +193,14 @@ workspace" is `workspaces.created_by = userId`, exactly what `claimWorkspace` al
   display order). The push gains optional `horizon: [{ id, title, description }]` (≤ 50) and each row an optional
   `destinations: string[]`; the extractor and the schema both reject a row naming an id the horizon lacks, naming the
   epic. `deriveHorizon(destinations, epics)` keeps its lit/partial/coming rule; `HORIZON_DESTINATIONS` is deleted.
-  No `horizon` → the `hub-horizon-empty` state. `entity-journeys-projections` (registered today, no epic folder) drops.
+  No `horizon` → the `hub-horizon-empty` state. `entity-journeys-projections` keeps `destination: primitives-grid` (it
+  does have an epic folder — the lock was wrong), so the mapping reproduces exactly.
+- **D14 amendment (Daniel, 2026-10-14):** the horizon lives at **`Roadmap/horizon.md`**, not `Roadmap/00-strategy/` —
+  the verifier on #361 found the kit makes `00-strategy/` private on public repos (strategy-private), where a committed
+  horizon is impossible and an epic's `destination:` would then fail the whole board push. `litBy` now lists epics by
+  build order rather than the old registry's order (the only visible difference on Golden Frijoles' horizon).
+  **After the merge deploys**, re-run "Push roadmap artifact" (`workflow_dispatch`): the push that fires on the merge
+  can reach the OLD server, whose envelope silently strips `horizon`, leaving the public horizon empty until the next push.
 
 **Routing.** The architect (Opus) builds everything on the auth/tenancy/migration path: S1.1–S1.4, S2.1, S2.2, S2.4.
 Sonnet builders take S1.5, S2.3, S2.5 and S3 against the contracts above; the architect diffs every one.

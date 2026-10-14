@@ -1000,6 +1000,22 @@
       "unknown": [],
       "source": "spec"
     },
+    "hub-horizon-empty": {
+      "missing": false,
+      "blocks": [
+        {
+          "kind": "head",
+          "action": null
+        },
+        {
+          "kind": "empty"
+        }
+      ],
+      "disclosures": 0,
+      "annotations": 0,
+      "unknown": [],
+      "source": "spec"
+    },
     "hub-roadmap-areas": {
       "missing": false,
       "blocks": [

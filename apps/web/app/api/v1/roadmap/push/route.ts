@@ -37,10 +37,15 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const { generatedAt, source, items, board } = parsed.value
+  const { generatedAt, source, items, board, horizon } = parsed.value
   // `board` (WIP limits, the repo base for doc links) is stored beside the rows. Before it was declared, an extra key
   // passed validation and was silently stripped here (board-sinks-and-scrumban lock C6).
-  const payload = board ? { items, board } : { items }
+  // `horizon` (the product's own destinations, many-products D14) rides the same way: absent when the push had none.
+  const payload = {
+    items,
+    ...(board ? { board } : {}),
+    ...(horizon && horizon.length ? { horizon } : {}),
+  }
   const supabase = getSupabaseServiceClient()
 
   // D16 — an unchanged board is not a new version. The latest artifact is read for THIS project only (the id came

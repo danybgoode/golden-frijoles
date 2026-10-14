@@ -1,7 +1,6 @@
 import { test, expect, type APIRequestContext } from '@playwright/test'
 import { createClient } from '@supabase/supabase-js'
 import { createHash } from 'node:crypto'
-import { HORIZON_DESTINATIONS } from '../lib/horizon-destinations'
 import { isFlagFunnelsEnabled } from './helpers/gates'
 import { specWorkspaceId } from './helpers/spec-workspace'
 
@@ -97,7 +96,7 @@ const epicRow = (over: Record<string, unknown> = {}) => ({
   ...over,
 })
 
-async function pushRoadmap(request: APIRequestContext, items: unknown[]) {
+async function pushRoadmap(request: APIRequestContext, items: unknown[], horizon?: unknown[]) {
   const res = await request.post('/api/v1/roadmap/push', {
     headers: { Authorization: `Bearer ${DEMO_KEY}` },
     data: {
@@ -105,6 +104,7 @@ async function pushRoadmap(request: APIRequestContext, items: unknown[]) {
       generatedAt: new Date().toISOString(),
       source: { commit: 'abc1234', ref: 'main' },
       items,
+      ...(horizon ? { horizon } : {}),
     },
   })
   expect(res.status(), await res.text()).toBe(200)
@@ -236,10 +236,22 @@ test('a tenant with no pushed artifact gets the deliberate empty state, not a br
 })
 
 // ── Story 1.3 fixtures ──────────────────────────────────────────────────────────────────────
+// many-products D14: the destinations are the PRODUCT'S OWN data, pushed with its roadmap — so the spec declares its own.
+const HORIZON = [
+  { id: 'spec-solo', title: 'The solo destination', description: 'Lit by exactly one epic.' },
+  { id: 'spec-pair', title: 'The paired destination', description: 'Lit by two epics.' },
+  { id: 'spec-idle', title: 'The idle destination', description: 'No epic names it yet.' },
+]
 /** A destination with exactly one contributing epic — the cleanest lit/coming lever. */
-const single = HORIZON_DESTINATIONS.find((d) => d.epics.length === 1)!
+const single = { id: 'spec-solo', epics: ['spec-solo-epic'] }
 /** A destination with several — the partial lever. */
-const multi = HORIZON_DESTINATIONS.find((d) => d.epics.length > 1)!
+const multi = { id: 'spec-pair', epics: ['spec-pair-a', 'spec-pair-b'] }
+/** Which destination each fixture epic lights. */
+const LIGHTS: Record<string, string[]> = {
+  'spec-solo-epic': ['spec-solo'],
+  'spec-pair-a': ['spec-pair'],
+  'spec-pair-b': ['spec-pair'],
+}
 
 const epic = (slug: string, status: string) => ({
   name: `Epic ${slug}`,
@@ -247,6 +259,7 @@ const epic = (slug: string, status: string) => ({
   grain: 'Epic',
   status,
   area: '01 Growth Engine',
+  ...(LIGHTS[slug] ? { destinations: LIGHTS[slug] } : {}),
 })
 
 /** The rendered badge for one destination, read from its own test-id'd node. */
@@ -260,21 +273,23 @@ function badgeFor(html: string, id: string): string {
 test('every destination renders, and a fully-shipped one is LIT', async ({ request }) => {
   await pushRoadmap(
     request,
-    single.epics.map((s) => epic(s, 'Shipped'))
+    single.epics.map((s) => epic(s, 'Shipped')),
+    HORIZON
   )
   const html = await (await request.get(`/hub/${DEMO_SLUG}/horizon`)).text()
 
   // The horizon shows the DESTINATION, not the backlog — an unlit destination must still appear, or
   // the page silently degrades into "what happens to be done".
-  for (const d of HORIZON_DESTINATIONS) {
+  for (const d of HORIZON) {
     expect(html, `destination ${d.id} must always render`).toContain(`dest-badge-${d.id}`)
   }
   expect(badgeFor(html, single.id)).toContain('lit')
+  expect(badgeFor(html, 'spec-idle')).toContain('on the way')
 })
 
 test('a destination with only SOME epics shipped is partly lit — never fully lit', async ({ request }) => {
   const [first, ...rest] = multi.epics
-  await pushRoadmap(request, [epic(first, 'Shipped'), ...rest.map((s) => epic(s, 'Scaffolded'))])
+  await pushRoadmap(request, [epic(first, 'Shipped'), ...rest.map((s) => epic(s, 'Scaffolded'))], HORIZON)
   const html = await (await request.get(`/hub/${DEMO_SLUG}/horizon`)).text()
 
   const badge = badgeFor(html, multi.id)
@@ -288,7 +303,8 @@ test('nothing claims ✅ for unshipped work — a near-miss status never lights 
   // "Shipping" is the realistic hostile input: it starts with the right word and means the opposite.
   await pushRoadmap(
     request,
-    single.epics.map((s) => epic(s, 'Shipping'))
+    single.epics.map((s) => epic(s, 'Shipping')),
+    HORIZON
   )
   const html = await (await request.get(`/hub/${DEMO_SLUG}/horizon`)).text()
 
@@ -297,11 +313,48 @@ test('nothing claims ✅ for unshipped work — a near-miss status never lights 
   expect(badge).not.toContain('✅')
 })
 
+test('a product that has pushed no destinations sees the empty state — and none of another product’s (S3.2)', async ({
+  request,
+}) => {
+  // A roadmap pushed WITHOUT a horizon replaces the one before it: the page reads the LATEST artifact.
+  await pushRoadmap(request, [epic('growth-engine-v1', 'Shipped')])
+  const html = await (await request.get(`/hub/${DEMO_SLUG}/horizon`)).text()
+
+  expect(html).toContain('class="ds-empty"')
+  expect(html).toContain('No destinations yet.')
+  expect(html).toContain('Roadmap/horizon.md')
+  expect(html).toContain('destination:')
+  expect(html).toContain('roadmap-push')
+  expect(html).not.toContain('dest-badge-')
+  // Golden Frijoles' own six used to be a registry every product saw; none of its titles may leak.
+  expect(html).not.toContain('The BYO-agent front door')
+  expect(html).not.toContain('The inverted loop')
+})
+
+test('a push naming an undeclared destination is a 400 that names the epic (S3.1)', async ({ request }) => {
+  const res = await request.post('/api/v1/roadmap/push', {
+    headers: { Authorization: `Bearer ${DEMO_KEY}` },
+    data: {
+      schemaVersion: 1,
+      generatedAt: new Date().toISOString(),
+      source: { commit: 'abc1234', ref: 'main' },
+      items: [{ ...epic('spec-solo-epic', 'Shipped'), destinations: ['no-such-destination'] }],
+      horizon: HORIZON,
+    },
+  })
+  expect(res.status()).toBe(400)
+  expect(await res.text()).toContain('spec-solo-epic')
+})
+
 test('seeds render as the hazy horizon, explicitly marked not-promised', async ({ request }) => {
-  await pushRoadmap(request, [
-    epic('growth-engine-v1', 'Shipped'),
-    { ...epic('a-raw-idea', 'Raw'), grain: 'Seed', name: 'A raw idea nobody refined' },
-  ])
+  await pushRoadmap(
+    request,
+    [
+      epic('growth-engine-v1', 'Shipped'),
+      { ...epic('a-raw-idea', 'Raw'), grain: 'Seed', name: 'A raw idea nobody refined' },
+    ],
+    HORIZON
+  )
   const html = await (await request.get(`/hub/${DEMO_SLUG}/horizon`)).text()
 
   expect(html).toContain('A raw idea nobody refined')

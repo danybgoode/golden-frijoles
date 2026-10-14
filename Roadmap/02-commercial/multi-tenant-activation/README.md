@@ -7,6 +7,7 @@ area: 02-commercial
 risk: high
 type: feature
 phase: Shipped
+destination: byo-agent-frontdoor, self-serve-tenancy
 sprints_total: 3
 stories_total: 9
 ---

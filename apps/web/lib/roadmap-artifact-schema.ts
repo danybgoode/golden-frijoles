@@ -80,6 +80,14 @@ export function isRealDay(d: string): boolean {
 // That is deliberate. The extract gains columns as the roadmap tooling grows, and a strict schema
 // would reject a NEWER, RICHER payload from a client who upgraded before we did — turning an
 // additive change into an outage. We pin the fields the hub actually renders and let the rest ride.
+/** many-products D14 — a destination id is lowercase-kebab. ⚠️ A copy of `HORIZON_ID_RE` / `HORIZON_MAX` in `scripts/lib/horizon.mjs`; `horizon-destinations.test.ts` pins both. */
+export const HORIZON_ID_PATTERN = /^[a-z][a-z0-9-]*$/
+export const HORIZON_MAX = 50
+const destinationId = z
+  .string()
+  .regex(HORIZON_ID_PATTERN, 'a destination id is lowercase-kebab (a-z, 0-9, -)')
+  .max(100)
+
 const roadmapRowSchema = z
   .object({
     name: z.string().min(1).max(500),
@@ -213,6 +221,9 @@ const roadmapRowSchema = z
       .string()
       .regex(/^[A-Za-z0-9_.:$-]{1,200}$/, 'satisfied_event must be an event name')
       .nullish(),
+    // many-products D14 — the destinations this epic lights, by id into the push's `horizon`. Nullish so an older
+    // pusher stays valid; whether each id is DECLARED is checked on the push (the row cannot see its siblings).
+    destinations: z.array(destinationId).max(HORIZON_MAX).nullish(),
   })
   .passthrough()
   // The contract's own rule (validateGrounded), held here too so a hand-written push cannot store a reason the board
@@ -221,39 +232,68 @@ const roadmapRowSchema = z
     message: 'grounded_reason is only for grounded: false',
   })
 
-export const roadmapPushSchema = z.object({
-  // Rejected with a clear message when it does not match — see the refinement below.
-  schemaVersion: z.number().int().positive(),
-  // ISO 8601. Coerced to a Date so an unparseable string fails here rather than as a Postgres error.
-  generatedAt: z.coerce.date(),
-  source: z
-    .object({
-      // Matches the migration's CHECK so a bad SHA is a 400 at the edge, not a 500 from the database.
-      commit: z
-        .string()
-        .regex(/^[0-9a-f]{7,40}$/i, 'commit must be a 7-40 char hex sha')
-        .nullish(),
-      ref: z.string().min(1).max(200).nullish(),
-    })
-    .nullish(),
-  // The migration also rejects an empty array; asserting it here makes the failure a 400 with a
-  // readable message instead of a constraint violation the caller cannot act on.
-  items: z.array(roadmapRowSchema).min(1).max(5000),
-  // board-sinks-and-scrumban D6/D21 — optional, additive. Before this field existed an extra `board` key passed this
-  // (non-strict) object and was silently STRIPPED (lock C6); now it is declared, and the route stores it.
-  board: z
-    .object({
-      wip: z
-        .object({
-          Building: z.number().int().positive().max(99).nullish(),
-          QA: z.number().int().positive().max(99).nullish(),
+export const roadmapPushSchema = z
+  .object({
+    // Rejected with a clear message when it does not match — see the refinement below.
+    schemaVersion: z.number().int().positive(),
+    // ISO 8601. Coerced to a Date so an unparseable string fails here rather than as a Postgres error.
+    generatedAt: z.coerce.date(),
+    source: z
+      .object({
+        // Matches the migration's CHECK so a bad SHA is a 400 at the edge, not a 500 from the database.
+        commit: z
+          .string()
+          .regex(/^[0-9a-f]{7,40}$/i, 'commit must be a 7-40 char hex sha')
+          .nullish(),
+        ref: z.string().min(1).max(200).nullish(),
+      })
+      .nullish(),
+    // The migration also rejects an empty array; asserting it here makes the failure a 400 with a
+    // readable message instead of a constraint violation the caller cannot act on.
+    items: z.array(roadmapRowSchema).min(1).max(5000),
+    // board-sinks-and-scrumban D6/D21 — optional, additive. Before this field existed an extra `board` key passed this
+    // (non-strict) object and was silently STRIPPED (lock C6); now it is declared, and the route stores it.
+    board: z
+      .object({
+        wip: z
+          .object({
+            Building: z.number().int().positive().max(99).nullish(),
+            QA: z.number().int().positive().max(99).nullish(),
+          })
+          .nullish(),
+        // The base a card's repo-relative doc links resolve against: `https://github.com/<o>/<r>/blob/<branch>/`.
+        repo: httpsUrl.nullish(),
+      })
+      .nullish(),
+    // many-products D14 — the product's own destinations, optional and additive: a push without it still parses and the
+    // horizon page shows its empty state. Display order is the array's order.
+    horizon: z
+      .array(
+        z.object({
+          id: destinationId,
+          title: z.string().min(1).max(200),
+          description: z.string().min(1).max(500),
         })
-        .nullish(),
-      // The base a card's repo-relative doc links resolve against: `https://github.com/<o>/<r>/blob/<branch>/`.
-      repo: httpsUrl.nullish(),
-    })
-    .nullish(),
-})
+      )
+      .max(HORIZON_MAX)
+      .nullish(),
+  })
+  // An epic may only light a destination the push declares — the extractor refuses it too; this is the same rule held
+  // for a hand-written push. The message names the epic, because a flattened issue drops its path.
+  .superRefine((push, ctx) => {
+    const ids = new Set((push.horizon ?? []).map((d) => d.id))
+    if (ids.size !== (push.horizon ?? []).length)
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'horizon declares the same destination id twice' })
+    for (const item of push.items) {
+      for (const id of item.destinations ?? []) {
+        if (!ids.has(id))
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `epic "${item.slug}" names destination "${id}" that the push's horizon does not declare`,
+          })
+      }
+    }
+  })
 
 export type RoadmapPush = z.infer<typeof roadmapPushSchema>
 export type RoadmapRow = z.infer<typeof roadmapRowSchema>

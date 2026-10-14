@@ -3,7 +3,7 @@ epic: many-products
 sprint: 3
 title: "Each product's own horizon"
 risk: low
-phase: Shaping
+phase: In review
 stories_total: 2
 stories:
   - id: S3.1
@@ -12,18 +12,18 @@ stories:
     i_want: "to declare my product's destinations in its repo"
     so_that: "the horizon is mine, kept where the rest of my roadmap lives"
     risk: low
-    status: planned
+    status: done
   - id: S3.2
     title: "/horizon shows the product's own destinations"
     as_a: "a founder looking at a product's horizon"
     i_want: "that product's destinations, or a way to add some"
     so_that: "I never see another product's end states"
     risk: low
-    status: planned
+    status: done
 ---
 # Many products — Sprint 3: Each product's own horizon
 
-**Status:** ⬜ not started
+**Status:** 🟦 In review — PR #361 (plugin + kit 1.9.1; the horizon lives at `Roadmap/horizon.md` per the D14 amendment)
 
 ## Build contract (locked by the architect before the builder started)
 Cites the epic README's Architecture lock; nothing here restates it.
@@ -36,7 +36,7 @@ Cites the epic README's Architecture lock; nothing here restates it.
 ### Story 3.1 — The horizon travels with the roadmap push
 **As a** founder, **I want** to declare my product's destinations in its repo, **so that** the horizon is mine, kept where the rest of my roadmap lives.
 **Acceptance:**
-- `Roadmap/00-strategy/horizon.md` declares destinations (id · title · one-line description); an epic names the one it
+- `Roadmap/horizon.md` declares destinations (id · title · one-line description); an epic names the one it
   lights with `destination: <id>` in its README frontmatter.
 - `roadmap-extract` reads both; `roadmap-push` sends an optional, additive `horizon` key (the `board` precedent,
   `lib/roadmap-artifact-schema.ts:242`); a push without it still parses.
@@ -68,7 +68,7 @@ Env: production · https://goldenfrijoles.com   (or the preview URL while testin
    → The same destinations as before, with the same lit / partly lit / on the way.
 2. Go to https://goldenfrijoles.com/hub/aomx/horizon
    → "No destinations yet" with how to declare one — no Golden Frijoles destinations.
-3. In the aomx repo, add `Roadmap/00-strategy/horizon.md` with one destination and `destination:` on one epic, then run roadmap-push.
+3. In the aomx repo, add `Roadmap/horizon.md` with one destination and `destination:` on one epic, then run roadmap-push.
    → https://goldenfrijoles.com/hub/aomx/horizon shows that destination, "on the way", with the epic under it.
 
 If any step fails, note the step number + what you saw — that's the bug report.
