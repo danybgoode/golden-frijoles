@@ -131,7 +131,8 @@ export const loginCommand: Command = {
     // (as this did) is how a brand-new repo ended up acting on an old product; with several, the repo binds itself
     // with `frijoles init --project | --create`, or `frijoles projects use` picks one for this machine.
     const reachable = probe.body.projects
-    const activeProject = reachable.some((project) => project.slug === existing?.activeProject)
+    const kept = reachable.some((project) => project.slug === existing?.activeProject)
+    const activeProject = kept
       ? existing?.activeProject
       : reachable.length === 1
         ? reachable[0].slug
@@ -146,8 +147,11 @@ export const loginCommand: Command = {
         projects: probe.body.projects,
       },
       `Signed in as ${probe.body.account.email ?? probe.body.account.userId} on ${apiUrl}.\n` +
+        // agent-legible-horizon D7 — say WHY this product is active, so a remembered one is not read as a choice.
         (activeProject
-          ? `Product: ${activeProject}.\n`
+          ? kept
+            ? `Product: ${activeProject} (remembered on this machine; a repo's golden-frijoles.config.json overrides it).\n`
+            : `Product: ${activeProject} (your only product).\n`
           : reachable.length > 1
             ? `${reachable.length} products. In a repo, \`frijoles init --project <slug>\` (or \`--create <slug>\`) picks its product.\n`
             : '') +
