@@ -150,6 +150,37 @@ test.describe('frijoles projects create — a product by name (many-products S1.
     }
   })
 
+  test('the cap: past the workspace\'s product_limit a create is a conflict naming it, and nothing is written', async ({
+    request,
+  }) => {
+    const client = db()
+    const founder = await person(client, 'mp-cap')
+    try {
+      const first = slugFor('mp-cap')
+      expect(
+        (await request.post('/api/v1/cli/projects', { headers: founder.auth, data: { slug: first } })).status()
+      ).toBe(200)
+      // The ceiling is DATA on the founder's own workspace: one UPDATE, no deploy.
+      const { data: workspace } = await client.from('workspaces').select('id').eq('created_by', founder.id).single()
+      await client.from('workspaces').update({ product_limit: 1 }).eq('id', workspace!.id)
+
+      const second = slugFor('mp-cap-over')
+      const refused = await request.post('/api/v1/cli/projects', { headers: founder.auth, data: { slug: second } })
+      expect(refused.status()).toBe(409)
+      const body = (await refused.json()) as { code: string; reason: string; error: string }
+      expect(body).toMatchObject({ code: 'conflict', reason: 'limit' })
+      expect(body.error).toMatch(/limit is 1/)
+      const { data: none } = await client.from('projects').select('id').eq('slug', second)
+      expect(none).toEqual([])
+
+      // Re-running a name you already own is not a new product, so the cap does not refuse it.
+      const again = await request.post('/api/v1/cli/projects', { headers: founder.auth, data: { slug: first } })
+      expect(await again.json()).toMatchObject({ ok: true, created: false })
+    } finally {
+      await cleanup(client, [founder.id])
+    }
+  })
+
   test('a token made for ONE product cannot make siblings; its own name answers "already yours"', async ({
     request,
   }) => {

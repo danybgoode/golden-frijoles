@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
   const result = await createProductForUser(account.userId, slug, await accountNaming(account.userId))
   if (!result.ok) {
     if (result.reason === 'invalid') return cliError('invalid', result.error)
-    if (result.reason === 'taken') return cliError('conflict', result.error)
+    if (result.reason === 'taken' || result.reason === 'limit') return cliError('conflict', result.error, { reason: result.reason })
     return cliError('server_error', result.error)
   }
   return cliOk({ created: result.created, slug: result.projectSlug })

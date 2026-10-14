@@ -361,7 +361,7 @@ export async function provisionTenantForUser(
 
 export type CreateProductResult =
   | { ok: true; created: boolean; projectSlug: string }
-  | { ok: false; reason: 'invalid' | 'taken' | 'error'; error: string }
+  | { ok: false; reason: 'invalid' | 'taken' | 'limit' | 'error'; error: string }
 
 /**
  * many-products D2 — a product the caller asked for BY NAME, beside the one their signup made: `frijoles projects create`,
@@ -402,9 +402,30 @@ export async function createProductForUser(
     console.error('[provisioning] workspace claim failed:', claim.error)
     return { ok: false, reason: 'error', error: 'Could not find your workspace right now.' }
   }
-  const fail = async (reason: 'taken' | 'error', error: string): Promise<CreateProductResult> => {
+  const fail = async (reason: 'taken' | 'limit' | 'error', error: string): Promise<CreateProductResult> => {
     await logRelease(supabase, claim)
     return { ok: false, reason, error }
+  }
+
+  // ── the cap (the product owner, 2026-10-14: "Cap per account") ────────────────────────────────────────────────────
+  // Every product carries its own event quota, so an uncapped create multiplies an account's quota. The ceiling is DATA
+  // on the caller's own workspace (`workspaces.product_limit`, default 10): raising it is an UPDATE. Checked before the
+  // insert, so two creates racing past the last slot can land one over — a soft cap, stated rather than hidden; the
+  // quota each product carries is the hard limit, and that is unchanged.
+  const [{ data: workspace, error: limitError }, { count, error: countError }] = await Promise.all([
+    supabase.from('workspaces').select('product_limit').eq('id', claim.workspaceId).single(),
+    supabase.from('projects').select('id', { count: 'exact', head: true }).eq('workspace_id', claim.workspaceId),
+  ])
+  if (limitError || countError || !workspace || count === null) {
+    console.error('[provisioning] product cap read failed:', limitError ?? countError)
+    return fail('error', 'Could not check how many products you have right now.')
+  }
+  const limit = workspace.product_limit as number
+  if (count >= limit) {
+    return fail(
+      'limit',
+      `Your workspace already holds ${count} products, its limit is ${limit}. Delete one, or ask us to raise the limit.`
+    )
   }
 
   // A PLAIN INSERT, never an upsert on `slug` (the rule provisionTenantForUser states): a conflict must be a visible
