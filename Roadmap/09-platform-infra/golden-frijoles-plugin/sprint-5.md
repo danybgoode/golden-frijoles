@@ -44,7 +44,7 @@ stories:
 ---
 # One plugin, one install — Golden Frijoles ships as a public plugin whose skills run in anyone's repo — Sprint 5: Setup and adjust
 
-**Status:** ✅ shipped (closed 2026-10-14; S5.5 carried into the epic retro as owed): S5.1–S5.4 are merged and deployed (golden-frijoles/skills#50 `00f5ce4`, release `v0.5.0`; danybgoode/golden-beans#164 `2e2ae50` and #166 `d37ce20`; CLI **0.2.1** hand-published by Daniel, on kit 0.5.2). S5.5, the walkthrough on a clean machine, is owed to Daniel, so the sprint isn't closed · **Wave:** 2
+**Status:** ✅ shipped (closed 2026-10-14; S5.5 carried into the epic retro as owed): S5.1–S5.4 are merged and deployed (golden-frijoles/skills#50 `00f5ce4`, release `v0.5.0`; danybgoode/golden-beans#164 `2e2ae50` and #166 `d37ce20`; CLI **0.2.1** hand-published by Daniel, on kit 0.5.2). S5.5, the walkthrough on a clean machine, was not run and is carried into the epic retro as owed · **Wave:** 2
 
 The five-question setup in the agent, `gf setup` / `gf config` in the terminal through the **same core**, one doctor line per module, and Jev egress as a stranger's explicit choice.
 
