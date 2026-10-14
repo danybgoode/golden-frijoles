@@ -14,15 +14,16 @@
 
 _seeds with no pitch yet._
 
-- [A reading for proving_workspaces](seeds/proving-workspaces-reading.md) — 01 Growth Engine · seed · Feature · risk: High · appetite S · _docs: status raw_
+- [Delivery back on: a dispatch schedule the free Vercel plan allows](seeds/delivery-back-on.md) — 01 Growth Engine · seed · Feature · risk: High · _docs: status raw_
 - [The Satisfied ask: a rating the product can ask, read as TARS's last stage](seeds/satisfied-ask.md) — 01 Growth Engine · seed · Feature · risk: Low · _docs: status raw_
 - [Verify for projects: the verification depth ladder offered to every project](seeds/verify-for-projects.md) — 09 Platform Infra · seed · Feature · risk: High · _docs: status raw_
 
-## Refining (1)
+## Refining (2)
 
 _a pitch is waiting at the approval gate._
 
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
+- [A reading for proving_workspaces](seeds/proving-workspaces-reading.md) — 01 Growth Engine · seed · Feature · risk: High · appetite S · _docs: status ready_
 
 ## Ready (11)
 
@@ -138,4 +139,4 @@ _merged, deployed and closed._
 - [The portfolio loop test fails intermittently in CI and has been quarantined](seeds/portfolio-loop-flake.md) — 02 Commercial · seed · Bug · risk: Low · appetite S · _docs: status shipped_
 
 ---
-_99 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._
+_100 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._
