@@ -39,6 +39,8 @@ test('the /install page renders a live connector URL that actually round-trips',
       ...(isExperimentGovernanceEnabled() ? ['get_experiment_decision'] : []),
       'get_input_readings',
       ...(isJourneyProjectionsEnabled() ? ['get_journey_cohort'] : []),
+      // agent-legible-horizon D3 — the horizon read, unconditional and person-free (the public roadmap is public).
+      'get_horizon',
       'get_north_star',
       'get_tars_funnel',
       // signals-loop Sprint 2 — gated on connector AND signals, like its siblings above.
