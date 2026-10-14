@@ -76,7 +76,7 @@ down.
 
 ## Gaps and what is owed
 
-- **The authed mobile sweep** — still owed from `landing-redesign-v2` and untouched here. The
+- **The authed mobile sweep** — still owed to Daniel from `landing-redesign-v2` and untouched here. The
   `browser` project is anonymous by construction, so a signed-in route would be measured against
   its login redirect. `assertMobileClean` is exported and ready for an `*.authed.spec.ts`.
 - **Both external review families capped** before a final full-scope round. Codex hit a hard quota

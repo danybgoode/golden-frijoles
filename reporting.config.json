@@ -5,5 +5,5 @@
   "stalePreviewAgeDays": 7,
   "vercelProject": "golden-beans",
   "checkouts": { "danybgoode/golden-frijoles": "." },
-  "owed": { "owners": ["the product owner", "Daniel"], "specDirs": ["apps/web/e2e"], "docDirs": ["Roadmap"] }
+  "owed": { "owners": ["the product owner", "the PO", "Daniel"], "specDirs": ["apps/web/e2e"], "docDirs": ["Roadmap"] }
 }
