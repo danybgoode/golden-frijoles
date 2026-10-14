@@ -109,6 +109,32 @@ test('delete: owner only, gone at once, every credential dead, name still taken;
       },
     })
     expect(pushed.status()).toBeLessThan(300)
+    // A North Star input value: input_values was append-only with NO cascade exit, so purge failed for every product
+    // that had one (verifier, #359). Seeded directly — the route that pushes them is not under test here.
+    const { data: metric } = await client
+      .from('north_star_metrics')
+      .insert({ project_id: project!.id, key: 'spec_metric', name: 'Spec metric' })
+      .select('id')
+      .single()
+    const { data: input } = await client
+      .from('leading_inputs')
+      .insert({
+        project_id: project!.id,
+        metric_id: metric!.id,
+        key: 'spec_input',
+        name: 'Spec input',
+        value_source: 'external_push',
+      })
+      .select('id')
+      .single()
+    const { error: valueError } = await client.from('input_values').insert({
+      project_id: project!.id,
+      input_id: input!.id,
+      occurred_on: '2026-10-01',
+      value: 3,
+      dedupe_key: `spec-${randomBytes(6).toString('hex')}`,
+    })
+    expect(valueError).toBeNull()
 
     expect((await track(request, ingestKey)).status()).toBeLessThan(300)
     const unknownConnector = (await mcp(request, `gb_connector_${'0'.repeat(32)}`)).status()
@@ -171,6 +197,28 @@ test('delete: owner only, gone at once, every credential dead, name still taken;
       .from('projects')
       .update({ deleted_at: new Date(Date.now() - 31 * 86_400_000).toISOString() })
       .eq('id', project!.id)
+    // An owner REMOVED from the workspace reaches nothing inside it — purge included (verifier, #359).
+    const { data: placed } = await client
+      .from('projects')
+      .select('workspace_id')
+      .eq('id', project!.id)
+      .single()
+    const { data: seat } = await client
+      .from('workspace_members')
+      .select('role')
+      .eq('workspace_id', placed!.workspace_id)
+      .eq('user_id', owner.id)
+      .single()
+    await client
+      .from('workspace_members')
+      .delete()
+      .eq('workspace_id', placed!.workspace_id)
+      .eq('user_id', owner.id)
+    expect((await purge(owner)).status()).toBe(404)
+    await client
+      .from('workspace_members')
+      .insert({ workspace_id: placed!.workspace_id, user_id: owner.id, role: seat!.role })
+
     const later = await purge(owner)
     expect(later.status()).toBe(200)
     expect(await later.json()).toMatchObject({ ok: true, purged: true, slug })

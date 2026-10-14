@@ -3,6 +3,7 @@ import { getSupabaseServiceClient } from './supabase'
 import { recordAudit } from './audit'
 import { DEMO_PROJECT_SLUG } from './public-demo'
 import { SELF_PROJECT_SLUG } from './self-track'
+import { GATE_CATALOG_PROJECT_SLUG } from './gates-decision'
 
 // many-products · Sprint 2, Stories 2.1 + 2.2 (Roadmap/02-commercial/many-products — lock D9, D10).
 //
@@ -19,7 +20,8 @@ export async function deleteProductForUser(userId: string, slug: string): Promis
   const { data, error } = await getSupabaseServiceClient().rpc('delete_project', {
     p_slug: slug,
     p_user_id: userId,
-    p_protected: [...new Set([DEMO_PROJECT_SLUG, SELF_PROJECT_SLUG])],
+    // The gate catalog's project too: deleting it would switch every product gate to its fallback (verifier, #359).
+    p_protected: [...new Set([DEMO_PROJECT_SLUG, SELF_PROJECT_SLUG, GATE_CATALOG_PROJECT_SLUG])],
   })
   if (error) {
     console.error('[product-lifecycle] delete failed:', { code: error.code ?? 'unknown' })
