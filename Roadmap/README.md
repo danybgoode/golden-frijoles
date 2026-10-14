@@ -102,7 +102,19 @@ independently shippable slice of value.
   Miyagi's 13-stage founding-merchant lifecycle is the first proof. Measured production p95 stayed
   under 120 ms with 13 relevant events, so the engine keeps its simpler query-time architecture.
 
+- ✅ [Several North Star metrics, one reading rule](01-growth-engine/north-star-multi-metric-read/README.md) —
+  **shipped 2026-10-08** (#321). A project with two North Star metrics shows the newest one and its own inputs, on the
+  North Star page and the Pod Report, instead of an error. **Owed:** the signed-in page look.
+- ✅ [One bet, wired: the flag knows its epic, its funnel and its read](01-growth-engine/one-bet-wired/README.md) —
+  **shipped 2026-10-10** (#341; CLI 1.3.0, plugin + kit 1.5.0). A measured bet's flag funnel on the TARS model
+  (Targeted is a segment, exposure is the flag `on`, adopters outside it counted beside), on the epic page and
+  Journeys; `frijoles bet sync` creates the Measure flag; refine suggests Measure for every feature and sign-in once,
+  where it pays off. **Owed:** a signed-in look at a live funnel; `tars-segments` next.
+
 ### 02 · Commercial
+- ✅ [A golden welcome and recovery pages](02-commercial/brand-reveal-error-pages/README.md) — **shipped 2026-10-10**
+  (#340; CLI 1.2.0, plugin + kit 1.4.0). `frijoles setup` opens with a bean ripening to gold and FRIJOLES revealed in a
+  gold sweep, and the site's missing and broken pages are branded, with a way back. **Owed:** the interactive reveal.
 - ✅ [Golden Frijoles CLI v1 — a write surface an agent can drive](02-commercial/golden-frijoles-cli/README.md)
   — `gf`, published as `@golden-frijoles/cli`. An agent can create a flag **in every environment**,
   roll it out and kill it with no browser and no human click: `gf flags create <key> --kill-switch
@@ -606,8 +618,12 @@ independently shippable slice of value.
   agent can run one end to end through `frijoles scenarios`; the first drill ran on our own site.
 - **2026-10-13**: `tars-one-model` **shipped**: ≈$12.98 against a $15–32 quote, two verifier rounds. Every funnel
   reads the same stages, over the feature's whole life or a 90- or 30-day cohort.
+- **2026-10-10**: `brand-reveal-error-pages` **shipped**: cost not measured, against a $15–32 quote. Setup opens with a
+  golden reveal, and missing and broken pages are branded with a way back.
 - **2026-10-10**: `why-as-a-story` **shipped**: ≈$9.72 against a $15–32 quote, two verifier rounds. The Why reads as a
   story, in full, and four of its seven stories were built by Sonnet under the new dispatch rule.
+- **2026-10-10**: `one-bet-wired` **shipped**: ≈$42.87, under its $56–79 quote, three verifier rounds. A bet's flag now
+  carries its own TARS funnel, from the seed to the epic page.
 - **2026-10-10**: `setup-instruments-connects` **shipped**: ≈$39.86, over its $15–31 quote (five review rounds, four on
   one paragraph of error-capture instructions). Setup now ends with the measuring code in a pull request, the project
   connected, and the first event visible.
@@ -620,6 +636,8 @@ independently shippable slice of value.
 - **2026-10-09**: `sdk-1-0` **shipped**: one PR, ≈$29.55 against a $16–32 quote. The SDK starts in one line, knows who
   the user is and pushes North Star inputs; review found a construction-time config read that would have sent three
   real 0.6.0 config shapes to production, now pinned by the freeze test.
+- **2026-10-08**: `north-star-multi-metric-read` **shipped**: ≈$3.89 against an $11–17 quote. A project with two North
+  Star metrics shows the newest one instead of an error page.
 - **2026-10-08**: `plugin-1-0` **shipped**: four sprints, ≈$56.54 against a $55–111 quote. The plugin went from fifteen
   skills to five plus the verifier, the CLI became `frijoles`, and Grooming became Refining. The verifier found a
   defect in every sprint that the builder's gates could not see; the stacked PRs merged into their bases instead of

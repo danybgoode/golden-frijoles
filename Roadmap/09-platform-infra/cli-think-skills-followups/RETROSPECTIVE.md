@@ -33,8 +33,8 @@ _Quote vs actual: $11–17 (S, n=3, p25–p75) → ≈$3.79 (−78% vs the quote
   predicts for guards, and it held again.
 
 ## Gaps / follow-ups
-- **Owed to Daniel by name:** `cd packages/cli && npm publish` (npm 2FA) for `@golden-frijoles/cli@0.4.1`, then smoke
-  steps 4–5 in `sprint-1.md`.
+- **Owed to Daniel by name:** ~~`cd packages/cli && npm publish` (npm 2FA) for `@golden-frijoles/cli@0.4.1`~~
+  (published; checked 2026-10-14), then smoke steps 4–5 in `sprint-1.md`.
 - **Accepted residuals** of the body-order guard, written in its doc comment: an alias (`const r = req`,
   `const { body } = req`), a cast, a computed member, and a second declarator in one export.
 - Two review-fix pushes went out with `--no-verify`, to skip the advisory local e2e (it fails on local DB state, while

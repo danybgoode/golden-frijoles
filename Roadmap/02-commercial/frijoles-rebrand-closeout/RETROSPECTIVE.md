@@ -50,7 +50,7 @@ _Closed: 2026-08-13 · PR #96 · merge `0a0beb0`_
 
 - Add the repo-local `scripts/live-smoke.mjs` wrapper expected by the shared skill so future rendered
   production checks emit the standard JSON report and screenshot artifact.
-- The signals-loop production write smoke and the first real pod-report share links remain owed.
+- The signals-loop production write smoke and the first real pod-report share links remain owed to Daniel.
   Both require credentials or tokens only Daniel can mint; this session did not attempt either.
 - `RESILIENCE_SCENARIOS_ENABLED` and `SECURITY_SIMULATIONS_ENABLED` remain deliberately OFF. Turning
   either on remains a separate env change plus Git-tracked redeployment and behavioral verification.

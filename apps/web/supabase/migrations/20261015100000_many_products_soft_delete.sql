@@ -115,7 +115,7 @@ DECLARE
   v_count INTEGER;
 BEGIN
   IF NEW.from_signup THEN RETURN NEW; END IF;
-  SELECT w.product_limit INTO v_limit FROM workspaces w WHERE w.id = NEW.workspace_id FOR UPDATE;
+  SELECT w.product_limit INTO v_limit FROM workspaces w WHERE w.id = NEW.workspace_id FOR NO KEY UPDATE;
   IF v_limit IS NULL THEN RETURN NEW; END IF;
   SELECT count(*) INTO v_count FROM projects p WHERE p.workspace_id = NEW.workspace_id AND p.deleted_at IS NULL;
   IF v_count >= v_limit THEN

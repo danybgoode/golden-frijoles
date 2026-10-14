@@ -49,8 +49,8 @@ project still answers 403.
 
 ## Gaps / follow-ups
 
-- **Owed to the product owner:** the signed-in look at a feature's funnel with the period choice, and the _Intent_
-  word.
+- **Owed to the product owner:** the signed-in look at a feature's funnel with the period choice, ~~and the _Intent_
+  word~~ (answered: yes).
 - **Accepted limits:** the 14-day served chart reads at most 1,000 rows; a busy project's single-feature page caps
   at 50k events (reported as truncated).
 - **After launch:** `tars-segments` (items 1, 3, 5), `funnel-trend`.
