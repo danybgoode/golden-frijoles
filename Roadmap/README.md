@@ -54,13 +54,15 @@ independently shippable slice of value.
   or follows the people who first got it in the last 90 or 30 days (the 90-day cap is gone). The feature pane, funnel
   page, epic page, reports, alerts, API and connector all read it; `tars` in the API is replaced by `funnel`.
   **Owed:** the signed-in look with the period choice.
-- 🚧 [Scenarios made PM-operable](01-growth-engine/scenarios-pm-operable/README.md) (owner define ·
-  bounded launch/retry/stop · explicit target state · honest impact comparison and immutable evidence
-  links) — **code and migration are live, authoring remains dark** (2026-08-13, PR #98, `5bca24c`).
-  Signed-in owners now have one project-scoped operating surface over the existing scenario engine;
-  members keep the read-only evidence view. The enablement gate stays OFF until a verified synthetic
-  production launch/stop and the product owner's rendered-claim judgment are complete. #14's chart
-  decision remains open, so impact uses the documented comparison-table fallback.
+- ✅ [Scenarios made PM-operable](01-growth-engine/scenarios-pm-operable/README.md) — **shipped; authoring live
+  2026-10-13** (PR #98; switched on by `scenarios-light-up`). Owners define, launch, retry and stop drills from one
+  surface over the scenario engine; members keep the read-only evidence view. The impact comparison stays a table (#14).
+- ✅ [Scenarios, switched on: an agent can set up a target, run a drill and stop it](01-growth-engine/scenarios-light-up/README.md) —
+  **shipped 2026-10-13** (#348, #350; SDK 1.1.0, CLI 1.4.0, plugin + kit 1.7.0). Anyone's app can become a drill target
+  (`frijoles scenarios targets add` → the SDK's ownership handler → `verify`); `frijoles scenarios define · launch · stop
+  · runs` run a whole drill from the terminal; the page and a read-only connector tool show it. goldenfrijoles.com is
+  the first verified target; a drill was run and stopped in production by an agent and by the product owner, and drills
+  are switched on. **Owed:** recording a drill's impact (`drill-impact-for-agents`).
 - ✅ [SDK 1.0: one line to start, who the user is, and North Star inputs](01-growth-engine/sdk-1-0/README.md) —
   **shipped 2026-10-09** (#331; `@golden-frijoles/sdk` 1.0.0). `createGrowthEngineClient({ apiKey })` defaults to
   goldenfrijoles.com (an empty `baseUrl` fails rather than defaulting); `identify`/`reset`; `pushInputValues` for North
@@ -594,6 +596,8 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-13**: `scenarios-light-up` **shipped**: ≈$27 against a $56–79 quote. Drills are on in production, and an
+  agent can run one end to end through `frijoles scenarios`; the first drill ran on our own site.
 - **2026-10-13**: `tars-one-model` **shipped**: ≈$12.98 against a $15–32 quote, two verifier rounds. Every funnel
   reads the same stages, over the feature's whole life or a 90- or 30-day cohort.
 - **2026-10-10**: `why-as-a-story` **shipped**: ≈$9.72 against a $15–32 quote, two verifier rounds. The Why reads as a

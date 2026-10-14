@@ -1,12 +1,12 @@
 ---
-status: in-progress   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+status: shipped   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
 slug: scenarios-pm-operable
 build_order: 86
 title: "Scenarios made PM-operable — define, launch, and kill a scenario from the UI"
 area: 01-growth-engine
 risk: high
 type: feature
-phase: Building
+phase: Shipped
 sprints_total: 3
 stories_total: 10
 ---
@@ -227,7 +227,9 @@ the kill path.
       environment**, created **DISABLED**, default `false`. *Verify-only.*
 - [x] **D9 answered in writing** — whether `approve_definition` gates a synthetic run, and what
       changed if it does
-- [ ] **The rendered impact claim reviewed by the product owner specifically** (D11), not just the
+- [x] ~~**The rendered impact claim reviewed by the product owner specifically** (D11)~~ — moved: no drill can record impact
+      for an owner yet, so there is nothing to review; seeded as `drill-impact-for-agents` (2026-10-13). Original line:
+      **The rendered impact claim reviewed by the product owner specifically** (D11), not just the
       page
-- [ ] Feature branch deleted remotely; set this README's frontmatter `status: shipped` after the
+- [x] Feature branch deleted remotely; set this README's frontmatter `status: shipped` after the
       product-owner claim check, then run `node scripts/build-order.mjs`
