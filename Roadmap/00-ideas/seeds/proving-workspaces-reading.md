@@ -1,14 +1,14 @@
 ---
 title: "A reading for proving_workspaces"
 slug: proving-workspaces-reading
-status: ready
+status: scaffolded
 area: "01"
 type: feature
 appetite: S
-underwritten_by: null
+underwritten_by: wave-2026-10
 risk: high
-epic: null
-build_order: null
+epic: "01-growth-engine/proving-workspaces-reading"
+build_order: 97
 updated: 2026-10-14
 intent_ask: verbatim
 hypothesis: "Our North Star's breadth input, proving workspaces, has no reading, so the strategy reads it by hand on 15 Dec. Counting a workspace when one of its bets is proven, without any tenant seeing another, makes it a number we can watch. We'll know when it reads itself."
@@ -17,7 +17,7 @@ grounded: true
 grounded_reason: null
 target_metric: proving_workspaces
 target_from: 0
-target_to: null
+target_to: 2
 read_date: 2026-12-15
 flag_key: null
 target_segment: null
@@ -127,7 +127,7 @@ without the secret it emits nothing. Rollback is `git revert`.
 
 ## Open risks / research
 
-- The target's end number (decision a at the gate).
+- Decided 2026-10-14 (Daniel): target 0 → 2 proving workspaces by 2026-12-15 (a); `SELF_SUBJECT_SECRET` added to Vercel production by the agent, live with the next commit to `main` (b).
 
 ## Decision (Daniel, 2026-10-14): a self-tracking event, no exemption
 

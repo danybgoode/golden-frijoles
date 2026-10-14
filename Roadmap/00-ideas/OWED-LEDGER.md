@@ -6,14 +6,14 @@
 
 _Generated: 2026-10-14_
 
-**91 check(s) owed across 69 file(s)** · 5 cleared.
+**92 check(s) owed across 70 file(s)** · 5 cleared.
 
 | Who can clear it | Count | What it means |
 |---|---|---|
 | publish | 3 | A package publish (npm 2FA): the product owner today, a CI job once trusted publishing is on |
 | credential | 7 | Mints or uses a production credential: only the product owner, named every time |
 | ops | 5 | On the product owner's own accounts or machine |
-| judgment | 27 | An answer only the product owner can give: an _Intent_, an approval, a decision |
+| judgment | 28 | An answer only the product owner can give: an _Intent_, an approval, a decision |
 | signed-in | 23 | A signed-in production walkthrough: an agent can run it once a smoke account exists |
 | interactive | 20 | An interactive plugin or terminal walkthrough: an agent can script it in a scratch repo |
 | unsorted | 6 | Nothing above matched — **not a bin, a to-triage list** |
@@ -23,7 +23,7 @@ _Generated: 2026-10-14_
 | money-path | 1 | Touches checkout, payment or order state — run these first |
 | auth-path | 26 | Needs a real signed-in session a script cannot mint against production |
 | admin-only | 0 | Behind an admin surface |
-| other | 64 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
+| other | 65 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
 
 ## publish (3)
 
@@ -49,10 +49,11 @@ _Generated: 2026-10-14_
 - `Roadmap/09-platform-infra/plugin-1-0/RETROSPECTIVE.md:43` · other — **Owed to Daniel:** the `_Intent_` word above; Sprint 4's interactive walkthrough steps 2–5; your live routines that name a removed skill (sprint-3 step 7); and two decisions: rename the Notion `Stage` select option (it stores the key "Grooming"), and whether to re-approve the c…
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:55` · other — Remove the three account copies of the coaches.
 
-## judgment (27)
+## judgment (28)
 
 - `Roadmap/01-growth-engine/drill-impact-for-agents/sprint-2.md:60` · other — Risk:** low (a judgment, owed to the product owner by name)
 - `Roadmap/01-growth-engine/drill-impact-for-agents/sprint-2.md:82` · other — Steps 4–5 are owed to the product owner by name (signed in, and a judgment). Steps 1–2 need the CLI release on npm.
+- `Roadmap/01-growth-engine/proving-workspaces-reading/sprint-1.md:90` · other — Step 2 is signed in and step 3 is a judgment, both owed to the product owner.
 - `Roadmap/02-commercial/account-from-the-terminal/RETROSPECTIVE.md:12` · other — > _Intent_ is provisional ("mostly"), owed to Daniel: GitHub and the email link were cut at the lock, and the Google > round trip worked end to end only after he fixed Supabase's URL settings. His own answer replaces this word.
 - `Roadmap/02-commercial/agentic-pm-public-surface/RETROSPECTIVE.md:78` · other — **Story 1.4 is owed to Daniel by name.** Running the workshop end-to-end in a fresh Claude and a fresh ChatGPT, on a real product. No automated smoke can judge whether a facilitation script facilitates. It must be run against **production**, not a preview — see A13.
 - `Roadmap/02-commercial/app-component-kit-adoption/RETROSPECTIVE.md:78` · other — **Owed to the product owner:** the **consequence copy**. Whether each sentence tells a PM what they're about to lose is the one judgement in this epic no spec makes — walkthrough step 7 in `sprint-3.md`. Also the signed-in visual parity pass across the six converted routes.
