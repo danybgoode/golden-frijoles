@@ -41,14 +41,6 @@ const MCP_SOURCES = [
   join(WEB, 'lib', 'mcp-scenario-tools.ts'),
 ]
 
-/**
- * Named here, and ONLY here, as "landing in this sprint" (agent-legible-horizon D1–D3, built in parallel).
- * An entry is excused solely while the source does not have it. The day `frijoles horizon` / `get_horizon`
- * land, the excuse stops applying and the page must name them like anything else — so this list needs no edit.
- */
-const LANDING_CLI = ['horizon']
-const LANDING_TOOLS = ['get_horizon']
-
 /** Every command path in the CLI, from the `path: [...]` of each command file. */
 function cliCommandPaths(): string[][] {
   const paths: string[][] = []
@@ -120,7 +112,6 @@ test('the guard can see the source it holds the page to', () => {
 
 test('every `frijoles <verb …>` the page names is a real command', () => {
   for (const words of namedCommands()) {
-    if (LANDING_CLI.includes(words[0]) && !paths.some((p) => p[0] === words[0])) continue
     assert.ok(
       paths.some((path) => startsWith(words, path)),
       `agents.md names \`frijoles ${words.join(' ')}\`, which is not a command in packages/cli/src/commands`
@@ -132,7 +123,6 @@ test('every MCP tool the page names is registered', () => {
   const named = namedTools()
   assert.ok(named.length >= 17, 'the page names too few tools to be the whole list')
   for (const name of named) {
-    if (LANDING_TOOLS.includes(name) && !tools.includes(name)) continue
     assert.ok(tools.includes(name), `agents.md names ${name}, which no registerTool call registers`)
   }
 })
@@ -150,14 +140,6 @@ test('every registered MCP tool is named on the page', () => {
   const named = namedTools()
   for (const name of tools)
     assert.ok(named.includes(name), `${name} is registered but agents.md never names it`)
-})
-
-test('the landing-in-this-sprint excuse is used only for what the source does not have yet', () => {
-  assert.ok(
-    LANDING_CLI.some((verb) => namedCommands().some((words) => words[0] === verb)),
-    'agents.md must name `frijoles horizon` (D1–D3)'
-  )
-  assert.ok(namedTools().includes('get_horizon'), 'agents.md must name `get_horizon` (D3)')
 })
 
 test('the page carries the D4 dry run and no real connector URL', () => {

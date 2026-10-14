@@ -32,7 +32,7 @@ to, and take no project argument.
 | --- | --- | --- |
 | See your products | \`frijoles projects ls\` (API: \`GET /api/v1/cli/projects\`) | The slug is in the list |
 | Make a product | \`frijoles projects create <slug>\` (idempotent) | \`frijoles projects ls\` lists it |
-| Pick the product for this machine | \`frijoles projects use <slug>\` | \`frijoles whoami\` and the next command's \`Product:\` line name it |
+| Pick the product for this machine | \`frijoles projects use <slug>\` (a bound repo's own product still wins) | \`frijoles whoami\` shows \`active project: <slug> (remembered on this machine)\` |
 | Bind this repo to a product | \`frijoles init --project <slug>\`, or \`frijoles init --create <slug>\` for a new one; it writes \`golden-frijoles.config.json\` | Later commands in this repo print \`Product: <slug> (from this repo's golden-frijoles.config.json)\` |
 | Delete a product you own | \`frijoles projects delete <slug> --confirm <slug>\`; the data is kept 30 days, then \`frijoles projects purge <slug> --confirm <slug>\` | \`frijoles projects ls\` no longer lists it |
 
@@ -41,8 +41,8 @@ to, and take no project argument.
 | You want | The headless way | Check it worked |
 | --- | --- | --- |
 | See every credential that reaches a product | \`frijoles keys ls\` (API: \`GET /api/v1/cli/keys\`) | The key's id and kind are listed |
-| Mint a key (the kind is required) | \`frijoles keys create --type ingest --label "my app"\`, or \`--type flag_read --env production\` | The key is printed once; \`frijoles keys ls\` lists it |
-| Kill a key | \`frijoles keys revoke <id> --type ingest\` | \`frijoles keys ls\` no longer lists it, and the key stops working at once |
+| Mint a key (the kind and a label are required) | \`frijoles keys create --type ingest --label "my app"\`, or \`--type flag_read --env production --label "my app"\` | The key is printed once; \`frijoles keys ls\` lists it |
+| Kill a key | \`frijoles keys revoke <id> --type ingest\` | \`frijoles keys ls\` shows it as \`revoked\`, and the key stops working at once |
 | Send the product's events | The SDK (\`createGrowthEngineClient\`) with an ingest key, or \`POST /api/v1/track\` | \`frijoles status\` says events are arriving, with the first and latest event |
 
 ## Flags
@@ -57,7 +57,7 @@ to, and take no project argument.
 | Replace its targeting rules | \`frijoles flags rules <key> --rules-file rules.json --env production\` | \`frijoles flags diff\` shows the change in words |
 | Switch it off now (the 3am verb) | \`frijoles flags kill <key> --env production\`; MCP \`kill_flag\` | \`frijoles flags get <key>\` prints \`off vN\` |
 | See who changed what | \`frijoles flags history <key>\`, then \`frijoles flags diff <key> --from 3 --to 4\` | Each version has its author |
-| Publish a catalog from source control | \`frijoles flags sync --file flags.json --dry-run\`, then the same without \`--dry-run\` (API: \`POST /api/v1/flags/sync\`) | \`frijoles flags ls\` shows the catalog |
+| Publish a catalog from source control | \`frijoles flags sync --file flags.json --dry-run\`, then the same without \`--dry-run\` and with a flag_sync key (\`--sync-key\` or \`GOLDEN_FRIJOLES_FLAG_SYNC_KEY\`) (API: \`POST /api/v1/flags/sync\`) | \`frijoles flags ls\` shows the catalog |
 | Create the flag for a bet from its epic | \`frijoles bet sync <epic README>\` | \`frijoles flags get <flag_key>\` shows it, off until rolled out |
 
 Writes by a person-made connector URL or a \`frijoles\` token run as that person; a read-only URL cannot change a flag.
@@ -66,7 +66,7 @@ Writes by a person-made connector URL or a \`frijoles\` token run as that person
 
 | You want | The headless way | Check it worked |
 | --- | --- | --- |
-| Compare variants | MCP \`compare_experiment\` (API: \`GET /api/v1/experiments/<key>/compare\`) | Counts and a verdict per variant |
+| Compare variants | MCP \`compare_experiment\` (API: \`GET /api/v1/experiments/<key>/compare\`) | Exposures, conversions, rate and lift per variant |
 | Read the recorded decision | \`frijoles experiments decision <key>\`; MCP \`get_experiment_decision\` | The decision and when it was made |
 | Read the analysis behind it | MCP \`get_experiment_analysis\` | Effect, interval and sample size |
 
@@ -99,7 +99,7 @@ Writes by a person-made connector URL or a \`frijoles\` token run as that person
 
 | You want | The headless way | Check it worked |
 | --- | --- | --- |
-| Check a push before sending it (no new tool: this is the dry run) | \`npx -y @golden-frijoles/kit roadmap-push --dry-run\` | It lists what would be sent and what is missing |
+| Check a push before sending it (no new tool: this is the dry run) | \`npx -y @golden-frijoles/kit roadmap-push --dry-run\` | It prints the JSON it would send (the \`horizon\` key and each epic's \`destinations\` included) and sends nothing; an epic naming an undeclared destination fails here, naming the epic |
 | Push the roadmap | \`npx -y @golden-frijoles/kit roadmap-push\` (API: \`POST /api/v1/roadmap/push\`) | \`frijoles horizon\` lists the destinations; the console Plan page shows the epics |
 | Read where the product is heading | \`frijoles horizon\`; MCP \`get_horizon\` | One line per destination with its status and epics |
 | Read tasks | MCP \`list_tasks\` and \`get_task\` | The task and its state |
@@ -110,8 +110,8 @@ Writes by a person-made connector URL or a \`frijoles\` token run as that person
 | You want | The headless way | Check it worked |
 | --- | --- | --- |
 | Connect Claude or Codex to a product | An owner makes the URL under Setup › Connect; in Codex, \`codex mcp add golden-frijoles --url <your connector URL>\` | \`codex mcp list\` shows golden-frijoles, and the tools above answer |
-| Stop a leaked URL | "Get a new URL" on Connect revokes the old one for Claude and Codex both | The old URL answers 404 |
-| Read it as a visitor | The public demo project has a connector with the same read tools and no person ids | A tool call answers without sign-in |
+| Stop a leaked URL | "Get a new URL" on Connect revokes the old one for Claude and Codex both | The old URL answers 401 (refused), like any unknown one |
+| Read it as a visitor | The public demo project has a connector with the read tools (its drills, \`list_scenarios\`, are members-only) and no person ids | A tool call answers without sign-in |
 
 ## Common errors and what they mean
 
@@ -130,6 +130,6 @@ Writes by a person-made connector URL or a \`frijoles\` token run as that person
   \`npx -y @golden-frijoles/kit roadmap-push\`. \`frijoles horizon\` then lists the destinations.
 - **\`frijoles status\` says "waiting for the first event"** — nothing the product sent has arrived. Check the ingest key
   is set where the app runs (\`GROWTH_ENGINE_API_KEY\`), then \`frijoles keys ls\`.
-- **A connector answers 404** — the connector is switched off, or the URL was revoked. Either is enough. Make a new
-  URL under Setup › Connect.
+- **A connector answers 401** — the URL was revoked, or was never real. Make a new one under Setup › Connect.
+- **A connector answers 404** — the connector is switched off for this deployment; no URL works until it is on.
 `
