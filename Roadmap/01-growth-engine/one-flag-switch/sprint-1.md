@@ -3,7 +3,7 @@ epic: one-flag-switch
 sprint: 1
 title: "One switch"
 risk: high
-phase: In review
+phase: Shipped
 stories_total: 5
 stories:
   - id: S1.1
@@ -44,7 +44,7 @@ stories:
 ---
 # One flag switch: on or off, the same in the CLI, the SDK, MCP and the page — Sprint 1: One switch
 
-**Status:** 🟡 built, in review
+**Status:** ✅ shipped 2026-10-13 (#351, #352, #353; CLI 1.5.0–1.5.2, SDK 1.2.0, plugin + kit 1.7.1–1.7.3)
 
 ## Stories
 
@@ -68,14 +68,14 @@ serves, with no switch.
 view says Off; the page action off → the CLI view says off and serves `false`; on → on and `true`.
 **Risk:** high · **Builder:** orchestrator
 
-### Story 1.4 — On says who it reaches
+### Story 1.4 — On says who it reaches ✅ #352
 **As a** founder, **I want** an On flag to say who gets it, **so that** On for some is never mistaken for On for all.
 **Acceptance:** beside every On (list, feature page, `frijoles flags ls/get`): `everyone`, `25% of people`, or the
 segment's name — and until named segments exist, the placeholder `a segment (not named yet)` (the product owner,
 2026-10-13). Same rule walk as the switch, so the words never disagree with it. CLI 1.5.1.
 **Risk:** low · **Builder:** orchestrator
 
-### Story 1.5 — A synced flag starts at its default
+### Story 1.5 — A synced flag starts at its default ✅ #353
 **As a** founder whose flags live in their app's code, **I want** a new flag pushed by `frijoles flags sync` to start switched to its default, **so that** the page never says Off while my app runs on its own built-in value.
 **Acceptance:** after a sync creates a NEW flag, each environment where it was never switched is set to that version
 (the default from the source file), through `set_flag_activation`, the sync key's owner as actor, the source named in

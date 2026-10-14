@@ -337,6 +337,10 @@ one-liner + why + date shape.
 
 ## Review quality
 
+- **Two surfaces that show "the same" thing need a test against EACH OTHER.** The flags page and `frijoles flags get` were
+  each tested and each right by their own definition, and they disagreed in production. A parity test (one fixture
+  set, both views, mutation-checked) is what makes a split go red. And a display rule reaches every reader of its data:
+  changing the CLI view's `state` also changed the product's gate seam. *(one-flag-switch, 2026-10-13.)*
 - **A guard for plain words must be tested on plain words.** why-as-a-story's first Why guard refused iPhone, eBay,
   Next.js and "reader/writer/editor"; reading the regex looked fine, running a prose corpus did not. Test a text guard
   against what it must let through, not only what it must catch. *(why-as-a-story, 2026-10-10.)*
