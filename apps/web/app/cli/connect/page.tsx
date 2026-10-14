@@ -139,7 +139,7 @@ export default async function CliConnectPage({
         <p className="ds-hint">
           It will be able to: plan, flag and measure for every product you belong to — read and change their
           feature flags, record A/B decisions and North Star readings, make new products, and, for the ones you own,
-          make keys for your app&apos;s events. Each repo picks its product with{' '}
+          make keys for your app&apos;s events or delete them. Each repo picks its product with{' '}
           <span className="ds-mono">frijoles init</span>. Your code never comes here.
         </p>
         <Button type="submit" variant="primary">

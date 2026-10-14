@@ -4,6 +4,7 @@ import type { Command, CommandContext } from '../command'
 import { readCredentials, writeCredentials } from '../credentials'
 import { EXIT, exitForServerCode, type ExitCode } from '../exit-codes'
 import { table } from '../output'
+import { flagValue } from '../args'
 
 type ProjectsBody = { projects: Array<{ slug: string; role: string }> }
 
@@ -70,6 +71,60 @@ export const projectsCreateCommand: Command = {
     return EXIT.OK
   },
 }
+
+/** `projects delete` and `projects purge`: one shape — a slug, the same slug again under --confirm, one POST. */
+function lifecycleCommand(verb: 'delete' | 'purge'): Command {
+  const past = verb === 'delete' ? 'Deleted' : 'Purged'
+  return {
+    path: ['projects', verb],
+    summary:
+      verb === 'delete'
+        ? 'delete a product you own: gone at once, its keys stop working, its data kept 30 days'
+        : 'remove a product deleted 30+ days ago, and all its data, for good',
+    usage: `frijoles projects ${verb} <slug> --confirm <slug> [--json]`,
+    needsAuth: true,
+    detail:
+      verb === 'delete'
+        ? `Owner only. The product leaves every list, and every key, connector URL and share link it
+  issued stops working, at once. Its data is kept, and its name stays taken, until you run
+  \`frijoles projects purge\` 30 days later. The public golden-frijoles product cannot be deleted.
+  --confirm must repeat the name.`
+        : `Owner only, and only 30 days after \`frijoles projects delete\`: before then it refuses and
+  names the date. It cannot be undone. --confirm must repeat the name.`,
+    flags: [{ name: 'confirm', value: '<slug>', describe: 'the same name again — nothing happens without it' }],
+    async run(context): Promise<ExitCode> {
+      const slug = context.args.positionals[0]?.trim()
+      if (!slug) {
+        context.emit.fail('invalid', `Name the product: \`frijoles projects ${verb} <slug> --confirm <slug>\`.`)
+        return EXIT.USAGE
+      }
+      // Checked here too, so a mistyped confirmation never reaches the server; the server checks it again.
+      if (flagValue(context.args, 'confirm')?.trim() !== slug) {
+        context.emit.fail('invalid', `To ${verb} ${slug}, repeat its name: --confirm ${slug}. Nothing was changed.`)
+        return EXIT.USAGE
+      }
+      const result = await context.api!.post<{ slug: string }>(`api/v1/cli/projects/${verb}`, { slug, confirm: slug })
+      if (result.kind === 'network') {
+        context.emit.fail('server_error', result.message)
+        return EXIT.SERVER
+      }
+      if (result.kind === 'error') {
+        context.emit.fail(result.code, result.message)
+        return exitForServerCode(result.code)
+      }
+      context.emit.ok(
+        { [verb === 'delete' ? 'deleted' : 'purged']: true, slug },
+        verb === 'delete'
+          ? `${past} ${slug}. Its keys no longer work. Its data is kept for 30 days; \`frijoles projects purge ${slug} --confirm ${slug}\` removes it after that.`
+          : `${past} ${slug}. It and its data are gone.`
+      )
+      return EXIT.OK
+    },
+  }
+}
+
+export const projectsDeleteCommand = lifecycleCommand('delete')
+export const projectsPurgeCommand = lifecycleCommand('purge')
 
 /** POST cli/projects { slug } — shared by `projects create` and `init --create`. Reports its own failure. */
 export async function createProduct(

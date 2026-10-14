@@ -6,7 +6,13 @@
 
 import type { Command } from '../command'
 import { loginCommand, logoutCommand, whoamiCommand } from './auth'
-import { projectsCreateCommand, projectsLsCommand, projectsUseCommand } from './projects'
+import {
+  projectsCreateCommand,
+  projectsDeleteCommand,
+  projectsLsCommand,
+  projectsPurgeCommand,
+  projectsUseCommand,
+} from './projects'
 import { initCommand } from './init'
 import { flagsGetCommand, flagsLsCommand } from './flags-read'
 import {
@@ -49,6 +55,8 @@ export const COMMANDS: readonly Command[] = [
   projectsLsCommand,
   projectsCreateCommand,
   projectsUseCommand,
+  projectsDeleteCommand,
+  projectsPurgeCommand,
   flagsLsCommand,
   flagsGetCommand,
   flagsCreateCommand,

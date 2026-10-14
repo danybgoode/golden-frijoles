@@ -53,7 +53,7 @@ export const getUserProjects = cache(async (userId: string): Promise<MemberProje
   const [{ data, error }, viewerWorkspaceIds] = await Promise.all([
     supabase
       .from('project_members')
-      .select('role, projects(id, slug, workspaces(id, name))')
+      .select('role, projects(id, slug, deleted_at, workspaces(id, name))')
       .eq('user_id', userId),
     getViewerWorkspaceIds(userId),
   ])
@@ -67,9 +67,12 @@ export const getUserProjects = cache(async (userId: string): Promise<MemberProje
     const project = row.projects as unknown as {
       id: string
       slug: string
+      deleted_at: string | null
       workspaces: { id: string; name: string } | null
     } | null
-    if (!project || !isInsideViewerWorkspaces(project.workspaces?.id, viewerWorkspaceIds)) return []
+    // A deleted product leaves every list at once (many-products D9) — the switcher, /app and `frijoles projects ls`.
+    if (!project || project.deleted_at !== null || !isInsideViewerWorkspaces(project.workspaces?.id, viewerWorkspaceIds))
+      return []
     return [{ id: project.id, slug: project.slug, role: String(row.role), workspace: project.workspaces! }]
   })
 })
@@ -89,6 +92,7 @@ export const getMembership = cache(async (userId: string, slug: string): Promise
     .from('projects')
     .select('id, workspace_id')
     .eq('slug', slug)
+    .is('deleted_at', null) // many-products D9: a deleted product is "not found", like a non-member's
     .maybeSingle()
   if (projectError) {
     console.error('[membership] project lookup failed:', projectError)
@@ -135,7 +139,7 @@ export const getMembershipByProjectId = cache(
   async (userId: string, projectId: string): Promise<Membership | null> => {
     const { data, error } = await getSupabaseServiceClient()
       .from('project_members')
-      .select('role, projects(workspace_id)')
+      .select('role, projects(workspace_id, deleted_at)')
       .eq('user_id', userId)
       .eq('project_id', projectId)
       .maybeSingle()
@@ -146,7 +150,8 @@ export const getMembershipByProjectId = cache(
     if (!data) return null
 
     // The same workspace re-check as getMembership, against the project the CALLER already resolved (never a slug).
-    const project = data.projects as unknown as { workspace_id: string } | null
+    const project = data.projects as unknown as { workspace_id: string; deleted_at: string | null } | null
+    if (!project || project.deleted_at !== null) return null // many-products D9
     const viewerWorkspaceIds = await getViewerWorkspaceIds(userId)
     if (!viewerWorkspaceIds || !isInsideViewerWorkspaces(project?.workspace_id, viewerWorkspaceIds))
       return null

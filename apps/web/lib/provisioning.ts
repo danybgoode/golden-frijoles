@@ -102,8 +102,11 @@ async function findExistingTenant(
 ): Promise<{ slug: string | null; error: unknown }> {
   const { data, error } = await supabase
     .from('project_members')
-    .select('project_id, projects(slug)')
+    // `!inner` + the filter: a membership of a DELETED product is no tenant (many-products D9). Without it, a person
+    // whose only product was deleted would be sent back to it on every sign-in.
+    .select('project_id, projects!inner(slug, deleted_at)')
     .eq('user_id', userId)
+    .is('projects.deleted_at', null)
     .limit(1)
     .maybeSingle()
   if (error) return { slug: null, error }
@@ -446,12 +449,17 @@ async function ownsSlug(
   userId: string,
   slug: string
 ): Promise<boolean | null> {
-  const { data: project, error } = await supabase.from('projects').select('id').eq('slug', slug).maybeSingle()
+  const { data: project, error } = await supabase
+    .from('projects')
+    .select('id, deleted_at')
+    .eq('slug', slug)
+    .maybeSingle()
   if (error) {
     console.error('[provisioning] slug lookup failed:', error)
     return null
   }
-  if (!project) return false
+  // A deleted product is nobody's to reuse until it is purged — its name is "taken", even to its owner (D2, D9).
+  if (!project || project.deleted_at !== null) return false
   const { data: member, error: memberError } = await supabase
     .from('project_members')
     .select('role')

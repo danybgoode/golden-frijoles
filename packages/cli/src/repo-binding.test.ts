@@ -255,3 +255,27 @@ test('projects create <slug> sends the slug and says created or already yours', 
   const none = await run({ argv: ['projects', 'create', '--json'], writer: capture().writer, env, cwd: repo, fetchImpl: noNetwork })
   assert.equal(none, EXIT.USAGE)
 })
+
+// ── delete and purge (many-products S2.1, S2.2) ───────────────────────────────────────────────
+
+test('⚠️ projects delete/purge refuse locally unless --confirm repeats the name, and then send both', async () => {
+  for (const verb of ['delete', 'purge'] as const) {
+    const { env, repo } = sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN })
+    for (const argv of [
+      ['projects', verb, 'acme', '--json'],
+      ['projects', verb, 'acme', '--confirm', 'acmee', '--json'],
+    ]) {
+      assert.equal(await run({ argv, writer: capture().writer, env, cwd: repo, fetchImpl: noNetwork }), EXIT.USAGE)
+    }
+    const seen: Seen = []
+    const code = await run({
+      argv: ['projects', verb, 'acme', '--confirm', 'acme', '--json'],
+      writer: capture().writer,
+      env,
+      cwd: repo,
+      fetchImpl: stub({ [`POST /api/v1/cli/projects/${verb}`]: { body: { ok: true, slug: 'acme' } } }, seen),
+    })
+    assert.equal(code, EXIT.OK)
+    assert.deepEqual(seen[0].body, { slug: 'acme', confirm: 'acme' })
+  }
+})
