@@ -116,19 +116,19 @@ untouched, in each consumer PR.
 
 ## Stories
 
-### Story 4.1 — One config file and one loader
+### Story 4.1 — One config file and one loader ✅
 **As** a user, **I want** one `golden-frijoles.config.json`, **so that** I can read my whole setup in one place.
 **Acceptance:** A schema (sections `project`, `board`, `verify`, `roadmap`, `ways`, `review`, `jev`, `smoke`, `reporting`, `deploy`, `ship`, `spend`) and `lib/config.mjs` in the kit. The **legacy files are a fallback**: `jev.config.json`, `reporting.config.json`, `live-smoke.config.json`, `smoke-triage.config.json`, `perf-probe.config.json`, `scripts/review-config.json`, `Roadmap/fill-ins.yml`. Precedence (D9): **the new file wins per key**, legacy files fill gaps, and a key defined in both is reported. `gf-kit config migrate` folds legacy into the new file and leaves the old files untouched. Secrets never go in it; only env var *names* do.
 **QA:** unit tests on every precedence case, including a malformed file = *configuration* failure (fails) vs an absent file (falls back)
 **Risk:** high
 
-### Story 4.2 — Every rail reads through the loader
+### Story 4.2 — Every rail reads through the loader ✅
 **As** a rail, **I want** to read my settings through one seam, **so that** there's one place config is interpreted.
 **Acceptance:** Review routing, Jev, reporting, live-smoke, smoke-triage, perf-probe and the WAYS-OF-WORKING renderer read through `lib/config.mjs`, with no direct `JSON.parse(readFileSync(...config.json))` left (a guard greps for it). **A repo with only legacy files behaves byte-identically**: golden-beans' existing tests for those rails run green against the new code before merge.
 **QA:** the grep guard (fires + doesn't fire fixtures); golden-beans' old tests against the new code
 **Risk:** high
 
-### Story 4.3 — Ask once, just in time
+### Story 4.3 — Ask once, just in time ✅
 **As** a skill, **I want** to ask for an unset setting the first time I need it, then save it, **so that** the user is never interviewed about things they don't use.
 **Acceptance:** A registry: each setting declares `{ key, askWhen, default, section, secret? }`. A skill that hits an unset key asks one question, writes the answer through the loader, and says *"change this later with `gf config set <key>`"*. The registry is the audit §4.3 table in code, and doctor (S5.3) reads it too.
 **QA:** unit test: an unset key asks once; a set key never asks

@@ -168,31 +168,31 @@ secret handling, and anything S2.3 would need beyond the steps above.
 
 ## Stories
 
-### Story 2.1 — Two roots: the project and the kit
+### Story 2.1 — Two roots: the project and the kit ✅
 **As** a script running from node_modules, **I want** to find the user's project and my own templates separately, **so that** I work the same whether I was copied into `scripts/` or installed as a package.
 **Acceptance:** `template/scripts/lib/project-root.mjs` exports `projectRoot()` (walk up from `process.cwd()` to the nearest dir with `Roadmap/` or `.git`; `--root` / `GF_PROJECT_ROOT` override) and `kitRoot()` (this package's own dir). Every site the build contract lists is converted (*lock X1: the live count was 18 self-rooted files, 5 hidden subprocess sites and 4 project-owned assets, not "14"*): project paths via `projectRoot()`, kit assets and spawned siblings via `kitRoot()`, project-owned assets via `projectAsset()`. Copied mode keeps working unchanged.
 **QA:** unit tests for both roots; **a tarball spec**: `npm pack` the kit, install it in a temp repo, run `gf-kit build-order` from a subdirectory, and assert it wrote *that* repo's `BUILD-ORDER.md`
 **Risk:** high
 
-### Story 2.2 — Build the kit from the skills' closure
+### Story 2.2 — Build the kit from the skills' closure ✅
 **As** a maintainer, **I want** `@golden-frijoles/kit` generated from `requires_scripts`, **so that** there's one list of what the skills need and no second copy of any script.
 **Acceptance:** `kit/package.json` (zero deps, `bin: { "gf-kit": "bin.mjs" }`, `license: Apache-2.0`, `files` = the built closure). `scripts/build-kit.mjs` copies the **union of every skill's declared closure** from `template/scripts/` into `kit/dist/` (gitignored). `gf-kit <name>` dispatches to `<name>.mjs`, and `gf-kit --list` prints what's inside. `check-skill-scripts.mjs` asserts the built kit contains every declared file. The repo root still has **no package.json** (D7).
 **QA:** `check-skill-scripts` + a `build-kit.test.mjs` that fails when a declared file is missing from the build
 **Risk:** high
 
-### Story 2.3 — Tag publishes the kit with provenance
+### Story 2.3 — Tag publishes the kit with provenance ✅
 **As** Daniel, **I want** a pushed `v*` tag to publish the kit from CI, **so that** a release needs no npm token on any machine.
 **Acceptance:** `.github/workflows/release.yml`: on a version bump merged to `main` (*lock X3/D5: CI creates the tag, it doesn't react to one*), verify = `plugin.json` version = `kit/package.json` version (D4), build the kit, `npm publish --provenance --access public` via **trusted publishing (OIDC)**. npm requires the package to exist before a trusted publisher can be attached (*confirmed by the lock, D5*), so a **`0.0.0` placeholder publish, then deprecate + attach, is owed to Daniel by hand** (lock X4). The npm page shows provenance.
 **QA:** a dry-run job on PRs (`npm publish --dry-run`) so the workflow can't rot between releases
 **Risk:** high
 
-### Story 2.4 — Skills run the kit unless the project has its own copy
+### Story 2.4 — Skills run the kit unless the project has its own copy ✅
 **As** a skill, **I want** to run a local `scripts/<x>.mjs` when the project has one, and the pinned kit otherwise, **so that** strangers are served and deliberate forks keep working.
 **Acceptance:** Every SKILL.md's run instruction becomes the two-step rule (D3), with the kit version **stamped by `render-skill-adverts.mjs`** (never hand-typed) and CI failing if the stamped version isn't published or being released in the same tag. Offline or unreachable npm → the skill reports **could not look**, names the local-override escape hatch, and does not claim the project is broken.
 **QA:** `render-skill-adverts --check` covers the stamp; a spec runs a skill's command with a fake local script present (local wins) and absent (kit runs)
 **Risk:** high
 
-### Story 2.5 — golden-beans runs on the kit (the dogfood)
+### Story 2.5 — golden-beans runs on the kit (the dogfood) ✅
 **As** Daniel, **I want** golden-beans to run its skills through the kit, **so that** the release is proven in a real repo before a stranger meets it.
 **Acceptance:** In golden-beans: a `cmp` loop of every kit file against its local copy goes in the PR body. **Byte-identical copies are deleted**; every surviving difference is listed with its reason (a deliberate fork stays, and local wins). The skills whose entries the deletion rule removes run through the kit, and their output matches the pre-change run. (*Lock X6: golden-beans forks `roadmap-extract.mjs` + `cross-agent-cli.mjs`, and its CI calls `build-order.mjs`, so which skills move is computed, not promised.*) golden-beans' OLD tests for the deleted scripts run against the kit build before deletion (LEARNINGS: *Replacing a file with the shared copy? Run the consumer's OLD tests against the NEW code*).
 **QA:** golden-beans CI green; the before/after output diff in the PR

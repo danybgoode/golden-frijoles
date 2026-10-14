@@ -3,7 +3,7 @@ epic: public-monorepo
 sprint: 3
 title: "S3 Secrets and sensitive docs"
 risk: low
-phase: In review
+phase: Shipped
 stories_total: 3
 stories:
   - id: S3.1
@@ -30,7 +30,7 @@ stories:
 ---
 # One public monorepo — Sprint 3: S3 Secrets and sensitive docs
 
-**Status:** 🚧 in review
+**Status:** ✅ shipped 2026-09-28 (#183, S3.1–S3.3; closed 2026-10-14)
 
 ## Stories
 

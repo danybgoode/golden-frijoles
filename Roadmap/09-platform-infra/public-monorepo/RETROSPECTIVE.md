@@ -1,6 +1,7 @@
 # One public monorepo — skills/ subtree, a lean install mirror, licences, a private docs repo — Retrospective
 
-_Retro written 2026-09-28. The epic stays **in progress** until S4.4 (the local folder move, Daniel) lands._
+_Retro written 2026-09-28._
+_Closed: 2026-10-14_
 
 ## What shipped
 <!-- The capability now live, by sprint, with commit/PR refs. -->
@@ -43,8 +44,10 @@ _Retro written 2026-09-28. The epic stays **in progress** until S4.4 (the local 
   (see sprint-4). Revisit if counsel disagrees. `references/` is now local-only. Its only load-bearing file, the brand
   tokens `globals.css` imports, moved to `apps/web/brand/tokens.css`. 7 historical Roadmap links into `references/`
   now 404 on GitHub.
-- **S4.4 is owed to Daniel:** the folder, Claude-memory and report-runner commands are in sprint-4.md. The runner
-  already showed exit `1` before the move.
+- ~~**S4.4 is owed to Daniel:** the folder, Claude-memory and report-runner commands are in sprint-4.md.~~ Done, and
+  checked on 2026-10-14: sessions run in `~/dobby/golden-frijoles` with their memory, and the report runner is loaded
+  with last exit 0. Left behind, harmless: an old `~/dobby/golden-beans` folder holding only `apps/` (not a checkout)
+  and the old `-Users-cosmo-dobby-golden-beans` history folder with one 2 KB session. Delete both when convenient.
 - **Notification and report headers still read `golden-beans`** (`telegram-notify.mjs:118`, `slack-notify.mjs:123`,
   `commit-report.mjs:185,223,236`, `standup-report.mjs:207`). They're labels only, a small follow-up.
 - **`epic-dod` alias:** `golden-frijoles` still means the skills repo (warning added to `_about`).
