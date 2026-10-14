@@ -111,7 +111,7 @@ bespoke analytics route for something this system already models.
 |---|---|
 | Event ingest | `POST /api/v1/track` (`apps/web/app/api/v1/track/route.ts`) |
 | Feature/signal registry | `POST /api/v1/features/sync` (`apps/web/lib/feature-schema.ts`) |
-| Funnel / North Star / experiment reads | `apps/web/lib/{tars,north-star,ab}-query.ts` |
+| Funnel / North Star / experiment reads | `apps/web/lib/{tars,north-star,ab}-query.ts`; the one funnel model they share is `apps/web/lib/flag-funnel{,-read}.ts` (tars-one-model D3) |
 | Event catalog (what the product sends) | `apps/web/lib/event-catalog-query.ts` |
 | Client SDK | `packages/sdk` (`createGrowthEngineClient`) |
 
@@ -319,6 +319,6 @@ supabase link --project-ref <ref> && supabase migration list   # then `supabase 
 - `lib/rate-limit.ts` — DB-backed, serverless-safe bounded writes for any public write route.
 - `lib/site-url.ts` → `getSiteUrl()` — the ONLY absolute-URL builder (rule #5).
 - `lib/public-demo.ts` → `assertPublicAllowedSlug()` — the demo-only gate for any public read (rule #2).
-- `lib/{tars,north-star,ab}-query.ts` — the canonical read paths; never re-query `events` ad hoc.
+- `lib/{tars,north-star,ab}-query.ts` — the canonical read paths (funnels through `lib/flag-funnel-read.ts`); never re-query `events` ad hoc.
 - `lib/event-catalog-query.ts` — the canonical project-scoped event catalog read.
 - `packages/sdk` → `createGrowthEngineClient` — the ONLY app→engine path for tracking (rule #1).

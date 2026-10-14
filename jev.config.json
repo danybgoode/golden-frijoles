@@ -19,11 +19,11 @@
       "shadowExpires": null
     },
     "lint": {
-      "mode": "shadow",
+      "mode": "jev",
       "thresholds": {
         "default": 0.8
       },
-      "shadowExpires": "2026-10-14"
+      "shadowExpires": null
     }
   }
 }
