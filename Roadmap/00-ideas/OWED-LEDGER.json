@@ -1,15 +1,15 @@
 {
-  "total": 82,
+  "total": 83,
   "cleared": 5,
-  "files": 62,
+  "files": 63,
   "byCategory": {
     "money-path": 1,
-    "auth-path": 26,
+    "auth-path": 27,
     "admin-only": 0,
     "other": 55
   },
   "byKind": {
-    "publish": 1,
+    "publish": 2,
     "credential": 7,
     "ops": 5,
     "judgment": 24,
