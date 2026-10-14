@@ -42,3 +42,15 @@ export const CLI_KILL_SWITCH_STORY = [
   `${CLI_BIN} flags rollout checkout.demo_enabled --env production --percent 25`,
   `${CLI_BIN} flags kill checkout.demo_enabled --env production`,
 ] as const
+
+// many-products · S2.1/S2.3 (D9, D11) — the lines the console prints for the product lifecycle and for the CLI install.
+// Named here, once, so the page and the specs read the same strings.
+
+/** What the Delete dialog tells an owner to run once the 30-day window has passed. Asserted against the CLI's golden help. */
+export const cliPurgeCommand = (slug: string) => `${CLI_BIN} projects purge ${slug} --confirm ${slug}`
+
+/** Pinned login: the exact CLI release this deployment was built with (generated, never typed by hand). */
+export const cliPinnedLogin = (version: string) => `npx -y ${CLI_PACKAGE}@${version} login`
+
+/** The smoke check after a global install. */
+export const CLI_HELP = `${CLI_BIN} --help`

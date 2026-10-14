@@ -58,6 +58,7 @@ export async function getPodReport(projectSlug: string, lens: PodReportLens): Pr
     .from('projects')
     .select('id')
     .eq('slug', projectSlug)
+    .is('deleted_at', null) // many-products D9: a deleted product is not found
     .maybeSingle()
   if (error) {
     console.error('[pod-report-query] project lookup failed:', error)

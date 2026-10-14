@@ -79,6 +79,7 @@ export async function readWorkspaceProjects(
     .select('id, slug, workspace_id')
     .eq('workspace_id', workspaceId)
     .in('id', projectIds)
+    .is('deleted_at', null) // many-products D9: a deleted product is not found
   if (projectError) {
     console.error('[workspace] workspace project read failed:', projectError)
     return []

@@ -24,6 +24,8 @@ Commands
   projects ls               the projects this credential reaches
   projects create           make a new product (idempotent: one you already own is left alone)
   projects use              remember which project the other commands act on
+  projects delete           delete a product you own: gone at once, its keys stop working, its data kept 30 days
+  projects purge            remove a product deleted 30+ days ago, and all its data, for good
 
   flags
   flags ls                  every flag, and what each environment serves

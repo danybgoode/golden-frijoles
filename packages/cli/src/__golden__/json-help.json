@@ -142,6 +142,32 @@
         "flags": []
       },
       {
+        "command": "projects delete",
+        "summary": "delete a product you own: gone at once, its keys stop working, its data kept 30 days",
+        "usage": "frijoles projects delete <slug> --confirm <slug> [--json]",
+        "needsAuth": true,
+        "flags": [
+          {
+            "flag": "--confirm",
+            "takesValue": true,
+            "describe": "the same name again — nothing happens without it"
+          }
+        ]
+      },
+      {
+        "command": "projects purge",
+        "summary": "remove a product deleted 30+ days ago, and all its data, for good",
+        "usage": "frijoles projects purge <slug> --confirm <slug> [--json]",
+        "needsAuth": true,
+        "flags": [
+          {
+            "flag": "--confirm",
+            "takesValue": true,
+            "describe": "the same name again — nothing happens without it"
+          }
+        ]
+      },
+      {
         "command": "flags ls",
         "summary": "every flag, and what each environment serves",
         "usage": "frijoles flags ls [--project <slug>] [--json]",

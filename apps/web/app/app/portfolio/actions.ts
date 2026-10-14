@@ -7,6 +7,9 @@ import { loopStageWriteDecision, parseLoopStage } from '@/lib/loop-stage'
 import { writeLoopStage } from '@/lib/loop-stage-store'
 import { getSupabaseServiceClient } from '@/lib/supabase'
 import { createProductForUser } from '@/lib/provisioning'
+import { deleteProductForUser } from '@/lib/product-lifecycle'
+import { getMembership } from '@/lib/membership'
+import { isOwner } from '@/lib/roles'
 import { displayNameFrom } from '@/lib/display-name'
 import { LOOP_OUTCOME_PARAM, PORTFOLIO_HREF, portfolioHrefFor } from '@/lib/portfolio-workspace'
 
@@ -79,4 +82,34 @@ export async function createProductAction(_previous: NewProductState, formData: 
   // The switcher and the portfolio both list the caller's products.
   revalidatePath('/app', 'layout')
   redirect(`/app/setup/connect/${encodeURIComponent(created.projectSlug)}`)
+}
+
+// many-products · Sprint 2, Story 2.1 (D9) — the console half of `frijoles projects delete`: the SAME
+// `deleteProductForUser`, called with the SESSION user. The slug is a SELECTOR; the server re-reads the caller's
+// membership (owner only) and the SQL function refuses anyone else, so a forged slug deletes nothing of anyone else's.
+// `confirm` must repeat the slug — the typed confirmation is enforced here, not only by the dialog's disabled button.
+//
+// ⚠️ A refusal is RETURNED, not thrown (same trap as above: Next redacts a thrown action error in production).
+export type DeleteProductState = { error: string | null }
+
+export async function deleteProductAction(_previous: DeleteProductState, formData: FormData): Promise<DeleteProductState> {
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
+
+  const slug = formData.get('slug')
+  const confirm = formData.get('confirm')
+  if (typeof slug !== 'string' || slug === '') return { error: 'Could not tell which product to delete.' }
+  if (confirm !== slug) return { error: `Type ${slug} exactly to confirm.` }
+
+  const membership = await getMembership(user.id, slug)
+  if (!membership || !isOwner(membership)) return { error: 'Only an owner of this product can delete it.' }
+
+  const outcome = await deleteProductForUser(user.id, slug)
+  if (outcome === 'protected') return { error: 'This product is protected and cannot be deleted.' }
+  if (outcome === 'not_found') return { error: 'Only an owner of this product can delete it.' }
+  if (outcome === 'error') return { error: 'Could not delete the product. Nothing was changed; try again in a moment.' }
+
+  // The switcher and the portfolio both list the caller's products.
+  revalidatePath('/app', 'layout')
+  redirect(PORTFOLIO_HREF)
 }

@@ -36,8 +36,8 @@ Plan → branch + scaffold docs → build story → verify → QA/smoke → PR �
 merge, and each PR gets a Vercel preview the Playwright harness runs against. **Never `vercel deploy` from
 the CLI** (AGENTS rule #4; it is on the deny list). An env-var change reaches running functions only on a
 **redeploy**, so verify by exercising the behaviour the var controls. **Supabase migrations are a separate,
-deliberate step** — applied through the Supabase MCP by an agent, or `supabase db push` by the product
-owner by hand; nothing migrates on merge.
+deliberate step** — applied with `supabase db push` (agents may, since 2026-10-14) or the Supabase MCP, before
+the merge that deploys the code reading it; nothing migrates on merge.
 5. **PR → review → merge.** Declare a risk tier, run the review the policy asks for, resolve or answer
    every finding, merge on green. **Merging to `main` is the production deploy.** Delete the branch.
 6. **Close.** Sprint close: the sprint-wrap summary. Epic close: the Definition of Done below.
@@ -166,7 +166,7 @@ that needs this list references it here; there is no second copy.
 
 `.claude/settings.json` carries a committed `permissions` block: **allow** = verb classes only (never a
 literal past command, and never one that destroys uncommitted work — an allowed command skips the
-auto-mode classifier); **deny** = the irreversible-by-rule (CLI deploys, migration replays, force pushes and
+auto-mode classifier); **deny** = the irreversible-by-rule (CLI deploys, database resets, force pushes and
 protected-branch deletes, `rm -r`, whole-tree staging, edits to generated files, and the few repo scripts
 that write production secrets from inside an allowed `node scripts/*`); **ask** = production secrets, env
 writes and a service deploy. Deny and ask rules are carried in **three spellings** — bare,
@@ -357,7 +357,7 @@ either channel. The guard still labels its model and blocks known unsupported cl
 | **git / gh** | Version control, feature branches, pull requests + merges, GitHub operations |
 | **node / npm** | Type-check (`tsc`), build (`npm run build`), Playwright (`npm run test:e2e`), local dev server, the `scripts/*` tooling |
 | **vercel** | Env-var management (`vercel env pull/add/ls`) + reading deploy state. **Never** `vercel deploy`/`--prod` — merge to `main` is the deploy (rule #4); check state via `gh api repos/<owner>/<repo>/deployments`. |
-| **supabase** | Migrations against linked project (`supabase link` / `migration list`; apply via the Supabase MCP — `db push` is denied to agents by `.claude/settings.json`, the product owner may run it by hand) and read-only prod queries (`supabase db query --linked "select …"`, uses the CLI's own auth — no service-role key in the shell). A separate, manual step from the Vercel deploy. |
+| **supabase** | Migrations against linked project (`supabase link` / `migration list`; apply with `supabase db push` or the Supabase MCP; `db reset` stays denied by `.claude/settings.json`) and read-only prod queries (`supabase db query --linked "select …"`, uses the CLI's own auth — no service-role key in the shell). A separate, manual step from the Vercel deploy. |
 | **codex / agy / vibe / claude** | The external review families, in preference order — **routed, never hand-picked**: `node scripts/review-route.mjs --builder <who> <PR#>` prints the general pass and, when the paths trigger it, the security lens by a different family (see *Review & merge*). Health and pins: `node scripts/agy-doctor.mjs`. **devin** does prose, not review; **cursor-agent** is not wired into review. |
 
 This means a story can go from code → verified → preview-deployed → live-tested on a branch, then

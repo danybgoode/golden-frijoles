@@ -103,8 +103,11 @@ async function findExistingTenant(
 ): Promise<{ slug: string | null; error: unknown }> {
   const { data, error } = await supabase
     .from('project_members')
-    .select('project_id, projects(slug)')
+    // `!inner` + the filter: a membership of a DELETED product is no tenant (many-products D9). Without it, a person
+    // whose only product was deleted would be sent back to it on every sign-in.
+    .select('project_id, projects!inner(slug, deleted_at)')
     .eq('user_id', userId)
+    .is('projects.deleted_at', null)
     .limit(1)
     .maybeSingle()
   if (error) return { slug: null, error }
@@ -414,7 +417,11 @@ export async function createProductForUser(
   // 20261014120000), so creates racing past the last slot are refused there, not here.
   const [{ data: workspace, error: limitError }, { count, error: countError }] = await Promise.all([
     supabase.from('workspaces').select('product_limit').eq('id', claim.workspaceId).single(),
-    supabase.from('projects').select('id', { count: 'exact', head: true }).eq('workspace_id', claim.workspaceId),
+    supabase
+      .from('projects')
+      .select('id', { count: 'exact', head: true })
+      .eq('workspace_id', claim.workspaceId)
+      .is('deleted_at', null), // a deleted product frees its slot in the cap (D9); its name stays taken until purge
   ])
   if (limitError || countError || !workspace || count === null) {
     console.error('[provisioning] product cap read failed:', limitError ?? countError)

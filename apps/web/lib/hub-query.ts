@@ -29,6 +29,7 @@ export async function getHubRoadmap(projectSlug: string): Promise<HubRoadmapResu
     .from('projects')
     .select('id')
     .eq('slug', projectSlug)
+    .is('deleted_at', null) // many-products D9: a deleted product is not found
     .maybeSingle()
   if (error) {
     console.error('[hub-query] project lookup failed:', error)

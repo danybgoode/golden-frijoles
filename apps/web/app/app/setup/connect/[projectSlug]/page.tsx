@@ -8,6 +8,8 @@ import { STARTER_FEATURE_KEY, STARTER_TARGET_EVENT } from '@/lib/provisioning'
 import { CopyPromptCard } from '@/components/landing/CopyPromptCard'
 import { getSiteUrl } from '@/lib/site-url'
 import { CopyField } from '@/design-system/copy-field'
+import { CLI_GLOBAL_INSTALL, CLI_HELP, cliPinnedLogin } from '@/lib/cli-install'
+import { CLI_VERSION } from '@/lib/plugin-release.generated'
 import { CodingAgents } from './coding-agents'
 import { isOwner } from '@/lib/roles'
 import { getConnectorStatus } from '@/lib/connector-tokens'
@@ -101,6 +103,15 @@ export default async function SetupConnectPage({ params }: { params: Promise<{ p
           </Field>
           <Field label="Codex, Cursor and other agents" hint="Pick your agent when it asks.">
             <CopyField value={SKILLS_ADD} label="Copy the npx skills command" />
+          </Field>
+          {/* many-products D11 (S2.3): the CLI, from lib/cli-install.ts + the generated CLI_VERSION — never typed here. */}
+          <Field
+            label="The frijoles CLI"
+            hint="Install it once, or sign in with the pinned version without installing. Then frijoles --help lists what it can do."
+          >
+            <CopyField value={CLI_GLOBAL_INSTALL} label="Copy the CLI install command" />
+            <CopyField value={cliPinnedLogin(CLI_VERSION)} label="Copy the pinned CLI login command" />
+            <CopyField value={CLI_HELP} label="Copy the CLI help command" />
           </Field>
         </ListCard>
 

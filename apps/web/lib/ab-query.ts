@@ -28,6 +28,7 @@ export async function getExperimentComparison(
     .from('projects')
     .select('id, slug')
     .eq('slug', projectSlug)
+    .is('deleted_at', null) // many-products D9: a deleted product is not found
     .maybeSingle()
   if (error) {
     console.error('[ab-query] project lookup failed:', error)

@@ -66,10 +66,10 @@ sensitive-flagged vars — mark anything non-secret `--no-sensitive` at creation
 checkout's `node_modules` can go stale after pulling a merge that added a dependency — `npm ci`
 before trusting a local build failure. **Supabase migrations are a separate step, not part of the
 Vercel deploy** — `supabase link --project-ref <ref>` (find the ref via `supabase projects list`)
-then `supabase migration list` (diffs local vs. remote); pending ones are applied by an agent through
-the Supabase MCP `apply_migration` tool, or by the product owner running `supabase db push` by hand —
-**`supabase db push` is on the committed deny list** (`.claude/settings.json`, 2026-09-16) so an
-unattended agent cannot replay migrations; nothing here happens automatically on merge. Roll back a bad merge with `git revert` on
+then `supabase migration list` (diffs local vs. remote); pending ones are applied with `supabase db push`
+(agents may run it since 2026-10-14, many-products S2.4 — the product owner lifted the deny) or the Supabase MCP
+`apply_migration` tool, **before** the merge that deploys the code reading them; `supabase db reset` stays on the
+committed deny list. Nothing here happens automatically on merge. Roll back a bad merge with `git revert` on
 `main`.
 
 ## Start here (orientation for any agent)
@@ -296,7 +296,7 @@ npm run seed:demo | npm run seed:self          # (re)seed the demo / self-tracki
 node scripts/review-route.mjs --builder <who> <PR#>        # prints the review commands: one general pass (+ security lens when triggered)
 node scripts/build-order.mjs                   # regenerate Roadmap/00-ideas/BUILD-ORDER.md (never hand-edit)
 # Supabase migrations are SEPARATE from the Vercel deploy (see rule #4 / Workflow above):
-supabase link --project-ref <ref> && supabase migration list   # apply: Supabase MCP apply_migration (agents) or `supabase db push` by hand (denied to agents)
+supabase link --project-ref <ref> && supabase migration list   # then `supabase db push` (agents may) or MCP apply_migration — before the merge
 ```
 
 **Key env vars** (all on `apps/web`, set in Vercel):

@@ -1,0 +1,19 @@
+frijoles projects purge — remove a product deleted 30+ days ago, and all its data, for good
+
+Usage
+  frijoles projects purge <slug> --confirm <slug> [--json]
+
+Owner only, and only 30 days after `frijoles projects delete`: before then it refuses and
+  names the date. It cannot be undone. --confirm must repeat the name.
+
+Flags
+  --confirm <slug>  the same name again — nothing happens without it
+
+Exit codes
+  0  ok         it worked
+  1  usage      the command is wrong — nothing was sent
+  2  auth       the credential is not accepted — run `frijoles login`
+  3  not-found  no such thing, or not yours
+  4  conflict   someone else changed it — re-read and retry
+  5  partial    some environments changed and some did not
+  6  server     the server or the network is unwell — retry

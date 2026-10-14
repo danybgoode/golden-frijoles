@@ -39,7 +39,7 @@ export async function resolveConnectorToken(token: string): Promise<ResolvedConn
   const supabase = getSupabaseServiceClient()
   const { data, error } = await supabase
     .from('connector_tokens')
-    .select('id, project_id, revoked_at, created_by, last_used_at, projects(slug)')
+    .select('id, project_id, revoked_at, created_by, last_used_at, projects(slug, deleted_at)')
     .eq('token', token)
     .is('revoked_at', null)
     .maybeSingle()
@@ -51,8 +51,9 @@ export async function resolveConnectorToken(token: string): Promise<ResolvedConn
 
   // supabase-js types a to-one joined relation loosely without a generated Database type —
   // same workaround lib/tars-query.ts/lib/north-star-query.ts already use.
-  const project = data.projects as unknown as { slug: string } | null
-  if (!project) return { ok: false }
+  const project = data.projects as unknown as { slug: string; deleted_at: string | null } | null
+  // A deleted product's URL is as dead as a revoked one, and answers the same (many-products D9).
+  if (!project || project.deleted_at !== null) return { ok: false }
 
   await touchConnectorToken(data.id as string, (data.last_used_at as string | null) ?? null)
 
@@ -94,6 +95,7 @@ export async function getActiveConnectorUrl(projectSlug: string): Promise<string
     .from('projects')
     .select('id')
     .eq('slug', projectSlug)
+    .is('deleted_at', null) // many-products D9: a deleted product is not found
     .maybeSingle()
   if (projectError || !project) return null
 
