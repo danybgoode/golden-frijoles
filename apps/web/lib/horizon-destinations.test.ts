@@ -90,7 +90,7 @@ test('deriveHorizon is pure — calling it twice yields equal results and mutate
   assert.deepEqual(input, [epic('a', true, ['alpha'])], 'input must not be mutated')
 })
 
-// ── Golden Frijoles' own horizon: moved from a hard-coded registry into Roadmap/00-strategy/horizon.md ────────────────
+// ── Golden Frijoles' own horizon: moved from a hard-coded registry into Roadmap/horizon.md ────────────────
 //
 // The registry that lived in this module, frozen verbatim as it stood before S3.2. The test derives the old answer
 // from it with the OLD rule and demands the new derivation (this repo's horizon.md + the epics' `destination:` lines,
@@ -120,7 +120,7 @@ async function ownHorizon() {
   const ext = (await import(pathToFileURL(join(REPO, 'scripts/roadmap-extract.mjs')).href)) as {
     buildRows: (o: object) => Array<{ slug: string; grain: string; destinations?: string[] }>
   }
-  const horizon = mod.parseHorizonMd(readFileSync(join(REPO, 'Roadmap/00-strategy/horizon.md'), 'utf8'))
+  const horizon = mod.parseHorizonMd(readFileSync(join(REPO, 'Roadmap/horizon.md'), 'utf8'))
   const rows = ext.buildRows({ root: REPO, dates: false, facts: { mode: 'docs', prs: [], branches: [] } })
   return { horizon, rows }
 }

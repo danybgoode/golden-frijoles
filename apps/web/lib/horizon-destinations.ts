@@ -1,7 +1,7 @@
 // pod-report · Sprint 1, Story 1.3 — the horizon view's destination↔epic derivation.
 //
 // many-products D14 (S3.2): the destinations are the PRODUCT'S OWN data. They are declared in its repo
-// (`Roadmap/00-strategy/horizon.md`), an epic names the ones it lights (`destination:` in its README frontmatter),
+// (`Roadmap/horizon.md`), an epic names the ones it lights (`destination:` in its README frontmatter),
 // and both travel in the roadmap push — so this module no longer holds a list. It takes the declared destinations and
 // the pushed epics and derives each destination's state. (`HORIZON_DESTINATIONS`, Golden Frijoles' own list, moved to
 // this repo's own `horizon.md`.)

@@ -16,7 +16,7 @@ export function EmptyHorizon() {
         title="No destinations yet."
         body={
           <>
-            Declare them in Roadmap/00-strategy/horizon.md and name one in an epic&apos;s{' '}
+            Declare them in Roadmap/horizon.md and name one in an epic&apos;s{' '}
             <code className="ds-mono">destination:</code>, then run roadmap-push.
           </>
         }

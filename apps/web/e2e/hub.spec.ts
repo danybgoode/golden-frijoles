@@ -322,7 +322,7 @@ test('a product that has pushed no destinations sees the empty state — and non
 
   expect(html).toContain('class="ds-empty"')
   expect(html).toContain('No destinations yet.')
-  expect(html).toContain('Roadmap/00-strategy/horizon.md')
+  expect(html).toContain('Roadmap/horizon.md')
   expect(html).toContain('destination:')
   expect(html).toContain('roadmap-push')
   expect(html).not.toContain('dest-badge-')

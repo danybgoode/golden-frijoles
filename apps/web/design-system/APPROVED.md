@@ -119,7 +119,7 @@ epic page, so the state is unreachable and its file and line are removed togethe
 | hub-board-empty | `surfaces/hub-board-empty.surface` | `8c2f5f0b8892e590` | Daniel (recorded by the architect at his instruction) | 2026-10-02 |
 | hub-roadmap-areas | `surfaces/hub-roadmap-areas.surface` | `4f2a3fc2d45bc950` | Daniel (recorded by the architect at his instruction) | 2026-10-02 |
 | hub-workspace-board | `surfaces/hub-workspace-board.surface` | `816bc514e4a22105` | Daniel (recorded by the architect at his instruction) | 2026-10-02 |
-| hub-horizon-empty | `surfaces/hub-horizon-empty.surface` | `d6c2724006552afa` | Daniel (recorded by the architect at his instruction) | 2026-10-14 |
+| hub-horizon-empty | `surfaces/hub-horizon-empty.surface` | `93d897965206daa4` | Daniel (recorded by the architect at his instruction; the path reads `Roadmap/horizon.md` per his placement decision the same day) | 2026-10-14 |
 
 ## Design decisions settled at approval — the lock does NOT reopen these
 
