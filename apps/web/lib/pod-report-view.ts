@@ -73,6 +73,11 @@ export type PodReportView = {
   generatedAt: string | null
   source: { repo?: string; commits?: number; epics?: number; mergedPrs?: number; windowDays?: number }
   speed: MetricRow[]
+  /**
+   * outcome-report-any-product D2/D3 — epics re-opened after shipping. Null when the artifact carries no
+   * `delivery.rework` (every artifact written before the field existed): the line is then simply absent.
+   */
+  rework?: { reopened: number; of: number; medianDaysToReship: number | null } | null
   composition: MetricRow[]
   notInstrumented: NotInstrumentedRow[]
   benchmarks: Array<{ id: string; label: string; url: string; note: string }>
@@ -184,10 +189,19 @@ export function buildPodReportView(payload: unknown): PodReportView {
     }
   })
 
+  const reworkRaw = obj(delivery.rework)
+  const reopened = num(reworkRaw.reopened)
+  const reworkOf = num(reworkRaw.of)
+  const rework =
+    reopened !== null && reworkOf !== null
+      ? { reopened, of: reworkOf, medianDaysToReship: num(reworkRaw.medianDaysToReship) }
+      : null
+
   return {
     generatedAt: str(p.generatedAt) ?? null,
     source: obj(p.source) as PodReportView['source'],
     speed,
+    rework,
     composition,
     notInstrumented: (Array.isArray(delivery.notInstrumented)
       ? delivery.notInstrumented

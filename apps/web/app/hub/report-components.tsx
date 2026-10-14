@@ -117,10 +117,10 @@ export function EmptyPodReportState({ projectSlug }: { projectSlug: string }) {
           <>
             <code className="ds-mono">{projectSlug}</code> has never pushed a{' '}
             <code className="ds-mono">pod_report</code> artifact, so there is nothing to render — an unplanted
-            plot, not a broken page and not a row of zeros. Compute and push one from a checkout of the repo
-            being measured with{' '}
-            <code className="ds-mono">node scripts/pod-report.mjs --repo &lt;checkout&gt; --push</code>, and
-            this page renders it automatically. No redeploy needed.
+            plot, not a broken page and not a row of zeros. In the product&apos;s own repo, with its ingest
+            key (<code className="ds-mono">GROWTH_ENGINE_API_KEY</code>) in <code>.env.local</code>, run{' '}
+            <code className="ds-mono">npx -y @golden-frijoles/kit pod-report --push</code>, and this page
+            renders it automatically. No redeploy needed.
           </>
         }
       />
@@ -826,7 +826,8 @@ export function PodReportBody({
         {view.empty ? (
           <p className="ds-hint" data-testid="pod-report-no-delivery">
             The latest pushed artifact carries no delivery section, so there are no delivery numbers to
-            render. Re-run <code>scripts/pod-report.mjs</code> against a real checkout and push again.
+            render. Re-run <code>npx -y @golden-frijoles/kit pod-report --push</code> in the product&apos;s
+            own repo to push again.
           </p>
         ) : (
           <>
@@ -871,6 +872,14 @@ export function PodReportBody({
                   rows={view.notInstrumented}
                 />
               </div>
+              {view.rework ? (
+                <p className="ds-hint" data-testid="rework-line">
+                  Re-opened after shipping: {view.rework.reopened} of {view.rework.of}
+                  {view.rework.medianDaysToReship !== null
+                    ? ` (median ${view.rework.medianDaysToReship} days to ship again)`
+                    : ''}
+                </p>
+              ) : null}
             </section>
 
             {policy.showComposition && <WhoDidTheWork rows={view.composition} />}
