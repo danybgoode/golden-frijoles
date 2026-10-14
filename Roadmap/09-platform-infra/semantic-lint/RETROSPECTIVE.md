@@ -54,8 +54,17 @@ One sprint, one PR, one plugin release: [#200](https://github.com/danybgoode/gol
 
 ## Gaps / follow-ups
 
-- **Owed to Daniel on 2026-10-14:** read `node scripts/jev-report.mjs` and decide promote / tune / drop for
-  `lint:rule-1`. `scripts-guard` goes red that day by design.
+- ~~**Owed to Daniel on 2026-10-14:** read `node scripts/jev-report.mjs` and decide promote / tune / drop for
+  `lint:rule-1`. `scripts-guard` goes red that day by design.~~ **Decided 2026-10-14 by the product owner: promote,
+  with three fixes.** Shadow, 2026-09-30 → 10-14, every checkout: 43 hunks judged (22 rule-1, 21 tenancy), **0 raised,
+  0 false raises**. Six were uncertain (five distinct hunks), all correctly not violations on reading: the top two were
+  `lib/flag-funnel-read.ts` at 0.62 (the shared funnel read since tars-one-model, which rule 1's table never named) and
+  the portfolio page at 0.48 (it builds only from `getWorkspaceProjects()`). **18 not checked**: 15 were
+  `no TYPESAFE_API_KEY` in linked worktrees, which have no `.env.local`; 3 were a timeout and the launch-day run.
+  No real violation came up, so its catch rate is still only the 33 labelled fixtures. The fixes:
+  (1) `rails.lint.mode` → `jev`, `shadowExpires` cleared; (2) `flag-funnel{,-read}.ts` on rule 1's allowlist and in
+  AGENTS rule 1's table; (3) Jev's key lookup falls back to the main checkout's `.env.local` from a worktree
+  (kit 1.9.2), which every Jev rail shares.
 - **The external cross-family review was DARK for #200.** Codex was capped, agy was quota-capped (about 150 h), vibe
   had no `MISTRAL_API_KEY`, and Claude built the diff. The fresh reviewer ran two rounds: four Should-fix, all fixed,
   then clean. No backtest is owed when a family returns (LEARNINGS).

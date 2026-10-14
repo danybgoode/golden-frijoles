@@ -541,14 +541,14 @@ independently shippable slice of value.
   failure is one skip line. Every closed scored epic answers **`_Intent: yes | mostly | no_`** (`epic-dod` checks it),
   and `intent-outcomes` joins scores and answers across repos: **24 scored, 0 of 20 answered** — the backfill's
   answers are owed to Daniel. **Shipped 2026-09-30** (#196, #197, S3; kit 0.10.0–0.12.0; medusa-bonsai #198).
-- 🚧 [Semantic lint (v1: AGENTS rule 1, in shadow)](09-platform-infra/semantic-lint/README.md): on every push, the
+- ✅ [Semantic lint (AGENTS rule 1 + tenancy, promoted)](09-platform-infra/semantic-lint/README.md): on every push, the
   advisory pre-push hook runs `semantic-lint.mjs`. Deterministic selectors (globs, added-line patterns, an allowlist,
   all data in `golden-frijoles.config.json → lint.rules`) pick candidate hunks, and Jev answers one question per
   candidate. A push that selects nothing makes no call: 19 of the last 220 commits selected anything. There are four
   outcomes: raise, clear, uncertain and **not checked**, and not checked never counts as a pass. Rule 1's wording is
-  measured: 31/33 labelled hunks decided, all right. 🚧 = **in shadow until 2026-10-14**, logging and printing but
-  never shown as findings; the promote / tune / drop decision is owed to Daniel on that date. **Shipped 2026-09-30**
-  (#200, kit 0.13.0).
+  measured: 31/33 labelled hunks decided, all right. **Promoted 2026-10-14** after two weeks in shadow: 43 hunks judged,
+  0 raised and 0 false raises; a raise now prints as a finding, and it still never blocks. Worktrees can look now (kit
+  1.9.2). **Shipped 2026-09-30** (#200, kit 0.13.0).
 - ✅ [Compiled prompts, wave 1](09-platform-infra/compiled-prompts/README.md): **every Jev question is data**
   (`scripts/lib/jev-questions/*.json`, Jev's own shape plus a `measured` block), and **every recording stamps the
   wording it answered**, so an edited question fails CI until it is re-measured. `optimize/` (dev-only Python, never

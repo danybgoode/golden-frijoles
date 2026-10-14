@@ -6,14 +6,14 @@
 
 _Generated: 2026-10-14_
 
-**86 check(s) owed across 64 file(s)** · 4 cleared.
+**85 check(s) owed across 63 file(s)** · 5 cleared.
 
 | Who can clear it | Count | What it means |
 |---|---|---|
 | publish | 2 | A package publish (npm 2FA): the product owner today, a CI job once trusted publishing is on |
 | credential | 7 | Mints or uses a production credential: only the product owner, named every time |
 | ops | 5 | On the product owner's own accounts or machine |
-| judgment | 25 | An answer only the product owner can give: an _Intent_, an approval, a decision |
+| judgment | 24 | An answer only the product owner can give: an _Intent_, an approval, a decision |
 | signed-in | 22 | A signed-in production walkthrough: an agent can run it once a smoke account exists |
 | interactive | 19 | An interactive plugin or terminal walkthrough: an agent can script it in a scratch repo |
 | unsorted | 6 | Nothing above matched — **not a bin, a to-triage list** |
@@ -23,7 +23,7 @@ _Generated: 2026-10-14_
 | money-path | 1 | Touches checkout, payment or order state — run these first |
 | auth-path | 29 | Needs a real signed-in session a script cannot mint against production |
 | admin-only | 0 | Behind an admin surface |
-| other | 56 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
+| other | 55 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
 
 ## publish (2)
 
@@ -48,7 +48,7 @@ _Generated: 2026-10-14_
 - `Roadmap/09-platform-infra/plugin-1-0/RETROSPECTIVE.md:43` · other — **Owed to Daniel:** the `_Intent_` word above; Sprint 4's interactive walkthrough steps 2–5; your live routines that name a removed skill (sprint-3 step 7); and two decisions: rename the Notion `Stage` select option (it stores the key "Grooming"), and whether to re-approve the c…
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:55` · other — Remove the three account copies of the coaches.
 
-## judgment (25)
+## judgment (24)
 
 - `Roadmap/02-commercial/account-from-the-terminal/RETROSPECTIVE.md:12` · other — > _Intent_ is provisional ("mostly"), owed to Daniel: GitHub and the email link were cut at the lock, and the Google > round trip worked end to end only after he fixed Supabase's URL settings. His own answer replaces this word.
 - `Roadmap/02-commercial/agentic-pm-public-surface/RETROSPECTIVE.md:78` · other — **Story 1.4 is owed to Daniel by name.** Running the workshop end-to-end in a fresh Claude and a fresh ChatGPT, on a real product. No automated smoke can judge whether a facilitation script facilitates. It must be run against **production**, not a preview — see A13.
@@ -72,7 +72,6 @@ _Generated: 2026-10-14_
 - `Roadmap/09-platform-infra/golden-frijoles-plugin/RETROSPECTIVE.md:4` · other — _Intent: owed to Daniel (yes | mostly | no)_
 - `Roadmap/09-platform-infra/intent-match/RETROSPECTIVE.md:52` · other — **Owed to Daniel:** the one-word `_Intent:` answer for the 23 backfilled epics and this one (about fifteen minutes; `intent-outcomes` counts them toward 20); groom one real idea in Cowork to see the new seed and Stage 3.5/4.6 end to end; read this epic's scored pitch and its rea…
 - `Roadmap/09-platform-infra/kickoff-generator-path/RETROSPECTIVE.md:49` · other — **Owed to Daniel:** this retro's `_Intent:_` answer.
-- `Roadmap/09-platform-infra/semantic-lint/RETROSPECTIVE.md:57` · other — **Owed to Daniel on 2026-10-14:** read `node scripts/jev-report.mjs` and decide promote / tune / drop for `lint:rule-1`. `scripts-guard` goes red that day by design.
 - `Roadmap/09-platform-infra/sketch-specs/RETROSPECTIVE.md:80` · other — Owed to Daniel: did we build what was meant?** Answer on its own line as `_Intent: yes_`, `_mostly_` or `_no_`. The builder does not answer this for the product owner. This epic has no `intent_match:` score, so `epic-dod` does not require it.
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:52` · other — Run the North Star coach on Golden Frijoles and judge the file (S1 smoke step 2).
 

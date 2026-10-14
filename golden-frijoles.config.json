@@ -17,6 +17,8 @@
           "apps/web/lib/north-star-query.ts",
           "apps/web/lib/ab-query.ts",
           "apps/web/lib/event-catalog-query.ts",
+          "apps/web/lib/flag-funnel.ts",
+          "apps/web/lib/flag-funnel-read.ts",
           "apps/web/e2e/**",
           "apps/web/**/*.test.ts",
           "scripts/seed-*"

@@ -2,7 +2,8 @@
 // no spec here touches the network.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -13,6 +14,7 @@ import {
   jevContext,
   loadJevConfig,
   logDecision,
+  mainCheckoutRoot,
   parseJevConfig,
   readApiKey,
   STATE_CHAR_BUDGET,
@@ -261,6 +263,42 @@ test('readApiKey: env wins, else .env.local at the root', () => {
   // Set but empty is "no key", never a fall-through to the .env.local key the person just blanked.
   assert.equal(readApiKey({ env: { TYPESAFE_API_KEY: '' }, root: dir, cwd: dir }), null);
   assert.equal(readApiKey({ env: { TYPESAFE_API_KEY: '  ' }, root: dir, cwd: dir }), null);
+});
+
+test('readApiKey: a linked worktree falls back to the main checkout, last', () => {
+  const wt = mkdtempSync(join(tmpdir(), 'jev-wt-'));
+  const main = mkdtempSync(join(tmpdir(), 'jev-main-'));
+  writeFileSync(join(main, '.env.local'), 'TYPESAFE_API_KEY=main\n');
+  assert.equal(readApiKey({ env: {}, root: wt, cwd: wt, mainRoot: () => main }), 'main');
+  // The worktree's own file still wins, the main checkout is never asked when it is not needed, and blank stays off.
+  writeFileSync(join(wt, '.env.local'), 'TYPESAFE_API_KEY=own\n');
+  const never = () => assert.fail('main checkout looked up');
+  assert.equal(readApiKey({ env: {}, root: wt, cwd: wt, mainRoot: never }), 'own');
+  assert.equal(readApiKey({ env: { TYPESAFE_API_KEY: '' }, root: wt, cwd: wt, mainRoot: () => main }), null);
+  assert.equal(readApiKey({ env: {}, root: main, cwd: main, mainRoot: () => null }), 'main');
+  // A plain path works as well as a lazy getter, like root and cwd (agy, #364).
+  assert.equal(readApiKey({ env: {}, root: mkdtempSync(join(tmpdir(), 'jev-x-')), cwd: tmpdir(), mainRoot: main }), 'main');
+});
+
+// Sealed: a hook exports GIT_DIR, and a fixture that inherits it rewrites the real repo (git-fixtures-sealed.test.mjs).
+const sealedEnv = () => Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_')));
+
+test('mainCheckoutRoot: the main checkout from a linked worktree, and null for everything else', () => {
+  assert.equal(mainCheckoutRoot(mkdtempSync(join(tmpdir(), 'jev-norepo-'))), null);
+  const base = mkdtempSync(join(tmpdir(), 'jev-git-'));
+  const repo = join(base, 'main');
+  const git = (...a) => execFileSync('git', a, { cwd: repo, stdio: 'ignore', env: sealedEnv() });
+  mkdirSync(repo);
+  git('init', '-q');
+  git('-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-q', '--allow-empty', '-m', 'x');
+  git('worktree', 'add', '-q', join(base, 'wt'));
+  assert.equal(realpathSync(mainCheckoutRoot(join(base, 'wt'))), realpathSync(repo));
+  // A plain checkout is not a worktree (verifier + agy, #364).
+  assert.equal(mainCheckoutRoot(repo), null);
+  // A folder INSIDE a repo is not that repo: borrowing the enclosing repo's key would send under someone else's.
+  mkdirSync(join(repo, 'inner'));
+  assert.equal(mainCheckoutRoot(join(repo, 'inner')), null);
+  assert.equal(mainCheckoutRoot(join(base, 'wt', 'nope')), null);
 });
 
 test('logDecision: one JSONL line with the contract fields, text truncated at 4k', () => {
