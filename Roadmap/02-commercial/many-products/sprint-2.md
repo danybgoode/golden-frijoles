@@ -3,7 +3,7 @@ epic: many-products
 sprint: 2
 title: "Delete, /connect and the folded-in fixes"
 risk: high
-phase: In review
+phase: Shipped
 stories_total: 5
 stories:
   - id: S2.1
@@ -44,7 +44,7 @@ stories:
 ---
 # Many products — Sprint 2: Delete, /connect and the folded-in fixes
 
-**Status:** 🟦 In review — PR #359 (migration `20261015100000` applied to prod and verified 2026-10-14; plugin + kit 1.9.0, CLI 1.6.0)
+**Status:** ✅ shipped 2026-10-14 — #359 merged (`7dc7dc0`), deployed to production; migration `20261015100000` applied and verified live beforehand; `@golden-frijoles/kit@1.9.0` published by CI.
 
 ## Build contract (locked by the architect before the builder started)
 Cites the epic README's Architecture lock; nothing here restates it.
@@ -127,3 +127,11 @@ Env: production · https://goldenfrijoles.com   (or the preview URL while testin
    → It pushes, with one line saying it pushed docs-only stages because there is no remote.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+### Smoke results (2026-10-14, production, `7dc7dc0`)
+- ✅ `POST /api/v1/cli/projects/{delete,purge}` with no credential → 401; `/api/v1/track` with a bad key → 401.
+- ✅ Prod schema: `projects.deleted_at`; all six credential views filter it; `delete_project` / `purge_deleted_project` present;
+  `input_values` lets a delete through only once its product is gone; no product deleted.
+- ✅ `@golden-frijoles/kit@1.9.0` on npm (`roadmap-push` first-day fixes, `db push` allowed in the template).
+- Owed to the product owner — steps 2–4, 6 and 7 need **CLI 1.6.0 on npm** (your 2FA `npm publish`); step 1 (/connect) and
+  step 5 (console delete on Setup › CLI) are signed-in walkthroughs.

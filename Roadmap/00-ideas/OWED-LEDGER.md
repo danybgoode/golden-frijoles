@@ -6,11 +6,11 @@
 
 _Generated: 2026-10-14_
 
-**124 check(s) owed across 70 file(s)** · 3 cleared.
+**125 check(s) owed across 70 file(s)** · 3 cleared.
 
 | Who can clear it | Count | What it means |
 |---|---|---|
-| publish | 3 | A package publish (npm 2FA): the product owner today, a CI job once trusted publishing is on |
+| publish | 4 | A package publish (npm 2FA): the product owner today, a CI job once trusted publishing is on |
 | credential | 7 | Mints or uses a production credential: only the product owner, named every time |
 | ops | 7 | On the product owner's own accounts or machine |
 | judgment | 29 | An answer only the product owner can give: an _Intent_, an approval, a decision |
@@ -23,11 +23,12 @@ _Generated: 2026-10-14_
 | money-path | 2 | Touches checkout, payment or order state — run these first |
 | auth-path | 34 | Needs a real signed-in session a script cannot mint against production |
 | admin-only | 0 | Behind an admin surface |
-| other | 88 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
+| other | 89 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
 
-## publish (3)
+## publish (4)
 
 - `Roadmap/02-commercial/many-products/sprint-1.md:140` · auth-path — Owed to the product owner — steps 1–4 and 6 need **CLI 1.6.0 on npm** (ships with Sprint 2; the npm publish is your 2FA step); step 5 (New product, signed in) and the signed-in approve page (it now names how many products the token reaches, warning above Allow).
+- `Roadmap/02-commercial/many-products/sprint-2.md:136` · other — Owed to the product owner — steps 2–4, 6 and 7 need **CLI 1.6.0 on npm** (your 2FA `npm publish`); step 1 (/connect) and step 5 (console delete on Setup › CLI) are signed-in walkthroughs.
 - `Roadmap/09-platform-infra/golden-frijoles-plugin/sprint-2.md:185` · other — Acceptance:** `.github/workflows/release.yml`: on a version bump merged to `main` (*lock X3/D5: CI creates the tag, it doesn't react to one*), verify = `plugin.json` version = `kit/package.json` version (D4), build the kit, `npm publish --provenance --access public` via **truste…
 - `Roadmap/09-platform-infra/golden-frijoles-plugin/sprint-2.md:210` · other — **Bootstrap the package (owed to Daniel; npm account with 2FA).** In an empty folder:
 
