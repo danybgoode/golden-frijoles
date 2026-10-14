@@ -3,7 +3,7 @@ epic: golden-frijoles-plugin
 sprint: 3
 title: "The front door"
 risk: high
-phase: Verifying
+phase: Shipped
 stories_total: 5
 stories:
   - id: S3.1
@@ -44,7 +44,7 @@ stories:
 ---
 # One plugin, one install — Golden Frijoles ships as a public plugin whose skills run in anyone's repo — Sprint 3: The front door
 
-**Status:** 🟦 in review: S3.1–S3.4 are merged and deployed (golden-frijoles/skills#47 `3a06aa0`, release `v0.3.0` + kit 0.3.0 with provenance; danybgoode/golden-beans#163 `d32fde9`, Vercel production). S3.5, both stranger walkthroughs, is owed to Daniel, so the sprint isn't closed · **Wave:** 1
+**Status:** ✅ shipped (closed 2026-10-14; S3.5 carried into the epic retro as owed): S3.1–S3.4 are merged and deployed (golden-frijoles/skills#47 `3a06aa0`, release `v0.3.0` + kit 0.3.0 with provenance; danybgoode/golden-beans#163 `d32fde9`, Vercel production). S3.5, both stranger walkthroughs, was not run and is carried into the epic retro as owed · **Wave:** 1
 
 One name to start from, a way to adopt any repo, and the install prompt, from one module and checked by running it, on the landing's closing CTA, `/install` and signed-in onboarding. It ends with the two stranger walkthroughs.
 

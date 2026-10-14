@@ -110,9 +110,9 @@ fi
 # ── ADVISORY section — never blocks (exits 0 regardless), see the header ─────────────────────────
 
 # semantic-lint (Roadmap/09-platform-infra/semantic-lint, D5/C6): selectors pick candidate hunks, Jev judges only
-# those, and in shadow it logs to .jev/decisions.jsonl and prints one line per rule. It runs FIRST here because it is
-# the cheap one (most pushes select nothing and make no call), and `|| true` keeps it out of the exit code by
-# construction. No stdin ranges (a manual run) → it reads @{upstream}...HEAD itself.
+# those; it logs to .jev/decisions.jsonl and prints one line per rule (in jev mode, each raise too). It runs FIRST
+# here because it is the cheap one (most pushes select nothing and make no call), and `|| true` keeps it out of the
+# exit code by construction. No stdin ranges (a manual run) → it reads @{upstream}...HEAD itself.
 if [ -f scripts/semantic-lint.mjs ]; then
   # $lint_ranges is unquoted on purpose: it is a list of `--range <base>...<sha>` words, none containing a space.
   # shellcheck disable=SC2086

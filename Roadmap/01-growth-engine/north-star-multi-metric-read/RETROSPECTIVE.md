@@ -1,7 +1,7 @@
 # Several North Star metrics, one reading rule — Retrospective
 
 _Closed: 2026-10-14_
-_Intent: owed to Daniel (yes | mostly | no)_
+_Intent: yes_
 <!-- Did we build what the product owner meant? One word, THEIR answer: yes, mostly or no. Required by `epic-dod` only
      when the epic's seed or README carries a numeric `intent_match:` (intent-match D17); the calibration learns from
      it. Keep the line and leave exactly one of the three words between `_Intent: ` and the closing underscore. -->
@@ -25,7 +25,7 @@ _Quote vs actual: $11–17 (S, n=3, p25–p75) → ≈$3.89 (−77% vs the quote
   metric, so `.maybeSingle()` on a non-unique filter passed for weeks. Promoted to LEARNINGS.
 
 ## Gaps / follow-ups
-- **Owed to Daniel:** the signed-in look at https://goldenfrijoles.com/app/north-star/golden-frijoles (sprint-1 step 2),
-  and the `_Intent_` word above.
+- **Owed to Daniel:** the signed-in look at https://goldenfrijoles.com/app/north-star/golden-frijoles (sprint-1 step 2).
+  ~~The `_Intent_` word~~: answered yes on 2026-10-14.
 - The epic was never closed at the time: it sat at "in review" for six days after its merge. The owed ledger now counts
   an open epic's sprint docs, so a stalled close-out shows up.

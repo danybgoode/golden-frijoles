@@ -526,11 +526,11 @@ independently shippable slice of value.
   — **shipped 2026-07-28** (PR #51); Slack uses a channel-scoped Incoming Webhook and plain-text
   response handling, while the local report checkpoint advances only after every configured channel
   accepts the reviewed prose.
-- 🚧 [One public monorepo](09-platform-infra/public-monorepo/README.md): the plugin, kit and template live in
+- ✅ [One public monorepo](09-platform-infra/public-monorepo/README.md): the plugin, kit and template live in
   `skills/` (with history), and `golden-frijoles/skills` is a fast-forward mirror whose own release workflow still
   publishes the kit. Release 0.5.3 went out that way. The repo is now `danybgoode/golden-frijoles`, and sensitive docs
   live in the private `golden-frijoles/internal`. Per-folder licences apply: Apache-2.0 for `skills/`, the CLI and the SDK, and FSL-1.1-ALv2 for
-  the engine (#184). **Shipped 2026-09-28 except** the local folder move (owed to Daniel).
+  the engine (#184). **Shipped 2026-09-28**; the local folder move was done after, and the epic closed 2026-10-14.
 - ✅ [Verify spike](09-platform-infra/verify-spike/README.md): formal verification, measured on our own code
   in one session. A Quint model of the delivery outbox found a stranded row, an unbounded unlogged resend
   (bug seed, fix already model-checked) and an unenforced timing order (guard test, #194). Lean proves the
@@ -547,14 +547,14 @@ independently shippable slice of value.
   failure is one skip line. Every closed scored epic answers **`_Intent: yes | mostly | no_`** (`epic-dod` checks it),
   and `intent-outcomes` joins scores and answers across repos: **24 scored, 0 of 20 answered** — the backfill's
   answers are owed to Daniel. **Shipped 2026-09-30** (#196, #197, S3; kit 0.10.0–0.12.0; medusa-bonsai #198).
-- 🚧 [Semantic lint (v1: AGENTS rule 1, in shadow)](09-platform-infra/semantic-lint/README.md): on every push, the
+- ✅ [Semantic lint (AGENTS rule 1 + tenancy, promoted)](09-platform-infra/semantic-lint/README.md): on every push, the
   advisory pre-push hook runs `semantic-lint.mjs`. Deterministic selectors (globs, added-line patterns, an allowlist,
   all data in `golden-frijoles.config.json → lint.rules`) pick candidate hunks, and Jev answers one question per
   candidate. A push that selects nothing makes no call: 19 of the last 220 commits selected anything. There are four
   outcomes: raise, clear, uncertain and **not checked**, and not checked never counts as a pass. Rule 1's wording is
-  measured: 31/33 labelled hunks decided, all right. 🚧 = **in shadow until 2026-10-14**, logging and printing but
-  never shown as findings; the promote / tune / drop decision is owed to Daniel on that date. **Shipped 2026-09-30**
-  (#200, kit 0.13.0).
+  measured: 31/33 labelled hunks decided, all right. **Promoted 2026-10-14** after two weeks in shadow: 43 hunks judged,
+  0 raised and 0 false raises; a raise now prints as a finding, and it still never blocks. Worktrees can look now (kit
+  1.9.2). **Shipped 2026-09-30** (#200, kit 0.13.0).
 - ✅ [Compiled prompts, wave 1](09-platform-infra/compiled-prompts/README.md): **every Jev question is data**
   (`scripts/lib/jev-questions/*.json`, Jev's own shape plus a `measured` block), and **every recording stamps the
   wording it answered**, so an edited question fails CI until it is re-measured. `optimize/` (dev-only Python, never
@@ -598,7 +598,7 @@ independently shippable slice of value.
   - ✅ **Plugin marketplace**: `golden-frijoles@golden-frijoles` from `golden-frijoles/skills` (Apache-2.0), installed via `.claude/settings.json` or `claude plugin install`; Cowork `.skill` archives built reproducibly by `scripts/pack-skills.mjs`.
   - ✅ **Spawn template** — `Roadmap/`, `AGENTS.md`, CI guards, git hooks and scripts a new project copies once.
   - ✅ **Portability guards** — `check-plugin-leaks.mjs` (origin-project residue) and `check-skill-scripts.mjs` (every skill's scripts exist).
-  - 🚧 **One plugin, one install**: wave 1 ✅ (2026-09-23). The plugin ships under the product's name with tagged, pinnable releases (a version bump merged to `main` publishes and tags). The skills' scripts reach any repo as **`@golden-frijoles/kit`** on npm, built from the skills' declared closure and published from CI with verified provenance. Every skill runs a project's own copy when it has one, otherwise the pinned kit. The **`golden-frijoles` umbrella skill**, `gf-kit init`, and one install prompt checked by *running* it (Claude Code and `npx skills`) complete it. Wave 2 (one config file, setup and adjust) is re-bet at the boundary. [`golden-frijoles-plugin`](09-platform-infra/golden-frijoles-plugin/README.md)
+  - ✅ **One plugin, one install** (closed 2026-10-14; the clean-machine stranger walkthrough is owed): wave 1 ✅ (2026-09-23). The plugin ships under the product's name with tagged, pinnable releases (a version bump merged to `main` publishes and tags). The skills' scripts reach any repo as **`@golden-frijoles/kit`** on npm, built from the skills' declared closure and published from CI with verified provenance. Every skill runs a project's own copy when it has one, otherwise the pinned kit. The **`golden-frijoles` umbrella skill**, `gf-kit init`, and one install prompt checked by *running* it (Claude Code and `npx skills`) complete it. Wave 2 (one config file, setup and adjust) shipped 2026-09-24. [`golden-frijoles-plugin`](09-platform-infra/golden-frijoles-plugin/README.md)
   - ✅ **Plugin audit + extraction** — every advertised skill runs (`KNOWN_ABSENT` empty; `check-skill-scripts` walks import closures, also against consumers), the advertised list is generated, and the origin's stranded rails are in the template behind committed config seams: the reporting family, routines, the hook budget, session notes, doc-format, owed-ledger, a prod-smoke engine, a fail-closed merge gate, merge-report, vercel-env and perf-probe. One implementation per rail it touched, across all three repos (each consumer's documented forks, notably the review rail, excepted). [`plugin-audit-and-extraction`](09-platform-infra/plugin-audit-and-extraction/README.md)
   - ✅ **Golden Frijoles by default** — a spawned project carries the flag provider already wired: one seam (`apps/*/flags.mjs`, fallback per call, SDK imported dynamically so it loads with no `node_modules`), `scripts/preflight.mjs` as the mandate-as-a-check (fails loudly on absent config, **warns** on an unreachable deployment), `AGENTS.md` rule 1 *"never build a parallel flag store"*, the leak guard's flag-mechanism rule, and `groom` Stage 6b planning against `gf flags create` with **activation as its own step**. The Edge answer is verified by executing the published SDK, not by reading its docs. [`golden-flags-by-default`](09-platform-infra/golden-flags-by-default/README.md)
   - ✅ **The build view** — a machine-readable frontmatter contract on every epic doc (`lib/roadmap-contract.mjs`), enforced by `doc-format.mjs` and born from the `groom` scaffolder; `roadmap-backfill.mjs` brought the whole corpus onto it and recorded what it could not resolve; `build-state.mjs` is the one resolver for "what is being built right now"; and `plugins/golden-frijoles/hooks/` renders it in the CLI as a Claude Mod (opt-in, deleting `hooks.json` is the kill-switch). [`build-visualization-claude-mods`](09-platform-infra/build-visualization-claude-mods/README.md)
