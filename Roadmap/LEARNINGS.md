@@ -388,7 +388,9 @@ one-liner + why + date shape.
   under a real pty (`expect`). The epic's HEADLINE command returned 400 until an end-to-end spec ran
   it against the real parser — every unit test had supplied the optional field the parser requires.
   For a new surface, name the layer no test touches (a TTY, the real parser, `jsonb` round-trips)
-  before calling the gate complete. *(2026-09-17, golden-frijoles-cli.)*
+  before calling the gate complete. For terminal animation, assert the raw redraw stream and run the built
+  binary in a real pty: a missing carriage return between frames, or a cursor left hidden by Ctrl-C, shows there
+  while every frame string passes its unit test. *(2026-09-17, golden-frijoles-cli; 2026-10-09, brand-reveal-error-pages.)*
 - **A truncated review posts as a clean pass — guard the SHAPE of the output, not just its
   presence.** A reviewer CLI exhausted its turn budget mid-read and exited 0 with a bare
   `read_file{…}` tool call as its entire output. The runner's guards (non-zero status, empty output)
