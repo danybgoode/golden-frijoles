@@ -110,7 +110,7 @@ Writes by a person-made connector URL or a \`frijoles\` token run as that person
 | You want | The headless way | Check it worked |
 | --- | --- | --- |
 | Make and push the outcome report | In the product's own repo, with its ingest key (\`GROWTH_ENGINE_API_KEY\`) in \`.env.local\`: \`npx -y @golden-frijoles/kit pod-report --push\` (API: \`POST /api/v1/reports/pod/push\`) | It prints \`✓ pod_report pushed\` |
-| Read it | The console page \`/hub/<product>/report\` | The report renders; with nothing pushed yet it shows the empty state that names this command |
+| Read it | No headless read yet: the console page \`/hub/<product>/report\` (or a share link) | The report renders; with nothing pushed yet it shows the empty state that names this command |
 
 ## Connector and MCP
 

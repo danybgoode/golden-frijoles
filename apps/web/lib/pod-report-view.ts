@@ -324,8 +324,11 @@ export function isHonest(view: PodReportView): boolean {
   // speed rows are all null but whose composition rows carry real percentages would pass the guard
   // with its caveats stripped — and an agent-authorship share presented without context is exactly
   // the kind of number this guard exists to keep honest.
+  // The rework line is a number too (outcome-report-any-product D2; agy, #368): it needs the same caveats.
   const hasNumbers =
-    view.speed.some((r) => r.value !== null) || view.composition.some((r) => r.value !== null)
+    view.speed.some((r) => r.value !== null) ||
+    view.composition.some((r) => r.value !== null) ||
+    (view.rework != null && view.rework.of > 0)
   if (hasNumbers && !(view.notInstrumented.length > 0 && view.caveats.length > 0)) return false
 
   // ── The maturity section's own honesty condition (Story 2.4) ────────────────────────────────

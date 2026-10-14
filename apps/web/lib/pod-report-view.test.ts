@@ -118,6 +118,18 @@ test('numbers without top-level caveats is also dishonest', () => {
   assert.equal(isHonest(stripped), false)
 })
 
+test('a rework count with its caveats stripped is dishonest too (agy, #368)', () => {
+  // Only the rework line carries a number: no speed, no composition. It still needs the caveats.
+  const view = buildPodReportView({
+    ...artifact,
+    caveats: [],
+    delivery: { notInstrumented: [], rework: { reopened: 1, of: 4, medianDaysToReship: 2, epics: [] } },
+    maturity: undefined,
+  })
+  assert.equal(view.rework?.of, 4)
+  assert.equal(isHonest(view), false)
+})
+
 test('an EMPTY view is honest — it claims nothing, so it cannot mislead', () => {
   assert.equal(isHonest(buildPodReportView(null)), true)
 })
