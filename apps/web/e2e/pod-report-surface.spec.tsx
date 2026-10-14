@@ -466,6 +466,21 @@ test('an empty artifact renders a friendly no-delivery notice, not a refusal and
   expect(html).not.toContain('data-metric=')
 })
 
+test('outcome-report-any-product D3: the re-opened line shows when delivery.rework is present, and is absent when it is not', () => {
+  const withRework = (rework: unknown) =>
+    render(buildPodReportView({ ...ARTIFACT, delivery: { ...(ARTIFACT.delivery as object), rework } }))
+  const full = withRework({ reopened: 2, of: 9, medianDaysToReship: 3, epics: [] })
+  expect(slice(full, 'rework-line', 200)).toContain(
+    'Re-opened after shipping: 2 of 9 (median 3 days to ship again)'
+  )
+  const noMedian = withRework({ reopened: 0, of: 5, medianDaysToReship: null, epics: [] })
+  const line = slice(noMedian, 'rework-line', 200)
+  expect(line).toContain('Re-opened after shipping: 0 of 5')
+  expect(line).not.toContain('median')
+  expect(render(buildPodReportView(ARTIFACT))).not.toContain('rework-line')
+  expect(withRework('junk')).not.toContain('rework-line')
+})
+
 // ── outcome-report-v2 · Sprint 1 ───────────────────────────────────────────────────────────────────────────────────
 
 test('S1.1: the report opens with whether it is paying off, before the ladder headline and every number', () => {

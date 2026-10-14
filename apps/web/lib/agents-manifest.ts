@@ -105,6 +105,13 @@ Writes by a person-made connector URL or a \`frijoles\` token run as that person
 | Read tasks | MCP \`list_tasks\` and \`get_task\` | The task and its state |
 | Change a task | MCP \`propose_task_change\`, then \`apply_task_change\` (a project write key; previewed and confirmed first) | \`get_task\` shows the change |
 
+## Outcome report
+
+| You want | The headless way | Check it worked |
+| --- | --- | --- |
+| Make and push the outcome report | In the product's own repo, with its ingest key (\`GROWTH_ENGINE_API_KEY\`) in \`.env.local\`: \`npx -y @golden-frijoles/kit pod-report --push\` (API: \`POST /api/v1/reports/pod/push\`) | It prints \`✓ pod_report pushed\` |
+| Read it | No headless read yet: the console page \`/hub/<product>/report\` (or a share link) | The report renders; with nothing pushed yet it shows the empty state that names this command |
+
 ## Connector and MCP
 
 | You want | The headless way | Check it worked |
