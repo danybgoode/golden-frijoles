@@ -1,14 +1,14 @@
 ---
 title: "Template scripts hold to the gates their consumers run"
 slug: template-scripts-consumer-gates
-status: ready
+status: scaffolded
 area: "09"
 type: chore
 appetite: S
-underwritten_by: null
+underwritten_by: wave-2026-10
 risk: high
-epic: null
-build_order: null
+epic: "09-platform-infra/template-scripts-consumer-gates"
+build_order: 94
 updated: 2026-10-14
 intent_match: 90
 intent_ask: verbatim
@@ -74,7 +74,7 @@ syncs.
 - **Prettier: format at the source, or have consumers ignore?** Consumers' Prettier configs differ, so formatting at
   the source with one config can still fail a consumer's check. Recommended (decision a): consumers ignore the vendored
   rails, and `frijoles-kit init` writes that one `.prettierignore` block, instead of one file at a time. Lint stays at
-  the source either way.
+  the source either way. **Decided 2026-10-14 (Daniel): as recommended.**
 - **A hostname that resolves to a private address.** Check the resolved address, not just the literal host, before
   each request.
 - **22 files in two trees** plus this repo's copies: the parity check (`check-script-parity`) must stay green.
