@@ -1,14 +1,14 @@
 ---
 title: 'A delivery whose settle keeps failing is re-sent every 5 minutes, uncounted and unlogged'
 slug: delivery-stale-reclaim-uncounted
-status: ready
+status: scaffolded
 area: '01'
 type: bug
 appetite: S
-underwritten_by: null
+underwritten_by: wave-2026-10
 risk: high
-epic: null
-build_order: null
+epic: "01-growth-engine/delivery-stale-reclaim-uncounted"
+build_order: 87
 updated: 2026-10-14
 intent_ask: proxy      # the ask is the verify-spike model's finding F2, ranked #1 by Daniel on 2026-10-14
 hypothesis: null
@@ -155,8 +155,8 @@ something goes wrong. Rollback is a forward migration restoring the old body plu
 ## Open risks / research
 
 - The Quint model used `MAX_ATTEMPTS = 3`. The code uses 6, and the fix is parametric in the budget.
-- Whether the health page should count `unconfirmed` as a *failure* is decision (a) at the gate; by default it lands
-  only in `total_attempts`.
+- Whether the health page should count `unconfirmed` as a *failure*: **decided 2026-10-14 (Daniel): no**, it lands only in `total_attempts`.
+- Over-charging a never-sent stale row (rabbit hole 1): **accepted 2026-10-14 (Daniel)**.
 
 ## Intent match
 

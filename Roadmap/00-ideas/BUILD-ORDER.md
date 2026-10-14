@@ -10,12 +10,11 @@
 > This committed file reads the docs alone, so **Building and QA are not here** — they are facts git
 > and GitHub hold. For the live board run `node scripts/build-order.mjs --live`, or open the Hub board.
 
-## Backlog (8)
+## Backlog (7)
 
 _seeds with no pitch yet._
 
 - [Verify module: the verification depth ladder as a product (after the spike)](seeds/verify-module.md) — #54 · 09 Platform Infra · seed · Feature · risk: High · appetite L · _docs: status raw_
-- [A delivery whose settle keeps failing is re-sent every 5 minutes, uncounted and unlogged](seeds/delivery-stale-reclaim-uncounted.md) — 01 Growth Engine · seed · Bug · risk: High · appetite S · _docs: status raw_
 - [A reading for proving_workspaces](seeds/proving-workspaces-reading.md) — 01 Growth Engine · seed · Feature · risk: High · appetite S · _docs: status raw_
 - [Drill impact for agents: a drill's effect, recorded and read from the CLI](seeds/drill-impact-for-agents.md) — 01 Growth Engine · seed · Feature · risk: High · appetite M · _docs: status raw_
 - [Funnel truth: named target segments, one model for every funnel, and the trend over time](seeds/funnel-truth.md) — 01 Growth Engine · seed · Feature · risk: High · appetite L · _docs: status raw_
@@ -29,14 +28,15 @@ _a pitch is waiting at the approval gate._
 
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
 
-## Ready (4)
+## Ready (5)
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
 - [Agent-legible horizon and docs](../02-commercial/agent-legible-horizon/README.md) — #85 · 02 Commercial · 0/5 stories · risk: High · appetite S · _docs: status in-progress_
-- [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #87 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
-- [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #88 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
-- [CMS-neutral experiment integration + Payload go/no-go](../01-growth-engine/cms-integration-spike/README.md) — #92 · 01 Growth Engine · 0/6 stories · risk: Low · _docs: status scaffolded_
+- [A delivery whose settle keeps failing is re-sent every 5 minutes, uncounted and unlogged](../01-growth-engine/delivery-stale-reclaim-uncounted/README.md) — #87 · 01 Growth Engine · 0/1 stories · risk: High · appetite S · _docs: status scaffolded_
+- [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #88 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
+- [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #92 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
+- [CMS-neutral experiment integration + Payload go/no-go](../01-growth-engine/cms-integration-spike/README.md) — #93 · 01 Growth Engine · 0/6 stories · risk: Low · _docs: status scaffolded_
 
 ## Building — live only
 
