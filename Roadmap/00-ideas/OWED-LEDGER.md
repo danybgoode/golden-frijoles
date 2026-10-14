@@ -6,11 +6,11 @@
 
 _Generated: 2026-10-14_
 
-**92 check(s) owed across 70 file(s)** · 5 cleared.
+**94 check(s) owed across 72 file(s)** · 5 cleared.
 
 | Who can clear it | Count | What it means |
 |---|---|---|
-| publish | 3 | A package publish (npm 2FA): the product owner today, a CI job once trusted publishing is on |
+| publish | 5 | A package publish (npm 2FA): the product owner today, a CI job once trusted publishing is on |
 | credential | 7 | Mints or uses a production credential: only the product owner, named every time |
 | ops | 5 | On the product owner's own accounts or machine |
 | judgment | 28 | An answer only the product owner can give: an _Intent_, an approval, a decision |
@@ -21,15 +21,17 @@ _Generated: 2026-10-14_
 | Category | Count | What it means |
 |---|---|---|
 | money-path | 1 | Touches checkout, payment or order state — run these first |
-| auth-path | 26 | Needs a real signed-in session a script cannot mint against production |
+| auth-path | 27 | Needs a real signed-in session a script cannot mint against production |
 | admin-only | 0 | Behind an admin surface |
-| other | 65 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
+| other | 66 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
 
-## publish (3)
+## publish (5)
 
 - `Roadmap/01-growth-engine/drill-impact-for-agents/sprint-2.md:44` · other — returns the same fields. A CLI release, its npm publish owed to the product owner. **Risk:** low
 - `Roadmap/01-growth-engine/funnel-truth/sprint-1.md:104` · other — Steps 2–3 are signed-in steps, owed to the product owner. Step 4 needs the CLI release on npm (the product owner's 2FA publish).
+- `Roadmap/02-commercial/agent-legible-horizon/RETROSPECTIVE.md:25` · auth-path — **Owed to the product owner:** `npm publish` of `@golden-frijoles/cli@1.7.0`; then `frijoles horizon` in a bound repo and the login line on a machine that remembers a product.
 - `Roadmap/02-commercial/many-products/RETROSPECTIVE.md:46` · other — **Owed to the product owner:** `npm publish` of `@golden-frijoles/cli@1.6.0` (2FA) — the CLI steps of S1 and S2's walkthroughs wait on it; the signed-in walkthroughs (approve page, New product, console delete on Setup › CLI, /connect, the aomx horizon); the hypothesis read (`bet…
+- `Roadmap/02-commercial/outcome-report-any-product/RETROSPECTIVE.md:24` · other — **Owed to the product owner:** the first aomx push and its signed-in report; re-push medusa-bonsai's report (median 7 → 3.4 days, with the caveat); `npm publish` of CLI 1.7.0 (from agent-legible-horizon).
 
 ## credential (7)
 

@@ -73,6 +73,11 @@ export type PodReportView = {
   generatedAt: string | null
   source: { repo?: string; commits?: number; epics?: number; mergedPrs?: number; windowDays?: number }
   speed: MetricRow[]
+  /**
+   * outcome-report-any-product D2/D3 — epics re-opened after shipping. Null when the artifact carries no
+   * `delivery.rework` (every artifact written before the field existed): the line is then simply absent.
+   */
+  rework?: { reopened: number; of: number; medianDaysToReship: number | null } | null
   composition: MetricRow[]
   notInstrumented: NotInstrumentedRow[]
   benchmarks: Array<{ id: string; label: string; url: string; note: string }>
@@ -184,10 +189,19 @@ export function buildPodReportView(payload: unknown): PodReportView {
     }
   })
 
+  const reworkRaw = obj(delivery.rework)
+  const reopened = num(reworkRaw.reopened)
+  const reworkOf = num(reworkRaw.of)
+  const rework =
+    reopened !== null && reworkOf !== null
+      ? { reopened, of: reworkOf, medianDaysToReship: num(reworkRaw.medianDaysToReship) }
+      : null
+
   return {
     generatedAt: str(p.generatedAt) ?? null,
     source: obj(p.source) as PodReportView['source'],
     speed,
+    rework,
     composition,
     notInstrumented: (Array.isArray(delivery.notInstrumented)
       ? delivery.notInstrumented
@@ -310,8 +324,11 @@ export function isHonest(view: PodReportView): boolean {
   // speed rows are all null but whose composition rows carry real percentages would pass the guard
   // with its caveats stripped — and an agent-authorship share presented without context is exactly
   // the kind of number this guard exists to keep honest.
+  // The rework line is a number too (outcome-report-any-product D2; agy, #368): it needs the same caveats.
   const hasNumbers =
-    view.speed.some((r) => r.value !== null) || view.composition.some((r) => r.value !== null)
+    view.speed.some((r) => r.value !== null) ||
+    view.composition.some((r) => r.value !== null) ||
+    (view.rework != null && view.rework.of > 0)
   if (hasNumbers && !(view.notInstrumented.length > 0 && view.caveats.length > 0)) return false
 
   // ── The maturity section's own honesty condition (Story 2.4) ────────────────────────────────

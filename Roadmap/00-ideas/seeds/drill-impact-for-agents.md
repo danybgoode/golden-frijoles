@@ -8,7 +8,7 @@ appetite: M
 underwritten_by: wave-2026-10
 risk: high
 epic: "01-growth-engine/drill-impact-for-agents"
-build_order: 93
+build_order: 94
 updated: 2026-10-14
 intent_ask: proxy
 hypothesis: "A drill's impact comparison is empty unless a Miyagi admin key captures it. Letting an owner's agent bind a drill to an experiment and capture its impact at stop puts the evidence on the CLI and the page. We'll know when a stopped drill has impact."

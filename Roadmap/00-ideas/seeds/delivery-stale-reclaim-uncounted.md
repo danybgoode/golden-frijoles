@@ -8,7 +8,7 @@ appetite: S
 underwritten_by: wave-2026-10
 risk: high
 epic: "01-growth-engine/delivery-stale-reclaim-uncounted"
-build_order: 87
+build_order: 88
 updated: 2026-10-14
 intent_ask: proxy      # the ask is the verify-spike model's finding F2, ranked #1 by Daniel on 2026-10-14
 hypothesis: null

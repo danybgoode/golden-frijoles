@@ -8,7 +8,7 @@ appetite: M
 underwritten_by: wave-2026-10
 risk: low
 epic: "09-platform-infra/verify-module"
-build_order: 96
+build_order: 97
 updated: 2026-10-14
 intent_ask: proxy
 hypothesis: "Our riskiest code (the delivery outbox, the flag evaluator) is reviewed by people and models, and still hid three bugs a model checker found in one session. Running those checks on every PR that touches it, and nightly in depth, catches the next one before merge. We'll know when Jev's routing log reaches 30 labelled PRs."

@@ -8,7 +8,7 @@ appetite: S
 underwritten_by: wave-2026-10
 risk: high
 epic: "01-growth-engine/proving-workspaces-reading"
-build_order: 97
+build_order: 98
 updated: 2026-10-14
 intent_ask: verbatim
 hypothesis: "Our North Star's breadth input, proving workspaces, has no reading, so the strategy reads it by hand on 15 Dec. Counting a workspace when one of its bets is proven, without any tenant seeing another, makes it a number we can watch. We'll know when it reads itself."

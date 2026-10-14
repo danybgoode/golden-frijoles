@@ -8,7 +8,7 @@ appetite: M
 underwritten_by: wave-2026-10
 risk: low
 epic: "09-platform-infra/build-view-one-story"
-build_order: 94
+build_order: 95
 updated: 2026-10-14
 intent_ask: verbatim
 hypothesis: "The build view says the same status on several lines, each from a different source. One headline, one track and one line per fact, with the board as other work, lets a founder read where the build is at a glance. We'll know when the product owner reads it without asking."

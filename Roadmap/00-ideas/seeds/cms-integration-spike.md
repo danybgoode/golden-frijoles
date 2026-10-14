@@ -6,7 +6,7 @@ area: "01"
 type: spike
 risk: low
 epic: "01-growth-engine/cms-integration-spike"
-build_order: 100
+build_order: 101
 updated: 2026-07-27
 underwritten_by: wave-backfill
 ---

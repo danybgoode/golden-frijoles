@@ -112,6 +112,14 @@ independently shippable slice of value.
   where it pays off. **Owed:** a signed-in look at a live funnel; `tars-segments` next.
 
 ### 02 · Commercial
+- ✅ [The outcome report for any product](02-commercial/outcome-report-any-product/README.md) — **shipped 2026-10-14**
+  (#368; kit 1.9.4). `npx -y @golden-frijoles/kit pod-report --push` in any product's repo; shipped dates from each epic's
+  real status history (the old search dated most ships at the README's creation — the report says the method changed);
+  "Re-opened after shipping" as its own number.
+- ✅ [Agent-legible horizon and docs](02-commercial/agent-legible-horizon/README.md) — **shipped 2026-10-14** (#366; kit
+  1.9.3, CLI 1.7.0 — npm publish owed). `frijoles horizon` and the `get_horizon` MCP tool read a product's horizon
+  headless; Codex MCP setup is in install.md and llms.txt; https://goldenfrijoles.com/agents.md names every feature's
+  headless read / change / check path; login says why a product is active.
 - ✅ [Many products](02-commercial/many-products/README.md) — **shipped 2026-10-14** (#356, #359, #361; plugin + kit
   1.9.0/1.9.1, CLI 1.6.0 — npm publish owed). A founder or their agent makes, binds and deletes products from the terminal
   or the console: `frijoles login` signs in the account, `frijoles init --create <slug>` makes a product and binds the
@@ -618,6 +626,10 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-14**: `outcome-report-any-product` **shipped** (≈$23): any product can push its outcome report from the kit,
+  and lead time is now read from each epic's real status history (medusa-bonsai's median: 7 → 3.4 days, said on the report).
+- **2026-10-14**: `agent-legible-horizon` **shipped** (≈$10): an agent can read a horizon, connect Codex and debug from
+  one page without a browser; the first Codex review on luna/xhigh came back Clean.
 - **2026-10-14**: `many-products` **shipped**: ≈$61 against a $15–33 quote — three verifier rounds each found a real
   defect (an uncapped create, purge blocked by an append-only ledger, then a cascade exit that could erase a live ledger),
   two caught before the migration reached production. A second product is now a CLI command, not hand-written SQL.

@@ -8,7 +8,7 @@ appetite: M
 underwritten_by: wave-2026-10
 risk: high
 epic: "02-commercial/owed-on-screen"
-build_order: 88
+build_order: 92
 updated: 2026-10-14
 intent_ask: verbatim
 hypothesis: "We believe that showing every owed check on the epic page and in one band on the board, for founders who own the product, will cut the open owed checks, because today they live only in a generated file nobody opens (85 open on 2026-10-14, 24 of them answers only the owner can give). We'll know when the open count falls."

@@ -8,7 +8,7 @@ appetite: L
 underwritten_by: wave-2026-10
 risk: high
 epic: "01-growth-engine/funnel-truth"
-build_order: 92
+build_order: 93
 updated: 2026-10-14
 intent_ask: verbatim
 hypothesis: "A funnel today is one number per period, and Targeted is always everyone. Showing it by the month people first got the feature, aimed at a named segment, lets founders judge a bet over its whole life. We'll know when members open funnel trends."

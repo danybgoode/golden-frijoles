@@ -31,7 +31,7 @@ adopted_event: funnel_trend_viewed
 retained_event: null
 retention_days: null
 satisfied_event: null
-build_order: 92      # integer position in the ONE global build sequence — the SSOT once the epic
+build_order: 93      # integer position in the ONE global build sequence — the SSOT once the epic
                      # exists (the seed's value is only a fallback). Fill it in at the betting
                      # table; plain integers, no "#2a" suffixes. See 00-ideas/README.md → Ordering.
 ---

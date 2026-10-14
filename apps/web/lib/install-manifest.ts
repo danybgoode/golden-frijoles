@@ -83,7 +83,8 @@ go-ahead, runs it.
 2. **The planning kit** (\`${KIT_PACKAGE}\`, fetched on demand). The skills run its scripts with \`npx\`;
    it is not installed globally and copies nothing into your repo. It lands in npm's own cache.
 3. **The \`${CLI_BIN}\` CLI** (optional, \`${CLI_PACKAGE}\`). Only if you want an account: feature
-   flags you can roll out and turn off, and outcome reports. Planning works without it.
+   flags you can roll out and turn off, and outcome reports (\`npx -y @golden-frijoles/kit pod-report --push\`,
+   run in your product's repo with its ingest key in \`.env.local\`). Planning works without it.
 
 ## This release
 

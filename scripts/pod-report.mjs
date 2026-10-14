@@ -1,13 +1,15 @@
 #!/usr/bin/env node
-// pod-report.mjs — gather the medusa-bonsai dataset and compute the Pod Report artifact.
+// pod-report.mjs — compute a product's outcome report (the Pod Report artifact) from its own repo, and push it.
 //
-// pod-report · Sprint 2, Story 2.1. This is the I/O half: it runs git and gh against a LOCAL
-// medusa-bonsai checkout, hands the result to the pure `lib/pod-metrics.mjs` computation, and
-// pushes the artifact through the same client-pushes rail Sprint 1 built.
+// pod-report · Sprint 2, Story 2.1 built it against a local the first measured product checkout; outcome-report-any-product (2026-10-14)
+// made it run in ANY product's repo from the kit. This is the I/O half: it runs git and gh against the checkout, hands the
+// result to the pure `lib/pod-metrics.mjs` computation, and pushes the artifact through the client-pushes rail.
 //
-//   node scripts/pod-report.mjs --repo ~/dobby/medusa-bonsai            # print the artifact
-//   node scripts/pod-report.mjs --repo … --push                        # push it to the engine
-//   node scripts/pod-report.mjs --repo … --out artifact.json           # write it to a file
+//   npx -y @golden-frijoles/kit pod-report --push          # in the product's repo; key + URL from .env.local
+//   node scripts/pod-report.mjs                            # print the artifact for the repo it runs in
+//   node scripts/pod-report.mjs --repo <path> --push        # another checkout
+//   node scripts/pod-report.mjs --env-file <path> --push    # the key and URL from that file
+//   node scripts/pod-report.mjs --out artifact.json         # write it to a file
 //
 // ── What this deliberately does NOT compute ───────────────────────────────────────────────────
 // Velocity, cost-per-point, change-failure-rate and MTTR are absent by design, not by omission —
@@ -21,11 +23,13 @@
 // a determinism check that ignores one field is not a determinism check.
 
 import { spawnSync } from 'node:child_process';
-import { writeFileSync, existsSync, writeSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, writeSync } from 'node:fs';
 import { resolve, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { die, need } from './lib/cross-agent-cli.mjs';
-import { computeDelivery } from './lib/pod-metrics.mjs';
+import { projectRoot } from './lib/project-root.mjs';
+import { computeDelivery, epicHistory, normalizeStatus } from './lib/pod-metrics.mjs';
+import { parseFrontmatter } from './lib/epic-kickoff.mjs';
 import { computeMaturityLens } from './lib/maturity-lens.mjs';
 
 /** The artifact's payload contract version. Bump only alongside a renderer migration. */
@@ -66,7 +70,7 @@ export function readCommits(repo, run = git) {
         // ── isRevert, which round 6 caught missing ────────────────────────────────────────────
         // `scoreTrustedSelfVerificationLoop` filters on `c.isRevert`; leaving it undefined made
         // revertCount 0 for EVERY repository — a 0% revert rate that means "never computed". It
-        // happened to match this dataset (medusa-bonsai genuinely has no reverts), which is exactly
+        // happened to match this dataset (the first measured product genuinely has no reverts), which is exactly
         // how it went unnoticed: accidentally right here, wrong everywhere else.
         //
         // Matched on the SUBJECT only. `git revert` writes "Revert \"original subject\"", but a
@@ -85,7 +89,7 @@ export function readCommits(repo, run = git) {
  * inferred date. An epic still in flight has a null `shippedAt` and is excluded from lead time
  * rather than counted as taking forever.
  */
-export function readEpics(repo, run = git) {
+export function readEpics(repo, run = git, showMany = catFileBatch) {
   const readmes = run(repo, ['ls-files', 'Roadmap/*/*/README.md'])
     .split('\n')
     .map((p) => p.trim())
@@ -98,31 +102,70 @@ export function readEpics(repo, run = git) {
         .split('\n')
         .filter(Boolean)[0] ?? null;
 
-    // Find the commit that INTRODUCED `status: shipped`.
-    //
-    // ── Why this stays `-S` with a literal, despite a review finding ─────────────────────────
-    // Round 6 correctly noted that an exact-string search is fragile to YAML variation
-    // (`status: "shipped"`, unusual spacing). Both attempted `-G` regex replacements were tried
-    // against the real dataset and BOTH changed verified numbers rather than preserving them:
-    // one returned zero measurable epics, the other 123 with a 3.6-day median where the validated
-    // answer is 47 and 7.2 days.
-    //
-    // The cause is semantic, not a typo: `-S` counts OCCURRENCES of a string and so matches the
-    // commit where the count went 0→1 — the flip itself. `-G` matches any commit whose diff merely
-    // TOUCHES a line matching the pattern, which includes every later edit to that line (this repo
-    // appends a growing changelog to the `status:` comment, so those edits are numerous).
-    //
-    // So the finding is real and the obvious fix is wrong. Making it robust needs a different
-    // approach — parsing the frontmatter at each revision rather than pattern-matching the diff —
-    // with a fixture proving it reproduces the validated numbers first. Recorded as a follow-up in
-    // sprint-2.md rather than shipped as an unverified swap that silently moves a headline metric.
-    const shippedAt =
-      run(repo, ['log', '-S', 'status: shipped', '--format=%aI', '--reverse', '--', path])
-        .split('\n')
-        .filter(Boolean)[0] ?? null;
-
-    return { slug, path, startedAt, shippedAt };
+    // ── outcome-report-any-product D1 — `shippedAt` from each revision's PARSED frontmatter ────────────────
+    // The old `git log -S 'status: shipped'` counted occurrences of a literal string: a quoted or re-spaced value was
+    // invisible to it, and a mention of the phrase anywhere in the README could date the ship. Each revision of this
+    // README is now read (one `git cat-file --batch` for all of them) and its frontmatter `status` parsed; the ship is
+    // the FIRST revision whose status reads `shipped` (the product owner, 2026-10-14). `startedAt` is unchanged.
+    const revisions = readRevisions(repo, path, run, showMany);
+    const history = epicHistory(revisions);
+    return { slug, path, startedAt, ...history };
   });
+}
+
+/** This README's revisions, oldest first, each with its parsed, normalised `status`. Deleted revisions are skipped. */
+function readRevisions(repo, path, run, showMany) {
+  const rows = run(repo, ['log', '--reverse', '--format=%H%x09%aI%x09%s', '--', path])
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => {
+      const [commit, at, ...subject] = line.split('\t');
+      return { commit, at, subject: subject.join('\t') };
+    });
+  const texts = showMany(
+    repo,
+    rows.map((row) => `${row.commit}:${path}`)
+  );
+  return rows
+    .map((row, i) =>
+      texts[i] === null ? null : { ...row, status: normalizeStatus(parseFrontmatter(texts[i]).status) }
+    )
+    .filter(Boolean);
+}
+
+/**
+ * The contents of many `<commit>:<path>` objects in ONE `git cat-file --batch` process — `null` for a missing one (the
+ * file did not exist at that commit). One process per README rather than one per revision.
+ */
+export function catFileBatch(repo, specs) {
+  if (specs.length === 0) return [];
+  const r = spawnSync('git', ['cat-file', '--batch'], {
+    cwd: repo,
+    input: specs.join('\n') + '\n',
+    maxBuffer: 256 * 1024 * 1024,
+  });
+  // Loud, never quiet (verifier, #368): mapping a failed read to "missing" would silently drop every ship date it held.
+  if (r.status !== 0 || !r.stdout) {
+    throw new Error(
+      `git cat-file --batch failed in ${repo}: ${(r.stderr || '').toString().trim() || `exit ${r.status}`}`
+    );
+  }
+  const out = r.stdout;
+  const texts = [];
+  let offset = 0;
+  for (let i = 0; i < specs.length; i++) {
+    const headerEnd = out.indexOf(10, offset);
+    const header = out.subarray(offset, headerEnd).toString('utf8');
+    if (header.endsWith(' missing')) {
+      texts.push(null);
+      offset = headerEnd + 1;
+      continue;
+    }
+    const size = Number(header.split(' ')[2]);
+    texts.push(out.subarray(headerEnd + 1, headerEnd + 1 + size).toString('utf8'));
+    offset = headerEnd + 1 + size + 1; // the object, then its trailing newline
+  }
+  return texts;
 }
 
 /** Merged PRs via `gh`. Returns [] when gh is unavailable rather than failing the whole report. */
@@ -307,12 +350,14 @@ export function buildArtifact({ delivery, source, generatedAt, maturity }) {
       "Every number here is computed from this repository's own git and pull-request history. Nothing is estimated.",
       'The comparison baseline is PUBLISHED BENCHMARKS, not an internal human-era baseline: this dataset has no human-majority era to compare against.',
       'Metrics listed as "not instrumented" are absent because the data cannot support them — not because they are zero.',
+      // outcome-report-any-product (the product owner, 2026-10-14): the date source changed; say so where the numbers are.
+      "Lead time and throughput read each epic's real status history (since 2026-10-14); earlier reports dated many ships at the epic's creation.",
     ],
   };
 }
 
 /**
- * Git provenance of the ANALYSED repo (the medusa-bonsai checkout, not this golden-beans one) — the
+ * Git provenance of the ANALYSED repo (the the first measured product checkout, not this golden-beans one) — the
  * freshness stamp a push carries. `run` is injectable so a unit test pins the call shape without a
  * real checkout, mirroring `readCommits`/`readEpics` above.
  */
@@ -327,7 +372,7 @@ export function gatherSourceRef(repo, run = git) {
  * Where to push and with which credential.
  *
  * `POD_REPORT_API_KEY` is checked FIRST, `SELF_PROJECT_API_KEY` second. The two need not agree: the
- * Pod Report is computed from a medusa-bonsai checkout but the tenant that OWNS the pushed artifact
+ * Pod Report is computed from a the first measured product checkout but the tenant that OWNS the pushed artifact
  * is whichever project the key belongs to (resolved server-side from the key, never from this
  * script — same rule as the route). A team dogfooding both rails from one tenant can set only
  * `SELF_PROJECT_API_KEY` and have it cover both; a team pushing the Pod Report to a different
@@ -335,9 +380,43 @@ export function gatherSourceRef(repo, run = git) {
  */
 export function resolvePushConfig(env = process.env) {
   return {
-    baseUrl: env.GROWTH_ENGINE_URL || 'http://localhost:3000',
-    apiKey: env.POD_REPORT_API_KEY || env.SELF_PROJECT_API_KEY || null,
+    // outcome-report-any-product D4 (decision b): a stranger's push reaches the hosted engine with only its key set.
+    baseUrl: env.GROWTH_ENGINE_URL || 'https://goldenfrijoles.com',
+    // `GROWTH_ENGINE_API_KEY` last: the name `frijoles init --ingest` writes and `roadmap-push` already reads.
+    apiKey: env.POD_REPORT_API_KEY || env.SELF_PROJECT_API_KEY || env.GROWTH_ENGINE_API_KEY || null,
   };
+}
+
+/**
+ * The environment the push reads, with its URL and key from ONE source (security lens, vibe, #368): the file's values
+ * only when the file supplies a key; otherwise the shell's — never the file's URL with the shell's key.
+ */
+export function pushEnvFrom(shell, file) {
+  const fileHasKey = Boolean(
+    file.POD_REPORT_API_KEY || file.SELF_PROJECT_API_KEY || file.GROWTH_ENGINE_API_KEY
+  );
+  if (!fileHasKey) return { ...shell };
+  const keyless = { ...shell };
+  for (const name of POD_ENV_NAMES) delete keyless[name];
+  return { ...keyless, ...file };
+}
+
+/** The variables this script reads from a dotenv file — nothing is evaluated, the last assignment wins (like roadmap-push). */
+export const POD_ENV_NAMES = [
+  'GROWTH_ENGINE_URL',
+  'GROWTH_ENGINE_API_KEY',
+  'SELF_PROJECT_API_KEY',
+  'POD_REPORT_API_KEY',
+];
+export function readPodEnvFile(text) {
+  const out = {};
+  for (const line of String(text).split(/\r?\n/)) {
+    const m = /^\s*(?:export\s+)?([A-Z_][A-Z0-9_]*)\s*=\s*(.*)$/.exec(line);
+    if (!m || !POD_ENV_NAMES.includes(m[1])) continue;
+    const value = m[2].trim().replace(/^(['"])(.*)\1$/, '$2');
+    if (value) out[m[1]] = value;
+  }
+  return out;
 }
 
 /**
@@ -397,11 +476,13 @@ async function fetchTaskLifecycle({ baseUrl, apiKey }) {
 
 async function main() {
   const args = process.argv.slice(2);
-  let repo = process.env.MEDUSA_BONSAI_PATH || `${process.env.HOME}/dobby/medusa-bonsai`;
-  let out, generatedAt;
+  // outcome-report-any-product D4: the repo it is RUN in (the project root), not a fixed checkout on one machine.
+  let repo = projectRoot();
+  let out, generatedAt, envFile;
   let push = false;
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--repo') repo = need(args[++i], '--repo');
+    else if (args[i] === '--env-file') envFile = need(args[++i], '--env-file');
     else if (args[i] === '--out') out = need(args[++i], '--out');
     else if (args[i] === '--generated-at') generatedAt = need(args[++i], '--generated-at');
     else if (args[i] === '--push') push = true;
@@ -410,11 +491,30 @@ async function main() {
 
   repo = resolve(repo.replace(/^~/, process.env.HOME ?? '~'));
   if (!existsSync(repo)) {
-    die(
-      `no checkout at ${repo}. Sprint 2 needs a local medusa-bonsai clone — pass --repo <path> ` +
-        `or set MEDUSA_BONSAI_PATH.`
-    );
+    die(`no checkout at ${repo}. Run it inside the product's repo, or pass --repo <path>.`);
   }
+
+  // The push's key and URL: --env-file, else the repo's own `.env.local` (where `frijoles init --ingest` writes them).
+  //
+  // ⚠️ Security lens (vibe, #368): an auto-loaded file must never pair ITS url with someone else's key. A cloned repo can
+  // commit a `.env.local` that sets only GROWTH_ENGINE_URL; with the file winning over the shell, the person's own key
+  // would be sent to that host. So: a TRACKED `.env.local` (committed by whoever committed it) is never auto-loaded, and
+  // `pushEnvFrom` takes the URL and the key from ONE source — the file only when the file also supplies the key.
+  const envPath = envFile ? resolve(envFile) : resolve(repo, '.env.local');
+  let fromFile = {};
+  const tracked = !envFile && git(repo, ['ls-files', '--error-unmatch', '.env.local']) !== '';
+  if (tracked) {
+    process.stderr.write(
+      '⚠ .env.local is tracked by git here, so it is not read; pass --env-file to use a file on purpose.\n'
+    );
+  } else if (envFile || existsSync(envPath)) {
+    try {
+      fromFile = readPodEnvFile(readFileSync(envPath, 'utf8'));
+    } catch (err) {
+      die(`could not read ${envPath}: ${err.message}`);
+    }
+  }
+  const pushEnv = pushEnvFrom(process.env, fromFile);
 
   const commits = readCommits(repo);
   if (commits.length === 0) die(`no commits found in ${repo} — is it a git checkout?`);
@@ -437,7 +537,7 @@ async function main() {
   // signals-loop Story 3.3b — the one input that does NOT come from git. Fetched from the engine
   // with the push credential, and `undefined` on any failure so the criterion degrades to
   // "not instrumented" rather than to a zero we did not measure.
-  const taskLifecycle = await fetchTaskLifecycle(resolvePushConfig());
+  const taskLifecycle = await fetchTaskLifecycle(resolvePushConfig(pushEnv));
 
   const maturity = computeMaturityLens({
     prs: prs.map(normalisePrForLens),
@@ -467,9 +567,9 @@ async function main() {
     maturity,
     delivery: computeDelivery({ prs, epics, commits, windowDays: days, generatedAt: stamp }),
     source: {
-      // The checkout's directory name, NOT a hardcoded string. It was `'medusa-bonsai'` literally,
+      // The checkout's directory name, NOT a hardcoded string. It was a client's repo name literally,
       // which meant `--repo` pointed anywhere else still produced an artifact CLAIMING to measure
-      // medusa-bonsai — a false provenance line on a document whose entire value is that every
+      // the first measured product — a false provenance line on a document whose entire value is that every
       // number is traceable. Found the first time the script was run against a second repository
       // (golden-beans' own, for the demo-safe landing artifact), which is the only way it could have
       // been found: with one dataset the constant was indistinguishable from correct.
@@ -495,7 +595,7 @@ async function main() {
   }
 
   if (push) {
-    const { baseUrl, apiKey } = resolvePushConfig();
+    const { baseUrl, apiKey } = resolvePushConfig(pushEnv);
     if (!apiKey) {
       // Clean skip, not a failure — same stance as scripts/roadmap-push.mjs: a repo without the
       // secret configured must not turn a run red over an observability-grade nicety. This is NOT
