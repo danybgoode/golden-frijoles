@@ -3,7 +3,7 @@ epic: brand-reveal-error-pages
 sprint: 2
 title: "S2 Branded recovery pages"
 risk: high
-phase: In review
+phase: Shipped
 stories_total: 1
 stories:
   - id: S2.1
@@ -16,23 +16,9 @@ stories:
 ---
 # A golden welcome and recovery pages — Sprint 2: S2 Branded recovery pages
 
-**Status:** 🟦 In review — S2.1 `1d6ab59`; PR #340 CI and preview passed
+**Status:** ✅ shipped 2026-10-10 (#340, merge `f0cadd1`); steps 1–2 checked live on 2026-10-14
 
 ## Stories
-<!-- One block per story. Thinnest shippable slice first.
-     Each story ALSO has an entry in the frontmatter `stories:` list above — that entry is what tools
-     read (the build view, build-state.mjs); the prose below is what people read. Add both, and keep
-     `stories_total` (here and in the epic README) equal to the number of entries.
-     Story `status:` is planned | in-progress | done. The sprint's `phase:` is the executive ladder
-     (Shaping | Locking architecture | Building | Verifying | In review | Shipped), WRITTEN at each
-     cadence event. Name the story in each commit subject (`S2.1 …`): that is how the build view
-     knows which story is in flight.
-     Keep the heading shape `### Story 2.M — <title>` (this is what the status board counts).
-     When a story ships, append ✅ + its commit ref to the heading, e.g.
-       ### Story 2.1 — <title> ✅ `abc1234`
-     Note: the epic README frontmatter `status:` is the AUTHORITATIVE epic status; this ✅ marker only
-     feeds the cosmetic per-sprint progress count, so a format slip can't mis-state shipped/not-shipped. -->
-
 ### Story 2.1 — Recover from missing and broken web pages ✅ `1d6ab59`
 **As a** visitor who reaches an error, **I want** a branded explanation and useful next step, **so that** I can recover without guessing what happened.
 **Acceptance:** Unknown pages and explicit browser 404s display the approved playful bean visual and working home/back links. Route crashes show a similarly branded retry state; root crashes also render when the normal layout fails. Mobile and desktop layouts are legible. Existing shared-link missing/expired/revoked states stay indistinguishable and existing API/auth statuses stay correct.
@@ -46,9 +32,11 @@ stories:
 ## Sprint 2 — Smoke walkthrough (do these in order)
 Env: preview URL before merge, then production after merge.
 
-1. Open `https://<your-domain>/this-page-does-not-exist` at desktop and mobile widths.
+1. ✅ *(2026-10-14: HTTP 404 and "We couldn’t find that page… Back to Golden Frijoles", desktop and mobile user agents)*
+   Open `https://goldenfrijoles.com/this-page-does-not-exist` at desktop and mobile widths.
    → Branded 404, helpful copy and working home link; HTTP 404 for a non-streamed response.
-2. Open an invalid `https://<your-domain>/s/<token>`.
+2. ✅ *(2026-10-14: HTTP 404 and the generic "Whoever shared it can make you a new one")*
+   Open an invalid `https://goldenfrijoles.com/s/<token>`.
    → Shared-link recovery remains generic and does not reveal token validity.
 3. Exercise a local test-only throwing route in the browser.
    → Branded 500 boundary offers a retry and home link, without sensitive error detail.

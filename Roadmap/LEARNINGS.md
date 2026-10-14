@@ -344,6 +344,10 @@ one-liner + why + date shape.
 - **A guard for plain words must be tested on plain words.** why-as-a-story's first Why guard refused iPhone, eBay,
   Next.js and "reader/writer/editor"; reading the regex looked fine, running a prose corpus did not. Test a text guard
   against what it must let through, not only what it must catch. *(why-as-a-story, 2026-10-10.)*
+- **A fixture with ONE of something cannot catch a bug that needs two.** Every North Star spec seeded one metric, so
+  `.maybeSingle()` on a non-unique filter passed for weeks and broke the page the day a project held two. Seed at least
+  two of anything a query must choose between, inserted against the order the rule picks.
+  *(north-star-multi-metric-read, 2026-10-08.)*
 - **When a feature reads data someone else must send, test it from the sender's instructions.** One bet, wired passed
   every unit test while its funnel could never fill: the docs never told the app to report evaluations, and the read
   keyed them on the server's own user. Write one test that sends the data exactly as the shipped guidance says.
