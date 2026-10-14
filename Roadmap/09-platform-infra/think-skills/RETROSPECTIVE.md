@@ -47,8 +47,8 @@ _Closed: 2026-10-01_
 ## Gaps / follow-ups
 
 - **Owed to Daniel, by name:**
-  - `npm publish` of `@golden-frijoles/cli@0.3.0` (npm 2FA). Until then the North Star skill's pinned command fails
-    loudly.
+  - ~~`npm publish` of `@golden-frijoles/cli@0.3.0` (npm 2FA). Until then the North Star skill's pinned command fails
+    loudly.~~ Published (npm lists 0.3.0; checked 2026-10-14).
   - Run the North Star coach on Golden Frijoles and judge the file (S1 smoke step 2).
   - The live `--yes` against `golden-beans` with that file, then check the North Star surface (S3 smoke steps 2–3).
   - The interactive coach runs (S1 smoke steps 1 and 3; S2 smoke step 1).

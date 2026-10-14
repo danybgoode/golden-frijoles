@@ -66,8 +66,8 @@ project members sat outside their workspace when Sprint 2's check went live.
   ran clean once scoped with `--paths` (74 KB on #220, 37 KB on #221).
 
 ## Gaps / follow-ups
-- **Owed to Daniel by name:** the signed-in prod walkthroughs (S1 steps 1–3 and 5, S2 step 1), and `npm publish` of
-  `@golden-frijoles/cli@0.4.0` (2FA), then S2 step 2. S2 step 3 is n/a in prod; CI replaces it.
+- **Owed to Daniel by name:** the signed-in prod walkthroughs (S1 steps 1–3 and 5, S2 step 1), and ~~`npm publish` of
+  `@golden-frijoles/cli@0.4.0` (2FA)~~ (published; checked 2026-10-14), then S2 step 2. S2 step 3 is n/a in prod; CI replaces it.
 - `provisionTenantForUser`'s release-on-failure wiring is verified by inspection only. The provisioner is `server-only`,
   and no spec can make it fail midway.
 - The `tenancy` lint rule is in shadow. Promote, tune or drop it with rule-1's review (shadow expires 2026-10-14). Its one

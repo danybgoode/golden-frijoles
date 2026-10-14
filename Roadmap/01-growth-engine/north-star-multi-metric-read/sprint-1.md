@@ -3,7 +3,7 @@ epic: north-star-multi-metric-read
 sprint: 1
 title: "S1 One rule for the current North Star, every reader uses it"
 risk: low
-phase: In review
+phase: Shipped
 stories_total: 1
 stories:
   - id: S1.1
@@ -16,14 +16,14 @@ stories:
 ---
 # Several North Star metrics, one reading rule — Sprint 1: S1 One rule for the current North Star, every reader uses it
 
-**Status:** 🟡 built 2026-10-08 — the bug went live on golden-frijoles after one-product-project's cutover
+**Status:** ✅ shipped 2026-10-08 (#321, merge `9bf9e5c`). The bug had gone live on golden-frijoles after one-product-project's cutover.
 
 ## Build contract (the architect locks this before the builder starts)
 Cite, don't restate: the epic README's **D1–D5**. D5's live count is part of the lock: record the number in the README.
 
 ## Stories
 
-### Story 1.1 — One rule for the current North Star, every reader uses it
+### Story 1.1 — One rule for the current North Star, every reader uses it ✅ #321
 **As a** project owner whose project holds two North Star metrics, **I want** my North Star page and Pod Report to show
 the newest metric and its inputs, **so that** a state `gf north-star set` creates on purpose never renders as an outage.
 **Acceptance:**
@@ -51,7 +51,8 @@ Env: production · https://goldenfrijoles.com (after the merge deploys)
    `npx @golden-frijoles/cli north-star set <file> --yes` (a new key).
 2. **(signed in, owed to Daniel)** Open https://goldenfrijoles.com/app/north-star/<that-project-slug>
    → the newest metric's name and its inputs, with no "something went wrong" screen.
-3. Open that project's Pod Report (https://goldenfrijoles.com/hub/<slug>/report, or a `/s/<token>` share link)
+3. ✅ *(2026-10-14, by the agent: https://goldenfrijoles.com/hub/golden-frijoles/report reads "North Star — proven_bets"
+   while the project holds two metrics.)* Open that project's Pod Report (https://goldenfrijoles.com/hub/<slug>/report, or a `/s/<token>` share link)
    → the North Star line shows the same metric and its input count, not "unavailable".
 
 If any step fails, note the step number + what you saw — that's the bug report.

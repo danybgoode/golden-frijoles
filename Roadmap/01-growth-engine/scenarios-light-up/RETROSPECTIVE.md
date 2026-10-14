@@ -48,5 +48,5 @@ connector tool, and two of the three needed a fix after the re-check (a help sen
 
 - **The impact comparison (D11)** could not be judged: impact is recorded only for a drill bound to an experiment, through
   a Miyagi-only route. Seeded as `drill-impact-for-agents`.
-- **Owed to the product owner:** the _Intent_ word.
+- ~~**Owed to the product owner:** the _Intent_ word.~~ Answered: yes (2026-10-13).
 - The flags page's "On" disagreeing with the CLI surfaced during this drill and became its own epic, `one-flag-switch`.
