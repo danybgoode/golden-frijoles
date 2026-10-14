@@ -3,7 +3,7 @@ epic: many-products
 sprint: 2
 title: "Delete, /connect and the folded-in fixes"
 risk: high
-phase: Shaping
+phase: In review
 stories_total: 5
 stories:
   - id: S2.1
@@ -12,39 +12,39 @@ stories:
     i_want: "to delete it from the terminal or the console"
     so_that: "a mistake or a dead product disappears and its keys stop working"
     risk: high
-    status: planned
+    status: done
   - id: S2.2
     title: "Purge after 30 days, by the owner"
     as_a: "a founder who deleted a product"
     i_want: "to purge its data once 30 days have passed"
     so_that: "the data really goes, without a cross-tenant job"
     risk: high
-    status: planned
+    status: done
   - id: S2.3
     title: "/connect shows how to install the CLI"
     as_a: "a founder on the Connect page"
     i_want: "the install and help commands"
     so_that: "I can get the CLI without asking an agent"
     risk: low
-    status: planned
+    status: done
   - id: S2.4
     title: "Agents may run supabase db push"
     as_a: "the product owner"
     i_want: "agents to apply migrations with supabase db push"
     so_that: "a migration is not a hand step"
     risk: high
-    status: planned
+    status: done
   - id: S2.5
     title: "roadmap-push works in a first-day repo"
     as_a: "a founder with a brand-new repo"
     i_want: "roadmap-push to push my board, or tell me the real reason it can't"
     so_that: "the first push isn't a dead end"
     risk: low
-    status: planned
+    status: done
 ---
 # Many products — Sprint 2: Delete, /connect and the folded-in fixes
 
-**Status:** ⬜ not started
+**Status:** 🟦 In review — PR #359 (migration `20261015100000` applied to prod and verified 2026-10-14; plugin + kit 1.9.0, CLI 1.6.0)
 
 ## Build contract (locked by the architect before the builder started)
 Cites the epic README's Architecture lock; nothing here restates it.
