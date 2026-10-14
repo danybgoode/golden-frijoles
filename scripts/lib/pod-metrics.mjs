@@ -168,6 +168,99 @@ export function epicLeadTimeDays(epics) {
 }
 
 /**
+ * outcome-report-any-product D1 — the one reading of an epic README's `status:` value: unquoted, lower-case, trimmed.
+ * The kit's `parseFrontmatter` already drops an inline `# comment`; this also accepts `"shipped"` / `'shipped'`, which the
+ * old text search (`git log -S 'status: shipped'`) could not see.
+ */
+export function normalizeStatus(value) {
+  if (typeof value !== 'string') return null;
+  const v = value
+    .trim()
+    .replace(/^(['"])(.*)\1$/, '$2')
+    .trim()
+    .toLowerCase();
+  return v === '' ? null : v;
+}
+
+/**
+ * outcome-report-any-product D1 + D2 — an epic's status history from its README's revisions, OLDEST first:
+ * `[{ commit, at, subject, status }]` (status already normalised; `null` when the revision has none).
+ *
+ *   shippedAt     — the FIRST revision whose status is `shipped` (the product owner, 2026-10-14: lead time runs to the
+ *                   first ship). A README whose first revision is already shipped keeps that date, and
+ *                   epicLeadTimeDays files it as "documented after the work", exactly as before.
+ *   statusHistory — the status CHANGES only, `{ at, from, to, commit, subject }`; an edit that leaves the parsed value
+ *                   alone (a reworded comment) is not a change.
+ *   reopenedAt / reshippedAt — the first time it LEFT `shipped` after shipping, and the next time it shipped again.
+ *
+ * Pure: no git, no clock. The I/O half (scripts/pod-report.mjs → readEpics) hands it the revisions.
+ */
+export function epicHistory(revisions) {
+  const statusHistory = [];
+  let previous = null;
+  for (const revision of revisions ?? []) {
+    const status = revision.status ?? null;
+    if (status !== previous) {
+      statusHistory.push({
+        at: revision.at,
+        from: previous,
+        to: status,
+        commit: revision.commit,
+        subject: revision.subject ?? '',
+      });
+      previous = status;
+    }
+  }
+  // By position in the history, never by comparing date strings: two commits' ISO dates can carry different offsets.
+  const shipIndex = statusHistory.findIndex((change) => change.to === 'shipped');
+  const firstShip = shipIndex === -1 ? null : statusHistory[shipIndex];
+  const reopenIndex =
+    shipIndex === -1
+      ? -1
+      : statusHistory.findIndex((change, i) => i > shipIndex && change.from === 'shipped');
+  const reopen = reopenIndex === -1 ? null : statusHistory[reopenIndex];
+  const reshipIndex =
+    reopenIndex === -1
+      ? -1
+      : statusHistory.findIndex((change, i) => i > reopenIndex && change.to === 'shipped');
+  const reship = reshipIndex === -1 ? null : statusHistory[reshipIndex];
+  return {
+    shippedAt: firstShip ? firstShip.at : null,
+    statusHistory,
+    reopenedAt: reopen ? reopen.at : null,
+    reopenedBy: reopen ? reopen.subject : null,
+    reshippedAt: reship ? reship.at : null,
+  };
+}
+
+/**
+ * outcome-report-any-product D2 — rework, as its OWN number: of the epics that shipped, how many left `shipped`
+ * afterwards, and the median days until they shipped again. Never folded into lead time. No reason is inferred;
+ * each re-opened epic carries the subject of the commit that re-opened it.
+ */
+export function reworkSummary(epics) {
+  const shipped = (epics ?? []).filter((epic) => epic.shippedAt);
+  const reopened = shipped.filter((epic) => epic.reopenedAt);
+  const reshipDays = reopened
+    .filter((epic) => epic.reshippedAt)
+    .map((epic) => (Date.parse(epic.reshippedAt) - Date.parse(epic.reopenedAt)) / 86_400_000)
+    .filter((days) => Number.isFinite(days) && days >= 0);
+  return {
+    reopened: reopened.length,
+    of: shipped.length,
+    medianDaysToReship: reshipDays.length ? round(median(reshipDays), 1) : null,
+    epics: reopened
+      .map((epic) => ({
+        slug: epic.slug,
+        reopenedAt: epic.reopenedAt,
+        reshippedAt: epic.reshippedAt ?? null,
+        subject: epic.reopenedBy ?? '',
+      }))
+      .sort((a, b) => (a.reopenedAt < b.reopenedAt ? -1 : a.reopenedAt > b.reopenedAt ? 1 : 0)),
+  };
+}
+
+/**
  * Deploy frequency — a LABELLED PROXY, and the label is not optional.
  *
  * There is no deploy log in the dataset, so this counts merged PRs per week and says so. medusa-
@@ -235,6 +328,7 @@ export function computeDelivery(input) {
     epicLeadTime: epicLeadTimeDays(epics),
     deployFrequency: deployFrequency(prs, windowDays),
     epicThroughput: epicThroughput(epics, windowDays),
+    rework: reworkSummary(epics),
     authorship: authorshipByMonth(commits),
     notInstrumented: NOT_INSTRUMENTED,
   };

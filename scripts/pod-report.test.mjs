@@ -8,7 +8,10 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, mkdtempSync, mkdirSync, writeFileSync as writeFile } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { spawnSync as run } from 'node:child_process';
+import { reworkSummary } from './lib/pod-metrics.mjs';
 import { basename } from 'node:path';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -23,6 +26,8 @@ import {
   buildArtifact,
   gatherSourceRef,
   resolvePushConfig,
+  readPodEnvFile,
+  readEpics,
   buildPushEnvelope,
   POD_REPORT_SCHEMA_VERSION,
 } from './pod-report.mjs';
@@ -320,7 +325,23 @@ test('resolvePushConfig falls back to SELF_PROJECT_API_KEY when POD_REPORT_API_K
 test('resolvePushConfig yields a null apiKey when neither env var is set — the clean-skip signal', () => {
   const cfg = resolvePushConfig({});
   assert.equal(cfg.apiKey, null);
-  assert.equal(cfg.baseUrl, 'http://localhost:3000', "matches roadmap-push.mjs's own default");
+  // outcome-report-any-product D4 (decision b): a stranger's push reaches the hosted engine with only its key.
+  assert.equal(cfg.baseUrl, 'https://goldenfrijoles.com');
+});
+
+test('resolvePushConfig falls back to GROWTH_ENGINE_API_KEY last — the name `frijoles init --ingest` writes', () => {
+  assert.equal(resolvePushConfig({ GROWTH_ENGINE_API_KEY: 'ingest' }).apiKey, 'ingest');
+  assert.equal(
+    resolvePushConfig({ GROWTH_ENGINE_API_KEY: 'ingest', SELF_PROJECT_API_KEY: 'self' }).apiKey,
+    'self'
+  );
+});
+
+test('readPodEnvFile reads only its own names, strips quotes, and the last assignment wins', () => {
+  const env = readPodEnvFile(
+    'GROWTH_ENGINE_API_KEY=first\nexport GROWTH_ENGINE_API_KEY="second"\nOTHER=x\nGROWTH_ENGINE_URL=\'https://e.test\'\n'
+  );
+  assert.deepEqual(env, { GROWTH_ENGINE_API_KEY: 'second', GROWTH_ENGINE_URL: 'https://e.test' });
 });
 
 test('resolvePushConfig reads GROWTH_ENGINE_URL when set', () => {
@@ -390,5 +411,99 @@ test('source.repo names the ANALYSED checkout, never a hardcoded dataset', () =>
     /repo:\s*'medusa-bonsai'/.test(src),
     false,
     'source.repo must be derived from the checkout, not hardcoded'
+  );
+});
+
+// ── outcome-report-any-product D1/D2 — dates and rework from each README's REAL status history ──────────────────
+// Real throwaway git repos, so the git half (`git log` + one `git cat-file --batch`) is exercised, not mocked.
+
+function scratchRepo() {
+  const dir = mkdtempSync(join(tmpdir(), 'pod-history-'));
+  const git = (...args) => {
+    const r = run('git', args, {
+      cwd: dir,
+      encoding: 'utf8',
+      env: { ...process.env, GIT_DIR: undefined, GIT_WORK_TREE: undefined },
+    });
+    if (r.status !== 0) throw new Error(`git ${args.join(' ')}: ${r.stderr}`);
+  };
+  git('init', '-q');
+  git('config', 'user.email', 'spec@example.test');
+  git('config', 'user.name', 'spec');
+  const commit = (path, text, subject, date) => {
+    mkdirSync(join(dir, path, '..'), { recursive: true });
+    writeFile(join(dir, path), text);
+    git('add', path);
+    run('git', ['commit', '-q', '-m', subject], {
+      cwd: dir,
+      env: { ...process.env, GIT_AUTHOR_DATE: date, GIT_COMMITTER_DATE: date },
+    });
+  };
+  return { dir, commit };
+}
+
+const readme = (status, body = '') => `---\nstatus: ${status}\n---\n# Epic\n${body}\n`;
+// The template's own Definition-of-Done line — the text the old `git log -S 'status: shipped'` matched at creation.
+const TEMPLATE_BODY = "- [ ] this README's frontmatter `status: shipped` (the SSOT)";
+
+test("the template's own `status: shipped` text is NOT a ship — the status line is (the bug the old search had)", () => {
+  const { dir, commit } = scratchRepo();
+  const path = 'Roadmap/01-x/alpha/README.md';
+  commit(path, readme('scaffolded', TEMPLATE_BODY), 'plan alpha', '2026-01-01T10:00:00Z');
+  commit(path, readme('shipped', TEMPLATE_BODY), 'ship alpha', '2026-01-04T10:00:00Z');
+  const [epic] = readEpics(dir);
+  assert.equal(epic.slug, 'alpha');
+  assert.equal(Date.parse(epic.startedAt), Date.parse('2026-01-01T10:00:00Z'));
+  assert.equal(Date.parse(epic.shippedAt), Date.parse('2026-01-04T10:00:00Z'));
+});
+
+test('a quoted status counts; a reworded comment on the status line is not a change; never shipped stays null', () => {
+  const { dir, commit } = scratchRepo();
+  commit('Roadmap/01-x/quoted/README.md', readme('in-progress'), 'start', '2026-02-01T00:00:00Z');
+  commit('Roadmap/01-x/quoted/README.md', readme('"shipped"   # done'), 'ship', '2026-02-03T00:00:00Z');
+  commit(
+    'Roadmap/01-x/quoted/README.md',
+    readme('shipped   # done, reworded'),
+    'comment',
+    '2026-02-05T00:00:00Z'
+  );
+  commit(
+    'Roadmap/01-x/parked/README.md',
+    readme('scaffolded', TEMPLATE_BODY),
+    'plan',
+    '2026-02-01T00:00:00Z'
+  );
+  const epics = Object.fromEntries(readEpics(dir).map((epic) => [epic.slug, epic]));
+  assert.equal(Date.parse(epics.quoted.shippedAt), Date.parse('2026-02-03T00:00:00Z'));
+  assert.deepEqual(
+    epics.quoted.statusHistory.map((change) => [change.from, change.to]),
+    [
+      [null, 'in-progress'],
+      ['in-progress', 'shipped'],
+    ]
+  );
+  assert.equal(epics.parked.shippedAt, null);
+});
+
+test('a re-opened epic keeps its FIRST ship for lead time, and rework counts it with the re-opening subject', () => {
+  const { dir, commit } = scratchRepo();
+  const path = 'Roadmap/01-x/beta/README.md';
+  commit(path, readme('in-progress'), 'start beta', '2026-03-01T00:00:00Z');
+  commit(path, readme('shipped'), 'ship beta', '2026-03-03T00:00:00Z');
+  commit(path, readme('in-progress'), 'reopen beta: a regression', '2026-03-10T00:00:00Z');
+  commit(path, readme('shipped'), 'ship beta again', '2026-03-12T00:00:00Z');
+  const [epic] = readEpics(dir);
+  assert.equal(Date.parse(epic.shippedAt), Date.parse('2026-03-03T00:00:00Z'));
+  assert.equal(Date.parse(epic.reopenedAt), Date.parse('2026-03-10T00:00:00Z'));
+  assert.equal(epic.reopenedBy, 'reopen beta: a regression');
+  const rework = reworkSummary([epic]);
+  assert.deepEqual(
+    {
+      reopened: rework.reopened,
+      of: rework.of,
+      median: rework.medianDaysToReship,
+      subject: rework.epics[0].subject,
+    },
+    { reopened: 1, of: 1, median: 2, subject: 'reopen beta: a regression' }
   );
 });
