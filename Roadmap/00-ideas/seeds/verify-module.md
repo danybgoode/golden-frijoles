@@ -1,14 +1,14 @@
 ---
 title: "Verify module: model checks and proofs in our own CI, with Jev routing in shadow"
 slug: verify-module
-status: ready
+status: scaffolded
 area: "09"
 type: feature
 appetite: M
-underwritten_by: null
+underwritten_by: wave-2026-10
 risk: low
-epic: null
-build_order: 54
+epic: "09-platform-infra/verify-module"
+build_order: 96
 updated: 2026-10-14
 intent_ask: proxy
 hypothesis: "Our riskiest code (the delivery outbox, the flag evaluator) is reviewed by people and models, and still hid three bugs a model checker found in one session. Running those checks on every PR that touches it, and nightly in depth, catches the next one before merge. We'll know when Jev's routing log reaches 30 labelled PRs."
@@ -17,8 +17,8 @@ grounded: false
 grounded_reason: "Engineering assurance on our own code; no North Star input counts it, and audit D7 forbids a landing claim until it is product."
 target_metric: "PRs in Jev's verify-depth shadow log with a builder label"
 target_from: 0
-target_to: null
-read_date: null
+target_to: 30
+read_date: null   # 60 days after shipping (decision b)
 flag_key: null
 target_segment: null
 adopted_event: null
@@ -149,6 +149,15 @@ only).
   its trace.
 - **S2.2** (low): Jev's verify-depth question runs on every PR in shadow and appends its call beside the builder's
   label to a log; `jev-triage` reports the labelled count.
+- **S2.3** (low): when the labelled count first reaches 30, the nightly sends one Telegram ping through
+  `scripts/telegram-notify.mjs` ("Jev's verify-depth log has 30 labelled PRs: verify-for-projects can be refined"),
+  and writes an owed line (judgment) into this epic's retro so the ledger and the board show it until it is acted on.
+  Once only: a marker stops a repeat ping (Daniel, 2026-10-14: "lets not let it go stale and automatically notify").
+
+## Decisions (Daniel, 2026-10-14)
+
+- a. Dogfood first: this epic is our CI only; the product for other projects is `verify-for-projects`.
+- b. Target 0 → 30 labelled PRs, read 60 days after shipping; reaching it pings automatically (S2.3).
 
 ## Open risks / research
 

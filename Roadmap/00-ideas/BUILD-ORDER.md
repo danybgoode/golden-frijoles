@@ -18,14 +18,13 @@ _seeds with no pitch yet._
 - [The Satisfied ask: a rating the product can ask, read as TARS's last stage](seeds/satisfied-ask.md) — 01 Growth Engine · seed · Feature · risk: Low · _docs: status raw_
 - [Verify for projects: the verification depth ladder offered to every project](seeds/verify-for-projects.md) — 09 Platform Infra · seed · Feature · risk: High · _docs: status raw_
 
-## Refining (2)
+## Refining (1)
 
 _a pitch is waiting at the approval gate._
 
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
-- [Verify module: model checks and proofs in our own CI, with Jev routing in shadow](seeds/verify-module.md) — #54 · 09 Platform Infra · seed · Feature · risk: Low · appetite M · _docs: status ready_
 
-## Ready (10)
+## Ready (11)
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
@@ -36,9 +35,10 @@ _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 - [Drill impact for agents](../01-growth-engine/drill-impact-for-agents/README.md) — #93 · 01 Growth Engine · 0/6 stories · risk: High · appetite M · _docs: status scaffolded_
 - [The build view tells one story](../09-platform-infra/build-view-one-story/README.md) — #94 · 09 Platform Infra · 0/7 stories · risk: Low · appetite M · _docs: status scaffolded_
 - [Template scripts hold to the gates their consumers run](../09-platform-infra/template-scripts-consumer-gates/README.md) — #95 · 09 Platform Infra · 0/3 stories · risk: High · appetite S · _docs: status scaffolded_
-- [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #96 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
-- [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #97 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
-- [CMS-neutral experiment integration + Payload go/no-go](../01-growth-engine/cms-integration-spike/README.md) — #98 · 01 Growth Engine · 0/6 stories · risk: Low · _docs: status scaffolded_
+- [Verify module](../09-platform-infra/verify-module/README.md) — #96 · 09 Platform Infra · 0/7 stories · risk: Low · appetite M · _docs: status scaffolded_
+- [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #97 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
+- [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #98 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
+- [CMS-neutral experiment integration + Payload go/no-go](../01-growth-engine/cms-integration-spike/README.md) — #99 · 01 Growth Engine · 0/6 stories · risk: Low · _docs: status scaffolded_
 
 ## Building — live only
 

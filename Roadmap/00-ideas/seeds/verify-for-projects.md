@@ -27,5 +27,6 @@ Jev's verify-depth routing in shadow. This is the product half the original seed
 12): a spec manifest and generators, the depth ladder in refine (off / light / standard / deep), CI checker jobs a
 project can adopt, and evidence in the Hub with its bounds stated.
 
-**Shape it only once** Jev's shadow log has ≥ 30 labelled PRs (verify-spike `DECISION.md` rule 3), and no landing
+**The trigger is automatic:** `verify-module` S2.3 pings the product owner on Telegram and writes an owed line the day
+the count reaches 30. **Shape it only once** Jev's shadow log has ≥ 30 labelled PRs (verify-spike `DECISION.md` rule 3), and no landing
 claim until it ships (audit D7).
