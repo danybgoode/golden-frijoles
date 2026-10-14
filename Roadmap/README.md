@@ -48,6 +48,10 @@ independently shippable slice of value.
      `### <NN> · <name>` heading per macro-section row above. -->
 
 ### 01 · Growth Engine
+- ✅ [One flag switch: on or off, the same in the CLI, the SDK, MCP and the page](01-growth-engine/one-flag-switch/README.md) —
+  **shipped 2026-10-13** (#351, #352, #353; SDK 1.2.0, CLI 1.5.2, plugin + kit 1.7.3). A flag is On or Off per
+  environment, from what it serves, and every surface says the same — including who an On flag reaches. The page switch
+  makes exactly the change the CLI does; a new synced flag goes live as written in its source file.
 - ✅ [TARS, one model: every funnel reads the same stages](01-growth-engine/tars-one-model/README.md) —
   **shipped 2026-10-13** (#344, web only). Registry features and bet flags read one funnel: everyone, got it, adopted,
   retained, satisfied, with adoption counted only among the people who got it. A funnel reads the feature's whole life,
@@ -596,6 +600,8 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-13**: `one-flag-switch` **shipped**: ≈$58 against a $15–32 quote (five stories where one was planned). A flag
+  has one switch, On or Off, the same on the page, in the CLI, the SDK and MCP.
 - **2026-10-13**: `scenarios-light-up` **shipped**: ≈$27 against a $56–79 quote. Drills are on in production, and an
   agent can run one end to end through `frijoles scenarios`; the first drill ran on our own site.
 - **2026-10-13**: `tars-one-model` **shipped**: ≈$12.98 against a $15–32 quote, two verifier rounds. Every funnel
