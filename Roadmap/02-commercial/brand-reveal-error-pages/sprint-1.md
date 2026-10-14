@@ -3,7 +3,7 @@ epic: brand-reveal-error-pages
 sprint: 1
 title: "S1 Golden terminal welcome"
 risk: high
-phase: In review
+phase: Shipped
 stories_total: 1
 stories:
   - id: S1.1
@@ -16,23 +16,9 @@ stories:
 ---
 # A golden welcome and recovery pages — Sprint 1: S1 Golden terminal welcome
 
-**Status:** 🟦 In review — S1.1 `5a353d0`; CLI 1.2.0 release prepared separately
+**Status:** ✅ shipped 2026-10-10 (#340, merge `f0cadd1`; CLI 1.2.0 and kit 1.4.0 on npm)
 
 ## Stories
-<!-- One block per story. Thinnest shippable slice first.
-     Each story ALSO has an entry in the frontmatter `stories:` list above — that entry is what tools
-     read (the build view, build-state.mjs); the prose below is what people read. Add both, and keep
-     `stories_total` (here and in the epic README) equal to the number of entries.
-     Story `status:` is planned | in-progress | done. The sprint's `phase:` is the executive ladder
-     (Shaping | Locking architecture | Building | Verifying | In review | Shipped), WRITTEN at each
-     cadence event. Name the story in each commit subject (`S1.1 …`): that is how the build view
-     knows which story is in flight.
-     Keep the heading shape `### Story 1.M — <title>` (this is what the status board counts).
-     When a story ships, append ✅ + its commit ref to the heading, e.g.
-       ### Story 1.1 — <title> ✅ `abc1234`
-     Note: the epic README frontmatter `status:` is the AUTHORITATIVE epic status; this ✅ marker only
-     feeds the cosmetic per-sprint progress count, so a format slip can't mis-state shipped/not-shipped. -->
-
 ### Story 1.1 — Reveal FRIJOLES during interactive setup ✅ `5a353d0`
 **As a** person setting up the CLI, **I want** a short green-to-gold bean and lettering reveal, **so that** the first setup moment feels recognizably Golden Frijoles.
 **Acceptance:** Interactive `frijoles setup` shows a green bean ripening to gold and a left-to-right gold sweep that reveals legible FRIJOLES before setup prompts. A no-motion setting shows a static branded mark. JSON, `--yes`, non-TTY, CI, and narrow/dumb terminals remain readable and do not emit animation control sequences. Existing setup choices and results stay unchanged.

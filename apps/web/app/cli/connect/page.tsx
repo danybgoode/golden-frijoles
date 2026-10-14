@@ -7,6 +7,7 @@ import { getSiteUrl } from '@/lib/site-url'
 import { isTerminalSignInEnabled } from '@/lib/terminal-sign-in-flag'
 import { viewDeviceCode } from '@/lib/cli-device-codes'
 import { normalizeUserCode } from '@/lib/cli-device-code-format'
+import { getUserProjects } from '@/lib/membership'
 import { confirmDeviceCode, denyDeviceCode } from './actions'
 
 // account-from-the-terminal · Sprint 2, Story 2.2 — `/cli/connect?code=KQ7M-3RTX` (epic D8, the
@@ -124,6 +125,12 @@ export default async function CliConnectPage({
   // many-products D4 (2026-10-14): Allow signs in the ACCOUNT. It used to bind the token to one product picked here,
   // which a brand-new repo could only answer wrongly; the repo now names its product with `frijoles init`.
   const minutesAgo = minutesSince(view.createdAt)
+  // The reach, as a number: an account-wide token is a bigger grant than the one-product token this page used to mint,
+  // so it says how big (the security pass on #356). An outage just leaves the number out — it never blocks Allow.
+  const reach = await getUserProjects(user.id).then(
+    (projects) => projects.length,
+    () => null
+  )
   return (
     <Frame variant="door" brandHref="/">
       <h1>Let your agent work on your products?</h1>
@@ -134,10 +141,16 @@ export default async function CliConnectPage({
         {minutesAgo === 0 ? 'less than a minute' : `${minutesAgo} minute${minutesAgo === 1 ? '' : 's'}`} ago,
         as <b>{user.email ?? 'you'}</b>.
       </p>
+      {/* Before the button, as the header comment above promises (it had drifted below both forms). */}
+      <div className="ds-doornote">
+        <b>If someone sent you this link, choose Cancel.</b> Didn&apos;t start this from your terminal? Close
+        this page. Nothing happens. Disconnect it any time in Setup › CLI access.
+      </div>
       <form action={confirmDeviceCode} className="ds-doorform">
         <input type="hidden" name="code" value={code} />
         <p className="ds-hint">
-          It will be able to: plan, flag and measure for every product you belong to — read and change their
+          It will be able to: plan, flag and measure for every product you belong to
+          {reach === null ? '' : ` (${reach} today)`} — read and change their
           feature flags, record A/B decisions and North Star readings, make new products, and, for the ones you own,
           make keys for your app&apos;s events or delete them. Each repo picks its product with{' '}
           <span className="ds-mono">frijoles init</span>. Your code never comes here.
@@ -150,10 +163,6 @@ export default async function CliConnectPage({
         <input type="hidden" name="code" value={code} />
         <Button type="submit">Cancel</Button>
       </form>
-      <div className="ds-doornote">
-        <b>If someone sent you this link, choose Cancel.</b> Didn&apos;t start this from your terminal? Close
-        this page. Nothing happens. Disconnect it any time in Setup › CLI access.
-      </div>
     </Frame>
   )
 }

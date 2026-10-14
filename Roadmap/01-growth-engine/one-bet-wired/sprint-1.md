@@ -3,7 +3,7 @@ epic: one-bet-wired
 sprint: 1
 title: "The funnel fills itself"
 risk: high
-phase: In review
+phase: Shipped
 stories_total: 3
 stories:
   - id: S1.1
@@ -30,7 +30,7 @@ stories:
 ---
 # One bet, wired: the flag knows its epic, its funnel and its read — Sprint 1: The funnel fills itself
 
-**Status:** 🟡 built, in review (one PR for both sprints)
+**Status:** ✅ shipped 2026-10-10 (#341, merge `9f5c816`; CLI 1.3.0, plugin + kit 1.5.0)
 
 ## Stories
 

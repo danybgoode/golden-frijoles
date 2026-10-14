@@ -3,7 +3,7 @@ epic: one-bet-wired
 sprint: 2
 title: "Measure by default, and seen"
 risk: high
-phase: In review
+phase: Shipped
 stories_total: 3
 stories:
   - id: S2.1
@@ -30,7 +30,7 @@ stories:
 ---
 # One bet, wired: the flag knows its epic, its funnel and its read — Sprint 2: Measure by default, and seen
 
-**Status:** 🟡 built, in review (one PR for both sprints)
+**Status:** ✅ shipped 2026-10-10 (#341, merge `9f5c816`; CLI 1.3.0, plugin + kit 1.5.0)
 
 ## Stories
 
