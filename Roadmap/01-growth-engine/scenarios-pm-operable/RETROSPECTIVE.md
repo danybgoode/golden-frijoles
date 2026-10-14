@@ -53,3 +53,14 @@ _Shipped dark: 2026-08-13 · PR #98 · `5bca24c`_
   table and does not choose or hand-roll a charting runtime.
 - The full local API rail saw one repeated-fixture collision in `north-star-sync`; the hermetic
   GitHub static/build and local-Supabase Playwright jobs were green and are authoritative for PR #98.
+
+## Closed 2026-10-13, by `scenarios-light-up`
+
+- **Authoring is ON in production**, after the walkthrough this epic owed: a verified synthetic target (goldenfrijoles.com),
+  a launch, the running state observed, a confirmed stop — first by an agent through `frijoles scenarios`, then by the
+  product owner from the page — and the authoring switch killed and restored live. Resilience and security drills are on;
+  automatic breakers stay off. (The "Git-tracked redeploy" step no longer applies: gates are catalog flags since
+  one-product-project D3.)
+- **The rendered impact claim (D11)** could not be judged: impact is recorded only for a drill bound to an experiment,
+  through a Miyagi-only credential route. Moved to the seed `drill-impact-for-agents`.
+- **#14** (the chart) stays open; the comparison table stands.

@@ -5,18 +5,19 @@
 
 # Build order — the six stages
 
-> **Generated 2026-10-13 — do not hand-edit.** One stage per initiative, decided in one place
+> **Generated 2026-10-14 — do not hand-edit.** One stage per initiative, decided in one place
 > (`scripts/lib/stage.mjs`): Backlog · Refining · Ready · Building · QA · Shipped.
 > This committed file reads the docs alone, so **Building and QA are not here** — they are facts git
 > and GitHub hold. For the live board run `node scripts/build-order.mjs --live`, or open the Hub board.
 
-## Backlog (9)
+## Backlog (10)
 
 _seeds with no pitch yet._
 
 - [Verify module: the verification depth ladder as a product (after the spike)](seeds/verify-module.md) — #54 · 09 Platform Infra · seed · Feature · risk: High · appetite L · _docs: status raw_
 - [A delivery whose settle keeps failing is re-sent every 5 minutes, uncounted and unlogged](seeds/delivery-stale-reclaim-uncounted.md) — 01 Growth Engine · seed · Bug · risk: High · appetite S · _docs: status raw_
 - [A reading for proving_workspaces](seeds/proving-workspaces-reading.md) — 01 Growth Engine · seed · Spike · risk: High · appetite S · _docs: status raw_
+- [Drill impact for agents: a drill's effect, recorded and read from the CLI](seeds/drill-impact-for-agents.md) — 01 Growth Engine · seed · Feature · risk: High · appetite M · _docs: status raw_
 - [Funnel trend: how a feature performed over time](seeds/funnel-trend.md) — 01 Growth Engine · seed · Feature · risk: Low · appetite M · _docs: status raw_
 - [perf-probe only requests the hosts a project names](seeds/perf-probe-target-allowlist.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
 - [TARS segments: named target segments, and every funnel on the agreed model](seeds/tars-segments.md) — 01 Growth Engine · seed · Feature · risk: High · appetite M · _docs: status raw_
@@ -31,17 +32,15 @@ _a pitch is waiting at the approval gate._
 - [Analytics visualization — the charting-dependency decision (spike), then the layer](seeds/analytics-visualization-layer.md) — #14 · 01 Growth Engine · seed · Spike · risk: Low · appetite S · _docs: status ready_
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
 
-## Ready (11)
+## Ready (9)
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
 - [One flag switch: on or off, the same in the CLI, the SDK, MCP and the page](../01-growth-engine/one-flag-switch/README.md) — #80 · 01 Growth Engine · 3/5 stories · risk: High · appetite M · _docs: status in-progress_
-- [Scenarios, switched on: an agent can set up a target, run a drill and stop it](../01-growth-engine/scenarios-light-up/README.md) — #81 · 01 Growth Engine · 7/9 stories · risk: High · appetite L · _docs: status in-progress_
 - [A golden welcome and recovery pages](../02-commercial/brand-reveal-error-pages/README.md) — #82 · 02 Commercial · 2/2 stories · risk: High · appetite M · _docs: status in-progress_
 - [One bet, wired: the flag knows its epic, its funnel and its read](../01-growth-engine/one-bet-wired/README.md) — #83 · 01 Growth Engine · 6/6 stories · risk: High · appetite L · _docs: status in-progress_
 - [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #84 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
 - [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #85 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
-- [Scenarios made PM-operable — define, launch, and kill a scenario from the UI](../01-growth-engine/scenarios-pm-operable/README.md) — #86 · 01 Growth Engine · 10/10 stories · risk: High · appetite M · _docs: status in-progress_
 - [CMS-neutral experiment integration + Payload go/no-go](../01-growth-engine/cms-integration-spike/README.md) — #87 · 01 Growth Engine · 0/6 stories · risk: Low · _docs: status scaffolded_
 - [One plugin, one install — Golden Frijoles ships as a public plugin whose skills run in anyone's repo](../09-platform-infra/golden-frijoles-plugin/README.md) — #88 · 09 Platform Infra · 14/23 stories · risk: High · appetite L · _docs: status in-progress_
 - [One public monorepo — skills/ subtree, a lean install mirror, licences, a private docs repo](../09-platform-infra/public-monorepo/README.md) — #89 · 09 Platform Infra · 13/15 stories · risk: High · appetite M · _docs: status in-progress_
@@ -55,10 +54,12 @@ _a work branch is on origin. Not in this committed file: `node scripts/build-ord
 
 _a PR is ready for review, or merged and waiting for its close-out. Not in this committed file: `node scripts/build-order.mjs --live` or the Hub board._
 
-## Shipped (75)
+## Shipped (77)
 
 _merged, deployed and closed._
 
+- [Scenarios made PM-operable — define, launch, and kill a scenario from the UI](../01-growth-engine/scenarios-pm-operable/README.md) — #86 · 01 Growth Engine · 10/10 stories · risk: High · appetite M · _docs: status shipped_
+- [Scenarios, switched on: an agent can set up a target, run a drill and stop it](../01-growth-engine/scenarios-light-up/README.md) — #81 · 01 Growth Engine · 9/9 stories · risk: High · appetite L · _docs: status shipped_
 - [The Why reads as a story, in full, and the plan names its crew](../09-platform-infra/why-as-a-story/README.md) — #79 · 09 Platform Infra · 7/7 stories · risk: Low · appetite M · _docs: status shipped_
 - [TARS, one model: every funnel reads the same stages](../01-growth-engine/tars-one-model/README.md) — #78 · 01 Growth Engine · 7/7 stories · risk: High · appetite M · _docs: status shipped_
 - [Setup instruments and connects: the events the North Star needs, in a pull request, and the first one seen](../09-platform-infra/setup-instruments-connects/README.md) — #77 · 09 Platform Infra · 6/6 stories · risk: High · appetite M · _docs: status shipped_
@@ -136,4 +137,4 @@ _merged, deployed and closed._
 - [The portfolio loop test fails intermittently in CI and has been quarantined](seeds/portfolio-loop-flake.md) — 02 Commercial · seed · Bug · risk: Low · appetite S · _docs: status shipped_
 
 ---
-_97 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._
+_98 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._

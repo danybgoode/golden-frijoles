@@ -3,7 +3,7 @@ epic: scenarios-light-up
 sprint: 2
 title: "Our site, the drill, the switches"
 risk: high
-phase: Verifying
+phase: Shipped
 stories_total: 4
 stories:
   - id: S2.1
@@ -26,18 +26,18 @@ stories:
     i_want: "an agent to run and stop one drill in production, and me to stop one from the page"
     so_that: "drills are switched on only once they are proven"
     risk: high
-    status: planned
+    status: done
   - id: S2.4
     title: "Close scenarios-pm-operable; poster"
     as_a: "the product owner"
     i_want: "the old epic closed and the poster to say drills are live"
     so_that: "the roadmap tells the truth"
     risk: low
-    status: planned
+    status: done
 ---
 # Scenarios, switched on — Sprint 2: Our site, the drill, the switches
 
-**Status:** 🟡 S2.1–S2.2 shipped (#348, merge `805f5cf`; SDK 1.1.0, CLI 1.4.0, plugin + kit 1.7.0); S2.3 under way in production
+**Status:** ✅ shipped 2026-10-13 (#348, #349, #350; the drill run in production; the impact judgment moved to the seed `drill-impact-for-agents`)
 
 ## Stories
 
@@ -57,7 +57,7 @@ execution; otherwise 404. `scripts/scenario-drill.mjs --count N` sends signed pr
 unsigned, not synthetic, switches off → 404.
 **Risk:** high (a production fault path) · **Builder:** orchestrator
 
-### Story 2.3 — The production drill, by an agent; the switches on
+### Story 2.3 — The production drill, by an agent; the switches on ✅ production, 2026-10-13
 **As the** product owner, **I want** an agent to run and stop one drill in production, and me to stop one from the page, **so that** drills are switched on only once they are proven.
 **Acceptance:** with authoring and resilience on: the agent, using only `frijoles` and the drill script, registers and
 verifies goldenfrijoles.com, makes a `delay` fault flag, defines the drill, launches it, sees probes take the delay,
@@ -68,7 +68,7 @@ security on.
 `frijoles flags get` shows the three `true` in production; breakers off.
 **Risk:** high · **Builder:** orchestrator + the product owner
 
-### Story 2.4 — Close `scenarios-pm-operable`; poster
+### Story 2.4 — Close `scenarios-pm-operable`; poster ✅ this close-out
 **As the** product owner, **I want** the old epic closed and the poster to say drills are live, **so that** the roadmap tells the truth.
 **Acceptance:** `scenarios-pm-operable` README `status: shipped`, its retro gaps answered with this epic's evidence,
 `epic-dod` passes; the poster's scenarios entries say live; the landing's ops claims match what is on.

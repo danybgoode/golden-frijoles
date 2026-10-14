@@ -1376,6 +1376,11 @@ one-liner + why + date shape.
   1.0.10 incident this repo already paid for. *(2026-07-25.)*
 
 ## Working efficiently
+- **`{ baseUrl: undefined }` is not "use the default", and "built" can mean "built for one customer".** The drill probe
+  passed an unset URL as a present key, which the SDK reads as unconfigured, so production never fetched while the local
+  rehearsal (which set the URL) passed (#350): spread optional config. And target setup "existed" only through a
+  Miyagi credential route — before switching a surface on, walk the whole path as a stranger would. *(scenarios-light-up,
+  2026-10-13.)*
 - **A builder's "typecheck clean" is a claim, and builder branches fall out of the cost stamp.** A Sonnet builder
   reported a clean typecheck that was not, and an advisory pre-push hook let a non-compiling commit through: re-run
   the checks before taking delegated work. `epic-actuals` attributes by the session's branch, so builders committing
