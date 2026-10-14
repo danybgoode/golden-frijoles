@@ -179,7 +179,7 @@ belongs to the workspace.
   whose workspace is not one of the caller's is "not found", never "forbidden". A `project_members` insert places the
   person inside the project's workspace (the `project_members_join_workspace` trigger), so the re-check never takes
   away access `project_members` grants; it denies a person REMOVED from a workspace everything inside it.
-- **A guard watches it:** the semantic-lint rule `tenancy` (`golden-frijoles.config.json → lint.rules`, in shadow)
+- **A guard watches it:** the semantic-lint rule `tenancy` (`golden-frijoles.config.json → lint.rules`, promoted 2026-10-14)
   asks about request-path code that reads several projects outside `getWorkspaceProjects()`.
 - **Credentials stay project-scoped.** An API key, a connector token or a share link resolves to ONE project and
   never reaches its siblings, workspace or no workspace.
