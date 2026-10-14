@@ -105,6 +105,8 @@ test.describe('POST /api/v1/public/mcp/c/:token', () => {
       'get_experiment_decision',
       'get_input_readings',
       'get_journey_cohort',
+      // agent-legible-horizon D3 — the horizon read, unconditional and person-free (the public roadmap is public).
+      'get_horizon',
       'get_north_star',
       'get_tars_funnel',
       ...(isTaskMcpToolEnabled() ? ['get_task', 'list_tasks'] : []),
@@ -126,6 +128,24 @@ test.describe('POST /api/v1/public/mcp/c/:token', () => {
       // gets it (the disposable-project test below).
     ].sort()
     expect(names).toEqual(expected)
+  })
+
+  test("get_horizon answers for the token's own product, with the pushed flag and its destinations", async ({
+    request,
+  }) => {
+    const token = await demoToken()
+    const res = await rpc(request, token, 'tools/call', { name: 'get_horizon', arguments: {} })
+    expect(res.status()).toBe(200)
+    const body = await res.json()
+    expect(body.result.isError ?? false).toBe(false)
+    const reply = JSON.parse(body.result.content[0].text) as {
+      project: string
+      pushed: boolean
+      destinations: unknown[]
+    }
+    expect(reply.project).toBe(DEMO_SLUG)
+    expect(typeof reply.pushed).toBe('boolean')
+    expect(Array.isArray(reply.destinations)).toBe(true)
   })
 
   test('result reads on the demo token answer for the demo project only — an unknown key is not_found', async ({

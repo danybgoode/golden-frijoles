@@ -1,5 +1,6 @@
 import 'server-only'
 import { NextRequest } from 'next/server'
+import { readHorizon } from '@/lib/horizon-read'
 import { z } from 'zod'
 import { inputReadings, isReadingsCut } from '@/lib/input-readings'
 import { getExperimentDecisionByKey } from '@/lib/experiment-decision-query'
@@ -173,6 +174,25 @@ async function buildMcpServer(
         return { content: [{ type: 'text', text: JSON.stringify(result) }], isError: true }
       }
       return { content: [{ type: 'text', text: JSON.stringify(result) }] }
+    }
+  )
+
+  // agent-legible-horizon D3 — the horizon, headless: the same read `frijoles horizon` and the /horizon page use, for
+  // this token's own product only. Read-only and person-free (titles, descriptions, epic names), so the public project's
+  // anonymous reader gets it too — its roadmap is public by rule #2.
+  server.registerTool(
+    'get_horizon',
+    {
+      description:
+        "Read this product's horizon: each destination it declared in Roadmap/horizon.md, whether it is lit, partly lit or on the way, and the epics that light it (from its latest roadmap push). pushed=false means no roadmap was ever pushed; pushed=true with no destinations means the push carried no horizon.",
+      inputSchema: {},
+    },
+    async () => {
+      const result = await readHorizon(projectId)
+      if (!result.ok) {
+        return { content: [{ type: 'text', text: JSON.stringify(result) }], isError: true }
+      }
+      return { content: [{ type: 'text', text: JSON.stringify({ project: projectSlug, ...result }) }] }
     }
   )
 

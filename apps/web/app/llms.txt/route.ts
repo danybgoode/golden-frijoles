@@ -69,6 +69,9 @@ account.
 - ${siteUrl}/install.md
   Read this before installing anything: what installs, what changes on the machine, which
   services it contacts, and how to remove it.
+- ${siteUrl}/agents.md
+  For an agent debugging: per feature, the headless way to read, change and check it (the \`frijoles\`
+  command, the MCP tool or the API route), and what the common errors mean.
 - ${siteUrl}/install
   Get your own tokenized MCP connector URL ("Add to Claude" deep-link) for the demo project, plus
   the SDK install docs for wiring your own product into the engine.
@@ -97,6 +100,11 @@ account.
   \`get_north_star\`, \`compare_experiment\`, and \`list_scenarios\` on a project's own token (all scoped to the one project the token resolves to;
   no tool accepts a project parameter). Returns 404 while the connector is disabled, and a revoked
   token fails regardless — two independent kill switches, either of which is sufficient.
+
+  Codex: \`codex mcp add golden-frijoles --url <your connector URL>\`, then \`codex mcp list\` should show
+  golden-frijoles. The URL comes from Setup › Connect in the console (an owner makes it); it is a
+  credential, so it is never written in a doc. "Get a new URL" on Connect revokes both Claude's and
+  Codex's.
 
 This manifest lists only what is live in this deployment right now.
 `

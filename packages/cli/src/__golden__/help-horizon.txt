@@ -1,0 +1,20 @@
+frijoles horizon — the product's destinations and the epics that light each
+
+Usage
+  frijoles horizon [--project <slug>] [--json]
+
+Reads the horizon of the product's latest roadmap push: lit (every epic under it shipped), partly lit,
+  or on the way. The destinations come from Roadmap/horizon.md and each epic's `destination:` — to change them,
+  edit those files and push again (`npx -y @golden-frijoles/kit roadmap-push --dry-run` shows what would be sent).
+
+Flags
+  --project <slug>  the project (default: the remembered one)
+
+Exit codes
+  0  ok         it worked
+  1  usage      the command is wrong — nothing was sent
+  2  auth       the credential is not accepted — run `frijoles login`
+  3  not-found  no such thing, or not yours
+  4  conflict   someone else changed it — re-read and retry
+  5  partial    some environments changed and some did not
+  6  server     the server or the network is unwell — retry

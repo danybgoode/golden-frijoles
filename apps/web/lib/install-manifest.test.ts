@@ -126,3 +126,11 @@ test('every security claim is on the page, under the security review', async () 
   ])
     assert.ok(review.includes(choice), choice)
 })
+
+test('Codex MCP setup (agent-legible-horizon D5): the command with a placeholder, where the URL comes from, and the revoke', () => {
+  assert.match(page, /codex mcp add golden-frijoles --url <your connector URL>/)
+  assert.match(page, /codex mcp list/)
+  assert.match(page, /Setup › Connect/)
+  assert.match(page, /Get a new URL/)
+  assert.doesNotMatch(page, /mcp\/c\/[A-Za-z0-9_-]{8,}/, 'a real connector URL must never be in a doc')
+})

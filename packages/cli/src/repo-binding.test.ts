@@ -281,6 +281,32 @@ test('login with exactly ONE product remembers it; a still-reachable earlier cho
   assert.equal(readCredentials(kept.env)?.activeProject, 'beta')
 })
 
+test('login says WHY the product is active: remembered, or your only one, or neither (agent-legible-horizon D7)', async () => {
+  const login = async (slugs: string[], remembered?: string) => {
+    const { env, repo } = sandbox()
+    if (remembered)
+      writeCredentials({ token: TOKEN, apiUrl: 'https://goldenfrijoles.com', activeProject: remembered }, env)
+    const { writer, out, err } = capture()
+    await run({
+      argv: ['login', '--token', TOKEN],
+      writer,
+      env,
+      cwd: repo,
+      fetchImpl: stub(whoami(slugs)),
+    })
+    return [...out, ...err].join('\n')
+  }
+
+  assert.match(
+    await login(['acme', 'beta'], 'beta'),
+    /Product: beta \(remembered on this machine; a repo's golden-frijoles\.config\.json overrides it\)\./
+  )
+  assert.match(await login(['acme']), /Product: acme \(your only product\)\./)
+  const several = await login(['acme', 'beta'])
+  assert.match(several, /2 products\. In a repo, `frijoles init --project <slug>`/)
+  assert.doesNotMatch(several, /Product: /)
+})
+
 test('projects create <slug> sends the slug and says created or already yours', async () => {
   const { env, repo } = sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN })
   const seen: Seen = []
