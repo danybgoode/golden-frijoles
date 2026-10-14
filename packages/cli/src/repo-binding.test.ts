@@ -82,7 +82,16 @@ const binding = (repo: string) =>
 test('⚠️ init --json with no product named and no binding stops, naming BOTH flags, without touching the network', async () => {
   const { env, repo } = sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN })
   const { writer, out } = capture()
-  const code = await run({ argv: ['init', '--json'], writer, env, cwd: repo, fetchImpl: noNetwork })
+  // As if a person were at the terminal: stdin is never a TTY under the test runner, so without this the no-TTY branch
+  // answered and the --json rule itself could be deleted with this test still green (verifier, #356).
+  const wasTTY = process.stdin.isTTY
+  process.stdin.isTTY = true
+  let code: number
+  try {
+    code = await run({ argv: ['init', '--json'], writer, env, cwd: repo, fetchImpl: noNetwork })
+  } finally {
+    process.stdin.isTTY = wasTTY
+  }
   assert.equal(code, EXIT.USAGE)
   const body = JSON.parse(out.join('\n')) as { ok: boolean; code: string; error: string }
   assert.equal(body.code, 'invalid')

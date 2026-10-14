@@ -62,10 +62,10 @@ export const projectsCreateCommand: Command = {
     }
     const result = await createProduct(context, slug)
     if (result.kind !== 'ok') return result.exit
-    const { created } = result
+    const { created, slug: made } = result
     context.emit.ok(
-      { created, slug },
-      created ? `Created ${slug}.` : `You already have ${slug}. Nothing changed.`
+      { created, slug: made },
+      created ? `Created ${made}.` : `You already have ${made}. Nothing changed.`
     )
     return EXIT.OK
   },
@@ -75,7 +75,7 @@ export const projectsCreateCommand: Command = {
 export async function createProduct(
   context: CommandContext,
   slug: string
-): Promise<{ kind: 'ok'; created: boolean } | { kind: 'failed'; exit: ExitCode }> {
+): Promise<{ kind: 'ok'; created: boolean; slug: string } | { kind: 'failed'; exit: ExitCode }> {
   const result = await context.api!.post<{ created: boolean; slug: string }>('api/v1/cli/projects', { slug })
   if (result.kind === 'network') {
     context.emit.fail('server_error', result.message)
@@ -85,7 +85,9 @@ export async function createProduct(
     context.emit.fail(result.code, result.message)
     return { kind: 'failed', exit: exitForServerCode(result.code) }
   }
-  return { kind: 'ok', created: result.body.created }
+  // The server's name for it, never the one typed: those are the same today (it refuses anything else), and binding or
+  // printing the typed one is how a product gets made under one name and used under another (verifier, #356).
+  return { kind: 'ok', created: result.body.created, slug: result.body.slug }
 }
 
 /** GET cli/projects — the products this credential reaches. Reports its own failure. */
