@@ -410,8 +410,8 @@ export async function createProductForUser(
   // ── the cap (the product owner, 2026-10-14: "Cap per account") ────────────────────────────────────────────────────
   // Every product carries its own event quota, so an uncapped create multiplies an account's quota. The ceiling is DATA
   // on the caller's own workspace (`workspaces.product_limit`, default 10): raising it is an UPDATE. Checked before the
-  // insert, so two creates racing past the last slot can land one over — a soft cap, stated rather than hidden; the
-  // quota each product carries is the hard limit, and that is unchanged.
+  // insert for the sentence; the database enforces it atomically (a trigger that locks the workspace row,
+  // 20261014120000), so creates racing past the last slot are refused there, not here.
   const [{ data: workspace, error: limitError }, { count, error: countError }] = await Promise.all([
     supabase.from('workspaces').select('product_limit').eq('id', claim.workspaceId).single(),
     supabase.from('projects').select('id', { count: 'exact', head: true }).eq('workspace_id', claim.workspaceId),
@@ -436,6 +436,10 @@ export async function createProductForUser(
     .select('id')
     .single()
   if (error || !data) {
+    // The database's own enforcement of the cap (20261014120000): a create that raced past the check above.
+    if (error?.code === 'P0001' && error.hint === 'workspace_product_limit') {
+      return fail('limit', `Your workspace is at its product limit (${limit}). Delete one, or ask us to raise the limit.`)
+    }
     if (error?.code === PG_UNIQUE_VIOLATION) {
       // Two creates of one name racing: the loser re-checks, so its retry (or this answer) says "already yours".
       if (await ownsSlug(userId, slug)) {

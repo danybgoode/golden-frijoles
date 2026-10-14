@@ -173,6 +173,18 @@ test.describe('frijoles projects create — a product by name (many-products S1.
       const { data: none } = await client.from('projects').select('id').eq('slug', second)
       expect(none).toEqual([])
 
+      // Racing for the last slot: the database trigger (20261014120000) locks the workspace row, so exactly ONE of five
+      // parallel creates lands, never five (agy security lens, #356).
+      await client.from('workspaces').update({ product_limit: 2 }).eq('id', workspace!.id)
+      const racers = Array.from({ length: 5 }, () => slugFor('mp-race-cap'))
+      const results = await Promise.all(
+        racers.map((slug) => request.post('/api/v1/cli/projects', { headers: founder.auth, data: { slug } }))
+      )
+      expect(results.filter((res) => res.status() === 200)).toHaveLength(1)
+      expect(results.filter((res) => res.status() === 409)).toHaveLength(4)
+      const { data: landed } = await client.from('projects').select('id').in('slug', racers)
+      expect(landed).toHaveLength(1)
+
       // Re-running a name you already own is not a new product, so the cap does not refuse it.
       const again = await request.post('/api/v1/cli/projects', { headers: founder.auth, data: { slug: first } })
       expect(await again.json()).toMatchObject({ ok: true, created: false })
