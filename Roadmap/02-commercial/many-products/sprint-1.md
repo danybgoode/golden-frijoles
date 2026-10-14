@@ -44,7 +44,7 @@ stories:
 ---
 # Many products — Sprint 1: Products, headlessly
 
-**Status:** 🟦 In review — PR #356 (migration `20261014100000` applied to prod 2026-10-14)
+**Status:** 🟦 In review — PR #356 (migrations `20261014100000` signup marker + `20261014110000` product_limit applied to prod 2026-10-14; `20261014120000` atomic cap trigger applied before merge)
 
 ## Build contract (locked by the architect before the builder started)
 Cites the epic README's Architecture lock; nothing here restates it.
