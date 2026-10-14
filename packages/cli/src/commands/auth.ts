@@ -210,6 +210,8 @@ export const whoamiCommand: Command = {
         apiUrl: context.api!.baseUrl,
         tokenSource: context.auth.source,
         activeProject: context.auth.activeProject,
+        // env | repo | file | null — where the active product came from (many-products D6).
+        projectSource: context.auth.projectSource,
         projects,
         workspaces,
       },
@@ -218,7 +220,11 @@ export const whoamiCommand: Command = {
         `credential: ${credential.label} (from ${describeSource(context.auth.source)})`,
         // The tenant (workspaces S2.3): one line per workspace, so a person in two sees both.
         ...workspaces.map((workspace) => `workspace: ${workspace.name}`),
-        `active project: ${context.auth.activeProject ?? 'none — run `frijoles projects use <slug>`'}`,
+        `active project: ${
+          context.auth.activeProject
+            ? `${context.auth.activeProject} (${describeProjectSource(context.auth.projectSource)})`
+            : 'none — run `frijoles init --project <slug>` in a repo, or `frijoles projects use <slug>`'
+        }`,
         '',
         table(
           ['PROJECT', 'ROLE'],
@@ -231,6 +237,12 @@ export const whoamiCommand: Command = {
     )
     return EXIT.OK
   },
+}
+
+function describeProjectSource(source: string | null): string {
+  if (source === 'env') return 'GOLDEN_FRIJOLES_PROJECT'
+  if (source === 'repo') return "this repo's golden-frijoles.config.json"
+  return 'remembered on this machine'
 }
 
 function describeSource(source: string): string {

@@ -11,6 +11,7 @@
   "apiUrl": "https://goldenfrijoles.com",
   "tokenSource": "env",
   "activeProject": null,
+  "projectSource": null,
   "projects": [
     {
       "slug": "acme",

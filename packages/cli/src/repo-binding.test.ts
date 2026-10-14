@@ -308,3 +308,28 @@ test('projects create <slug> sends the slug and says created or already yours', 
   })
   assert.equal(none, EXIT.USAGE)
 })
+
+test('a product taken from the repo binding is SAID, every time (security pass, #356)', async () => {
+  const { env, repo } = sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN })
+  writeFileSync(join(repo, CONFIG), JSON.stringify({ project: { slug: 'beta' } }))
+  const { writer, err } = capture()
+  await run({
+    argv: ['projects', 'ls'],
+    writer,
+    env,
+    cwd: repo,
+    fetchImpl: stub({ '/api/v1/cli/projects': { body: PROJECTS } }),
+  })
+  assert.match(err.join('\n'), /Product: beta \(from this repo's golden-frijoles\.config\.json\)/)
+
+  // GOLDEN_FRIJOLES_PROJECT wins, and then nothing is said about the repo.
+  const quiet = capture()
+  await run({
+    argv: ['projects', 'ls'],
+    writer: quiet.writer,
+    env: { ...env, GOLDEN_FRIJOLES_PROJECT: 'acme' },
+    cwd: repo,
+    fetchImpl: stub({ '/api/v1/cli/projects': { body: PROJECTS } }),
+  })
+  assert.doesNotMatch(quiet.err.join('\n'), /golden-frijoles\.config\.json/)
+})
