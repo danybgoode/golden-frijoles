@@ -3,7 +3,7 @@ epic: outcome-report-any-product
 sprint: 1
 title: "Report from any repo"
 risk: high
-phase: Building
+phase: Shipped
 stories_total: 4
 stories:
   - id: S1.1
@@ -37,7 +37,7 @@ stories:
 ---
 # The outcome report for any product — Sprint 1: Report from any repo
 
-**Status:** 🟦 In review (plugin + kit 1.9.4)
+**Status:** ✅ shipped 2026-10-14 — https://github.com/danybgoode/golden-frijoles/pull/368 merged (`9781756`), deployed; `@golden-frijoles/kit@1.9.4` on npm.
 
 ## Build contract (locked by the architect before the builder started)
 Cites the epic README's Architecture lock. 1.1 → D1 · 1.2 → D2, D3 · 1.3 → D4 · 1.4 → D5.
@@ -81,3 +81,11 @@ Env: production · https://goldenfrijoles.com
    → The report renders with aomx's epics; no "run node scripts/pod-report.mjs" anywhere.
 3. Go to https://goldenfrijoles.com/agents.md and https://goldenfrijoles.com/install.md
    → Both name `npx -y @golden-frijoles/kit pod-report --push`.
+
+### Smoke results (2026-10-14, production, `9781756`)
+- ✅ golden-frijoles' own push (CI `workflow_dispatch`) → `✓ pod_report pushed` (version 326); https://goldenfrijoles.com/hub/golden-frijoles/report
+  shows "Re-opened after shipping: 1 of 80 (median 0 days to ship again)" and the caveat that the date source changed.
+- ✅ The built kit in a scratch repo reads that repo, resolves the key from an untracked `.env.local`, and (verifier, with a
+  listener) never pairs a file's URL with the shell's key; a tracked `.env.local` is not read.
+- Owed to the product owner — step 1 (the first aomx push: `npx -y @golden-frijoles/kit@1.9.4 pod-report --push` in the
+  aomx repo) and step 2 (the signed-in aomx report); re-pushing medusa-bonsai's report shows its corrected numbers.
