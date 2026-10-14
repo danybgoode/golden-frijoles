@@ -135,6 +135,12 @@ test('delete: owner only, gone at once, every credential dead, name still taken;
       dedupe_key: `spec-${randomBytes(6).toString('hex')}`,
     })
     expect(valueError).toBeNull()
+    // While the product lives, its ledger cannot be erased through a parent either (verifier, #359): deleting the input
+    // or the metric is refused, and the value is still there.
+    expect((await client.from('leading_inputs').delete().eq('id', input!.id)).error).not.toBeNull()
+    expect((await client.from('north_star_metrics').delete().eq('id', metric!.id)).error).not.toBeNull()
+    const { data: kept } = await client.from('input_values').select('id').eq('project_id', project!.id)
+    expect(kept).toHaveLength(1)
 
     expect((await track(request, ingestKey)).status()).toBeLessThan(300)
     const unknownConnector = (await mcp(request, `gb_connector_${'0'.repeat(32)}`)).status()

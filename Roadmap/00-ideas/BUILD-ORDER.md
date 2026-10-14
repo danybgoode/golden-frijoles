@@ -36,7 +36,7 @@ _a pitch is waiting at the approval gate._
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
-- [Many products](../02-commercial/many-products/README.md) — #82 · 02 Commercial · 0/12 stories · risk: High · appetite M · _docs: status scaffolded_
+- [Many products](../02-commercial/many-products/README.md) — #82 · 02 Commercial · 5/12 stories · risk: High · appetite M · _docs: status scaffolded_
 - [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #85 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
 - [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #87 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
 - [CMS-neutral experiment integration + Payload go/no-go](../01-growth-engine/cms-integration-spike/README.md) — #88 · 01 Growth Engine · 0/6 stories · risk: Low · _docs: status scaffolded_
