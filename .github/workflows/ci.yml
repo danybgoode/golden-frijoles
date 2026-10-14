@@ -54,6 +54,10 @@ jobs:
         run: node scripts/check-template-drift.mjs
       - name: BUILD-ORDER.md is up to date
         run: node scripts/build-order.mjs --check
+      # The owed ledger is generated from the specs and the epic docs; a doc that adds or clears an owed line
+      # regenerates it in the same PR.
+      - name: OWED-LEDGER.md is up to date
+        run: node scripts/owed-ledger.mjs --check
       # Replay only. Shadow expiry is a DATE, so here it would turn every unrelated PR red; jev-expiry.yml runs it
       # daily instead, and that red run is what forces the promote/tune/drop decision.
       - name: Jev — eval replay

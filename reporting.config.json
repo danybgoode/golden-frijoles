@@ -4,5 +4,6 @@
   "deployRepos": [{ "label": "Web", "repo": "danybgoode/golden-frijoles" }],
   "stalePreviewAgeDays": 7,
   "vercelProject": "golden-beans",
-  "checkouts": { "danybgoode/golden-frijoles": "." }
+  "checkouts": { "danybgoode/golden-frijoles": "." },
+  "owed": { "owners": ["the product owner", "the PO", "Daniel"], "specDirs": ["apps/web/e2e"], "docDirs": ["Roadmap"] }
 }
