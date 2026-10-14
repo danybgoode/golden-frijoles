@@ -1,21 +1,21 @@
 {
-  "total": 125,
-  "cleared": 3,
-  "files": 70,
+  "total": 86,
+  "cleared": 4,
+  "files": 64,
   "byCategory": {
-    "money-path": 2,
-    "auth-path": 34,
+    "money-path": 1,
+    "auth-path": 29,
     "admin-only": 0,
-    "other": 89
+    "other": 56
   },
   "byKind": {
-    "publish": 4,
+    "publish": 2,
     "credential": 7,
-    "ops": 7,
-    "judgment": 29,
-    "signed-in": 26,
-    "interactive": 27,
-    "unsorted": 25
+    "ops": 5,
+    "judgment": 25,
+    "signed-in": 22,
+    "interactive": 19,
+    "unsorted": 6
   },
   "generatedAt": "2026-10-14"
 }

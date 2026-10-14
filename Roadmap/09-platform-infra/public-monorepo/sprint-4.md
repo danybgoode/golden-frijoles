@@ -3,7 +3,7 @@ epic: public-monorepo
 sprint: 4
 title: "S4 Licences and identity"
 risk: high
-phase: Building
+phase: Shipped
 stories_total: 4
 stories:
   - id: S4.1
@@ -33,11 +33,11 @@ stories:
     i_want: "exact commands to rename ~/dobby/golden-beans and move Claude Code's per-project history"
     so_that: "my sessions keep their memory after the move"
     risk: high
-    status: planned
+    status: done
 ---
 # One public monorepo — Sprint 4: S4 Licences and identity
 
-**Status:** 🚧 S4.1–S4.3 shipped. S4.4 is owed to Daniel (commands below), and he'll run it after this session.
+**Status:** ✅ shipped. S4.1–S4.3 on 2026-09-28; S4.4 done by Daniel and checked on 2026-10-14.
 
 ## Stories
 
@@ -56,7 +56,7 @@ stories:
 **Acceptance:** The first merge after the rename appears in `gh api repos/danybgoode/golden-frijoles/deployments` with its SHA, and goldenfrijoles.com serves it.
 **Risk:** high
 
-### Story 4.4 — Local folder and Claude memory (owed to Daniel)
+### Story 4.4 — Local folder and Claude memory ✅ checked 2026-10-14: sessions run in `~/dobby/golden-frijoles` with the memory index loaded, and the report runner points there (`--status`: loaded, last exit 0)
 **As the product owner**, **I want** exact commands to rename ~/dobby/golden-beans and move Claude Code's per-project history, **so that** my sessions keep their memory after the move.
 **Acceptance:** The sprint doc lists the `mv` commands for the folder and `~/.claude/projects/-Users-cosmo-dobby-golden-beans` → `-golden-frijoles`, to run between sessions. It's done when the next session starts in the new folder with its memory index loaded.
 **Risk:** high
@@ -79,7 +79,7 @@ Done when a new session in `~/dobby/golden-frijoles` loads its memory index, and
 `launchctl list` already showed this runner's last exit as `1` before the move, which predates this epic and is worth a look.
 
 ## Sprint QA
-- The deploy proof (S4.3) is the gate. **Owed to Daniel:** S4.4's local moves.
+- The deploy proof (S4.3) is the gate. ~~**Owed to Daniel:** S4.4's local moves.~~ Done (checked 2026-10-14).
 - **deterministic gate:** `npm run typecheck` + `npm run build` + Playwright `api` green, plus the skills checks from S1.2 on.
 
 ## Sprint 4 — Smoke walkthrough (do these in order)

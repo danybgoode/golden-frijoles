@@ -126,31 +126,31 @@ carries open PRs with it.
 
 ## Stories
 
-### Story 1.1 — License the public repo
+### Story 1.1 — License the public repo ✅
 **As** a stranger who found the repo, **I want** an Apache-2.0 license and a NOTICE, **so that** I'm allowed to use what I install.
 **Acceptance:** `LICENSE` (Apache-2.0) and `NOTICE` at the repo root. NOTICE states that "Golden Frijoles" is a trademark and is not licensed. GitHub's sidebar shows **Apache-2.0**. `kit/package.json` (S2) carries `"license": "Apache-2.0"`.
 **QA:** none beyond CI
 **Risk:** low
 
-### Story 1.2 — Create the org and transfer the repo (owed to Daniel)
+### Story 1.2 — Create the org and transfer the repo (owed to Daniel) ✅
 **As** Daniel, **I want** the `golden-frijoles` org to own the repo as `golden-frijoles/skills`, **so that** the install line names the product, not a person.
 **Acceptance:** Daniel creates the `golden-frijoles` GitHub org (the name had no user or org on 2026-09-23) and transfers + renames `danybgoode/dobby-foundation` → `golden-frijoles/skills`. Check: `git ls-remote https://github.com/danybgoode/dobby-foundation HEAD` returns the same SHA as `git ls-remote https://github.com/golden-frijoles/skills HEAD`. The builder updates `origin` in every local checkout it touches.
 **QA:** owed to Daniel. The builder writes the exact steps into this sprint's walkthrough
 **Risk:** high
 
-### Story 1.3 — Rename the marketplace and plugin to golden-frijoles
+### Story 1.3 — Rename the marketplace and plugin to golden-frijoles ✅
 **As** a Claude Code user, **I want** `claude plugin install golden-frijoles@golden-frijoles`, **so that** the install line is the product's name.
 **Acceptance:** `.claude-plugin/marketplace.json` `name: golden-frijoles`; `plugins/ways-of-work/` → `plugins/golden-frijoles/`; `plugin.json` `name: golden-frijoles`. `render-skill-adverts.mjs` regenerates every advert. `check-plugin-leaks.mjs` rules and fixtures are **rewritten, not allowlisted** for the old names (provenance prose excepted, each with a reason). `claude plugin validate plugins/golden-frijoles` is green, and so is the CI path filter / every workflow path that named `ways-of-work`.
 **QA:** leak-guard fixtures (fires on `ways-of-work@dobby-foundation` in shipped files, not on the provenance lines); `claude plugin validate`
 **Risk:** high
 
-### Story 1.4 — Switch both consumers in the same sprint
+### Story 1.4 — Switch both consumers in the same sprint ✅
 **As** Daniel, **I want** golden-beans and medusa-bonsai to load `golden-frijoles@golden-frijoles`, **so that** no session in either repo loses its skills on the day the rename lands.
 **Acceptance:** One PR per consumer: `.claude/settings.json` `extraKnownMarketplaces.golden-frijoles` → `golden-frijoles/skills`, `enabledPlugins` `golden-frijoles@golden-frijoles: true`, the old entries removed, and every doc that tells someone to install `ways-of-work` updated. They merge **the same day as S1.3**. Check: a fresh Claude Code session in each repo lists `golden-frijoles:groom`.
 **QA:** golden-beans session check by the builder; **medusa-bonsai session check owed to Daniel** (private repo)
 **Risk:** high
 
-### Story 1.5 — Tagged releases a user can pin
+### Story 1.5 — Tagged releases a user can pin ✅
 **As** a stranger, **I want** versioned releases with a changelog, **so that** I can pin a release and roll back from a bad one.
 **Acceptance:** `plugin.json` gets `"version": "0.1.0"`; `CHANGELOG.md` (Keep a Changelog shape); tag `v0.1.0`. `scripts/check-release.mjs` in CI fails when `plugins/` changed and the `version` didn't (on PRs to `main`), and when the tag, `plugin.json` and the newest CHANGELOG heading disagree. `RELEASING.md` has the three-line release procedure.
 **QA:** `check-release.test.mjs`: fires on a plugin change without a bump, and doesn't fire on a docs-only change

@@ -1,6 +1,6 @@
 ---
-status: in-progress  # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Verifying    # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+status: shipped  # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+phase: Shipped    # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
 slug: public-monorepo
 title: "One public monorepo — skills/ subtree, a lean install mirror, licences, a private docs repo"
@@ -82,12 +82,12 @@ agy as the external family and the security lens on S1/S2 (workflow paths).
 S1 → S2 → S3 → S4, with stacked branches. Nothing changes for strangers until S2.3, and `MIRROR_ENABLED=false` stops the mirror without a revert. S4.1 is held for the lawyer. The S4.2 rename goes last, so every earlier PR uses today's URLs.
 
 ## Definition of Done (epic)
-- [ ] All sprints merged to `main` + smoke-tested (gaps stated — `node scripts/owed-ledger.mjs` counts what is still owed)
+- [x] All sprints merged to `main` + smoke-tested (gaps stated — `node scripts/owed-ledger.mjs` counts what is still owed)
 - [x] Each `sprint-N.md` has its smoke walkthrough (real URLs)
-- [ ] This README marked ✅; every sprint status ticked with commit refs
+- [x] This README marked ✅; every sprint status ticked with commit refs
 - [x] `RETROSPECTIVE.md` written
 - [x] Product poster (`Roadmap/README.md`) updated
 - [x] Team memory + `MEMORY.md` index updated
 - [x] Durable learnings promoted to `Roadmap/LEARNINGS.md` (dedupe — sharpen, don't append)
 - [x] **Kill-switch:** N/A. There's no Golden Frijoles flag, because a repo move isn't a runtime behaviour. The mirror's off switch is the `MIRROR_ENABLED` repo variable (Stage 6b).
-- [ ] Feature branch deleted; **this README's frontmatter `status: shipped`** (the SSOT — the board & Notion derive from it; run `node scripts/build-order.mjs`)
+- [x] Feature branch deleted; **this README's frontmatter `status: shipped`** (the SSOT — the board & Notion derive from it; run `node scripts/build-order.mjs`)

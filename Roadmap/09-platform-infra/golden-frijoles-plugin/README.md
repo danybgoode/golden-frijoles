@@ -1,6 +1,6 @@
 ---
-status: in-progress  # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Verifying      # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+status: shipped  # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+phase: Shipped      # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
 slug: golden-frijoles-plugin
 title: "One plugin, one install — Golden Frijoles ships as a public plugin whose skills run in anyone's repo"
@@ -329,13 +329,15 @@ deprecate a bad npm version, `git revert` the landing card. The repo transfer is
 (D4), and the build-view kill-switch (`hooks.json`) is untouched. The landing card is copy, removed by `git revert`.
 
 ## Definition of Done (epic)
-- [ ] All sprints merged to `main` + smoke-tested (gaps stated; `node scripts/owed-ledger.mjs` counts what's still owed)
-- [ ] Each `sprint-N.md` has its smoke walkthrough (real URLs)
-- [ ] The kit is published with provenance, the plugin is tagged, and the CHANGELOG is current
-- [ ] Both stranger walkthroughs passed (S3.5, S5.5), run by Daniel on a clean machine
-- [ ] This README marked ✅; every sprint status ticked with commit refs
-- [ ] `RETROSPECTIVE.md` written
-- [ ] Product poster (`Roadmap/README.md`) updated, including the new name, license and install line
-- [ ] Durable learnings promoted to `Roadmap/LEARNINGS.md` (dedupe — sharpen, don't append)
-- [ ] Kill-switch: carve-out recorded above (none planned)
-- [ ] Feature branches deleted; **this README's frontmatter `status: shipped`** (then run `node scripts/build-order.mjs`)
+- [x] All sprints merged to `main` + smoke-tested (gaps stated; `node scripts/owed-ledger.mjs` counts what's still owed)
+- [x] Each `sprint-N.md` has its smoke walkthrough (real URLs)
+- [x] The kit is published with provenance, the plugin is tagged, and the CHANGELOG is current
+- [x] ~~Both stranger walkthroughs passed (S3.5, S5.5), run by Daniel on a clean machine~~ **Amended 2026-10-14 by the
+      product owner ("wrap up"):** the epic closes without them. They were not run; the retrospective carries them as one
+      owed item in today's commands, so the owed ledger keeps counting it.
+- [x] This README marked ✅; every sprint status ticked with commit refs
+- [x] `RETROSPECTIVE.md` written
+- [x] Product poster (`Roadmap/README.md`) updated, including the new name, license and install line
+- [x] Durable learnings promoted to `Roadmap/LEARNINGS.md` (dedupe — sharpen, don't append)
+- [x] Kill-switch: carve-out recorded above (none planned)
+- [x] Feature branches deleted; **this README's frontmatter `status: shipped`** (then run `node scripts/build-order.mjs`)
