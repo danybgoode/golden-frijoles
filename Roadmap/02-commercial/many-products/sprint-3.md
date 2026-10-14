@@ -3,7 +3,7 @@ epic: many-products
 sprint: 3
 title: "Each product's own horizon"
 risk: low
-phase: Shaping
+phase: In review
 stories_total: 2
 stories:
   - id: S3.1
@@ -12,18 +12,18 @@ stories:
     i_want: "to declare my product's destinations in its repo"
     so_that: "the horizon is mine, kept where the rest of my roadmap lives"
     risk: low
-    status: planned
+    status: done
   - id: S3.2
     title: "/horizon shows the product's own destinations"
     as_a: "a founder looking at a product's horizon"
     i_want: "that product's destinations, or a way to add some"
     so_that: "I never see another product's end states"
     risk: low
-    status: planned
+    status: done
 ---
 # Many products — Sprint 3: Each product's own horizon
 
-**Status:** ⬜ not started
+**Status:** 🟦 In review — PR #361 (plugin + kit 1.9.1; the horizon lives at `Roadmap/horizon.md` per the D14 amendment)
 
 ## Build contract (locked by the architect before the builder started)
 Cites the epic README's Architecture lock; nothing here restates it.
