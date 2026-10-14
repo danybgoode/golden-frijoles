@@ -12,39 +12,39 @@ stories:
     i_want: "to own more than one product"
     so_that: "a second product needs no hand-written SQL"
     risk: high
-    status: planned
+    status: done
   - id: S1.2
     title: "frijoles projects create really creates"
     as_a: "a founder's agent"
     i_want: "to create a product from the terminal"
     so_that: "a new repo gets its own product headlessly"
     risk: high
-    status: planned
+    status: done
   - id: S1.3
     title: "Login is who you are, not which product"
     as_a: "a founder"
     i_want: "frijoles login to sign in my account without asking for a product"
     so_that: "a new repo is never linked to the wrong product"
     risk: high
-    status: planned
+    status: done
   - id: S1.4
     title: "init binds the repo to its product"
     as_a: "a founder's agent in a repo"
     i_want: "frijoles init to bind this repo to an existing product or create one"
     so_that: "the repo, not the login, says which product it is"
     risk: high
-    status: planned
+    status: done
   - id: S1.5
     title: "New product in the console"
     as_a: "a founder in the console"
     i_want: "a New product button"
     so_that: "a human can do what the agent can"
     risk: low
-    status: planned
+    status: done
 ---
 # Many products — Sprint 1: Products, headlessly
 
-**Status:** ⬜ not started
+**Status:** 🟦 In review — PR #356 (migration `20261014100000` applied to prod 2026-10-14)
 
 ## Build contract (locked by the architect before the builder started)
 Cites the epic README's Architecture lock; nothing here restates it.

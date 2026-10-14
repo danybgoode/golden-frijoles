@@ -103,6 +103,30 @@ CREATE OR REPLACE VIEW active_share_links AS
     AND (k.expires_at IS NULL OR k.expires_at > now())
     AND p.deleted_at IS NULL;
 
+-- ── the product cap counts LIVE products (20261014120000's trigger, redefined) ──────────────────────────────────────
+-- A deleted product frees its slot; its name stays taken until purge (projects_slug_key).
+CREATE OR REPLACE FUNCTION public.enforce_workspace_product_limit()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_limit INTEGER;
+  v_count INTEGER;
+BEGIN
+  IF NEW.from_signup THEN RETURN NEW; END IF;
+  SELECT w.product_limit INTO v_limit FROM workspaces w WHERE w.id = NEW.workspace_id FOR UPDATE;
+  IF v_limit IS NULL THEN RETURN NEW; END IF;
+  SELECT count(*) INTO v_count FROM projects p WHERE p.workspace_id = NEW.workspace_id AND p.deleted_at IS NULL;
+  IF v_count >= v_limit THEN
+    RAISE EXCEPTION 'workspace product limit reached (% of %)', v_count, v_limit
+      USING ERRCODE = 'P0001', HINT = 'workspace_product_limit';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+REVOKE ALL ON FUNCTION public.enforce_workspace_product_limit() FROM PUBLIC, anon, authenticated;
+
 -- ── delete (S2.1) ───────────────────────────────────────────────────────────────────────────────────────────────────
 -- One guarded UPDATE: only an OWNER, only a live product, never a protected one (the caller passes the public demo's
 -- and the self-tracking project's slugs, which are env-driven and so cannot be named here). p_user_id comes from a

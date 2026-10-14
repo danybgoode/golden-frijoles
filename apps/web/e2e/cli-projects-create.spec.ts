@@ -138,13 +138,56 @@ test.describe('frijoles projects create — a product by name (many-products S1.
     const client = db()
     const founder = await person(client, 'mp-invalid')
     try {
-      for (const data of [{}, { slug: '' }, { slug: 'My Product' }, { slug: 'ab' }, { slug: 'golden-frijoles' }, { slug: 'app' }]) {
+      for (const data of [{}, { slug: '' }, { slug: 'My Product' }, { slug: 'MyProd' }, { slug: ' spaced ' }, { slug: 'ab' }, { slug: 'golden-frijoles' }, { slug: 'app' }]) {
         const res = await request.post('/api/v1/cli/projects', { headers: founder.auth, data })
         expect(res.status(), JSON.stringify(data)).toBe(400)
         expect(await res.json()).toMatchObject({ ok: false, code: 'invalid' })
       }
       const { data: rows } = await client.from('projects').select('id').eq('created_by', founder.id)
       expect(rows).toEqual([])
+    } finally {
+      await cleanup(client, [founder.id])
+    }
+  })
+
+  test('the cap: past the workspace\'s product_limit a create is a conflict naming it, and nothing is written', async ({
+    request,
+  }) => {
+    const client = db()
+    const founder = await person(client, 'mp-cap')
+    try {
+      const first = slugFor('mp-cap')
+      expect(
+        (await request.post('/api/v1/cli/projects', { headers: founder.auth, data: { slug: first } })).status()
+      ).toBe(200)
+      // The ceiling is DATA on the founder's own workspace: one UPDATE, no deploy.
+      const { data: workspace } = await client.from('workspaces').select('id').eq('created_by', founder.id).single()
+      await client.from('workspaces').update({ product_limit: 1 }).eq('id', workspace!.id)
+
+      const second = slugFor('mp-cap-over')
+      const refused = await request.post('/api/v1/cli/projects', { headers: founder.auth, data: { slug: second } })
+      expect(refused.status()).toBe(409)
+      const body = (await refused.json()) as { code: string; reason: string; error: string }
+      expect(body).toMatchObject({ code: 'conflict', reason: 'limit' })
+      expect(body.error).toMatch(/limit is 1/)
+      const { data: none } = await client.from('projects').select('id').eq('slug', second)
+      expect(none).toEqual([])
+
+      // Racing for the last slot: the database trigger (20261014120000) locks the workspace row, so exactly ONE of five
+      // parallel creates lands, never five (agy security lens, #356).
+      await client.from('workspaces').update({ product_limit: 2 }).eq('id', workspace!.id)
+      const racers = Array.from({ length: 5 }, () => slugFor('mp-race-cap'))
+      const results = await Promise.all(
+        racers.map((slug) => request.post('/api/v1/cli/projects', { headers: founder.auth, data: { slug } }))
+      )
+      expect(results.filter((res) => res.status() === 200)).toHaveLength(1)
+      expect(results.filter((res) => res.status() === 409)).toHaveLength(4)
+      const { data: landed } = await client.from('projects').select('id').in('slug', racers)
+      expect(landed).toHaveLength(1)
+
+      // Re-running a name you already own is not a new product, so the cap does not refuse it.
+      const again = await request.post('/api/v1/cli/projects', { headers: founder.auth, data: { slug: first } })
+      expect(await again.json()).toMatchObject({ ok: true, created: false })
     } finally {
       await cleanup(client, [founder.id])
     }

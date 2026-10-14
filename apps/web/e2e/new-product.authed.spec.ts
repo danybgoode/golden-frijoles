@@ -47,7 +47,7 @@ test('New product: creates a product in my own workspace and lands on its Connec
     }
 
     // A reserved name and a name someone else holds: each shows a sentence and creates nothing.
-    let dialog = await open()
+    const dialog = await open()
     // Each waits for ITS OWN sentence: the field keeps the last error, so "any text" would pass on the previous attempt's
     // while this one is still in flight (and a pending button ignores the next click).
     const refusals: Array<[string, RegExp]> = [

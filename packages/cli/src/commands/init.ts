@@ -596,7 +596,7 @@ async function chooseProduct(context: CommandContext): Promise<Chosen> {
   if (toCreate) {
     const made = await createProduct(context, toCreate)
     if (made.kind !== 'ok') return made
-    return bind(context, toCreate, made.created)
+    return bind(context, made.slug, made.created)
   }
   if (named) {
     const listed = await listProducts(context)
@@ -633,7 +633,7 @@ async function chooseProduct(context: CommandContext): Promise<Chosen> {
   if (answer.create) {
     const made = await createProduct(context, answer.slug)
     if (made.kind !== 'ok') return made
-    return bind(context, answer.slug, made.created)
+    return bind(context, made.slug, made.created)
   }
   return bind(context, answer.slug, false)
 }

@@ -125,6 +125,13 @@ workspace" is `workspaces.created_by = userId`, exactly what `claimWorkspace` al
   `isForbiddenSlug` (reserved, `DEMO_PROJECT_SLUG`, `SELF_PROJECT_SLUG`) → `invalid`. Outcomes: `created` ·
   `already_yours` (the caller is an OWNER of that slug → `created: false`) · `taken` (anyone else's, incl. a member
   who is not owner, and a soft-deleted slug: D9) → `conflict`.
+- **D2 amendment (the product owner, 2026-10-14 — "Cap per account"):** the verifier on #356 found that an uncapped
+  create multiplies an account's event quota (each product carries its own). `workspaces.product_limit` (default 10,
+  `20261014110000_many_products_product_limit.sql`) caps the products in the caller's own workspace; past it,
+  `conflict` with `reason: limit`. The app checks first for the sentence; a `BEFORE INSERT` trigger that locks the
+  workspace row enforces it atomically (`20261014120000`, agy security lens on #356: parallel creates overshot a
+  check-then-insert). Names are exact: anything `normalizeSlug` would change is `invalid`, never silently
+  rewritten.
 - **D3 · `POST /api/v1/cli/projects { slug }`** creates (D2). No `slug` → `invalid` naming it (the ensure is retired:
   every account already has a product from signup). A product-scoped token (`scopeProjectId !== null`) → `not_found`
   for any slug other than its own, and `created: false` for its own (it may not reach siblings, so it may not make
