@@ -1,7 +1,7 @@
 ---
 title: "The public surface names the category — agentic product management, a hero that hands you a prompt, and a North Star workshop worth the URL"
 slug: agentic-pm-public-surface
-status: queued
+status: shipped
 area: "02"
 type: feature
 appetite: L
@@ -9,7 +9,7 @@ underwritten_by: wave-2026-08-20-agentic-pm
 risk: low
 epic: "02-commercial/agentic-pm-public-surface"
 build_order: 23
-updated: 2026-08-20
+updated: 2026-10-14
 ---
 
 # Scope — the public surface says one thing, and the workshop earns its URL

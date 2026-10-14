@@ -1,10 +1,10 @@
 ---
 title: "Template scripts run when invoked through a symlinked path"
 slug: script-ismain-realpath
-status: raw
+status: archived   # merged into template-scripts-consumer-gates (2026-10-14)
 area: "09"
 type: chore
-updated: 2026-09-24
+updated: 2026-10-14
 ---
 
 # Seed — `isMain` by realpath in every template script

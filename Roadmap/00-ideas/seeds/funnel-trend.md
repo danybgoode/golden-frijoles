@@ -1,7 +1,7 @@
 ---
 title: "Funnel trend: how a feature performed over time"
 slug: funnel-trend
-status: raw
+status: archived   # merged into funnel-truth (2026-10-14)
 area: "01"
 type: feature
 appetite: M
@@ -9,7 +9,7 @@ underwritten_by: null
 risk: low
 epic: null
 build_order: null
-updated: 2026-10-12
+updated: 2026-10-14
 intent_ask: verbatim
 hypothesis: null
 target_metric: null

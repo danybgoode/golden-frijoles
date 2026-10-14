@@ -1,7 +1,7 @@
 ---
 title: "TARS segments: named target segments, and every funnel on the agreed model"
 slug: tars-segments
-status: raw
+status: archived   # merged into funnel-truth (2026-10-14)
 area: "01"
 type: feature
 appetite: M
@@ -9,7 +9,7 @@ underwritten_by: null
 risk: high
 epic: null
 build_order: null
-updated: 2026-10-10
+updated: 2026-10-14
 intent_ask: proxy
 hypothesis: null
 target_metric: null

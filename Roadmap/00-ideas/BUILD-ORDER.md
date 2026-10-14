@@ -10,26 +10,23 @@
 > This committed file reads the docs alone, so **Building and QA are not here** — they are facts git
 > and GitHub hold. For the live board run `node scripts/build-order.mjs --live`, or open the Hub board.
 
-## Backlog (10)
+## Backlog (8)
 
 _seeds with no pitch yet._
 
 - [Verify module: the verification depth ladder as a product (after the spike)](seeds/verify-module.md) — #54 · 09 Platform Infra · seed · Feature · risk: High · appetite L · _docs: status raw_
 - [A delivery whose settle keeps failing is re-sent every 5 minutes, uncounted and unlogged](seeds/delivery-stale-reclaim-uncounted.md) — 01 Growth Engine · seed · Bug · risk: High · appetite S · _docs: status raw_
-- [A reading for proving_workspaces](seeds/proving-workspaces-reading.md) — 01 Growth Engine · seed · Spike · risk: High · appetite S · _docs: status raw_
+- [A reading for proving_workspaces](seeds/proving-workspaces-reading.md) — 01 Growth Engine · seed · Feature · risk: High · appetite S · _docs: status raw_
 - [Drill impact for agents: a drill's effect, recorded and read from the CLI](seeds/drill-impact-for-agents.md) — 01 Growth Engine · seed · Feature · risk: High · appetite M · _docs: status raw_
-- [Funnel trend: how a feature performed over time](seeds/funnel-trend.md) — 01 Growth Engine · seed · Feature · risk: Low · appetite M · _docs: status raw_
-- [perf-probe only requests the hosts a project names](seeds/perf-probe-target-allowlist.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
-- [TARS segments: named target segments, and every funnel on the agreed model](seeds/tars-segments.md) — 01 Growth Engine · seed · Feature · risk: High · appetite M · _docs: status raw_
-- [Template scripts run when invoked through a symlinked path](seeds/script-ismain-realpath.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
+- [Funnel truth: named target segments, one model for every funnel, and the trend over time](seeds/funnel-truth.md) — 01 Growth Engine · seed · Feature · risk: High · appetite L · _docs: status raw_
+- [Owed on screen: what only the product owner can clear, in the console](seeds/owed-on-screen.md) — 02 Commercial · seed · Feature · risk: Low · appetite M · _docs: status raw_
+- [Template scripts hold to the gates their consumers run](seeds/template-scripts-consumer-gates.md) — 09 Platform Infra · seed · Chore · risk: Low · appetite S · _docs: status raw_
 - [The build view tells one story: one status, said once](seeds/build-view-one-story.md) — 09 Platform Infra · seed · Feature · risk: Low · appetite M · _docs: status raw_
-- [This repo lints its template scripts the way its consumers do](seeds/foundation-lint-gate.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
 
-## Refining (2)
+## Refining (1)
 
 _a pitch is waiting at the approval gate._
 
-- [Analytics visualization — the charting-dependency decision (spike), then the layer](seeds/analytics-visualization-layer.md) — #14 · 01 Growth Engine · seed · Spike · risk: Low · appetite S · _docs: status ready_
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
 
 ## Ready (4)
@@ -139,4 +136,4 @@ _merged, deployed and closed._
 - [The portfolio loop test fails intermittently in CI and has been quarantined](seeds/portfolio-loop-flake.md) — 02 Commercial · seed · Bug · risk: Low · appetite S · _docs: status shipped_
 
 ---
-_100 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._
+_97 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._
