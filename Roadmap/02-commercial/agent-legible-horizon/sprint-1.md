@@ -3,7 +3,7 @@ epic: agent-legible-horizon
 sprint: 1
 title: "Read it headless, and say so"
 risk: high
-phase: Building
+phase: Shipped
 stories_total: 5
 stories:
   - id: S1.1
@@ -44,7 +44,7 @@ stories:
 ---
 # Agent-legible horizon and docs — Sprint 1: Read it headless, and say so
 
-**Status:** 🟦 In review (CLI 1.7.0, plugin + kit 1.9.3)
+**Status:** ✅ shipped 2026-10-14 — https://github.com/danybgoode/golden-frijoles/pull/366 merged (`0a7ece7`), deployed; `@golden-frijoles/kit@1.9.3` on npm.
 
 ## Build contract (locked by the architect before the builder started)
 Cites the epic README's Architecture lock. 1.1 → D1, D2 · 1.2 → D3 · 1.3 → D5 · 1.4 → D4, D6 · 1.5 → D7.
@@ -97,3 +97,9 @@ Env: production · https://goldenfrijoles.com
    → The Codex `codex mcp add` step; the per-feature headless paths.
 5. Run `… login` on a machine that already remembers a product.
    → "Product: <slug> (remembered on this machine; …)".
+
+### Smoke results (2026-10-14, production, `0a7ece7`)
+- ✅ Step 3: the public connector's `get_horizon` answers for golden-frijoles — `pushed: true`, the destinations lit.
+- ✅ Step 4: https://goldenfrijoles.com/agents.md serves (names `frijoles horizon`); install.md carries
+  `codex mcp add golden-frijoles --url <your connector URL>`; llms.txt carries it and links /agents.md.
+- Owed to the product owner — steps 1, 2 and 5 need **CLI 1.7.0 on npm** (`npm publish`, 2FA).
