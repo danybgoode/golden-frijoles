@@ -4,17 +4,17 @@
   "files": 50,
   "byCategory": {
     "money-path": 1,
-    "auth-path": 20,
+    "auth-path": 21,
     "admin-only": 0,
-    "other": 47
+    "other": 46
   },
   "byKind": {
     "publish": 0,
-    "credential": 5,
+    "credential": 6,
     "ops": 6,
     "judgment": 22,
     "signed-in": 15,
-    "interactive": 17,
+    "interactive": 16,
     "unsorted": 3
   },
   "generatedAt": "2026-10-14"

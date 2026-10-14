@@ -11,23 +11,24 @@ _Generated: 2026-10-14_
 | Who can clear it | Count | What it means |
 |---|---|---|
 | publish | 0 | A package publish (npm 2FA): the product owner today, a CI job once trusted publishing is on |
-| credential | 5 | Mints or uses a production credential: only the product owner, named every time |
+| credential | 6 | Mints or uses a production credential: only the product owner, named every time |
 | ops | 6 | On the product owner's own accounts or machine |
 | judgment | 22 | An answer only the product owner can give: an _Intent_, an approval, a decision |
 | signed-in | 15 | A signed-in production walkthrough: an agent can run it once a smoke account exists |
-| interactive | 17 | An interactive plugin or terminal walkthrough: an agent can script it in a scratch repo |
+| interactive | 16 | An interactive plugin or terminal walkthrough: an agent can script it in a scratch repo |
 | unsorted | 3 | Nothing above matched — **not a bin, a to-triage list** |
 
 | Category | Count | What it means |
 |---|---|---|
 | money-path | 1 | Touches checkout, payment or order state — run these first |
-| auth-path | 20 | Needs a real signed-in session a script cannot mint against production |
+| auth-path | 21 | Needs a real signed-in session a script cannot mint against production |
 | admin-only | 0 | Behind an admin surface |
-| other | 47 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
+| other | 46 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
 
-## credential (5)
+## credential (6)
 
-- `Roadmap/02-commercial/console-ia-overhaul/RETROSPECTIVE.md:78` · other — **Owed to Daniel by name:** the signed-in production walkthrough (`sprint-3.md`), whose two writing steps — turning a live flag off and creating a real definition version — are his by construction; and **minting a connector URL** (`Setup › Connect`), outstanding from Sprint 2, b…
+- `Roadmap/01-growth-engine/growth-engine-v1/RETROSPECTIVE.md:74` · auth-path — **Owed to Daniel: Sprint 4's real-production smoke** (an authenticated round-trip against the Vercel deployment host (now `goldenfrijoles.com`) proving bucketing → exposure → comparison end-to-end with real data). No session held a plaintext production API key to run this as the…
+- `Roadmap/02-commercial/console-ia-overhaul/RETROSPECTIVE.md:78` · auth-path — **Owed to Daniel by name:** the signed-in production walkthrough (`sprint-3.md`), whose two writing steps — turning a live flag off and creating a real definition version — are his by construction; and **minting a connector URL** (`Setup › Connect`), outstanding from Sprint 2, b…
 - `Roadmap/02-commercial/design-system-rails/RETROSPECTIVE.md:92` · auth-path — ⚠️ **Owed to Daniel, by name — the auth-path production smoke.** Signing up and signing in as a brand-new user, and opening a real share link while signed out. No automated smoke covers either; `sprint-6.md`'s walkthrough has both with what "wrong" looks like at each step.
 - `Roadmap/02-commercial/outcome-report-v2/RETROSPECTIVE.md:38` · auth-path — **Owed to Daniel:** both sprints' signed-in walkthroughs; a client share link opened signed out (minting one is a prod credential); `_Intent:_` above.
 - `Roadmap/02-commercial/pod-report/RETROSPECTIVE.md:72` · auth-path — **Owed to Daniel — the one launch step an agent should not take alone:** minting the first real share credentials in production, and deciding which tenant's report goes to which audience. The mechanism is proven (mint → open → revoke → dead, spec'd against a real revoked row), b…
@@ -85,9 +86,8 @@ _Generated: 2026-10-14_
 - `Roadmap/09-platform-infra/setup-instruments-connects/RETROSPECTIVE.md:42` · other — **Owed to Daniel:** the interactive setup walkthrough (sprint 2) on a scratch copy of a real product repo, and the signed-in Today check on a fresh project (sprint 1 step 3).
 - `Roadmap/09-platform-infra/sketch-specs/RETROSPECTIVE.md:66` · auth-path — **Owed to Daniel:** open one rendered wireframe and say whether it reads; and check the signed-in `/app/flags` look (S2 step 4, with the authed gate as a green proxy).
 
-## interactive (17)
+## interactive (16)
 
-- `Roadmap/01-growth-engine/growth-engine-v1/RETROSPECTIVE.md:74` · auth-path — **Owed to Daniel: Sprint 4's real-production smoke** (an authenticated round-trip against the Vercel deployment host (now `goldenfrijoles.com`) proving bucketing → exposure → comparison end-to-end with real data). No session held a plaintext production API key to run this as the…
 - `Roadmap/01-growth-engine/sdk-1-0/RETROSPECTIVE.md:33` · other — **Owed to Daniel:** walkthrough step 3 (a real `identify` + `track` seen in the catalog).
 - `Roadmap/02-commercial/commercial-shell/RETROSPECTIVE.md:93` · auth-path — The live browser/session smokes owed to Daniel per Sprint 2/3's QA sections (the connector round-trip, the "paste into a chat app" unfurl check) are still outstanding — unchanged by this session, tracked in their respective sprint docs.
 - `Roadmap/02-commercial/connect-page/RETROSPECTIVE.md:42` · other — **Owed to Daniel:** the walkthrough (a fresh Google signup lands on Connect with no key; the Claude app turns a flag off with the URL it was given).
