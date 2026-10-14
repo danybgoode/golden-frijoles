@@ -2,6 +2,10 @@ import { requireProjectMembership } from '@/lib/dashboard-auth'
 import { getSiteUrl } from '@/lib/site-url'
 import { Callout, ListCard, PageHead } from '@/design-system/primitives'
 import { ProductShell } from '@/components/product/ProductShell'
+import { DeleteProduct } from '@/components/product/DeleteProduct'
+import { isOwner } from '@/lib/roles'
+import { DEMO_PROJECT_SLUG } from '@/lib/public-demo'
+import { cliPurgeCommand } from '@/lib/cli-install'
 import { listOwnCliTokens } from './actions'
 import { CliTokensManager } from './cli-tokens-manager'
 
@@ -29,7 +33,8 @@ export const dynamic = 'force-dynamic'
 
 export default async function SetupCliPage({ params }: { params: Promise<{ projectSlug: string }> }) {
   const { projectSlug } = await params
-  await requireProjectMembership(projectSlug)
+  const membership = await requireProjectMembership(projectSlug)
+  const canDelete = isOwner({ projectId: membership.projectId, role: membership.role }) && projectSlug !== DEMO_PROJECT_SLUG
 
   // Throws rather than returning [] on a query failure (lib/cli-tokens.ts): an empty list renders as
   // "no tokens", which during an outage invites minting a duplicate — or concluding that a token
@@ -74,6 +79,10 @@ export default async function SetupCliPage({ params }: { params: Promise<{ proje
 
           <CliTokensManager slug={projectSlug} tokens={tokens} />
         </ListCard>
+
+        {/* many-products S2.1 (D9): owner-only, never on the public demo (the server refuses it anyway). Lives here, off
+            the measured Keys and Connect surfaces, so their approved structure is untouched. */}
+        {canDelete ? <DeleteProduct slug={projectSlug} purgeCommand={cliPurgeCommand(projectSlug)} /> : null}
       </main>
     </ProductShell>
   )
