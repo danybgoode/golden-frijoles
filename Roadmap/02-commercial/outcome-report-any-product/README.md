@@ -83,6 +83,12 @@ measurable, median 7 d, p90 7.3 d, 106 retroactively documented, `epicThroughput
   DoD line contains the literal "`status: shipped`") / 3 never shipped but counted / 11 same-day; medusa-bonsai 67 / 85 /
   6 / 5. Corrected: medusa-bonsai median 7 → 3.4 d (p90 7.3), measurable 53 → 138, shipped 159 → 153; golden-frijoles
   median 2 → 1 d, measurable 7 → 60. The artifact's caveats say the date source changed.
+- **D1/D2 amendment (the architect, 2026-10-14, at the verifier's re-check of #368):** (1) the revisions are read with
+  plain `git log -- <path>`, not `--follow` — zero epic READMEs were renamed or deleted in either real repo, so nothing
+  differs today; a renamed epic folder would restart its dates (recorded, not built). (2) The per-epic `statusHistory`
+  stays IN MEMORY (it feeds the dates and the rework count); the artifact carries `delivery.rework` with each re-opened
+  epic's slug, dates and re-opening subject — not every epic's history (payload size, and nothing renders it). (3) The
+  push reads `.env.local` only when git does not track it, and takes the URL and the key from ONE source (vibe, #368).
 - **D2 · History and rework, additive.** Each epic in the artifact gains `statusHistory: [{at, from, to, commit, subject}]`
   (status CHANGES only); `delivery.rework = { reopened, of, medianDaysToReship, epics: [{slug, reopenedAt, reshippedAt,
   subject}] }` — an epic that left `shipped` after shipping. Lead time is untouched by rework. No reason is inferred;
