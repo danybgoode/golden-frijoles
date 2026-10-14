@@ -19,7 +19,8 @@ test.describe('experiment builder', () => {
     created.push(fx.projectId)
     await page.goto(`/app/experiments/${fx.slug}`)
     await page.getByRole('button', { name: /new experiment|continue new experiment/i }).click()
-    const dialog = page.locator('dialog.ds-dialog')
+    // The OPEN one: the product switcher carries a closed `+ New product` dialog on every page (many-products S1.5).
+    const dialog = page.locator('dialog.ds-dialog[open]')
     await expect(dialog).toBeVisible()
     await expect(
       dialog

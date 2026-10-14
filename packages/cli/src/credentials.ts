@@ -91,6 +91,8 @@ export type ResolvedAuth = {
   token: string | null
   apiUrl: string
   activeProject: string | null
+  /** Where `activeProject` came from (many-products D6). `repo` = this repo's `project.slug`. */
+  projectSource: 'env' | 'repo' | 'file' | null
   /** Where the token came from — `frijoles doctor` and `frijoles whoami` say so, and never print the token. */
   source: 'env' | 'flag' | 'file' | 'none'
 }
@@ -106,6 +108,8 @@ export function resolveAuth(options: {
   tokenFlag?: string
   apiFlag?: string
   env?: NodeJS.ProcessEnv
+  /** The product the repo is bound to (`repo-binding.ts`), read by the caller — it needs the kit, which is async. */
+  repoProject?: string | null
 }): ResolvedAuth {
   const env = options.env ?? process.env
   const file = readCredentials(env)
@@ -113,13 +117,19 @@ export function resolveAuth(options: {
   const apiUrl = normalizeApiUrl(
     options.apiFlag?.trim() || env.GOLDEN_FRIJOLES_URL?.trim() || file?.apiUrl || DEFAULT_API_URL
   )
-  const activeProject = env.GOLDEN_FRIJOLES_PROJECT?.trim() || file?.activeProject || null
+  // many-products D6: the repo's binding sits between the env var and the machine-wide remembered choice — a repo knows
+  // which product it is better than whatever was last `use`d on this machine, and CI's env var still wins over both.
+  const envProject = env.GOLDEN_FRIJOLES_PROJECT?.trim() || null
+  const repoProject = options.repoProject?.trim() || null
+  const fileProject = file?.activeProject || null
+  const activeProject = envProject ?? repoProject ?? fileProject
+  const projectSource = envProject ? 'env' : repoProject ? 'repo' : fileProject ? 'file' : null
+  const project = { activeProject, projectSource } as const
 
-  if (envToken) return { token: envToken, apiUrl, activeProject, source: 'env' }
-  if (options.tokenFlag?.trim())
-    return { token: options.tokenFlag.trim(), apiUrl, activeProject, source: 'flag' }
-  if (file) return { token: file.token, apiUrl, activeProject, source: 'file' }
-  return { token: null, apiUrl, activeProject, source: 'none' }
+  if (envToken) return { token: envToken, apiUrl, ...project, source: 'env' }
+  if (options.tokenFlag?.trim()) return { token: options.tokenFlag.trim(), apiUrl, ...project, source: 'flag' }
+  if (file) return { token: file.token, apiUrl, ...project, source: 'file' }
+  return { token: null, apiUrl, ...project, source: 'none' }
 }
 
 /**

@@ -6,6 +6,8 @@ import { getMembershipByProjectId } from '@/lib/membership'
 import { loopStageWriteDecision, parseLoopStage } from '@/lib/loop-stage'
 import { writeLoopStage } from '@/lib/loop-stage-store'
 import { getSupabaseServiceClient } from '@/lib/supabase'
+import { createProductForUser } from '@/lib/provisioning'
+import { displayNameFrom } from '@/lib/display-name'
 import { LOOP_OUTCOME_PARAM, PORTFOLIO_HREF, portfolioHrefFor } from '@/lib/portfolio-workspace'
 
 // portfolio-view · Sprint 2, Story 2.3 (Roadmap/02-commercial/portfolio-view — the Architecture lock, D3, D11, C4).
@@ -51,4 +53,30 @@ export async function setLoopStageAction(formData: FormData): Promise<void> {
   revalidatePath(PORTFOLIO_HREF)
   if (!saved) redirect(`${back}${sep}${LOOP_OUTCOME_PARAM}=failed`)
   redirect(back)
+}
+
+// many-products · Sprint 1, Story 1.5 (Roadmap/02-commercial/many-products — D8, D2).
+//
+// New product from the console: the SAME create as `frijoles projects create` (`createProductForUser`), called with the
+// SESSION user. The form carries one thing — the slug the person typed. The owner and the workspace come from the cookie
+// and from `claimWorkspace` (the caller's OWN), never from a field: there is no id here to forge (AGENTS § The tenancy
+// invariant).
+//
+// ⚠️ A refusal is RETURNED, not thrown: Next redacts a thrown action error in production and the route's boundary would
+// say "Couldn't load your workspace" for a failed SAVE (same trap `setLoopStageAction` documents above).
+export type NewProductState = { error: string | null }
+
+export async function createProductAction(_previous: NewProductState, formData: FormData): Promise<NewProductState> {
+  const user = await getSessionUser()
+  if (!user) redirect('/login')
+
+  const created = await createProductForUser(user.id, formData.get('slug'), {
+    email: user.email,
+    displayName: displayNameFrom(user.user_metadata),
+  })
+  if (!created.ok) return { error: created.error }
+
+  // The switcher and the portfolio both list the caller's products.
+  revalidatePath('/app', 'layout')
+  redirect(`/app/setup/connect/${encodeURIComponent(created.projectSlug)}`)
 }

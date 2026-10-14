@@ -1,10 +1,10 @@
 {
-  "total": 121,
+  "total": 123,
   "cleared": 3,
-  "files": 68,
+  "files": 70,
   "byCategory": {
     "money-path": 2,
-    "auth-path": 31,
+    "auth-path": 33,
     "admin-only": 0,
     "other": 88
   },
@@ -13,7 +13,7 @@
     "credential": 7,
     "ops": 7,
     "judgment": 29,
-    "signed-in": 24,
+    "signed-in": 26,
     "interactive": 27,
     "unsorted": 25
   },

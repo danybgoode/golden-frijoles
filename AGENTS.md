@@ -165,6 +165,12 @@ OWN memberships — the id, slug, role and workspace of each project they belong
 workspace is not one of the caller's. Anything that reads events, metrics, flags
 or any other project data from several projects is a multi-project read and goes through `getWorkspaceProjects()`.
 
+**A second named carve-out, also not a data read (Daniel, 2026-10-14, many-products):** the product cap counts the
+products in the caller's OWN workspace (`createProductForUser` in `lib/provisioning.ts`, and the
+`enforce_workspace_product_limit` trigger) — workspace administration that returns one number, never anything from
+inside a project. It counts projects the caller may not be a member of (hand-seeded ones), which is the point: the cap
+belongs to the workspace.
+
 - **The workspace is a boundary, not a grant** (access model A). `project_members` is still the access list: a
   workspace member cannot open a project they are not a member of. `workspace_members.role` gates workspace
   administration only, and nothing reads it for project access.

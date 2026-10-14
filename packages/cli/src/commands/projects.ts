@@ -1,6 +1,6 @@
 // golden-frijoles-cli · Sprint 1, Story 1.3 — `frijoles projects ls | create | use`.
 
-import type { Command } from '../command'
+import type { Command, CommandContext } from '../command'
 import { readCredentials, writeCredentials } from '../credentials'
 import { EXIT, exitForServerCode, type ExitCode } from '../exit-codes'
 import { table } from '../output'
@@ -27,7 +27,7 @@ export const projectsLsCommand: Command = {
     context.emit.ok(
       { projects, activeProject: context.auth.activeProject },
       projects.length === 0
-        ? 'This account belongs to no project yet. Run `frijoles projects create`.'
+        ? 'This account belongs to no product yet. Run `frijoles projects create <slug>`.'
         : table(
             ['PROJECT', 'ROLE', ''],
             projects.map((project) => [
@@ -43,40 +43,67 @@ export const projectsLsCommand: Command = {
 
 export const projectsCreateCommand: Command = {
   path: ['projects', 'create'],
-  summary: 'make sure this account has a project (idempotent)',
-  usage: 'frijoles projects create [--json]',
+  summary: 'make a new product (idempotent: one you already own is left alone)',
+  usage: 'frijoles projects create <slug> [--json]',
   needsAuth: true,
-  detail: `⚠️ An ENSURE, not a second project.
+  detail: `Makes a product called <slug> in your own workspace, with you as its owner.
+  A name you already own answers created: false and changes nothing, so a script can
+  run it twice. A name anyone else holds is a conflict.
 
-  The database enforces one self-serve project per account — a partial unique index that
-  closes a signup race, not a plan limit. So this reports the project you already have,
-  with created: false, and never mints a second. Use it in a script that wants to be sure
-  before \`frijoles init\`, without parsing \`frijoles projects ls\`.
-
-  It cannot rescue an account that has NO project: holding a CLI token already means you
-  have one. If you are in that state, open /app in a browser — it retries provisioning for
-  you.
-
-  It also never returns an ingest key. Use \`frijoles keys create --type ingest\` for that, where
-  the credential gets its own confirmation and its own audit row.`,
+  It does not bind a repo to the product — \`frijoles init --create <slug>\` does both —
+  and it never returns an ingest key: \`frijoles keys create --type ingest\` makes one, with
+  its own confirmation and its own audit row.`,
   flags: [],
   async run(context): Promise<ExitCode> {
-    const result = await context.api!.post<{ created: boolean; slug: string }>('api/v1/cli/projects', {})
-    if (result.kind === 'network') {
-      context.emit.fail('server_error', result.message)
-      return EXIT.SERVER
+    const slug = context.args.positionals[0]?.trim()
+    if (!slug) {
+      context.emit.fail('invalid', 'Name the product: `frijoles projects create <slug>`.')
+      return EXIT.USAGE
     }
-    if (result.kind === 'error') {
-      context.emit.fail(result.code, result.message)
-      return exitForServerCode(result.code)
-    }
-    const { created, slug } = result.body
+    const result = await createProduct(context, slug)
+    if (result.kind !== 'ok') return result.exit
+    const { created, slug: made } = result
     context.emit.ok(
-      { created, slug },
-      created ? `Created project ${slug}.` : `This account already has project ${slug}. Nothing changed.`
+      { created, slug: made },
+      created ? `Created ${made}.` : `You already have ${made}. Nothing changed.`
     )
     return EXIT.OK
   },
+}
+
+/** POST cli/projects { slug } — shared by `projects create` and `init --create`. Reports its own failure. */
+export async function createProduct(
+  context: CommandContext,
+  slug: string
+): Promise<{ kind: 'ok'; created: boolean; slug: string } | { kind: 'failed'; exit: ExitCode }> {
+  const result = await context.api!.post<{ created: boolean; slug: string }>('api/v1/cli/projects', { slug })
+  if (result.kind === 'network') {
+    context.emit.fail('server_error', result.message)
+    return { kind: 'failed', exit: EXIT.SERVER }
+  }
+  if (result.kind === 'error') {
+    context.emit.fail(result.code, result.message)
+    return { kind: 'failed', exit: exitForServerCode(result.code) }
+  }
+  // The server's name for it, never the one typed: those are the same today (it refuses anything else), and binding or
+  // printing the typed one is how a product gets made under one name and used under another (verifier, #356).
+  return { kind: 'ok', created: result.body.created, slug: result.body.slug }
+}
+
+/** GET cli/projects — the products this credential reaches. Reports its own failure. */
+export async function listProducts(
+  context: CommandContext
+): Promise<{ kind: 'ok'; projects: ProjectsBody['projects'] } | { kind: 'failed'; exit: ExitCode }> {
+  const result = await context.api!.get<ProjectsBody>('api/v1/cli/projects')
+  if (result.kind === 'network') {
+    context.emit.fail('server_error', result.message)
+    return { kind: 'failed', exit: EXIT.SERVER }
+  }
+  if (result.kind === 'error') {
+    context.emit.fail(result.code, result.message)
+    return { kind: 'failed', exit: exitForServerCode(result.code) }
+  }
+  return { kind: 'ok', projects: result.body.projects }
 }
 
 export const projectsUseCommand: Command = {

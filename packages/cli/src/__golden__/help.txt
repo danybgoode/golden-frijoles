@@ -22,7 +22,7 @@ Commands
 
   projects
   projects ls               the projects this credential reaches
-  projects create           make sure this account has a project (idempotent)
+  projects create           make a new product (idempotent: one you already own is left alone)
   projects use              remember which project the other commands act on
 
   flags

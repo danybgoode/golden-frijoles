@@ -11,6 +11,7 @@ import { createApiClient, type ApiClient } from './api'
 import { matchCommand, type Command, type CommandContext } from './command'
 import { COMMANDS } from './commands'
 import { resolveAuth } from './credentials'
+import { readRepoBinding } from './repo-binding'
 import { EXIT, type ExitCode } from './exit-codes'
 import { commandAsData, helpAsData, renderCommandHelp, renderRootHelp } from './help'
 import { createEmitter, processWriter, type Writer } from './output'
@@ -120,6 +121,7 @@ export async function run(options: RunOptions): Promise<ExitCode> {
     tokenFlag: flagValue(withPositionals, 'token'),
     apiFlag: flagValue(withPositionals, 'api'),
     env,
+    repoProject: (await readRepoBinding(env, cwd))?.slug ?? null,
   })
 
   const clientFor = (token: string): ApiClient =>
@@ -138,6 +140,12 @@ export async function run(options: RunOptions): Promise<ExitCode> {
     )
     return EXIT.AUTH
   }
+
+  // many-products (security pass on #356): a committed or copied golden-frijoles.config.json outranks the product this
+  // machine last used, so a write could land on another of the account's products without the person noticing. Say
+  // where the product came from, every time it came from the repo (stderr; dropped under --json, like every note).
+  if (command.needsAuth && auth.projectSource === 'repo' && auth.activeProject)
+    emit.note(`Product: ${auth.activeProject} (from this repo's golden-frijoles.config.json).`)
 
   const context: CommandContext = {
     args: withPositionals,

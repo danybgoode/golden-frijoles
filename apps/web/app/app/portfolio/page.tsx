@@ -16,6 +16,7 @@ import { readGates } from '@/lib/shell-nav'
 import { todayHrefFor } from '@/lib/console-shell'
 import { ProductShell } from '@/components/product/ProductShell'
 import { Callout, Empty, PageHead, Table, TableCell, TableHead, TableRow } from '@/design-system/primitives'
+import { NewProduct } from '@/components/product/NewProduct'
 import { LoopControl } from './loop-control'
 import { LoadingTable, PORTFOLIO_COLUMNS } from './loading-table'
 import { SCREEN_WORDS } from '@/lib/screen-words'
@@ -70,7 +71,7 @@ export default async function PortfolioPage({
       <main>
         {held < PORTFOLIO_MIN_PRODUCTS ? (
           <div data-portfolio-state="empty">
-            <PageHead title={SCREEN_WORDS.portfolio} lede={workspace.name} />
+            <PageHead title={SCREEN_WORDS.portfolio} lede={workspace.name} actions={<NewProduct />} />
             <Empty
               title={
                 held === 1 ? 'This workspace has one product.' : 'You have no product in this workspace yet.'
@@ -84,9 +85,12 @@ export default async function PortfolioPage({
               title={SCREEN_WORDS.portfolio}
               lede={`${workspace.name} — every product you belong to, placed on the Consider · Operate · Exit loop.`}
               actions={
-                <a className="ds-btn ds-btn--secondary" href={todayHrefFor(mine[0].slug)}>
-                  Open a product
-                </a>
+                <>
+                  <a className="ds-btn ds-btn--secondary" href={todayHrefFor(mine[0].slug)}>
+                    Open a product
+                  </a>
+                  <NewProduct />
+                </>
               }
             />
             {loopOutcome ? <Callout tone="warn">{loopOutcome}</Callout> : null}

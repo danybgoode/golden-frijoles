@@ -90,7 +90,7 @@
       {
         "command": "init",
         "summary": "project, key, .env.local and the snippet — in one verb",
-        "usage": "frijoles init [--env <environment>] [--ingest] [--json] [--yes]",
+        "usage": "frijoles init [--project <slug> | --create <slug>] [--env <environment>] [--ingest] [--json] [--yes]",
         "needsAuth": true,
         "flags": [
           {
@@ -101,7 +101,12 @@
           {
             "flag": "--project",
             "takesValue": true,
-            "describe": "the project (default: the remembered one)"
+            "describe": "bind this repo to a product you belong to"
+          },
+          {
+            "flag": "--create",
+            "takesValue": true,
+            "describe": "make the product first, then bind this repo to it"
           },
           {
             "flag": "--ingest",
@@ -111,7 +116,7 @@
           {
             "flag": "--yes",
             "takesValue": false,
-            "describe": "accepted and ignored — this verb never prompts"
+            "describe": "accepted and ignored — name the product with --project or --create instead"
           }
         ]
       },
@@ -124,8 +129,8 @@
       },
       {
         "command": "projects create",
-        "summary": "make sure this account has a project (idempotent)",
-        "usage": "frijoles projects create [--json]",
+        "summary": "make a new product (idempotent: one you already own is left alone)",
+        "usage": "frijoles projects create <slug> [--json]",
         "needsAuth": true,
         "flags": []
       },

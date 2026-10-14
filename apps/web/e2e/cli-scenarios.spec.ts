@@ -35,7 +35,7 @@ test('owner writes, member reads, stranger sees nothing; a target is registered 
   const member = await person(client, 'scn-member')
   const stranger = await person(client, 'scn-stranger')
   try {
-    const created = await request.post('/api/v1/cli/projects', { headers: owner.auth, data: {} })
+    const created = await request.post('/api/v1/cli/projects', { headers: owner.auth, data: { slug: `spec-${randomBytes(4).toString('hex')}` } })
     expect(created.status()).toBe(200)
     const project = ((await created.json()) as { slug: string }).slug
     const { data: row } = await client.from('projects').select('id').eq('slug', project).single()
