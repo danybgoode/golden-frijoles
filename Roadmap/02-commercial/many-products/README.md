@@ -43,7 +43,7 @@ actual_basis: "this machine · 2026-10-14 · 1 session · prices 2026-10-02"
 
 # Epic: Many products ✅
 
-> **Shipped 2026-10-14** — #356 (`7755438`), #359 (`7dc7dc0`), #361 (`d481548`); plugin + kit 1.9.0/1.9.1 on npm; CLI 1.6.0 publish owed to the product owner.
+> **Shipped 2026-10-14** — #356 (`7755438`), #359 (`7dc7dc0`), #361 (`d481548`); plugin + kit 1.9.0/1.9.1 on npm; CLI 1.6.0 on npm (1.7.0 since).
 
 > **Area:** 02-commercial · **Risk:** high · **Class:** Feature · **Scope seed:** [`00-ideas/seeds/many-products.md`](../../00-ideas/seeds/many-products.md)
 <!-- Class (above) is the Stage-2 classification: Feature, Spike, Bug, or Chore — see SKILL.md's

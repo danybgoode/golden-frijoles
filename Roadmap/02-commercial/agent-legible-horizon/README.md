@@ -43,7 +43,7 @@ actual_basis: "this machine · 2026-10-14 · 1 session · prices 2026-10-02"
 
 # Epic: Agent-legible horizon and docs ✅
 
-> **Shipped 2026-10-14** — https://github.com/danybgoode/golden-frijoles/pull/366 (`0a7ece7`); plugin + kit 1.9.3 on npm; CLI 1.7.0 publish owed to the product owner.
+> **Shipped 2026-10-14** — https://github.com/danybgoode/golden-frijoles/pull/366 (`0a7ece7`); plugin + kit 1.9.3 on npm; CLI 1.7.0 on npm.
 
 > **Area:** 02-commercial · **Risk:** high · **Class:** Feature · **Scope seed:** [`00-ideas/seeds/agent-legible-horizon.md`](../../00-ideas/seeds/agent-legible-horizon.md)
 <!-- Class (above) is the Stage-2 classification: Feature, Spike, Bug, or Chore — see SKILL.md's
