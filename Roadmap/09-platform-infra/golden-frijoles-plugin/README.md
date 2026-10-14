@@ -332,8 +332,9 @@ deprecate a bad npm version, `git revert` the landing card. The repo transfer is
 - [x] All sprints merged to `main` + smoke-tested (gaps stated; `node scripts/owed-ledger.mjs` counts what's still owed)
 - [x] Each `sprint-N.md` has its smoke walkthrough (real URLs)
 - [x] The kit is published with provenance, the plugin is tagged, and the CHANGELOG is current
-- [ ] Both stranger walkthroughs passed (S3.5, S5.5), run by Daniel on a clean machine: **not run**; carried into the
-      retrospective as one owed item, in today's commands (closed 2026-10-14)
+- [x] ~~Both stranger walkthroughs passed (S3.5, S5.5), run by Daniel on a clean machine~~ **Amended 2026-10-14 by the
+      product owner ("wrap up"):** the epic closes without them. They were not run; the retrospective carries them as one
+      owed item in today's commands, so the owed ledger keeps counting it.
 - [x] This README marked ✅; every sprint status ticked with commit refs
 - [x] `RETROSPECTIVE.md` written
 - [x] Product poster (`Roadmap/README.md`) updated, including the new name, license and install line
