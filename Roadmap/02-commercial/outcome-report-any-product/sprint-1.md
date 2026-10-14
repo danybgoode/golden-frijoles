@@ -12,32 +12,32 @@ stories:
     i_want: "shipped dates read from each epic's parsed status history"
     so_that: "the report is safe to publish for any repo"
     risk: high
-    status: planned
+    status: done
   - id: S1.2
     title: "Rework is its own number"
     as_a: "a founder reading the outcome report"
     i_want: "re-opened epics counted on their own"
     so_that: "rework is visible without bending lead time"
     risk: low
-    status: planned
+    status: done
   - id: S1.3
     title: "pod-report in the kit, with a stranger's defaults"
     as_a: "a founder's agent in any product's repo"
     i_want: "npx -y @golden-frijoles/kit pod-report --push"
     so_that: "another product can push its outcome report"
     risk: high
-    status: planned
+    status: done
   - id: S1.4
     title: "Every screen names the command that works"
     as_a: "a founder told an outcome report is included"
     i_want: "setup, install, /agents.md and the empty page to name the kit command"
     so_that: "nothing promises a command I don't have"
     risk: low
-    status: planned
+    status: done
 ---
 # The outcome report for any product — Sprint 1: Report from any repo
 
-**Status:** ⬜ not started
+**Status:** 🟦 In review (plugin + kit 1.9.4)
 
 ## Build contract (locked by the architect before the builder started)
 Cites the epic README's Architecture lock. 1.1 → D1 · 1.2 → D2, D3 · 1.3 → D4 · 1.4 → D5.

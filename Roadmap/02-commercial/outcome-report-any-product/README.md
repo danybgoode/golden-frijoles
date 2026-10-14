@@ -1,5 +1,5 @@
 ---
-status: scaffolded   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+status: in-progress   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
 phase: Building       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
 locked_at: "2026-10-14T19:07:51Z"
@@ -78,6 +78,11 @@ measurable, median 7 d, p90 7.3 d, 106 retroactively documented, `epicThroughput
   (the product owner, 2026-10-14). A README whose first revision is already shipped stays "retroactively documented".
   **The baselines above must come out identical**; any epic whose date differs is listed in the PR with why (a real
   miss of the old `-S` search), never absorbed.
+- **D1 amendment (the product owner, 2026-10-14 — "Ship corrected + say so"):** they did NOT come out identical, and the
+  old search was the defect. Per epic: golden-frijoles 18 same / 53 dated at README creation (the epic template's own
+  DoD line contains the literal "`status: shipped`") / 3 never shipped but counted / 11 same-day; medusa-bonsai 67 / 85 /
+  6 / 5. Corrected: medusa-bonsai median 7 → 3.4 d (p90 7.3), measurable 53 → 138, shipped 159 → 153; golden-frijoles
+  median 2 → 1 d, measurable 7 → 60. The artifact's caveats say the date source changed.
 - **D2 · History and rework, additive.** Each epic in the artifact gains `statusHistory: [{at, from, to, commit, subject}]`
   (status CHANGES only); `delivery.rework = { reopened, of, medianDaysToReship, epics: [{slug, reopenedAt, reshippedAt,
   subject}] }` — an epic that left `shipped` after shipping. Lead time is untouched by rework. No reason is inferred;
