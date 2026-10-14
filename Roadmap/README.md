@@ -112,6 +112,10 @@ independently shippable slice of value.
   where it pays off. **Owed:** a signed-in look at a live funnel; `tars-segments` next.
 
 ### 02 · Commercial
+- ✅ [The outcome report for any product](02-commercial/outcome-report-any-product/README.md) — **shipped 2026-10-14**
+  (#368; kit 1.9.4). `npx -y @golden-frijoles/kit pod-report --push` in any product's repo; shipped dates from each epic's
+  real status history (the old search dated most ships at the README's creation — the report says the method changed);
+  "Re-opened after shipping" as its own number.
 - ✅ [Agent-legible horizon and docs](02-commercial/agent-legible-horizon/README.md) — **shipped 2026-10-14** (#366; kit
   1.9.3, CLI 1.7.0 — npm publish owed). `frijoles horizon` and the `get_horizon` MCP tool read a product's horizon
   headless; Codex MCP setup is in install.md and llms.txt; https://goldenfrijoles.com/agents.md names every feature's
@@ -622,6 +626,8 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-14**: `outcome-report-any-product` **shipped** (≈$23): any product can push its outcome report from the kit,
+  and lead time is now read from each epic's real status history (medusa-bonsai's median: 7 → 3.4 days, said on the report).
 - **2026-10-14**: `agent-legible-horizon` **shipped** (≈$10): an agent can read a horizon, connect Codex and debug from
   one page without a browser; the first Codex review on luna/xhigh came back Clean.
 - **2026-10-14**: `many-products` **shipped**: ≈$61 against a $15–33 quote — three verifier rounds each found a real

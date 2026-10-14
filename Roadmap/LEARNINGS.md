@@ -2339,3 +2339,12 @@ one-liner + why + date shape.
   404; revoked keys stay listed). Verify each claimed outcome against its code path before publishing.
 - **A guard's "not landed yet" excuse must expire with the thing it excuses**, or it silently hides that thing's later
   removal — delete the excuse in the PR that lands it.
+
+### Measuring from your own docs (outcome-report-any-product, 2026-10-14)
+- **A text search over docs can match the docs' TEMPLATE.** `git log -S 'status: shipped'` found the epic template's own
+  Definition-of-Done line ("`status: shipped`") in the commit that CREATED each README, so most ships were dated at
+  creation. Parse the field you mean (the frontmatter `status`) at each revision; lock against two real repos and list
+  every epic whose number moves before believing either method.
+- **Auto-loading a repo's env file is a new trust boundary.** A cloned repo's `.env.local` that names only a host would
+  have received the person's own key from their shell. Take the URL and the key from ONE source, and never auto-read a
+  file git tracks (someone else committed it).
