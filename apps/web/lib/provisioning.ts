@@ -55,6 +55,9 @@ async function findProjectByCreator(
     .from('projects')
     .select('slug')
     .eq('created_by', userId)
+    // many-products D1: only the SIGNUP product is unique per creator. Without this filter a founder with a second
+    // product makes `.maybeSingle()` error, and the signup race this function resolves would strand them.
+    .eq('from_signup', true)
     .maybeSingle()
   if (error) {
     console.error('[provisioning] created_by lookup failed:', error)
@@ -120,6 +123,61 @@ async function logRelease(
 ): Promise<void> {
   const error = await releaseWorkspace(supabase, claim)
   if (error) console.error(`[provisioning] could not release workspace ${claim.workspaceId}:`, error)
+}
+
+/**
+ * The owner membership of a project this call just inserted — or, when it cannot be written, the project rolled back.
+ * Returns false after a rollback; the caller then releases its workspace claim.
+ *
+ * The project row exists but nobody can reach it until this lands. There is no transaction across these calls
+ * (supabase-js speaks REST, not sessions), so the compensating delete is the cleanup.
+ *
+ * CHECKED, not fire-and-forget: if the delete also fails we have an orphan project owned by a user with no membership,
+ * which is exactly the state that produced an infinite /app ↔ /app/provision redirect loop. We can't fix it here, but
+ * the next signup attempt's ensureOwnerMembership() repairs it — and this log is what makes the state findable if it
+ * somehow persists (cross-review, Codex 2026-07-20). The project delete has to land before the caller's release:
+ * projects.workspace_id is ON DELETE RESTRICT, so while the orphan exists the release is refused — which is right,
+ * since an orphan in a deleted tenant would be worse.
+ */
+async function insertOwnerOrRollback(
+  supabase: ReturnType<typeof getSupabaseServiceClient>,
+  userId: string,
+  projectId: string,
+  projectSlug: string
+): Promise<boolean> {
+  const { error: memberError } = await supabase
+    .from('project_members')
+    .insert({ user_id: userId, project_id: projectId, role: 'owner' })
+  if (!memberError) return true
+  console.error('[provisioning] membership insert failed:', memberError)
+  const { error: cleanupError } = await supabase.from('projects').delete().eq('id', projectId)
+  if (cleanupError) {
+    console.error(
+      `[provisioning] ORPHAN project ${projectId} (${projectSlug}) — membership insert failed AND cleanup failed:`,
+      cleanupError
+    )
+  }
+  return false
+}
+
+/**
+ * The connector URL a new product starts with. connect-page D1: it acts as its owner from the start, exactly like one
+ * made with Create — the same rule, imported (`makerToStamp`), so the demo project never names anyone. Best-effort:
+ * the MCP route is independently gated (AGENTS rule #3) and Connect renders an honest "not ready" state without one.
+ */
+async function insertConnectorToken(
+  supabase: ReturnType<typeof getSupabaseServiceClient>,
+  userId: string,
+  projectId: string,
+  projectSlug: string
+): Promise<boolean> {
+  const { error } = await supabase.from('connector_tokens').insert({
+    project_id: projectId,
+    token: generateConnectorToken(),
+    created_by: makerToStamp(projectSlug, DEMO_PROJECT_SLUG, userId),
+  })
+  if (error) console.error('[provisioning] connector token insert failed:', error)
+  return !error
 }
 
 /**
@@ -263,29 +321,7 @@ export async function provisionTenantForUser(
   // OWNER, not member: this user must be able to administer their own credentials (S1 made
   // credential admin owner-only — lib/roles.ts). A self-serve tenant provisioned as `member`
   // would 404 on its own API-keys page, which is exactly the trap the S1 rollout note warns about.
-  const { error: memberError } = await supabase
-    .from('project_members')
-    .insert({ user_id: userId, project_id: projectId, role: 'owner' })
-  if (memberError) {
-    console.error('[provisioning] membership insert failed:', memberError)
-    // The project row exists but nobody can reach it. Roll it back rather than leaving an orphan
-    // squatting on a slug forever — there is no transaction across these calls (supabase-js
-    // speaks REST, not sessions), so this compensating delete is the cleanup.
-    //
-    // CHECKED, not fire-and-forget: if the delete also fails we have an orphan project owned by a
-    // user with no membership, which is exactly the state that produced an infinite
-    // /app ↔ /app/provision redirect loop. We can't fix it here, but the next attempt's
-    // ensureOwnerMembership() repairs it — and this log is what makes the state findable if it
-    // somehow persists (cross-review, Codex 2026-07-20).
-    const { error: cleanupError } = await supabase.from('projects').delete().eq('id', projectId)
-    if (cleanupError) {
-      console.error(
-        `[provisioning] ORPHAN project ${projectId} (${projectSlug}) — membership insert failed AND cleanup failed:`,
-        cleanupError
-      )
-    }
-    // The project delete has to land first: projects.workspace_id is ON DELETE RESTRICT, so while the orphan exists
-    // the release below is refused — which is right, since an orphan in a deleted tenant would be worse.
+  if (!(await insertOwnerOrRollback(supabase, userId, projectId, projectSlug))) {
     return fail('Could not set up your account.')
   }
 
@@ -310,28 +346,123 @@ export async function provisionTenantForUser(
   }
 
   // ── connector token (Story 2.3's "copy your MCP URL") ──────────────────────────────────────
-  // Best-effort: the MCP route is independently gated by CONNECTOR_ENABLED (AGENTS rule #3), and
-  // onboarding renders an honest "not ready" state when there's no token — so a failure here
-  // costs a convenience, not the tenant.
-  const { error: tokenError } = await supabase
-    .from('connector_tokens')
-    // connect-page D1: the URL a new account is handed acts as its owner from the start, exactly like
-    // one made with Create — the same rule, imported (`makerToStamp`), so the demo project never names anyone.
-    .insert({
-      project_id: projectId,
-      token: generateConnectorToken(),
-      created_by: makerToStamp(projectSlug, DEMO_PROJECT_SLUG, userId),
-    })
-  if (tokenError) console.error('[provisioning] connector token insert failed:', tokenError)
+  const tokenOk = await insertConnectorToken(supabase, userId, projectId, projectSlug)
 
   await recordAudit({
     action: 'tenant_provisioned',
     projectId,
     actorUserId: userId,
-    metadata: { slug: projectSlug, firstKey: true, connectorToken: !tokenError },
+    metadata: { slug: projectSlug, firstKey: true, connectorToken: tokenOk },
   })
 
   return { ok: true, created: true, projectSlug, plaintextKey }
+}
+
+export type CreateProductResult =
+  | { ok: true; created: boolean; projectSlug: string }
+  | { ok: false; reason: 'invalid' | 'taken' | 'error'; error: string }
+
+/**
+ * many-products D2 — a product the caller asked for BY NAME, beside the one their signup made: `frijoles projects create`,
+ * `frijoles init --create` and the console's New product all land here.
+ *
+ * It lives in the caller's OWN workspace (`claimWorkspace` — the one they created, made if they have none), never one a
+ * request names: AGENTS § The tenancy invariant. `from_signup: false` is what lets it coexist with their signup product
+ * under `projects_one_per_creator_idx` (D1). It mints no ingest key — `frijoles keys create` and `init --ingest` do, with
+ * their own confirmation — but it does mint the owner-stamped connector URL every other mint path mints (LEARNINGS: list
+ * the mint paths, not just the renderers).
+ *
+ * Idempotent for its owner: a slug the caller already OWNS answers `created: false`. A slug anyone else holds — a
+ * stranger's, one the caller is only a member of, or one soft-deleted and not yet purged — is `taken`, with no hint of
+ * which (the slug is the only thing a caller learns, and "it exists" is all a public signup form would tell them too).
+ */
+export async function createProductForUser(
+  userId: string,
+  requestedSlug: unknown,
+  naming: { email?: string | null; displayName?: string | null } = {}
+): Promise<CreateProductResult> {
+  const slug = typeof requestedSlug === 'string' ? normalizeSlug(requestedSlug) : null
+  if (!slug || slug !== String(requestedSlug).trim().toLowerCase() || isForbiddenSlug(slug)) {
+    return {
+      ok: false,
+      reason: 'invalid',
+      error:
+        'A product name is 3–40 lowercase letters, digits and dashes (not starting or ending with one), and not a reserved name.',
+    }
+  }
+
+  const supabase = getSupabaseServiceClient()
+  const owned = await ownsSlug(supabase, userId, slug)
+  if (owned === null) return { ok: false, reason: 'error', error: 'Could not check that name right now.' }
+  if (owned) return { ok: true, created: false, projectSlug: slug }
+
+  const claim = await claimWorkspace(supabase, userId, workspaceNameFor(naming.displayName, naming.email))
+  if (!claim.ok) {
+    console.error('[provisioning] workspace claim failed:', claim.error)
+    return { ok: false, reason: 'error', error: 'Could not find your workspace right now.' }
+  }
+  const fail = async (reason: 'taken' | 'error', error: string): Promise<CreateProductResult> => {
+    await logRelease(supabase, claim)
+    return { ok: false, reason, error }
+  }
+
+  // A PLAIN INSERT, never an upsert on `slug` (the rule provisionTenantForUser states): a conflict must be a visible
+  // "taken", never a silent bind to somebody else's product.
+  const { data, error } = await supabase
+    .from('projects')
+    .insert({ slug, created_by: userId, workspace_id: claim.workspaceId, api_key_hash: null, from_signup: false })
+    .select('id')
+    .single()
+  if (error || !data) {
+    if (error?.code === PG_UNIQUE_VIOLATION) {
+      // Two creates of one name racing: the loser re-checks, so its retry (or this answer) says "already yours".
+      if (await ownsSlug(supabase, userId, slug)) {
+        await logRelease(supabase, claim)
+        return { ok: true, created: false, projectSlug: slug }
+      }
+      return fail('taken', `The name \`${slug}\` is taken. Pick another.`)
+    }
+    console.error('[provisioning] product insert failed:', error)
+    return fail('error', 'Could not create that product.')
+  }
+
+  const projectId = data.id as string
+  if (!(await insertOwnerOrRollback(supabase, userId, projectId, slug))) {
+    return fail('error', 'Could not create that product.')
+  }
+  const tokenOk = await insertConnectorToken(supabase, userId, projectId, slug)
+  await recordAudit({
+    action: 'product_created',
+    projectId,
+    actorUserId: userId,
+    metadata: { slug, connectorToken: tokenOk },
+  })
+  return { ok: true, created: true, projectSlug: slug }
+}
+
+/** Does `userId` OWN the product called `slug`? null = could not tell (the caller fails closed). */
+async function ownsSlug(
+  supabase: ReturnType<typeof getSupabaseServiceClient>,
+  userId: string,
+  slug: string
+): Promise<boolean | null> {
+  const { data: project, error } = await supabase.from('projects').select('id').eq('slug', slug).maybeSingle()
+  if (error) {
+    console.error('[provisioning] slug lookup failed:', error)
+    return null
+  }
+  if (!project) return false
+  const { data: member, error: memberError } = await supabase
+    .from('project_members')
+    .select('role')
+    .eq('user_id', userId)
+    .eq('project_id', project.id)
+    .maybeSingle()
+  if (memberError) {
+    console.error('[provisioning] ownership lookup failed:', memberError)
+    return null
+  }
+  return member?.role === 'owner'
 }
 
 /** The feature key the onboarding snippet's event is tagged with. Exported so the onboarding page

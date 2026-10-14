@@ -26,7 +26,7 @@ test('a measured flag fills its funnel from its own evaluations, on a fresh proj
   await client.from('cli_tokens').insert({ user_id: userId, token_hash: sha256(token), label: 'spec' })
   try {
     const auth = { authorization: `Bearer ${token}` }
-    const created = await request.post('/api/v1/cli/projects', { headers: auth, data: {} })
+    const created = await request.post('/api/v1/cli/projects', { headers: auth, data: { slug: `spec-${randomBytes(4).toString('hex')}` } })
     expect(created.status()).toBe(200)
     const slug = ((await created.json()) as { slug: string }).slug
     const { data: project } = await client.from('projects').select('id').eq('slug', slug).single()

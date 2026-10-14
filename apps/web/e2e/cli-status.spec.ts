@@ -45,7 +45,7 @@ test.describe('the CLI first-event status', () => {
     const account = await freshAccount()
     try {
       const auth = { authorization: `Bearer ${account.token}` }
-      const created = await request.post('/api/v1/cli/projects', { headers: auth, data: {} })
+      const created = await request.post('/api/v1/cli/projects', { headers: auth, data: { slug: `spec-${randomBytes(4).toString('hex')}` } })
       expect(created.status()).toBe(200)
       const project = ((await created.json()) as { slug: string }).slug
       const status = async () => {

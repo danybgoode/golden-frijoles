@@ -68,6 +68,8 @@ export type AuditAction =
   // about its own access that is not true. Query them by `actor_user_id`.
   | 'cli_token_minted'
   | 'cli_token_revoked'
+  // many-products — a product made by name (S1.2), soft-deleted (S2.1) and purged (S2.2). Metadata carries the slug.
+  | 'product_created'
   // A lifecycle event that could not be emitted. The task row still holds the truth; this records
   // that a tenant's automation was never told, so the gap is queryable rather than only a log line.
   | 'task_event_emit_failed'
