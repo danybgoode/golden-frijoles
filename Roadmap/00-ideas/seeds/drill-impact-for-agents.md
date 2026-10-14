@@ -1,14 +1,14 @@
 ---
 title: "Drill impact for agents: a drill's effect, recorded and read from the CLI"
 slug: drill-impact-for-agents
-status: ready
+status: scaffolded
 area: "01"
 type: feature
 appetite: M
-underwritten_by: null
+underwritten_by: wave-2026-10
 risk: high
-epic: null
-build_order: null
+epic: "01-growth-engine/drill-impact-for-agents"
+build_order: 93
 updated: 2026-10-14
 intent_ask: proxy
 hypothesis: "A drill's impact comparison is empty unless a Miyagi admin key captures it. Letting an owner's agent bind a drill to an experiment and capture its impact at stop puts the evidence on the CLI and the page. We'll know when a stopped drill has impact."
@@ -17,7 +17,7 @@ grounded: false
 grounded_reason: "Drills prove resilience, not a bet's outcome; no North Star input counts them."
 target_metric: "stopped drills with impact evidence recorded (scenario_impact_evidence rows, golden-frijoles)"
 target_from: 0
-target_to: null
+target_to: 2
 read_date: null
 flag_key: null
 target_segment: null
@@ -174,7 +174,7 @@ sequenceDiagram
 
 ## Open risks / research
 
-- Decision a (capture at stop or as an explicit step) and decision b (the target) at the gate.
+- Decided 2026-10-14 (Daniel): capture automatically at stop (a); target 0 → 2 stopped drills with impact, read 30 days after shipping (b).
 
 ## Intent match
 
