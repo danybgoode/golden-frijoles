@@ -1,3 +1,6 @@
+/** @jsxImportSource react */
+// Pragma: a no-op under Next, load-bearing for the test rail (Playwright's transform pins its own jsx runtime, which
+// react-dom/server refuses to render) — the same line, for the same reason, as `board-components.tsx`.
 import { Empty, PageHead } from '@/design-system/primitives'
 
 // many-products S3.2 — the horizon's own head, shared by the page and its empty state so the two cannot drift.
