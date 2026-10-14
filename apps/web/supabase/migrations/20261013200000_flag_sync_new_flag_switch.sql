@@ -6,8 +6,13 @@
 -- its switch set from the default in your source file, in every environment; existing flags are never switched by a
 -- sync — right?", the answer was "yes".
 --
+-- Then, asked whether a new flag's RULES go live too (a file saying "off by default, 50% get it" goes live at 50% in
+-- production on one CI sync): "yes as recommended" — the source file is the truth, and the sync output says what each
+-- new flag now serves and to whom.
+--
 -- So after the import, and only for a flag THIS sync created, each environment in which that flag has never been
--- switched is set to the new version, through the one activation function every other path uses
+-- switched is set to the new version — its default AND its rules, as written — through the one activation function
+-- every other path uses
 -- (`set_flag_activation`: owner-checked, snapshot-versioned, audited), with the sync key's owner as the actor and the
 -- source named in the reason. An existing flag, or an environment where the flag was ever switched, is never touched.
 -- Additive: the function keeps its signature and its return shape.
@@ -45,6 +50,7 @@ BEGIN
     LOOP
       IF v_row.is_new THEN
         FOREACH v_environment IN ARRAY ARRAY['development', 'preview', 'production'] LOOP
+          -- Always true for a flag this sync just created; kept so no future caller can switch a set environment.
           IF NOT EXISTS (
             SELECT 1 FROM public.flag_environment_activations activation
             WHERE activation.project_id = v_key.project_id

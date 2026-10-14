@@ -4,8 +4,8 @@
 // Every other write verb rides the CLI's PAT. This one rides a `flag_sync` key, because the thing
 // it is bridging is a CI job publishing a catalog out of source control — a job that must not hold
 // a credential that can also roll out or kill a flag. `lib/credential-inventory.ts` models exactly
-// that difference: "create flag definitions from an outside catalog; CANNOT turn a flag on or off
-// in any environment."
+// that difference: "create flag definitions from an outside catalog; a new flag goes live as written; CANNOT turn
+// an existing flag on or off." (one-flag-switch S1.5.)
 //
 // So the key comes from `--sync-key` or `GOLDEN_FRIJOLES_FLAG_SYNC_KEY`, and the PAT is not a
 // fallback. Falling back would quietly hand a pipeline the wider credential the moment someone
@@ -16,17 +16,32 @@
 // cap and the body limit. A second implementation here would drift from the route the first time
 // either changed.
 //
-// ── Sync NEVER activates, and this verb says so ───────────────────────────────────────────────
-// The route does not activate, by design — a catalog import creates immutable definition versions
-// and nothing else. A CLI that printed "synced" and left the reader assuming production had changed
-// would be papering over that, so the output names it.
+// ── What a sync switches, and this verb says so ───────────────────────────────────────────────
+// one-flag-switch S1.5 (the product owner, 2026-10-13): a NEW flag goes live as written in the source file, default
+// and rules, in every environment; an EXISTING flag's switch is never changed by a sync. So the output says, for each
+// new flag, what it now serves and to whom (`flagSwitchState` / `flagReach`, the SDK's one rule, the same the flags
+// page uses), and that nothing existing was switched.
 
 import { readFileSync } from 'node:fs'
-import { createFlagDefinitionSyncClient } from '@golden-frijoles/sdk'
+import { createFlagDefinitionSyncClient, flagReach, flagSwitchState } from '@golden-frijoles/sdk'
 import { boolFlag, flagValue } from '../args'
 import type { Command } from '../command'
 import { EXIT, type ExitCode } from '../exit-codes'
 import { table } from '../output'
+
+/** What a NEW flag serves after this sync, by the flags page's own rule: `on (everyone)`, `on (25% of people)`, `off`. */
+export function nowServes(definition: unknown): string {
+  if (flagSwitchState(definition) === 'off') return 'off'
+  const reach = flagReach(definition)
+  return reach ? `on (${reach})` : 'its value'
+}
+
+function definitionOf(catalog: unknown, key: string): unknown {
+  return Array.isArray(catalog)
+    ? (catalog as Array<{ key?: unknown; definition?: unknown }>).find((entry) => entry?.key === key)
+        ?.definition
+    : undefined
+}
 
 export const flagsSyncCommand: Command = {
   path: ['flags', 'sync'],
@@ -39,8 +54,8 @@ export const flagsSyncCommand: Command = {
 
   Mint one with: frijoles keys create --type flag_sync --source <name> --label <text>
 
-  ⚠️ A NEW flag starts switched to its default in every environment, from your source file.
-  An existing flag's switch is never changed by a sync, and a sync never deletes a flag. A key
+  ⚠️ A NEW flag goes live as written in your source file (default and rules), in every
+  environment, and the output says what it now serves. An existing flag's switch is never changed by a sync, and a sync never deletes a flag. A key
   that already exists with an identical definition reports created: false; semantic drift from
   an existing version is a conflict for an owner to resolve through the normal version lifecycle.`,
   flags: [
@@ -136,18 +151,22 @@ export const flagsSyncCommand: Command = {
         `${created.length} new definition version${created.length === 1 ? '' : 's'} from ${result.entries.length} entr${result.entries.length === 1 ? 'y' : 'ies'}.`,
         '',
         table(
-          ['FLAG', 'VERSION', 'RESULT'],
+          ['FLAG', 'VERSION', 'RESULT', 'NOW SERVES (every environment)'],
           result.entries.map((entry) => [
             entry.key,
             `v${entry.definitionVersion}`,
             // `created: false` is an identical no-op, NOT a failure — the route is idempotent by
             // design and re-running a pipeline must not read as "nothing worked".
             entry.created ? 'created' : 'unchanged',
+            // A new flag is live as written in the file; an existing one was not switched by this sync.
+            entry.created ? nowServes(definitionOf(catalog, entry.key)) : 'not switched',
           ])
         ),
         '',
         // Said every time, so nobody concludes a sync switched an EXISTING flag.
-        'New flags start at their default in every environment. Existing flags were not switched — use `frijoles flags set` for that.',
+        created.length > 0
+          ? 'New flags are live as written in the file, in every environment. Existing flags were not switched — use `frijoles flags set` for that.'
+          : 'No new flags. Existing flags were not switched — use `frijoles flags set` for that.',
       ].join('\n')
     )
     return EXIT.OK

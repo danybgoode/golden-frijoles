@@ -35,6 +35,12 @@ await growth.pushInputValues('attributed_revenue', [{ occurredOn: today, value: 
 - **ESM and CommonJS:** `import` and `require` both work, with types.
 - **Every method returns an envelope** (`{ ok: true, … }` or `{ ok: false, error, code }`) and never throws.
 
+## 1.2 — one flag switch
+
+**Added only.** `flagSwitchState(definition)` says whether a served flag is **on** or **off** — the rule the Golden
+Frijoles flags page, `frijoles flags ls/get` and the MCP tools all use — and `flagReach(definition)` says who an On flag
+reaches (`everyone`, `25% of people`, `a segment (not named yet)`). Both are pure.
+
 ## 1.1 — make your app a drill target
 
 **Added only.** `createScenarioOwnershipHandler({ token })` answers the ownership check that makes an app a drill
@@ -198,8 +204,9 @@ if (!result.ok) throw new Error(`${result.kind}: ${result.error}`)
 
 The v1 request is bounded to 100 definitions and a 4 MiB JSON body. A new key creates immutable
 version 1; an identical definition returns `created: false`; semantic drift is an HTTP `409` for an
-owner to resolve through the normal version lifecycle. Sync never activates, deactivates or deletes
-a flag.
+owner to resolve through the normal version lifecycle. A **new** flag goes live as
+written in the catalog (default and rules) in every environment; sync never switches an existing flag and never
+deletes one.
 
 ## Make your app a drill target
 

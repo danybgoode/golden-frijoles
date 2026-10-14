@@ -9,8 +9,8 @@ Uses a flag_sync key — NOT your CLI token — from --sync-key or
 
   Mint one with: frijoles keys create --type flag_sync --source <name> --label <text>
 
-  ⚠️ A NEW flag starts switched to its default in every environment, from your source file.
-  An existing flag's switch is never changed by a sync, and a sync never deletes a flag. A key
+  ⚠️ A NEW flag goes live as written in your source file (default and rules), in every
+  environment, and the output says what it now serves. An existing flag's switch is never changed by a sync, and a sync never deletes a flag. A key
   that already exists with an identical definition reports created: false; semantic drift from
   an existing version is a conflict for an owner to resolve through the normal version lifecycle.
 

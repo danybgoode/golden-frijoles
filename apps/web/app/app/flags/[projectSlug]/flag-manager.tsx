@@ -534,8 +534,8 @@ export function FlagManager({
             <h2>Mint a catalog sync key</h2>
             <p>
               Give each service publisher its own key, such as <code>frontend</code> or <code>backend</code>.
-              A sync key creates or no-ops immutable drafts only; it can never activate a flag or change a
-              snapshot.
+              A sync key creates or no-ops immutable definitions. A new flag goes live as written in the
+              source file; it can never switch an existing flag.
             </p>
             <label htmlFor="flag-sync-source">
               Publisher source
@@ -680,8 +680,8 @@ export function FlagManager({
           />
           <h2>Catalog sync keys</h2>
           <p>
-            Each service publisher has a separately revocable credential. These keys create or no-op drafts;
-            they never activate a version or change a snapshot.
+            Each service publisher has a separately revocable credential. These keys create or no-op drafts; a
+            new flag goes live as written, and they never switch an existing one.
           </p>
           <DataTable
             caption="Catalog sync keys"

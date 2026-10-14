@@ -24,6 +24,7 @@ type ResolveHook = (
 })
 
 const { describeServing } = await import('./flags-read.ts')
+const { nowServes } = await import('./flags-sync.ts')
 
 // one-flag-switch — the cell `frijoles flags ls/get` prints is the flags page's On / Off, with who an On flag reaches.
 const row = (over: Partial<Parameters<typeof describeServing>[0]>) => ({
@@ -57,4 +58,29 @@ test('an older server with no reach field still prints on', () => {
 
 test('a value flag prints the value it serves', () => {
   assert.equal(describeServing(row({ serving: { kind: 'none' }, reach: null })), '{"kind":"none"}  v3')
+})
+
+test('the sync output says what a NEW flag now serves, by the same rule as the page', () => {
+  const variants = [
+    { key: 'off', value: false },
+    { key: 'on', value: true },
+  ]
+  assert.equal(
+    nowServes({ valueType: 'boolean', variants, defaultVariantKey: 'on', rules: [] }),
+    'on (everyone)'
+  )
+  assert.equal(nowServes({ valueType: 'boolean', variants, defaultVariantKey: 'off', rules: [] }), 'off')
+  assert.equal(
+    nowServes({
+      valueType: 'boolean',
+      variants,
+      defaultVariantKey: 'off',
+      rules: [{ priority: 1, clauses: [], rollout: { basisPoints: 5000 }, variantKey: 'on' }],
+    }),
+    'on (50% of people)'
+  )
+  assert.equal(
+    nowServes({ valueType: 'string', variants: [{ key: 'a', value: 'x' }], defaultVariantKey: 'a' }),
+    'its value'
+  )
 })
