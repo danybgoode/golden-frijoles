@@ -56,6 +56,7 @@ export function publicRoutes(chapterIds: readonly string[]): PublicRoute[] {
     // Agent-facing manifests. Listing them is not decoration: it is how a crawler that has never
     // seen this site finds the machine-readable entry points at all.
     { path: '/llms.txt', changeFrequency: 'monthly', priority: 0.5 },
+    { path: '/agents.md', changeFrequency: 'monthly', priority: 0.4 },
     { path: '/northstar-self-serve.md', changeFrequency: 'monthly', priority: 0.4 },
   ]
 }

@@ -69,6 +69,9 @@ account.
 - ${siteUrl}/install.md
   Read this before installing anything: what installs, what changes on the machine, which
   services it contacts, and how to remove it.
+- ${siteUrl}/agents.md
+  For an agent debugging: per feature, the headless way to read, change and check it (the \`frijoles\`
+  command, the MCP tool or the API route), and what the common errors mean.
 - ${siteUrl}/install
   Get your own tokenized MCP connector URL ("Add to Claude" deep-link) for the demo project, plus
   the SDK install docs for wiring your own product into the engine.
