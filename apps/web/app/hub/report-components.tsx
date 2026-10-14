@@ -871,6 +871,14 @@ export function PodReportBody({
                   rows={view.notInstrumented}
                 />
               </div>
+              {view.rework ? (
+                <p className="ds-hint" data-testid="rework-line">
+                  Re-opened after shipping: {view.rework.reopened} of {view.rework.of}
+                  {view.rework.medianDaysToReship !== null
+                    ? ` (median ${view.rework.medianDaysToReship} days to ship again)`
+                    : ''}
+                </p>
+              ) : null}
             </section>
 
             {policy.showComposition && <WhoDidTheWork rows={view.composition} />}
