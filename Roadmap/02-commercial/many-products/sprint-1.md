@@ -44,7 +44,7 @@ stories:
 ---
 # Many products — Sprint 1: Products, headlessly
 
-**Status:** 🟦 In review — PR #356 (migrations `20261014100000` signup marker + `20261014110000` product_limit applied to prod 2026-10-14; `20261014120000` atomic cap trigger applied before merge)
+**Status:** ✅ shipped 2026-10-14 — #356 merged (`7755438`), deployed to production; migrations `20261014100000`, `20261014110000`, `20261014120000` applied and verified live beforehand.
 
 ## Build contract (locked by the architect before the builder started)
 Cites the epic README's Architecture lock; nothing here restates it.
@@ -131,3 +131,11 @@ Env: production · https://goldenfrijoles.com   (or the preview URL while testin
    → It exits with an error naming `--project` and `--create`, without waiting for input.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+### Smoke results (2026-10-14, production, `7755438`)
+- ✅ `POST /api/v1/cli/projects` with no or a bad credential → 401 `unauthorized` (the uniform answer).
+- ✅ `POST /api/v1/cli/device` starts a code; `/cli/connect?code=…` signed out shows "Sign in to connect your terminal".
+- ✅ Prod schema: `projects_one_per_creator_idx … WHERE created_by IS NOT NULL AND from_signup`; hand-seeded rows `from_signup = false`;
+  `workspaces.product_limit = 10` everywhere; `projects_workspace_product_limit_trg` BEFORE INSERT with `FOR NO KEY UPDATE`.
+- Owed to the product owner — steps 1–4 and 6 need **CLI 1.6.0 on npm** (ships with Sprint 2; the npm publish is your 2FA step);
+  step 5 (New product, signed in) and the signed-in approve page (it now names how many products the token reaches, warning above Allow).
