@@ -1,7 +1,7 @@
 # A golden welcome and recovery pages — Retrospective
 
 _Closed: 2026-10-14_
-_Intent: owed to Daniel (yes | mostly | no)_
+_Intent: yes_
 <!-- Did we build what the product owner meant? One word, THEIR answer: yes, mostly or no. Required by `epic-dod` only
      when the epic's seed or README carries a numeric `intent_match:` (intent-match D17); the calibration learns from
      it. Keep the line and leave exactly one of the three words between `_Intent: ` and the closing underscore. -->
@@ -28,7 +28,7 @@ _Quote vs actual: $15–32 (M, n=20, p25–p75) → not measured (no Claude sess
 
 ## Gaps / follow-ups
 - **Owed to Daniel:** the interactive setup reveal in a real terminal (sprint-1 steps 1–2, scriptable by an agent with a
-  pseudo-terminal), and the `_Intent_` word above.
+  pseudo-terminal). ~~The `_Intent_` word~~: answered yes on 2026-10-14.
 - The 500 page can't be checked in production without a route that throws, which would ship a crash on purpose. It was
   checked on a production build with a temporary route that was removed before the merge.
 - **Not measured:** the actual cost. The build ran outside this machine's Claude transcripts.
