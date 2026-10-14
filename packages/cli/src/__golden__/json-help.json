@@ -681,6 +681,19 @@
         ]
       },
       {
+        "command": "horizon",
+        "summary": "the product's destinations and the epics that light each",
+        "usage": "frijoles horizon [--project <slug>] [--json]",
+        "needsAuth": true,
+        "flags": [
+          {
+            "flag": "--project",
+            "takesValue": true,
+            "describe": "the project (default: the remembered one)"
+          }
+        ]
+      },
+      {
         "command": "bet sync",
         "summary": "create the bet's flag from its epic (a Measure flag, off until you roll it out)",
         "usage": "frijoles bet sync <epic README> [--project <slug>] [--json]",

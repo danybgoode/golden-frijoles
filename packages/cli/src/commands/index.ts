@@ -36,6 +36,7 @@ import {
   scenariosTargetsVerifyCommand,
 } from './scenarios'
 import { statusCommand } from './status'
+import { horizonCommand } from './horizon'
 import { betSyncCommand } from './bet'
 import { experimentsDecisionCommand, northStarReadingsCommand } from './result-reads'
 import { keysCreateCommand, keysLsCommand, keysRevokeCommand } from './keys'
@@ -78,6 +79,7 @@ export const COMMANDS: readonly Command[] = [
   scenariosStopCommand,
   scenariosRunsCommand,
   statusCommand,
+  horizonCommand,
   betSyncCommand,
   experimentsDecisionCommand,
   keysLsCommand,
