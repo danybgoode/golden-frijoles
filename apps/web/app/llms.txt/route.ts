@@ -98,6 +98,11 @@ account.
   no tool accepts a project parameter). Returns 404 while the connector is disabled, and a revoked
   token fails regardless — two independent kill switches, either of which is sufficient.
 
+  Codex: \`codex mcp add golden-frijoles --url <your connector URL>\`, then \`codex mcp list\` should show
+  golden-frijoles. The URL comes from Setup › Connect in the console (an owner makes it); it is a
+  credential, so it is never written in a doc. "Get a new URL" on Connect revokes both Claude's and
+  Codex's.
+
 This manifest lists only what is live in this deployment right now.
 `
 

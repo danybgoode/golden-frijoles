@@ -140,6 +140,16 @@ ${CLI_NPX_INIT}
 
 (or install it once: \`${CLI_GLOBAL_INSTALL}\`)
 
+**Reading your product's data from an agent (MCP connector, optional).** An owner makes a connector URL in the
+console under Setup › Connect (${siteUrl}/app). In the Claude app, add it as a custom connector. In Codex:
+
+\`\`\`
+codex mcp add golden-frijoles --url <your connector URL>
+\`\`\`
+
+\`codex mcp list\` should then show golden-frijoles. The URL is a credential, so it is never in a doc: use
+the one from Connect. "Get a new URL" on Connect revokes both the Claude app's and Codex's.
+
 ## What changes on this machine
 
 - **Claude Code:** the plugin is cached under \`~/.claude/plugins/\`; the marketplace is registered (with
