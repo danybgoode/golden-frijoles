@@ -8,7 +8,7 @@ appetite: S
 underwritten_by: wave-2026-10
 risk: high
 epic: "09-platform-infra/template-scripts-consumer-gates"
-build_order: 94
+build_order: 95
 updated: 2026-10-14
 intent_match: 90
 intent_ask: verbatim

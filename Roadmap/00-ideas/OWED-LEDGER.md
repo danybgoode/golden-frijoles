@@ -6,7 +6,7 @@
 
 _Generated: 2026-10-14_
 
-**89 check(s) owed across 67 file(s)** · 5 cleared.
+**90 check(s) owed across 68 file(s)** · 5 cleared.
 
 | Who can clear it | Count | What it means |
 |---|---|---|
@@ -15,7 +15,7 @@ _Generated: 2026-10-14_
 | ops | 5 | On the product owner's own accounts or machine |
 | judgment | 26 | An answer only the product owner can give: an _Intent_, an approval, a decision |
 | signed-in | 23 | A signed-in production walkthrough: an agent can run it once a smoke account exists |
-| interactive | 19 | An interactive plugin or terminal walkthrough: an agent can script it in a scratch repo |
+| interactive | 20 | An interactive plugin or terminal walkthrough: an agent can script it in a scratch repo |
 | unsorted | 6 | Nothing above matched — **not a bin, a to-triage list** |
 
 | Category | Count | What it means |
@@ -23,7 +23,7 @@ _Generated: 2026-10-14_
 | money-path | 1 | Touches checkout, payment or order state — run these first |
 | auth-path | 26 | Needs a real signed-in session a script cannot mint against production |
 | admin-only | 0 | Behind an admin surface |
-| other | 62 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
+| other | 63 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
 
 ## publish (3)
 
@@ -104,7 +104,7 @@ _Generated: 2026-10-14_
 - `Roadmap/09-platform-infra/setup-instruments-connects/RETROSPECTIVE.md:42` · other — **Owed to Daniel:** the interactive setup walkthrough (sprint 2) on a scratch copy of a real product repo, and the signed-in Today check on a fresh project (sprint 1 step 3).
 - `Roadmap/09-platform-infra/sketch-specs/RETROSPECTIVE.md:66` · auth-path — **Owed to Daniel:** open one rendered wireframe and say whether it reads; and check the signed-in `/app/flags` look (S2 step 4, with the authed gate as a green proxy).
 
-## interactive (19)
+## interactive (20)
 
 - `Roadmap/01-growth-engine/sdk-1-0/RETROSPECTIVE.md:33` · other — **Owed to Daniel:** walkthrough step 3 (a real `identify` + `track` seen in the catalog).
 - `Roadmap/01-growth-engine/signals-loop/sprint-2.md:144` · auth-path — (Owed to Daniel by name — needs a real Claude session.)*
@@ -112,6 +112,7 @@ _Generated: 2026-10-14_
 - `Roadmap/02-commercial/commercial-shell/RETROSPECTIVE.md:93` · auth-path — The live browser/session smokes owed to Daniel per Sprint 2/3's QA sections (the connector round-trip, the "paste into a chat app" unfurl check) are still outstanding — unchanged by this session, tracked in their respective sprint docs.
 - `Roadmap/02-commercial/connect-page/RETROSPECTIVE.md:42` · other — **Owed to Daniel:** the walkthrough (a fresh Google signup lands on Connect with no key; the Claude app turns a flag off with the URL it was given).
 - `Roadmap/02-commercial/result-record/RETROSPECTIVE.md:43` · other — The interactive walkthroughs are owed to Daniel (see the sprint files).
+- `Roadmap/09-platform-infra/build-view-one-story/sprint-1.md:152` · other — Every step is owed to the product owner (an interactive walkthrough); an agent can script steps 1–3 in a scratch repo.
 - `Roadmap/09-platform-infra/build-visualization-claude-mods/RETROSPECTIVE.md:65` · auth-path — **Owed to the product owner:** the interactive-TUI half of the Sprint 4 smoke (watching Progress advance and the status become `In review` across turns, with a status row that a headless `-p` session does not have). The mechanics under it are tested; the pixels are not.
 - `Roadmap/09-platform-infra/distribute-what-we-use/RETROSPECTIVE.md:52` · other — the clean-machine stranger install (S2 steps 1–2);
 - `Roadmap/09-platform-infra/distribute-what-we-use/RETROSPECTIVE.md:53` · other — a Telegram test send from your own bot (S3 steps 2–4);
