@@ -6,7 +6,7 @@
 
 _Generated: 2026-10-14_
 
-**83 check(s) owed across 63 file(s)** · 5 cleared.
+**84 check(s) owed across 64 file(s)** · 5 cleared.
 
 | Who can clear it | Count | What it means |
 |---|---|---|
@@ -14,7 +14,7 @@ _Generated: 2026-10-14_
 | credential | 7 | Mints or uses a production credential: only the product owner, named every time |
 | ops | 5 | On the product owner's own accounts or machine |
 | judgment | 24 | An answer only the product owner can give: an _Intent_, an approval, a decision |
-| signed-in | 21 | A signed-in production walkthrough: an agent can run it once a smoke account exists |
+| signed-in | 22 | A signed-in production walkthrough: an agent can run it once a smoke account exists |
 | interactive | 19 | An interactive plugin or terminal walkthrough: an agent can script it in a scratch repo |
 | unsorted | 6 | Nothing above matched — **not a bin, a to-triage list** |
 
@@ -23,7 +23,7 @@ _Generated: 2026-10-14_
 | money-path | 1 | Touches checkout, payment or order state — run these first |
 | auth-path | 26 | Needs a real signed-in session a script cannot mint against production |
 | admin-only | 0 | Behind an admin surface |
-| other | 56 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
+| other | 57 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
 
 ## publish (1)
 
@@ -74,7 +74,7 @@ _Generated: 2026-10-14_
 - `Roadmap/09-platform-infra/sketch-specs/RETROSPECTIVE.md:80` · other — Owed to Daniel: did we build what was meant?** Answer on its own line as `_Intent: yes_`, `_mostly_` or `_no_`. The builder does not answer this for the product owner. This epic has no `intent_match:` score, so `epic-dod` does not require it.
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:52` · other — Run the North Star coach on Golden Frijoles and judge the file (S1 smoke step 2).
 
-## signed-in (21)
+## signed-in (22)
 
 - `apps/web/e2e/app-auth.spec.ts:121` · auth-path — authed member-vs-owner HTTP path needs a real session (browser smoke owed to Daniel), so the
 - `apps/web/e2e/delivery-replay.spec.ts:18` · auth-path — The authenticated /app replay + delivery-history UI is a real-session BROWSER smoke owed to Daniel.
@@ -91,6 +91,7 @@ _Generated: 2026-10-14_
 - `Roadmap/02-commercial/app-shell-and-agent-rail/RETROSPECTIVE.md:112` · auth-path — **The SIGNED-IN production walkthrough has not been run.** The anonymous half was verified in production against `102f494` on 2026-08-07: all routes healthy, `/app` 307s to login, the rail markers are **absent** from both anonymously-readable demo dashboards (the dark spec's pro…
 - `Roadmap/02-commercial/landing-frijoles-rebrand/RETROSPECTIVE.md:79` · auth-path — **The authed mobile sweep** — still owed to Daniel from `landing-redesign-v2` and untouched here. The `browser` project is anonymous by construction, so a signed-in route would be measured against its login redirect. `assertMobileClean` is exported and ready for an `*.authed.spe…
 - `Roadmap/02-commercial/one-header-one-name/RETROSPECTIVE.md:51` · other — Both sprints' signed-in walkthroughs on production (sprint-1 steps 1–5, sprint-2 steps 1–6). Preview can't serve a signed-in page.
+- `Roadmap/02-commercial/owed-on-screen/sprint-2.md:101` · other — Steps 2–5 are signed-in steps, owed to the product owner.
 - `Roadmap/02-commercial/workspaces/RETROSPECTIVE.md:69` · other — **Owed to Daniel by name:** the signed-in prod walkthroughs (S1 steps 1–3 and 5, S2 step 1), and ~~`npm publish` of `@golden-frijoles/cli@0.4.0` (2FA)~~ (published; checked 2026-10-14), then S2 step 2. S2 step 3 is n/a in prod; CI replaces it.
 - `Roadmap/09-platform-infra/one-product-project/sprint-1.md:87` · auth-path — (signed in, owed to Daniel) Open https://goldenfrijoles.com/app → the switcher lists golden-frijoles, and its flags list shows auth.terminal_sign_in_enabled
 - `Roadmap/09-platform-infra/one-product-project/sprint-2.md:75` · other — (signed in, owed to Daniel) Open https://goldenfrijoles.com/app → the agent rail is on the right

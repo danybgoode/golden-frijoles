@@ -1,14 +1,14 @@
 ---
 title: "Owed on screen: what only the product owner can clear, in the console"
 slug: owed-on-screen
-status: ready
+status: scaffolded
 area: "02"
 type: feature
 appetite: M
-underwritten_by: null
+underwritten_by: wave-2026-10
 risk: high
-epic: null
-build_order: null
+epic: "02-commercial/owed-on-screen"
+build_order: 88
 updated: 2026-10-14
 intent_ask: verbatim
 hypothesis: "We believe that showing every owed check on the epic page and in one band on the board, for founders who own the product, will cut the open owed checks, because today they live only in a generated file nobody opens (85 open on 2026-10-14, 24 of them answers only the owner can give). We'll know when the open count falls."
@@ -17,7 +17,7 @@ grounded: false
 grounded_reason: "An operator surface: it clears what stalls epic close-outs, where verdicts are stamped, but no North Star input counts owed checks directly."
 target_metric: "open owed checks (OWED-LEDGER.json total)"
 target_from: 83
-target_to: null
+target_to: 40
 read_date: null
 flag_key: hub.owed_enabled
 target_segment: everyone
@@ -181,7 +181,7 @@ exactly as today.
 
 ## Open risks / research
 
-- The target's end number is Daniel's call (decision a at the gate).
+- Target decided 2026-10-14 (Daniel): 83 → 40 open checks, read 30 days after shipping. The portfolio count stays (decision b).
 
 ## Intent match
 
