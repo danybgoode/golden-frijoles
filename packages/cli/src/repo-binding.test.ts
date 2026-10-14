@@ -25,7 +25,10 @@ registerHooks({
       specifier.startsWith('.') &&
       !specifier.endsWith('.ts')
     ) {
-      return nextResolve(specifier.endsWith('/commands') ? `${specifier}/index.ts` : `${specifier}.ts`, context)
+      return nextResolve(
+        specifier.endsWith('/commands') ? `${specifier}/index.ts` : `${specifier}.ts`,
+        context
+      )
     }
     return nextResolve(specifier, context)
   },
@@ -52,7 +55,12 @@ function capture() {
 function sandbox(extra: NodeJS.ProcessEnv = {}) {
   const home = mkdtempSync(join(tmpdir(), 'gf-bind-home-'))
   const repo = mkdtempSync(join(tmpdir(), 'gf-bind-repo-'))
-  const env: NodeJS.ProcessEnv = { HOME: home, XDG_CONFIG_HOME: join(home, '.config'), GF_PROJECT_ROOT: repo, ...extra }
+  const env: NodeJS.ProcessEnv = {
+    HOME: home,
+    XDG_CONFIG_HOME: join(home, '.config'),
+    GF_PROJECT_ROOT: repo,
+    ...extra,
+  }
   return { env, repo }
 }
 
@@ -62,7 +70,11 @@ function stub(routes: Record<string, { status?: number; body: unknown }>, seen: 
   return (async (input: string | URL, init?: RequestInit) => {
     const url = new URL(String(input))
     const method = init?.method ?? 'GET'
-    seen.push({ method, path: url.pathname, body: typeof init?.body === 'string' ? JSON.parse(init.body) : undefined })
+    seen.push({
+      method,
+      path: url.pathname,
+      body: typeof init?.body === 'string' ? JSON.parse(init.body) : undefined,
+    })
     const match = routes[`${method} ${url.pathname}`] ?? routes[url.pathname]
     if (!match) throw new Error(`no stub for ${method} ${url.pathname}`)
     return new Response(JSON.stringify(match.body), {
@@ -72,10 +84,18 @@ function stub(routes: Record<string, { status?: number; body: unknown }>, seen: 
   }) as unknown as typeof fetch
 }
 
-const PROJECTS = { ok: true, projects: [{ slug: 'acme', role: 'owner' }, { slug: 'beta', role: 'owner' }] }
+const PROJECTS = {
+  ok: true,
+  projects: [
+    { slug: 'acme', role: 'owner' },
+    { slug: 'beta', role: 'owner' },
+  ],
+}
 const MINTED = { body: { ok: true, id: 'key-1', key: 'gb_key_secret', type: 'flag_read', expiresAt: null } }
 const binding = (repo: string) =>
-  existsSync(join(repo, CONFIG)) ? (JSON.parse(readFileSync(join(repo, CONFIG), 'utf8')).project?.slug ?? null) : null
+  existsSync(join(repo, CONFIG))
+    ? (JSON.parse(readFileSync(join(repo, CONFIG), 'utf8')).project?.slug ?? null)
+    : null
 
 // ── init: which product (D7) ──────────────────────────────────────────────────────────────────
 
@@ -119,7 +139,10 @@ test('init --create makes the product, binds the repo to it, then mints into .en
     env,
     cwd: repo,
     fetchImpl: stub(
-      { 'POST /api/v1/cli/projects': { body: { ok: true, created: true, slug: 'fresh-one' } }, '/api/v1/cli/keys': MINTED },
+      {
+        'POST /api/v1/cli/projects': { body: { ok: true, created: true, slug: 'fresh-one' } },
+        '/api/v1/cli/keys': MINTED,
+      },
       seen
     ),
   })
@@ -237,12 +260,24 @@ test('⚠️ login with SEVERAL products picks none — taking the first is how 
 
 test('login with exactly ONE product remembers it; a still-reachable earlier choice is kept', async () => {
   const one = sandbox()
-  await run({ argv: ['login', '--token', TOKEN, '--json'], writer: capture().writer, env: one.env, cwd: one.repo, fetchImpl: stub(whoami(['acme'])) })
+  await run({
+    argv: ['login', '--token', TOKEN, '--json'],
+    writer: capture().writer,
+    env: one.env,
+    cwd: one.repo,
+    fetchImpl: stub(whoami(['acme'])),
+  })
   assert.equal(readCredentials(one.env)?.activeProject, 'acme')
 
   const kept = sandbox()
   writeCredentials({ token: TOKEN, apiUrl: 'https://goldenfrijoles.com', activeProject: 'beta' }, kept.env)
-  await run({ argv: ['login', '--token', TOKEN, '--json'], writer: capture().writer, env: kept.env, cwd: kept.repo, fetchImpl: stub(whoami(['acme', 'beta'])) })
+  await run({
+    argv: ['login', '--token', TOKEN, '--json'],
+    writer: capture().writer,
+    env: kept.env,
+    cwd: kept.repo,
+    fetchImpl: stub(whoami(['acme', 'beta'])),
+  })
   assert.equal(readCredentials(kept.env)?.activeProject, 'beta')
 })
 
@@ -255,12 +290,21 @@ test('projects create <slug> sends the slug and says created or already yours', 
     writer,
     env,
     cwd: repo,
-    fetchImpl: stub({ 'POST /api/v1/cli/projects': { body: { ok: true, created: false, slug: 'acme' } } }, seen),
+    fetchImpl: stub(
+      { 'POST /api/v1/cli/projects': { body: { ok: true, created: false, slug: 'acme' } } },
+      seen
+    ),
   })
   assert.equal(code, EXIT.OK)
   assert.deepEqual(seen[0].body, { slug: 'acme' })
   assert.deepEqual(JSON.parse(out.join('\n')), { ok: true, created: false, slug: 'acme' })
 
-  const none = await run({ argv: ['projects', 'create', '--json'], writer: capture().writer, env, cwd: repo, fetchImpl: noNetwork })
+  const none = await run({
+    argv: ['projects', 'create', '--json'],
+    writer: capture().writer,
+    env,
+    cwd: repo,
+    fetchImpl: noNetwork,
+  })
   assert.equal(none, EXIT.USAGE)
 })

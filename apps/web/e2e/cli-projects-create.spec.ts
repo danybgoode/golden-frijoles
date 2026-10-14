@@ -26,7 +26,11 @@ const slugFor = (prefix: string) => `${prefix}-${randomBytes(4).toString('hex')}
 
 type Person = { id: string; auth: Record<string, string>; token: string }
 
-async function person(client: SupabaseClient, label: string, scopeProjectId: string | null = null): Promise<Person> {
+async function person(
+  client: SupabaseClient,
+  label: string,
+  scopeProjectId: string | null = null
+): Promise<Person> {
   const { data, error } = await client.auth.admin.createUser({
     email: `${label}-${randomBytes(6).toString('hex')}@example.test`,
     email_confirm: true,
@@ -62,16 +66,25 @@ test.describe('frijoles projects create — a product by name (many-products S1.
     const founder = await person(client, 'mp-founder')
     try {
       const first = slugFor('mp-one')
-      const created = await request.post('/api/v1/cli/projects', { headers: founder.auth, data: { slug: first } })
+      const created = await request.post('/api/v1/cli/projects', {
+        headers: founder.auth,
+        data: { slug: first },
+      })
       expect(created.status()).toBe(200)
       expect(await created.json()).toMatchObject({ ok: true, created: true, slug: first })
 
-      const again = await request.post('/api/v1/cli/projects', { headers: founder.auth, data: { slug: first } })
+      const again = await request.post('/api/v1/cli/projects', {
+        headers: founder.auth,
+        data: { slug: first },
+      })
       expect(again.status()).toBe(200)
       expect(await again.json()).toMatchObject({ ok: true, created: false, slug: first })
 
       const second = slugFor('mp-two')
-      const other = await request.post('/api/v1/cli/projects', { headers: founder.auth, data: { slug: second } })
+      const other = await request.post('/api/v1/cli/projects', {
+        headers: founder.auth,
+        data: { slug: second },
+      })
       expect(other.status()).toBe(200)
       expect(await other.json()).toMatchObject({ created: true, slug: second })
 
@@ -102,7 +115,9 @@ test.describe('frijoles projects create — a product by name (many-products S1.
     }
   })
 
-  test("someone else's name is a conflict — a member who is not its owner gets the same", async ({ request }) => {
+  test("someone else's name is a conflict — a member who is not its owner gets the same", async ({
+    request,
+  }) => {
     const client = db()
     const owner = await person(client, 'mp-owner')
     const member = await person(client, 'mp-member')
@@ -121,7 +136,10 @@ test.describe('frijoles projects create — a product by name (many-products S1.
         expect(await res.json()).toMatchObject({ ok: false, code: 'conflict' })
       }
       // Nothing changed hands.
-      const { data: members } = await client.from('project_members').select('user_id, role').eq('project_id', row!.id)
+      const { data: members } = await client
+        .from('project_members')
+        .select('user_id, role')
+        .eq('project_id', row!.id)
       expect(members).toEqual(
         expect.arrayContaining([
           { user_id: owner.id, role: 'owner' },
@@ -138,7 +156,16 @@ test.describe('frijoles projects create — a product by name (many-products S1.
     const client = db()
     const founder = await person(client, 'mp-invalid')
     try {
-      for (const data of [{}, { slug: '' }, { slug: 'My Product' }, { slug: 'MyProd' }, { slug: ' spaced ' }, { slug: 'ab' }, { slug: 'golden-frijoles' }, { slug: 'app' }]) {
+      for (const data of [
+        {},
+        { slug: '' },
+        { slug: 'My Product' },
+        { slug: 'MyProd' },
+        { slug: ' spaced ' },
+        { slug: 'ab' },
+        { slug: 'golden-frijoles' },
+        { slug: 'app' },
+      ]) {
         const res = await request.post('/api/v1/cli/projects', { headers: founder.auth, data })
         expect(res.status(), JSON.stringify(data)).toBe(400)
         expect(await res.json()).toMatchObject({ ok: false, code: 'invalid' })
@@ -150,7 +177,7 @@ test.describe('frijoles projects create — a product by name (many-products S1.
     }
   })
 
-  test('the cap: past the workspace\'s product_limit a create is a conflict naming it, and nothing is written', async ({
+  test("the cap: past the workspace's product_limit a create is a conflict naming it, and nothing is written", async ({
     request,
   }) => {
     const client = db()
@@ -158,14 +185,23 @@ test.describe('frijoles projects create — a product by name (many-products S1.
     try {
       const first = slugFor('mp-cap')
       expect(
-        (await request.post('/api/v1/cli/projects', { headers: founder.auth, data: { slug: first } })).status()
+        (
+          await request.post('/api/v1/cli/projects', { headers: founder.auth, data: { slug: first } })
+        ).status()
       ).toBe(200)
       // The ceiling is DATA on the founder's own workspace: one UPDATE, no deploy.
-      const { data: workspace } = await client.from('workspaces').select('id').eq('created_by', founder.id).single()
+      const { data: workspace } = await client
+        .from('workspaces')
+        .select('id')
+        .eq('created_by', founder.id)
+        .single()
       await client.from('workspaces').update({ product_limit: 1 }).eq('id', workspace!.id)
 
       const second = slugFor('mp-cap-over')
-      const refused = await request.post('/api/v1/cli/projects', { headers: founder.auth, data: { slug: second } })
+      const refused = await request.post('/api/v1/cli/projects', {
+        headers: founder.auth,
+        data: { slug: second },
+      })
       expect(refused.status()).toBe(409)
       const body = (await refused.json()) as { code: string; reason: string; error: string }
       expect(body).toMatchObject({ code: 'conflict', reason: 'limit' })
@@ -186,7 +222,10 @@ test.describe('frijoles projects create — a product by name (many-products S1.
       expect(landed).toHaveLength(1)
 
       // Re-running a name you already own is not a new product, so the cap does not refuse it.
-      const again = await request.post('/api/v1/cli/projects', { headers: founder.auth, data: { slug: first } })
+      const again = await request.post('/api/v1/cli/projects', {
+        headers: founder.auth,
+        data: { slug: first },
+      })
       expect(await again.json()).toMatchObject({ ok: true, created: false })
     } finally {
       await cleanup(client, [founder.id])
@@ -207,7 +246,10 @@ test.describe('frijoles projects create — a product by name (many-products S1.
       const scoped = await tokenFor(client, founder.id, row!.id)
 
       const sibling = slugFor('mp-sibling')
-      const refused = await request.post('/api/v1/cli/projects', { headers: scoped.auth, data: { slug: sibling } })
+      const refused = await request.post('/api/v1/cli/projects', {
+        headers: scoped.auth,
+        data: { slug: sibling },
+      })
       expect(refused.status()).toBe(404)
       expect(await refused.json()).toMatchObject({ ok: false, code: 'not_found' })
       const { data: none } = await client.from('projects').select('id').eq('slug', sibling)
@@ -253,7 +295,12 @@ test.describe('the signup guard (many-products S1.1, lock D1)', () => {
 
       const later = await client
         .from('projects')
-        .insert({ slug: slugFor('mp-later'), created_by: userId, workspace_id: workspace!.id, from_signup: false })
+        .insert({
+          slug: slugFor('mp-later'),
+          created_by: userId,
+          workspace_id: workspace!.id,
+          from_signup: false,
+        })
         .select('id')
         .single()
       expect(later.error).toBeNull()
@@ -261,5 +308,4 @@ test.describe('the signup guard (many-products S1.1, lock D1)', () => {
       await cleanup(client, [userId])
     }
   })
-
 })

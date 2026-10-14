@@ -29,7 +29,11 @@ test('New product: creates a product in my own workspace and lands on its Connec
   try {
     // Someone else's product: a real row with no member of mine.
     // (In the home product's workspace: `workspace_id` is NOT NULL, and nothing here reads which one.)
-    const { data: home } = await db.from('project_members').select('projects(workspace_id)').eq('user_id', userId).single()
+    const { data: home } = await db
+      .from('project_members')
+      .select('projects(workspace_id)')
+      .eq('user_id', userId)
+      .single()
     const workspaceId = (home?.projects as unknown as { workspace_id: string }).workspace_id
     const { error: heldError } = await db
       .from('projects')
