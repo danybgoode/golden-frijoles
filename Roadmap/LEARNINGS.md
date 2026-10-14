@@ -2316,3 +2316,19 @@ one-liner + why + date shape.
   would have deleted every real event. The public connector handed a person's id to anyone, in four tools, and the
   first fix covered one: redaction belongs at the one place every reply passes, by field name.
 
+
+### Deleting a tenant, and the ledgers around it (many-products, 2026-10-14)
+- **List the tables whose tenant column has NO foreign key before trusting `ON DELETE CASCADE` to remove a tenant.**
+  Nine tables here carried `project_id` with no FK (audit trails, report artifacts, decision records); a purge that only
+  deleted the `projects` row left them behind. Query `pg_constraint` for it; a spec that purges through one real row of
+  such a table catches the rest.
+- **A cascade exit on an append-only ledger (`pg_trigger_depth() > 1`) opens EVERY cascade into it, not the one you
+  meant.** `input_values` also cascades from its metric and input, so that exit let deleting a LIVE product's input
+  erase its ledger. Gate the exit on the fact you mean ("the parent project no longer exists"), and pin the refusal.
+- **A shared script module must be declared in every skill that runs it, or the kit ships without it.** The kit is built
+  from `requires_scripts`, not from imports; check the BUILT kit (`build-kit` + every relative import resolves), not the
+  source tree.
+- **A file the roadmap push depends on cannot live in a folder the kit makes private** (`Roadmap/00-strategy/` is
+  git-ignored on public repos before a coach's first write). It goes beside the roadmap it describes.
+- **Two local e2e runners on one machine share port 3110 and one database**: a spec can silently hit the OTHER worktree's
+  server. Check `lsof -iTCP:3110` before trusting a red (or a green) from a focused local run while a builder runs.

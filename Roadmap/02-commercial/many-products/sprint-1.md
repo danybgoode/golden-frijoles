@@ -44,7 +44,7 @@ stories:
 ---
 # Many products — Sprint 1: Products, headlessly
 
-**Status:** ✅ shipped 2026-10-14 — #356 merged (`7755438`), deployed to production; migrations `20261014100000`, `20261014110000`, `20261014120000` applied and verified live beforehand.
+**Status:** ✅ shipped 2026-10-14 — https://github.com/danybgoode/golden-frijoles/pull/356 merged (`7755438`), deployed to production; migrations `20261014100000`, `20261014110000`, `20261014120000` applied and verified live beforehand.
 
 ## Build contract (locked by the architect before the builder started)
 Cites the epic README's Architecture lock; nothing here restates it.

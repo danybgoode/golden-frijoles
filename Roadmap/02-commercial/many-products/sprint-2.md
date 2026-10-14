@@ -44,7 +44,7 @@ stories:
 ---
 # Many products — Sprint 2: Delete, /connect and the folded-in fixes
 
-**Status:** ✅ shipped 2026-10-14 — #359 merged (`7dc7dc0`), deployed to production; migration `20261015100000` applied and verified live beforehand; `@golden-frijoles/kit@1.9.0` published by CI.
+**Status:** ✅ shipped 2026-10-14 — https://github.com/danybgoode/golden-frijoles/pull/359 merged (`7dc7dc0`), deployed to production; migration `20261015100000` applied and verified live beforehand; `@golden-frijoles/kit@1.9.0` published by CI.
 
 ## Build contract (locked by the architect before the builder started)
 Cites the epic README's Architecture lock; nothing here restates it.
