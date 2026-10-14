@@ -128,14 +128,16 @@ $$;
 REVOKE ALL ON FUNCTION public.enforce_workspace_product_limit() FROM PUBLIC, anon, authenticated;
 
 -- ── input_values lets a cascade through (verifier, #359) ────────────────────────────────────────────────────────────
--- Its append-only trigger (20260716100000) raised on EVERY delete, with no cascade exit, so purging any product that ever
--- pushed a North Star input value failed. It now has the exit every other ledger has: a DELETE inside a cascade, or once
--- the row's project is gone. While the project exists, UPDATE and a direct DELETE stay refused exactly as before.
+-- Its append-only trigger (20260716100000) raised on EVERY delete, so purging any product that ever pushed a North Star
+-- input value failed. It now lets a DELETE through ONLY once the row's project is gone — which is true when the projects
+-- cascade reaches it. NOT a `pg_trigger_depth() > 1` exit: input_values also cascades from leading_inputs and
+-- north_star_metrics, and that exit let deleting a LIVE product's input erase its ledger (verifier, #359). While the
+-- project exists, UPDATE and every DELETE — direct or cascaded — stay refused exactly as before.
 CREATE OR REPLACE FUNCTION input_values_no_mutation() RETURNS trigger AS $$
 BEGIN
-  IF TG_OP = 'DELETE' AND (
-    pg_trigger_depth() > 1 OR NOT EXISTS (SELECT 1 FROM public.projects p WHERE p.id = OLD.project_id)
-  ) THEN RETURN OLD; END IF;
+  IF TG_OP = 'DELETE' AND NOT EXISTS (SELECT 1 FROM public.projects p WHERE p.id = OLD.project_id) THEN
+    RETURN OLD;
+  END IF;
   RAISE EXCEPTION 'input_values is append-only: % is not allowed', TG_OP;
 END;
 $$ LANGUAGE plpgsql SET search_path = public, pg_temp;
