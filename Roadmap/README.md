@@ -112,6 +112,12 @@ independently shippable slice of value.
   where it pays off. **Owed:** a signed-in look at a live funnel; `tars-segments` next.
 
 ### 02 · Commercial
+- ✅ [Many products](02-commercial/many-products/README.md) — **shipped 2026-10-14** (#356, #359, #361; plugin + kit
+  1.9.0/1.9.1, CLI 1.6.0 — npm publish owed). A founder or their agent makes, binds and deletes products from the terminal
+  or the console: `frijoles login` signs in the account, `frijoles init --create <slug>` makes a product and binds the
+  repo, `+ New product` in the console, owner delete (every key dead at once) and purge after 30 days. Each workspace
+  holds up to 10 products (a data `UPDATE` raises it). Each product's `/horizon` shows its own destinations, declared in
+  `Roadmap/horizon.md`. Agents may `supabase db push`. **Owed:** CLI publish, signed-in walkthroughs, the target read.
 - ✅ [A golden welcome and recovery pages](02-commercial/brand-reveal-error-pages/README.md) — **shipped 2026-10-10**
   (#340; CLI 1.2.0, plugin + kit 1.4.0). `frijoles setup` opens with a bean ripening to gold and FRIJOLES revealed in a
   gold sweep, and the site's missing and broken pages are branded, with a way back. **Owed:** the interactive reveal.
@@ -612,6 +618,9 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-14**: `many-products` **shipped**: ≈$61 against a $15–33 quote — three verifier rounds each found a real
+  defect (an uncapped create, purge blocked by an append-only ledger, then a cascade exit that could erase a live ledger),
+  two caught before the migration reached production. A second product is now a CLI command, not hand-written SQL.
 - **2026-10-13**: `one-flag-switch` **shipped**: ≈$58 against a $15–32 quote (five stories where one was planned). A flag
   has one switch, On or Off, the same on the page, in the CLI, the SDK and MCP.
 - **2026-10-13**: `scenarios-light-up` **shipped**: ≈$27 against a $56–79 quote. Drills are on in production, and an

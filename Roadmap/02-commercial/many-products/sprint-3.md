@@ -3,7 +3,7 @@ epic: many-products
 sprint: 3
 title: "Each product's own horizon"
 risk: low
-phase: In review
+phase: Shipped
 stories_total: 2
 stories:
   - id: S3.1
@@ -23,7 +23,7 @@ stories:
 ---
 # Many products — Sprint 3: Each product's own horizon
 
-**Status:** 🟦 In review — PR #361 (plugin + kit 1.9.1; the horizon lives at `Roadmap/horizon.md` per the D14 amendment)
+**Status:** ✅ shipped 2026-10-14 — https://github.com/danybgoode/golden-frijoles/pull/361 merged (`d481548`), deployed; `@golden-frijoles/kit@1.9.1` published; roadmap re-pushed after the deploy (D14 amendment).
 
 ## Build contract (locked by the architect before the builder started)
 Cites the epic README's Architecture lock; nothing here restates it.
@@ -72,3 +72,10 @@ Env: production · https://goldenfrijoles.com   (or the preview URL while testin
    → https://goldenfrijoles.com/hub/aomx/horizon shows that destination, "on the way", with the epic under it.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+### Smoke results (2026-10-14, production, `d481548`)
+- ✅ Step 1 (public, signed out): https://goldenfrijoles.com/hub/golden-frijoles/horizon shows the same six destinations,
+  all **lit** (as before), read from `Roadmap/horizon.md` after the post-deploy `workflow_dispatch` re-push.
+- ✅ `/hub/aomx/horizon` signed out → 307 to sign-in (members only).
+- Owed to the product owner — step 2 (signed in, aomx's empty state) and step 3 (declare a destination in the aomx repo
+  at **`Roadmap/horizon.md`** — moved from `00-strategy/` by the D14 amendment — then roadmap-push).
