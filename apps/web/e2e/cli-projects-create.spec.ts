@@ -138,7 +138,7 @@ test.describe('frijoles projects create — a product by name (many-products S1.
     const client = db()
     const founder = await person(client, 'mp-invalid')
     try {
-      for (const data of [{}, { slug: '' }, { slug: 'My Product' }, { slug: 'ab' }, { slug: 'golden-frijoles' }, { slug: 'app' }]) {
+      for (const data of [{}, { slug: '' }, { slug: 'My Product' }, { slug: 'MyProd' }, { slug: ' spaced ' }, { slug: 'ab' }, { slug: 'golden-frijoles' }, { slug: 'app' }]) {
         const res = await request.post('/api/v1/cli/projects', { headers: founder.auth, data })
         expect(res.status(), JSON.stringify(data)).toBe(400)
         expect(await res.json()).toMatchObject({ ok: false, code: 'invalid' })

@@ -9,6 +9,7 @@ import { DEMO_PROJECT_SLUG } from './public-demo'
 import { claimWorkspace, releaseWorkspace, workspaceNameFor, type WorkspaceClaim } from './workspace-tenancy'
 import { SELF_PROJECT_SLUG } from './self-track'
 import { makerToStamp } from './connector-maker'
+import { getMembership, isOwner } from './membership'
 
 // multi-tenant-activation · Sprint 2, Story 2.1 — turning a CONFIRMED auth user into a working
 // tenant: a project, an owner membership, a first API key, and a connector token for onboarding.
@@ -382,7 +383,9 @@ export async function createProductForUser(
   naming: { email?: string | null; displayName?: string | null } = {}
 ): Promise<CreateProductResult> {
   const slug = typeof requestedSlug === 'string' ? normalizeSlug(requestedSlug) : null
-  if (!slug || slug !== String(requestedSlug).trim().toLowerCase() || isForbiddenSlug(slug)) {
+  // Exactly the name asked for, or a refusal: a silently lowercased or re-hyphenated name would be created under a slug
+  // the caller never typed and then bound or printed as the one they did (verifier, #356).
+  if (!slug || slug !== requestedSlug || isForbiddenSlug(slug)) {
     return {
       ok: false,
       reason: 'invalid',
@@ -392,9 +395,7 @@ export async function createProductForUser(
   }
 
   const supabase = getSupabaseServiceClient()
-  const owned = await ownsSlug(supabase, userId, slug)
-  if (owned === null) return { ok: false, reason: 'error', error: 'Could not check that name right now.' }
-  if (owned) return { ok: true, created: false, projectSlug: slug }
+  if (await ownsSlug(userId, slug)) return { ok: true, created: false, projectSlug: slug }
 
   const claim = await claimWorkspace(supabase, userId, workspaceNameFor(naming.displayName, naming.email))
   if (!claim.ok) {
@@ -416,7 +417,7 @@ export async function createProductForUser(
   if (error || !data) {
     if (error?.code === PG_UNIQUE_VIOLATION) {
       // Two creates of one name racing: the loser re-checks, so its retry (or this answer) says "already yours".
-      if (await ownsSlug(supabase, userId, slug)) {
+      if (await ownsSlug(userId, slug)) {
         await logRelease(supabase, claim)
         return { ok: true, created: false, projectSlug: slug }
       }
@@ -440,29 +441,15 @@ export async function createProductForUser(
   return { ok: true, created: true, projectSlug: slug }
 }
 
-/** Does `userId` OWN the product called `slug`? null = could not tell (the caller fails closed). */
-async function ownsSlug(
-  supabase: ReturnType<typeof getSupabaseServiceClient>,
-  userId: string,
-  slug: string
-): Promise<boolean | null> {
-  const { data: project, error } = await supabase.from('projects').select('id').eq('slug', slug).maybeSingle()
-  if (error) {
-    console.error('[provisioning] slug lookup failed:', error)
-    return null
-  }
-  if (!project) return false
-  const { data: member, error: memberError } = await supabase
-    .from('project_members')
-    .select('role')
-    .eq('user_id', userId)
-    .eq('project_id', project.id)
-    .maybeSingle()
-  if (memberError) {
-    console.error('[provisioning] ownership lookup failed:', memberError)
-    return null
-  }
-  return member?.role === 'owner'
+/**
+ * Does `userId` OWN the product called `slug`? Through `getMembership`, the one seam every project-access read passes
+ * (AGENTS § The tenancy invariant), so a person removed from the workspace is not told "already yours" (verifier, #356).
+ * It fails closed by returning null, which reads as "not yours": the insert that follows then meets the existing slug
+ * and answers `taken`, never a bind.
+ */
+async function ownsSlug(userId: string, slug: string): Promise<boolean> {
+  const membership = await getMembership(userId, slug)
+  return membership !== null && isOwner(membership)
 }
 
 /** The feature key the onboarding snippet's event is tagged with. Exported so the onboarding page
