@@ -17,6 +17,7 @@ import { AgentRail } from './AgentRail'
 import { ConsoleRail } from './ConsoleRail'
 import { CommandPalette } from './CommandPalette'
 import { ShellErrorBoundary } from './ShellErrorBoundary'
+import { NewProduct } from './NewProduct'
 import { PORTFOLIO_MIN_PRODUCTS, portfolioHrefFor, workspaceBoardHrefFor } from '@/lib/portfolio-workspace'
 
 /**
@@ -394,6 +395,8 @@ export async function ProductShell({
                             </ul>
                           </section>
                         ))}
+                        {/* many-products D8 — the same `+ New product` as the portfolio head. */}
+                        <NewProduct />
                         <p className="ds-shell-note">
                           Projects are grouped by workspace. A workspace is the boundary your data never
                           crosses.
