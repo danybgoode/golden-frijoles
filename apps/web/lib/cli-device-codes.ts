@@ -98,22 +98,23 @@ export async function viewDeviceCode(rawUserCode: unknown): Promise<DeviceCodeVi
 export type DecideOutcome = 'approved' | 'denied' | 'expired' | 'used' | 'unknown' | 'not_member' | 'error'
 
 /**
- * Approve (for `projectId`) or deny on behalf of `userId`, which the caller takes from `getSessionUser()` —
- * never from the request. `projectId` comes from the person's own membership (`getMembership`); the SQL
- * function re-checks that membership, and status and expiry, in the same statement that writes.
+ * Approve or deny on behalf of `userId`, which the caller takes from `getSessionUser()` — never from the request. The
+ * SQL function checks status and expiry in the same statement that writes.
  */
 export async function decideDeviceCode(
   rawUserCode: unknown,
   userId: string,
-  decision: { approve: true; projectId: string } | { approve: false }
+  decision: { approve: boolean }
 ): Promise<DecideOutcome> {
   const userCode = normalizeUserCode(rawUserCode)
   if (!userCode) return 'unknown'
+  // The 3-argument overload (20261006100000): it records no product, so `collectDeviceCode` mints an ACCOUNT-WIDE
+  // token (many-products D4). The 4-argument one stays in the database for nothing to call; tokens it bound to one
+  // product keep working, scoped as before.
   const { data, error } = await getSupabaseServiceClient().rpc('decide_cli_device_code', {
     p_user_code: userCode,
     p_user_id: userId,
     p_approve: decision.approve,
-    p_project_id: decision.approve ? decision.projectId : null,
   })
   if (error) {
     console.error('[cli-device-codes] decide failed:', { code: error.code ?? 'unknown' })

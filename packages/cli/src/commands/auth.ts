@@ -125,11 +125,17 @@ export const loginCommand: Command = {
     const existing = readCredentials(context.env)
     // Keep the active project only if it is still one this account can reach. A token swapped
     // for a different account would otherwise leave `frijoles flags ls` pointed at a project the new
-    // credential 404s on, and the error would name the flag rather than the stale selection. A token made
-    // for one product (the browser's approve page) reaches only that one, so it becomes the active one.
-    const activeProject = probe.body.projects.some((project) => project.slug === existing?.activeProject)
+    // credential 404s on, and the error would name the flag rather than the stale selection.
+    //
+    // many-products D5: otherwise it is chosen ONLY when there is exactly one to choose. Taking the first of several
+    // (as this did) is how a brand-new repo ended up acting on an old product; with several, the repo binds itself
+    // with `frijoles init --project | --create`, or `frijoles projects use` picks one for this machine.
+    const reachable = probe.body.projects
+    const activeProject = reachable.some((project) => project.slug === existing?.activeProject)
       ? existing?.activeProject
-      : probe.body.projects[0]?.slug
+      : reachable.length === 1
+        ? reachable[0].slug
+        : undefined
     const path = writeCredentials({ token, apiUrl, activeProject }, context.env)
 
     context.emit.ok(
@@ -140,7 +146,11 @@ export const loginCommand: Command = {
         projects: probe.body.projects,
       },
       `Signed in as ${probe.body.account.email ?? probe.body.account.userId} on ${apiUrl}.\n` +
-        (activeProject ? `Product: ${activeProject}.\n` : '') +
+        (activeProject
+          ? `Product: ${activeProject}.\n`
+          : reachable.length > 1
+            ? `${reachable.length} products. In a repo, \`frijoles init --project <slug>\` (or \`--create <slug>\`) picks its product.\n`
+            : '') +
         `Saved to ${path} (mode 0600).`
     )
     return EXIT.OK

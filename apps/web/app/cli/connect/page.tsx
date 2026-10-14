@@ -6,8 +6,7 @@ import { getSessionUser } from '@/lib/supabase-auth'
 import { getSiteUrl } from '@/lib/site-url'
 import { isTerminalSignInEnabled } from '@/lib/terminal-sign-in-flag'
 import { viewDeviceCode } from '@/lib/cli-device-codes'
-import { defaultProjectSlug, normalizeUserCode } from '@/lib/cli-device-code-format'
-import { getUserProjects } from '@/lib/membership'
+import { normalizeUserCode } from '@/lib/cli-device-code-format'
 import { confirmDeviceCode, denyDeviceCode } from './actions'
 
 // account-from-the-terminal · Sprint 2, Story 2.2 — `/cli/connect?code=KQ7M-3RTX` (epic D8, the
@@ -21,7 +20,7 @@ export const dynamic = 'force-dynamic'
 const DONE_MESSAGES: Record<string, { title: string; body: string }> = {
   approved: {
     title: 'Your agent is connected',
-    body: 'Your terminal will say who you are and which product in a few seconds. You can close this page.',
+    body: 'Your terminal will say who you are in a few seconds. You can close this page.',
   },
   not_member: {
     title: 'Nothing was signed in',
@@ -122,14 +121,12 @@ export default async function CliConnectPage({
   // words (shown as such, never as a fact), the request's age is shown, what allowing grants is
   // stated in full, and "if someone sent you this link" is said before the button, not after.
   //
-  // Since the 2026-10-05 amendment (canvas First run, frame 6) Allow binds the token to ONE product, picked
-  // from the person's own memberships; the repo name the terminal sent only pre-selects one.
+  // many-products D4 (2026-10-14): Allow signs in the ACCOUNT. It used to bind the token to one product picked here,
+  // which a brand-new repo could only answer wrongly; the repo now names its product with `frijoles init`.
   const minutesAgo = minutesSince(view.createdAt)
-  const projects = [...(await getUserProjects(user.id))].sort((a, b) => a.slug.localeCompare(b.slug))
-  const preselected = defaultProjectSlug(projects, view.repoHint)
   return (
     <Frame variant="door" brandHref="/">
-      <h1>Let your agent work on your product?</h1>
+      <h1>Let your agent work on your products?</h1>
       <p className="ds-doorlede">
         Your coding agent and <span className="ds-mono">frijoles</span>, on the terminal that calls itself “
         {view.label}” (its own name, not something we checked), showing{' '}
@@ -139,34 +136,11 @@ export default async function CliConnectPage({
       </p>
       <form action={confirmDeviceCode} className="ds-doorform">
         <input type="hidden" name="code" value={code} />
-        {projects.length > 0 ? (
-          <div className="ds-field">
-            <label className="ds-label" htmlFor="cli-connect-product">
-              Product
-            </label>
-            <select
-              id="cli-connect-product"
-              name="product"
-              className="ds-input"
-              defaultValue={preselected ?? ''}
-            >
-              {projects.map((project) => (
-                <option key={project.id} value={project.slug}>
-                  {project.slug}
-                </option>
-              ))}
-            </select>
-          </div>
-        ) : (
-          <p className="ds-hint">
-            You have no product yet. Allow makes your first one, the way{' '}
-            <span className="ds-mono">frijoles init</span> does.
-          </p>
-        )}
         <p className="ds-hint">
-          It will be able to: plan, flag and measure for that product — read and change its feature flags,
-          record A/B decisions and North Star readings, and, if you own it, make keys for your app&apos;s
-          events. Only that product: not your others. Your code never comes here.
+          It will be able to: plan, flag and measure for every product you belong to — read and change their
+          feature flags, record A/B decisions and North Star readings, make new products, and, for the ones you own,
+          make keys for your app&apos;s events. Each repo picks its product with{' '}
+          <span className="ds-mono">frijoles init</span>. Your code never comes here.
         </p>
         <Button type="submit" variant="primary">
           Allow
