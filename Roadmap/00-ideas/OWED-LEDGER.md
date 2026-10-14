@@ -10,13 +10,13 @@ _Generated: 2026-10-14_
 
 | Who can clear it | Count | What it means |
 |---|---|---|
-| publish | 3 | A package publish (npm 2FA): the product owner today, a CI job once trusted publishing is on |
+| publish | 0 | A package publish (npm 2FA): the product owner today, a CI job once trusted publishing is on |
 | credential | 7 | Mints or uses a production credential: only the product owner, named every time |
 | ops | 5 | On the product owner's own accounts or machine |
-| judgment | 24 | An answer only the product owner can give: an _Intent_, an approval, a decision |
-| signed-in | 20 | A signed-in production walkthrough: an agent can run it once a smoke account exists |
+| judgment | 25 | An answer only the product owner can give: an _Intent_, an approval, a decision |
+| signed-in | 21 | A signed-in production walkthrough: an agent can run it once a smoke account exists |
 | interactive | 19 | An interactive plugin or terminal walkthrough: an agent can script it in a scratch repo |
-| unsorted | 6 | Nothing above matched — **not a bin, a to-triage list** |
+| unsorted | 7 | Nothing above matched — **not a bin, a to-triage list** |
 
 | Category | Count | What it means |
 |---|---|---|
@@ -24,12 +24,6 @@ _Generated: 2026-10-14_
 | auth-path | 27 | Needs a real signed-in session a script cannot mint against production |
 | admin-only | 0 | Behind an admin surface |
 | other | 56 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
-
-## publish (3)
-
-- `Roadmap/02-commercial/agent-legible-horizon/RETROSPECTIVE.md:25` · auth-path — **Owed to the product owner:** `npm publish` of `@golden-frijoles/cli@1.7.0`; then `frijoles horizon` in a bound repo and the login line on a machine that remembers a product.
-- `Roadmap/02-commercial/many-products/RETROSPECTIVE.md:46` · other — **Owed to the product owner:** `npm publish` of `@golden-frijoles/cli@1.6.0` (2FA) — the CLI steps of S1 and S2's walkthroughs wait on it; the signed-in walkthroughs (approve page, New product, console delete on Setup › CLI, /connect, the aomx horizon); the hypothesis read (`bet…
-- `Roadmap/02-commercial/outcome-report-any-product/RETROSPECTIVE.md:24` · other — **Owed to the product owner:** the first aomx push and its signed-in report; re-push medusa-bonsai's report (median 7 → 3.4 days, with the caveat); `npm publish` of CLI 1.7.0 (from agent-legible-horizon).
 
 ## credential (7)
 
@@ -49,7 +43,7 @@ _Generated: 2026-10-14_
 - `Roadmap/09-platform-infra/plugin-1-0/RETROSPECTIVE.md:43` · other — **Owed to Daniel:** the `_Intent_` word above; Sprint 4's interactive walkthrough steps 2–5; your live routines that name a removed skill (sprint-3 step 7); and two decisions: rename the Notion `Stage` select option (it stores the key "Grooming"), and whether to re-approve the c…
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:55` · other — Remove the three account copies of the coaches.
 
-## judgment (24)
+## judgment (25)
 
 - `Roadmap/02-commercial/account-from-the-terminal/RETROSPECTIVE.md:12` · other — > _Intent_ is provisional ("mostly"), owed to Daniel: GitHub and the email link were cut at the lock, and the Google > round trip worked end to end only after he fixed Supabase's URL settings. His own answer replaces this word.
 - `Roadmap/02-commercial/agentic-pm-public-surface/RETROSPECTIVE.md:78` · other — **Story 1.4 is owed to Daniel by name.** Running the workshop end-to-end in a fresh Claude and a fresh ChatGPT, on a real product. No automated smoke can judge whether a facilitation script facilitates. It must be run against **production**, not a preview — see A13.
@@ -62,6 +56,7 @@ _Generated: 2026-10-14_
 - `Roadmap/02-commercial/gates-in-plain-agile/RETROSPECTIVE.md:47` · other — **Owed to Daniel:** both sprints' interactive walkthroughs, in a scratch repo with the plugin installed from `main` (setup → Strategy gate → Plan gate → Build gate), and this retro's `_Intent_` answer.
 - `Roadmap/02-commercial/launch-trust-sweep/RETROSPECTIVE.md:4` · other — _Intent: owed to Daniel (yes | mostly | no)_ _Quote vs actual: not quoted → ≈$8.01 (Claude only, from the branch's first commit; the audit before it and the reviewers are not measured)_
 - `Roadmap/02-commercial/launch-trust-sweep/RETROSPECTIVE.md:35` · other — **Owed to Daniel:** the `_Intent_` word above; the two account settings outside the PR: the GitHub description and homepage of `danybgoode/golden-frijoles` and `golden-frijoles/skills` (the agent runs `gh repo edit` on a go), and the Vercel domain redirect from the old `golden-b…
+- `Roadmap/02-commercial/many-products/RETROSPECTIVE.md:46` · other — **Owed to the product owner:** ~~`npm publish` of `@golden-frijoles/cli@1.6.0` (2FA) — the CLI steps of S1 and S2's walkthroughs wait on it~~ (published; 1.7.0 on npm 2026-10-14); the signed-in walkthroughs (approve page, New product, console delete on Setup › CLI, /connect, the…
 - `Roadmap/02-commercial/one-epic-page/RETROSPECTIVE.md:47` · other — **Owed to Daniel:** the signed-in walkthroughs of both sprints; the `_Intent_` word; approving a picture of the new page for the design gate (D5 — the seed sketch's kinds are not in `surface.map.json`).
 - `Roadmap/02-commercial/one-header-one-name/RETROSPECTIVE.md:53` · other — The retro's `_Intent_` word.
 - `Roadmap/02-commercial/one-header-one-name/RETROSPECTIVE.md:54` · other — **Owed to Daniel (D10):** re-approve `design-system/surfaces/hub-board*.surface` and `hub-roadmap-areas.surface` with the new words. Their text still reads "To groom … Ready to build". The gate measures structure, not words, so this doesn't block anything.
@@ -76,7 +71,7 @@ _Generated: 2026-10-14_
 - `Roadmap/09-platform-infra/sketch-specs/RETROSPECTIVE.md:80` · other — Owed to Daniel: did we build what was meant?** Answer on its own line as `_Intent: yes_`, `_mostly_` or `_no_`. The builder does not answer this for the product owner. This epic has no `intent_match:` score, so `epic-dod` does not require it.
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:52` · other — Run the North Star coach on Golden Frijoles and judge the file (S1 smoke step 2).
 
-## signed-in (20)
+## signed-in (21)
 
 - `apps/web/e2e/app-auth.spec.ts:121` · auth-path — authed member-vs-owner HTTP path needs a real session (browser smoke owed to Daniel), so the
 - `apps/web/e2e/delivery-replay.spec.ts:18` · auth-path — The authenticated /app replay + delivery-history UI is a real-session BROWSER smoke owed to Daniel.
@@ -92,6 +87,7 @@ _Generated: 2026-10-14_
 - `Roadmap/02-commercial/app-shell-and-agent-rail/RETROSPECTIVE.md:112` · auth-path — **The SIGNED-IN production walkthrough has not been run.** The anonymous half was verified in production against `102f494` on 2026-08-07: all routes healthy, `/app` 307s to login, the rail markers are **absent** from both anonymously-readable demo dashboards (the dark spec's pro…
 - `Roadmap/02-commercial/landing-frijoles-rebrand/RETROSPECTIVE.md:79` · auth-path — **The authed mobile sweep** — still owed to Daniel from `landing-redesign-v2` and untouched here. The `browser` project is anonymous by construction, so a signed-in route would be measured against its login redirect. `assertMobileClean` is exported and ready for an `*.authed.spe…
 - `Roadmap/02-commercial/one-header-one-name/RETROSPECTIVE.md:51` · other — Both sprints' signed-in walkthroughs on production (sprint-1 steps 1–5, sprint-2 steps 1–6). Preview can't serve a signed-in page.
+- `Roadmap/02-commercial/outcome-report-any-product/RETROSPECTIVE.md:24` · other — **Owed to the product owner:** the first aomx push and its signed-in report; re-push medusa-bonsai's report (median 7 → 3.4 days, with the caveat); ~~`npm publish` of CLI 1.7.0 (from agent-legible-horizon)~~ (published 2026-10-14).
 - `Roadmap/02-commercial/workspaces/RETROSPECTIVE.md:69` · other — **Owed to Daniel by name:** the signed-in prod walkthroughs (S1 steps 1–3 and 5, S2 step 1), and ~~`npm publish` of `@golden-frijoles/cli@0.4.0` (2FA)~~ (published; checked 2026-10-14), then S2 step 2. S2 step 3 is n/a in prod; CI replaces it.
 - `Roadmap/09-platform-infra/one-product-project/sprint-1.md:87` · auth-path — (signed in, owed to Daniel) Open https://goldenfrijoles.com/app → the switcher lists golden-frijoles, and its flags list shows auth.terminal_sign_in_enabled
 - `Roadmap/09-platform-infra/one-product-project/sprint-2.md:75` · other — (signed in, owed to Daniel) Open https://goldenfrijoles.com/app → the agent rail is on the right
@@ -121,12 +117,13 @@ _Generated: 2026-10-14_
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:54` · other — The interactive coach runs (S1 smoke steps 1 and 3; S2 smoke step 1).
 - `Roadmap/09-platform-infra/why-as-a-story/RETROSPECTIVE.md:50` · other — **Owed to the product owner:** the refine walkthrough on a new idea (the Why drafted as a story, the guard, the build view showing it in full) and a Plan gate with the Crew block.
 
-## unsorted (6)
+## unsorted (7)
 
 - `apps/web/e2e/app-auth.spec.ts:7` · auth-path — owed to Daniel; here we pin the api-testable negatives that make the boundary real:
 - `Roadmap/01-growth-engine/signals-loop/sprint-1.md:145` · other — throw a real error in the demo app → watch the signal appear (**owed to Daniel by name**)._
 - `Roadmap/01-growth-engine/signals-loop/sprint-2.md:96` · other — `list_tasks` → evidence sanity), **owed to Daniel by name**
 - `Roadmap/01-growth-engine/signals-loop/sprint-3.md:122` · other — resolve → revoke → confirm dead) + the production flip, **owed to Daniel by name**
+- `Roadmap/02-commercial/agent-legible-horizon/RETROSPECTIVE.md:25` · auth-path — **Owed to the product owner:** ~~`npm publish` of `@golden-frijoles/cli@1.7.0`~~ (published 2026-10-14; from npm, `frijoles horizon --project <slug>` and `whoami`'s "remembered on this machine" work); then `frijoles horizon` in a bound repo and the login line on a machine that r…
 - `Roadmap/09-platform-infra/cli-think-skills-followups/RETROSPECTIVE.md:36` · other — **Owed to Daniel by name:** ~~`cd packages/cli && npm publish` (npm 2FA) for `@golden-frijoles/cli@0.4.1`~~ (published; checked 2026-10-14), then smoke steps 4–5 in `sprint-1.md`.
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:53` · other — The live `--yes` against `golden-beans` with that file, then check the North Star surface (S3 smoke steps 2–3).
 

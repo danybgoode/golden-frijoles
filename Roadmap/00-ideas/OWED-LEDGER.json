@@ -9,13 +9,13 @@
     "other": 56
   },
   "byKind": {
-    "publish": 3,
+    "publish": 0,
     "credential": 7,
     "ops": 5,
-    "judgment": 24,
-    "signed-in": 20,
+    "judgment": 25,
+    "signed-in": 21,
     "interactive": 19,
-    "unsorted": 6
+    "unsorted": 7
   },
   "generatedAt": "2026-10-14"
 }
