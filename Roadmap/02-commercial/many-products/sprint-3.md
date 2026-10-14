@@ -25,6 +25,12 @@ stories:
 
 **Status:** ⬜ not started
 
+## Build contract (locked by the architect before the builder started)
+Cites the epic README's Architecture lock; nothing here restates it.
+- 3.1 → D14 (`horizon.md` parser + `destination:` list in the kit; optional `horizon` + row `destinations` in the schema;
+  unknown id rejected on both sides, naming the epic; Golden Frijoles' list moves into its own `horizon.md`).
+- 3.2 → D14 (`deriveHorizon(destinations, epics)`; `HORIZON_DESTINATIONS` deleted; `hub-horizon-empty` state approved).
+
 ## Stories
 
 ### Story 3.1 — The horizon travels with the roadmap push

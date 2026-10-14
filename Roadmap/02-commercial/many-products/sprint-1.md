@@ -3,7 +3,7 @@ epic: many-products
 sprint: 1
 title: "Products, headlessly"
 risk: high
-phase: Shaping
+phase: Building
 stories_total: 5
 stories:
   - id: S1.1
@@ -45,6 +45,14 @@ stories:
 # Many products — Sprint 1: Products, headlessly
 
 **Status:** ⬜ not started
+
+## Build contract (locked by the architect before the builder started)
+Cites the epic README's Architecture lock; nothing here restates it.
+- 1.1 → D1 (migration `20261014100000_many_products_signup_marker.sql`; `findProjectByCreator` filter).
+- 1.2 → D2, D3 (`createProductForUser`; `POST cli/projects { slug }`; `e2e/cli-projects-create.spec.ts`).
+- 1.3 → D4, D5 (3-argument decide; approve page without a product; login's active-project rule).
+- 1.4 → D6, D7 (`project.slug` binding resolved once in `run.ts`; `init --project|--create`; `--json` never prompts).
+- 1.5 → D8 (Server Action on the session user; `NewThingDialog`; re-approval of the changed state owed).
 
 ## Stories
 

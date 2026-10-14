@@ -1,7 +1,8 @@
 ---
 status: scaffolded   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Shaping       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+phase: Building       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
+locked_at: "2026-10-14T03:04:37Z"
 slug: many-products
 title: "Many products"
 area: 02-commercial
@@ -96,9 +97,103 @@ exemption registry is untouched.
 owner-run purge, not an automatic job; target = bets placed in products other than golden-frijoles, 0 → 3 within 30
 days of shipping; no flag.
 
+## Architecture lock (2026-10-13, the architect, verified against live code and production data)
+
+Builders cite these; they do not restate them. Where a decision corrects the scope above, it says so.
+
+**Live data at the lock (prod `slweidgffcfndnskcskc`, read-only):** 6 projects. `golden-frijoles`, `golden-beans` and
+`aomx` are hand-seeded (`created_by NULL`) in the workspace "Daniel's products" (`9e58bc7d…`), one member each;
+`miyagi` and `champion327` are self-serve (`created_by` set), each in its creator's own workspace. The backfill
+(`20261001100000_workspaces.sql`) gave every workspace a `created_by` (it aborts otherwise), so "the caller's own
+workspace" is `workspaces.created_by = userId`, exactly what `claimWorkspace` already reads.
+
+- **D1 · The signup marker, in ONE migration, safe in either deploy order** (corrects S1.1's two-phase expand/contract).
+  `projects.from_signup BOOLEAN NOT NULL DEFAULT true`; `UPDATE … SET from_signup = false WHERE created_by IS NULL`
+  (hand-seeded rows untouched in meaning); `projects_one_per_creator_idx` is dropped and recreated **under the same
+  name** as `ON projects(created_by) WHERE created_by IS NOT NULL AND from_signup`. The DEFAULT `true` is the
+  expand step: the running code's signup insert never names the column, so it stays guarded before and after the
+  deploy; the ONE non-signup writer (`createProductForUser`, D2) writes `false` explicitly. Keeping the index name
+  means `CREATOR_CONSTRAINT` in `lib/provisioning.ts` does not change. `findProjectByCreator` gains
+  `.eq('from_signup', true)` — with two products per creator its `.maybeSingle()` would otherwise error and strand the
+  signup race. Migration: `20261014100000_many_products_signup_marker.sql`.
+- **D2 · `createProductForUser(userId, slug)`** in `lib/provisioning.ts`: the caller's own workspace via
+  `claimWorkspace` (never one named in a request), a PLAIN insert with `from_signup: false` (never an upsert on slug —
+  the existing comment's rule), an owner membership, the owner-stamped connector token (`makerToStamp`, the mint-path
+  rule in LEARNINGS), the audit row, and the same compensating delete + `releaseWorkspace` on failure. It shares the
+  insert/member/credential tail with `provisionTenantForUser` through one private function; it does NOT mint an
+  ingest key (the route never returned one — `frijoles keys create` / `init --ingest` do). Slug: `normalizeSlug`, then
+  `isForbiddenSlug` (reserved, `DEMO_PROJECT_SLUG`, `SELF_PROJECT_SLUG`) → `invalid`. Outcomes: `created` ·
+  `already_yours` (the caller is an OWNER of that slug → `created: false`) · `taken` (anyone else's, incl. a member
+  who is not owner, and a soft-deleted slug: D9) → `conflict`.
+- **D3 · `POST /api/v1/cli/projects { slug }`** creates (D2). No `slug` → `invalid` naming it (the ensure is retired:
+  every account already has a product from signup). A product-scoped token (`scopeProjectId !== null`) → `not_found`
+  for any slug other than its own, and `created: false` for its own (it may not reach siblings, so it may not make
+  them). Request-path tenancy: the product lands in the caller's workspace; no read crosses workspaces.
+- **D4 · Login is account-wide.** `confirmDeviceCode` calls the existing **3-argument**
+  `decide_cli_device_code(code, user, approve)` (still in prod; `20261007100000` kept it on purpose, and
+  `collect_cli_device_code` mints `projectId: null` for it). No migration. The approve page loses the product select
+  and the "Allow makes your first one" branch (login provisions nothing; `init --create` does). Its grant sentence
+  changes from "only that product" to "every product you belong to". `defaultProjectSlug`/`repoHint` stay readable
+  but unused on the page (the column and the CLI's `repo` field are harmless; removing them is not this epic).
+  Existing scoped tokens keep working unchanged.
+- **D5 · `frijoles login` no longer picks a product.** It keeps the saved `activeProject` only if still reachable, and
+  otherwise sets one only when the token reaches exactly ONE product (today's `projects[0]` fallback is the
+  "linked to the wrong product" bug in the CLI).
+- **D6 · The repo binding is `project.slug` in `golden-frijoles.config.json`** (confirmed per S1.4: the kit's config
+  core already owns that file and its `project` section; the CLI loads it through `config-core.ts`, and `setKey`
+  needs no registry entry, so S1 does NOT wait on a kit release). Precedence for "which product" in every command:
+  `--project` > `GOLDEN_FRIJOLES_PROJECT` > the repo's `project.slug` (at `projectRoot`) > the credentials file's
+  `activeProject`. Resolved ONCE in `run.ts` into `context.auth.activeProject` (plus `projectSource`), so the dozen
+  verbs that read `activeProject` inherit it unchanged. An unreadable config is "no binding", never a crash.
+- **D7 · `frijoles init`**: `--project <slug>` binds an existing product (verified against `GET cli/projects`);
+  `--create <slug>` calls D3 then binds (`already_yours` binds too); neither + a binding → uses it; neither + no
+  binding → at a TTY it asks (existing products + "create one"), under `--json` or no TTY it exits `invalid` naming
+  `--project` and `--create` without reading stdin. Both flags → `invalid`. It writes `project.slug` before minting
+  (so a failed mint leaves the binding, which is harmless). `projects create <slug>` prints the slug and
+  created/already; `--json` carries `{ created, slug }`. Help goldens change on purpose.
+- **D8 · New product in the console** (S1.5): a Server Action calling `createProductForUser` with the SESSION user,
+  behind the kit's one confirmation shape (`NewThingDialog`), on the portfolio head and the switcher; on success
+  `redirect('/app/setup/connect/<slug>')`. The structural gate measures default state: a new head action changes
+  `app-portfolio`'s approved state — re-approval is put to the product owner (LEARNINGS: a green gate is not an
+  approval).
+- **D9 · Soft delete in the database first, code second** (S2.1). `projects.deleted_at TIMESTAMPTZ NULL`
+  (`20261015100000_many_products_soft_delete.sql`). Every credential view — `active_ingest_keys`,
+  `active_agent_write_keys`, `active_flag_admin_keys` (gains the `projects` join), `active_flag_read_keys`,
+  `active_flag_sync_keys`, `active_share_links` — is `CREATE OR REPLACE`d with the same columns and
+  `AND p.deleted_at IS NULL`, so every SQL function that reads them inherits it. Code seams: the three reads in
+  `lib/membership.ts`, `getWorkspaceProjects`' project read, `resolveConnectorToken`, and every remaining
+  `.from('projects')` read on a request path, pinned by a source guard (`lib/soft-delete-guard.test.ts`: every
+  `from('projects')` select in `lib/`+`app/` carries `deleted_at` or sits on a named allow-list — fix the class, not
+  the instance). The slug stays taken until purge (the row exists). `DEMO_PROJECT_SLUG` and `SELF_PROJECT_SLUG`
+  refuse delete. Delete = owner only (`requireCliOwner`); member/stranger → `not_found`.
+- **D10 · Purge is one SQL function, owner-run** (S2.2): `purge_deleted_project(p_slug TEXT, p_user_id UUID)
+  RETURNS TABLE(outcome TEXT, purge_after TIMESTAMPTZ)` — `not_found` unless the caller is an owner of a project with
+  that slug AND `deleted_at IS NOT NULL`; `too_soon` with `deleted_at + 30 days`; else `DELETE FROM projects WHERE
+  id = …` (the 26 `ON DELETE CASCADE` FKs and the immutable ledgers' `pg_trigger_depth() > 1` cascade exits do the
+  rest — the spec seeds a decision record to prove it). Service-role EXECUTE only. No scheduler, so the exemption
+  registry is untouched.
+- **D11 · `/connect` install lines** (S2.3) come from `lib/cli-install.ts` + the generated `CLI_VERSION`
+  (`lib/plugin-release.generated.ts`); no hand-typed version.
+- **D12 · `db push` allowed** (S2.4): the 12 deny spellings (`supabase … db push`, `npx supabase … db push`) leave
+  both `settings.json` files and both ledgers; every `db reset` spelling stays; `permissions-smoke` green in both.
+- **D13 · roadmap-push in a first-day repo** (S2.5): the failure carries the full stderr (bounded), `--docs-only`
+  passes the extract `--live` without `--require-live`, and "no `origin` remote" (`git remote get-url origin` fails)
+  is detected BEFORE the extract and degrades to docs-only with one line; a remote whose `gh` call fails still fails.
+- **D14 · The horizon travels as data** (S3; **corrects S3.1**). Live: `multi-tenant-activation` lights TWO
+  destinations and `commercial-shell` TWO, so one `destination: <id>` per epic cannot reproduce Golden Frijoles'
+  horizon. `destination:` takes one id or a comma-separated list (the kit's flat frontmatter parser reads it as a
+  string). `Roadmap/00-strategy/horizon.md` declares destinations (`## <id> — <title>` + one-line description, in
+  display order). The push gains optional `horizon: [{ id, title, description }]` (≤ 50) and each row an optional
+  `destinations: string[]`; the extractor and the schema both reject a row naming an id the horizon lacks, naming the
+  epic. `deriveHorizon(destinations, epics)` keeps its lit/partial/coming rule; `HORIZON_DESTINATIONS` is deleted.
+  No `horizon` → the `hub-horizon-empty` state. `entity-journeys-projections` (registered today, no epic folder) drops.
+
+**Routing.** The architect (Opus) builds everything on the auth/tenancy/migration path: S1.1–S1.4, S2.1, S2.2, S2.4.
+Sonnet builders take S1.5, S2.3, S2.5 and S3 against the contracts above; the architect diffs every one.
+
 ## Deploy order
-Migrations first and separately (expand/contract): S1.1's marker column before its index change; S2.1's `deleted_at`
-before the code that reads it. Then the server (create route, device flow, soft-delete seams), then the CLI release
+Migrations first and separately, each applied before its PR merges: S1's signup marker (D1, safe in either order),
+S2's soft delete + purge function (D9, D10) before the code that reads `deleted_at`. Then the server (create route, device flow, soft-delete seams), then the CLI release
 (npm publish is the product owner's 2FA step) and the kit/plugin release (`skills/RELEASING.md`) for S2.4, S2.5 and
 S3.1. Merge to `main` is the deploy; no flag.
 

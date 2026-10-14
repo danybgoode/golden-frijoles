@@ -46,6 +46,12 @@ stories:
 
 **Status:** ⬜ not started
 
+## Build contract (locked by the architect before the builder started)
+Cites the epic README's Architecture lock; nothing here restates it.
+- 2.1 → D9 (migration `20261015100000_many_products_soft_delete.sql`; six views; code seams + `soft-delete-guard.test.ts`).
+- 2.2 → D10 (`purge_deleted_project`; spec seeds an immutable ledger row and purges through it).
+- 2.3 → D11. · 2.4 → D12. · 2.5 → D13 (kit release; vendored copies byte-identical).
+
 ## Stories
 
 ### Story 2.1 — An owner can delete a product
