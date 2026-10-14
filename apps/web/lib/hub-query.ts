@@ -12,13 +12,24 @@ import { summarizeRoadmap, type RoadmapRow } from './roadmap-artifact-schema'
 // (roadmap-artifact-schema.ts's summarizeRoadmap) instead of each page re-querying and
 // re-deriving slightly differently.
 
-export type RoadmapArtifactPayload = { items: RoadmapRow[] }
+export type RoadmapArtifactPayload = {
+  items: RoadmapRow[]
+  /** many-products D14 — the product's own destinations; absent when it declared none. */
+  horizon?: HorizonDeclared[]
+}
+export type HorizonDeclared = { id: string; title: string; description: string }
 export type RoadmapSummary = ReturnType<typeof summarizeRoadmap>
 
 export type HubRoadmapResult =
   // `projectId` is the id this read resolved server-side (one-epic-page D2): a page that reads more of the SAME project
   // (the epic page's flag) takes it from here, never by re-resolving the URL's slug.
-  | { ok: true; artifact: ReportArtifact<RoadmapArtifactPayload>; summary: RoadmapSummary; projectId: string }
+  | {
+      ok: true
+      artifact: ReportArtifact<RoadmapArtifactPayload>
+      summary: RoadmapSummary
+      projectId: string
+      horizon: HorizonDeclared[]
+    }
   // 'project_not_found' → notFound(); 'no_artifact' → the deliberate empty state; 'query_failed' →
   // throw (a broken database must never render identically to "nothing pushed yet").
   | { ok: false; reason: 'project_not_found' | 'no_artifact' | 'query_failed' }
@@ -53,5 +64,6 @@ export async function getHubRoadmapByProjectId(projectId: string): Promise<HubRo
   if (!artifact) return { ok: false, reason: 'no_artifact' }
 
   const items = Array.isArray(artifact.payload?.items) ? artifact.payload.items : []
-  return { ok: true, artifact, summary: summarizeRoadmap(items), projectId }
+  const horizon = Array.isArray(artifact.payload?.horizon) ? artifact.payload.horizon : []
+  return { ok: true, artifact, summary: summarizeRoadmap(items), projectId, horizon }
 }

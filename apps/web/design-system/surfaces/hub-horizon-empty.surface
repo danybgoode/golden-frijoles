@@ -1,0 +1,4 @@
+state: hub-horizon-empty
+route: /hub/aomx/horizon
+- head "Horizon"
+- empty "No destinations yet. Declare them in Roadmap/00-strategy/horizon.md and name one in an epic's `destination:`, then run roadmap-push."

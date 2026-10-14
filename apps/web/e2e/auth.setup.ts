@@ -974,7 +974,7 @@ async function seedRoadmapFixture(db: SupabaseClient, projectId: string) {
             1,
             '02-commercial'
           ),
-          ...card('Shipped', { shipped_at: today }),
+          ...card('Shipped', { shipped_at: today, destinations: ['fixture-front-door'] }),
         },
         {
           ...epic('fixture-design-rails', 'One design system, every surface', 'shipped', 2, '02-commercial'),
@@ -1000,6 +1000,7 @@ async function seedRoadmapFixture(db: SupabaseClient, projectId: string) {
           ...epic('fixture-mockups', 'The mockups, as built', 'in-progress', 3, '02-commercial'),
           // one-epic-page S1.3 — a Building card with its sprints, so the Now panel has a sprint to name and a Wrap.
           ...card('Building', {
+            destinations: ['fixture-front-door'],
             // one-epic-page S2 — a Building epic with a target, a quote and an actual, and a flag that EXISTS in this
             // project's registry (the activity fixture's, never activated), so the page shows its state.
             hypothesis: 'The mockups, as built, close the gap between design and product',
@@ -1022,6 +1023,7 @@ async function seedRoadmapFixture(db: SupabaseClient, projectId: string) {
         {
           ...epic('fixture-unbet', 'An idea nobody has bet on yet', 'scaffolded', null, '01-platform'),
           ...card('Ready to build', {
+            destinations: ['fixture-second-door'],
             goal: 'So that the board has a Ready-to-build card with a kickoff to copy.',
             flag_note: 'none. Risk low. Rollback is a revert.',
             sprints: [{ n: 1, title: 'The one sprint', done: 0, total: 2 }],
@@ -1055,6 +1057,22 @@ async function seedRoadmapFixture(db: SupabaseClient, projectId: string) {
         wip: { Building: 2, QA: 3 },
         repo: 'https://github.com/danybgoode/golden-frijoles/blob/main/',
       },
+      // many-products S3.2 — a product's horizon is its OWN pushed data. Without destinations `/hub/…/horizon` renders
+      // `hub-horizon-empty` and the gate would measure it against the populated `hub-horizon`. None is fully shipped
+      // (the horizon test asserts no destination is lit on this fixture): one is partly lit, two are on the way.
+      horizon: [
+        {
+          id: 'fixture-front-door',
+          title: 'The fixture front door',
+          description: 'Lit by a shipped and a building epic.',
+        },
+        {
+          id: 'fixture-second-door',
+          title: 'The second door',
+          description: 'Lit by an epic nobody has started.',
+        },
+        { id: 'fixture-third-door', title: 'The third door', description: 'No epic names it yet.' },
+      ],
     },
     p_generated_at: new Date().toISOString(),
     p_source_commit: null,

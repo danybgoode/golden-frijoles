@@ -7,6 +7,7 @@ import { Icon } from '@/components/ui/Icon'
 import { EmptyHubState } from '../../hub-components'
 import { HubShell } from '../../hub-shell'
 import { Answer, Callout, PageHead } from '@/design-system/primitives'
+import { EmptyHorizon, HORIZON_LEDE } from './horizon-components'
 
 export const dynamic = 'force-dynamic'
 
@@ -57,28 +58,37 @@ export default async function HubHorizonPage({ params }: { params: Promise<{ pro
 
     return (
       <HubShell projectSlug={projectSlug} tab="horizon">
-        <PageHead
-          title="Horizon"
-          lede="The end states this product is walking toward, and which epics light each one."
-        />
+        <PageHead title="Horizon" lede={HORIZON_LEDE} />
         <EmptyHubState projectSlug={projectSlug} />
       </HubShell>
     )
   }
 
-  const { artifact, summary } = result
+  const { artifact, summary, horizon } = result
+  // many-products D14 — the destinations are the product's own, from its latest push. None declared → the
+  // `hub-horizon-empty` state, never another product's list.
+  if (horizon.length === 0) {
+    return (
+      <HubShell projectSlug={projectSlug} tab="horizon">
+        <EmptyHorizon />
+      </HubShell>
+    )
+  }
   const freshness = formatFreshness(artifact.generatedAt, new Date(), artifact.sourceCommit)
   const destinations = deriveHorizon(
-    summary.epics.map((e) => ({ slug: e.slug, name: e.name, shipped: e.shipped }))
+    horizon,
+    summary.epics.map((e) => ({
+      slug: e.slug,
+      name: e.name,
+      shipped: e.shipped,
+      destinations: e.destinations,
+    }))
   )
   const litCount = destinations.filter((d) => d.status === 'lit').length
 
   return (
     <HubShell projectSlug={projectSlug} tab="horizon">
-      <PageHead
-        title="Horizon"
-        lede="The end states this product is walking toward, and which epics light each one."
-      />
+      <PageHead title="Horizon" lede={HORIZON_LEDE} />
       {/* ⚠️ **NO PROVENANCE LINE — mockups-as-built Story 4.4.** The approved `hub-horizon` state is
           `head → answer → destinations → haze`; the stamp belongs to `hub-report`, which draws one.
           It is not lost: the answer below says when, which is where a sentence about how current a
@@ -144,8 +154,8 @@ export default async function HubHorizonPage({ params }: { params: Promise<{ pro
         <section className="ds-haze" aria-label="Ideas on the horizon">
           <h2>Further out — on the horizon</h2>
           <p>
-            Unrefined ideas, deliberately hazy. These are <strong>not promised</strong> and carry no date —
-            an idea rendered like a commitment is the one dishonesty this view exists to avoid.
+            Unrefined ideas, deliberately hazy. These are <strong>not promised</strong> and carry no date — an
+            idea rendered like a commitment is the one dishonesty this view exists to avoid.
           </p>
           <ul className="ds-hazelist" data-testid="horizon-seeds">
             {summary.seeds.map((seed) => (
