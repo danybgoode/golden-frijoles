@@ -6,7 +6,7 @@ area: "09"
 type: chore
 appetite: S
 underwritten_by: null
-risk: low
+risk: high
 epic: null
 build_order: null
 updated: 2026-10-14
