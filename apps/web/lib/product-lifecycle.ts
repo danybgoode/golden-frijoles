@@ -3,6 +3,7 @@ import { getSupabaseServiceClient } from './supabase'
 import { recordAudit } from './audit'
 import { DEMO_PROJECT_SLUG } from './public-demo'
 import { SELF_PROJECT_SLUG } from './self-track'
+import { GATE_CATALOG_PROJECT_SLUG } from './gates-decision'
 
 // many-products · Sprint 2, Stories 2.1 + 2.2 (Roadmap/02-commercial/many-products — lock D9, D10).
 //
@@ -19,7 +20,8 @@ export async function deleteProductForUser(userId: string, slug: string): Promis
   const { data, error } = await getSupabaseServiceClient().rpc('delete_project', {
     p_slug: slug,
     p_user_id: userId,
-    p_protected: [...new Set([DEMO_PROJECT_SLUG, SELF_PROJECT_SLUG])],
+    // The gate catalog's project too: deleting it would switch every product gate to its fallback (verifier, #359).
+    p_protected: [...new Set([DEMO_PROJECT_SLUG, SELF_PROJECT_SLUG, GATE_CATALOG_PROJECT_SLUG])],
   })
   if (error) {
     console.error('[product-lifecycle] delete failed:', { code: error.code ?? 'unknown' })
@@ -33,10 +35,7 @@ export async function deleteProductForUser(userId: string, slug: string): Promis
 }
 
 export type PurgeOutcome =
-  | { kind: 'purged' }
-  | { kind: 'too_soon'; purgeAfter: string }
-  | { kind: 'not_found' }
-  | { kind: 'error' }
+  { kind: 'purged' } | { kind: 'too_soon'; purgeAfter: string } | { kind: 'not_found' } | { kind: 'error' }
 
 export async function purgeProductForUser(userId: string, slug: string): Promise<PurgeOutcome> {
   const { data, error } = await getSupabaseServiceClient().rpc('purge_deleted_project', {
@@ -47,14 +46,22 @@ export async function purgeProductForUser(userId: string, slug: string): Promise
     console.error('[product-lifecycle] purge failed:', { code: error.code ?? 'unknown' })
     return { kind: 'error' }
   }
-  const row = (Array.isArray(data) ? data[0] : data) as { outcome?: unknown; purge_after?: unknown } | undefined
+  const row = (Array.isArray(data) ? data[0] : data) as
+    { outcome?: unknown; purge_after?: unknown } | undefined
   switch (row?.outcome) {
     case 'purged':
       // projectId null: the row is gone, and audit_log's project reference would only dangle.
-      await recordAudit({ action: 'product_purged', projectId: null, actorUserId: userId, metadata: { slug } })
+      await recordAudit({
+        action: 'product_purged',
+        projectId: null,
+        actorUserId: userId,
+        metadata: { slug },
+      })
       return { kind: 'purged' }
     case 'too_soon':
-      return typeof row.purge_after === 'string' ? { kind: 'too_soon', purgeAfter: row.purge_after } : { kind: 'error' }
+      return typeof row.purge_after === 'string'
+        ? { kind: 'too_soon', purgeAfter: row.purge_after }
+        : { kind: 'error' }
     case 'not_found':
       return { kind: 'not_found' }
     default:

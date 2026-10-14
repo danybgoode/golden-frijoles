@@ -127,6 +127,19 @@ END;
 $$;
 REVOKE ALL ON FUNCTION public.enforce_workspace_product_limit() FROM PUBLIC, anon, authenticated;
 
+-- ── input_values lets a cascade through (verifier, #359) ────────────────────────────────────────────────────────────
+-- Its append-only trigger (20260716100000) raised on EVERY delete, with no cascade exit, so purging any product that ever
+-- pushed a North Star input value failed. It now has the exit every other ledger has: a DELETE inside a cascade, or once
+-- the row's project is gone. While the project exists, UPDATE and a direct DELETE stay refused exactly as before.
+CREATE OR REPLACE FUNCTION input_values_no_mutation() RETURNS trigger AS $$
+BEGIN
+  IF TG_OP = 'DELETE' AND (
+    pg_trigger_depth() > 1 OR NOT EXISTS (SELECT 1 FROM public.projects p WHERE p.id = OLD.project_id)
+  ) THEN RETURN OLD; END IF;
+  RAISE EXCEPTION 'input_values is append-only: % is not allowed', TG_OP;
+END;
+$$ LANGUAGE plpgsql SET search_path = public, pg_temp;
+
 -- ── delete (S2.1) ───────────────────────────────────────────────────────────────────────────────────────────────────
 -- One guarded UPDATE: only an OWNER, only a live product, never a protected one (the caller passes the public demo's
 -- and the self-tracking project's slugs, which are env-driven and so cannot be named here). p_user_id comes from a
@@ -139,9 +152,12 @@ AS $$
 DECLARE
   v_id UUID;
 BEGIN
+  -- An owner, AND still inside the product's workspace: the tenancy invariant's re-check (a person removed from the
+  -- workspace keeps a project_members row, and reaches nothing inside it).
   SELECT p.id INTO v_id
     FROM projects p
     JOIN project_members m ON m.project_id = p.id AND m.user_id = p_user_id AND m.role = 'owner'
+    JOIN workspace_members wm ON wm.workspace_id = p.workspace_id AND wm.user_id = p_user_id
    WHERE p.slug = p_slug AND p.deleted_at IS NULL;
   IF v_id IS NULL THEN RETURN 'not_found'; END IF;
   IF p_slug = ANY (COALESCE(p_protected, ARRAY[]::TEXT[])) THEN RETURN 'protected'; END IF;
@@ -172,9 +188,11 @@ DECLARE
   v_id UUID;
   v_deleted_at TIMESTAMPTZ;
 BEGIN
+  -- Owner AND workspace member — the same re-check lib/membership.ts makes for every live read (verifier, #359).
   SELECT p.id, p.deleted_at INTO v_id, v_deleted_at
     FROM projects p
     JOIN project_members m ON m.project_id = p.id AND m.user_id = p_user_id AND m.role = 'owner'
+    JOIN workspace_members wm ON wm.workspace_id = p.workspace_id AND wm.user_id = p_user_id
    WHERE p.slug = p_slug AND p.deleted_at IS NOT NULL;
   IF v_id IS NULL THEN
     RETURN QUERY SELECT 'not_found'::TEXT, NULL::TIMESTAMPTZ;
