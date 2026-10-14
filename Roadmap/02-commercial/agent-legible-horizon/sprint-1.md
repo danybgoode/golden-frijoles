@@ -3,7 +3,7 @@ epic: agent-legible-horizon
 sprint: 1
 title: "Read it headless, and say so"
 risk: high
-phase: Shaping
+phase: Building
 stories_total: 5
 stories:
   - id: S1.1
