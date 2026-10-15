@@ -122,11 +122,13 @@ test('D1: the whole-life funnel exposed is the sum of the cohorts’ exposed (mo
     const t: FunnelTrend = computeFunnelTrend(events, rule, measure, { by, now })!
     const sum: number = t.periods.reduce((n, p) => n + (p.state === 'read' ? p.funnel.exposed : 0), 0)
     assert.equal(sum, all.exposed, by)
+    // Beside the funnel is counted per period, like the base: someone who adopts unexposed in two months is in both
+    // (verifier, #378), so the periods never sum to LESS than the whole life.
     const beside: number = t.periods.reduce(
       (n, p) => n + (p.state === 'read' ? p.funnel.adoptedWithoutExposure : 0),
       0
     )
-    assert.equal(beside, all.adoptedWithoutExposure, `${by}: beside the funnel, partitioned too`)
+    assert.ok(beside >= all.adoptedWithoutExposure, `${by}: beside the funnel, per period`)
   }
 })
 

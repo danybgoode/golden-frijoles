@@ -108,7 +108,6 @@ export default async function HubEpicPage({
   const by = asTrendBy(Array.isArray(query.by) ? query.by[0] : query.by)
   const epicHref = (extra: Record<string, string>) =>
     `/hub/${encodeURIComponent(projectSlug)}/epic/${encodeURIComponent(epicSlug)}${boardQuery(parseBoardFilters(query), extra)}`
-  const periodHref = (p: FunnelPeriod) => epicHref({ period: p, by })
   const byHref = (b: TrendBy) => epicHref({ period, by: b })
   const funnelsOn = funnelBet !== null && (await isFlagFunnelsEnabled())
   const funnel = funnelsOn
@@ -120,6 +119,8 @@ export default async function HubEpicPage({
       ? funnelTrendView(await getFlagFunnelTrend(result.projectId, funnelBet, by).catch(() => null))
       : null
   if (trend) await noteFunnelTrendViewed(result.projectId)
+  // D6: with the trend off, the period links are exactly as before (verifier, #378).
+  const periodHref = (p: FunnelPeriod) => epicHref(trend ? { period: p, by } : { period: p })
   const freshness = formatFreshness(artifact.generatedAt, new Date(), artifact.sourceCommit)
   // owed-on-screen S2.1 — a member's owed checks for THIS epic, behind the flag. `{ ok: false }` (flag off, signed out,
   // not a member, nothing pushed) leaves the page exactly as it was.

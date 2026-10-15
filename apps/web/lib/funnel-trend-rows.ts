@@ -14,7 +14,7 @@ export type FunnelTrendRow =
       state: 'read'
       exposed: number
       adopted: number | null
-      /** null when no retained event is named. A maturing period's count is still filling: read it with `maturing`. */
+      /** null when no adoption event is named (retention then has nothing to repeat). A maturing period's count is still filling: read it with `maturing`. */
       retained: number | null
       adoptedWithoutExposure: number
     }

@@ -342,7 +342,7 @@ export default async function FlagDetailPage({
               flagKey={flag.key}
               result={funnel}
               period={period}
-              hrefFor={(p) => `${basePath}?tab=funnel&period=${p}&by=${by}`}
+              hrefFor={(p) => `${basePath}?tab=funnel&period=${p}${trend ? `&by=${by}` : ''}`}
               trend={
                 trend ? (
                   <FunnelTrend

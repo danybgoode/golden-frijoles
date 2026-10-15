@@ -114,7 +114,9 @@ invariant holds (one project per read, segments per project). Bets on `everyone`
   measure's events follow every cohort to now, so **a cut there makes every period** unreadable; the base is read
   newest first, so a cut at T makes **every period starting before T** unreadable. A period's base is the people with an
   event arriving in `[start, end)`. Cuts are by arrival (`created_at`) while a period is placed by `occurred_at ??
-  created_at`, as `readFunnel` does; a backfilled event older than its arrival is the known skew.
+  created_at`, as `readFunnel` does; a backfilled event older than its arrival is the known skew. A second, beside the
+  funnel only (verifier, #378): when exposures are cut, someone first exposed after the cut who adopted unexposed in an
+  earlier, read period and again after that exposure still counts as adopting without it there; the stages are exact.
 - **D4 · Shape.** `FunnelTrendRead = { state: 'not_exposed' } | { state: 'measured', by, from, to, periods }`, each
   period `{ label, start, end, maturing } & ({ state: 'read', funnel } | { state: 'unreadable', reason })`. Cached by
   `getFunnelTrend` in `lib/event-catalog-query.ts` (same seconds and key shape as `getFunnel`, plus `by`).

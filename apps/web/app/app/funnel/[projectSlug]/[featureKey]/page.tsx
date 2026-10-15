@@ -81,7 +81,7 @@ export default async function FunnelPage({
           flagKey={featureKey}
           result={result}
           period={period}
-          hrefFor={(p) => `${base}?period=${p}&by=${by}`}
+          hrefFor={(p) => `${base}?period=${p}${trend ? `&by=${by}` : ''}`}
           trend={
             trend ? (
               <FunnelTrend

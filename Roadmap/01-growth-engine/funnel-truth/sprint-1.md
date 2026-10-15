@@ -109,8 +109,9 @@ Env: production · https://goldenfrijoles.com
    → the same trend when a registry feature shares the flag's key; otherwise the existing "no funnel" words, no trend.
 5. Open a bet's page in the Hub whose card has a flag and an adoption event
    (https://goldenfrijoles.com/hub/golden-frijoles/epic/funnel-truth).
-   → the flag's funnel says nobody has been counted with the flag on yet, and no trend (golden-frijoles reports no
-   flag evaluations; README correction). A project that reports them shows the trend here.
+   → the flag's funnel says nobody has been counted with the flag on yet, and the trend under it says nobody has got
+   it yet (golden-frijoles reports no flag evaluations; README correction). A project that reports them shows the
+   trend's numbers here.
 6. Run `frijoles funnel setup_guide --by month --project golden-frijoles`.
    → a table with one row per month whose numbers match step 3.
 7. Ask the golden-frijoles connector for `get_tars_funnel` of `setup_guide` with `by: month`.
