@@ -845,7 +845,14 @@ one-liner + why + date shape.
   as a join reads a snapshot and gives you nothing under READ COMMITTED. If a concurrent writer can
   invalidate what you joined on, take an explicit `SELECT … FOR SHARE` as its **own statement** first
   (the next statement then runs on a fresh snapshot). Pick one lock ORDER for the whole subsystem —
-  here every path locks the destination, then the delivery — so the paths can't deadlock.
+  here every path locks the destination, then the delivery — so the paths can't deadlock. **A foreign key
+  is a lock too:** an INSERT takes `KEY SHARE` on every row its FKs reference, so adding a write to a
+  locking function adds *every FK of the target table* to its lock order — check them all, including FKs
+  declared in later migrations (a stale-reclaim INSERT into the attempt log inverted the order through a
+  destination FK and deadlocked against `delete_destination`; scoped reviews missed it because the FK lived
+  outside the diff). **Pin it with real transactions, never a sleep:** two `pg` clients, and wait on
+  `pg_stat_activity.wait_event_type = 'Lock'` for the blocked one — a sleep lets the wrong side win on a
+  slow runner and the spec passes with the fix removed. *(2026-10-14, delivery-stale-reclaim-uncounted.)*
 - **A `CHECK` constraint that evaluates to NULL is a suggestion — PostgreSQL accepts the row.** Only
   an explicit FALSE rejects. `CHECK ((scope='share' AND share_lens IN (...)) OR (scope='ingest' AND
   share_lens IS NULL))` looks airtight and permits exactly the row it appears to forbid: for

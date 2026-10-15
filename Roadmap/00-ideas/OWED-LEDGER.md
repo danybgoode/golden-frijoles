@@ -6,24 +6,24 @@
 
 _Generated: 2026-10-15_
 
-**94 check(s) owed across 72 file(s)** · 5 cleared.
+**96 check(s) owed across 72 file(s)** · 5 cleared.
 
 | Who can clear it | Count | What it means |
 |---|---|---|
 | publish | 2 | A package publish (npm 2FA): the product owner today, a CI job once trusted publishing is on |
 | credential | 7 | Mints or uses a production credential: only the product owner, named every time |
 | ops | 5 | On the product owner's own accounts or machine |
-| judgment | 29 | An answer only the product owner can give: an _Intent_, an approval, a decision |
+| judgment | 30 | An answer only the product owner can give: an _Intent_, an approval, a decision |
 | signed-in | 24 | A signed-in production walkthrough: an agent can run it once a smoke account exists |
 | interactive | 20 | An interactive plugin or terminal walkthrough: an agent can script it in a scratch repo |
-| unsorted | 7 | Nothing above matched — **not a bin, a to-triage list** |
+| unsorted | 8 | Nothing above matched — **not a bin, a to-triage list** |
 
 | Category | Count | What it means |
 |---|---|---|
 | money-path | 1 | Touches checkout, payment or order state — run these first |
 | auth-path | 27 | Needs a real signed-in session a script cannot mint against production |
 | admin-only | 0 | Behind an admin surface |
-| other | 66 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
+| other | 68 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
 
 ## publish (2)
 
@@ -48,8 +48,9 @@ _Generated: 2026-10-15_
 - `Roadmap/09-platform-infra/plugin-1-0/RETROSPECTIVE.md:43` · other — **Owed to Daniel:** the `_Intent_` word above; Sprint 4's interactive walkthrough steps 2–5; your live routines that name a removed skill (sprint-3 step 7); and two decisions: rename the Notion `Stage` select option (it stores the key "Grooming"), and whether to re-approve the c…
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:55` · other — Remove the three account copies of the coaches.
 
-## judgment (29)
+## judgment (30)
 
+- `Roadmap/01-growth-engine/delivery-stale-reclaim-uncounted/RETROSPECTIVE.md:58` · other — Did we build what was meant? (owed to Daniel: one word)
 - `Roadmap/01-growth-engine/drill-impact-for-agents/sprint-2.md:60` · other — Risk:** low (a judgment, owed to the product owner by name)
 - `Roadmap/01-growth-engine/drill-impact-for-agents/sprint-2.md:82` · other — Steps 4–5 are owed to the product owner by name (signed in, and a judgment). Steps 1–2 need the CLI release on npm.
 - `Roadmap/01-growth-engine/proving-workspaces-reading/sprint-1.md:90` · other — Step 2 is signed in and step 3 is a judgment, both owed to the product owner.
@@ -88,7 +89,7 @@ _Generated: 2026-10-15_
 - `apps/web/e2e/destinations.spec.ts:30` · auth-path — /app/destinations) is a real-session BROWSER smoke owed to Daniel — the same boundary
 - `apps/web/e2e/funnel.spec.ts:77` · other — assertions this test used to make) is the browser smoke owed to Daniel. The JSON endpoint above
 - `apps/web/e2e/hub.authed.spec.ts:10` · auth-path — by hand. That is precisely the "browser smoke owed to the product owner" WAYS-OF-WORKING says a
-- `Roadmap/01-growth-engine/delivery-stale-reclaim-uncounted/sprint-1.md:78` · other — Step 6 is a signed-in walkthrough, owed to the product owner unless a smoke account exists.
+- `Roadmap/01-growth-engine/delivery-stale-reclaim-uncounted/RETROSPECTIVE.md:47` · other — **Owed to Daniel:** the signed-in look at `/app/destinations/golden-frijoles` (sprint-1 smoke step 6).
 - `Roadmap/01-growth-engine/flags-console-parity/RETROSPECTIVE.md:130` · money-path — **Owed to the product owner: the signed-in walkthroughs for all three sprints.** Every surface is credential-gated, so nothing in this repo reaches past the login redirect. Sprint 2's includes the money-path confirm on preview **and** production (cancel both).
 - `Roadmap/01-growth-engine/funnel-truth/sprint-2.md:101` · other — Step 4 is a signed-in step, owed to the product owner.
 - `Roadmap/01-growth-engine/north-star-multi-metric-read/RETROSPECTIVE.md:28` · other — **Owed to Daniel:** the signed-in look at https://goldenfrijoles.com/app/north-star/golden-frijoles (sprint-1 step 2). ~~The `_Intent_` word~~: answered yes on 2026-10-14.
@@ -130,9 +131,10 @@ _Generated: 2026-10-15_
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:54` · other — The interactive coach runs (S1 smoke steps 1 and 3; S2 smoke step 1).
 - `Roadmap/09-platform-infra/why-as-a-story/RETROSPECTIVE.md:50` · other — **Owed to the product owner:** the refine walkthrough on a new idea (the Why drafted as a story, the guard, the build view showing it in full) and a Plan gate with the Crew block.
 
-## unsorted (7)
+## unsorted (8)
 
 - `apps/web/e2e/app-auth.spec.ts:7` · auth-path — owed to Daniel; here we pin the api-testable negatives that make the boundary real:
+- `Roadmap/01-growth-engine/delivery-stale-reclaim-uncounted/RETROSPECTIVE.md:55` · other — (F7, still owed to Daniel).
 - `Roadmap/01-growth-engine/signals-loop/sprint-1.md:145` · other — throw a real error in the demo app → watch the signal appear (**owed to Daniel by name**)._
 - `Roadmap/01-growth-engine/signals-loop/sprint-2.md:96` · other — `list_tasks` → evidence sanity), **owed to Daniel by name**
 - `Roadmap/01-growth-engine/signals-loop/sprint-3.md:122` · other — resolve → revoke → confirm dead) + the production flip, **owed to Daniel by name**
