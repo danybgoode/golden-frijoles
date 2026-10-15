@@ -21,6 +21,9 @@
     "skills/plugins/golden-frijoles/hooks/**",
     "apps/web/lib/workspace*",
     "apps/web/lib/membership*",
+    "apps/web/lib/owed-read*",
+    "apps/web/lib/owed-screen*",
+    "apps/web/lib/report-artifact*",
     "apps/web/lib/dashboard-auth*",
     "apps/web/app/hub/w/**"
   ]
