@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { resolveProjectFromAuthHeader } from '@/lib/auth'
 import { getSupabaseServiceClient } from '@/lib/supabase'
 import { isSameRoadmapPayload, parseRoadmapPush, ROADMAP_SCHEMA_VERSION } from '@/lib/roadmap-artifact-schema'
-import { getLatestArtifact } from '@/lib/report-artifacts'
+import { getLatestRoadmapWithOwed } from '@/lib/report-artifacts'
 
 // pod-report · Sprint 1, Story 1.1 — POST /api/v1/roadmap/push
 //
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const { generatedAt, source, items, board, horizon } = parsed.value
+  const { generatedAt, source, items, board, horizon, owed } = parsed.value
   // `board` (WIP limits, the repo base for doc links) is stored beside the rows. Before it was declared, an extra key
   // passed validation and was silently stripped here (board-sinks-and-scrumban lock C6).
   // `horizon` (the product's own destinations, many-products D14) rides the same way: absent when the push had none.
@@ -45,6 +45,9 @@ export async function POST(req: NextRequest) {
     items,
     ...(board ? { board } : {}),
     ...(horizon && horizon.length ? { horizon } : {}),
+    // owed-on-screen D4 — stored beside the rows (it is not in `items`, so it would be dropped). [] is kept: it is a
+    // reading ("nothing owed"), where absent is "keeps no ledger". Never read back raw except through D6's registry.
+    ...(Array.isArray(owed) ? { owed } : {}),
   }
   const supabase = getSupabaseServiceClient()
 
@@ -52,7 +55,8 @@ export async function POST(req: NextRequest) {
   // from the API key above), and a failed read never blocks the push: the worst case is one duplicate version.
   let latest = null
   try {
-    latest = await getLatestArtifact(auth.projectId, 'roadmap')
+    // The RAW read (owed-on-screen D6): the stripped one would make every push carrying `owed` look changed.
+    latest = await getLatestRoadmapWithOwed(auth.projectId)
   } catch {
     latest = null
   }
