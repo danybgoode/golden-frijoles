@@ -120,7 +120,8 @@ BEGIN
                                 THEN 'retry budget spent: the last claim was never settled (presumed sent)'
                                 ELSE d.last_error END,
            -- the presumed attempt happened during the lost claim: stamp its time, so a row dead-lettered
-           -- here never reads "6 attempts, last attempt —" (verifier nit, PR #373)
+           -- here never reads "6 attempts, last attempt —" (verifier nit, PR #373). Its `unconfirmed` attempt
+           -- row below is dated p_now instead: that is when the loss was DETECTED, ≥ STALE_CLAIM_MS later.
            last_attempt_at = CASE WHEN p.stale THEN d.claimed_at ELSE d.last_attempt_at END,
            updated_at    = p_now
       FROM picked p

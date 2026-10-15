@@ -782,12 +782,17 @@ test('a stale-charging claim cannot DEADLOCK against a destination drain (lock o
   try {
     await makeStale(db, deliveryId, 0)
     // A second, due pending row on the SAME destination — the row the drain must touch.
-    const { data: ev2 } = await db
+    const { data: ev2, error: evErr } = await db
       .from('events')
       .insert({ project_id: pid, user_id: 'rep-u', event: 'order_placed' })
       .select('id')
       .single()
-    await db.from('event_deliveries').insert({ project_id: pid, event_id: ev2!.id, destination_id: destId })
+    expect(evErr).toBeNull()
+    const { error: delErr } = await db
+      .from('event_deliveries')
+      .insert({ project_id: pid, event_id: ev2!.id, destination_id: destId })
+    expect(delErr, 'without the pending row the drain touches nothing and the spec is vacuous').toBeNull()
+    const bPid = (await b.query('SELECT pg_backend_pid() AS pid')).rows[0].pid as number
 
     // A: delete_destination's shape — destination FOR UPDATE first …
     await a.query('BEGIN')
@@ -799,7 +804,19 @@ test('a stale-charging claim cannot DEADLOCK against a destination drain (lock o
         (r) => ({ ok: true as const, rows: r.rowCount }),
         (e: Error) => ({ ok: false as const, error: e.message })
       )
-    await new Promise((r) => setTimeout(r, 500)) // let B reach its lock wait
+    // Wait until B is BLOCKED on a lock — never a fixed sleep (verifier, PR #373): on a slow runner a
+    // drain that ran first would win the pending row, SKIP LOCKED would skip it, and the spec would
+    // pass with the fix removed. B blocks on a lock both with the fix (the destination pre-lock) and
+    // without it (the attempt FK, after it already holds the delivery rows).
+    for (let i = 0; ; i++) {
+      const { rowCount } = await a.query(
+        "SELECT 1 FROM pg_stat_activity WHERE pid = $1 AND wait_event_type = 'Lock'",
+        [bPid]
+      )
+      if (rowCount) break
+      if (i > 200) throw new Error('the claim never blocked on the destination lock')
+      await new Promise((r) => setTimeout(r, 25))
+    }
     // … then the drain of the destination's outstanding pending/failed rows.
     const drain = await a
       .query(
