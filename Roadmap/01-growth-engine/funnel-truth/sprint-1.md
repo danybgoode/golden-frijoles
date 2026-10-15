@@ -3,7 +3,7 @@ epic: funnel-truth
 sprint: 1
 title: "The trend"
 risk: high
-phase: Shaping
+phase: Building
 stories_total: 4
 stories:
   - id: S1.1
@@ -38,6 +38,14 @@ stories:
 # Funnel truth — Sprint 1: The trend
 
 **Status:** ⬜ not started
+
+## Build contract (locked by the architect before the builder started)
+Cite the epic README's D1–D8; never restate them. In short, per story: **S1.1** = D1 + D2 (pure, `lib/flag-funnel.ts`,
+`until` changes nothing when absent). **S1.2** = D3 + D4 (`lib/flag-funnel-read.ts`, an api spec with a lowered
+`rowCap`, cut by each of the three reads). **S1.3** = D5 + D6 + D7 (flag page Funnel tab, `/app/funnel/…`, Hub epic
+page; the browser spec renders trend on/off and flag funnels on/off). **S1.4** = D8 (CLI route + command + connector
+`by`). Deviation from the stories as written: the CLI and connector read the **registry** source by feature key (the
+flag page's source), not the epic page's flag source — see the README's corrections.
 
 ## Stories
 <!-- Keep the heading shape `### Story 1.M — <title>`; append ✅ + the commit ref when it ships. Name the story in
@@ -91,17 +99,24 @@ Env: production · https://goldenfrijoles.com
 
 1. Run `frijoles flags get bets.funnel_trend_enabled --project golden-frijoles`.
    → production says `off v1` (or later).
-2. Run `frijoles flags set bets.funnel_trend_enabled --value true --env production --project golden-frijoles`, wait
-   30 s, then sign in and open a measured flag's page under https://goldenfrijoles.com/app/flags/golden-frijoles.
-   → a trend shows below the funnel, one small chart per stage, by month; the newest month says it is still maturing.
-3. Open the same bet's epic page in the Hub.
-   → the same trend, with the same numbers.
-4. Run `frijoles funnel <that flag key> --by month --project golden-frijoles`.
-   → a table with one row per month whose numbers match step 2.
-5. Ask the golden-frijoles connector for that funnel by month.
+2. Signed out, open https://goldenfrijoles.com/app/funnel/golden-frijoles/setup_guide.
+   → the funnel as before, and no trend (the switch is off).
+3. Run `frijoles flags set bets.funnel_trend_enabled --value true --env production --project golden-frijoles`, wait
+   30 s, and reload step 2's page.
+   → under the funnel, "By month · By week" and one small chart per stage; the table has a row for every month from
+   2026-07 to 2026-10, July with 60 got it, the months between at 0, and the newest month marked still maturing.
+4. Signed in, open https://goldenfrijoles.com/app/flags/golden-frijoles and a flag's page, Funnel tab.
+   → the same trend when a registry feature shares the flag's key; otherwise the existing "no funnel" words, no trend.
+5. Open a bet's page in the Hub whose card has a flag and an adoption event
+   (https://goldenfrijoles.com/hub/golden-frijoles/epic/funnel-truth).
+   → the flag's funnel says nobody has been counted with the flag on yet, and no trend (golden-frijoles reports no
+   flag evaluations; README correction). A project that reports them shows the trend here.
+6. Run `frijoles funnel setup_guide --by month --project golden-frijoles`.
+   → a table with one row per month whose numbers match step 3.
+7. Ask the golden-frijoles connector for `get_tars_funnel` of `setup_guide` with `by: month`.
    → the same rows, with no person's id.
 
-Steps 2–3 are signed-in steps, owed to the product owner. Step 4 needs the CLI release on npm (the product owner's
-2FA publish).
+Steps 4–5 are signed-in steps, owed to the product owner. Step 6 needs the CLI release on npm (the product owner's 2FA
+publish).
 
 If any step fails, note the step number + what you saw — that's the bug report.
