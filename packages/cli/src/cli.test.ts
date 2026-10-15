@@ -1355,7 +1355,7 @@ test('bet sync refuses a bet with no flag or no adoption event, naming each fiel
   assert.equal(seen.length, 0)
   assert.match(
     captured.all(),
-    /flag_key is missing.*adopted_event is missing.*target_segment "power_users" is not supported yet/
+    /flag_key is missing.*adopted_event is missing.*target_segment "power_users" is not everyone or a segment key/
   )
 })
 
