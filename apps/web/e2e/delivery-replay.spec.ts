@@ -1,9 +1,11 @@
 import { test, expect } from '@playwright/test'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import { dispatchPendingDeliveries } from '@/lib/delivery-dispatch'
+import { Client as PgClient } from 'pg'
+import { dispatchPendingDeliveries, STALE_CLAIM_MS } from '@/lib/delivery-dispatch'
 import { retryDecision, MAX_ATTEMPTS, BASE_DELAY_MS, MAX_DELAY_MS } from '@/lib/retry-policy'
 import { verifyWebhookSignature } from '@/lib/webhook-signature'
 import { specWorkspaceId } from './helpers/spec-workspace'
+import { requireTestDatabaseUrl } from './helpers/test-db-cleanup'
 
 // event-destination-router · Sprint 2, Story 2.2 — retry, terminal failure, and replay.
 //
@@ -548,6 +550,293 @@ test('projects_with_due_work EXCLUDES a project whose due work is behind a DISAB
     })
     expect((data as { project_id: string }[]).map((r) => r.project_id)).not.toContain(pid)
   } finally {
+    await db.from('projects').delete().eq('id', pid)
+  }
+})
+
+// ── a stale reclaim charges the presumed attempt (delivery-stale-reclaim-uncounted S1.1) ─────────
+// verify-spike F2: a row whose settle never lands was reclaimed every STALE_CLAIM_MS with its
+// attempt_count untouched — re-sent forever, logged nowhere. The claim now charges each stale reclaim,
+// logs it as `unconfirmed`, and dead-letters the row in the same statement once the budget is spent.
+
+type ClaimRow = { id: string; attempt_count: number }
+
+// Puts the fixture's delivery in_flight, claimed 10 minutes ago (STALE_CLAIM_MS is 5), at `attempts`.
+async function makeStale(db: SupabaseClient, deliveryId: string, attempts: number) {
+  await db
+    .from('event_deliveries')
+    .update({
+      status: 'in_flight',
+      attempt_count: attempts,
+      claimed_at: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
+    })
+    .eq('id', deliveryId)
+}
+
+async function claim(db: SupabaseClient, pid: string, now = new Date(), withBudget = true) {
+  const { data, error } = await db.rpc('claim_deliveries', {
+    p_project_id: pid,
+    p_limit: 50,
+    p_now: now.toISOString(),
+    p_stale_after_ms: STALE_CLAIM_MS,
+    ...(withBudget ? { p_max_attempts: MAX_ATTEMPTS } : {}),
+  })
+  expect(error).toBeNull()
+  return (data ?? []) as ClaimRow[]
+}
+
+async function attemptsFor(db: SupabaseClient, deliveryId: string) {
+  const { data } = await db
+    .from('event_delivery_attempts')
+    .select('outcome, attempt_no, error, http_status')
+    .eq('delivery_id', deliveryId)
+    .order('attempt_no')
+  return data ?? []
+}
+
+test('a stale reclaim below the budget is CLAIMED, charged one attempt, and logged unconfirmed', async () => {
+  const db = dbClient()
+  const { pid, deliveryId } = await fixture(db)
+  try {
+    await makeStale(db, deliveryId, MAX_ATTEMPTS - 2)
+    const rows = await claim(db, pid)
+    expect(rows.map((r) => r.id)).toEqual([deliveryId])
+    expect(rows[0].attempt_count).toBe(MAX_ATTEMPTS - 1)
+
+    const { data: row } = await db
+      .from('event_deliveries')
+      .select('status, attempt_count')
+      .eq('id', deliveryId)
+      .single()
+    expect(row).toEqual({ status: 'in_flight', attempt_count: MAX_ATTEMPTS - 1 })
+    const log = await attemptsFor(db, deliveryId)
+    expect(log).toHaveLength(1)
+    expect(log[0]).toMatchObject({ outcome: 'unconfirmed', attempt_no: MAX_ATTEMPTS - 1, http_status: null })
+  } finally {
+    await db.from('projects').delete().eq('id', pid)
+  }
+})
+
+test('a stale reclaim that spends the budget is DEAD-LETTERED in the claim and NOT returned', async () => {
+  const db = dbClient()
+  const { pid, deliveryId } = await fixture(db)
+  try {
+    await makeStale(db, deliveryId, MAX_ATTEMPTS - 1)
+    expect(await claim(db, pid)).toEqual([])
+
+    const { data: row } = await db
+      .from('event_deliveries')
+      .select('status, attempt_count, claimed_at, last_error, last_attempt_at')
+      .eq('id', deliveryId)
+      .single()
+    expect(row!.last_attempt_at, 'the presumed attempt is dated').not.toBeNull()
+    expect(row!.status).toBe('dead')
+    expect(row!.attempt_count).toBe(MAX_ATTEMPTS)
+    expect(row!.claimed_at).toBeNull()
+    expect(row!.last_error).toContain('never settled')
+    const log = await attemptsFor(db, deliveryId)
+    expect(log).toHaveLength(1)
+    expect(log[0]).toMatchObject({ outcome: 'unconfirmed', attempt_no: MAX_ATTEMPTS })
+  } finally {
+    await db.from('projects').delete().eq('id', pid)
+  }
+})
+
+test('a row whose settle never lands is handed out at most MAX_ATTEMPTS times, then dies (F2)', async () => {
+  // The model's counterexample, replayed against the real function: claim, never settle, let it go
+  // stale, claim again. Before the fix the row came back on every pass, forever, at attempt_count 0.
+  const db = dbClient()
+  const { pid, deliveryId } = await fixture(db)
+  try {
+    let t = Date.now()
+    let handedOut = 0
+    for (let pass = 0; pass < MAX_ATTEMPTS + 3; pass++) {
+      handedOut += (await claim(db, pid, new Date(t))).length
+      t += STALE_CLAIM_MS + 60_000 // the next pass finds the unsettled row stale
+    }
+    expect(handedOut).toBe(MAX_ATTEMPTS)
+
+    const { data: row } = await db
+      .from('event_deliveries')
+      .select('status, attempt_count')
+      .eq('id', deliveryId)
+      .single()
+    expect(row).toEqual({ status: 'dead', attempt_count: MAX_ATTEMPTS })
+    const log = await attemptsFor(db, deliveryId)
+    expect(log.map((a) => a.outcome)).toEqual(Array(MAX_ATTEMPTS).fill('unconfirmed'))
+    expect(log.map((a) => a.attempt_no)).toEqual(Array.from({ length: MAX_ATTEMPTS }, (_, i) => i + 1))
+  } finally {
+    await db.from('projects').delete().eq('id', pid)
+  }
+})
+
+test('a due pending or failed row is claimed exactly as before — no charge, no attempt row', async () => {
+  const db = dbClient()
+  const { pid, deliveryId } = await fixture(db)
+  try {
+    // pending, as the fixture queued it
+    let rows = await claim(db, pid)
+    expect(rows).toEqual([expect.objectContaining({ id: deliveryId, attempt_count: 0 })])
+
+    // a failed row mid-schedule, due now
+    await db
+      .from('event_deliveries')
+      .update({
+        status: 'failed',
+        attempt_count: 2,
+        claimed_at: null,
+        next_attempt_at: new Date(Date.now() - 1000).toISOString(),
+      })
+      .eq('id', deliveryId)
+    rows = await claim(db, pid)
+    expect(rows).toEqual([expect.objectContaining({ id: deliveryId, attempt_count: 2 })])
+    expect(await attemptsFor(db, deliveryId)).toEqual([])
+  } finally {
+    await db.from('projects').delete().eq('id', pid)
+  }
+})
+
+test('the old 4-argument claim still resolves during the deploy window (p_max_attempts DEFAULT)', async () => {
+  const db = dbClient()
+  const { pid, deliveryId } = await fixture(db)
+  try {
+    await makeStale(db, deliveryId, MAX_ATTEMPTS - 2)
+    const rows = await claim(db, pid, new Date(), false)
+    expect(rows).toEqual([expect.objectContaining({ id: deliveryId, attempt_count: MAX_ATTEMPTS - 1 })])
+  } finally {
+    await db.from('projects').delete().eq('id', pid)
+  }
+})
+
+test('a budget below 1 is refused — it can never dead-letter a batch', async () => {
+  const db = dbClient()
+  const { pid, deliveryId } = await fixture(db)
+  try {
+    await makeStale(db, deliveryId, 0)
+    const { error } = await db.rpc('claim_deliveries', {
+      p_project_id: pid,
+      p_limit: 50,
+      p_now: new Date().toISOString(),
+      p_stale_after_ms: STALE_CLAIM_MS,
+      p_max_attempts: 0,
+    })
+    expect(error?.message).toContain('p_max_attempts')
+    const { data: row } = await db.from('event_deliveries').select('status').eq('id', deliveryId).single()
+    expect(row!.status).toBe('in_flight')
+  } finally {
+    await db.from('projects').delete().eq('id', pid)
+  }
+})
+
+test('the dispatcher never SENDS a stale row whose budget is spent', async () => {
+  const db = dbClient()
+  await withGateOn(async () => {
+    const { pid, deliveryId } = await fixture(db)
+    try {
+      await makeStale(db, deliveryId, MAX_ATTEMPTS - 1)
+      const fetch = stubFetch(200)
+      const out = await dispatchPendingDeliveries(db, pid, {
+        fetchImpl: fetch.impl,
+        resolveHost: PUBLIC_RESOLVE,
+      })
+      expect(out.ok).toBe(true)
+      expect(out.claimed).toEqual([])
+      expect(fetch.bodies).toHaveLength(0)
+      const { data: row } = await db.from('event_deliveries').select('status').eq('id', deliveryId).single()
+      expect(row!.status).toBe('dead')
+    } finally {
+      await db.from('projects').delete().eq('id', pid)
+    }
+  })
+})
+
+test('delivery_health counts an unconfirmed attempt in total_attempts only, not as a failure', async () => {
+  // Daniel, 2026-10-14: a presumed send is an attempt, not a failure.
+  const db = dbClient()
+  const { pid, deliveryId, destId } = await fixture(db)
+  try {
+    await makeStale(db, deliveryId, 0)
+    await claim(db, pid)
+    const { data } = await db.rpc('delivery_health', { p_project_id: pid })
+    const row = (data as Record<string, unknown>[]).find((r) => r.destination_id === destId)!
+    expect(Number(row.total_attempts)).toBe(1)
+    expect(Number(row.failed_attempts)).toBe(0)
+    expect(Number(row.delivered)).toBe(0)
+  } finally {
+    await db.from('projects').delete().eq('id', pid)
+  }
+})
+
+test('a stale-charging claim cannot DEADLOCK against a destination drain (lock order: destination first)', async () => {
+  // Verifier, PR #373: the claim's `unconfirmed` INSERT takes KEY SHARE on the destination through the
+  // attempt log's FK. Taken AFTER the delivery locks, that inverts delete_destination's order (FOR
+  // UPDATE on the destination, then the drain UPDATE of its pending/failed rows) — a real deadlock.
+  // Two real transactions over pg, because PostgREST cannot hold one open. Removing the claim's
+  // destination pre-lock turns this red with `deadlock detected`.
+  const db = dbClient()
+  const { pid, destId, deliveryId } = await fixture(db)
+  const a = new PgClient({ connectionString: requireTestDatabaseUrl() })
+  const b = new PgClient({ connectionString: requireTestDatabaseUrl() })
+  await a.connect()
+  await b.connect()
+  try {
+    await makeStale(db, deliveryId, 0)
+    // A second, due pending row on the SAME destination — the row the drain must touch.
+    const { data: ev2, error: evErr } = await db
+      .from('events')
+      .insert({ project_id: pid, user_id: 'rep-u', event: 'order_placed' })
+      .select('id')
+      .single()
+    expect(evErr).toBeNull()
+    const { error: delErr } = await db
+      .from('event_deliveries')
+      .insert({ project_id: pid, event_id: ev2!.id, destination_id: destId })
+    expect(delErr, 'without the pending row the drain touches nothing and the spec is vacuous').toBeNull()
+    const bPid = (await b.query('SELECT pg_backend_pid() AS pid')).rows[0].pid as number
+
+    // A: delete_destination's shape — destination FOR UPDATE first …
+    await a.query('BEGIN')
+    await a.query('SELECT 1 FROM event_destinations WHERE id = $1 AND project_id = $2 FOR UPDATE', [destId, pid])
+    // B: the claim, while A holds the destination.
+    const claimed = b
+      .query('SELECT id FROM claim_deliveries($1, 10, now(), $2, $3)', [pid, STALE_CLAIM_MS, MAX_ATTEMPTS])
+      .then(
+        (r) => ({ ok: true as const, rows: r.rowCount }),
+        (e: Error) => ({ ok: false as const, error: e.message })
+      )
+    // Wait until B is BLOCKED on a lock — never a fixed sleep (verifier, PR #373): on a slow runner a
+    // drain that ran first would win the pending row, SKIP LOCKED would skip it, and the spec would
+    // pass with the fix removed. B blocks on a lock both with the fix (the destination pre-lock) and
+    // without it (the attempt FK, after it already holds the delivery rows).
+    for (let i = 0; ; i++) {
+      const { rowCount } = await a.query(
+        "SELECT 1 FROM pg_stat_activity WHERE pid = $1 AND wait_event_type = 'Lock'",
+        [bPid]
+      )
+      if (rowCount) break
+      if (i > 200) throw new Error('the claim never blocked on the destination lock')
+      await new Promise((r) => setTimeout(r, 25))
+    }
+    // … then the drain of the destination's outstanding pending/failed rows.
+    const drain = await a
+      .query(
+        `UPDATE event_deliveries SET status = 'dead', last_error = 'destination removed', claimed_at = NULL
+          WHERE project_id = $1 AND destination_id = $2 AND status IN ('pending', 'failed')`,
+        [pid, destId]
+      )
+      .then(
+        () => ({ ok: true as const }),
+        (e: Error) => ({ ok: false as const, error: e.message })
+      )
+    if (drain.ok) await a.query('COMMIT')
+    else await a.query('ROLLBACK')
+
+    const claim = await claimed
+    expect(drain, 'the drain must not be chosen as the deadlock victim').toEqual({ ok: true })
+    expect(claim.ok, `the claim must wait, not deadlock: ${'error' in claim ? claim.error : ''}`).toBe(true)
+  } finally {
+    await a.end().catch(() => {})
+    await b.end().catch(() => {})
     await db.from('projects').delete().eq('id', pid)
   }
 })

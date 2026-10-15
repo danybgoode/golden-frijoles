@@ -320,7 +320,7 @@ test('every delivery RPC is service-role-only — the REVOKEs have teeth', async
   const calls: [string, Record<string, unknown>][] = [
     [
       'claim_deliveries',
-      { p_project_id: zero, p_limit: 1, p_now: new Date().toISOString(), p_stale_after_ms: 1000 },
+      { p_project_id: zero, p_limit: 1, p_now: new Date().toISOString(), p_stale_after_ms: 1000, p_max_attempts: 6 },
     ],
     ['projects_with_due_work', { p_now: new Date().toISOString(), p_limit: 1, p_stale_after_ms: 1000 }],
     ['delivery_health', { p_project_id: zero }],
@@ -371,6 +371,11 @@ test('every delivery RPC is service-role-only — the REVOKEs have teeth', async
     expect(functionLevelDenial, `${fn}: expected a function-level denial, got ${code} ${message}`).toBe(true)
     expect(message).not.toContain('row-level security')
   }
+
+  // PGRST202 above would also pass if the 5-argument claim_deliveries did not exist at all, so pin
+  // the one this epic re-created to a real permission denial (delivery-stale-reclaim-uncounted S1.1).
+  const { error: claimError } = await anonClient.rpc('claim_deliveries', calls[0][1])
+  expect(claimError?.code, 'claim_deliveries(…, p_max_attempts) exists and refuses anon').toBe('42501')
 })
 
 test('the per-project destination CAP is enforced in-transaction (write-amplification guard)', async () => {

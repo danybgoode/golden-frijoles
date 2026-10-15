@@ -83,12 +83,12 @@ _Generated: 2026-10-15_
 ## signed-in (24)
 
 - `apps/web/e2e/app-auth.spec.ts:121` · auth-path — authed member-vs-owner HTTP path needs a real session (browser smoke owed to Daniel), so the
-- `apps/web/e2e/delivery-replay.spec.ts:18` · auth-path — The authenticated /app replay + delivery-history UI is a real-session BROWSER smoke owed to Daniel.
-- `apps/web/e2e/delivery-replay.spec.ts:229` · other — browser smoke owed to Daniel; this pins the delivery-level property it depends on.)
+- `apps/web/e2e/delivery-replay.spec.ts:20` · auth-path — The authenticated /app replay + delivery-history UI is a real-session BROWSER smoke owed to Daniel.
+- `apps/web/e2e/delivery-replay.spec.ts:231` · other — browser smoke owed to Daniel; this pins the delivery-level property it depends on.)
 - `apps/web/e2e/destinations.spec.ts:30` · auth-path — /app/destinations) is a real-session BROWSER smoke owed to Daniel — the same boundary
 - `apps/web/e2e/funnel.spec.ts:77` · other — assertions this test used to make) is the browser smoke owed to Daniel. The JSON endpoint above
 - `apps/web/e2e/hub.authed.spec.ts:10` · auth-path — by hand. That is precisely the "browser smoke owed to the product owner" WAYS-OF-WORKING says a
-- `Roadmap/01-growth-engine/delivery-stale-reclaim-uncounted/sprint-1.md:73` · other — Step 3 is a signed-in walkthrough, owed to the product owner unless a smoke account exists.
+- `Roadmap/01-growth-engine/delivery-stale-reclaim-uncounted/sprint-1.md:78` · other — Step 6 is a signed-in walkthrough, owed to the product owner unless a smoke account exists.
 - `Roadmap/01-growth-engine/flags-console-parity/RETROSPECTIVE.md:130` · money-path — **Owed to the product owner: the signed-in walkthroughs for all three sprints.** Every surface is credential-gated, so nothing in this repo reaches past the login redirect. Sprint 2's includes the money-path confirm on preview **and** production (cancel both).
 - `Roadmap/01-growth-engine/funnel-truth/sprint-2.md:101` · other — Step 4 is a signed-in step, owed to the product owner.
 - `Roadmap/01-growth-engine/north-star-multi-metric-read/RETROSPECTIVE.md:28` · other — **Owed to Daniel:** the signed-in look at https://goldenfrijoles.com/app/north-star/golden-frijoles (sprint-1 step 2). ~~The `_Intent_` word~~: answered yes on 2026-10-14.

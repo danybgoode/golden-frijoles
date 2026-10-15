@@ -29,7 +29,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { isDestinationDeliveryEnabled } from './flags'
 import { deliverWebhook, type DeliveryDisposition, DELIVERY_TIMEOUT_MS } from './webhook-delivery'
 import { serializeEnvelope, buildEventEnvelope, type CanonicalEventRow } from './delivery-payload'
-import { retryDecision } from './retry-policy'
+import { retryDecision, MAX_ATTEMPTS } from './retry-policy'
 
 /**
  * How many rows one dispatcher pass may take ownership of. Bounded because a dispatcher runs on a
@@ -61,6 +61,7 @@ type ClaimedRow = {
   project_id: string
   event_id: string
   destination_id: string
+  /** Attempts already charged, INCLUDING the one a stale reclaim presumes the lost worker made. */
   attempt_count: number
 }
 
@@ -136,6 +137,10 @@ export async function dispatchPendingDeliveries(
       p_limit: limit,
       p_now: now.toISOString(),
       p_stale_after_ms: staleAfterMs,
+      // The ONE retry budget (lib/retry-policy.ts). The claim charges a stale reclaim against it and
+      // dead-letters the row there once it is spent (20261016100000), so a row whose settle keeps
+      // failing cannot be re-sent forever (verify-spike F2).
+      p_max_attempts: MAX_ATTEMPTS,
     })
     if (claimError) throw new Error(`could not claim deliveries: ${claimError.message}`)
 
