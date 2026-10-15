@@ -1,7 +1,7 @@
 # Owed on screen — Retrospective
 
 _Closed: 2026-10-15_
-_Intent: yes | mostly | no_
+_Intent: yes_
 <!-- Did we build what the product owner meant? One word, THEIR answer: yes, mostly or no. Required by `epic-dod` only
      when the epic's seed or README carries a numeric `intent_match:` (intent-match D17); the calibration learns from
      it. Keep the line and leave exactly one of the three words between `_Intent: ` and the closing underscore. -->
@@ -40,7 +40,7 @@ _Crew (actual): claude-opus-5-5 ≈$23.92 · claude-sonnet-5-5 ≈$2.34 · revie
 
 ## Gaps / follow-ups
 **Owed to the product owner:**
-- The _Intent_ answer above.
+- ✅ The _Intent_ answer above (yes, 2026-10-15).
 - Switching `hub.owed_enabled` on in production and the Sprint 2 signed-in walkthrough (steps 2–5 of `sprint-2.md`).
 - The result read on the target (open owed checks 96 → 40), due ~2026-11-14: `node scripts/epic-read.mjs --epic owed-on-screen`.
 

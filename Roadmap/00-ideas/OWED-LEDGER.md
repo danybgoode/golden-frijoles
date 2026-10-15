@@ -6,14 +6,14 @@
 
 _Generated: 2026-10-15_
 
-**98 check(s) owed across 72 file(s)** · 5 cleared.
+**97 check(s) owed across 72 file(s)** · 6 cleared.
 
 | Who can clear it | Count | What it means |
 |---|---|---|
 | publish | 2 | A package publish (npm 2FA): the product owner today, a CI job once trusted publishing is on |
 | credential | 7 | Mints or uses a production credential: only the product owner, named every time |
 | ops | 5 | On the product owner's own accounts or machine |
-| judgment | 31 | An answer only the product owner can give: an _Intent_, an approval, a decision |
+| judgment | 30 | An answer only the product owner can give: an _Intent_, an approval, a decision |
 | signed-in | 24 | A signed-in production walkthrough: an agent can run it once a smoke account exists |
 | interactive | 20 | An interactive plugin or terminal walkthrough: an agent can script it in a scratch repo |
 | unsorted | 9 | Nothing above matched — **not a bin, a to-triage list** |
@@ -23,7 +23,7 @@ _Generated: 2026-10-15_
 | money-path | 1 | Touches checkout, payment or order state — run these first |
 | auth-path | 27 | Needs a real signed-in session a script cannot mint against production |
 | admin-only | 0 | Behind an admin surface |
-| other | 70 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
+| other | 69 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
 
 ## publish (2)
 
@@ -48,7 +48,7 @@ _Generated: 2026-10-15_
 - `Roadmap/09-platform-infra/plugin-1-0/RETROSPECTIVE.md:43` · other — **Owed to Daniel:** the `_Intent_` word above; Sprint 4's interactive walkthrough steps 2–5; your live routines that name a removed skill (sprint-3 step 7); and two decisions: rename the Notion `Stage` select option (it stores the key "Grooming"), and whether to re-approve the c…
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:55` · other — Remove the three account copies of the coaches.
 
-## judgment (31)
+## judgment (30)
 
 - `Roadmap/01-growth-engine/delivery-stale-reclaim-uncounted/RETROSPECTIVE.md:58` · other — Did we build what was meant? (owed to Daniel: one word)
 - `Roadmap/01-growth-engine/drill-impact-for-agents/sprint-2.md:60` · other — Risk:** low (a judgment, owed to the product owner by name)
@@ -69,7 +69,6 @@ _Generated: 2026-10-15_
 - `Roadmap/02-commercial/one-epic-page/RETROSPECTIVE.md:47` · other — **Owed to Daniel:** the signed-in walkthroughs of both sprints; the `_Intent_` word; approving a picture of the new page for the design gate (D5 — the seed sketch's kinds are not in `surface.map.json`).
 - `Roadmap/02-commercial/one-header-one-name/RETROSPECTIVE.md:53` · other — The retro's `_Intent_` word.
 - `Roadmap/02-commercial/one-header-one-name/RETROSPECTIVE.md:54` · other — **Owed to Daniel (D10):** re-approve `design-system/surfaces/hub-board*.surface` and `hub-roadmap-areas.surface` with the new words. Their text still reads "To groom … Ready to build". The gate measures structure, not words, so this doesn't block anything.
-- `Roadmap/02-commercial/owed-on-screen/RETROSPECTIVE.md:43` · other — The _Intent_ answer above.
 - `Roadmap/02-commercial/portfolio-view/RETROSPECTIVE.md:47` · other — **Owed to Daniel:** the signed-in walkthroughs (sprint-1 step 3, sprint-2 steps 1–4), placing his products on the loop, and the retro's `_Intent:_` answer.
 - `Roadmap/02-commercial/result-record/RETROSPECTIVE.md:75` · auth-path — **Owed to Daniel:** sprint 1's grooming walkthrough (steps 1–2) and sprint 2's end-to-end read (ship a tiny epic with today's read date → session line → Today → `epic-read` → approve → push → bean). Then the `_Intent_` word.
 - `Roadmap/09-platform-infra/ci-diet/RETROSPECTIVE.md:59` · other — **Owed to Daniel:** the `_Intent:_` answer above.
