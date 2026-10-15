@@ -75,7 +75,8 @@ export type BoardCard = {
 }
 
 export type BetMeasureCard = {
-  targetSegment: 'everyone'
+  /** funnel-truth D13 — `everyone` or a segment key the project may (or may not yet) define. */
+  targetSegment: string
   adoptedEvent: string
   retainedEvent: string | null
   retentionDays: number
@@ -200,7 +201,7 @@ export function toCard(row: RoadmapRow, project: string | null = null): BoardCar
     measure:
       row.grain === 'Epic' && typeof r.flag_key === 'string' && typeof r.adopted_event === 'string'
         ? {
-            targetSegment: 'everyone' as const,
+            targetSegment: typeof r.target_segment === 'string' ? r.target_segment : 'everyone',
             adoptedEvent: r.adopted_event,
             retainedEvent: typeof r.retained_event === 'string' ? r.retained_event : null,
             retentionDays: typeof r.retention_days === 'number' ? r.retention_days : 7,

@@ -402,8 +402,15 @@ test('a push carrying a bet measurement stores it; a named segment and a bad win
     })
   )
   assert.equal(ok.ok, true)
+  // funnel-truth D13 — a named segment (kebab) pushes; an unknown one is the screen's business, not the push's.
+  const named = parseRoadmapPush(
+    push({ items: [row({ target_segment: 'power-users', adopted_event: 'x' } as Partial<RoadmapRow>)] })
+  )
+  assert.equal(named.ok, true)
   for (const bad of [
     { target_segment: 'power_users' },
+    { target_segment: 'Power-Users' },
+    { target_segment: 'a'.repeat(49) },
     { retention_days: 0 },
     { adopted_event: 'has space' },
   ]) {
