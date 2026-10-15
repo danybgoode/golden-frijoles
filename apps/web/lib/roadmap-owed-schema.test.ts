@@ -115,4 +115,13 @@ test('the producer\u2019s bounds are the schema\u2019s (scripts/owed-ledger.mjs 
   assert.ok(
     schema.includes(".regex(/^[A-Za-z0-9_][A-Za-z0-9_./-]*$/, 'owed file must be a repo-relative path')")
   )
+  // The other two file bounds, on both sides: the producer drops what the schema refuses.
+  assert.equal(num('OWED_PUSH_FILE_MAX'), 300)
+  assert.ok(src.includes(".split('/').includes('..')"), 'the producer refuses a climbing path')
+  assert.equal(
+    parseRoadmapPush(push({ owed: [check({ epic: null, file: `a/${'b'.repeat(299)}` })] })).ok,
+    false
+  )
+  assert.ok(parseRoadmapPush(push({ owed: [check({ epic: null, file: `a/${'b'.repeat(298)}` })] })).ok)
+  assert.equal(parseRoadmapPush(push({ owed: [check({ epic: null, file: 'a/../b.md' })] })).ok, false)
 })
