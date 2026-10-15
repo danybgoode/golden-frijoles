@@ -6,6 +6,8 @@ import { listExperimentRegistries } from './experiments'
 import { getFlagRegistryView } from './flag-registry'
 import { projectFlagRows } from './flag-list-view'
 import { getLatestArtifact } from './report-artifacts'
+import { isOwedOnScreenEnabled } from './flags'
+import { getOwedForViewer } from './owed-read'
 import { epicFinopsFromArtifact } from './roadmap-finops'
 import { readLoopStage } from './loop-stage-store'
 import { assemblePortfolio, type PortfolioReaders, type PortfolioRow } from './portfolio-model'
@@ -33,6 +35,8 @@ const readers: PortfolioReaders = {
   podReport: (projectId) => getLatestArtifact(projectId, 'pod_report'),
   roadmap: (projectId) => getLatestArtifact(projectId, 'roadmap'),
   epicSpend: epicFinopsFromArtifact,
+  // Replaced per call in `getPortfolio`: it needs the viewer and the flag. Nothing may be said until it is.
+  owed: async () => null,
 }
 
 /**
@@ -40,5 +44,15 @@ const readers: PortfolioReaders = {
  * workspace (both decided by `getWorkspaceProjects`, which returns [] on any error: it fails closed).
  */
 export async function getPortfolio(userId: string, workspaceId: string): Promise<PortfolioRow[]> {
-  return assemblePortfolio(await getWorkspaceProjects(userId, workspaceId), readers)
+  // owed-on-screen S2.3 (D9) — the flag FIRST: off, no owed read happens at all. On, each product's count is its OWN
+  // push, one project per read, by an id `getWorkspaceProjects` returned; `getOwedForViewer` re-checks that the viewer is
+  // a member of it, so a project they cannot open contributes nothing.
+  const owedOn = await isOwedOnScreenEnabled()
+  const owed = owedOn
+    ? async (projectId: string) => {
+        const read = await getOwedForViewer(projectId, userId)
+        return read.ok ? read.items.length : null
+      }
+    : readers.owed
+  return assemblePortfolio(await getWorkspaceProjects(userId, workspaceId), { ...readers, owed })
 }

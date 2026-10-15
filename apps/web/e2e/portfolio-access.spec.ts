@@ -72,6 +72,7 @@ function recordingReaders(seen: Set<string>): PortfolioReaders {
     },
     podReport: note,
     roadmap: note,
+    owed: note,
     epicSpend: () => [],
   }
 }
