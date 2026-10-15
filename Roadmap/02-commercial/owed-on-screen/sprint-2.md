@@ -3,7 +3,7 @@ epic: owed-on-screen
 sprint: 2
 title: "On screen"
 risk: low
-phase: In review
+phase: Shipped
 stories_total: 4
 stories:
   - id: S2.1
@@ -12,32 +12,32 @@ stories:
     i_want: "its owed checks listed, with their kind and where each was written"
     so_that: "I can close the epic's loop from its own page"
     risk: low
-    status: done
+    status: shipped
   - id: S2.2
     title: "The board has one Waiting on you band"
     as_a: "a founder looking across epics"
     i_want: "every owed check in one band, split by who can clear it"
     so_that: "I clear what only I can do, and see what an agent could take"
     risk: low
-    status: done
+    status: shipped
   - id: S2.3
     title: "The portfolio card counts open checks"
     as_a: "a founder with several products"
     i_want: "each product's open owed count on its portfolio card"
     so_that: "I see which product has loose ends at a glance"
     risk: low
-    status: done
+    status: shipped
   - id: S2.4
     title: "The flag ships dark and the view is measured"
     as_a: "the product owner"
     i_want: "the screens behind hub.owed_enabled, with owed_viewed counted"
     so_that: "I roll it out when I choose and know whether it's used"
     risk: low
-    status: done
+    status: shipped
 ---
 # Owed on screen — Sprint 2: On screen
 
-**Status:** 🟦 In review — PR #376 (built `0d7a1e6`…; flag `hub.owed_enabled` is `off v1` in production)
+**Status:** ✅ shipped 2026-10-15 — PR #376, merge `635f2dc` (commits `0d7a1e6`, `f0824aa`, `35f895f`, `f063182`, `6951f64`, `bfb80e4`); dark: `hub.owed_enabled` is `off v1` in production
 
 ## Stories
 <!-- Keep the heading shape `### Story 2.M — <title>`; append ✅ + the commit ref when it ships. Name the story in
@@ -120,3 +120,10 @@ Env: production · https://goldenfrijoles.com
 Steps 2–5 are signed-in steps, owed to the product owner.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+**Run 2026-10-15 (architect):**
+1. ✅ `frijoles flags get hub.owed_enabled --project golden-frijoles` → production `off v1` (created dark 2026-10-15T06:15Z).
+6. ✅ Signed out, `/hub/golden-frijoles/board` and the epic page carry no band and no owed section (checked after the
+   deploy; also asserted by `hub.spec.ts` on every CI run).
+
+Steps 2–5 (signed in; step 3 switches the flag on) are owed to the product owner.

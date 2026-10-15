@@ -23,7 +23,11 @@ one-liner + why + date shape.
   the push contract and the workflow that pushes on merge in one PR: the first two pushes reached the OLD route, which
   dropped the new `board` block, and the board stayed stale until the next event re-pushed. When a merge changes both a
   route and a client that calls it on merge, either make the client wait for the deployment (`deployment_status`), or
-  make the payload one the old route accepts in full and verify after the deploy. *(2026-10-02.)*
+  make the payload one the old route accepts in full and verify after the deploy. *(2026-10-02.)* **Paid a second
+  time** by owed-on-screen (2026-10-15): the merge's push beat its deploy by 29 s, the old non-strict schema dropped
+  `owed` and answered `unchanged` — green run, nothing stored. Two incidents make it a class: the fix is structural
+  (the push workflow runs on `deployment_status` for production), and until then verify the STORED artifact after a
+  contract change, never the run's green.
 - **A committed generated file cannot hold facts that move without a commit — nor sort by them.** BUILD-ORDER.md
   could not carry Building/QA (they move on a branch push, not a commit), and its Shipped section, sorted by git dates,
   reordered itself in CI's depth-1 clone and failed the freshness guard. Committed output sorts by committed data
@@ -2120,7 +2124,9 @@ one-liner + why + date shape.
 - **In zsh, `set -- $spec` and `$PATHS` do not word-split.** A loop over "module invariant depth"
   strings ran nine model checks with empty arguments and printed nine blank results that looked
   like output. Put such loops in a `bash` script, which the reproduce doc needs anyway. The same trap bit
-  `git add $FILES` in `intent-match` (2026-09-30): use `${=FILES}` or an array (`(${(f)"$(…)"})`).
+  `git add $FILES` in `intent-match` (2026-09-30): use `${=FILES}` or an array (`(${(f)"$(…)"})`). And
+  `T="node --test"; $T spec.ts` runs a command NAMED "node --test" (owed-on-screen, 2026-10-15): four mutation checks
+  printed nothing and looked run. Use a shell function; a mutation check counts only when its red is on screen.
 - **A backticked commit message in double quotes is a zsh parse error, or worse, command substitution.**
   (`intent-match`, 2026-09-30.) Commit and PR bodies go through a quoted heredoc (`-F - <<'EOF'`), always.
 
@@ -2338,7 +2344,8 @@ one-liner + why + date shape.
   erase its ledger. Gate the exit on the fact you mean ("the parent project no longer exists"), and pin the refusal.
 - **A shared script module must be declared in every skill that runs it, or the kit ships without it.** The kit is built
   from `requires_scripts`, not from imports; check the BUILT kit (`build-kit` + every relative import resolves), not the
-  source tree.
+  source tree. A lazy `import()` does not shrink anything: the build-view and refine vendor bundles follow dynamic
+  imports too (owed-on-screen, 2026-10-15).
 - **A file the roadmap push depends on cannot live in a folder the kit makes private** (`Roadmap/00-strategy/` is
   git-ignored on public repos before a coach's first write). It goes beside the roadmap it describes.
 - **Two local e2e runners on one machine share port 3110 and one database**: a spec can silently hit the OTHER worktree's
@@ -2359,3 +2366,12 @@ one-liner + why + date shape.
 - **Auto-loading a repo's env file is a new trust boundary.** A cloned repo's `.env.local` that names only a host would
   have received the person's own key from their shell. Take the URL and the key from ONE source, and never auto-read a
   file git tracks (someone else committed it).
+
+### A producer and its validator (owed-on-screen, 2026-10-15)
+- **A producer must never send what its validator refuses when one bad item fails the whole payload.** The extract
+  passed ledger items through as found; the server's bounds (a repo-relative path, ≤300 chars, ≤100 per epic) would
+  have 400'd a consumer's entire roadmap push for one `(group)` spec path. Conform the output to the schema's bounds at
+  the producer, name what was left off, and pin the two sides' bounds together in a spec.
+- **A member-only field on a public read is stripped at the read seam, not at each renderer.** Ten readers serialized the
+  public roadmap; one `artifactFromRow(…, { keepOwed })` covers them all, and a closed registry spec turns a new raw
+  reader into a red test.

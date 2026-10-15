@@ -446,6 +446,13 @@ independently shippable slice of value.
   last two months; the Steps of AI Adoption say where you are, what the next step needs and hand you a prompt for your
   agent; every section has a line and a link. Share links keep spend, the table and console links team-only.
   **Owed:** signed-in walkthroughs and a client share link opened signed out.
+- ✅ [Owed on screen](02-commercial/owed-on-screen/README.md) — **shipped 2026-10-15, dark** (#375, #376; plugin + kit
+  1.10.0). The roadmap push carries the project's open owed checks (derived live from the owed ledger, 96 at ship), and
+  only a member ever receives one: every roadmap read strips them at one seam, the public project's anonymous readers
+  and connector get none. Behind `hub.owed_enabled` (`off v1` in production): an "Owed" section on the epic page, one
+  "Waiting on you" band on the board split by who can clear each check, and "N owed" on the portfolio, with
+  `owed_viewed` counted. **Owed:** switching the flag on and the signed-in walkthrough; the _Intent_ answer; the read on
+  96 → 40 open checks (~2026-11-14).
 - ✅ [One epic page](02-commercial/one-epic-page/README.md) (launch epic 5) — **shipped and live 2026-10-07** (#295,
   #297; plugin + kit 0.34.0). Every card, Roadmap row, workspace card and ⌘K epic opens one page,
   `/hub/<p>/epic/<e>`; old `?card=` links redirect there with their filters. It shows where the epic is (chips and a
@@ -626,6 +633,9 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-15**: `owed-on-screen` **shipped dark** (≈$26.25 vs $15–34): owed checks ride the roadmap push, members
+  only, and the epic page, board and portfolio show them once `hub.owed_enabled` is on. The verifier caught a producer
+  that could 400 a consumer's whole push; the merge's push raced its deploy a second time (now a LEARNINGS class).
 - **2026-10-14**: `delivery-stale-reclaim-uncounted` **shipped** (≈$8.77 vs $5–17): a delivery whose settle keeps failing
   is now charged per presumed send, logged as `unconfirmed`, and dead-lettered at the budget instead of re-sent every
   5 minutes forever (verify-spike F2). The verifier found a real lock-order deadlock in the first fix; a two-transaction
