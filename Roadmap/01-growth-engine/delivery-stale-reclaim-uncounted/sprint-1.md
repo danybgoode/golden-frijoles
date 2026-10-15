@@ -3,7 +3,7 @@ epic: delivery-stale-reclaim-uncounted
 sprint: 1
 title: "A stale reclaim charges the presumed attempt"
 risk: high
-phase: Shaping
+phase: Building
 stories_total: 1
 stories:
   - id: S1.1
@@ -63,13 +63,18 @@ Env: production · https://goldenfrijoles.com
    → the new `…_delivery_stale_reclaim_charge.sql` shows on both the Local and the Remote side.
 2. Run `supabase db query --linked "select pg_get_function_identity_arguments(oid) from pg_proc where proname = 'claim_deliveries'"`.
    → exactly one row, ending in `p_max_attempts integer`.
-3. Open https://goldenfrijoles.com/app/destinations/golden-frijoles signed in.
-   → the destinations page loads and its health numbers look as they did before the merge (no row went dead from
-   the fix itself).
-4. After the next cron tick (at most 5 min), check the dispatcher's latest run in the Vercel logs for
-   `/api/internal/dispatch-deliveries`.
-   → no `could not claim deliveries` error.
+3. Run `supabase db query --linked "select count(*) from claim_deliveries('00000000-0000-0000-0000-000000000000'::uuid, 1, now(), 300000)"`.
+   → `0`: the old 4-argument call shape still resolves through the `DEFAULT` (no project has that id, so nothing
+   is claimed or changed).
+4. Run `curl -s -X POST "$SUPABASE_URL/rest/v1/rpc/claim_deliveries" -H "apikey: $ANON" -H "Authorization: Bearer $ANON" -H 'Content-Type: application/json' -d '{"p_project_id":"00000000-0000-0000-0000-000000000000","p_limit":1,"p_now":"2026-10-14T00:00:00Z","p_stale_after_ms":1000,"p_max_attempts":6}'`
+   with the production URL and the public anon key.
+   → refused at the function level (`42501 … permission denied for function claim_deliveries`), never a row list.
+5. Run `frijoles flags get delivery.destinations_enabled --project golden-frijoles`.
+   → the production row still reads `off v1` (the dispatcher is dark; this fix changes nothing a customer sees
+   until it is turned on).
+6. Open https://goldenfrijoles.com/app/destinations/golden-frijoles signed in.
+   → the destinations page loads and its health numbers look as they did before the merge.
 
-Step 3 is a signed-in walkthrough, owed to the product owner unless a smoke account exists.
+Step 6 is a signed-in walkthrough, owed to the product owner unless a smoke account exists.
 
 If any step fails, note the step number + what you saw — that's the bug report.
