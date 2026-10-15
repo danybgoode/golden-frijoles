@@ -1,7 +1,8 @@
 ---
 status: scaffolded   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Shaping       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+phase: Building                   # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
+locked_at: "2026-10-15T05:56:51Z"
 slug: owed-on-screen
 title: "Owed on screen"
 area: 02-commercial
@@ -15,7 +16,7 @@ quote_high_usd: 34
 quote_basis: "M, n=24, p25–p75"
 hypothesis: "We believe that showing every owed check on the epic page and in one band on the board, for founders who own the product, will cut the open owed checks, because today they live only in a generated file nobody opens (85 open on 2026-10-14, 24 of them answers only the owner can give). We'll know when the open count falls."   # the result record — copied from the seed by scaffold-epic; null = no target (never an error)
 target_metric: "open owed checks (OWED-LEDGER.json total)"   # which number: a North Star input key (grounded) or free text (not grounded)
-target_from: 83   # from what, a number
+target_from: 96   # from what, a number
 target_to: 40       # to what, a number
 read_date: null       # YYYY-MM-DD; null = 30 days after shipping, derived by the extract and never written back
 verdict: null        # proven | disproven | unclear — stamped by `node scripts/epic-read.mjs --epic <slug> --write`
@@ -53,9 +54,9 @@ build_order: 92      # integer position in the ONE global build sequence — the
 
 ## Why
 Owed checks (the walkthroughs, credentials, publishes and answers an epic leaves for its owner) live only in a
-generated file: 83 open on 2026-10-14, 24 of them answers only the owner can give. This puts them where a founder
+generated file: 96 open on 2026-10-15, 30 of them answers only the owner can give. This puts them where a founder
 already looks, on the epic page, in one band on the board and as a count on the portfolio, for members only. We'll
-know when the open count falls from 83 to 40 within 30 days of shipping.
+know when the open count falls from 96 to 40 within 30 days of shipping.
 
 
 ## Platform-first note
@@ -84,6 +85,79 @@ Sprint 1 first: the push contract and the member-only seam, with no screen. Spri
 `hub.owed_enabled`, off in production until the product owner sets it on. `roadmap-extract.mjs` is mirrored to
 `skills/`, so S1.1 is also a plugin release (`skills/RELEASING.md`). No migration.
 
+
+## Architecture lock (D1…D12) — locked 2026-10-15, before any builder started
+
+Verified against live code on `main` (`d1eafaa`) and live production data (read-only, 2026-10-15). Builders cite these;
+each rule lives where it says, once.
+
+**Deviations the live system forced, said out loud:**
+- **`OWED-LEDGER.json` holds counts only — no items** (`{ total, cleared, files, byCategory, byKind, generatedAt }`;
+  `scripts/owed-ledger.mjs` writes the items only to the markdown). The S1.1 text ("reads `OWED-LEDGER.json` and
+  attaches each item") is fiction as written. Corrected in D1: the push **derives** the items live with the ledger's own
+  functions, and the committed JSON's presence is only the opt-in.
+- **Per-row `owed` is replaced by ONE top-level `owed` block on the envelope** (D2). Per-row would ride every
+  `items` reader (`.passthrough()` keeps unknown fields): the journey, palette, epic-index, share link, finops, pod
+  report, connector — ten readers each needing to remember to drop it. One block is one key to strip, and
+  `buildRows()` (BUILD-ORDER, terminal, Notion) stays byte-identical. `owed_unattached` becomes `epic: null`.
+- **The baseline is 96, not 83** (`node scripts/owed-ledger.mjs`, 2026-10-15: 96 open across 72 files). `target_from`
+  corrected 83 → 96; `target_to` (40) is the product owner's and stays.
+- **The kit does not ship `owed-ledger.mjs` today** (no skill lists it in `requires_scripts`). Making `roadmap-push.mjs`
+  import it means `refine`, `report` and `setup` declare it (+ `lib/reporting-config.mjs` for `refine`), checked on the
+  BUILT kit (LEARNINGS: a shared module must be declared in every skill that runs it).
+
+**Live data (2026-10-15):** `report_artifacts` roadmap rows: `golden-frijoles` v441 (546,740 bytes, cap 4,194,304),
+`aomx` v8. No payload carries an `owed` key. `hub.owed_enabled` does not exist in the catalog yet. 96 owed items
+≈ 50 KB on the push.
+
+- **D1 — Derivation.** `scripts/owed-ledger.mjs` exports `owedForPush({ root, epicSlugs })`: returns `null` when
+  `Roadmap/00-ideas/OWED-LEDGER.json` is absent (the opt-in — AC4), or when the ledger's own refusal rule fires (no spec
+  dir / a configured dir missing — `main()`'s rule, extracted, never a second copy); otherwise the OPEN items of
+  `buildLedger(gather(...))`, each `{ epic, text, kind, category, file, line }`. `gather` takes `root` (today it reads the
+  module's `ROOT`). Count === the ledger's `total` (AC1), asserted in its pure spec.
+- **D2 — Attribution.** `epic` = the slug of the epic folder holding `file` (`Roadmap/<NN-area>/<slug>/…` where `<slug>` is
+  in `epicSlugs`), else `null` (specs under `apps/*/e2e`). Pure, in `owed-ledger.mjs`, spec'd beside its tests.
+- **D3 — Envelope.** `roadmap-push.mjs → envelopeFor` adds `owed` (when non-null) via `buildEnvelope(..., { owed })`, like
+  `horizon`. `text` is cut to 500 chars with `…` in the extract (the source keeps the whole note).
+- **D4 — Schema** (`lib/roadmap-artifact-schema.ts`, top-level, `.nullish()` so an older pusher validates — AC2):
+  `owed: z.array({ epic: slug|null, text: 1..500, kind: z.enum(OWED_KINDS), category: z.enum(OWED_CATEGORIES), file:
+  repo-relative path ≤300 (no `..`, no scheme), line: int ≥1 }).max(1000)`; superRefine: ≤100 per epic, and every non-null
+  `epic` names an `Epic` row in `items` (the destinations rule's shape). Messages name the field (AC3). `OWED_KINDS` /
+  `OWED_CATEGORIES` are COPIES of `KINDS` / `CATEGORIES` in `scripts/owed-ledger.mjs`, pinned by a spec (the
+  `ROADMAP_STAGES` precedent). The push route stores `owed` beside `items` (it is not in `items`, so it would be dropped).
+- **D5 — The strip is the read seam** (CODE-QUALITY §2: unrepresentable, not remembered). `lib/report-artifacts.ts`'s
+  `getLatestArtifact` / `getLatestArtifactBefore` return a roadmap payload WITHOUT `owed`, via a pure
+  `withoutOwed(payload)` in a zero-import `lib/owed.ts`. Every existing reader (hub pages, connector, CLI, share link,
+  portfolio, finops, pod report) is covered with no edit.
+- **D6 — The one raw read.** `lib/report-artifacts.ts` exports `getLatestRoadmapWithOwed(projectId)`. Its callers are a
+  closed registry pinned by a source-guard spec: `app/api/v1/roadmap/push/route.ts` (the D16 unchanged-board compare must
+  see `owed`, or every push is a new version) and `lib/owed-read.ts`. A third caller turns the spec red.
+- **D7 — The member gate.** `lib/owed-read.ts` (server-only): `getOwedForViewer(projectId, userId | null)` →
+  `{ ok: true, items, generatedAt, sourceCommit } | { ok: false }`. `userId` null → `{ ok: false }` with no read; else
+  `getMembershipByProjectId(userId, projectId)` (fails closed, re-checks the workspace) → null ⇒ `{ ok: false }`. The
+  decision is the pure `owedForViewer(payload, isMember)` in `lib/owed.ts` (`[]` unless member) — the spec target.
+  `projectId` is always the id the page's own read resolved (one-epic-page D2), never re-derived from a slug.
+- **D8 — Connector.** `lib/public-connector-scrub.ts` DROPS (not "hidden") keys `owed` / `owed_unattached` anywhere —
+  belt to D5's braces, so a future tool that reads raw cannot leak to the anonymous reader. Api spec on the public
+  project's anonymous connector (`get_horizon` + the epic reads): no `owed` key in any reply (AC S1.2-2).
+- **D9 — Flag.** `GATES.owedOnScreen = { key: 'hub.owed_enabled', envVar: 'HUB_OWED_ENABLED', fallback: false }` (an
+  enablement, born dark); `isOwedOnScreenEnabled()` in `lib/flags.ts`; `HUB_OWED_ENABLED=false|true` in
+  `ci/gates.off.env` / `ci/gates.on.env`. Catalog: `frijoles flags create hub.owed_enabled --enablement --all-envs`;
+  `frijoles flags get` must print `off vN` in production. Flag off ⇒ the three screens skip the owed read entirely.
+- **D10 — Grouping.** `lib/owed.ts → groupOwed(items)`: `waiting` (judgment, credential, publish, ops), `agentCould`
+  (signed-in, interactive), `unsorted`. The kind → group map is total over `OWED_KINDS` (a `Record`, so a new kind is a
+  build error). Pure spec.
+- **D11 — Measurement.** `owed_viewed` joins `lib/self-track-events.ts`, mapped to `HUB_ENGAGEMENT_SIGNAL_KEY` (already
+  registered on the self tenant — no prod feature registration owed). Fired via `after()`, with the member's user id
+  (person = user subject, one-bet-wired), once per page view that rendered ≥1 owed check, on the epic page, the board and
+  the portfolio.
+- **D12 — Release + order.** S1.1 touches mirrored `scripts/` → plugin+kit release **1.10.0** in the S1 PR
+  (`skills/RELEASING.md`, `plugin-checksums.mjs`). No migration. S1 ships with no screen; S2 ships dark behind D9.
+
+**Routing.** S1 (push contract + authorization boundary, high): the architect (Opus) builds it — never delegated
+(WAYS-OF-WORKING: auth/tenancy stay strongest). S2 (four low, well-specified stories on S1's seams): one Sonnet builder
+on `feat/owed-on-screen-s2`, stacked. Review on every PR: `review-route.mjs` (general + security lens on S1), plus the
+mandatory fresh `verifier` (high-risk epic). Built in place (one session in this checkout, one builder at a time).
 
 ## Definition of Done (epic)
 - [ ] All sprints merged to `main` + smoke-tested (gaps stated — `node scripts/owed-ledger.mjs` counts what is still owed)

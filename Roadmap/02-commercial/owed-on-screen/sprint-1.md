@@ -3,7 +3,7 @@ epic: owed-on-screen
 sprint: 1
 title: "The data, member-only"
 risk: high
-phase: Shaping
+phase: Building
 stories_total: 2
 stories:
   - id: S1.1
@@ -63,6 +63,17 @@ anything they serialize.
 3. A pure spec on the function, plus an api spec on the public project for criterion 2.
 
 **Risk:** high (an authorization boundary on a public project). Security lens on review.
+
+## Build contract (locked by the architect before the builder started)
+Cites the epic README's D1–D8 and D12; restates none of them.
+- **S1.1** → D1 (`owedForPush`, the JSON's presence is the opt-in), D2 (attribution), D3 (envelope), D4 (schema + the
+  route stores `owed`), D12 (release 1.10.0; `refine`/`report`/`setup` declare `owed-ledger.mjs`, checked on the built kit).
+  Mirror every edited `scripts/` file to `skills/template/scripts/` byte-for-byte.
+- **S1.2** → D5 (strip at `lib/report-artifacts.ts`), D6 (the raw read + its caller registry spec), D7 (`lib/owed.ts`
+  pure + `lib/owed-read.ts` gate), D8 (scrub drop + anonymous connector api spec). Mutation-check D5, D6 and D7 (break
+  the line, see red, revert, `git diff HEAD` clean).
+- No screen in this sprint. Corrected acceptance: S1.1-4 reads "a repo with no `OWED-LEDGER.json` pushes exactly as
+  before" (unchanged); S1.1-1's "matching the ledger's count" = `node scripts/owed-ledger.mjs --json`'s `total`.
 
 ## Sprint QA
 - **api spec(s):** S1.1 → a push spec beside the existing roadmap-push specs; S1.2 → connector spec on the public

@@ -3,7 +3,7 @@ epic: owed-on-screen
 sprint: 2
 title: "On screen"
 risk: low
-phase: Shaping
+phase: Locking architecture
 stories_total: 4
 stories:
   - id: S2.1
@@ -75,6 +75,25 @@ roll it out when I choose and know whether it's used.
 `owed_viewed` is tracked through `trackSelfEvent`, once per page view that rendered at least one owed check. A browser
 spec renders the board with the flag on and off.
 **Risk:** low
+
+## Build contract (locked by the architect before the builder started)
+Cites the epic README's D7, D9, D10, D11; builds only on S1's seams (`lib/owed.ts`, `lib/owed-read.ts`).
+- **Every screen:** `if (await isOwedOnScreenEnabled())` FIRST, then `getOwedForViewer(<the id the page already
+  resolved>, <session user id or null>)`. Flag off or `{ ok: false }` ⇒ render exactly what renders today (no section, no
+  band, no count, no empty state).
+- **S2.1** epic page: an "Owed" section (text, kind in words, `file:line` linked through the page's existing repo base
+  like `EpicDocs`) for `items` where `epic === card.slug`; absent when none.
+- **S2.2** board: one "Waiting on you" band from `design-system/bands.tsx` (`Band`, `TaskList`, `BandEmpty`), three groups
+  per D10, each line naming its epic and linking `/hub/<slug>/epic/<epic>` (unattached lines name their file). The push's
+  freshness line (`formatFreshness` of the owed read's `generatedAt`/`sourceCommit`). Empty state when the read is ok and
+  holds zero. Project board only — the workspace board is out of scope.
+- **S2.3** portfolio: the count per card through `getOwedForViewer(project.id, userId)` inside `getPortfolio` (the
+  project list stays `getWorkspaceProjects()`); "N owed" when N > 0, nothing at 0 or on `{ ok: false }`.
+- **S2.4** D9 row + `ci/gates.*.env` + catalog create (`off vN` in production, verified); D11 `owed_viewed`; a browser
+  spec renders the board ON (ci on-server) and asserts the band's absence on the OFF server, following the existing
+  `*-dark` spec pattern.
+- Visual gate: with the flag off nothing changes, so no approved state moves; the lit band is a new state left unapproved
+  (named in the PR body).
 
 ## Sprint QA
 - **api spec(s):** pure specs for grouping and the count; browser spec for the band on/off (S2.4).
