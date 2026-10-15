@@ -357,7 +357,13 @@ one-liner + why + date shape.
 - **When a feature reads data someone else must send, test it from the sender's instructions.** One bet, wired passed
   every unit test while its funnel could never fill: the docs never told the app to report evaluations, and the read
   keyed them on the server's own user. Write one test that sends the data exactly as the shipped guidance says.
-  *(one-bet-wired, 2026-10-10.)*
+  *(one-bet-wired, 2026-10-10.)* **The same holds inside the pipeline: a spec that hand-builds the middle of a path
+  skips its producer.** funnel-truth's segment spec pushed a hand-built row and stayed green while the real extractor
+  turned every named segment into null (read as everyone); the verifier found it, outside the diff. Test a new field
+  from where it is written (README → extractor → push → board), not from where it is read. *(funnel-truth, 2026-10-15.)*
+- **CI's gates-off pass runs BEFORE `seed:demo`.** A dark spec that assumes the demo project's fixtures 404s there, and
+  its failure stops the whole ON api suite from running, while it passes locally on a DB that remembers earlier runs.
+  A dark spec provisions what it reads (look-then-insert, as `flag-funnel-dark.spec.ts`). *(funnel-truth, 2026-10-15.)*
 - **A lock decision is most at risk in the NEXT sprint's convenience code.** D19 said "the Hub never computes a
   stage" and S2's board obeyed it; S4's Roadmap tab, written for a different story, quietly derived stages from the old
   `status` field for pre-stage pushes, and linked them to cards the board could not open. Before building a view, grep

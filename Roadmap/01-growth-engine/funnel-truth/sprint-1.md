@@ -3,7 +3,7 @@ epic: funnel-truth
 sprint: 1
 title: "The trend"
 risk: high
-phase: Building
+phase: Shipped
 stories_total: 4
 stories:
   - id: S1.1
@@ -12,32 +12,32 @@ stories:
     i_want: "its funnel computed for each month (or week) people first got it, back to the first exposure"
     so_that: "I see whether adoption and return improve over time, not one number"
     risk: low
-    status: in-review
+    status: shipped
   - id: S1.2
     title: "A year of events, read honestly"
     as_a: "a founder reading a busy feature's trend"
     i_want: "the whole life read within a bound, and any period the read couldn't finish said in words"
     so_that: "a cut-off read never looks like a drop"
     risk: high
-    status: in-review
+    status: shipped
   - id: S1.3
     title: "The trend on the flag page and the epic page"
     as_a: "a founder reading a feature or a bet"
     i_want: "the trend drawn where I already read its funnel"
     so_that: "I judge it without exporting anything"
     risk: low
-    status: in-review
+    status: shipped
   - id: S1.4
     title: "Agents read the trend"
     as_a: "a founder's agent"
     i_want: "frijoles funnel <key> --by month and the connector's get_tars_funnel by parameter"
     so_that: "I can answer how a feature performed over the last year without a screen"
     risk: low
-    status: in-review
+    status: shipped
 ---
 # Funnel truth — Sprint 1: The trend
 
-**Status:** 🟦 In review
+**Status:** ✅ Shipped 2026-10-15 — # merged `81f1207`, deployed
 
 ## Build contract (locked by the architect before the builder started)
 Cite the epic README's D1–D8; never restate them. In short, per story: **S1.1** = D1 + D2 (pure, `lib/flag-funnel.ts`,
@@ -119,5 +119,10 @@ Env: production · https://goldenfrijoles.com
 
 Steps 4–5 are signed-in steps, owed to the product owner. Step 6 needs the CLI release on npm (the product owner's 2FA
 publish).
+
+**Run 2026-10-15 (architect, after the deploy of `b6f0c1c`):** step 1 ✅ `off v1`; step 2 ✅ funnel page renders, no
+trend, no `by=` in its links; step 6 ✅ via the repo-built CLI 1.9.0 against production: 2026-07 60 · 39 · 16, 2026-08 and
+2026-09 zeros, 2026-10 maturing. Steps 3–5 (flag on, signed in) and 7 (connector) owed to the product owner; step 6 with
+the published CLI needs the npm publish.
 
 If any step fails, note the step number + what you saw — that's the bug report.
