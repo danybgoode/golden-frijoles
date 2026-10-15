@@ -2,8 +2,8 @@ import 'server-only'
 import { unstable_cache } from 'next/cache'
 import { reservedEventsInFilter, type EventCatalog } from './event-catalog'
 import { readEventCatalog } from './event-catalog-read'
-import { readFunnel, type FunnelRead } from './flag-funnel-read'
-import type { BetMeasure, ExposureRule, FunnelMeasure, FunnelPeriod } from './flag-funnel'
+import { readFunnel, readFunnelTrend, type FunnelRead, type FunnelTrendRead } from './flag-funnel-read'
+import type { BetMeasure, ExposureRule, FunnelMeasure, FunnelPeriod, TrendBy } from './flag-funnel'
 import { getSupabaseServiceClient } from './supabase'
 
 /**
@@ -92,6 +92,16 @@ export async function getFirstEventForBand(
  * read (a thrown read is not cached).
  */
 export const FLAG_FUNNEL_CACHE_SECONDS = 300
+const funnelCacheKey = (projectId: string, source: ExposureRule, measure: FunnelMeasure) => [
+  projectId,
+  source.kind,
+  source.kind === 'flag' ? source.flagKey : source.featureKey,
+  source.kind === 'feature' ? (source.targetEvent ?? '*') : '',
+  measure.adoptedEvent ?? '',
+  measure.retainedEvent ?? '',
+  String(measure.retentionDays),
+  measure.satisfiedEvent ?? '',
+]
 export function getFunnel(
   projectId: string,
   source: ExposureRule,
@@ -100,19 +110,7 @@ export function getFunnel(
   options: { base?: boolean } = {}
 ): Promise<FunnelRead> {
   const withBase = options.base !== false
-  const key = [
-    'funnel',
-    projectId,
-    source.kind,
-    source.kind === 'flag' ? source.flagKey : source.featureKey,
-    source.kind === 'feature' ? (source.targetEvent ?? '*') : '',
-    measure.adoptedEvent ?? '',
-    measure.retainedEvent ?? '',
-    String(measure.retentionDays),
-    measure.satisfiedEvent ?? '',
-    period,
-    withBase ? 'base' : 'no-base',
-  ]
+  const key = ['funnel', ...funnelCacheKey(projectId, source, measure), period, withBase ? 'base' : 'no-base']
   return unstable_cache(
     () =>
       readFunnel(getSupabaseServiceClient(), projectId, source, measure, period, new Date(), {
@@ -132,4 +130,30 @@ export function getFlagFunnel(
   period: FunnelPeriod = 'all'
 ): Promise<FunnelRead> {
   return getFunnel(projectId, { kind: 'flag', flagKey: bet.flagKey }, bet, period)
+}
+
+/**
+ * funnel-truth D4 — a funnel's trend by cohort period for ONE project (the caller resolved it), cached as `getFunnel`
+ * is. Throws on a failed read (a thrown read is not cached); an unreadable PERIOD is a value, not a throw (D3).
+ */
+export function getFunnelTrend(
+  projectId: string,
+  source: ExposureRule,
+  measure: FunnelMeasure,
+  by: TrendBy
+): Promise<FunnelTrendRead> {
+  return unstable_cache(
+    () => readFunnelTrend(getSupabaseServiceClient(), projectId, source, measure, by, new Date()),
+    ['funnel-trend', ...funnelCacheKey(projectId, source, measure), by],
+    { revalidate: FLAG_FUNNEL_CACHE_SECONDS }
+  )()
+}
+
+/** A measured flag's trend (the epic page). */
+export function getFlagFunnelTrend(
+  projectId: string,
+  bet: BetMeasure,
+  by: TrendBy
+): Promise<FunnelTrendRead> {
+  return getFunnelTrend(projectId, { kind: 'flag', flagKey: bet.flagKey }, bet, by)
 }
