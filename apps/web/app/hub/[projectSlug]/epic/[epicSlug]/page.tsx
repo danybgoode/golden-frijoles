@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { after } from 'next/server'
 import { requireDashboardAccess } from '@/lib/dashboard-auth'
 import { getHubRoadmap } from '@/lib/hub-query'
 import { formatFreshness } from '@/lib/hub-freshness'
@@ -14,12 +15,15 @@ import { asPeriod, type FunnelPeriod } from '@/lib/flag-funnel'
 import { getFlagFunnel } from '@/lib/event-catalog-query'
 import { flagFunnelView, funnelBetOf } from '@/lib/flag-funnel-view'
 import { isFlagFunnelsEnabled } from '@/lib/flags'
+import { readOwedOnScreen } from '@/lib/owed-screen'
+import { trackSelfEvent, OWED_VIEWED_EVENT } from '@/lib/self-track'
 import {
   EpicBars,
   EpicDocs,
   EpicFlag,
   EpicFreshness,
   EpicHead,
+  EpicOwed,
   EpicSpend,
   EpicTrack,
   EpicWhy,
@@ -101,6 +105,12 @@ export default async function HubEpicPage({
       ? flagFunnelView(await getFlagFunnel(result.projectId, funnelBet, period).catch(() => null))
       : null
   const freshness = formatFreshness(artifact.generatedAt, new Date(), artifact.sourceCommit)
+  // owed-on-screen S2.1 — a member's owed checks for THIS epic, behind the flag. `{ ok: false }` (flag off, signed out,
+  // not a member, nothing pushed) leaves the page exactly as it was.
+  const owedRead = await readOwedOnScreen(result.projectId)
+  const owed = owedRead.ok ? owedRead.items.filter((item) => item.epic === card.slug) : []
+  // D11 — once per page view that rendered at least one owed check, as the member (person = user subject).
+  if (owedRead.ok && owed.length > 0) after(() => trackSelfEvent(OWED_VIEWED_EVENT, owedRead.userId))
 
   return (
     <HubShell projectSlug={projectSlug} tab="board">
@@ -124,6 +134,7 @@ export default async function HubEpicPage({
       {card.grain === 'Epic' && card.finops ? (
         <EpicSpend finops={epicFinops(card.finops)} projectSlug={projectSlug} slug={card.slug} />
       ) : null}
+      <EpicOwed items={owed} repo={repo} />
       <EpicDocs card={card} repo={repo} />
       <EpicFreshness freshness={freshness} />
     </HubShell>

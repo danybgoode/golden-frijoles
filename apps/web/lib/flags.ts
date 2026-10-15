@@ -169,3 +169,8 @@ export function isFirstEventBandEnabled(): Promise<boolean> {
 export function isFlagFunnelsEnabled(): Promise<boolean> {
   return gate(GATES.flagFunnels)
 }
+
+/** Owed checks on the epic page, the board and the portfolio (owed-on-screen D9). An enablement: born dark. */
+export function isOwedOnScreenEnabled(): Promise<boolean> {
+  return gate(GATES.owedOnScreen)
+}

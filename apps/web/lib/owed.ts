@@ -4,6 +4,10 @@
 //
 // The strip that keeps owed checks off every other read is `withoutOwed` in `lib/report-artifact-row.ts` (D5).
 
+// A TYPE-only import: erased at runtime, so this file still has no imports to load. It is what makes the two maps below
+// total over the schema's kinds — a kind added there is a build error here, not a check that silently lands nowhere.
+import type { OwedKind } from './roadmap-artifact-schema'
+
 /** One owed check as stored on the push (`lib/roadmap-artifact-schema.ts → owedItemSchema` is the contract). */
 export type OwedRow = {
   epic: string | null
@@ -39,4 +43,46 @@ function isOwedRow(v: unknown): v is OwedRow {
     typeof r.file === 'string' &&
     typeof r.line === 'number'
   )
+}
+
+// ── D10 — who can clear a check, and the kind in words ─────────────────────────────────────────────────────────────
+
+export type OwedGroupKey = 'waiting' | 'agentCould' | 'unsorted'
+
+const GROUP_OF_KIND: Record<OwedKind, OwedGroupKey> = {
+  judgment: 'waiting',
+  credential: 'waiting',
+  publish: 'waiting',
+  ops: 'waiting',
+  'signed-in': 'agentCould',
+  interactive: 'agentCould',
+  unsorted: 'unsorted',
+}
+
+/** The kind as a reader says it. Never colour or a bare slug alone (DD4's status rule). */
+export const OWED_KIND_WORDS: Record<OwedKind, string> = {
+  judgment: 'A decision only you can make',
+  credential: 'A credential',
+  publish: 'A publish',
+  ops: 'An ops step',
+  'signed-in': 'A signed-in walkthrough',
+  interactive: 'An interactive check',
+  unsorted: 'Not sorted yet',
+}
+
+const isKnownKind = (kind: string): kind is OwedKind => Object.hasOwn(GROUP_OF_KIND, kind)
+
+/** The kind in words; a kind a newer pusher invented reads as unsorted rather than as its raw slug. */
+export function owedKindWords(kind: string): string {
+  return isKnownKind(kind) ? OWED_KIND_WORDS[kind] : OWED_KIND_WORDS.unsorted
+}
+
+/**
+ * The board's three groups, in display order, each in the push's own order. A kind this build does not know lands in
+ * `unsorted` — visible, never dropped: a check that vanishes from the band is a check nobody clears.
+ */
+export function groupOwed(items: readonly OwedRow[]): Record<OwedGroupKey, OwedRow[]> {
+  const groups: Record<OwedGroupKey, OwedRow[]> = { waiting: [], agentCould: [], unsorted: [] }
+  for (const item of items) groups[isKnownKind(item.kind) ? GROUP_OF_KIND[item.kind] : 'unsorted'].push(item)
+  return groups
 }

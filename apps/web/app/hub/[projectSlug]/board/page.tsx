@@ -1,10 +1,13 @@
 import { notFound, redirect } from 'next/navigation'
+import { after } from 'next/server'
 import { requireDashboardAccess } from '@/lib/dashboard-auth'
 import { getHubRoadmap } from '@/lib/hub-query'
 import { formatFreshness } from '@/lib/hub-freshness'
 import { boardQuery, buildBoard, hasStages, parseBoardFilters } from '@/lib/hub-board'
 import { HubShell } from '../../hub-shell'
-import { BoardView, EmptyBoard } from './board-components'
+import { BoardView, EmptyBoard, OwedBand } from './board-components'
+import { readOwedOnScreen } from '@/lib/owed-screen'
+import { trackSelfEvent, OWED_VIEWED_EVENT } from '@/lib/self-track'
 
 export const dynamic = 'force-dynamic'
 
@@ -66,6 +69,11 @@ export default async function HubBoardPage({
   const freshness = formatFreshness(artifact.generatedAt, new Date(), artifact.sourceCommit)
   const base = `/hub/${encodeURIComponent(projectSlug)}/board`
 
+  // owed-on-screen S2.2 — a member's owed checks for this project, behind the flag, by the id the roadmap read resolved.
+  // Not the workspace board: that one reads several projects and is out of scope. `{ ok: false }` renders nothing at all.
+  const owed = await readOwedOnScreen(result.projectId)
+  if (owed.ok && owed.items.length > 0) after(() => trackSelfEvent(OWED_VIEWED_EVENT, owed.userId))
+
   const board = buildBoard(items, { filters, wip: boardBlock?.wip ?? null })
   return (
     <HubShell projectSlug={projectSlug} tab="board">
@@ -76,6 +84,14 @@ export default async function HubBoardPage({
         freshness={freshness}
         version={artifact.version}
       />
+      {owed.ok ? (
+        <OwedBand
+          items={owed.items}
+          freshness={formatFreshness(owed.generatedAt, new Date(), owed.sourceCommit)}
+          projectSlug={projectSlug}
+          repo={boardBlock?.repo ?? null}
+        />
+      ) : null}
     </HubShell>
   )
 }

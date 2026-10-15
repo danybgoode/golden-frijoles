@@ -8,6 +8,7 @@ import {
   funnelStageCell,
   killSwitchesOffCell,
   leadTimeCell,
+  owedCell,
   loopStageCell,
   northStarCell,
   spendCell,
@@ -50,6 +51,7 @@ const fullReaders = (over: Partial<PortfolioReaders> = {}): PortfolioReaders => 
     generatedAt: '2026-09-29T10:00:00Z',
   }),
   epicSpend: epics,
+  owed: async () => 4,
   ...over,
 })
 
@@ -90,6 +92,7 @@ test('1.1: a full row has the locked shape (C8)', async () => {
     kill_switches_off: { value: 1 },
     epic_lead_time_days: { value: 3.1, as_of: '2026-09-30T10:00:00Z' },
     spend_vs_quote: { value: { usd: 36, deltaPct: 20, epics: 1 }, as_of: '2026-09-29T10:00:00Z' },
+    owed: { value: 4 },
   })
 })
 
@@ -248,4 +251,27 @@ test('tars-one-model S2.2: the funnel cell is the furthest whole-life stage, and
     reason: REASONS.nobodyTargeted,
   })
   assert.equal(REASONS.nobodyTargeted, 'nobody has got a feature yet')
+})
+
+test('S2.3: the owed reader gets THAT row’s project id; null is "nothing may be said", never a zero', async () => {
+  const seen: string[] = []
+  const rows = await assemblePortfolio(
+    [P('a'), P('b')],
+    fullReaders({
+      owed: async (id) => {
+        seen.push(id)
+        return id === 'id-a' ? 3 : null
+      },
+    })
+  )
+  assert.deepEqual(seen.sort(), ['id-a', 'id-b'])
+  assert.deepEqual(rows[0].owed, { value: 3 })
+  assert.deepEqual(rows[1].owed, { value: null, reason: REASONS.noOwed })
+  assert.deepEqual(owedCell(0), { value: 0 })
+})
+
+test('S2.3: a failing or slow owed read costs only its own cell', async () => {
+  const [row] = await assemblePortfolio([P('a')], fullReaders({ owed: () => new Promise(() => {}) }), 50)
+  assert.deepEqual(row.owed, { error: true })
+  assert.deepEqual(row.loop_stage, { value: 'operate' })
 })

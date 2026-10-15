@@ -35,6 +35,8 @@ export type PortfolioRow = {
   kill_switches_off: Cell<number>
   epic_lead_time_days: Cell<number>
   spend_vs_quote: Cell<SpendValue>
+  /** owed-on-screen S2.3 — open owed checks. Absent (not 0) whenever there is nothing to say: flag off, not a member, no ledger. */
+  owed: Cell<number>
 }
 
 // ── The facts each reader hands back — structural, so the real modules' results satisfy them as they are ─────────────
@@ -61,6 +63,8 @@ export type PortfolioReaders = {
   flags(projectId: string): Promise<readonly FlagFacts[]>
   podReport(projectId: string): Promise<ArtifactFacts | null>
   roadmap(projectId: string): Promise<ArtifactFacts | null>
+  /** The product's open owed-check count, or `null` when nothing may be said (flag off, not a member, never pushed). */
+  owed(projectId: string): Promise<number | null>
   /** finops 3.2's accessor, injected so this file keeps zero imports. */
   epicSpend(payload: unknown): readonly EpicSpendFacts[]
 }
@@ -78,6 +82,7 @@ export const REASONS = {
   noReport: 'no report pushed',
   noLeadTime: 'no epic lead time measured yet',
   noQuotes: 'no quotes yet',
+  noOwed: 'no owed checks to show',
 } as const
 
 const ERROR = { error: true } as const
@@ -160,6 +165,11 @@ export function killSwitchesOffCell(flags: readonly FlagFacts[]): Cell<number> {
 }
 
 /** The pod report's median epic lead time (`delivery.epicLeadTime.medianDays`), as of its push (D4). */
+/** `null` is "nothing may be said", which is not a count of zero — the view shows neither (D2). */
+export function owedCell(count: number | null): Cell<number> {
+  return count === null ? absent(REASONS.noOwed) : { value: count }
+}
+
 export function leadTimeCell(artifact: ArtifactFacts | null): Cell<number> {
   if (artifact === null) return absent(REASONS.noReport)
   const delivery = (artifact.payload as { delivery?: { epicLeadTime?: { medianDays?: unknown } } } | null)
@@ -204,13 +214,14 @@ export async function assemblePortfolio(
     projects.map(async (project): Promise<PortfolioRow> => {
       // A reader may throw synchronously; `run` turns that into a rejected promise so it costs one cell, not the page.
       const run = <T>(read: () => Promise<T>) => withTimeout(Promise.resolve().then(read), timeoutMs)
-      const [loopStage, outcome, experiments, flags, pod, roadmap] = await Promise.all([
+      const [loopStage, outcome, experiments, flags, pod, roadmap, owed] = await Promise.all([
         run(() => readers.loopStage(project.id)),
         run(() => readers.outcome(project)),
         run(() => readers.experiments(project.id)),
         run(() => readers.flags(project.id)),
         run(() => readers.podReport(project.id)),
         run(() => readers.roadmap(project.id)),
+        run(() => readers.owed(project.id)),
       ])
       const shaped = <T, C>(
         read: { ok: true; value: T } | { ok: false },
@@ -232,6 +243,7 @@ export async function assemblePortfolio(
         kill_switches_off: shaped(flags, killSwitchesOffCell),
         epic_lead_time_days: shaped(pod, leadTimeCell),
         spend_vs_quote: shaped(roadmap, (artifact) => spendCell(artifact, readers.epicSpend)),
+        owed: shaped(owed, owedCell),
       }
     })
   )

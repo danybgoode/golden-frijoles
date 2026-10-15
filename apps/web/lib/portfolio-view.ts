@@ -46,6 +46,15 @@ function view<T>(
   return { ...present(cell.value, cell.as_of), tone: 'value', href }
 }
 
+/**
+ * owed-on-screen S2.3 — "3 owed" under a product's name, or `null` for nothing at all. Only a positive count is said:
+ * zero would be a number on a product that owes nothing (noise), and absent or failed is "nothing may be said" — never
+ * a zero beside a real count (CODE-QUALITY #8).
+ */
+export function owedLabel(cell: Cell<number>): string | null {
+  return 'value' in cell && cell.value !== null && cell.value > 0 ? `${cell.value} owed` : null
+}
+
 /** `≈$410 · +18% (5 quoted epics)` — the cell's one line. */
 export function spendLabel(spend: SpendValue): string {
   const usd = spend.usd >= 100 ? Math.round(spend.usd).toString() : spend.usd.toFixed(2)

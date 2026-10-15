@@ -3,7 +3,7 @@ epic: owed-on-screen
 sprint: 1
 title: "The data, member-only"
 risk: high
-phase: Building
+phase: Shipped
 stories_total: 2
 stories:
   - id: S1.1
@@ -12,24 +12,24 @@ stories:
     i_want: "each epic's owed checks pushed to the Hub with the rest of its roadmap"
     so_that: "the console can show them without anyone opening a file"
     risk: high
-    status: planned
+    status: shipped
   - id: S1.2
     title: "Only a member ever receives an owed check"
     as_a: "a founder whose ledger names people and internal ids"
     i_want: "owed checks handed only to members of my project"
     so_that: "an anonymous reader of a public roadmap, or a signed-in stranger, never sees them"
     risk: high
-    status: planned
+    status: shipped
 ---
 # Owed on screen — Sprint 1: The data, member-only
 
-**Status:** ⬜ not started
+**Status:** ✅ shipped 2026-10-15 — PR #375, merge `8cb1ec4` (commits `73745f8`, `64cb553`, `8bbadcf`, `6c131dc`, `b3ccdb9`); plugin + kit 1.10.0; no migration
 
 ## Stories
 <!-- Keep the heading shape `### Story 1.M — <title>`; append ✅ + the commit ref when it ships. Name the story in
      each commit subject (`S1.1 …`). The frontmatter `stories:` entry is what tools read. -->
 
-### Story 1.1 — The roadmap push carries each epic's owed checks
+### Story 1.1 — The roadmap push carries each epic's owed checks ✅ `73745f8`
 **As** a founder who owns the product, **I want** each epic's owed checks pushed to the Hub with the rest of its
 roadmap, **so that** the console can show them without anyone opening a file.
 
@@ -48,7 +48,7 @@ unsorted`). `skills/template/scripts/roadmap-extract.mjs` is mirrored (a plugin 
 
 **Risk:** high (the push contract, mirrored to every consumer).
 
-### Story 1.2 — Only a member ever receives an owed check
+### Story 1.2 — Only a member ever receives an owed check ✅ `64cb553`
 **As** a founder whose ledger names people and internal ids, **I want** owed checks handed only to members of my
 project, **so that** an anonymous reader of a public roadmap, or a signed-in stranger, never sees them.
 
@@ -90,3 +90,11 @@ Env: production · https://goldenfrijoles.com
    → the answer names epics and destinations, and no owed check appears anywhere.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+**Run 2026-10-15 (architect):**
+1. ✅ — but only on the SECOND run. The `roadmap-push` run the merge fired (`38738523117`) pushed at 12:56:46, before the
+   production deploy of `8cb1ec4` existed (12:57:15): the old route's schema dropped the unknown `owed` key and answered
+   `unchanged`. Re-run by `workflow_dispatch` once the deploy was `success` (`38738689311`): `✓ roadmap pushed (335
+   rows)`, version 446, and production stores 96 owed checks (7 unattached) — the ledger's `total`.
+2. ✅ Signed out, the public connector's `get_horizon` answers `pushed: true` with no `owed` anywhere in the reply; the
+   public hub, board and this epic's page carry none of the checks' text.

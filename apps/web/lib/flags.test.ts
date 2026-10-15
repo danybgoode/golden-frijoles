@@ -38,6 +38,7 @@ const singles: Record<string, keyof typeof GATES> = {
   isFlagRuleBuilderEnabled: 'flagRuleBuilder',
   isFlagConsoleEnabled: 'flagConsole',
   isFirstEventBandEnabled: 'firstEventBand',
+  isOwedOnScreenEnabled: 'owedOnScreen',
   isFlagFunnelsEnabled: 'flagFunnels',
 }
 

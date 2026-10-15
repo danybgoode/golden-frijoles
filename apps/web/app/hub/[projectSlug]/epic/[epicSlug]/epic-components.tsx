@@ -14,6 +14,8 @@ import { stageLabel } from '@/lib/screen-words'
 import { Icon } from '@/components/ui/Icon'
 import { PageHead } from '@/design-system/primitives'
 import { CopyButton } from '../../../copy-button'
+import { OwedLine } from '../../../owed-line'
+import type { OwedRow } from '@/lib/owed'
 
 // one-epic-page · Sprint 1 — the epic page's parts (lock D4: `CardView`'s parts, moved here; the card view is gone).
 // Every part reads the ONE pushed row, as a `BoardCard` (D1); nothing here computes a stage (board lock D19).
@@ -379,6 +381,25 @@ export function EpicDocs({ card, repo }: { card: BoardCard; repo: string | null 
           </li>
         ))}
       </ul>
+    </section>
+  )
+}
+
+/**
+ * owed-on-screen S2.1 — what this epic still owes its owner. The caller passes only a member's rows for this epic, so the
+ * section is absent (not empty) when there are none: with the flag off, for a stranger and for an epic with nothing owed
+ * the page is what it was before.
+ */
+export function EpicOwed({ items, repo }: { items: readonly OwedRow[]; repo: string | null }) {
+  if (items.length === 0) return null
+  return (
+    <section className="ds-epic-section" aria-label="Owed" data-owed-section>
+      <h2 className="ds-label">Owed</h2>
+      <div className="ds-tasklist">
+        {items.map((item) => (
+          <OwedLine key={`${item.file}:${item.line}:${item.text}`} item={item} repo={repo} />
+        ))}
+      </div>
     </section>
   )
 }

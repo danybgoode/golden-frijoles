@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { COULDNT_LOAD, asOfLabel, buildPortfolioRowView, spendLabel } from './portfolio-view.ts'
+import { COULDNT_LOAD, asOfLabel, buildPortfolioRowView, owedLabel, spendLabel } from './portfolio-view.ts'
 
 // portfolio-view S2.1 — what each cell SAYS and where it links (D2, D4, C1, C5, C6). Three shapes stay three.
 
@@ -22,6 +22,7 @@ const row = {
   kill_switches_off: { value: 0 },
   epic_lead_time_days: { value: 3.1, as_of: '2026-09-30T10:00:00Z' },
   spend_vs_quote: { value: { usd: 410.4, deltaPct: 18, epics: 5 }, as_of: '2026-10-03T02:17:31Z' },
+  owed: { value: 3 },
 }
 
 test('2.1: a full row reads as values, each linked to the page it came from', () => {
@@ -87,4 +88,11 @@ test('1.4: the label says the sum, the delta and how many epics it is over', () 
   assert.equal(spendLabel({ usd: 96, deltaPct: -6, epics: 2 }), '≈$96.00 · −6% (2 quoted epics)')
   assert.equal(spendLabel({ usd: 12.5, deltaPct: 0, epics: 1 }), '≈$12.50 · ±0% (1 quoted epic)')
   assert.equal(spendLabel({ usd: 12.5, deltaPct: null, epics: 1 }), '≈$12.50 (1 quoted epic)')
+})
+
+test('S2.3: "N owed" only for a positive count — nothing at zero, absent or failed', () => {
+  assert.equal(owedLabel({ value: 3 }), '3 owed')
+  assert.equal(owedLabel({ value: 0 }), null)
+  assert.equal(owedLabel({ value: null, reason: 'no owed checks to show' }), null)
+  assert.equal(owedLabel({ error: true }), null)
 })

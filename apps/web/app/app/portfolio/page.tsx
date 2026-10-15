@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import { notFound, redirect } from 'next/navigation'
+import { after } from 'next/server'
 import { getSessionUser } from '@/lib/supabase-auth'
 import { getUserProjects } from '@/lib/membership'
 import { getUserWorkspaces } from '@/lib/workspace'
@@ -10,7 +11,8 @@ import {
   projectsPerWorkspace,
   resolvePortfolioWorkspace,
 } from '@/lib/portfolio-workspace'
-import { buildPortfolioRowView, type CellView, type RowLinks } from '@/lib/portfolio-view'
+import { buildPortfolioRowView, owedLabel, type CellView, type RowLinks } from '@/lib/portfolio-view'
+import { trackSelfEvent, OWED_VIEWED_EVENT } from '@/lib/self-track'
 import { getProjectSurfaceLinks } from '@/lib/project-route-inventory'
 import { readGates } from '@/lib/shell-nav'
 import { todayHrefFor } from '@/lib/console-shell'
@@ -116,6 +118,8 @@ async function PortfolioRows({ userId, workspaceId }: { userId: string; workspac
       </div>
     )
   const gates = await readGates()
+  // owed-on-screen D11 — once per page view that showed at least one "N owed", as the member who saw it.
+  if (rows.some((row) => owedLabel(row.owed) !== null)) after(() => trackSelfEvent(OWED_VIEWED_EVENT, userId))
   return (
     <div data-portfolio-state="portfolio">
       <Table>
@@ -151,6 +155,11 @@ async function PortfolioRows({ userId, workspaceId }: { userId: string; workspac
                   {row.project.slug}
                 </a>
                 <span className="ds-state-detail">{row.project.role}</span>
+                {owedLabel(row.owed) ? (
+                  <span className="ds-state-detail" data-cell="owed">
+                    {owedLabel(row.owed)}
+                  </span>
+                ) : null}
               </TableCell>
               <TableCell>
                 <LoopControl
