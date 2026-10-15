@@ -5,40 +5,40 @@
 
 # Build order — the six stages
 
-> **Generated 2026-10-14 — do not hand-edit.** One stage per initiative, decided in one place
+> **Generated 2026-10-15 — do not hand-edit.** One stage per initiative, decided in one place
 > (`scripts/lib/stage.mjs`): Backlog · Refining · Ready · Building · QA · Shipped.
 > This committed file reads the docs alone, so **Building and QA are not here** — they are facts git
 > and GitHub hold. For the live board run `node scripts/build-order.mjs --live`, or open the Hub board.
 
-## Backlog (10)
+## Backlog (3)
 
 _seeds with no pitch yet._
 
-- [Verify module: the verification depth ladder as a product (after the spike)](seeds/verify-module.md) — #54 · 09 Platform Infra · seed · Feature · risk: High · appetite L · _docs: status raw_
-- [A delivery whose settle keeps failing is re-sent every 5 minutes, uncounted and unlogged](seeds/delivery-stale-reclaim-uncounted.md) — 01 Growth Engine · seed · Bug · risk: High · appetite S · _docs: status raw_
-- [A reading for proving_workspaces](seeds/proving-workspaces-reading.md) — 01 Growth Engine · seed · Spike · risk: High · appetite S · _docs: status raw_
-- [Drill impact for agents: a drill's effect, recorded and read from the CLI](seeds/drill-impact-for-agents.md) — 01 Growth Engine · seed · Feature · risk: High · appetite M · _docs: status raw_
-- [Funnel trend: how a feature performed over time](seeds/funnel-trend.md) — 01 Growth Engine · seed · Feature · risk: Low · appetite M · _docs: status raw_
-- [perf-probe only requests the hosts a project names](seeds/perf-probe-target-allowlist.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
-- [TARS segments: named target segments, and every funnel on the agreed model](seeds/tars-segments.md) — 01 Growth Engine · seed · Feature · risk: High · appetite M · _docs: status raw_
-- [Template scripts run when invoked through a symlinked path](seeds/script-ismain-realpath.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
-- [The build view tells one story: one status, said once](seeds/build-view-one-story.md) — 09 Platform Infra · seed · Feature · risk: Low · appetite M · _docs: status raw_
-- [This repo lints its template scripts the way its consumers do](seeds/foundation-lint-gate.md) — 09 Platform Infra · seed · Chore · _docs: status raw_
+- [Delivery back on: a dispatch schedule the free Vercel plan allows](seeds/delivery-back-on.md) — 01 Growth Engine · seed · Feature · risk: High · _docs: status raw_
+- [The Satisfied ask: a rating the product can ask, read as TARS's last stage](seeds/satisfied-ask.md) — 01 Growth Engine · seed · Feature · risk: Low · _docs: status raw_
+- [Verify for projects: the verification depth ladder offered to every project](seeds/verify-for-projects.md) — 09 Platform Infra · seed · Feature · risk: High · _docs: status raw_
 
-## Refining (2)
+## Refining (1)
 
 _a pitch is waiting at the approval gate._
 
-- [Analytics visualization — the charting-dependency decision (spike), then the layer](seeds/analytics-visualization-layer.md) — #14 · 01 Growth Engine · seed · Spike · risk: Low · appetite S · _docs: status ready_
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
 
-## Ready (3)
+## Ready (11)
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
-- [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #88 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
-- [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #92 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
-- [CMS-neutral experiment integration + Payload go/no-go](../01-growth-engine/cms-integration-spike/README.md) — #93 · 01 Growth Engine · 0/6 stories · risk: Low · _docs: status scaffolded_
+- [A delivery whose settle keeps failing is re-sent every 5 minutes, uncounted and unlogged](../01-growth-engine/delivery-stale-reclaim-uncounted/README.md) — #88 · 01 Growth Engine · 0/1 stories · risk: High · appetite S · _docs: status scaffolded_
+- [Owed on screen](../02-commercial/owed-on-screen/README.md) — #92 · 02 Commercial · 0/6 stories · risk: High · appetite M · _docs: status scaffolded_
+- [Funnel truth](../01-growth-engine/funnel-truth/README.md) — #93 · 01 Growth Engine · 0/8 stories · risk: High · appetite L · _docs: status scaffolded_
+- [Drill impact for agents](../01-growth-engine/drill-impact-for-agents/README.md) — #94 · 01 Growth Engine · 0/6 stories · risk: High · appetite M · _docs: status scaffolded_
+- [The build view tells one story](../09-platform-infra/build-view-one-story/README.md) — #95 · 09 Platform Infra · 0/7 stories · risk: Low · appetite M · _docs: status scaffolded_
+- [Template scripts hold to the gates their consumers run](../09-platform-infra/template-scripts-consumer-gates/README.md) — #96 · 09 Platform Infra · 0/3 stories · risk: High · appetite S · _docs: status scaffolded_
+- [Verify module](../09-platform-infra/verify-module/README.md) — #97 · 09 Platform Infra · 0/7 stories · risk: Low · appetite M · _docs: status scaffolded_
+- [A reading for proving_workspaces](../01-growth-engine/proving-workspaces-reading/README.md) — #98 · 01 Growth Engine · 0/3 stories · risk: High · appetite S · _docs: status scaffolded_
+- [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #99 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
+- [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #100 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
+- [CMS-neutral experiment integration + Payload go/no-go](../01-growth-engine/cms-integration-spike/README.md) — #101 · 01 Growth Engine · 0/6 stories · risk: Low · _docs: status scaffolded_
 
 ## Building — live only
 

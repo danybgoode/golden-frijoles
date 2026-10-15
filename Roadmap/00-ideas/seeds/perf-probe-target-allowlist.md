@@ -1,10 +1,10 @@
 ---
 title: "perf-probe only requests the hosts a project names"
 slug: perf-probe-target-allowlist
-status: raw
+status: archived   # merged into template-scripts-consumer-gates (2026-10-14)
 area: "09"
 type: chore
-updated: 2026-09-24
+updated: 2026-10-14
 ---
 
 # Seed — bound where a smoke probe may point

@@ -1,7 +1,7 @@
 ---
 title: "App shell and agent rail — make the signed-in product show the agent it sells"
 slug: app-shell-and-agent-rail
-status: queued
+status: shipped
 area: "02"
 type: feature
 appetite: M
@@ -9,7 +9,7 @@ underwritten_by: wave-2026-08-06
 risk: high
 epic: "02-commercial/app-shell-and-agent-rail"
 build_order: 12
-updated: 2026-08-06
+updated: 2026-10-14
 ---
 
 <!-- SCAFFOLDED 2026-08-06. The epic README's frontmatter `status:` is now the SSOT for the board;

@@ -4,18 +4,18 @@
 > Re-derived from the spec tree and the epic docs on every run, never from a maintained list.
 > To clear an item, tick (`✅`) or strike (`~~…~~`) its line where it was written, then regenerate.
 
-_Generated: 2026-10-14_
+_Generated: 2026-10-15_
 
-**84 check(s) owed across 64 file(s)** · 5 cleared.
+**94 check(s) owed across 72 file(s)** · 5 cleared.
 
 | Who can clear it | Count | What it means |
 |---|---|---|
-| publish | 0 | A package publish (npm 2FA): the product owner today, a CI job once trusted publishing is on |
+| publish | 2 | A package publish (npm 2FA): the product owner today, a CI job once trusted publishing is on |
 | credential | 7 | Mints or uses a production credential: only the product owner, named every time |
 | ops | 5 | On the product owner's own accounts or machine |
-| judgment | 25 | An answer only the product owner can give: an _Intent_, an approval, a decision |
-| signed-in | 21 | A signed-in production walkthrough: an agent can run it once a smoke account exists |
-| interactive | 19 | An interactive plugin or terminal walkthrough: an agent can script it in a scratch repo |
+| judgment | 29 | An answer only the product owner can give: an _Intent_, an approval, a decision |
+| signed-in | 24 | A signed-in production walkthrough: an agent can run it once a smoke account exists |
+| interactive | 20 | An interactive plugin or terminal walkthrough: an agent can script it in a scratch repo |
 | unsorted | 7 | Nothing above matched — **not a bin, a to-triage list** |
 
 | Category | Count | What it means |
@@ -23,7 +23,12 @@ _Generated: 2026-10-14_
 | money-path | 1 | Touches checkout, payment or order state — run these first |
 | auth-path | 27 | Needs a real signed-in session a script cannot mint against production |
 | admin-only | 0 | Behind an admin surface |
-| other | 56 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
+| other | 66 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
+
+## publish (2)
+
+- `Roadmap/01-growth-engine/drill-impact-for-agents/sprint-2.md:44` · other — returns the same fields. A CLI release, its npm publish owed to the product owner. **Risk:** low
+- `Roadmap/01-growth-engine/funnel-truth/sprint-1.md:104` · other — Steps 2–3 are signed-in steps, owed to the product owner. Step 4 needs the CLI release on npm (the product owner's 2FA publish).
 
 ## credential (7)
 
@@ -43,8 +48,11 @@ _Generated: 2026-10-14_
 - `Roadmap/09-platform-infra/plugin-1-0/RETROSPECTIVE.md:43` · other — **Owed to Daniel:** the `_Intent_` word above; Sprint 4's interactive walkthrough steps 2–5; your live routines that name a removed skill (sprint-3 step 7); and two decisions: rename the Notion `Stage` select option (it stores the key "Grooming"), and whether to re-approve the c…
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:55` · other — Remove the three account copies of the coaches.
 
-## judgment (25)
+## judgment (29)
 
+- `Roadmap/01-growth-engine/drill-impact-for-agents/sprint-2.md:60` · other — Risk:** low (a judgment, owed to the product owner by name)
+- `Roadmap/01-growth-engine/drill-impact-for-agents/sprint-2.md:82` · other — Steps 4–5 are owed to the product owner by name (signed in, and a judgment). Steps 1–2 need the CLI release on npm.
+- `Roadmap/01-growth-engine/proving-workspaces-reading/sprint-1.md:90` · other — Step 2 is signed in and step 3 is a judgment, both owed to the product owner.
 - `Roadmap/02-commercial/account-from-the-terminal/RETROSPECTIVE.md:12` · other — > _Intent_ is provisional ("mostly"), owed to Daniel: GitHub and the email link were cut at the lock, and the Google > round trip worked end to end only after he fixed Supabase's URL settings. His own answer replaces this word.
 - `Roadmap/02-commercial/agentic-pm-public-surface/RETROSPECTIVE.md:78` · other — **Story 1.4 is owed to Daniel by name.** Running the workshop end-to-end in a fresh Claude and a fresh ChatGPT, on a real product. No automated smoke can judge whether a facilitation script facilitates. It must be run against **production**, not a preview — see A13.
 - `Roadmap/02-commercial/app-component-kit-adoption/RETROSPECTIVE.md:78` · other — **Owed to the product owner:** the **consequence copy**. Whether each sentence tells a PM what they're about to lose is the one judgement in this epic no spec makes — walkthrough step 7 in `sprint-3.md`. Also the signed-in visual parity pass across the six converted routes.
@@ -70,8 +78,9 @@ _Generated: 2026-10-14_
 - `Roadmap/09-platform-infra/kickoff-generator-path/RETROSPECTIVE.md:49` · other — **Owed to Daniel:** this retro's `_Intent:_` answer.
 - `Roadmap/09-platform-infra/sketch-specs/RETROSPECTIVE.md:80` · other — Owed to Daniel: did we build what was meant?** Answer on its own line as `_Intent: yes_`, `_mostly_` or `_no_`. The builder does not answer this for the product owner. This epic has no `intent_match:` score, so `epic-dod` does not require it.
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:52` · other — Run the North Star coach on Golden Frijoles and judge the file (S1 smoke step 2).
+- `Roadmap/09-platform-infra/verify-spike/RETROSPECTIVE.md:48` · other — **F7, owed to the product owner:** the delivery cron may not be registered in production (DECISION § 4). Re-checked 2026-10-14: `vercel crons ls` finds no cron jobs, and `delivery.destinations_enabled` is off in production (320 pending on 2026-10-08). Decide whether delivery com…
 
-## signed-in (21)
+## signed-in (24)
 
 - `apps/web/e2e/app-auth.spec.ts:121` · auth-path — authed member-vs-owner HTTP path needs a real session (browser smoke owed to Daniel), so the
 - `apps/web/e2e/delivery-replay.spec.ts:18` · auth-path — The authenticated /app replay + delivery-history UI is a real-session BROWSER smoke owed to Daniel.
@@ -79,7 +88,9 @@ _Generated: 2026-10-14_
 - `apps/web/e2e/destinations.spec.ts:30` · auth-path — /app/destinations) is a real-session BROWSER smoke owed to Daniel — the same boundary
 - `apps/web/e2e/funnel.spec.ts:77` · other — assertions this test used to make) is the browser smoke owed to Daniel. The JSON endpoint above
 - `apps/web/e2e/hub.authed.spec.ts:10` · auth-path — by hand. That is precisely the "browser smoke owed to the product owner" WAYS-OF-WORKING says a
+- `Roadmap/01-growth-engine/delivery-stale-reclaim-uncounted/sprint-1.md:73` · other — Step 3 is a signed-in walkthrough, owed to the product owner unless a smoke account exists.
 - `Roadmap/01-growth-engine/flags-console-parity/RETROSPECTIVE.md:130` · money-path — **Owed to the product owner: the signed-in walkthroughs for all three sprints.** Every surface is credential-gated, so nothing in this repo reaches past the login redirect. Sprint 2's includes the money-path confirm on preview **and** production (cancel both).
+- `Roadmap/01-growth-engine/funnel-truth/sprint-2.md:101` · other — Step 4 is a signed-in step, owed to the product owner.
 - `Roadmap/01-growth-engine/north-star-multi-metric-read/RETROSPECTIVE.md:28` · other — **Owed to Daniel:** the signed-in look at https://goldenfrijoles.com/app/north-star/golden-frijoles (sprint-1 step 2). ~~The `_Intent_` word~~: answered yes on 2026-10-14.
 - `Roadmap/01-growth-engine/one-bet-wired/RETROSPECTIVE.md:50` · other — **Owed to the product owner:** a signed-in look at a measured epic's funnel once a bet reports evaluations, and the interactive refine walkthrough of Stage 6b.
 - `Roadmap/01-growth-engine/tars-one-model/RETROSPECTIVE.md:52` · other — **Owed to the product owner:** the signed-in look at a feature's funnel with the period choice, ~~and the _Intent_ word~~ (answered: yes).
@@ -88,6 +99,7 @@ _Generated: 2026-10-14_
 - `Roadmap/02-commercial/landing-frijoles-rebrand/RETROSPECTIVE.md:79` · auth-path — **The authed mobile sweep** — still owed to Daniel from `landing-redesign-v2` and untouched here. The `browser` project is anonymous by construction, so a signed-in route would be measured against its login redirect. `assertMobileClean` is exported and ready for an `*.authed.spe…
 - `Roadmap/02-commercial/one-header-one-name/RETROSPECTIVE.md:51` · other — Both sprints' signed-in walkthroughs on production (sprint-1 steps 1–5, sprint-2 steps 1–6). Preview can't serve a signed-in page.
 - `Roadmap/02-commercial/outcome-report-any-product/RETROSPECTIVE.md:24` · other — **Owed to the product owner:** the first aomx push and its signed-in report; re-push medusa-bonsai's report (median 7 → 3.4 days, with the caveat); ~~`npm publish` of CLI 1.7.0 (from agent-legible-horizon)~~ (published 2026-10-14).
+- `Roadmap/02-commercial/owed-on-screen/sprint-2.md:101` · other — Steps 2–5 are signed-in steps, owed to the product owner.
 - `Roadmap/02-commercial/workspaces/RETROSPECTIVE.md:69` · other — **Owed to Daniel by name:** the signed-in prod walkthroughs (S1 steps 1–3 and 5, S2 step 1), and ~~`npm publish` of `@golden-frijoles/cli@0.4.0` (2FA)~~ (published; checked 2026-10-14), then S2 step 2. S2 step 3 is n/a in prod; CI replaces it.
 - `Roadmap/09-platform-infra/one-product-project/sprint-1.md:87` · auth-path — (signed in, owed to Daniel) Open https://goldenfrijoles.com/app → the switcher lists golden-frijoles, and its flags list shows auth.terminal_sign_in_enabled
 - `Roadmap/09-platform-infra/one-product-project/sprint-2.md:75` · other — (signed in, owed to Daniel) Open https://goldenfrijoles.com/app → the agent rail is on the right
@@ -95,7 +107,7 @@ _Generated: 2026-10-14_
 - `Roadmap/09-platform-infra/setup-instruments-connects/RETROSPECTIVE.md:42` · other — **Owed to Daniel:** the interactive setup walkthrough (sprint 2) on a scratch copy of a real product repo, and the signed-in Today check on a fresh project (sprint 1 step 3).
 - `Roadmap/09-platform-infra/sketch-specs/RETROSPECTIVE.md:66` · auth-path — **Owed to Daniel:** open one rendered wireframe and say whether it reads; and check the signed-in `/app/flags` look (S2 step 4, with the authed gate as a green proxy).
 
-## interactive (19)
+## interactive (20)
 
 - `Roadmap/01-growth-engine/sdk-1-0/RETROSPECTIVE.md:33` · other — **Owed to Daniel:** walkthrough step 3 (a real `identify` + `track` seen in the catalog).
 - `Roadmap/01-growth-engine/signals-loop/sprint-2.md:144` · auth-path — (Owed to Daniel by name — needs a real Claude session.)*
@@ -103,6 +115,7 @@ _Generated: 2026-10-14_
 - `Roadmap/02-commercial/commercial-shell/RETROSPECTIVE.md:93` · auth-path — The live browser/session smokes owed to Daniel per Sprint 2/3's QA sections (the connector round-trip, the "paste into a chat app" unfurl check) are still outstanding — unchanged by this session, tracked in their respective sprint docs.
 - `Roadmap/02-commercial/connect-page/RETROSPECTIVE.md:42` · other — **Owed to Daniel:** the walkthrough (a fresh Google signup lands on Connect with no key; the Claude app turns a flag off with the URL it was given).
 - `Roadmap/02-commercial/result-record/RETROSPECTIVE.md:43` · other — The interactive walkthroughs are owed to Daniel (see the sprint files).
+- `Roadmap/09-platform-infra/build-view-one-story/sprint-1.md:152` · other — Every step is owed to the product owner (an interactive walkthrough); an agent can script steps 1–3 in a scratch repo.
 - `Roadmap/09-platform-infra/build-visualization-claude-mods/RETROSPECTIVE.md:65` · auth-path — **Owed to the product owner:** the interactive-TUI half of the Sprint 4 smoke (watching Progress advance and the status become `In review` across turns, with a status row that a headless `-p` session does not have). The mechanics under it are tested; the pixels are not.
 - `Roadmap/09-platform-infra/distribute-what-we-use/RETROSPECTIVE.md:52` · other — the clean-machine stranger install (S2 steps 1–2);
 - `Roadmap/09-platform-infra/distribute-what-we-use/RETROSPECTIVE.md:53` · other — a Telegram test send from your own bot (S3 steps 2–4);

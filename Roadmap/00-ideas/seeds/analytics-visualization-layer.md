@@ -1,7 +1,7 @@
 ---
 title: "Analytics visualization — the charting-dependency decision (spike), then the layer"
 slug: analytics-visualization-layer
-status: ready
+status: archived   # answered without the spike: design-system/charts/ is hand-rolled SVG, no dependency (2026-10-14)
 area: "01"
 type: spike
 appetite: S
@@ -9,7 +9,7 @@ underwritten_by: wave-2026-08-08
 risk: low
 epic: null
 build_order: 14
-updated: 2026-08-08
+updated: 2026-10-14
 ---
 
 # Spike brief — make the namesake framework look like one

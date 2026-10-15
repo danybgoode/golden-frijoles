@@ -1,10 +1,10 @@
 ---
 title: "This repo lints its template scripts the way its consumers do"
 slug: foundation-lint-gate
-status: raw
+status: archived   # merged into template-scripts-consumer-gates (2026-10-14)
 area: "09"
 type: chore
-updated: 2026-09-24
+updated: 2026-10-14
 ---
 
 # Seed — a lint gate before the copy-in finds it
