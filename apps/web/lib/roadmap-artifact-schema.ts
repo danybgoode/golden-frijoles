@@ -88,6 +88,51 @@ const destinationId = z
   .regex(HORIZON_ID_PATTERN, 'a destination id is lowercase-kebab (a-z, 0-9, -)')
   .max(100)
 
+/**
+ * owed-on-screen D4 — who can clear an owed check, and what it touches. ⚠️ COPIES of `KINDS` / `CATEGORIES` in
+ * `scripts/owed-ledger.mjs`, where an item is classified; `roadmap-owed-schema.test.ts` asserts each pair is
+ * identical, so a kind added there is a red spec here instead of a 400 on every push.
+ */
+export const OWED_KINDS = [
+  'publish',
+  'credential',
+  'ops',
+  'judgment',
+  'signed-in',
+  'interactive',
+  'unsorted',
+] as const
+export type OwedKind = (typeof OWED_KINDS)[number]
+export const OWED_CATEGORIES = ['money-path', 'auth-path', 'admin-only', 'other'] as const
+/** The push's bounds: in total, and per epic (the epic page and the board draw every line). */
+export const OWED_MAX = 1000
+export const OWED_MAX_PER_EPIC = 100
+
+const owedItemSchema = z.object({
+  // An epic slug the push carries as an Epic row (checked on the push below), or null: a spec, or a doc outside any epic.
+  epic: z
+    .string()
+    .max(200)
+    .regex(/^[a-z0-9][a-z0-9-]*$/i, 'owed epic must be an epic slug')
+    .nullable(),
+  text: z.string().min(1).max(500),
+  kind: z.enum(OWED_KINDS, {
+    errorMap: () => ({ message: `owed kind must be one of ${OWED_KINDS.join(' | ')}` }),
+  }),
+  category: z.enum(OWED_CATEGORIES, {
+    errorMap: () => ({ message: `owed category must be one of ${OWED_CATEGORIES.join(' | ')}` }),
+  }),
+  // Where the check was written, repo-relative (a doc or a spec). Rendered as `file:line` and joined onto the pushed repo
+  // base, so the same stance as `docPath`: no scheme, no climbing out of the repo.
+  file: z
+    .string()
+    .max(300)
+    .regex(/^[A-Za-z0-9_][A-Za-z0-9_./-]*$/, 'owed file must be a repo-relative path')
+    .refine((p) => !p.split('/').includes('..'), 'owed file must not climb out of the repo'),
+  line: z.number().int().positive().max(1_000_000),
+})
+export type OwedItem = z.infer<typeof owedItemSchema>
+
 const roadmapRowSchema = z
   .object({
     name: z.string().min(1).max(500),
@@ -277,6 +322,12 @@ export const roadmapPushSchema = z
       )
       .max(HORIZON_MAX)
       .nullish(),
+    // owed-on-screen D4 — the project's open owed checks, one top-level block. Nullish: an older pusher never sends it,
+    // and absent means "keeps no ledger", while [] means "nothing owed". Member-only on every read (lib/owed.ts).
+    owed: z
+      .array(owedItemSchema)
+      .max(OWED_MAX, { message: `owed carries at most ${OWED_MAX} checks` })
+      .nullish(),
   })
   // An epic may only light a destination the push declares — the extractor refuses it too; this is the same rule held
   // for a hand-written push. The message names the epic, because a flattened issue drops its path.
@@ -293,6 +344,24 @@ export const roadmapPushSchema = z
           })
       }
     }
+    // owed-on-screen D4 — an owed check names an epic this push carries, and no epic carries more than the page draws.
+    const epics = new Set(push.items.filter((i) => i.grain === 'Epic').map((i) => i.slug))
+    const perEpic = new Map<string, number>()
+    for (const o of push.owed ?? []) {
+      if (o.epic === null) continue
+      if (!epics.has(o.epic))
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `owed names epic "${o.epic}" that the push does not carry`,
+        })
+      perEpic.set(o.epic, (perEpic.get(o.epic) ?? 0) + 1)
+    }
+    for (const [epic, n] of perEpic)
+      if (n > OWED_MAX_PER_EPIC)
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `owed carries ${n} checks for epic "${epic}" (at most ${OWED_MAX_PER_EPIC})`,
+        })
   })
 
 export type RoadmapPush = z.infer<typeof roadmapPushSchema>

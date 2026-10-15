@@ -17,6 +17,12 @@ const PERSON_FIELD =
 // Targeting rules may name a user id or an email verbatim. An empty list names nobody and keeps its type.
 const RULES_FIELD = /^rules$/i
 
+// owed-on-screen D8 — owed checks are member-only, so the anonymous reader gets no such key at all (not a "hidden" marker:
+// it would say the project keeps a ledger). The read seam already strips them (lib/report-artifact-row.ts, D5); this is the belt for a
+// tool written later that reads a raw payload. The names are lib/report-artifact-row.ts's own list, copied because this file has no
+// imports by design; `public-connector-scrub.test.ts` pins the two lists.
+export const DROPPED_ON_PUBLIC_CONNECTOR = ['owed', 'owed_unattached'] as const
+
 function hides(key: string, field: unknown): boolean {
   if (field === null) return false
   if (RULES_FIELD.test(key)) return !(Array.isArray(field) && field.length === 0)
@@ -28,6 +34,7 @@ export function scrubForPublicReader(value: unknown): unknown {
   if (value === null || typeof value !== 'object') return value
   const out: Record<string, unknown> = {}
   for (const [key, field] of Object.entries(value)) {
+    if ((DROPPED_ON_PUBLIC_CONNECTOR as readonly string[]).includes(key)) continue
     out[key] = hides(key, field) ? HIDDEN_ON_PUBLIC_CONNECTOR : scrubForPublicReader(field)
   }
   return out

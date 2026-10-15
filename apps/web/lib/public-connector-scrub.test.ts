@@ -1,10 +1,12 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  DROPPED_ON_PUBLIC_CONNECTOR,
   HIDDEN_ON_PUBLIC_CONNECTOR as H,
   scrubForPublicReader,
   scrubToolText,
 } from './public-connector-scrub.ts'
+import { OWED_PAYLOAD_KEYS } from './report-artifact-row.ts'
 
 const uid = '083dc850-a99d-49d1-a06c-0e7b1d3d4eb0'
 
@@ -61,4 +63,20 @@ test('everything else, including a null person field, is left exactly as it was'
 test('text that is not JSON is returned untouched', () => {
   assert.equal(scrubToolText('not json'), 'not json')
   assert.equal(scrubToolText(JSON.stringify({ actor: uid })), JSON.stringify({ actor: H }))
+})
+
+// owed-on-screen D8 — owed checks never reach the anonymous reader, at any depth, and not even as a "hidden" marker.
+test('owed keys are dropped, not hidden, anywhere in a reply', () => {
+  const reply = {
+    ok: true,
+    owed: [{ text: 'x' }],
+    epics: [{ slug: 'e', owed: [{ text: 'y' }], owed_unattached: [] }],
+  }
+  const out = JSON.stringify(scrubForPublicReader(reply))
+  assert.doesNotMatch(out, /owed/)
+  assert.match(out, /"slug":"e"/)
+})
+
+test('the dropped names are lib/report-artifact-row.ts’s own list', () => {
+  assert.deepEqual([...DROPPED_ON_PUBLIC_CONNECTOR], [...OWED_PAYLOAD_KEYS])
 })

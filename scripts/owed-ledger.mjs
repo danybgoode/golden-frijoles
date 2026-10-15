@@ -452,19 +452,146 @@ export function renderMarkdown(ledger, generatedAt) {
   return `${l.join('\n')}\n`;
 }
 
-function gather({ owners, specDirs, docDirs = [] }) {
+function gather({ owners, specDirs, docDirs = [] }, root = ROOT) {
   const marker = markerFor(owners);
   const markers = [];
   // A Set: two configured dirs that overlap ("Roadmap" and "Roadmap/01-…") must not count one file twice.
   const files = [
     ...new Set([
-      ...specDirs.flatMap((dir) => listSpecFiles(join(ROOT, dir))),
-      ...docDirs.flatMap((dir) => listDocFiles(join(ROOT, dir))),
+      ...specDirs.flatMap((dir) => listSpecFiles(join(root, dir))),
+      ...docDirs.flatMap((dir) => listDocFiles(join(root, dir))),
     ]),
   ];
   for (const f of files)
-    markers.push(...extractMarkers(readFileSync(f, 'utf8'), relative(ROOT, f).split(sep).join('/'), marker));
+    markers.push(...extractMarkers(readFileSync(f, 'utf8'), relative(root, f).split(sep).join('/'), marker));
   return buildLedger(markers);
+}
+
+/**
+ * Why a ledger cannot be emitted from this config, or null when it can. The ONE refusal rule: `main()` and the push
+ * (`owedForPush`) both read it. A spec tree can live in a separate, gitignored checkout; its absence is a real
+ * possibility (a fresh clone of the root repo alone), and it must not read as "zero owed".
+ */
+export function refusalFor(owedConfig, root = ROOT, exists = existsSync) {
+  const missing = [...owedConfig.specDirs, ...owedConfig.docDirs].filter((d) => !exists(join(root, d)));
+  if (!owedConfig.specDirs.length)
+    return 'no spec directory found (apps/*/e2e, or reporting.config.json → owed.specDirs)';
+  if (missing.length) return `${missing.join(', ')} not found`;
+  return null;
+}
+
+// ── owed-on-screen D1–D3: the ledger rides the roadmap push ───────────────────────────────────────────────
+// The committed OWED-LEDGER.json holds COUNTS only, so the push derives the items here, live, with the same functions
+// that wrote the file. The file's PRESENCE is the opt-in: a project that never ran the ledger pushes exactly as before.
+
+/** The committed ledger the push treats as the opt-in. Relative to the project root. */
+export const OWED_LEDGER_JSON = 'Roadmap/00-ideas/OWED-LEDGER.json';
+/** An item's text on the push is cut here; the source keeps the whole note (the schema's bound, lib/roadmap-artifact-schema.ts). */
+export const OWED_PUSH_TEXT_MAX = 500;
+/**
+ * The push's other bounds. ⚠️ COPIES of `OWED_MAX`, `OWED_MAX_PER_EPIC` and the `file` pattern in
+ * apps/web/lib/roadmap-artifact-schema.ts (`roadmap-owed-schema.test.ts` pins them): the server refuses the WHOLE push
+ * past any of them, so the producer must never send what it would refuse (verifier, #375).
+ */
+export const OWED_PUSH_MAX = 1000;
+export const OWED_PUSH_MAX_PER_EPIC = 100;
+export const OWED_PUSH_FILE_RE = /^[A-Za-z0-9_][A-Za-z0-9_./-]*$/;
+export const OWED_PUSH_FILE_MAX = 300;
+
+/**
+ * Keep only the items the push contract accepts, and say how many were left out. PURE. A file the schema cannot carry
+ * (`(group)`, `[slug]`, a space), an empty text, or a check past a cap is dropped from the PUSH only — it stays in the
+ * ledger and its markdown, where the full list lives.
+ */
+export function conformOwedForPush(items) {
+  const kept = [];
+  const perEpic = new Map();
+  let badFile = 0;
+  let empty = 0;
+  let overEpic = 0;
+  let overTotal = 0;
+  for (const it of items) {
+    if (
+      it.file.length > OWED_PUSH_FILE_MAX ||
+      !OWED_PUSH_FILE_RE.test(it.file) ||
+      it.file.split('/').includes('..')
+    ) {
+      badFile++;
+      continue;
+    }
+    if (!it.text) {
+      empty++;
+      continue;
+    }
+    if (it.epic !== null) {
+      const n = perEpic.get(it.epic) ?? 0;
+      if (n >= OWED_PUSH_MAX_PER_EPIC) {
+        overEpic++;
+        continue;
+      }
+      perEpic.set(it.epic, n + 1);
+    }
+    if (kept.length >= OWED_PUSH_MAX) {
+      overTotal++;
+      continue;
+    }
+    kept.push(it);
+  }
+  const parts = [
+    badFile && `${badFile} with a file path the push cannot carry`,
+    empty && `${empty} with no text`,
+    overEpic && `${overEpic} past ${OWED_PUSH_MAX_PER_EPIC} on one epic`,
+    overTotal && `${overTotal} past ${OWED_PUSH_MAX} in all`,
+  ].filter(Boolean);
+  return {
+    kept,
+    note: parts.length ? `owed checks left off the push (still in the ledger): ${parts.join(', ')}` : null,
+  };
+}
+
+/**
+ * The epic an item belongs to: the epic folder holding its file (`Roadmap/<NN-area>/<slug>/…`), when that slug is one
+ * of the pushed epics; else null (a spec under apps/<app>/e2e, or a doc outside any epic). PURE.
+ */
+export function epicOfOwedFile(file, epicSlugs) {
+  const m = /^Roadmap\/\d{2}-[^/]+\/([^/]+)\//.exec(String(file ?? ''));
+  return m && epicSlugs.has(m[1]) ? m[1] : null;
+}
+
+/** One open ledger item as the push carries it. PURE. */
+export function owedPushItem(item, epicSlugs) {
+  const text = String(item.text ?? '').trim();
+  return {
+    epic: epicOfOwedFile(item.file, epicSlugs),
+    text: text.length > OWED_PUSH_TEXT_MAX ? `${text.slice(0, OWED_PUSH_TEXT_MAX - 1).trimEnd()}…` : text,
+    kind: item.kind,
+    category: item.category,
+    file: item.file,
+    line: item.line,
+  };
+}
+
+/**
+ * The open owed items for the roadmap push, or `{ owed: null, note }` when there are none to send: no committed ledger
+ * (the opt-in), or a ledger that cannot be derived here (the refusal rule, or a walk that would under-report). A push
+ * never fails because of the ledger — the board must still update — but the reason is returned, never swallowed.
+ * `epicSlugs` are the Epic rows the push carries, so every non-null `epic` names one of them (the schema's rule).
+ */
+export function owedForPush({ root = ROOT, epicSlugs = [], exists = existsSync } = {}) {
+  if (!exists(join(root, OWED_LEDGER_JSON))) return { owed: null, note: null };
+  try {
+    const owedConfig = resolveOwedConfig({ root });
+    const refusal = refusalFor(owedConfig, root, exists);
+    if (refusal) return { owed: null, note: `owed checks not pushed: ${refusal}` };
+    const ledger = gather(owedConfig, root);
+    const slugs = new Set(epicSlugs);
+    const { kept, note } = conformOwedForPush(
+      KINDS.flatMap((k) => ledger.itemsByKind[k]).map((it) => owedPushItem(it, slugs))
+    );
+    return { owed: kept, note };
+  } catch (e) {
+    return { owed: null, note: `owed checks not pushed: ${e.message}` };
+  }
 }
 
 function main() {
@@ -473,13 +600,10 @@ function main() {
   const jsonOnly = argv.includes('--json');
 
   const owedConfig = resolveOwedConfig();
-  const missing = [...owedConfig.specDirs, ...owedConfig.docDirs].filter((d) => !existsSync(join(ROOT, d)));
-  if (!owedConfig.specDirs.length || missing.length) {
-    // A spec tree can live in a separate, gitignored checkout. Its absence is a real possibility (a
-    // fresh clone of the root repo alone), and it must not read as "zero owed".
+  const refusal = refusalFor(owedConfig);
+  if (refusal) {
     process.stderr.write(
-      `owed-ledger: ${owedConfig.specDirs.length ? `${missing.join(', ')} not found` : 'no spec directory found (apps/*/e2e, or reporting.config.json → owed.specDirs)'}.\n` +
-        `  Refusing to emit a ledger that would read as "nothing is owed".\n`
+      `owed-ledger: ${refusal}.\n` + `  Refusing to emit a ledger that would read as "nothing is owed".\n`
     );
     process.exit(jsonOnly || check ? 1 : 0);
   }
