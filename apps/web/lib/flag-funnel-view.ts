@@ -53,7 +53,7 @@ export function funnelModelNote(now: Date): string | null {
  * as everyone.
  */
 export const segmentNotDefinedText = (key: string) =>
-  `This bet targets ${key}, which this project hasn’t defined, so its funnel isn’t read as everyone. \`frijoles segments define ${key} --event <e> --min <n> --days <d>\` defines it.`
+  `This bet targets ${key}, which this project hasn’t defined, so its funnel isn’t read as everyone. Define it with frijoles segments define ${key}.`
 
 export function flagFunnelView(read: FlagFunnelRead | null, segmentKey?: string): FunnelView {
   if (read === null)

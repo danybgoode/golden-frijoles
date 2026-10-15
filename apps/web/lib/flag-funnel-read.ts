@@ -234,9 +234,8 @@ export async function readFunnel(
       : await readBase(client, projectId, from, to)
 
   // funnel-truth D12 — a named segment: its members as of now, from its own bounded read.
-  const segment = options.segment
-    ? await readSegmentEvents(client, projectId, options.segment, from, to)
-    : null
+  // Members as of now need only (now − days, now] (verifier, #379): readSegmentEvents reads `days` before its `from`.
+  const segment = options.segment ? await readSegmentEvents(client, projectId, options.segment, to, to) : null
   const funnel = computeFunnel([...exposures.rows, ...funnelEvents.rows].map(toEvent), source, measure, {
     basePeople: new Set(base.rows.map(person)),
     since,
