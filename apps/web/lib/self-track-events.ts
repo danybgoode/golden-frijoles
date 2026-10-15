@@ -54,6 +54,10 @@ export const SHARE_VIEWED_EVENT = 'share_viewed'
 export const METHODOLOGY_VISITED_EVENT = 'methodology_visited'
 export const METHODOLOGY_CHAPTER_OPENED_EVENT = 'methodology_chapter_opened'
 
+// owed-on-screen D11 — a member saw at least one owed check (epic page, board or portfolio), once per page view. The
+// "user" is the member's user id (person = user subject, one-bet-wired), so `adopted` reads as distinct people.
+export const OWED_VIEWED_EVENT = 'owed_viewed'
+
 export type SelfTrackEvent =
   | typeof LANDING_VISITED_EVENT
   | typeof WAITLIST_JOINED_EVENT
@@ -64,6 +68,7 @@ export type SelfTrackEvent =
   | typeof SHARE_VIEWED_EVENT
   | typeof METHODOLOGY_VISITED_EVENT
   | typeof METHODOLOGY_CHAPTER_OPENED_EVENT
+  | typeof OWED_VIEWED_EVENT
 
 // The TARS feature each funnel event belongs to. Registered on the self tenant by
 // scripts/seed-self-project.mjs.
@@ -105,4 +110,5 @@ export const EVENT_FEATURE: Record<SelfTrackEvent, string> = {
   [SHARE_VIEWED_EVENT]: HUB_ENGAGEMENT_SIGNAL_KEY,
   [METHODOLOGY_VISITED_EVENT]: METHODOLOGY_SIGNAL_KEY,
   [METHODOLOGY_CHAPTER_OPENED_EVENT]: METHODOLOGY_SIGNAL_KEY,
+  [OWED_VIEWED_EVENT]: HUB_ENGAGEMENT_SIGNAL_KEY,
 }

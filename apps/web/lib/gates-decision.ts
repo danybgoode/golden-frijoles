@@ -111,6 +111,8 @@ export const GATES = {
     envVar: 'FIRST_EVENT_BAND_ENABLED',
     fallback: true,
   },
+  // owed-on-screen D9 — owed checks on the epic page, the board and the portfolio. An enablement: born dark.
+  owedOnScreen: { key: 'hub.owed_enabled', envVar: 'HUB_OWED_ENABLED', fallback: false },
 } as const satisfies Record<string, Gate>
 
 export type GateName = keyof typeof GATES
