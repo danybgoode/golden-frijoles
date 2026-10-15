@@ -113,6 +113,8 @@ export const GATES = {
   },
   // owed-on-screen D9 — owed checks on the epic page, the board and the portfolio. An enablement: born dark.
   owedOnScreen: { key: 'hub.owed_enabled', envVar: 'HUB_OWED_ENABLED', fallback: false },
+  // funnel-truth D6 — a funnel's trend by cohort period and the segment screens. An enablement: born dark.
+  funnelTrend: { key: 'bets.funnel_trend_enabled', envVar: 'FUNNEL_TREND_ENABLED', fallback: false },
 } as const satisfies Record<string, Gate>
 
 export type GateName = keyof typeof GATES

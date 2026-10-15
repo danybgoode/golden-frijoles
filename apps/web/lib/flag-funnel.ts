@@ -95,6 +95,8 @@ export function isExposure(e: FunnelEvent, rule: ExposureRule): boolean {
 /**
  * The funnel for one exposure rule and measure. `since` (ms) makes it a cohort: only people whose FIRST exposure is at
  * or after it are exposed, and only adoptions at or after it count beside the funnel; absent = the whole life.
+ * `until` (ms, exclusive) closes the cohort (funnel-truth D1): first exposure, the base and adoption beside the funnel
+ * are bounded by it, while adoption, retention and satisfaction still follow the cohort to the last event; absent = now.
  * `basePeople`: the period's active people when the caller read them separately (the bounded read does); people in
  * `events` active in the period always count too, so the base is never smaller than the funnel.
  */
@@ -102,14 +104,16 @@ export function computeFunnel(
   events: FunnelEvent[],
   rule: ExposureRule,
   measure: FunnelMeasure,
-  options: { basePeople?: ReadonlySet<string>; since?: number } = {}
+  options: { basePeople?: ReadonlySet<string>; since?: number; until?: number } = {}
 ): Funnel {
   const since = options.since ?? -Infinity
+  const until = options.until ?? Infinity
+  const inPeriod = (t: number) => t >= since && t < until
   const people = events.filter((e) => !isSystemUser(e.userId))
   const base = new Set(
     [
       ...(options.basePeople ?? []),
-      ...people.filter((e) => ms(e.createdAt) >= since).map((e) => e.userId),
+      ...people.filter((e) => inPeriod(ms(e.createdAt))).map((e) => e.userId),
     ].filter((u) => !isSystemUser(u))
   )
   const targeted = base // `everyone` (one-bet-wired D1): the whole base
@@ -121,7 +125,9 @@ export function computeFunnel(
     const t = ms(e.createdAt)
     if (!firstExposure.has(e.userId) || t < firstExposure.get(e.userId)!) firstExposure.set(e.userId, t)
   }
-  const cohort = new Set([...firstExposure].filter(([u, t]) => t >= since && targeted.has(u)).map(([u]) => u))
+  const cohort = new Set(
+    [...firstExposure].filter(([u, t]) => inPeriod(t) && targeted.has(u)).map(([u]) => u)
+  )
 
   const adoptedWithoutExposure = new Set<string>()
   const adoptedAfterExposure = new Set<string>() // any cohort: such a person adopted through the feature
@@ -132,7 +138,7 @@ export function computeFunnel(
       const t = ms(e.createdAt)
       const exposedAt = firstExposure.get(e.userId)
       if (exposedAt === undefined || t < exposedAt) {
-        if (t >= since) adoptedWithoutExposure.add(e.userId)
+        if (inPeriod(t)) adoptedWithoutExposure.add(e.userId)
         continue
       }
       adoptedAfterExposure.add(e.userId)
@@ -200,4 +206,90 @@ export function computeFlagFunnel(
   options: { basePeople?: ReadonlySet<string>; since?: number } = {}
 ): Funnel {
   return computeFunnel(events, { kind: 'flag', flagKey: bet.flagKey }, bet, options)
+}
+
+// ── funnel-truth D1/D2 — the funnel by cohort period ─────────────────────────────────────────────────────────────────
+// A period is a UTC calendar month or an ISO week (Monday 00:00 UTC). The trend runs from the period holding the first
+// exposure to the period holding `now`, gaps included: a period nobody first got the feature in is exposed 0, a real
+// zero. Each period is `computeFunnel` closed by `since`/`until`, so the trend IS the one model, per period.
+
+export const TREND_BYS = ['month', 'week'] as const
+export type TrendBy = (typeof TREND_BYS)[number]
+export const asTrendBy = (v: unknown): TrendBy =>
+  (TREND_BYS as readonly unknown[]).includes(v) ? (v as TrendBy) : 'month'
+
+const DAY_MS = 86_400_000
+
+/** The start (ms) of the period holding `t`. */
+export function periodStart(t: number, by: TrendBy): number {
+  const d = new Date(t)
+  if (by === 'month') return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1)
+  const day = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
+  return day - ((d.getUTCDay() + 6) % 7) * DAY_MS // back to Monday
+}
+
+/** The start (ms) of the period after the one starting at `start`. */
+export function nextPeriodStart(start: number, by: TrendBy): number {
+  if (by === 'week') return start + 7 * DAY_MS
+  const d = new Date(start)
+  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1)
+}
+
+/** "2026-10" for a month, "2026-10-12" (its Monday) for a week. */
+export const periodLabel = (start: number, by: TrendBy) =>
+  new Date(start).toISOString().slice(0, by === 'month' ? 7 : 10)
+
+/** Every period from the one holding `first` to the one holding `now`, oldest first. */
+export function trendPeriods(
+  first: number,
+  now: number,
+  by: TrendBy
+): { label: string; start: number; end: number }[] {
+  const periods: { label: string; start: number; end: number }[] = []
+  for (let start = periodStart(first, by); start <= now; start = nextPeriodStart(start, by))
+    periods.push({ label: periodLabel(start, by), start, end: nextPeriodStart(start, by) })
+  return periods
+}
+
+/** A cohort period: its funnel, or why it couldn't be read (the bounded read decides; the model never does). */
+export type TrendPeriod = {
+  label: string
+  start: string
+  end: string
+  /** D2: younger than `retentionDays` past its end, so retention (and satisfaction) is still filling. */
+  maturing: boolean
+} & ({ state: 'read'; funnel: Funnel } | { state: 'unreadable'; reason: string })
+
+export type FunnelTrend = { by: TrendBy; periods: TrendPeriod[] }
+
+/**
+ * The funnel by cohort period (D1). `baseActivity`: the people the caller read as active, each with when (ms); a
+ * period's base is those active in it. Null when nobody was ever exposed (there is no first period).
+ */
+export function computeFunnelTrend(
+  events: FunnelEvent[],
+  rule: ExposureRule,
+  measure: FunnelMeasure,
+  options: { by: TrendBy; now: number; baseActivity?: ReadonlyArray<{ person: string; at: number }> }
+): FunnelTrend | null {
+  let first = Infinity
+  for (const e of events)
+    if (!isSystemUser(e.userId) && isExposure(e, rule)) first = Math.min(first, ms(e.createdAt))
+  if (first === Infinity) return null
+  const periods = trendPeriods(first, Math.max(first, options.now), options.by).map(
+    ({ label, start, end }): TrendPeriod => {
+      const basePeople = new Set(
+        (options.baseActivity ?? []).filter((a) => a.at >= start && a.at < end).map((a) => a.person)
+      )
+      return {
+        label,
+        start: new Date(start).toISOString(),
+        end: new Date(end).toISOString(),
+        maturing: end + measure.retentionDays * DAY_MS > options.now,
+        state: 'read',
+        funnel: computeFunnel(events, rule, measure, { basePeople, since: start, until: end }),
+      }
+    }
+  )
+  return { by: options.by, periods }
 }
