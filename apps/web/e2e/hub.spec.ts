@@ -549,8 +549,15 @@ test('owed checks are stored with the push and absent from every anonymous read 
   ]) {
     const res = await request.get(path)
     expect(res.status(), path).toBe(200)
-    expect(await res.text(), path).not.toContain(marker)
+    const html = await res.text()
+    expect(html, path).not.toContain(marker)
+    // owed-on-screen S2.4 — signed out, the screens carry no owed band or section even when the flag is on (the lit server
+    // runs this file): the member gate, not the flag, is what keeps a reader of the public project out.
+    expect(html, path).not.toContain('data-owed-band')
+    expect(html, path).not.toContain('data-owed-section')
   }
+  // CONTROL: the epic page rendered the pushed epic, so the absence above is not an error page's.
+  expect(await (await request.get(`/hub/${DEMO_SLUG}/epic/${slug}`)).text()).toContain(`Owed ${slug}`)
 
   // The anonymous connector (the public URL): no owed key and no check, in the horizon or any other reply.
   const { data: project } = await db.from('projects').select('id').eq('slug', DEMO_SLUG).single()
