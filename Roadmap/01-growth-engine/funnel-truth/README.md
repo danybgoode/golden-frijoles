@@ -173,9 +173,9 @@ invariant holds (one project per read, segments per project). Bets on `everyone`
   section on Journeys (Measure, member-gated, beside the bets' funnels), behind D6, rendered only once the project has
   defined a segment. A new `/app/<x>/[projectSlug]` route must be a classified rail surface, and a new rail item would
   change the approved Measure rail; the section leaves every approved default state untouched. It lists each segment's
-  rule and its share of the last 30 days' active people. Each funnel's Targeted row reads "Targeted: everyone" or
-  "Targeted: power-users, 18% of active people", and "N exposed outside power-users (M adopted): beside the funnel, not
-  in its rates". Registry-feature funnels name no segment: they are `everyone`.
+  rule and its share of the last 30 days' active people. Each funnel's Targeted row reads "Targeted (everyone)" (unchanged, so
+  an `everyone` page is byte-identical) or "Targeted: power-users" with its share of active people beside it, and "N
+  people outside power-users got it (M adopted): beside the funnel, not in its rates". Registry-feature funnels name no segment: they are `everyone`.
 
 ### Process
 - **D15 · Stack and routing.** `feat/funnel-truth` (S1) → `feat/funnel-truth-s2` (S2), one PR each, in place (one
