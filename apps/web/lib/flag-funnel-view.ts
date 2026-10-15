@@ -1,7 +1,7 @@
 // one-bet-wired D7 — how a measured flag's funnel reads on screen, pure, so the epic page and Journeys say the same
 // words. Each stage is a count and its share of the stage before; "not measured" is said, never shown as zero.
-import type { FlagFunnelRead } from './flag-funnel-read'
-import type { BetMeasure, FunnelPeriod } from './flag-funnel'
+import type { FlagFunnelRead, FunnelTrendRead } from './flag-funnel-read'
+import type { BetMeasure, FunnelPeriod, TrendBy, TrendPeriod } from './flag-funnel'
 import type { BoardCard } from './hub-board'
 
 /** The bet an epic card measures, or null: an Epic with a flag and an adoption event (one-bet-wired D1, D7). */
@@ -95,4 +95,113 @@ export function flagFunnelView(read: FlagFunnelRead | null): FunnelView {
   if (f.adopted === null) notes.push('Name an adoption event for this feature to read adoption.')
   const note = notes.length ? notes.join(' ') : null
   return { kind: 'measured', rows, beside, note }
+}
+
+// ── funnel-truth D5 — the trend on screen, pure ──────────────────────────────────────────────────────────────────────
+// One small chart per stage and a table of every period. A stage's line holds read periods only; retained and satisfied
+// hold mature ones only (D2), so a cohort still filling never reads as a drop. Unreadable periods sit at one end of the
+// trend by construction (D3: an exposure cut takes the newest, a base cut the oldest, an events cut all), so leaving
+// them out never draws a line across a hole; they are named in words instead.
+
+export const TREND_BY_LABELS: Record<TrendBy, string> = { month: 'By month', week: 'By week' }
+export function trendByLinks(by: TrendBy): { by: TrendBy; label: string; current: boolean }[] {
+  return (Object.keys(TREND_BY_LABELS) as TrendBy[]).map((b) => ({
+    by: b,
+    label: TREND_BY_LABELS[b],
+    current: b === by,
+  }))
+}
+
+export type TrendStage = { label: string; value: number | null; series: { date: string; value: number }[] }
+export type TrendRow = {
+  period: string
+  gotIt: string
+  adopted: string
+  retained: string
+  satisfied: string | null
+}
+export type FunnelTrendView =
+  | { kind: 'unreadable' | 'not_exposed'; text: string }
+  | { kind: 'measured'; stages: TrendStage[]; rows: TrendRow[]; unreadable: string[] }
+
+const share = (part: number | null, whole: number | null) =>
+  part === null || whole === null || whole === 0 ? null : Math.round((part / whole) * 100)
+const shareText = (part: number | null, whole: number | null) => {
+  if (part === null) return 'not measured'
+  const p = share(part, whole)
+  return p === null ? String(part) : `${part} (${p}%)`
+}
+
+export function funnelTrendView(read: FunnelTrendRead | null): FunnelTrendView {
+  if (read === null)
+    return { kind: 'unreadable', text: 'The trend could not be read right now. This is not a zero.' }
+  if (read.state === 'not_exposed')
+    return {
+      kind: 'not_exposed',
+      text: 'Nobody has got it yet, so there is no first month to start a trend from.',
+    }
+  const read_ = read.periods.filter((p): p is TrendPeriod & { state: 'read' } => p.state === 'read')
+  const measured = read_.some((p) => p.funnel.adopted !== null)
+  const satisfiedMeasured = read_.some((p) => p.funnel.satisfied !== null)
+  const point = (p: TrendPeriod & { state: 'read' }, value: number | null) =>
+    value === null ? [] : [{ date: p.start.slice(0, 10), value }]
+  const stage = (label: string, points: { date: string; value: number }[]): TrendStage => ({
+    label,
+    value: points.length ? points[points.length - 1].value : null,
+    series: points,
+  })
+  const mature = read_.filter((p) => !p.maturing)
+  const stages: TrendStage[] = [
+    stage(
+      'Got it (people)',
+      read_.flatMap((p) => point(p, p.funnel.exposed))
+    ),
+  ]
+  if (measured) {
+    stages.push(
+      stage(
+        'Adopted (% who got it)',
+        read_.flatMap((p) => point(p, share(p.funnel.adopted, p.funnel.exposed)))
+      )
+    )
+    stages.push(
+      stage(
+        'Retained (% of adopters)',
+        mature.flatMap((p) => point(p, share(p.funnel.retained, p.funnel.adopted)))
+      )
+    )
+  }
+  if (satisfiedMeasured)
+    stages.push(
+      stage(
+        'Satisfied (% of retained)',
+        mature.flatMap((p) => point(p, share(p.funnel.satisfied, p.funnel.retained)))
+      )
+    )
+  const rows = read.periods.map((p): TrendRow => {
+    if (p.state === 'unreadable')
+      return {
+        period: p.label,
+        gotIt: 'couldn’t be read',
+        adopted: '',
+        retained: '',
+        satisfied: satisfiedMeasured ? '' : null,
+      }
+    const f = p.funnel
+    return {
+      period: p.label,
+      gotIt: String(f.exposed),
+      adopted: shareText(f.adopted, f.exposed),
+      retained: p.maturing && f.adopted !== null ? 'still maturing' : shareText(f.retained, f.adopted),
+      satisfied: satisfiedMeasured
+        ? p.maturing
+          ? 'still maturing'
+          : shareText(f.satisfied, f.retained)
+        : null,
+    }
+  })
+  const unreadable = read.periods.flatMap((p) =>
+    p.state === 'unreadable' ? [`${p.label}: ${p.reason}`] : []
+  )
+  return { kind: 'measured', stages, rows, unreadable }
 }

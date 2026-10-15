@@ -58,6 +58,9 @@ export const METHODOLOGY_CHAPTER_OPENED_EVENT = 'methodology_chapter_opened'
 // "user" is the member's user id (person = user subject, one-bet-wired), so `adopted` reads as distinct people.
 export const OWED_VIEWED_EVENT = 'owed_viewed'
 
+// funnel-truth D7 — a member saw a funnel's trend (flag page, /app/funnel or the epic page), once per page view.
+export const FUNNEL_TREND_VIEWED_EVENT = 'funnel_trend_viewed'
+
 export type SelfTrackEvent =
   | typeof LANDING_VISITED_EVENT
   | typeof WAITLIST_JOINED_EVENT
@@ -69,6 +72,7 @@ export type SelfTrackEvent =
   | typeof METHODOLOGY_VISITED_EVENT
   | typeof METHODOLOGY_CHAPTER_OPENED_EVENT
   | typeof OWED_VIEWED_EVENT
+  | typeof FUNNEL_TREND_VIEWED_EVENT
 
 // The TARS feature each funnel event belongs to. Registered on the self tenant by
 // scripts/seed-self-project.mjs.
@@ -111,4 +115,5 @@ export const EVENT_FEATURE: Record<SelfTrackEvent, string> = {
   [METHODOLOGY_VISITED_EVENT]: METHODOLOGY_SIGNAL_KEY,
   [METHODOLOGY_CHAPTER_OPENED_EVENT]: METHODOLOGY_SIGNAL_KEY,
   [OWED_VIEWED_EVENT]: HUB_ENGAGEMENT_SIGNAL_KEY,
+  [FUNNEL_TREND_VIEWED_EVENT]: HUB_ENGAGEMENT_SIGNAL_KEY,
 }

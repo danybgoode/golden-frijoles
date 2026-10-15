@@ -199,6 +199,7 @@ async function main() {
       // The rest of CI's OFF pass (ci.yml), so the two lists do not drift.
       'apps/web/e2e/first-event-dark.spec.ts',
       'apps/web/e2e/flag-funnel-dark.spec.ts',
+      'apps/web/e2e/funnel-trend-pages.spec.ts',
       'apps/web/e2e/cli-scenarios.spec.ts',
     ]);
   });

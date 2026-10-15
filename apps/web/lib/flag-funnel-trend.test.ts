@@ -6,6 +6,7 @@ import {
   periodStart,
   trendPeriods,
   type ExposureRule,
+  type FunnelTrend,
   type FunnelEvent,
   type FunnelMeasure,
 } from './flag-funnel.ts'
@@ -118,10 +119,10 @@ test('D1: the whole-life funnel exposed is the sum of the cohorts’ exposed (mo
   ]
   const all = computeFunnel(events, rule, measure)
   for (const by of ['month', 'week'] as const) {
-    const t = computeFunnelTrend(events, rule, measure, { by, now })!
-    const sum = t.periods.reduce((n, p) => n + (p.state === 'read' ? p.funnel.exposed : 0), 0)
+    const t: FunnelTrend = computeFunnelTrend(events, rule, measure, { by, now })!
+    const sum: number = t.periods.reduce((n, p) => n + (p.state === 'read' ? p.funnel.exposed : 0), 0)
     assert.equal(sum, all.exposed, by)
-    const beside = t.periods.reduce(
+    const beside: number = t.periods.reduce(
       (n, p) => n + (p.state === 'read' ? p.funnel.adoptedWithoutExposure : 0),
       0
     )

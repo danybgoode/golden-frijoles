@@ -11,10 +11,12 @@ import { HubShell } from '../../../hub-shell'
 import { EmptyBoard } from '../../board/board-components'
 import { FlagFunnel } from '@/components/product/FlagFunnel'
 import { PeriodChoice } from '@/components/product/PeriodChoice'
-import { asPeriod, type FunnelPeriod } from '@/lib/flag-funnel'
-import { getFlagFunnel } from '@/lib/event-catalog-query'
-import { flagFunnelView, funnelBetOf } from '@/lib/flag-funnel-view'
-import { isFlagFunnelsEnabled } from '@/lib/flags'
+import { asPeriod, asTrendBy, type FunnelPeriod, type TrendBy } from '@/lib/flag-funnel'
+import { getFlagFunnel, getFlagFunnelTrend } from '@/lib/event-catalog-query'
+import { flagFunnelView, funnelBetOf, funnelTrendView } from '@/lib/flag-funnel-view'
+import { isFlagFunnelsEnabled, isFunnelTrendEnabled } from '@/lib/flags'
+import { noteFunnelTrendViewed } from '@/lib/funnel-trend-screen'
+import { FunnelTrend } from '@/components/product/FunnelTrend'
 import { readOwedOnScreen } from '@/lib/owed-screen'
 import { trackSelfEvent, OWED_VIEWED_EVENT } from '@/lib/self-track'
 import {
@@ -44,7 +46,12 @@ export default async function HubEpicPage({
   searchParams,
 }: {
   params: Promise<{ projectSlug: string; epicSlug: string }>
-  searchParams: Promise<{ type?: string | string[]; risk?: string | string[]; period?: string | string[] }>
+  searchParams: Promise<{
+    type?: string | string[]
+    risk?: string | string[]
+    period?: string | string[]
+    by?: string | string[]
+  }>
 }) {
   const { projectSlug, epicSlug } = await params
   const query = await searchParams
@@ -98,12 +105,21 @@ export default async function HubEpicPage({
   const funnelBet = funnelBetOf(card)
   const period = asPeriod(Array.isArray(query.period) ? query.period[0] : query.period)
   // The period link keeps the filters the page was opened with (they only matter to Back).
-  const periodHref = (p: FunnelPeriod) =>
-    `/hub/${encodeURIComponent(projectSlug)}/epic/${encodeURIComponent(epicSlug)}${boardQuery(parseBoardFilters(query), { period: p })}`
-  const funnel =
-    funnelBet && (await isFlagFunnelsEnabled())
-      ? flagFunnelView(await getFlagFunnel(result.projectId, funnelBet, period).catch(() => null))
+  const by = asTrendBy(Array.isArray(query.by) ? query.by[0] : query.by)
+  const epicHref = (extra: Record<string, string>) =>
+    `/hub/${encodeURIComponent(projectSlug)}/epic/${encodeURIComponent(epicSlug)}${boardQuery(parseBoardFilters(query), extra)}`
+  const periodHref = (p: FunnelPeriod) => epicHref({ period: p, by })
+  const byHref = (b: TrendBy) => epicHref({ period, by: b })
+  const funnelsOn = funnelBet !== null && (await isFlagFunnelsEnabled())
+  const funnel = funnelsOn
+    ? flagFunnelView(await getFlagFunnel(result.projectId, funnelBet, period).catch(() => null))
+    : null
+  // funnel-truth D5/D6 — the flag's trend under its funnel, behind both switches. D7: counted only for a member.
+  const trend =
+    funnelsOn && (await isFunnelTrendEnabled())
+      ? funnelTrendView(await getFlagFunnelTrend(result.projectId, funnelBet, by).catch(() => null))
       : null
+  if (trend) await noteFunnelTrendViewed(result.projectId)
   const freshness = formatFreshness(artifact.generatedAt, new Date(), artifact.sourceCommit)
   // owed-on-screen S2.1 — a member's owed checks for THIS epic, behind the flag. `{ ok: false }` (flag off, signed out,
   // not a member, nothing pushed) leaves the page exactly as it was.
@@ -131,6 +147,7 @@ export default async function HubEpicPage({
           <FlagFunnel view={funnel} />
         </section>
       ) : null}
+      {trend ? <FunnelTrend view={trend} by={by} hrefFor={byHref} /> : null}
       {card.grain === 'Epic' && card.finops ? (
         <EpicSpend finops={epicFinops(card.finops)} projectSlug={projectSlug} slug={card.slug} />
       ) : null}

@@ -1,6 +1,10 @@
 import { notFound } from 'next/navigation'
-import { getFeatureFunnel } from '@/lib/tars-query'
-import { asPeriod } from '@/lib/flag-funnel'
+import { getFeatureFunnel, getFeatureFunnelTrend } from '@/lib/tars-query'
+import { asPeriod, asTrendBy } from '@/lib/flag-funnel'
+import { isFunnelTrendEnabled } from '@/lib/flags'
+import { funnelTrendView } from '@/lib/flag-funnel-view'
+import { noteFunnelTrendViewed } from '@/lib/funnel-trend-screen'
+import { FunnelTrend } from '@/components/product/FunnelTrend'
 import { requireDashboardAccess } from '@/lib/dashboard-auth'
 import { ProductShell } from '@/components/product/ProductShell'
 import { Answer, Crumb, Crumbs, PageHead } from '@/design-system/primitives'
@@ -33,7 +37,7 @@ export default async function FunnelPage({
   searchParams,
 }: {
   params: Promise<{ projectSlug: string; featureKey: string }>
-  searchParams: Promise<{ period?: string | string[] }>
+  searchParams: Promise<{ period?: string | string[]; by?: string | string[] }>
 }) {
   const { projectSlug, featureKey } = await params
   await requireDashboardAccess(projectSlug)
@@ -45,6 +49,14 @@ export default async function FunnelPage({
   // outage is not one of them.
   if (!result.ok && result.reason === 'query_failed') throw new Error('Funnel lookup failed')
   if (!result.ok) notFound()
+  // funnel-truth D5/D6/D7 — the trend under the funnel, behind its switch; counted only for a signed-in member.
+  const rawBy = (await searchParams).by
+  const by = asTrendBy(Array.isArray(rawBy) ? rawBy[0] : rawBy)
+  const trend = (await isFunnelTrendEnabled())
+    ? await getFeatureFunnelTrend(projectSlug, featureKey, by)
+    : null
+  if (trend?.projectId) await noteFunnelTrendViewed(trend.projectId)
+  const base = `/app/funnel/${encodeURIComponent(projectSlug)}/${encodeURIComponent(featureKey)}`
 
   return (
     <ProductShell projectSlug={projectSlug} section="ship" railActive={'flags'}>
@@ -69,8 +81,15 @@ export default async function FunnelPage({
           flagKey={featureKey}
           result={result}
           period={period}
-          hrefFor={(p) =>
-            `/app/funnel/${encodeURIComponent(projectSlug)}/${encodeURIComponent(featureKey)}?period=${p}`
+          hrefFor={(p) => `${base}?period=${p}&by=${by}`}
+          trend={
+            trend ? (
+              <FunnelTrend
+                view={funnelTrendView(trend.ok ? trend.trend : null)}
+                by={by}
+                hrefFor={(b) => `${base}?period=${period}&by=${b}`}
+              />
+            ) : undefined
           }
         />
       </main>

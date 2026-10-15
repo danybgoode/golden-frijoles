@@ -149,7 +149,27 @@ export type FunnelTrendResult =
       feature: { key: string; targetEvent: string | null; adoptedEvent: string | null; retentionDays: number }
       trend: FunnelTrendRead
     }
-  | { ok: false; reason: 'feature_not_found' | 'query_failed' }
+  | { ok: false; reason: 'project_not_found' | 'feature_not_found' | 'query_failed' }
+
+/** The trend for a slug (the public-or-member /app/funnel page): resolves the project as `getFeatureFunnel` does. */
+export async function getFeatureFunnelTrend(
+  projectSlug: string,
+  featureKey: string,
+  by: TrendBy
+): Promise<FunnelTrendResult & { projectId?: string }> {
+  const { data: project, error } = await getSupabaseServiceClient()
+    .from('projects')
+    .select('id, slug')
+    .eq('slug', projectSlug)
+    .is('deleted_at', null)
+    .maybeSingle()
+  if (error) return { ok: false, reason: 'query_failed' }
+  if (!project) return { ok: false, reason: 'project_not_found' }
+  return {
+    ...(await getFeatureFunnelTrendByProjectId(project.id, project.slug, featureKey, by)),
+    projectId: project.id,
+  }
+}
 
 /**
  * funnel-truth D4/D8 — a registry feature's trend by cohort period: the flag page's Funnel tab, /app/funnel, the CLI and
