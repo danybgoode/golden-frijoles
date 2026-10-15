@@ -3,6 +3,7 @@ import { EVENT_CATALOG_PAGE_SIZE } from './event-catalog-read'
 import {
   computeFunnel,
   computeFunnelTrend,
+  periodStart,
   FLAG_EVALUATED_EVENT,
   PERIOD_DAYS,
   personOf as person,
@@ -240,7 +241,10 @@ export async function readFunnelTrend(
   const cap = options.rowCap ?? {}
   const exposures = await readExposures(client, projectId, source, cap.exposures)
   if (exposures.rows.length === 0) return { state: 'not_exposed', source, by }
-  const from = new Date(Math.min(...exposures.rows.map((r) => new Date(when(r)).getTime()))).toISOString()
+  // The first period starts before the first exposure (a month's 1st, a week's Monday): read from there, so that
+  // period's active people and adoptions beside the funnel are whole, not counted from the first exposure on.
+  const firstOn = Math.min(...exposures.rows.map((r) => new Date(when(r)).getTime()))
+  const from = new Date(periodStart(firstOn, by)).toISOString()
   const to = now.toISOString()
   const events = await readMeasureEvents(client, projectId, source, measure, from, to, cap.events)
   const base = await readBase(client, projectId, from, to, cap.base)

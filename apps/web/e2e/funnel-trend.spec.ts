@@ -64,6 +64,7 @@ const shape = (periods: TrendPeriod[]) =>
 test('funnel-truth D3: a whole life reads one row per month, gaps as zeros, the newest maturing', async () => {
   const client = db()
   const id = await project(client, [
+    seen('w', '2026-07-01'), // active before the first exposure, in its month
     on('a', '2026-07-03'),
     order('a', '2026-07-04'),
     on('b', '2026-09-02'),
@@ -79,6 +80,8 @@ test('funnel-truth D3: a whole life reads one row per month, gaps as zeros, the 
     ['2026-10', 1, 0],
   ])
   expect(read.periods.map((p) => p.maturing)).toEqual([false, false, false, true])
+  // The first month's base starts on its 1st, not at the first exposure.
+  expect(read.periods[0].state === 'read' && read.periods[0].funnel.base).toBe(2)
   const weeks = await readFunnelTrend(client, id, source, measure, 'week', now)
   expect(weeks.state === 'measured' && weeks.periods[0].label).toBe('2026-06-29')
   const none = await readFunnelTrend(client, id, { kind: 'flag', flagKey: 'never.on' }, measure, 'month', now)
