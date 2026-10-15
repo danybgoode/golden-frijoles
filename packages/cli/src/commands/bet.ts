@@ -41,8 +41,11 @@ export function betProblems(fm: BetFrontmatter): string[] {
     problems.push('adopted_event is missing: the bet does not say what counts as adopting')
   for (const key of ['adopted_event', 'retained_event', 'satisfied_event'])
     if (fm[key] && !EVENT.test(fm[key]!)) problems.push(`${key} "${fm[key]}" is not an event name`)
-  if (fm.target_segment && fm.target_segment !== 'everyone')
-    problems.push(`target_segment "${fm.target_segment}" is not supported yet (only everyone)`)
+  if (
+    fm.target_segment &&
+    !(fm.target_segment.length <= 48 && /^[a-z0-9]+(-[a-z0-9]+)*$/.test(fm.target_segment))
+  )
+    problems.push(`target_segment "${fm.target_segment}" is not everyone or a segment key (like power-users)`)
   if (
     fm.retention_days &&
     !(/^\d+$/.test(fm.retention_days) && +fm.retention_days >= 1 && +fm.retention_days <= 90)
@@ -99,7 +102,7 @@ export const betSyncCommand: Command = {
     if (!project) return missingProject(context)
     const flagKey = fm.flag_key!
     const measure = {
-      targetSegment: 'everyone',
+      targetSegment: fm.target_segment || 'everyone',
       adoptedEvent: fm.adopted_event,
       retainedEvent: fm.retained_event,
       retentionDays: fm.retention_days ? Number(fm.retention_days) : 7,

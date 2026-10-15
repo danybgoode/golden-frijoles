@@ -84,6 +84,7 @@ Writes by a person-made connector URL or a \`frijoles\` token run as that person
 | --- | --- | --- |
 | Read Targeted, Adopted, Retained | MCP \`get_tars_funnel\` (API: \`GET /api/v1/features/<key>/funnel\`) | The three stages have counts |
 | Read a feature's funnel by month or week | \`frijoles funnel <feature-key> --by month\`; MCP \`get_tars_funnel\` with \`by\` (API: \`GET /api/v1/cli/funnel\`) | One row per cohort period; a young one says maturing, an unreadable one says why |
+| Define or list a project's segments | \`frijoles segments define <key> --event <e> --min <n> --days <d>\` (owner) · \`frijoles segments ls\` (API: \`/api/v1/cli/segments\`) | Each segment's rule and its share of the last 30 days' active people; a bet names one in \`target_segment:\` |
 | Read a journey's cohort | MCP \`get_journey_cohort\` (API: \`GET /api/v1/journeys/<key>/cohort\`) | Cohort periods are returned |
 | Check events reach the funnel | \`frijoles status\` | "Events are arriving", with the latest event |
 

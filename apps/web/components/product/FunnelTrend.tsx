@@ -29,6 +29,7 @@ export function FunnelTrend({
         <p className="ds-hint">{view.text}</p>
       ) : (
         <>
+          {view.segment ? <p className="ds-hint">{view.segment}</p> : null}
           <div className="ds-chart-smalls">
             {view.stages.map((stage) => (
               <SmallMultiple

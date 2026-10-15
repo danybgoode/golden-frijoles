@@ -3,7 +3,14 @@ import { unstable_cache } from 'next/cache'
 import { reservedEventsInFilter, type EventCatalog } from './event-catalog'
 import { readEventCatalog } from './event-catalog-read'
 import { readFunnel, readFunnelTrend, type FunnelRead, type FunnelTrendRead } from './flag-funnel-read'
-import type { BetMeasure, ExposureRule, FunnelMeasure, FunnelPeriod, TrendBy } from './flag-funnel'
+import type {
+  BetMeasure,
+  ExposureRule,
+  FunnelMeasure,
+  FunnelPeriod,
+  SegmentRule,
+  TrendBy,
+} from './flag-funnel'
 import { getSupabaseServiceClient } from './supabase'
 
 /**
@@ -92,6 +99,8 @@ export async function getFirstEventForBand(
  * read (a thrown read is not cached).
  */
 export const FLAG_FUNNEL_CACHE_SECONDS = 300
+const segmentCacheKey = (segment: SegmentRule | undefined) =>
+  segment ? `${segment.key}:${segment.event}:${segment.minCount}:${segment.days}` : 'everyone'
 const funnelCacheKey = (projectId: string, source: ExposureRule, measure: FunnelMeasure) => [
   projectId,
   source.kind,
@@ -107,14 +116,21 @@ export function getFunnel(
   source: ExposureRule,
   measure: FunnelMeasure,
   period: FunnelPeriod = 'all',
-  options: { base?: boolean } = {}
+  options: { base?: boolean; segment?: SegmentRule } = {}
 ): Promise<FunnelRead> {
   const withBase = options.base !== false
-  const key = ['funnel', ...funnelCacheKey(projectId, source, measure), period, withBase ? 'base' : 'no-base']
+  const key = [
+    'funnel',
+    ...funnelCacheKey(projectId, source, measure),
+    period,
+    withBase ? 'base' : 'no-base',
+    segmentCacheKey(options.segment),
+  ]
   return unstable_cache(
     () =>
       readFunnel(getSupabaseServiceClient(), projectId, source, measure, period, new Date(), {
         base: withBase,
+        ...(options.segment ? { segment: options.segment } : {}),
       }),
     key,
     {
@@ -127,9 +143,11 @@ export function getFunnel(
 export function getFlagFunnel(
   projectId: string,
   bet: BetMeasure,
-  period: FunnelPeriod = 'all'
+  period: FunnelPeriod = 'all',
+  /** funnel-truth D12 — the bet's segment; absent = everyone. */
+  segment?: SegmentRule
 ): Promise<FunnelRead> {
-  return getFunnel(projectId, { kind: 'flag', flagKey: bet.flagKey }, bet, period)
+  return getFunnel(projectId, { kind: 'flag', flagKey: bet.flagKey }, bet, period, segment ? { segment } : {})
 }
 
 /**
@@ -140,11 +158,21 @@ export function getFunnelTrend(
   projectId: string,
   source: ExposureRule,
   measure: FunnelMeasure,
-  by: TrendBy
+  by: TrendBy,
+  segment?: SegmentRule
 ): Promise<FunnelTrendRead> {
   return unstable_cache(
-    () => readFunnelTrend(getSupabaseServiceClient(), projectId, source, measure, by, new Date()),
-    ['funnel-trend', ...funnelCacheKey(projectId, source, measure), by],
+    () =>
+      readFunnelTrend(
+        getSupabaseServiceClient(),
+        projectId,
+        source,
+        measure,
+        by,
+        new Date(),
+        segment ? { segment } : {}
+      ),
+    ['funnel-trend', ...funnelCacheKey(projectId, source, measure), by, segmentCacheKey(segment)],
     { revalidate: FLAG_FUNNEL_CACHE_SECONDS }
   )()
 }
@@ -153,7 +181,8 @@ export function getFunnelTrend(
 export function getFlagFunnelTrend(
   projectId: string,
   bet: BetMeasure,
-  by: TrendBy
+  by: TrendBy,
+  segment?: SegmentRule
 ): Promise<FunnelTrendRead> {
-  return getFunnelTrend(projectId, { kind: 'flag', flagKey: bet.flagKey }, bet, by)
+  return getFunnelTrend(projectId, { kind: 'flag', flagKey: bet.flagKey }, bet, by, segment)
 }

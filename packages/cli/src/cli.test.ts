@@ -1355,7 +1355,7 @@ test('bet sync refuses a bet with no flag or no adoption event, naming each fiel
   assert.equal(seen.length, 0)
   assert.match(
     captured.all(),
-    /flag_key is missing.*adopted_event is missing.*target_segment "power_users" is not supported yet/
+    /flag_key is missing.*adopted_event is missing.*target_segment "power_users" is not everyone or a segment key/
   )
 })
 
@@ -1372,4 +1372,108 @@ test('bet sync helpers: frontmatter comments and quotes; the description stays w
 test('bet sync: a long slug still keeps the description within 500 characters', async () => {
   const { betDescription } = await import('./commands/bet.ts')
   assert.ok(betDescription({ hypothesis: 'word '.repeat(300), slug: 's'.repeat(200) }).length <= 500)
+})
+
+// ── funnel-truth S2.1 (D10) — a project's segments ─────────────────────────────────────────────────────────────────
+
+test('frijoles segments define: posts the rule under `segment`, and says the share in words', async () => {
+  const { writer, out } = capture()
+  const seen: Array<{ method: string; url: string; body: unknown }> = []
+  const code = await run({
+    argv: [
+      'segments',
+      'define',
+      'power-users',
+      '--event',
+      'report_run',
+      '--min',
+      '3',
+      '--days',
+      '30',
+      '--project',
+      'acme',
+    ],
+    writer,
+    env: sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN }),
+    fetchImpl: stubFetch(
+      {
+        '/api/v1/cli/segments': {
+          body: {
+            project: 'acme',
+            created: true,
+            segment: {
+              key: 'power-users',
+              event: 'report_run',
+              minCount: 3,
+              days: 30,
+              share: 0.18,
+              members: 9,
+              base: 50,
+            },
+          },
+        },
+      },
+      seen
+    ),
+  })
+  assert.equal(code, EXIT.OK)
+  assert.equal(seen[0].method, 'POST')
+  assert.deepEqual(seen[0].body, {
+    project: 'acme',
+    segment: { key: 'power-users', event: 'report_run', minCount: 3, days: 30 },
+  })
+  assert.match(out.join('\n'), /Defined power-users \(report_run ×3 in 30 days\): 18% of active people\./)
+})
+
+test('frijoles segments define: everyone, a bad key or a bad number never sends', async () => {
+  for (const argv of [
+    ['segments', 'define', 'everyone', '--event', 'e', '--min', '1', '--days', '1'],
+    ['segments', 'define', 'Power_Users', '--event', 'e', '--min', '1', '--days', '1'],
+    ['segments', 'define', 'power-users', '--event', 'e', '--min', '0', '--days', '1'],
+    ['segments', 'define', 'power-users', '--event', 'e', '--min', '1', '--days', '366'],
+    ['segments', 'define', 'power-users', '--min', '1', '--days', '1'],
+  ]) {
+    const { writer } = capture()
+    const seen: Array<{ method: string; url: string; body: unknown }> = []
+    const code = await run({
+      argv: [...argv, '--project', 'acme'],
+      writer,
+      env: sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN }),
+      fetchImpl: stubFetch({}, seen),
+    })
+    assert.equal(code, EXIT.USAGE, argv.join(' '))
+    assert.equal(seen.length, 0, argv.join(' '))
+  }
+})
+
+test('frijoles segments ls: everyone first, each rule, and an unreadable share in words, never 0%', async () => {
+  const { writer, out } = capture()
+  const code = await run({
+    argv: ['segments', 'ls', '--project', 'acme'],
+    writer,
+    env: sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN }),
+    fetchImpl: stubFetch({
+      '/api/v1/cli/segments': {
+        body: {
+          project: 'acme',
+          segments: [
+            { key: 'everyone', share: 1 },
+            {
+              key: 'power-users',
+              event: 'report_run',
+              minCount: 3,
+              days: 30,
+              share: null,
+              unreadable: 'More report_run events than one read covers.',
+            },
+          ],
+        },
+      },
+    }),
+  })
+  assert.equal(code, EXIT.OK)
+  const text = out.join('\n')
+  assert.match(text, /everyone\s+built in: the whole base\s+100% of active people/)
+  assert.match(text, /power-users\s+report_run ×3 in 30 days\s+share unreadable: More report_run events/)
+  assert.doesNotMatch(text, /power-users.*\b0% of active/)
 })

@@ -9,11 +9,11 @@
     "other": 69
   },
   "byKind": {
-    "publish": 2,
+    "publish": 3,
     "credential": 7,
     "ops": 5,
     "judgment": 30,
-    "signed-in": 24,
+    "signed-in": 23,
     "interactive": 20,
     "unsorted": 9
   },

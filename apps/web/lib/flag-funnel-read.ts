@@ -4,6 +4,8 @@ import {
   computeFunnel,
   computeFunnelTrend,
   periodStart,
+  segmentMembers,
+  type SegmentRule,
   FLAG_EVALUATED_EVENT,
   PERIOD_DAYS,
   personOf as person,
@@ -50,7 +52,8 @@ export type FunnelRead =
       from: string
       to: string
       /** Which read hit its cap, if any; each skews different numbers (flag-funnel-view says how). */
-      truncated: { exposures: boolean; events: boolean; base: boolean }
+      /** `segment` only when the funnel names one (funnel-truth D12): its read was cut, so Targeted can't be told. */
+      truncated: { exposures: boolean; events: boolean; base: boolean; segment?: boolean }
     }
 
 /** funnel-truth D4 — the trend read: every cohort period from the first exposure, each read or unreadable (D3). */
@@ -167,6 +170,32 @@ function readBase(
   )
 }
 
+/** funnel-truth D12 — the segment's own event, from `days` before `from` to `to`, oldest arrival first. */
+function readSegmentEvents(
+  client: SupabaseClient,
+  projectId: string,
+  rule: SegmentRule,
+  from: string,
+  to: string,
+  cap?: number
+): Promise<Read> {
+  const since = new Date(new Date(from).getTime() - rule.days * 86_400_000).toISOString()
+  return paged(
+    (a, b) =>
+      client
+        .from('events')
+        .select(COLS)
+        .eq('project_id', projectId)
+        .eq('event', rule.event)
+        .gte('created_at', since)
+        .lte('created_at', to)
+        .order('created_at', { ascending: true })
+        .order('id', { ascending: true })
+        .range(a, b),
+    cap
+  )
+}
+
 const toEvent = (r: Row): FunnelEvent => ({
   userId: person(r),
   event: r.event,
@@ -183,7 +212,7 @@ export async function readFunnel(
   measure: FunnelMeasure,
   period: FunnelPeriod = 'all',
   now: Date = new Date(),
-  options: { base?: boolean } = {}
+  options: { base?: boolean; segment?: SegmentRule } = {}
 ): Promise<FunnelRead> {
   const exposures = await readExposures(client, projectId, source)
   if (exposures.rows.length === 0) return { state: 'not_exposed', source, period }
@@ -204,9 +233,15 @@ export async function readFunnel(
       ? { rows: [] as Row[], truncated: false }
       : await readBase(client, projectId, from, to)
 
+  // funnel-truth D12 — a named segment: its members as of now, from its own bounded read.
+  // Members as of now need only (now − days, now] (verifier, #379): readSegmentEvents reads `days` before its `from`.
+  const segment = options.segment ? await readSegmentEvents(client, projectId, options.segment, to, to) : null
   const funnel = computeFunnel([...exposures.rows, ...funnelEvents.rows].map(toEvent), source, measure, {
     basePeople: new Set(base.rows.map(person)),
     since,
+    ...(segment && options.segment
+      ? { segment: segmentMembers(segment.rows.map(toEvent), options.segment, now.getTime()) }
+      : {}),
   })
   return {
     state: 'measured',
@@ -215,7 +250,12 @@ export async function readFunnel(
     funnel,
     from,
     to,
-    truncated: { exposures: exposures.truncated, events: funnelEvents.truncated, base: base.truncated },
+    truncated: {
+      exposures: exposures.truncated,
+      events: funnelEvents.truncated,
+      base: base.truncated,
+      ...(segment ? { segment: segment.truncated } : {}),
+    },
   }
 }
 
@@ -235,8 +275,12 @@ export async function readFunnelTrend(
   measure: FunnelMeasure,
   by: TrendBy,
   now: Date = new Date(),
-  /** Spec only: a lower cap per read, so each cut can be driven on its own. */
-  options: { rowCap?: { exposures?: number; events?: number; base?: number } } = {}
+  options: {
+    /** funnel-truth D12 — each period's Targeted is this segment as of the period's end. */
+    segment?: SegmentRule
+    /** Spec only: a lower cap per read, so each cut can be driven on its own. */
+    rowCap?: { exposures?: number; events?: number; base?: number; segment?: number }
+  } = {}
 ): Promise<FunnelTrendRead> {
   const cap = options.rowCap ?? {}
   const exposures = await readExposures(client, projectId, source, cap.exposures)
@@ -252,9 +296,13 @@ export async function readFunnelTrend(
   const to = now.toISOString()
   const events = await readMeasureEvents(client, projectId, source, measure, from, to, cap.events)
   const base = await readBase(client, projectId, from, to, cap.base)
+  const segment = options.segment
+    ? await readSegmentEvents(client, projectId, options.segment, from, to, cap.segment)
+    : { rows: [] as Row[], truncated: false }
 
   const trend = computeFunnelTrend([...exposures.rows, ...events.rows].map(toEvent), source, measure, {
     by,
+    ...(options.segment ? { segment: options.segment, segmentEvents: segment.rows.map(toEvent) } : {}),
     now: now.getTime(),
     baseActivity: base.rows.map((r) => ({ person: person(r), at: new Date(r.created_at).getTime() })),
   })
@@ -265,6 +313,8 @@ export async function readFunnelTrend(
   const baseCut = base.truncated ? lastArrival(base) : null
   const day = (t: number) => new Date(t).toISOString().slice(0, 10)
   const why = (start: number, end: number): string | null => {
+    if (segment.truncated && options.segment)
+      return `More ${options.segment.event} events than one read covers, so who is in ${options.segment.key} can’t be told.`
     if (events.truncated)
       return 'More adoption and retention events than one read covers, so no cohort’s adoption could be followed through.'
     if (exposuresCut !== null && end > exposuresCut)
@@ -295,3 +345,38 @@ export function readFlagFunnel(
 
 /** one-bet-wired's name for the read result. */
 export type FlagFunnelRead = FunnelRead
+
+/** funnel-truth D11/D14 — a segment's share of the last 30 days' active people, or why it can't be told. */
+export type SegmentShareRead =
+  | { state: 'read'; members: number; base: number; share: number | null }
+  | { state: 'unreadable'; reason: string }
+
+export const SEGMENT_SHARE_DAYS = 30
+
+/** The share as of `now`: members (D11) within the people active in the last 30 days, over those people. One project. */
+export async function readSegmentShare(
+  client: SupabaseClient,
+  projectId: string,
+  rule: SegmentRule,
+  now: Date = new Date(),
+  options: { rowCap?: { base?: number; segment?: number } } = {}
+): Promise<SegmentShareRead> {
+  const to = now.toISOString()
+  const from = new Date(now.getTime() - SEGMENT_SHARE_DAYS * 86_400_000).toISOString()
+  const base = await readBase(client, projectId, from, to, options.rowCap?.base)
+  if (base.truncated)
+    return { state: 'unreadable', reason: 'More activity in the last 30 days than one read covers.' }
+  // readSegmentEvents reads `days` before its `from`, so passing `to` reads exactly (now − days, now].
+  const segment = await readSegmentEvents(client, projectId, rule, to, to, options.rowCap?.segment)
+  if (segment.truncated)
+    return { state: 'unreadable', reason: `More ${rule.event} events than one read covers.` }
+  const active = new Set(base.rows.map(person).filter((u) => !u.startsWith('system:')))
+  const members = segmentMembers(segment.rows.map(toEvent), rule, now.getTime())
+  const inside = [...active].filter((u) => members.has(u)).length
+  return {
+    state: 'read',
+    members: inside,
+    base: active.size,
+    share: active.size === 0 ? null : inside / active.size,
+  }
+}

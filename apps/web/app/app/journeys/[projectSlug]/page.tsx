@@ -16,9 +16,10 @@ import { ProductShell } from '@/components/product/ProductShell'
 import { NewThingDialog } from '@/components/product/NewThingDialog'
 import { Answer, PageHead, Tile } from '@/design-system/primitives'
 import { FlagFunnel } from '@/components/product/FlagFunnel'
-import { getFlagFunnel } from '@/lib/event-catalog-query'
-import { flagFunnelView, funnelBetOf, type FunnelView } from '@/lib/flag-funnel-view'
-import { isFlagFunnelsEnabled } from '@/lib/flags'
+import { funnelBetOf, type FunnelView } from '@/lib/flag-funnel-view'
+import { betFunnelView } from '@/lib/bet-funnel'
+import { isFlagFunnelsEnabled, isFunnelTrendEnabled } from '@/lib/flags'
+import { SegmentsSection } from '@/components/product/SegmentsSection'
 import { getLatestArtifact } from '@/lib/report-artifacts'
 import { toCard } from '@/lib/hub-board'
 import type { RoadmapRow } from '@/lib/roadmap-artifact-schema'
@@ -48,7 +49,7 @@ async function fromYourFlags(
         slug: card.slug,
         name: card.name,
         flagKey: bet.flagKey,
-        view: flagFunnelView(await getFlagFunnel(projectId, bet).catch(() => null)),
+        view: await betFunnelView(projectId, bet, card.measure?.targetSegment, 'all'),
       }))
     )
   } catch {
@@ -108,6 +109,8 @@ export default async function JourneysPage({ params }: { params: Promise<{ proje
   const rows = projectJourneyRows(inputs, new Map())
   const summary = summariseJourneys(rows)
   const flagFunnels = (await isFlagFunnelsEnabled()) ? await fromYourFlags(membership.projectId) : null
+  // funnel-truth D14 — the project's segments, behind the trend switch; nothing renders until one is defined.
+  const segmentsOn = await isFunnelTrendEnabled()
 
   return (
     <ProductShell projectSlug={projectSlug} section="measure" railActive={'journeys'}>
@@ -170,6 +173,7 @@ export default async function JourneysPage({ params }: { params: Promise<{ proje
         )}
 
         <JourneyRows slug={projectSlug} rows={rows} />
+        {segmentsOn ? <SegmentsSection projectId={membership.projectId} /> : null}
         {flagFunnels && flagFunnels.length > 0 ? (
           <section aria-label="From your flags">
             <h2 className="ds-label">From your flags</h2>

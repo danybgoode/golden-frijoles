@@ -245,8 +245,12 @@ const roadmapRowSchema = z
     grounded: z.boolean({ invalid_type_error: 'grounded must be true, false or null' }).nullish(),
     grounded_reason: z.string().max(300).nullish(),
     // one-bet-wired D1 — the bet's measurement, nullish so an older pusher stays valid.
+    // funnel-truth D13 — `everyone` or a segment key the project defines; an unknown key is accepted here and read as
+    // "not defined" on screen, never silently as everyone.
     target_segment: z
-      .enum(['everyone'], { errorMap: () => ({ message: 'target_segment must be everyone (or null)' }) })
+      .string()
+      .max(48, 'target_segment must be everyone or a segment key')
+      .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'target_segment must be everyone or a segment key, like power-users')
       .nullish(),
     adopted_event: z
       .string()

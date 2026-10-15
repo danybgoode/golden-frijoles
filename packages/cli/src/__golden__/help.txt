@@ -55,6 +55,10 @@ Commands
   scenarios stop            stop a run now
   scenarios runs            runs, and with --watch their progress until they end
 
+  segments
+  segments define           define (or redefine) a segment: people who did an event at least N times in the last D days
+  segments ls               this project's segments and each one's share of the last 30 days' active people
+
   bet
   bet sync                  create the bet's flag from its epic (a Measure flag, off until you roll it out)
 

@@ -12,8 +12,8 @@ import { EmptyBoard } from '../../board/board-components'
 import { FlagFunnel } from '@/components/product/FlagFunnel'
 import { PeriodChoice } from '@/components/product/PeriodChoice'
 import { asPeriod, asTrendBy, type FunnelPeriod, type TrendBy } from '@/lib/flag-funnel'
-import { getFlagFunnel, getFlagFunnelTrend } from '@/lib/event-catalog-query'
-import { flagFunnelView, funnelBetOf, funnelTrendView } from '@/lib/flag-funnel-view'
+import { betFunnelView, betTrendView } from '@/lib/bet-funnel'
+import { funnelBetOf } from '@/lib/flag-funnel-view'
 import { isFlagFunnelsEnabled, isFunnelTrendEnabled } from '@/lib/flags'
 import { noteFunnelTrendViewed } from '@/lib/funnel-trend-screen'
 import { FunnelTrend } from '@/components/product/FunnelTrend'
@@ -111,12 +111,12 @@ export default async function HubEpicPage({
   const byHref = (b: TrendBy) => epicHref({ period, by: b })
   const funnelsOn = funnelBet !== null && (await isFlagFunnelsEnabled())
   const funnel = funnelsOn
-    ? flagFunnelView(await getFlagFunnel(result.projectId, funnelBet, period).catch(() => null))
+    ? await betFunnelView(result.projectId, funnelBet, card.measure?.targetSegment, period)
     : null
   // funnel-truth D5/D6 — the flag's trend under its funnel, behind both switches. D7: counted only for a member.
   const trend =
     funnelsOn && (await isFunnelTrendEnabled())
-      ? funnelTrendView(await getFlagFunnelTrend(result.projectId, funnelBet, by).catch(() => null))
+      ? await betTrendView(result.projectId, funnelBet, card.measure?.targetSegment, by)
       : null
   if (trend) await noteFunnelTrendViewed(result.projectId)
   // D6: with the trend off, the period links are exactly as before (verifier, #378).

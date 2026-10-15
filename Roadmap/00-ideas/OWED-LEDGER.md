@@ -10,11 +10,11 @@ _Generated: 2026-10-15_
 
 | Who can clear it | Count | What it means |
 |---|---|---|
-| publish | 2 | A package publish (npm 2FA): the product owner today, a CI job once trusted publishing is on |
+| publish | 3 | A package publish (npm 2FA): the product owner today, a CI job once trusted publishing is on |
 | credential | 7 | Mints or uses a production credential: only the product owner, named every time |
 | ops | 5 | On the product owner's own accounts or machine |
 | judgment | 30 | An answer only the product owner can give: an _Intent_, an approval, a decision |
-| signed-in | 24 | A signed-in production walkthrough: an agent can run it once a smoke account exists |
+| signed-in | 23 | A signed-in production walkthrough: an agent can run it once a smoke account exists |
 | interactive | 20 | An interactive plugin or terminal walkthrough: an agent can script it in a scratch repo |
 | unsorted | 9 | Nothing above matched — **not a bin, a to-triage list** |
 
@@ -25,10 +25,11 @@ _Generated: 2026-10-15_
 | admin-only | 0 | Behind an admin surface |
 | other | 69 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
 
-## publish (2)
+## publish (3)
 
 - `Roadmap/01-growth-engine/drill-impact-for-agents/sprint-2.md:44` · other — returns the same fields. A CLI release, its npm publish owed to the product owner. **Risk:** low
 - `Roadmap/01-growth-engine/funnel-truth/sprint-1.md:120` · other — Steps 4–5 are signed-in steps, owed to the product owner. Step 6 needs the CLI release on npm (the product owner's 2FA publish).
+- `Roadmap/01-growth-engine/funnel-truth/sprint-2.md:112` · other — Steps 4 and 6 are signed-in steps, owed to the product owner. Steps 1–2 need the CLI 1.9.0 release on npm (the product owner's 2FA publish).
 
 ## credential (7)
 
@@ -81,7 +82,7 @@ _Generated: 2026-10-15_
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:52` · other — Run the North Star coach on Golden Frijoles and judge the file (S1 smoke step 2).
 - `Roadmap/09-platform-infra/verify-spike/RETROSPECTIVE.md:48` · other — **F7, owed to the product owner:** the delivery cron may not be registered in production (DECISION § 4). Re-checked 2026-10-14: `vercel crons ls` finds no cron jobs, and `delivery.destinations_enabled` is off in production (320 pending on 2026-10-08). Decide whether delivery com…
 
-## signed-in (24)
+## signed-in (23)
 
 - `apps/web/e2e/app-auth.spec.ts:121` · auth-path — authed member-vs-owner HTTP path needs a real session (browser smoke owed to Daniel), so the
 - `apps/web/e2e/delivery-replay.spec.ts:20` · auth-path — The authenticated /app replay + delivery-history UI is a real-session BROWSER smoke owed to Daniel.
@@ -91,7 +92,6 @@ _Generated: 2026-10-15_
 - `apps/web/e2e/hub.authed.spec.ts:10` · auth-path — by hand. That is precisely the "browser smoke owed to the product owner" WAYS-OF-WORKING says a
 - `Roadmap/01-growth-engine/delivery-stale-reclaim-uncounted/RETROSPECTIVE.md:47` · other — **Owed to Daniel:** the signed-in look at `/app/destinations/golden-frijoles` (sprint-1 smoke step 6).
 - `Roadmap/01-growth-engine/flags-console-parity/RETROSPECTIVE.md:130` · money-path — **Owed to the product owner: the signed-in walkthroughs for all three sprints.** Every surface is credential-gated, so nothing in this repo reaches past the login redirect. Sprint 2's includes the money-path confirm on preview **and** production (cancel both).
-- `Roadmap/01-growth-engine/funnel-truth/sprint-2.md:108` · other — Step 4 is a signed-in step, owed to the product owner.
 - `Roadmap/01-growth-engine/north-star-multi-metric-read/RETROSPECTIVE.md:28` · other — **Owed to Daniel:** the signed-in look at https://goldenfrijoles.com/app/north-star/golden-frijoles (sprint-1 step 2). ~~The `_Intent_` word~~: answered yes on 2026-10-14.
 - `Roadmap/01-growth-engine/one-bet-wired/RETROSPECTIVE.md:50` · other — **Owed to the product owner:** a signed-in look at a measured epic's funnel once a bet reports evaluations, and the interactive refine walkthrough of Stage 6b.
 - `Roadmap/01-growth-engine/tars-one-model/RETROSPECTIVE.md:52` · other — **Owed to the product owner:** the signed-in look at a feature's funnel with the period choice, ~~and the _Intent_ word~~ (answered: yes).

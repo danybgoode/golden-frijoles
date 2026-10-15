@@ -69,6 +69,11 @@ export type Funnel = {
   satisfied: number | null
   /** Did the adoption event without (or before) being exposed: beside the funnel, not in it. */
   adoptedWithoutExposure: number
+  /**
+   * funnel-truth D12 — only when the funnel names a segment: people first exposed in the period who are NOT in it, and
+   * how many of them adopted after exposure. Beside the funnel, never in its rates. Absent for `everyone`.
+   */
+  outside?: { exposed: number; adopted: number | null }
   /** Each stage as a share of the one before; null when the one before is zero or not measured. */
   rates: {
     targeted: number | null
@@ -104,7 +109,13 @@ export function computeFunnel(
   events: FunnelEvent[],
   rule: ExposureRule,
   measure: FunnelMeasure,
-  options: { basePeople?: ReadonlySet<string>; since?: number; until?: number } = {}
+  options: {
+    basePeople?: ReadonlySet<string>
+    since?: number
+    until?: number
+    /** funnel-truth D12 — the people in the bet's segment (`segmentMembers`); absent = everyone. */
+    segment?: ReadonlySet<string>
+  } = {}
 ): Funnel {
   const since = options.since ?? -Infinity
   const until = options.until ?? Infinity
@@ -116,7 +127,9 @@ export function computeFunnel(
       ...people.filter((e) => inPeriod(ms(e.createdAt))).map((e) => e.userId),
     ].filter((u) => !isSystemUser(u))
   )
-  const targeted = base // `everyone` (one-bet-wired D1): the whole base
+  // `everyone` (one-bet-wired D1) is the whole base; a named segment is its members within the base (funnel-truth D12).
+  const segment = options.segment
+  const targeted = segment ? new Set([...base].filter((u) => segment.has(u))) : base
 
   // Every person's FIRST exposure, all time: the cohort is who first got it in the period (D2).
   const firstExposure = new Map<string, number>()
@@ -128,10 +141,14 @@ export function computeFunnel(
   const cohort = new Set(
     [...firstExposure].filter(([u, t]) => inPeriod(t) && targeted.has(u)).map(([u]) => u)
   )
+  const exposedOutside = segment
+    ? new Set([...firstExposure].filter(([u, t]) => inPeriod(t) && !targeted.has(u)).map(([u]) => u))
+    : null
 
   const adoptedWithoutExposure = new Set<string>()
   const adoptedAfterExposure = new Set<string>() // any cohort: such a person adopted through the feature
   const firstAdoption = new Map<string, number>()
+  const adoptedOutside = new Set<string>()
   if (measure.adoptedEvent !== null) {
     for (const e of people) {
       if (e.event !== measure.adoptedEvent) continue
@@ -142,6 +159,7 @@ export function computeFunnel(
         continue
       }
       adoptedAfterExposure.add(e.userId)
+      if (exposedOutside?.has(e.userId)) adoptedOutside.add(e.userId)
       if (!cohort.has(e.userId)) continue // exposed before the period: another cohort's adoption
       if (!firstAdoption.has(e.userId) || t < firstAdoption.get(e.userId)!) firstAdoption.set(e.userId, t)
     }
@@ -189,6 +207,9 @@ export function computeFunnel(
     ...counts,
     satisfied,
     adoptedWithoutExposure: adoptedWithoutExposure.size,
+    ...(exposedOutside
+      ? { outside: { exposed: exposedOutside.size, adopted: measured ? adoptedOutside.size : null } }
+      : {}),
     rates: {
       targeted: rate(counts.targeted, counts.base),
       exposed: rate(counts.exposed, counts.targeted),
@@ -197,6 +218,25 @@ export function computeFunnel(
       satisfied: rate(satisfied, counts.retained),
     },
   }
+}
+
+/** funnel-truth D9/D11 — a project's segment: the people who did `event` at least `minCount` times in `days`. */
+export type SegmentRule = { key: string; event: string; minCount: number; days: number }
+export const EVERYONE = 'everyone'
+
+/**
+ * funnel-truth D11 — who is in a segment at a moment: the people (never `system:` users) with at least `minCount` of
+ * its event in `(at − days, at]`, placed by the event's own time as every funnel stage is.
+ */
+export function segmentMembers(events: FunnelEvent[], rule: SegmentRule, at: number): Set<string> {
+  const from = at - rule.days * 86_400_000
+  const counts = new Map<string, number>()
+  for (const e of events) {
+    if (e.event !== rule.event || isSystemUser(e.userId)) continue
+    const t = ms(e.createdAt)
+    if (t > from && t <= at) counts.set(e.userId, (counts.get(e.userId) ?? 0) + 1)
+  }
+  return new Set([...counts].filter(([, n]) => n >= rule.minCount).map(([u]) => u))
 }
 
 /** A measured flag's funnel (one-bet-wired): the model with a flag's exposure rule. */
@@ -270,7 +310,15 @@ export function computeFunnelTrend(
   events: FunnelEvent[],
   rule: ExposureRule,
   measure: FunnelMeasure,
-  options: { by: TrendBy; now: number; baseActivity?: ReadonlyArray<{ person: string; at: number }> }
+  options: {
+    by: TrendBy
+    now: number
+    baseActivity?: ReadonlyArray<{ person: string; at: number }>
+    /** funnel-truth D12 — each period's Targeted is this segment, as of the period's end (capped at now). */
+    segment?: SegmentRule
+    /** The rows the segment is decided from (its own read); absent = `events`. Kept apart so none is counted twice. */
+    segmentEvents?: FunnelEvent[]
+  }
 ): FunnelTrend | null {
   // An exposure dated after `now` (a skewed client clock's occurred_at) never opens a period: the trend ends at now.
   let first = Infinity
@@ -288,7 +336,20 @@ export function computeFunnelTrend(
       end: new Date(end).toISOString(),
       maturing: end + measure.retentionDays * DAY_MS > options.now,
       state: 'read',
-      funnel: computeFunnel(events, rule, measure, { basePeople, since: start, until: end }),
+      funnel: computeFunnel(events, rule, measure, {
+        basePeople,
+        since: start,
+        until: end,
+        ...(options.segment
+          ? {
+              segment: segmentMembers(
+                options.segmentEvents ?? events,
+                options.segment,
+                Math.min(end, options.now)
+              ),
+            }
+          : {}),
+      }),
     }
   })
   return { by: options.by, periods }

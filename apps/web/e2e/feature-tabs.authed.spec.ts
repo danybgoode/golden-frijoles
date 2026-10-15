@@ -278,6 +278,7 @@ test.describe('the feature destination answers the whole loop', () => {
     await expect(trend).toBeVisible()
     await expect(trend.locator('.ds-chart-small')).toHaveCount(3) // got it, adopted, retained
     await expect(trend.locator('.ds-table-row', { hasText: /^\d{4}-\d{2}/ }).first()).toBeVisible()
-    await expect.poll(count, { timeout: 15_000 }).toBe(before + 1)
+    // At least this view: the file's other Funnel-tab test runs in parallel as the same member and counts its own view.
+    await expect.poll(count, { timeout: 15_000 }).toBeGreaterThanOrEqual(before + 1)
   })
 })
