@@ -8,6 +8,9 @@ import { stageLabel } from '@/lib/screen-words'
 import { BEAN_WORDS, epicResult, resultLine } from '@/lib/roadmap-result'
 import { Bean } from '@/design-system/bean'
 import { Answer, Empty, PageHead } from '@/design-system/primitives'
+import { Band, BandEmpty, TaskList } from '@/design-system/bands'
+import { groupOwed, type OwedGroupKey, type OwedRow } from '@/lib/owed'
+import { OwedLine } from '../../owed-line'
 
 // board-sinks-and-scrumban · Sprint 2 — the board's approved states, as components (the third, `hub-board-card`, retired
 // with the card view into the epic page — one-epic-page D4):
@@ -198,5 +201,74 @@ export function EmptyBoard() {
         }
       />
     </>
+  )
+}
+
+const OWED_GROUPS: ReadonlyArray<{ key: OwedGroupKey; label: string }> = [
+  { key: 'waiting', label: 'Waiting on you' },
+  { key: 'agentCould', label: 'An agent could, with a smoke account' },
+  { key: 'unsorted', label: 'Not sorted yet' },
+]
+
+/**
+ * owed-on-screen S2.2 (D10) — every owed check in ONE band, split by who can clear it. The caller passes it only for a
+ * member behind the flag, so nothing here decides who may see what; it draws a read that already passed that gate.
+ *
+ * An empty band says so (CODE-QUALITY §8): "nothing owed" and "never pushed" must not look alike, and this renders only
+ * when the push carried an owed block, so zero here means the ledger was read and held nothing.
+ */
+export function OwedBand({
+  items,
+  freshness,
+  projectSlug,
+  repo,
+}: {
+  items: readonly OwedRow[]
+  freshness: Freshness | null
+  projectSlug: string
+  repo: string | null
+}) {
+  const groups = groupOwed(items)
+  const pushed = `${freshness?.tone === 'stale' ? 'possibly stale — ' : ''}pushed ${freshness?.age ?? 'at an unknown time'}${
+    freshness?.shortCommit ? ` as of ${freshness.shortCommit}` : ''
+  }`
+  return (
+    <div data-owed-band>
+      <Band
+        title="Waiting on you"
+        who="you"
+        count={items.length}
+        sub={`The checks your epics left open, from their own docs · ${pushed}`}
+      >
+        {items.length === 0 ? (
+          <BandEmpty
+            head="Nothing is owed."
+            body="The last push read every epic's docs and found no open check. If you expected one, it may have been written after that push."
+          />
+        ) : (
+          OWED_GROUPS.filter(({ key }) => groups[key].length > 0).map(({ key, label }) => (
+            <section key={key} data-owed-group={key} aria-label={label}>
+              <h4 className="ds-label">
+                {label} · {groups[key].length}
+              </h4>
+              <TaskList>
+                {groups[key].map((item) => (
+                  <OwedLine
+                    key={`${item.file}:${item.line}:${item.text}`}
+                    item={item}
+                    repo={repo}
+                    epicHref={
+                      item.epic
+                        ? `/hub/${encodeURIComponent(projectSlug)}/epic/${encodeURIComponent(item.epic)}`
+                        : undefined
+                    }
+                  />
+                ))}
+              </TaskList>
+            </section>
+          ))
+        )}
+      </Band>
+    </div>
   )
 }
