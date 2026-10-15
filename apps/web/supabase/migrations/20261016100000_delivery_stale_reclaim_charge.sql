@@ -34,12 +34,12 @@ DROP FUNCTION IF EXISTS claim_deliveries(UUID, INTEGER, TIMESTAMPTZ, INTEGER);
 
 -- Everything 20260724100000 documented still holds: ALWAYS project-scoped (p_project_id required and
 -- re-asserted), eligibility (destination enabled + deliverable) enforced HERE, FOR UPDATE SKIP LOCKED
--- so concurrent workers take different rows, and only delivery rows are locked (no new lock-order
--- edge: the attempt INSERT's composite FK takes KEY SHARE on a delivery row this statement already
--- holds FOR UPDATE).
+-- so concurrent workers take different rows. NEW: when a stale candidate exists, its destination is
+-- locked KEY SHARE before any delivery row (see the PERFORM in the body), keeping the subsystem's one
+-- lock order — destination, then delivery — now that the claim writes attempt rows.
 --
 -- ONE statement, three CTEs:
---   picked — the eligible rows, locked, with `stale` = whether this is a reclaim of an in_flight row.
+--   picked — (MATERIALIZED) the eligible rows, locked, with `stale` = whether this is a reclaim of an in_flight row.
 --            Under READ COMMITTED the lock re-reads the latest row version and re-checks the WHERE,
 --            so `stale` reflects committed state: a row a late settle just moved off in_flight is
 --            either skipped (still locked) or no longer matches.
@@ -67,8 +67,31 @@ BEGIN
     RAISE EXCEPTION 'claim_deliveries: p_max_attempts must be >= 1 (got %)', p_max_attempts;
   END IF;
 
+  -- LOCK ORDER: destination, then delivery — the order every other path here uses (settle, release,
+  -- delete_destination). The `logged` INSERT below has composite FKs to event_destinations and events,
+  -- so it takes KEY SHARE on the destination row; taken there, AFTER the delivery rows are locked, it
+  -- would invert the order against delete_destination (FOR UPDATE on the destination, then the drain
+  -- UPDATE on its deliveries) and the two could deadlock (verifier, PR #373). So lock the destinations
+  -- of every stale candidate FIRST, in its own statement, in id order. A claim with no stale candidate
+  -- locks nothing here and behaves exactly as before. (The events FK lock is left as is: nothing takes
+  -- FOR UPDATE on an event row; only tenant offboarding deletes them, and a deadlock there aborts one
+  -- side cleanly, never corrupts.)
+  PERFORM 1
+     FROM event_destinations dest
+    WHERE dest.project_id = p_project_id
+      AND dest.id IN (
+        SELECT dd.destination_id
+          FROM event_deliveries dd
+         WHERE dd.project_id = p_project_id
+           AND dd.status = 'in_flight'
+           AND dd.claimed_at < p_now - make_interval(secs => p_stale_after_ms / 1000.0)
+      )
+    ORDER BY dest.id
+    FOR KEY SHARE OF dest;
+
   RETURN QUERY
-  WITH picked AS (
+  WITH picked AS MATERIALIZED (   -- evaluated ONCE: a LIMIT … SKIP LOCKED subquery the planner
+                                -- re-scanned inside a join could hand back a different set
     SELECT dd.id, (dd.status = 'in_flight') AS stale
       FROM event_deliveries dd
       JOIN event_destinations dest

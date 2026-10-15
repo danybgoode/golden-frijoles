@@ -123,11 +123,16 @@ settles `row.attempt_count + 1`, so a row reclaimed at `MAX-2` is returned at `M
 `MAX`th attempt (dead on failure via `retryDecision`). Same `>=` comparison as the Quint fix
 (`outbox.qnt:113-114`, `charged >= MAX_ATTEMPTS`).
 
-**D7 · Concurrency.** No new lock and no new lock-order edge: the claim still locks only delivery rows; the attempt
-INSERT's composite FK takes `KEY SHARE` on a delivery row this transaction already holds `FOR UPDATE`. A late settle
-from the lost worker still loses: its claim token (`claimed_at`) no longer matches (re-stamped, or NULL + `dead`), and
-settle requires `status = 'in_flight'`. `projects_with_due_work` is not touched: it may enumerate a project whose only
-due row is about to be dead-lettered, and that claim simply returns nothing.
+**D7 · Concurrency** (amended 2026-10-14 after the verifier on PR #373 — the first wording was wrong). The original
+lock claimed "no new lock-order edge". False: `event_delivery_attempts` also has composite FKs to
+`event_destinations` and `events` (`20260726100000:364-366`), so the claim's attempt INSERT takes `KEY SHARE` on the
+destination AFTER holding delivery locks, inverting the subsystem's one order (destination, then delivery) against
+`delete_destination`. Reproduced as a real `deadlock detected` (`deadlock-repro.sh`). **Fix:** before the claim
+statement, a separate `PERFORM … FOR KEY SHARE` locks the destinations of every stale candidate, in id order; a claim
+with no stale candidate locks nothing new. The `events` FK lock is accepted: nothing takes `FOR UPDATE` on an event,
+and only offboarding deletes them. `picked` is `AS MATERIALIZED` so the `LIMIT … SKIP LOCKED` set is evaluated once.
+A late settle from the lost worker still loses: its claim token (`claimed_at`) no longer matches (re-stamped, or
+NULL + `dead`), and settle requires `status = 'in_flight'`. `projects_with_due_work` is not touched.
 
 **D8 · Health view unchanged** (live fact above); a spec pins that `unconfirmed` lands in `total_attempts` only.
 
