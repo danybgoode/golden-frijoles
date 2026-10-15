@@ -1,0 +1,23 @@
+frijoles segments define — define (or redefine) a segment: people who did an event at least N times in the last D days
+
+Usage
+  frijoles segments define <key> --event <e> --min <n> --days <d> [--project <slug>] [--json]
+
+A bet aims at a segment by naming it in `target_segment:`; its funnel's Targeted is then the
+  segment's share of the active people, and anyone exposed outside it shows beside the funnel.
+  The key is lowercase words joined by hyphens (power-users). `everyone` is built in. Owners only.
+
+Flags
+  --event <event>   the behaviour that puts someone in the segment
+  --min <n>         at least this many times (1–10000)
+  --days <d>        within the last this many days (1–365)
+  --project <slug>  the project (default: the remembered one)
+
+Exit codes
+  0  ok         it worked
+  1  usage      the command is wrong — nothing was sent
+  2  auth       the credential is not accepted — run `frijoles login`
+  3  not-found  no such thing, or not yours
+  4  conflict   someone else changed it — re-read and retry
+  5  partial    some environments changed and some did not
+  6  server     the server or the network is unwell — retry

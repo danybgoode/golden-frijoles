@@ -712,6 +712,47 @@
         ]
       },
       {
+        "command": "segments define",
+        "summary": "define (or redefine) a segment: people who did an event at least N times in the last D days",
+        "usage": "frijoles segments define <key> --event <e> --min <n> --days <d> [--project <slug>] [--json]",
+        "needsAuth": true,
+        "flags": [
+          {
+            "flag": "--event",
+            "takesValue": true,
+            "describe": "the behaviour that puts someone in the segment"
+          },
+          {
+            "flag": "--min",
+            "takesValue": true,
+            "describe": "at least this many times (1–10000)"
+          },
+          {
+            "flag": "--days",
+            "takesValue": true,
+            "describe": "within the last this many days (1–365)"
+          },
+          {
+            "flag": "--project",
+            "takesValue": true,
+            "describe": "the project (default: the remembered one)"
+          }
+        ]
+      },
+      {
+        "command": "segments ls",
+        "summary": "this project's segments and each one's share of the last 30 days' active people",
+        "usage": "frijoles segments ls [--project <slug>] [--json]",
+        "needsAuth": true,
+        "flags": [
+          {
+            "flag": "--project",
+            "takesValue": true,
+            "describe": "the project (default: the remembered one)"
+          }
+        ]
+      },
+      {
         "command": "bet sync",
         "summary": "create the bet's flag from its epic (a Measure flag, off until you roll it out)",
         "usage": "frijoles bet sync <epic README> [--project <slug>] [--json]",
