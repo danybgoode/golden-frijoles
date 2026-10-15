@@ -48,7 +48,14 @@ export function funnelModelNote(now: Date): string | null {
   return now.getTime() < new Date(`${FUNNEL_MODEL_NOTE_UNTIL}T00:00:00Z`).getTime() ? FUNNEL_MODEL_NOTE : null
 }
 
-export function flagFunnelView(read: FlagFunnelRead | null): FunnelView {
+/**
+ * funnel-truth D13 — a bet that names a segment its project hasn't defined: said in words with no numbers, never read
+ * as everyone.
+ */
+export const segmentNotDefinedText = (key: string) =>
+  `This bet targets ${key}, which this project hasn’t defined, so its funnel isn’t read as everyone. \`frijoles segments define ${key} --event <e> --min <n> --days <d>\` defines it.`
+
+export function flagFunnelView(read: FlagFunnelRead | null, segmentKey?: string): FunnelView {
   if (read === null)
     return { kind: 'unreadable', text: 'The funnel could not be read right now. This is not a zero.' }
   const feature = read.source.kind === 'feature' ? read.source : null
@@ -62,7 +69,12 @@ export function flagFunnelView(read: FlagFunnelRead | null): FunnelView {
   const f = read.funnel
   const rows: FunnelRow[] = [
     { stage: 'Active users', people: String(f.base), share: '' },
-    { stage: 'Targeted (everyone)', people: String(f.targeted), share: pct(f.rates.targeted) },
+    // funnel-truth D14 — the funnel names its segment: everyone, or the bet's.
+    {
+      stage: segmentKey ? `Targeted: ${segmentKey}` : 'Targeted (everyone)',
+      people: String(f.targeted),
+      share: pct(f.rates.targeted),
+    },
     {
       stage: feature
         ? feature.targetEvent === null
@@ -77,10 +89,16 @@ export function flagFunnelView(read: FlagFunnelRead | null): FunnelView {
     stageRow('Satisfied', f.satisfied, f.rates.satisfied),
   ]
   const without = feature ? 'without seeing it' : 'without the flag on'
-  const beside =
+  const besideWithout =
     f.adoptedWithoutExposure === 0
       ? `Nobody adopted ${without}.`
       : `${f.adoptedWithoutExposure} ${f.adoptedWithoutExposure === 1 ? 'person' : 'people'} adopted ${without}: evidence the feature is wanted, not counted in the rates.`
+  // funnel-truth D12/D14 — people exposed outside the segment, beside the funnel and never in its rates.
+  const outside =
+    f.outside && segmentKey
+      ? ` ${f.outside.exposed} ${f.outside.exposed === 1 ? 'person' : 'people'} outside ${segmentKey} got it${f.outside.adopted === null ? '' : ` (${f.outside.adopted} adopted)`}: beside the funnel, not in its rates.`
+      : ''
+  const beside = besideWithout + outside
   // Each capped read skews different numbers; say which (verifier, #341).
   const notes = [
     read.truncated.exposures &&
@@ -122,7 +140,14 @@ export type TrendRow = {
 }
 export type FunnelTrendView =
   | { kind: 'unreadable' | 'not_exposed'; text: string }
-  | { kind: 'measured'; stages: TrendStage[]; rows: TrendRow[]; unreadable: string[] }
+  | {
+      kind: 'measured'
+      stages: TrendStage[]
+      rows: TrendRow[]
+      unreadable: string[]
+      /** funnel-truth D14 — who the trend is about, when the bet names a segment; null for everyone. */
+      segment: string | null
+    }
 
 const share = (part: number | null, whole: number | null) =>
   part === null || whole === null || whole === 0 ? null : Math.round((part / whole) * 100)
@@ -132,7 +157,7 @@ const shareText = (part: number | null, whole: number | null) => {
   return p === null ? String(part) : `${part} (${p}%)`
 }
 
-export function funnelTrendView(read: FunnelTrendRead | null): FunnelTrendView {
+export function funnelTrendView(read: FunnelTrendRead | null, segmentKey?: string): FunnelTrendView {
   if (read === null)
     return { kind: 'unreadable', text: 'The trend could not be read right now. This is not a zero.' }
   if (read.state === 'not_exposed')
@@ -203,5 +228,9 @@ export function funnelTrendView(read: FunnelTrendRead | null): FunnelTrendView {
   const unreadable = read.periods.flatMap((p) =>
     p.state === 'unreadable' ? [`${p.label}: ${p.reason}`] : []
   )
-  return { kind: 'measured', stages, rows, unreadable }
+  const outside = read_.reduce((n, p) => n + (p.funnel.outside?.exposed ?? 0), 0)
+  const segment = segmentKey
+    ? `Targeted: ${segmentKey}. Each month counts the people in it as of the month’s end; ${outside} ${outside === 1 ? 'person' : 'people'} outside it got it, beside these numbers.`
+    : null
+  return { kind: 'measured', stages, rows, unreadable, segment }
 }

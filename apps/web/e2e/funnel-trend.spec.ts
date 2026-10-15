@@ -4,8 +4,8 @@
 import { test, expect } from '@playwright/test'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { randomBytes } from 'node:crypto'
-import { readFunnelTrend } from '../lib/flag-funnel-read'
-import type { FunnelMeasure, TrendPeriod } from '../lib/flag-funnel'
+import { readFunnel, readFunnelTrend } from '../lib/flag-funnel-read'
+import type { FunnelMeasure, SegmentRule, TrendPeriod } from '../lib/flag-funnel'
 import { specWorkspaceId } from './helpers/spec-workspace'
 
 function db() {
@@ -151,4 +151,52 @@ test('funnel-truth D3: the base cut at T (newest first) — every period startin
   expect(oct.state === 'read' && oct.funnel.base).toBe(1)
   const jul = read.periods[0]
   expect(jul.state === 'unreadable' && jul.reason).toContain('before 2026-08-20')
+})
+
+// funnel-truth S2.2 (D12) — Targeted is the segment, read from PostgREST: the segment's own event read under the cap,
+// exposed people outside it beside the funnel, and a cut segment read unreadable rather than read as everyone.
+const power: SegmentRule = { key: 'power-users', event: 'report_run', minCount: 2, days: 30 }
+const ran = (user: string, at: string): Seed => ({ user, event: 'report_run', at })
+
+test('funnel-truth D12: a segment narrows Targeted; exposed people outside it go beside, in the funnel and the trend', async () => {
+  const client = db()
+  const id = await project(client, [
+    ran('a', '2026-09-20'),
+    ran('a', '2026-10-01'),
+    on('a', '2026-10-02'),
+    order('a', '2026-10-03'),
+    on('b', '2026-10-02'), // never ran a report: outside
+    order('b', '2026-10-04'),
+    seen('c', '2026-10-05'), // active, outside, never exposed
+  ])
+  const everyone = await readFunnel(client, id, source, measure, 'all', now)
+  const aimed = await readFunnel(client, id, source, measure, 'all', now, { segment: power })
+  if (everyone.state !== 'measured' || aimed.state !== 'measured') throw new Error('not measured')
+  expect('outside' in everyone.funnel).toBe(false)
+  expect(everyone.truncated).toEqual({ exposures: false, events: false, base: false })
+  expect(aimed.funnel).toMatchObject({
+    targeted: 1,
+    exposed: 1,
+    adopted: 1,
+    outside: { exposed: 1, adopted: 1 },
+  })
+  expect(aimed.truncated.segment).toBe(false)
+
+  const trend = await readFunnelTrend(client, id, source, measure, 'month', now, { segment: power })
+  if (trend.state !== 'measured') throw new Error(trend.state)
+  const oct = trend.periods.at(-1)!
+  expect(oct.state === 'read' && [oct.funnel.targeted, oct.funnel.exposed, oct.funnel.outside]).toEqual([
+    1,
+    1,
+    { exposed: 1, adopted: 1 },
+  ])
+  // The segment's own read cut: who is in it can't be told, so every period is unreadable — never read as everyone.
+  const cut = await readFunnelTrend(client, id, source, measure, 'month', now, {
+    segment: power,
+    rowCap: { segment: 1 },
+  })
+  if (cut.state !== 'measured') throw new Error(cut.state)
+  expect(cut.periods.every((p) => p.state === 'unreadable' && /who is in power-users/.test(p.reason))).toBe(
+    true
+  )
 })

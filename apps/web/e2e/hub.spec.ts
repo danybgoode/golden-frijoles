@@ -486,6 +486,73 @@ test('a measured epic shows its funnel on its epic page while the funnel switch 
   } else expect(html).not.toContain('The funnel over time')
 })
 
+// funnel-truth S2.2/S2.4 (D12–D14) — a bet aimed at a segment: its funnel names the segment, and people exposed outside
+// it show beside; a bet naming a segment the project never defined says so, with no numbers — never read as everyone.
+// Here, in this serial file, for the same latest-wins reason as above.
+test('a bet aimed at a segment names it on its epic page; an undefined segment reads as not defined', async ({
+  request,
+}) => {
+  test.skip(!isFlagFunnelsEnabled(), 'the funnel is behind the funnel switch')
+  const db = dbClient()
+  const { data: demo } = await db.from('projects').select('id').eq('slug', DEMO_SLUG).single()
+  const projectId = demo!.id as string
+  const stamp = Date.now()
+  const segmentKey = `spec-power-${stamp}`
+  const flagKey = `spec.segment_${stamp}_enabled`
+  const defined = await db
+    .from('segments')
+    .insert({ project_id: projectId, key: segmentKey, event: `spec_report_${stamp}`, min_count: 1, days: 30 })
+  if (defined.error) throw new Error(`could not define the segment: ${defined.error.message}`)
+  const ago = (h: number) => new Date(Date.now() - h * 3_600_000).toISOString()
+  const ev = (user: string, event: string, h: number, on = false) => ({
+    project_id: projectId,
+    user_id: user,
+    event,
+    created_at: ago(h),
+    tags: on ? { flag_key: flagKey, variant: 'on' } : {},
+    ...(on ? { feature_id: flagKey } : {}),
+  })
+  const seeded = await db
+    .from('events')
+    .insert([
+      ev(`spec-in-${stamp}`, `spec_report_${stamp}`, 5),
+      ev(`spec-in-${stamp}`, 'flag_evaluated', 4, true),
+      ev(`spec-out-${stamp}`, 'flag_evaluated', 4, true),
+      ev(`spec-out-${stamp}`, `spec_adopt_${stamp}`, 3),
+    ])
+  if (seeded.error) throw new Error(`could not seed events: ${seeded.error.message}`)
+  try {
+    const aimed = `spec-aimed-${stamp}`
+    const ghost = `spec-ghost-${stamp}`
+    const measured = { flag_key: flagKey, adopted_event: `spec_adopt_${stamp}`, retention_days: 7 }
+    await pushRoadmap(request, [
+      epicRow({
+        slug: aimed,
+        name: `Aimed ${aimed}`,
+        stage: 'Building',
+        ...measured,
+        target_segment: segmentKey,
+      }),
+      epicRow({
+        slug: ghost,
+        name: `Ghost ${ghost}`,
+        stage: 'Building',
+        ...measured,
+        target_segment: 'never-defined',
+      }),
+    ])
+    const html = await (await request.get(`/hub/${DEMO_SLUG}/epic/${aimed}`)).text()
+    expect(html).toContain(`Targeted: ${segmentKey}`)
+    expect(html).toContain(`1 person outside ${segmentKey} got it (1 adopted): beside the funnel`)
+    const unknown = await (await request.get(`/hub/${DEMO_SLUG}/epic/${ghost}`)).text()
+    expect(unknown).toContain(`Ghost ${ghost}`) // CONTROL: the epic rendered
+    expect(unknown).toContain('This bet targets never-defined, which this project hasn')
+    expect(unknown).not.toContain('Targeted (everyone)')
+  } finally {
+    await db.from('segments').delete().eq('project_id', projectId).eq('key', segmentKey)
+  }
+})
+
 // owed-on-screen S1.1/S1.2 — owed checks ride the push, are stored, and reach NO anonymous reader of the public project.
 // Here, in this serial file, for the same latest-wins reason as above. The marker is unique per run, so a match anywhere
 // in a public reply can only be this push's owed check.
