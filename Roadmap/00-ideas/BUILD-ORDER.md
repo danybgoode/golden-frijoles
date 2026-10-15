@@ -24,11 +24,10 @@ _a pitch is waiting at the approval gate._
 
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
 
-## Ready (11)
+## Ready (10)
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
-- [A delivery whose settle keeps failing is re-sent every 5 minutes, uncounted and unlogged](../01-growth-engine/delivery-stale-reclaim-uncounted/README.md) — #88 · 01 Growth Engine · 0/1 stories · risk: High · appetite S · _docs: status scaffolded_
 - [Owed on screen](../02-commercial/owed-on-screen/README.md) — #92 · 02 Commercial · 0/6 stories · risk: High · appetite M · _docs: status scaffolded_
 - [Funnel truth](../01-growth-engine/funnel-truth/README.md) — #93 · 01 Growth Engine · 0/8 stories · risk: High · appetite L · _docs: status scaffolded_
 - [Drill impact for agents](../01-growth-engine/drill-impact-for-agents/README.md) — #94 · 01 Growth Engine · 0/6 stories · risk: High · appetite M · _docs: status scaffolded_
@@ -48,13 +47,14 @@ _a work branch is on origin. Not in this committed file: `node scripts/build-ord
 
 _a PR is ready for review, or merged and waiting for its close-out. Not in this committed file: `node scripts/build-order.mjs --live` or the Hub board._
 
-## Shipped (86)
+## Shipped (87)
 
 _merged, deployed and closed._
 
 - [Several North Star metrics, one reading rule](../01-growth-engine/north-star-multi-metric-read/README.md) — #91 · 01 Growth Engine · 1/1 stories · risk: Low · appetite S · _docs: status shipped_
 - [One public monorepo — skills/ subtree, a lean install mirror, licences, a private docs repo](../09-platform-infra/public-monorepo/README.md) — #90 · 09 Platform Infra · 15/15 stories · risk: High · appetite M · _docs: status shipped_
 - [One plugin, one install — Golden Frijoles ships as a public plugin whose skills run in anyone's repo](../09-platform-infra/golden-frijoles-plugin/README.md) — #89 · 09 Platform Infra · 23/23 stories · risk: High · appetite L · _docs: status shipped_
+- [✅ A delivery whose settle keeps failing is re-sent every 5 minutes, uncounted and unlogged](../01-growth-engine/delivery-stale-reclaim-uncounted/README.md) — #88 · 01 Growth Engine · 1/1 stories · risk: High · appetite S · _docs: status shipped_
 - [The outcome report for any product ✅](../02-commercial/outcome-report-any-product/README.md) — #87 · 02 Commercial · 4/4 stories · risk: High · appetite S · _docs: status shipped_
 - [Scenarios made PM-operable — define, launch, and kill a scenario from the UI](../01-growth-engine/scenarios-pm-operable/README.md) — #86 · 01 Growth Engine · 10/10 stories · risk: High · appetite M · _docs: status shipped_
 - [Agent-legible horizon and docs ✅](../02-commercial/agent-legible-horizon/README.md) — #85 · 02 Commercial · 5/5 stories · risk: High · appetite S · _docs: status shipped_

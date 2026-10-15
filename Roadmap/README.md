@@ -541,7 +541,7 @@ independently shippable slice of value.
   the engine (#184). **Shipped 2026-09-28**; the local folder move was done after, and the epic closed 2026-10-14.
 - ✅ [Verify spike](09-platform-infra/verify-spike/README.md): formal verification, measured on our own code
   in one session. A Quint model of the delivery outbox found a stranded row, an unbounded unlogged resend
-  (bug seed, fix already model-checked) and an unenforced timing order (guard test, #194). Lean proves the
+  (**fixed 2026-10-14**, [delivery-stale-reclaim-uncounted](01-growth-engine/delivery-stale-reclaim-uncounted/README.md)) and an unenforced timing order (guard test, #194). Lean proves the
   flag explanation agrees with the served value for every type-correct call, and a differential test ties
   the model to the shipped code (0/6,000 disagreements). **Decision:** Quint + Lean, per-PR simulation,
   nightly exhaustive checks, and no proof without a differential test. **Shipped 2026-09-29.** No landing
@@ -626,6 +626,10 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-14**: `delivery-stale-reclaim-uncounted` **shipped** (≈$8.77 vs $5–17): a delivery whose settle keeps failing
+  is now charged per presumed send, logged as `unconfirmed`, and dead-lettered at the budget instead of re-sent every
+  5 minutes forever (verify-spike F2). The verifier found a real lock-order deadlock in the first fix; a two-transaction
+  spec now pins it.
 - **2026-10-14**: `outcome-report-any-product` **shipped** (≈$23): any product can push its outcome report from the kit,
   and lead time is now read from each epic's real status history (medusa-bonsai's median: 7 → 3.4 days, said on the report).
 - **2026-10-14**: `agent-legible-horizon` **shipped** (≈$10): an agent can read a horizon, connect Codex and debug from

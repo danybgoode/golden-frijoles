@@ -3,7 +3,7 @@ epic: delivery-stale-reclaim-uncounted
 sprint: 1
 title: "A stale reclaim charges the presumed attempt"
 risk: high
-phase: Building
+phase: Shipped
 stories_total: 1
 stories:
   - id: S1.1
@@ -12,17 +12,17 @@ stories:
     i_want: "a delivery that was sent but never recorded to stop reaching my endpoint once its retry budget is spent, with every presumed send in the attempt log"
     so_that: "a partial database failure can't send me the same event every 5 minutes without limit while every screen shows 0 attempts"
     risk: high
-    status: planned
+    status: shipped
 ---
 # A delivery whose settle keeps failing is re-sent every 5 minutes, uncounted and unlogged — Sprint 1: A stale reclaim charges the presumed attempt
 
-**Status:** ⬜ not started
+**Status:** ✅ shipped 2026-10-14 — PR #373, merge `4304135` (commits `764c5f6`, `2ec8599`, `0257d06`, `c843261`); migration applied to production before the merge
 
 ## Stories
 <!-- Keep the heading shape `### Story 1.M — <title>`; append ✅ + the commit ref when it ships. Name the story in
      each commit subject (`S1.1 …`). The frontmatter `stories:` entry is what tools read. -->
 
-### Story 1.1 — A stale reclaim charges the presumed attempt and respects the budget
+### Story 1.1 — A stale reclaim charges the presumed attempt and respects the budget ✅ `764c5f6`
 **As** a customer receiving webhooks from Golden Frijoles, **I want** a delivery that was sent but never recorded to
 stop reaching my endpoint once its retry budget is spent, with every presumed send in the attempt log, **so that** a
 partial database failure can't send me the same event every 5 minutes without limit while every screen shows 0
@@ -78,3 +78,13 @@ Env: production · https://goldenfrijoles.com
 Step 6 is a signed-in walkthrough, owed to the product owner unless a smoke account exists.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+### Smoke results — run 2026-10-14 against production (`slweidgffcfndnskcskc`, deploy of `4304135` = success)
+1. ✅ `supabase migration list`: `20261016100000` on Local and Remote.
+2. ✅ one `claim_deliveries` row, ending `p_max_attempts integer`; outcome CHECK includes `unconfirmed`.
+3. ✅ the 4-arg call on the zero project returned `0` rows; `event_deliveries` unchanged (323 pending, 6 delivered).
+4. ✅ (by grant, not by curl) `has_function_privilege` on prod: anon `false`, authenticated `false`, service_role `true`.
+   The curl form needs the production anon key, and the local `.env.local` holds the local stack's key ("Invalid API
+   key"); fetching prod keys prints the service-role secret, so it was not done. The CI spec pins the `42501` shape.
+5. ✅ `delivery.destinations_enabled` production `off v1`.
+6. ⏳ **Owed to Daniel:** the signed-in look at https://goldenfrijoles.com/app/destinations/golden-frijoles.
