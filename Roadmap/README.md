@@ -117,11 +117,11 @@ independently shippable slice of value.
   real status history (the old search dated most ships at the README's creation — the report says the method changed);
   "Re-opened after shipping" as its own number.
 - ✅ [Agent-legible horizon and docs](02-commercial/agent-legible-horizon/README.md) — **shipped 2026-10-14** (#366; kit
-  1.9.3, CLI 1.7.0 — npm publish owed). `frijoles horizon` and the `get_horizon` MCP tool read a product's horizon
+  1.9.3, CLI 1.7.0 on npm). `frijoles horizon` and the `get_horizon` MCP tool read a product's horizon
   headless; Codex MCP setup is in install.md and llms.txt; https://goldenfrijoles.com/agents.md names every feature's
   headless read / change / check path; login says why a product is active.
 - ✅ [Many products](02-commercial/many-products/README.md) — **shipped 2026-10-14** (#356, #359, #361; plugin + kit
-  1.9.0/1.9.1, CLI 1.6.0 — npm publish owed). A founder or their agent makes, binds and deletes products from the terminal
+  1.9.0/1.9.1, CLI 1.6.0 on npm). A founder or their agent makes, binds and deletes products from the terminal
   or the console: `frijoles login` signs in the account, `frijoles init --create <slug>` makes a product and binds the
   repo, `+ New product` in the console, owner delete (every key dead at once) and purge after 30 days. Each workspace
   holds up to 10 products (a data `UPDATE` raises it). Each product's `/horizon` shows its own destinations, declared in

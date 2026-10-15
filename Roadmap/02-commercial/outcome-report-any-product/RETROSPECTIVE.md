@@ -22,6 +22,6 @@ shipping) as its own number and one report line; every screen names the kit comm
 
 ## Gaps / follow-ups
 - **Owed to the product owner:** the first aomx push and its signed-in report; re-push medusa-bonsai's report (median
-  7 → 3.4 days, with the caveat); `npm publish` of CLI 1.7.0 (from agent-legible-horizon).
+  7 → 3.4 days, with the caveat); ~~`npm publish` of CLI 1.7.0 (from agent-legible-horizon)~~ (published 2026-10-14).
 - A headless read of the outcome report (CLI/MCP) — /agents.md says "No headless read yet".
 - A renamed epic folder restarts its dates (no `--follow`); none matter today.

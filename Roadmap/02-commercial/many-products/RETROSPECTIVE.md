@@ -43,8 +43,8 @@ _Crew (actual): claude-opus-5-5 ≈$56.66 (architect: every auth/tenancy/migrati
 - Two local e2e runners on one machine share port 3110 and one database: a spec can hit the other worktree's server.
 
 ## Gaps / follow-ups
-- **Owed to the product owner:** `npm publish` of `@golden-frijoles/cli@1.6.0` (2FA) — the CLI steps of S1 and S2's
-  walkthroughs wait on it; the signed-in walkthroughs (approve page, New product, console delete on Setup › CLI, /connect,
+- **Owed to the product owner:** ~~`npm publish` of `@golden-frijoles/cli@1.6.0` (2FA) — the CLI steps of S1 and S2's
+  walkthroughs wait on it~~ (published; 1.7.0 on npm 2026-10-14); the signed-in walkthroughs (approve page, New product, console delete on Setup › CLI, /connect,
   the aomx horizon); the hypothesis read (`bets_placed_per_workspace` 0 → 3, read 30 days after shipping).
 - The external security lens was DARK on #356 and #359 (agy returned only its trailer at full scope; vibe out of budget;
   codex excluded); it landed Clean on #361 at small scope. Same-family verifier security passes stood in.

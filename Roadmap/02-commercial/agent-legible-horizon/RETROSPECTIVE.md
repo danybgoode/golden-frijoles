@@ -22,7 +22,8 @@ plugin + kit 1.9.3.
 - A guard's "not landed yet" excuse must expire with the thing it excuses, or it hides that thing's removal.
 
 ## Gaps / follow-ups
-- **Owed to the product owner:** `npm publish` of `@golden-frijoles/cli@1.7.0`; then `frijoles horizon` in a bound repo
+- **Owed to the product owner:** ~~`npm publish` of `@golden-frijoles/cli@1.7.0`~~ (published 2026-10-14; from npm,
+  `frijoles horizon --project <slug>` and `whoami`'s "remembered on this machine" work); then `frijoles horizon` in a bound repo
   and the login line on a machine that remembers a product.
 - Next (product owner, 2026-10-14): the outcome report for ANY product — ship `pod-report` in the kit, compute shipped
   dates from each revision's frontmatter (a fixture proving the validated numbers hold), fix the console's empty-state
