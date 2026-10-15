@@ -126,8 +126,9 @@ each rule lives where it says, once.
   `OWED_CATEGORIES` are COPIES of `KINDS` / `CATEGORIES` in `scripts/owed-ledger.mjs`, pinned by a spec (the
   `ROADMAP_STAGES` precedent). The push route stores `owed` beside `items` (it is not in `items`, so it would be dropped).
 - **D5 — The strip is the read seam** (CODE-QUALITY §2: unrepresentable, not remembered). `lib/report-artifacts.ts`'s
-  `getLatestArtifact` / `getLatestArtifactBefore` return a roadmap payload WITHOUT `owed`, via a pure
-  `withoutOwed(payload)` in a zero-import `lib/owed.ts`. Every existing reader (hub pages, connector, CLI, share link,
+  `getLatestArtifact` / `getLatestArtifactBefore` return a roadmap payload WITHOUT `owed`: every read maps its row through
+  the zero-import `lib/report-artifact-row.ts → artifactFromRow(row, { keepOwed })`, which applies `withoutOwed`
+  (amended at build: the mapping moved there so the strip itself is unit-tested, not just the helper). Every existing reader (hub pages, connector, CLI, share link,
   portfolio, finops, pod report) is covered with no edit.
 - **D6 — The one raw read.** `lib/report-artifacts.ts` exports `getLatestRoadmapWithOwed(projectId)`. Its callers are a
   closed registry pinned by a source-guard spec: `app/api/v1/roadmap/push/route.ts` (the D16 unchanged-board compare must

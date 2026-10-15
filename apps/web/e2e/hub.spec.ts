@@ -479,3 +479,98 @@ test('a measured epic shows its funnel on its epic page while the funnel switch 
   expect(html).toMatch(/aria-label="The flag(&#x27;|')s funnel"/)
   expect(html).toContain('No one has been counted with this flag on yet')
 })
+
+// owed-on-screen S1.1/S1.2 — owed checks ride the push, are stored, and reach NO anonymous reader of the public project.
+// Here, in this serial file, for the same latest-wins reason as above. The marker is unique per run, so a match anywhere
+// in a public reply can only be this push's owed check.
+test('owed checks are stored with the push and absent from every anonymous read of the public project', async ({
+  request,
+}) => {
+  const slug = `spec-owed-${Date.now()}`
+  const marker = `OWED-MARKER-${Date.now()}`
+  const data = {
+    schemaVersion: 1,
+    generatedAt: new Date().toISOString(),
+    source: { commit: 'abc1234', ref: 'main' },
+    items: [epicRow({ slug, name: `Owed ${slug}`, stage: 'Building' })],
+    owed: [
+      {
+        epic: slug,
+        text: `${marker} the _Intent_ answer`,
+        kind: 'judgment',
+        category: 'other',
+        file: `Roadmap/02-commercial/${slug}/RETROSPECTIVE.md`,
+        line: 4,
+      },
+      {
+        epic: null,
+        text: `${marker} a smoke`,
+        kind: 'signed-in',
+        category: 'auth-path',
+        file: 'apps/web/e2e/x.spec.ts',
+        line: 1,
+      },
+    ],
+  }
+  const post = () =>
+    request.post('/api/v1/roadmap/push', { headers: { Authorization: `Bearer ${DEMO_KEY}` }, data })
+  const first = await post()
+  expect(first.status(), await first.text()).toBe(200)
+  const stored = await first.json()
+
+  // Stored beside the rows, as pushed.
+  const db = dbClient()
+  const { data: row } = await db
+    .from('report_artifacts')
+    .select('payload')
+    .eq('id', stored.artifactId)
+    .single()
+  expect((row?.payload as { owed?: unknown[] }).owed).toHaveLength(2)
+
+  // The unchanged-board check reads the RAW latest (D6): the same push again is not a new version.
+  const again = await post()
+  expect(again.status()).toBe(200)
+  expect((await again.json()).unchanged).toBe(true)
+
+  // An unknown kind is a 400 naming the field (AC S1.1-3).
+  const bad = await request.post('/api/v1/roadmap/push', {
+    headers: { Authorization: `Bearer ${DEMO_KEY}` },
+    data: { ...data, owed: [{ ...data.owed[0], kind: 'whenever' }] },
+  })
+  expect(bad.status()).toBe(400)
+  expect(await bad.text()).toContain('owed kind must be one of')
+
+  // Signed out, every hub page of the public project renders, and none carries the check.
+  for (const path of [
+    `/hub/${DEMO_SLUG}`,
+    `/hub/${DEMO_SLUG}/board`,
+    `/hub/${DEMO_SLUG}/epic/${slug}`,
+    `/hub/${DEMO_SLUG}/horizon`,
+  ]) {
+    const res = await request.get(path)
+    expect(res.status(), path).toBe(200)
+    expect(await res.text(), path).not.toContain(marker)
+  }
+
+  // The anonymous connector (the public URL): no owed key and no check, in the horizon or any other reply.
+  const { data: project } = await db.from('projects').select('id').eq('slug', DEMO_SLUG).single()
+  const { data: tokenRow } = await db
+    .from('connector_tokens')
+    .select('token')
+    .eq('project_id', project!.id)
+    .is('revoked_at', null)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  // Fail loud, as e2e/mcp-connector.spec.ts does: a skipped boundary check reads as a passed one.
+  if (!tokenRow) throw new Error('demo project has no live connector token — run npm run seed:demo first')
+  const res = await request.post(`/api/v1/public/mcp/c/${tokenRow!.token}`, {
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream' },
+    data: { jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'get_horizon', arguments: {} } },
+  })
+  expect(res.status()).toBe(200)
+  const text = await res.text()
+  expect(text).toContain('\\"pushed\\":true')
+  expect(text).not.toContain(marker)
+  expect(text).not.toMatch(/\\?"owed/)
+})
