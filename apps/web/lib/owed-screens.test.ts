@@ -44,9 +44,15 @@ test('only the screen helper and the portfolio read owed checks for a viewer', (
 test('the flag is awaited before the member read, in both places that read for a screen', () => {
   for (const file of ['lib/owed-screen.ts', 'lib/portfolio.ts']) {
     const src = code(read(file))
-    const gate = src.indexOf('await isOwedOnScreenEnabled()')
+    // The gate's RESULT must decide: an early return when it is off, before any read. Awaiting it and ignoring the answer
+    // (`const on = await …; void on`) would satisfy a weaker "awaited first" check (verifier, #376) — and the signed-in
+    // dark spec runs nowhere in CI, so this is the CI defence of "flag off, a member sees nothing".
+    const gate = src.search(/if \(!\(await isOwedOnScreenEnabled\(\)\)\) return\b/)
     const readAt = src.indexOf('getOwedForViewer(')
-    assert.ok(gate !== -1, `${file} awaits the gate (a bare call is a Promise, always truthy)`)
+    assert.ok(
+      gate !== -1,
+      `${file} returns early when the gate is off (awaited: a bare call is a truthy Promise)`
+    )
     assert.ok(readAt !== -1 && gate < readAt, `${file} checks the flag before it reads`)
   }
 })
