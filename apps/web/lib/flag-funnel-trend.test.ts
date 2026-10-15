@@ -173,3 +173,13 @@ test('D1: weeks start on Monday 00:00 UTC; months on the 1st', () => {
     ['2025-12', '2026-01', '2026-02']
   )
 })
+
+test('D1 (Codex, #378): an exposure dated after now opens no period; only future exposures is no trend', () => {
+  const future = on('z', 12, 1) // December, after now (2026-10-15)
+  const t = computeFunnelTrend([on('a', 10, 2), future], rule, measure, { by: 'month', now })!
+  assert.deepEqual(
+    t.periods.map((p) => p.label),
+    ['2026-10']
+  )
+  assert.equal(computeFunnelTrend([future], rule, measure, { by: 'month', now }), null)
+})

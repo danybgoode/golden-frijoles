@@ -243,7 +243,11 @@ export async function readFunnelTrend(
   if (exposures.rows.length === 0) return { state: 'not_exposed', source, by }
   // The first period starts before the first exposure (a month's 1st, a week's Monday): read from there, so that
   // period's active people and adoptions beside the funnel are whole, not counted from the first exposure on.
-  const firstOn = Math.min(...exposures.rows.map((r) => new Date(when(r)).getTime()))
+  // Exposures dated after now (a skewed clock) open no period (Codex, #378); none left is nobody exposed yet.
+  const firstOn = Math.min(
+    ...exposures.rows.map((r) => new Date(when(r)).getTime()).filter((t) => t <= now.getTime())
+  )
+  if (firstOn === Infinity) return { state: 'not_exposed', source, by }
   const from = new Date(periodStart(firstOn, by)).toISOString()
   const to = now.toISOString()
   const events = await readMeasureEvents(client, projectId, source, measure, from, to, cap.events)

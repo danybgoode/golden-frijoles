@@ -272,24 +272,24 @@ export function computeFunnelTrend(
   measure: FunnelMeasure,
   options: { by: TrendBy; now: number; baseActivity?: ReadonlyArray<{ person: string; at: number }> }
 ): FunnelTrend | null {
+  // An exposure dated after `now` (a skewed client clock's occurred_at) never opens a period: the trend ends at now.
   let first = Infinity
   for (const e of events)
-    if (!isSystemUser(e.userId) && isExposure(e, rule)) first = Math.min(first, ms(e.createdAt))
+    if (!isSystemUser(e.userId) && isExposure(e, rule) && ms(e.createdAt) <= options.now)
+      first = Math.min(first, ms(e.createdAt))
   if (first === Infinity) return null
-  const periods = trendPeriods(first, Math.max(first, options.now), options.by).map(
-    ({ label, start, end }): TrendPeriod => {
-      const basePeople = new Set(
-        (options.baseActivity ?? []).filter((a) => a.at >= start && a.at < end).map((a) => a.person)
-      )
-      return {
-        label,
-        start: new Date(start).toISOString(),
-        end: new Date(end).toISOString(),
-        maturing: end + measure.retentionDays * DAY_MS > options.now,
-        state: 'read',
-        funnel: computeFunnel(events, rule, measure, { basePeople, since: start, until: end }),
-      }
+  const periods = trendPeriods(first, options.now, options.by).map(({ label, start, end }): TrendPeriod => {
+    const basePeople = new Set(
+      (options.baseActivity ?? []).filter((a) => a.at >= start && a.at < end).map((a) => a.person)
+    )
+    return {
+      label,
+      start: new Date(start).toISOString(),
+      end: new Date(end).toISOString(),
+      maturing: end + measure.retentionDays * DAY_MS > options.now,
+      state: 'read',
+      funnel: computeFunnel(events, rule, measure, { basePeople, since: start, until: end }),
     }
-  )
+  })
   return { by: options.by, periods }
 }
