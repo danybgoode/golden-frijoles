@@ -23,7 +23,10 @@ _Quote vs actual: $15–32 (M, n=20, p25–p75) → not measured (no Claude sess
   agents, and a bad share link still answers 404 with the generic "Whoever shared it can make you a new one".
 
 ## What we learned
-- Nothing new for LEARNINGS. The PR's own note stands: when one external reviewer has to run both the general and the
+- **A terminal animation is checked in the redraw stream and a real pty.** The verifier found hiding the cursor could
+  strand it on Ctrl-C, and review found a missing carriage return between frames; both passed the frame-string unit
+  tests. Promoted to LEARNINGS (the "what the suite cannot reach" entry).
+- The PR's own note stands: when one external reviewer has to run both the general and the
   security prompt, family independence is short, and the fresh verifier is the separate check.
 
 ## Gaps / follow-ups

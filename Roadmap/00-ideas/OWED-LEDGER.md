@@ -99,7 +99,7 @@ _Generated: 2026-10-14_
 
 - `Roadmap/01-growth-engine/sdk-1-0/RETROSPECTIVE.md:33` · other — **Owed to Daniel:** walkthrough step 3 (a real `identify` + `track` seen in the catalog).
 - `Roadmap/01-growth-engine/signals-loop/sprint-2.md:144` · auth-path — (Owed to Daniel by name — needs a real Claude session.)*
-- `Roadmap/02-commercial/brand-reveal-error-pages/RETROSPECTIVE.md:30` · other — **Owed to Daniel:** the interactive setup reveal in a real terminal (sprint-1 steps 1–2, scriptable by an agent with a pseudo-terminal). ~~The `_Intent_` word~~: answered yes on 2026-10-14.
+- `Roadmap/02-commercial/brand-reveal-error-pages/RETROSPECTIVE.md:33` · other — **Owed to Daniel:** the interactive setup reveal in a real terminal (sprint-1 steps 1–2, scriptable by an agent with a pseudo-terminal). ~~The `_Intent_` word~~: answered yes on 2026-10-14.
 - `Roadmap/02-commercial/commercial-shell/RETROSPECTIVE.md:93` · auth-path — The live browser/session smokes owed to Daniel per Sprint 2/3's QA sections (the connector round-trip, the "paste into a chat app" unfurl check) are still outstanding — unchanged by this session, tracked in their respective sprint docs.
 - `Roadmap/02-commercial/connect-page/RETROSPECTIVE.md:42` · other — **Owed to Daniel:** the walkthrough (a fresh Google signup lands on Connect with no key; the Claude app turns a flag off with the URL it was given).
 - `Roadmap/02-commercial/result-record/RETROSPECTIVE.md:43` · other — The interactive walkthroughs are owed to Daniel (see the sprint files).
