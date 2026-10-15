@@ -83,8 +83,8 @@ _Generated: 2026-10-15_
 ## signed-in (24)
 
 - `apps/web/e2e/app-auth.spec.ts:121` · auth-path — authed member-vs-owner HTTP path needs a real session (browser smoke owed to Daniel), so the
-- `apps/web/e2e/delivery-replay.spec.ts:18` · auth-path — The authenticated /app replay + delivery-history UI is a real-session BROWSER smoke owed to Daniel.
-- `apps/web/e2e/delivery-replay.spec.ts:229` · other — browser smoke owed to Daniel; this pins the delivery-level property it depends on.)
+- `apps/web/e2e/delivery-replay.spec.ts:20` · auth-path — The authenticated /app replay + delivery-history UI is a real-session BROWSER smoke owed to Daniel.
+- `apps/web/e2e/delivery-replay.spec.ts:231` · other — browser smoke owed to Daniel; this pins the delivery-level property it depends on.)
 - `apps/web/e2e/destinations.spec.ts:30` · auth-path — /app/destinations) is a real-session BROWSER smoke owed to Daniel — the same boundary
 - `apps/web/e2e/funnel.spec.ts:77` · other — assertions this test used to make) is the browser smoke owed to Daniel. The JSON endpoint above
 - `apps/web/e2e/hub.authed.spec.ts:10` · auth-path — by hand. That is precisely the "browser smoke owed to the product owner" WAYS-OF-WORKING says a

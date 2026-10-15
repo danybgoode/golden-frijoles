@@ -119,6 +119,9 @@ BEGIN
            last_error    = CASE WHEN p.stale AND d.attempt_count + 1 >= p_max_attempts
                                 THEN 'retry budget spent: the last claim was never settled (presumed sent)'
                                 ELSE d.last_error END,
+           -- the presumed attempt happened during the lost claim: stamp its time, so a row dead-lettered
+           -- here never reads "6 attempts, last attempt —" (verifier nit, PR #373)
+           last_attempt_at = CASE WHEN p.stale THEN d.claimed_at ELSE d.last_attempt_at END,
            updated_at    = p_now
       FROM picked p
      WHERE d.id = p.id

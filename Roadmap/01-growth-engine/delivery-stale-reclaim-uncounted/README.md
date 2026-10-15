@@ -127,7 +127,7 @@ settles `row.attempt_count + 1`, so a row reclaimed at `MAX-2` is returned at `M
 lock claimed "no new lock-order edge". False: `event_delivery_attempts` also has composite FKs to
 `event_destinations` and `events` (`20260726100000:364-366`), so the claim's attempt INSERT takes `KEY SHARE` on the
 destination AFTER holding delivery locks, inverting the subsystem's one order (destination, then delivery) against
-`delete_destination`. Reproduced as a real `deadlock detected` (`deadlock-repro.sh`). **Fix:** before the claim
+`delete_destination`. Reproduced as a real `deadlock detected`, now pinned in CI by a two-transaction pg spec (`delivery-replay.spec.ts`, "cannot DEADLOCK", the real drain shape) that goes red without the fix. **Fix:** before the claim
 statement, a separate `PERFORM … FOR KEY SHARE` locks the destinations of every stale candidate, in id order; a claim
 with no stale candidate locks nothing new. The `events` FK lock is accepted: nothing takes `FOR UPDATE` on an event,
 and only offboarding deletes them. `picked` is `AS MATERIALIZED` so the `LIMIT … SKIP LOCKED` set is evaluated once.

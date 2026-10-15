@@ -1,9 +1,11 @@
 import { test, expect } from '@playwright/test'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { Client as PgClient } from 'pg'
 import { dispatchPendingDeliveries, STALE_CLAIM_MS } from '@/lib/delivery-dispatch'
 import { retryDecision, MAX_ATTEMPTS, BASE_DELAY_MS, MAX_DELAY_MS } from '@/lib/retry-policy'
 import { verifyWebhookSignature } from '@/lib/webhook-signature'
 import { specWorkspaceId } from './helpers/spec-workspace'
+import { requireTestDatabaseUrl } from './helpers/test-db-cleanup'
 
 // event-destination-router · Sprint 2, Story 2.2 — retry, terminal failure, and replay.
 //
@@ -624,9 +626,10 @@ test('a stale reclaim that spends the budget is DEAD-LETTERED in the claim and N
 
     const { data: row } = await db
       .from('event_deliveries')
-      .select('status, attempt_count, claimed_at, last_error')
+      .select('status, attempt_count, claimed_at, last_error, last_attempt_at')
       .eq('id', deliveryId)
       .single()
+    expect(row!.last_attempt_at, 'the presumed attempt is dated').not.toBeNull()
     expect(row!.status).toBe('dead')
     expect(row!.attempt_count).toBe(MAX_ATTEMPTS)
     expect(row!.claimed_at).toBeNull()
@@ -760,6 +763,63 @@ test('delivery_health counts an unconfirmed attempt in total_attempts only, not 
     expect(Number(row.failed_attempts)).toBe(0)
     expect(Number(row.delivered)).toBe(0)
   } finally {
+    await db.from('projects').delete().eq('id', pid)
+  }
+})
+
+test('a stale-charging claim cannot DEADLOCK against a destination drain (lock order: destination first)', async () => {
+  // Verifier, PR #373: the claim's `unconfirmed` INSERT takes KEY SHARE on the destination through the
+  // attempt log's FK. Taken AFTER the delivery locks, that inverts delete_destination's order (FOR
+  // UPDATE on the destination, then the drain UPDATE of its pending/failed rows) — a real deadlock.
+  // Two real transactions over pg, because PostgREST cannot hold one open. Removing the claim's
+  // destination pre-lock turns this red with `deadlock detected`.
+  const db = dbClient()
+  const { pid, destId, deliveryId } = await fixture(db)
+  const a = new PgClient({ connectionString: requireTestDatabaseUrl() })
+  const b = new PgClient({ connectionString: requireTestDatabaseUrl() })
+  await a.connect()
+  await b.connect()
+  try {
+    await makeStale(db, deliveryId, 0)
+    // A second, due pending row on the SAME destination — the row the drain must touch.
+    const { data: ev2 } = await db
+      .from('events')
+      .insert({ project_id: pid, user_id: 'rep-u', event: 'order_placed' })
+      .select('id')
+      .single()
+    await db.from('event_deliveries').insert({ project_id: pid, event_id: ev2!.id, destination_id: destId })
+
+    // A: delete_destination's shape — destination FOR UPDATE first …
+    await a.query('BEGIN')
+    await a.query('SELECT 1 FROM event_destinations WHERE id = $1 AND project_id = $2 FOR UPDATE', [destId, pid])
+    // B: the claim, while A holds the destination.
+    const claimed = b
+      .query('SELECT id FROM claim_deliveries($1, 10, now(), $2, $3)', [pid, STALE_CLAIM_MS, MAX_ATTEMPTS])
+      .then(
+        (r) => ({ ok: true as const, rows: r.rowCount }),
+        (e: Error) => ({ ok: false as const, error: e.message })
+      )
+    await new Promise((r) => setTimeout(r, 500)) // let B reach its lock wait
+    // … then the drain of the destination's outstanding pending/failed rows.
+    const drain = await a
+      .query(
+        `UPDATE event_deliveries SET status = 'dead', last_error = 'destination removed', claimed_at = NULL
+          WHERE project_id = $1 AND destination_id = $2 AND status IN ('pending', 'failed')`,
+        [pid, destId]
+      )
+      .then(
+        () => ({ ok: true as const }),
+        (e: Error) => ({ ok: false as const, error: e.message })
+      )
+    if (drain.ok) await a.query('COMMIT')
+    else await a.query('ROLLBACK')
+
+    const claim = await claimed
+    expect(drain, 'the drain must not be chosen as the deadlock victim').toEqual({ ok: true })
+    expect(claim.ok, `the claim must wait, not deadlock: ${'error' in claim ? claim.error : ''}`).toBe(true)
+  } finally {
+    await a.end().catch(() => {})
+    await b.end().catch(() => {})
     await db.from('projects').delete().eq('id', pid)
   }
 })
