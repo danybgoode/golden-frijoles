@@ -140,7 +140,8 @@ each rule lives where it says, once.
   `projectId` is always the id the page's own read resolved (one-epic-page D2), never re-derived from a slug.
 - **D8 — Connector.** `lib/public-connector-scrub.ts` DROPS (not "hidden") keys `owed` / `owed_unattached` anywhere —
   belt to D5's braces, so a future tool that reads raw cannot leak to the anonymous reader. Api spec on the public
-  project's anonymous connector (`get_horizon` + the epic reads): no `owed` key in any reply (AC S1.2-2).
+  project's anonymous connector: no `owed` key in any reply (AC S1.2-2). Corrected at build: the connector has no epic
+  read — `get_horizon` is its one roadmap read, so the spec calls it (verifier, #375).
 - **D9 — Flag.** `GATES.owedOnScreen = { key: 'hub.owed_enabled', envVar: 'HUB_OWED_ENABLED', fallback: false }` (an
   enablement, born dark); `isOwedOnScreenEnabled()` in `lib/flags.ts`; `HUB_OWED_ENABLED=false|true` in
   `ci/gates.off.env` / `ci/gates.on.env`. Catalog: `frijoles flags create hub.owed_enabled --enablement --all-envs`;

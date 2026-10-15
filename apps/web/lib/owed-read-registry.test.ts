@@ -42,3 +42,11 @@ test('report-artifacts.ts keeps owed checks in exactly one read: the registered 
   const raw = src.slice(src.indexOf(`export async function ${RAW}`))
   assert.match(raw.slice(0, raw.indexOf('\n}\n')), /keepOwed: true/, `the one that keeps them is ${RAW}`)
 })
+
+test('only lib/report-artifacts.ts queries report_artifacts, so every read passes through its strip', () => {
+  const direct = ['app', 'lib', 'components']
+    .flatMap((d) => sources(join(WEB, d)))
+    .filter((f) => /from\(\s*['"]report_artifacts['"]\s*\)/.test(readFileSync(f, 'utf8')))
+    .map((f) => relative(WEB, f).split('\\').join('/'))
+  assert.deepEqual(direct, ['lib/report-artifacts.ts'])
+})

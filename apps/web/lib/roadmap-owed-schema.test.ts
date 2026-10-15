@@ -94,3 +94,25 @@ test('OWED_KINDS and OWED_CATEGORIES are the ledger’s own lists (scripts/owed-
   assert.deepEqual([...OWED_KINDS], list('KINDS'))
   assert.deepEqual([...OWED_CATEGORIES], list('CATEGORIES'))
 })
+
+test('the producer\u2019s bounds are the schema\u2019s (scripts/owed-ledger.mjs conformOwedForPush)', () => {
+  const src = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), '../../../scripts/owed-ledger.mjs'),
+    'utf8'
+  )
+  const num = (name: string) => Number(new RegExp(`export const ${name} = (\\d+);`).exec(src)?.[1])
+  assert.equal(num('OWED_PUSH_MAX'), OWED_MAX)
+  assert.equal(num('OWED_PUSH_MAX_PER_EPIC'), OWED_MAX_PER_EPIC)
+  assert.equal(num('OWED_PUSH_TEXT_MAX'), 500)
+  assert.ok(
+    src.includes('export const OWED_PUSH_FILE_RE = /^[A-Za-z0-9_][A-Za-z0-9_./-]*$/;'),
+    'file pattern drifted'
+  )
+  const schema = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), 'roadmap-artifact-schema.ts'),
+    'utf8'
+  )
+  assert.ok(
+    schema.includes(".regex(/^[A-Za-z0-9_][A-Za-z0-9_./-]*$/, 'owed file must be a repo-relative path')")
+  )
+})

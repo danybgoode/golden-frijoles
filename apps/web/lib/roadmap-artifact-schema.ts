@@ -90,7 +90,7 @@ const destinationId = z
 
 /**
  * owed-on-screen D4 — who can clear an owed check, and what it touches. ⚠️ COPIES of `KINDS` / `CATEGORIES` in
- * `scripts/owed-ledger.mjs`, where an item is classified; `roadmap-artifact-schema.test.ts` asserts each pair is
+ * `scripts/owed-ledger.mjs`, where an item is classified; `roadmap-owed-schema.test.ts` asserts each pair is
  * identical, so a kind added there is a red spec here instead of a 400 on every push.
  */
 export const OWED_KINDS = [

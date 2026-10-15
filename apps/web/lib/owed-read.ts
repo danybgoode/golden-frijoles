@@ -20,7 +20,15 @@ export async function getOwedForViewer(projectId: string, userId: string | null)
   if (!userId) return { ok: false }
   const membership = await getMembershipByProjectId(userId, projectId)
   if (!membership) return { ok: false }
-  const artifact = await getLatestRoadmapWithOwed(projectId)
+  let artifact
+  try {
+    artifact = await getLatestRoadmapWithOwed(projectId)
+  } catch (err) {
+    // The owed section is one part of a page that has already read the same roadmap; a failed read here must not 500
+    // the board. Logged, and the section is simply absent — the page's own read surfaces a broken database.
+    console.error('[owed-read] roadmap read failed:', err)
+    return { ok: false }
+  }
   if (!artifact) return { ok: false }
   const items = owedForViewer(artifact.payload, true)
   if (items === null) return { ok: false }
