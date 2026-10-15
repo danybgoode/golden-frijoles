@@ -316,6 +316,8 @@ export function computeFunnelTrend(
     baseActivity?: ReadonlyArray<{ person: string; at: number }>
     /** funnel-truth D12 — each period's Targeted is this segment, as of the period's end (capped at now). */
     segment?: SegmentRule
+    /** The rows the segment is decided from (its own read); absent = `events`. Kept apart so none is counted twice. */
+    segmentEvents?: FunnelEvent[]
   }
 ): FunnelTrend | null {
   // An exposure dated after `now` (a skewed client clock's occurred_at) never opens a period: the trend ends at now.
@@ -340,7 +342,13 @@ export function computeFunnelTrend(
           since: start,
           until: end,
           ...(options.segment
-            ? { segment: segmentMembers(events, options.segment, Math.min(end, options.now)) }
+            ? {
+                segment: segmentMembers(
+                  options.segmentEvents ?? events,
+                  options.segment,
+                  Math.min(end, options.now)
+                ),
+              }
             : {}),
         }),
       }
