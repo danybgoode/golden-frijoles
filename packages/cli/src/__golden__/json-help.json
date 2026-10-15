@@ -694,6 +694,24 @@
         ]
       },
       {
+        "command": "funnel",
+        "summary": "a feature's funnel by month or week: got it, adopted, retained",
+        "usage": "frijoles funnel <feature-key> [--by month|week] [--project <slug>] [--json]",
+        "needsAuth": true,
+        "flags": [
+          {
+            "flag": "--by",
+            "takesValue": true,
+            "describe": "the period to group by (default: month)"
+          },
+          {
+            "flag": "--project",
+            "takesValue": true,
+            "describe": "the project (default: the remembered one)"
+          }
+        ]
+      },
+      {
         "command": "bet sync",
         "summary": "create the bet's flag from its epic (a Measure flag, off until you roll it out)",
         "usage": "frijoles bet sync <epic README> [--project <slug>] [--json]",

@@ -15,6 +15,7 @@ Commands
   init                      project, key, .env.local and the snippet — in one verb
   status                    has the project received its first event yet, and which was the latest
   horizon                   the product's destinations and the epics that light each
+  funnel                    a feature's funnel by month or week: got it, adopted, retained
 
   config
   config list               every setting in golden-frijoles.config.json and the legacy files, and which files each section came from

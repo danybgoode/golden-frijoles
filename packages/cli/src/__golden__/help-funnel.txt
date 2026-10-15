@@ -1,0 +1,21 @@
+frijoles funnel — a feature's funnel by month or week: got it, adopted, retained
+
+Usage
+  frijoles funnel <feature-key> [--by month|week] [--project <slug>] [--json]
+
+Each row is the people who first got the feature in that period, followed to now. A period younger
+  than the feature's retention window shows RETAINED as `maturing`; a period the server could not read says so
+  and why, never a short number. `--json` prints the rows an agent parses.
+
+Flags
+  --by month|week   the period to group by (default: month)
+  --project <slug>  the project (default: the remembered one)
+
+Exit codes
+  0  ok         it worked
+  1  usage      the command is wrong — nothing was sent
+  2  auth       the credential is not accepted — run `frijoles login`
+  3  not-found  no such thing, or not yours
+  4  conflict   someone else changed it — re-read and retry
+  5  partial    some environments changed and some did not
+  6  server     the server or the network is unwell — retry
