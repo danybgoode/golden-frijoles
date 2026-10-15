@@ -123,3 +123,22 @@ test('D5: the grouping links mark the current one', () => {
     ]
   )
 })
+
+test('D12 (Codex, #379): a cut segment read is unreadable, never a measured funnel; the trend caption names its period', async () => {
+  const { flagFunnelView } = await import('./flag-funnel-view.ts')
+  const cutSegment = flagFunnelView(
+    {
+      state: 'measured',
+      source: { kind: 'flag', flagKey: 'x' },
+      period: 'all',
+      funnel: funnel(5, 2, 1),
+      from: '2026-07-01T00:00:00.000Z',
+      to: '2026-10-15T00:00:00.000Z',
+      truncated: { exposures: false, events: false, base: false, segment: true },
+    },
+    'power-users'
+  )
+  assert.equal(cutSegment.kind, 'unreadable')
+  const weekly = funnelTrendView({ ...trend([read('2026-10', funnel(3, 1, 0))]), by: 'week' }, 'power-users')
+  assert.ok(weekly.kind === 'measured' && /Each week counts/.test(weekly.segment ?? ''))
+})

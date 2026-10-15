@@ -66,6 +66,12 @@ export function flagFunnelView(read: FlagFunnelRead | null, segmentKey?: string)
         ? `Nobody has been counted with this feature’s ${feature.targetEvent ?? 'target'} event yet. It fills once the app reports it.`
         : 'No one has been counted with this flag on yet. It fills once the flag is on for someone and the app reports the evaluation (refine’s Measure step says how).',
     }
+  // funnel-truth D12 (Codex, #379): who is in the segment couldn't be told, so no number here is about it.
+  if (read.truncated.segment)
+    return {
+      kind: 'unreadable',
+      text: `More events than one read covers to tell who is in ${segmentKey ?? 'the segment'}, so this funnel isn’t drawn. This is not a zero.`,
+    }
   const f = read.funnel
   const rows: FunnelRow[] = [
     { stage: 'Active users', people: String(f.base), share: '' },
@@ -230,7 +236,7 @@ export function funnelTrendView(read: FunnelTrendRead | null, segmentKey?: strin
   )
   const outside = read_.reduce((n, p) => n + (p.funnel.outside?.exposed ?? 0), 0)
   const segment = segmentKey
-    ? `Targeted: ${segmentKey}. Each month counts the people in it as of the month’s end; ${outside} ${outside === 1 ? 'person' : 'people'} outside it got it, beside these numbers.`
+    ? `Targeted: ${segmentKey}. Each ${read.by === 'week' ? 'week' : 'month'} counts the people in it as of its end; ${outside} ${outside === 1 ? 'person' : 'people'} outside it got it, beside these numbers.`
     : null
   return { kind: 'measured', stages, rows, unreadable, segment }
 }
