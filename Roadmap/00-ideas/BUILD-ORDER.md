@@ -28,7 +28,7 @@ _a pitch is waiting at the approval gate._
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
-- [Owed on screen](../02-commercial/owed-on-screen/README.md) — #92 · 02 Commercial · 0/6 stories · risk: High · appetite M · _docs: status scaffolded_
+- [Owed on screen](../02-commercial/owed-on-screen/README.md) — #92 · 02 Commercial · 6/6 stories · risk: High · appetite M · _docs: status scaffolded_
 - [Funnel truth](../01-growth-engine/funnel-truth/README.md) — #93 · 01 Growth Engine · 0/8 stories · risk: High · appetite L · _docs: status scaffolded_
 - [Drill impact for agents](../01-growth-engine/drill-impact-for-agents/README.md) — #94 · 01 Growth Engine · 0/6 stories · risk: High · appetite M · _docs: status scaffolded_
 - [The build view tells one story](../09-platform-infra/build-view-one-story/README.md) — #95 · 09 Platform Infra · 0/7 stories · risk: Low · appetite M · _docs: status scaffolded_
