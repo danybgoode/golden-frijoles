@@ -74,4 +74,5 @@ test('with the funnel switch off, a measured epic page shows no funnel', async (
   const html = await res.text()
   expect(html).toContain(`Measured ${slug}`) // the page rendered the epic, so the absence below is the switch
   expect(html).not.toMatch(/The flag(&#x27;|')s funnel/)
+  expect(html).not.toContain('The funnel over time') // funnel-truth D6: no trend either
 })

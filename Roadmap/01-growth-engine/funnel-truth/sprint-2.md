@@ -39,6 +39,13 @@ stories:
 
 **Status:** ⬜ not started
 
+## Build contract (locked by the architect before the builder started)
+Cite the epic README's D9–D14; never restate them. **S2.1** = D9 + D10 (migration applied with `supabase db push`
+before the merge; an api spec asserts anon and authenticated get a permission error, not an empty RLS result).
+**S2.2** = D11 + D12 (`everyone` deep-equals today's output on the existing fixtures; a seeded-segment api spec).
+**S2.3** = D13 (push schema, roadmap contract + its `skills/` copy, CLI `bet.ts`, the seed template comment).
+**S2.4** = D14 (behind D6; a browser spec of a funnel with a segment).
+
 ## Stories
 <!-- Keep the heading shape `### Story 2.M — <title>`; append ✅ + the commit ref when it ships. Name the story in
      each commit subject (`S2.1 …`). The frontmatter `stories:` entry is what tools read. -->

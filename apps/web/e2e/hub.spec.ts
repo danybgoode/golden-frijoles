@@ -1,7 +1,7 @@
 import { test, expect, type APIRequestContext } from '@playwright/test'
 import { createClient } from '@supabase/supabase-js'
 import { createHash } from 'node:crypto'
-import { isFlagFunnelsEnabled } from './helpers/gates'
+import { isFlagFunnelsEnabled, isFunnelTrendEnabled } from './helpers/gates'
 import { specWorkspaceId } from './helpers/spec-workspace'
 
 // pod-report · Sprint 1, Story 1.2 — the journey view and the epic drill-down.
@@ -478,6 +478,12 @@ test('a measured epic shows its funnel on its epic page while the funnel switch 
   const html = await res.text()
   expect(html).toMatch(/aria-label="The flag(&#x27;|')s funnel"/)
   expect(html).toContain('No one has been counted with this flag on yet')
+  // funnel-truth D5/D6 — the flag's trend under its funnel when the trend switch is on too (its OFF half:
+  // flag-funnel-dark.spec.ts). Nobody got this flag, so the trend says so in words rather than drawing a zero.
+  if (isFunnelTrendEnabled()) {
+    expect(html).toContain('aria-label="The funnel over time"')
+    expect(html).toContain('Nobody has got it yet')
+  } else expect(html).not.toContain('The funnel over time')
 })
 
 // owed-on-screen S1.1/S1.2 — owed checks ride the push, are stored, and reach NO anonymous reader of the public project.

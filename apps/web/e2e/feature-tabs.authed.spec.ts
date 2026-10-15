@@ -28,7 +28,9 @@ import {
   readTenantRecord,
 } from './helpers/authed-fixture'
 import { booleanDefinition, seedFlagVersion } from './helpers/seed-flag'
-import { isFlagConsoleEnabled } from './helpers/gates'
+import { Client } from 'pg'
+import { FUNNEL_TREND_VIEWED_EVENT } from '@/lib/self-track-events'
+import { isFlagConsoleEnabled, isFunnelTrendEnabled } from './helpers/gates'
 
 const VIEWPORT = { width: 1440, height: 960 }
 
@@ -53,7 +55,11 @@ const TABS = ['Value', 'Targeting', 'Environments', 'Funnel', 'Impact', 'History
  * the tail wagging the dog. What they DO owe — a `ds-` class inside `<main>`, a status under 400, no
  * HORIZONTAL page scroll, and exactly one current tab — is asserted for all seven below.
  */
-const NO_SCROLL_TABS = new Set(['Value', 'Environments', 'Funnel'])
+// funnel-truth D5: with the trend switch on, the Funnel tab also lists every cohort period, so its height grows with
+// the feature's age, as History's does with its versions; it keeps the other promises below.
+const NO_SCROLL_TABS = new Set(
+  isFunnelTrendEnabled() ? ['Value', 'Environments'] : ['Value', 'Environments', 'Funnel']
+)
 
 function tenantSlug(): string {
   const slug = readTenantRecord()?.slug
@@ -235,5 +241,43 @@ test.describe('the feature destination answers the whole loop', () => {
       'every day in the window rendered as non-zero, which the fixture cannot produce'
     ).toBeGreaterThan(0)
     expect(zeroDays, 'every day rendered as zero — the seeded events reached no bar').toBeLessThan(14)
+  })
+
+  // funnel-truth S1.3 (D5, D7) — the trend under the funnel on the flag page, and the member counted once per view.
+  test('with the trend switch on, the Funnel tab draws the trend and counts the member', async ({ page }) => {
+    test.skip(!isFunnelTrendEnabled(), 'the lit half; funnel-trend-pages.spec.ts covers the switch off')
+    const record = readTenantRecord()
+    if (!record?.slug) throw new Error('the feature-tabs smoke requires the auth-setup project')
+    const dbUrl = process.env.SUPABASE_DB_URL
+    if (!dbUrl)
+      throw new Error('needs SUPABASE_DB_URL — the self tenant must be reachable to read the event back')
+    const selfSlug =
+      process.env.SELF_PROJECT_SLUG?.trim() || process.env.DEMO_PROJECT_SLUG?.trim() || 'golden-frijoles'
+    const count = async () => {
+      const client = new Client({ connectionString: dbUrl })
+      await client.connect()
+      try {
+        const { rows } = await client.query(
+          `select count(*)::int as n from events e join projects p on p.id = e.project_id
+            where e.event = $1 and e.user_id = $2 and p.slug = $3`,
+          [FUNNEL_TREND_VIEWED_EVENT, record.userId, selfSlug]
+        )
+        return rows[0].n as number
+      } finally {
+        await client.end()
+      }
+    }
+    await seedFlagVersion(
+      FUNNEL_FEATURE_KEY,
+      booleanDefinition('Story 4.2 funnel-tab fixture.'),
+      'Story 4.2 funnel-tab fixture.'
+    )
+    const before = await count()
+    await page.goto(`/app/flags/${record.slug}/${encodeURIComponent(FUNNEL_FEATURE_KEY)}?tab=funnel`)
+    const trend = page.getByRole('region', { name: 'The funnel over time' })
+    await expect(trend).toBeVisible()
+    await expect(trend.locator('.ds-chart-small')).toHaveCount(3) // got it, adopted, retained
+    await expect(trend.locator('.ds-table-row', { hasText: /^\d{4}-\d{2}/ }).first()).toBeVisible()
+    await expect.poll(count, { timeout: 15_000 }).toBe(before + 1)
   })
 })

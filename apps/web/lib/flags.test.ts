@@ -40,6 +40,7 @@ const singles: Record<string, keyof typeof GATES> = {
   isFirstEventBandEnabled: 'firstEventBand',
   isOwedOnScreenEnabled: 'owedOnScreen',
   isFlagFunnelsEnabled: 'flagFunnels',
+  isFunnelTrendEnabled: 'funnelTrend',
 }
 
 test('every gate in GATES but terminal sign-in (its own seam) has exactly one function here, reading its own entry', () => {

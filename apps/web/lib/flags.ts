@@ -174,3 +174,8 @@ export function isFlagFunnelsEnabled(): Promise<boolean> {
 export function isOwedOnScreenEnabled(): Promise<boolean> {
   return gate(GATES.owedOnScreen)
 }
+
+/** A funnel's trend by cohort period and the segment screens (funnel-truth D6). An enablement: born dark. */
+export function isFunnelTrendEnabled(): Promise<boolean> {
+  return gate(GATES.funnelTrend)
+}

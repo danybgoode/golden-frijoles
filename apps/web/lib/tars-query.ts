@@ -1,8 +1,8 @@
 import 'server-only'
 import { getSupabaseServiceClient } from './supabase'
-import { getFunnel } from './event-catalog-query'
-import type { FunnelPeriod } from './flag-funnel'
-import type { FunnelRead } from './flag-funnel-read'
+import { getFunnel, getFunnelTrend } from './event-catalog-query'
+import type { FunnelPeriod, TrendBy } from './flag-funnel'
+import type { FunnelRead, FunnelTrendRead } from './flag-funnel-read'
 import { computeServedDaily, type ServedDay, type TarsEvent } from './tars'
 
 // Growth Engine v1 · Sprint 2, Story 2.3 — the DB-touching half of the funnel. Shared by
@@ -139,5 +139,84 @@ export async function getFeatureFunnelByProjectId(
     // number the approved design labels ("TIMES SERVED, LAST 14 DAYS"), and a caller-chosen window
     // would make the label and the data two things that must agree.
     servedDaily: computeServedDaily(served, 14),
+  }
+}
+
+export type FunnelTrendResult =
+  | {
+      ok: true
+      project: { slug: string }
+      feature: { key: string; targetEvent: string | null; adoptedEvent: string | null; retentionDays: number }
+      trend: FunnelTrendRead
+    }
+  | { ok: false; reason: 'project_not_found' | 'feature_not_found' | 'query_failed' }
+
+/** The trend for a slug (the public-or-member /app/funnel page): resolves the project as `getFeatureFunnel` does. */
+export async function getFeatureFunnelTrend(
+  projectSlug: string,
+  featureKey: string,
+  by: TrendBy
+): Promise<FunnelTrendResult & { projectId?: string }> {
+  const { data: project, error } = await getSupabaseServiceClient()
+    .from('projects')
+    .select('id, slug')
+    .eq('slug', projectSlug)
+    .is('deleted_at', null)
+    .maybeSingle()
+  if (error) return { ok: false, reason: 'query_failed' }
+  if (!project) return { ok: false, reason: 'project_not_found' }
+  return {
+    ...(await getFeatureFunnelTrendByProjectId(project.id, project.slug, featureKey, by)),
+    projectId: project.id,
+  }
+}
+
+/**
+ * funnel-truth D4/D8 — a registry feature's trend by cohort period: the flag page's Funnel tab, /app/funnel, the CLI and
+ * the connector. `projectId` is resolved by the caller from membership or a credential, never from the request.
+ */
+export async function getFeatureFunnelTrendByProjectId(
+  projectId: string,
+  projectSlug: string,
+  featureKey: string,
+  by: TrendBy
+): Promise<FunnelTrendResult> {
+  const { data: feature, error } = await getSupabaseServiceClient()
+    .from('features')
+    .select('key, target_event, adopted_event, retained_event, retention_days')
+    .eq('project_id', projectId)
+    .eq('key', featureKey)
+    .maybeSingle()
+  if (error) {
+    console.error('[tars-query] feature lookup failed:', error)
+    return { ok: false, reason: 'query_failed' }
+  }
+  if (!feature) return { ok: false, reason: 'feature_not_found' }
+  try {
+    const trend = await getFunnelTrend(
+      projectId,
+      { kind: 'feature', featureKey, targetEvent: feature.target_event },
+      {
+        adoptedEvent: feature.adopted_event,
+        retainedEvent: feature.retained_event,
+        retentionDays: feature.retention_days,
+        satisfiedEvent: null,
+      },
+      by
+    )
+    return {
+      ok: true,
+      project: { slug: projectSlug },
+      feature: {
+        key: feature.key,
+        targetEvent: feature.target_event,
+        adoptedEvent: feature.adopted_event,
+        retentionDays: feature.retention_days,
+      },
+      trend,
+    }
+  } catch (e) {
+    console.error('[tars-query] funnel trend read failed:', e)
+    return { ok: false, reason: 'query_failed' }
   }
 }

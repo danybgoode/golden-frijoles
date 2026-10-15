@@ -886,6 +886,117 @@ test('frijoles north-star readings: an unknown input is the route’s not_found 
   assert.equal(bad, EXIT.USAGE)
 })
 
+// ── funnel-truth S1.4 (D8) — a feature's funnel by cohort period ────────────────────────────────────────────────────
+const FUNNEL_BODY = {
+  ok: true,
+  project: 'acme',
+  feature: 'setup_guide',
+  by: 'month',
+  trend: {
+    state: 'measured',
+    from: '2026-07-03T10:00:00.000Z',
+    to: '2026-10-15T00:00:00.000Z',
+    periods: [
+      {
+        label: '2026-07',
+        start: 'a',
+        end: 'b',
+        maturing: false,
+        state: 'read',
+        exposed: 5,
+        adopted: 3,
+        retained: 2,
+        adoptedWithoutExposure: 0,
+      },
+      {
+        label: '2026-08',
+        start: 'b',
+        end: 'c',
+        maturing: false,
+        state: 'unreadable',
+        reason: 'the read was cut',
+      },
+      {
+        label: '2026-10',
+        start: 'c',
+        end: 'd',
+        maturing: true,
+        state: 'read',
+        exposed: 4,
+        adopted: 1,
+        retained: 0,
+        adoptedWithoutExposure: 0,
+      },
+    ],
+  },
+}
+
+test('frijoles funnel: --by is passed through, the rows are the JSON body', async () => {
+  const { writer, out } = capture()
+  const seen: Array<{ method: string; url: string; body: unknown }> = []
+  const code = await run({
+    argv: ['funnel', 'setup_guide', '--by', 'week', '--project', 'acme', '--json'],
+    writer,
+    env: sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN }),
+    fetchImpl: stubFetch({ '/api/v1/cli/funnel': { body: FUNNEL_BODY } }, seen),
+  })
+  assert.equal(code, EXIT.OK)
+  assert.equal(seen[0].url, '/api/v1/cli/funnel?project=acme&feature=setup_guide&by=week')
+  const doc = JSON.parse(out[0])
+  assert.equal(doc.trend.periods.length, 3)
+  assert.equal(doc.trend.periods[1].state, 'unreadable')
+})
+
+test('frijoles funnel: the table says maturing and unreadable in words, and the reason sits under it', async () => {
+  const { writer, out } = capture()
+  const code = await run({
+    argv: ['funnel', 'setup_guide', '--project', 'acme'],
+    writer,
+    env: sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN }),
+    fetchImpl: stubFetch({ '/api/v1/cli/funnel': { body: FUNNEL_BODY } }),
+  })
+  assert.equal(code, EXIT.OK)
+  const text = out.join('\n')
+  assert.match(text, /PERIOD\s+GOT IT\s+ADOPTED\s+RETAINED/)
+  assert.match(text, /2026-07\s+5\s+3\s+2/)
+  assert.match(text, /2026-08\s+unreadable/)
+  assert.match(text, /2026-10\s+4\s+1\s+maturing/)
+  assert.match(text, /2026-08: the read was cut/)
+})
+
+test('frijoles funnel: nobody counted yet says so; an unknown feature is not_found; a bad --by never sends', async () => {
+  const empty = capture()
+  const none = await run({
+    argv: ['funnel', 'setup_guide', '--project', 'acme'],
+    writer: empty.writer,
+    env: sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN }),
+    fetchImpl: stubFetch({
+      '/api/v1/cli/funnel': { body: { ...FUNNEL_BODY, trend: { state: 'not_exposed' } } },
+    }),
+  })
+  assert.equal(none, EXIT.OK)
+  assert.match(empty.out.join('\n'), /nobody has been counted yet/)
+  const code = await run({
+    argv: ['funnel', 'nope', '--project', 'acme', '--json'],
+    writer: capture().writer,
+    env: sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN }),
+    fetchImpl: stubFetch({
+      '/api/v1/cli/funnel': {
+        status: 404,
+        body: { ok: false, code: 'not_found', error: 'No feature "nope".' },
+      },
+    }),
+  })
+  assert.equal(code, exitForServerCode('not_found'))
+  const bad = await run({
+    argv: ['funnel', 'setup_guide', '--by', 'year', '--project', 'acme'],
+    writer: capture().writer,
+    env: sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN }),
+    fetchImpl: noNetworkFetch,
+  })
+  assert.equal(bad, EXIT.USAGE)
+})
+
 test('frijoles experiments decision: the decision record under --json; the human line names the outcome', async () => {
   const body = {
     ok: true,

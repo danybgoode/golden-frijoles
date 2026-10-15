@@ -3,7 +3,7 @@ epic: funnel-truth
 sprint: 1
 title: "The trend"
 risk: high
-phase: Shaping
+phase: Building
 stories_total: 4
 stories:
   - id: S1.1
@@ -12,38 +12,46 @@ stories:
     i_want: "its funnel computed for each month (or week) people first got it, back to the first exposure"
     so_that: "I see whether adoption and return improve over time, not one number"
     risk: low
-    status: planned
+    status: in-review
   - id: S1.2
     title: "A year of events, read honestly"
     as_a: "a founder reading a busy feature's trend"
     i_want: "the whole life read within a bound, and any period the read couldn't finish said in words"
     so_that: "a cut-off read never looks like a drop"
     risk: high
-    status: planned
+    status: in-review
   - id: S1.3
     title: "The trend on the flag page and the epic page"
     as_a: "a founder reading a feature or a bet"
     i_want: "the trend drawn where I already read its funnel"
     so_that: "I judge it without exporting anything"
     risk: low
-    status: planned
+    status: in-review
   - id: S1.4
     title: "Agents read the trend"
     as_a: "a founder's agent"
     i_want: "frijoles funnel <key> --by month and the connector's get_tars_funnel by parameter"
     so_that: "I can answer how a feature performed over the last year without a screen"
     risk: low
-    status: planned
+    status: in-review
 ---
 # Funnel truth — Sprint 1: The trend
 
-**Status:** ⬜ not started
+**Status:** 🟦 In review
+
+## Build contract (locked by the architect before the builder started)
+Cite the epic README's D1–D8; never restate them. In short, per story: **S1.1** = D1 + D2 (pure, `lib/flag-funnel.ts`,
+`until` changes nothing when absent). **S1.2** = D3 + D4 (`lib/flag-funnel-read.ts`, an api spec with a lowered
+`rowCap`, cut by each of the three reads). **S1.3** = D5 + D6 + D7 (flag page Funnel tab, `/app/funnel/…`, Hub epic
+page; the browser spec renders trend on/off and flag funnels on/off). **S1.4** = D8 (CLI route + command + connector
+`by`). Deviation from the stories as written: the CLI and connector read the **registry** source by feature key (the
+flag page's source), not the epic page's flag source — see the README's corrections.
 
 ## Stories
 <!-- Keep the heading shape `### Story 1.M — <title>`; append ✅ + the commit ref when it ships. Name the story in
      each commit subject (`S1.1 …`). The frontmatter `stories:` entry is what tools read. -->
 
-### Story 1.1 — The funnel by cohort period
+### Story 1.1 — The funnel by cohort period ✅ f2a17fd
 **As** a founder who shipped a flagged, measured feature, **I want** its funnel computed for each month (or week)
 people first got it, back to the first exposure, **so that** I see whether adoption and return improve over time, not
 one number.
@@ -53,7 +61,7 @@ one funnel per cohort period from `computeFunnel` (which gains an `until` beside
 gap month, the maturing cohort, and `all` equal to the sum of cohorts' exposed.
 **Risk:** low
 
-### Story 1.2 — A year of events, read honestly
+### Story 1.2 — A year of events, read honestly ✅ 1840169, 0b1d1f5
 **As** a founder reading a busy feature's trend, **I want** the whole life read within a bound, and any period the read
 couldn't finish said in words, **so that** a cut-off read never looks like a drop.
 **Acceptance:** `lib/flag-funnel-read.ts` reads the trend per period (or aggregates in SQL), still one project and
@@ -61,7 +69,7 @@ under `FLAG_FUNNEL_ROW_CAP` per read. A period the read couldn't complete comes 
 spec seeds past a lowered cap and asserts the period is unreadable, not short.
 **Risk:** high (a read whose numbers people act on).
 
-### Story 1.3 — The trend on the flag page and the epic page
+### Story 1.3 — The trend on the flag page and the epic page ✅ a0e81ed
 **As** a founder reading a feature or a bet, **I want** the trend drawn where I already read its funnel, **so that** I
 judge it without exporting anything.
 **Acceptance:** the flag page (`app/app/flags/[projectSlug]/[flagKey]/feature-panes.tsx`) and the Hub epic page show
@@ -72,7 +80,7 @@ the flag on and off, and the flag funnel with `bets.flag_funnels_enabled` on and
 left).
 **Risk:** low
 
-### Story 1.4 — Agents read the trend
+### Story 1.4 — Agents read the trend ✅ dd0adbf
 **As** a founder's agent, **I want** `frijoles funnel <key> --by month` and the connector's `get_tars_funnel` `by`
 parameter, **so that** I can answer how a feature performed over the last year without a screen.
 **Acceptance:** a new member-gated CLI read (PAT, `lib/membership.ts`) prints the trend table, or JSON with `--json`.
@@ -91,17 +99,25 @@ Env: production · https://goldenfrijoles.com
 
 1. Run `frijoles flags get bets.funnel_trend_enabled --project golden-frijoles`.
    → production says `off v1` (or later).
-2. Run `frijoles flags set bets.funnel_trend_enabled --value true --env production --project golden-frijoles`, wait
-   30 s, then sign in and open a measured flag's page under https://goldenfrijoles.com/app/flags/golden-frijoles.
-   → a trend shows below the funnel, one small chart per stage, by month; the newest month says it is still maturing.
-3. Open the same bet's epic page in the Hub.
-   → the same trend, with the same numbers.
-4. Run `frijoles funnel <that flag key> --by month --project golden-frijoles`.
-   → a table with one row per month whose numbers match step 2.
-5. Ask the golden-frijoles connector for that funnel by month.
+2. Signed out, open https://goldenfrijoles.com/app/funnel/golden-frijoles/setup_guide.
+   → the funnel as before, and no trend (the switch is off).
+3. Run `frijoles flags set bets.funnel_trend_enabled --value true --env production --project golden-frijoles`, wait
+   30 s, and reload step 2's page.
+   → under the funnel, "By month · By week" and one small chart per stage; the table has a row for every month from
+   2026-07 to 2026-10, July with 60 got it, the months between at 0, and the newest month marked still maturing.
+4. Signed in, open https://goldenfrijoles.com/app/flags/golden-frijoles and a flag's page, Funnel tab.
+   → the same trend when a registry feature shares the flag's key; otherwise the existing "no funnel" words, no trend.
+5. Open a bet's page in the Hub whose card has a flag and an adoption event
+   (https://goldenfrijoles.com/hub/golden-frijoles/epic/funnel-truth).
+   → the flag's funnel says nobody has been counted with the flag on yet, and the trend under it says nobody has got
+   it yet (golden-frijoles reports no flag evaluations; README correction). A project that reports them shows the
+   trend's numbers here.
+6. Run `frijoles funnel setup_guide --by month --project golden-frijoles`.
+   → a table with one row per month whose numbers match step 3.
+7. Ask the golden-frijoles connector for `get_tars_funnel` of `setup_guide` with `by: month`.
    → the same rows, with no person's id.
 
-Steps 2–3 are signed-in steps, owed to the product owner. Step 4 needs the CLI release on npm (the product owner's
-2FA publish).
+Steps 4–5 are signed-in steps, owed to the product owner. Step 6 needs the CLI release on npm (the product owner's 2FA
+publish).
 
 If any step fails, note the step number + what you saw — that's the bug report.

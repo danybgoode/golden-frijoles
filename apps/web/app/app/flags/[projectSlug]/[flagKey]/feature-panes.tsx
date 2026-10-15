@@ -19,6 +19,7 @@
 // (`app/app/funnel/[projectSlug]/[featureKey]/page.tsx:26`), and a tab that 404s the whole feature
 // page because the OTHER registry has no row would be a regression caused by a missing measurement.
 
+import type { ReactNode } from 'react'
 import { Empty as DsEmpty, Field } from '@/design-system/primitives'
 import { DayColumns, SmallMultiple } from '@/design-system/charts'
 import { FlagFunnel } from '@/components/product/FlagFunnel'
@@ -93,12 +94,15 @@ export function FunnelPane({
   result,
   period,
   hrefFor,
+  trend,
 }: {
   flagKey: string
   result: FunnelResult
   period: FunnelPeriod
   /** The pane's own URL for a period: the page keeps its other params (tars-one-model D2). */
   hrefFor: (period: FunnelPeriod) => string
+  /** funnel-truth D5/D6 — the trend under the funnel, when its switch is on; absent = the pane as before. */
+  trend?: ReactNode
 }) {
   if (!result.ok) {
     const { head, body } = absence(result.reason, flagKey, 'funnel')
@@ -120,6 +124,7 @@ export function FunnelPane({
       )}
       {modelNote ? <p className="ds-hint">{modelNote}</p> : null}
       <FlagFunnel view={flagFunnelView(funnel)} />
+      {trend}
       <p className="ds-hint">Last synced {formatUtc(feature.syncedAt)}.</p>
       <Field label="Times served, last 14 days">
         <DayColumns

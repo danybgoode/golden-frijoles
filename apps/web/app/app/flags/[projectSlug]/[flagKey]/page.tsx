@@ -17,11 +17,14 @@
 
 import { notFound } from 'next/navigation'
 import { requireProjectMembership } from '@/lib/dashboard-auth'
-import { isFlagConsoleEnabled, isFlagRuleBuilderEnabled } from '@/lib/flags'
+import { isFlagConsoleEnabled, isFlagRuleBuilderEnabled, isFunnelTrendEnabled } from '@/lib/flags'
 import { isOwner } from '@/lib/roles'
 import { getFlagRegistryView } from '@/lib/flag-registry'
-import { getFeatureFunnelByProjectId } from '@/lib/tars-query'
-import { asPeriod } from '@/lib/flag-funnel'
+import { getFeatureFunnelByProjectId, getFeatureFunnelTrendByProjectId } from '@/lib/tars-query'
+import { asPeriod, asTrendBy } from '@/lib/flag-funnel'
+import { funnelTrendView } from '@/lib/flag-funnel-view'
+import { noteFunnelTrendViewed } from '@/lib/funnel-trend-screen'
+import { FunnelTrend } from '@/components/product/FunnelTrend'
 import { getFeatureImpactByProjectId } from '@/lib/north-star-query'
 import { FLAG_ENVIRONMENTS } from '@/lib/flag-definition'
 import { projectFlagRows } from '@/lib/flag-list-view'
@@ -181,6 +184,15 @@ export default async function FlagDetailPage({
     tab === 'funnel'
       ? await getFeatureFunnelByProjectId(membership.projectId, projectSlug, flag.key, period)
       : null
+  // funnel-truth D5/D6 — the trend under the funnel, behind its switch; a feature with no registry row has no funnel and
+  // so no trend. D7: a member saw it.
+  const rawBy = (await searchParams).by
+  const by = asTrendBy(Array.isArray(rawBy) ? rawBy[0] : rawBy)
+  const trend =
+    funnel !== null && funnel.ok && (await isFunnelTrendEnabled())
+      ? await getFeatureFunnelTrendByProjectId(membership.projectId, projectSlug, flag.key, by)
+      : null
+  if (trend) await noteFunnelTrendViewed(membership.projectId)
   const impact =
     tab === 'impact' ? await getFeatureImpactByProjectId(membership.projectId, projectSlug, flag.key) : null
 
@@ -330,7 +342,16 @@ export default async function FlagDetailPage({
               flagKey={flag.key}
               result={funnel}
               period={period}
-              hrefFor={(p) => `${basePath}?tab=funnel&period=${p}`}
+              hrefFor={(p) => `${basePath}?tab=funnel&period=${p}${trend ? `&by=${by}` : ''}`}
+              trend={
+                trend ? (
+                  <FunnelTrend
+                    view={funnelTrendView(trend.ok ? trend.trend : null)}
+                    by={by}
+                    hrefFor={(b) => `${basePath}?tab=funnel&period=${period}&by=${b}`}
+                  />
+                ) : undefined
+              }
             />
           </Pane>
         )}

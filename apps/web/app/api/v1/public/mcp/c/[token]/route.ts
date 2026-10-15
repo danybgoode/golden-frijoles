@@ -27,9 +27,10 @@ import { resolveConnectorToken, TOKEN_FORMAT } from '@/lib/connector-tokens'
 import { makerMayWrite } from '@/lib/connector-maker'
 import { DEMO_PROJECT_SLUG } from '@/lib/public-demo'
 import { scrubToolText } from '@/lib/public-connector-scrub'
-import { FUNNEL_PERIODS } from '@/lib/flag-funnel'
+import { FUNNEL_PERIODS, TREND_BYS } from '@/lib/flag-funnel'
+import { funnelTrendRows } from '@/lib/funnel-trend-rows'
 import { checkRateLimit } from '@/lib/rate-limit'
-import { getFeatureFunnelByProjectId } from '@/lib/tars-query'
+import { getFeatureFunnelByProjectId, getFeatureFunnelTrendByProjectId } from '@/lib/tars-query'
 import { getFeatureImpactByProjectId, getInputSeriesByKey } from '@/lib/north-star-query'
 import { getExperimentComparisonByProjectId } from '@/lib/ab-query'
 import { parseJourneyCohortRequest } from '@/lib/journey-cohort-request'
@@ -134,16 +135,44 @@ async function buildMcpServer(
     'get_tars_funnel',
     {
       description:
-        "Read this project's funnel for a feature: active users, targeted (everyone), exposed, adopted, retained, satisfied, and who adopted without exposure. The period follows the people first exposed in it.",
+        "Read this project's funnel for a feature: active users, targeted (everyone), exposed, adopted, retained, satisfied, and who adopted without exposure. The period follows the people first exposed in it. With by (month or week) it returns the funnel for each cohort period instead, oldest first.",
       inputSchema: {
         featureKey: z.string().describe('The feature registry key, e.g. setup_guide'),
         period: z
           .enum(FUNNEL_PERIODS)
           .optional()
           .describe("all (the feature's whole life, the default), 90d or 30d"),
+        by: z
+          .enum(TREND_BYS)
+          .optional()
+          .describe(
+            'month or week: the funnel for each cohort period (the people first exposed in it), oldest first, instead of one funnel. Ignores period.'
+          ),
       },
     },
-    async ({ featureKey, period }) => {
+    async ({ featureKey, period, by }) => {
+      if (by) {
+        // funnel-truth S1.4 (D8) — the same rows `frijoles funnel` prints (one shared rendering). Counts only; the reply
+        // still passes the scrub every tool's text passes for the anonymous public reader.
+        const trend = await getFeatureFunnelTrendByProjectId(projectId, projectSlug, featureKey, by)
+        if (!trend.ok) {
+          return { content: [{ type: 'text', text: JSON.stringify(trend) }], isError: true }
+        }
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                project: trend.project,
+                feature: trend.feature,
+                by,
+                trend: funnelTrendRows(trend.trend),
+                note: 'One row per cohort period (the people first exposed in it), oldest first. A maturing period has not had its retention days yet, so its retained count is still filling. An unreadable period names why it could not be read; it is never a short count.',
+              }),
+            },
+          ],
+        }
+      }
       const result = await getFeatureFunnelByProjectId(projectId, projectSlug, featureKey, period ?? 'all')
       if (!result.ok) {
         return { content: [{ type: 'text', text: JSON.stringify(result) }], isError: true }

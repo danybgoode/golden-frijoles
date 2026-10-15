@@ -147,6 +147,7 @@ jobs:
             apps/web/e2e/flag-console-dark.spec.ts \
             apps/web/e2e/first-event-dark.spec.ts \
             apps/web/e2e/flag-funnel-dark.spec.ts \
+            apps/web/e2e/funnel-trend-pages.spec.ts \
             apps/web/e2e/cli-scenarios.spec.ts \
             apps/web/e2e/signup.spec.ts \
             || { cat /tmp/off-server.log; exit 1; }

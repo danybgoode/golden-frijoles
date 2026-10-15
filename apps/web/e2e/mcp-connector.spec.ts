@@ -184,6 +184,44 @@ test.describe('POST /api/v1/public/mcp/c/:token', () => {
     expect(payload.funnel.funnel.exposed).toBeGreaterThan(0)
   })
 
+  test('get_tars_funnel with `by` → the cohort period rows, counts only', async ({ request }) => {
+    const token = await demoToken()
+    const res = await rpc(request, token, 'tools/call', {
+      name: 'get_tars_funnel',
+      arguments: { featureKey: 'setup_guide', by: 'month' },
+    })
+    expect(res.status()).toBe(200)
+    const body = await res.json()
+    const payload = JSON.parse(body.result.content[0].text)
+    expect(payload.project.slug).toBe(DEMO_SLUG)
+    expect(payload.by).toBe('month')
+    expect(payload.trend.state).toBe('measured')
+    const periods = payload.trend.periods as Array<Record<string, unknown>>
+    expect(periods.length).toBeGreaterThan(0)
+    const first = periods[0]
+    expect(first.label).toMatch(/^\d{4}-\d{2}$/)
+    expect(first.state).toBe('read')
+    expect(first.exposed).toBeGreaterThan(0)
+    expect(typeof first.maturing).toBe('boolean')
+    expect(first).not.toHaveProperty('funnel') // the rows, not the nested funnel
+    expect(periods.reduce((sum, p) => sum + ((p.exposed as number | undefined) ?? 0), 0)).toBeGreaterThan(0)
+    // The weekly cut is the same tool with a different `by`; an unknown feature stays a named failure.
+    const weekly = await rpc(request, token, 'tools/call', {
+      name: 'get_tars_funnel',
+      arguments: { featureKey: 'setup_guide', by: 'week' },
+    })
+    const w = JSON.parse((await weekly.json()).result.content[0].text)
+    expect([w.by, w.trend.state]).toEqual(['week', 'measured'])
+    expect(w.trend.periods.length).toBeGreaterThanOrEqual(periods.length)
+    const missing = await rpc(request, token, 'tools/call', {
+      name: 'get_tars_funnel',
+      arguments: { featureKey: 'no_such_feature', by: 'month' },
+    })
+    const m = await missing.json()
+    expect(m.result.isError).toBe(true)
+    expect(JSON.parse(m.result.content[0].text)).toEqual({ ok: false, reason: 'feature_not_found' })
+  })
+
   test("a token minted for a disposable project cannot read another project's data", async ({ request }) => {
     const db = dbClient()
     const isolationSlug = `mcp-isolation-${randomBytes(6).toString('hex')}`
