@@ -58,6 +58,13 @@ independently shippable slice of value.
   or follows the people who first got it in the last 90 or 30 days (the 90-day cap is gone). The feature pane, funnel
   page, epic page, reports, alerts, API and connector all read it; `tars` in the API is replaced by `funnel`.
   **Owed:** the signed-in look with the period choice.
+- ✅ [Funnel truth: a funnel over time, aimed at a segment](01-growth-engine/funnel-truth/README.md) — **shipped
+  dark 2026-10-15** (#378, #379; CLI 1.8.0 → 1.9.0, plugin + kit 1.10.1 → 1.10.3). A feature's funnel by the month (or
+  week) people first got it, back to its first exposure, each period read or said to be unreadable, never short; on the
+  feature page, the funnel page and the epic page behind `bets.funnel_trend_enabled` (off). Projects define segments
+  (`frijoles segments define`), a bet names one in `target_segment:`, and its Targeted becomes that segment's share
+  with people outside it beside the funnel; `everyone` reads exactly as before. `frijoles funnel --by` and the
+  connector's `get_tars_funnel { by }` are live. **Owed:** CLI npm publishes, the switch on, signed-in looks.
 - ✅ [Scenarios made PM-operable](01-growth-engine/scenarios-pm-operable/README.md) — **shipped; authoring live
   2026-10-13** (PR #98; switched on by `scenarios-light-up`). Owners define, launch, retry and stop drills from one
   surface over the scenario engine; members keep the read-only evidence view. The impact comparison stays a table (#14).
@@ -633,6 +640,9 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-15**: `funnel-truth` **shipped dark** (≈$38.20 vs $49–68): the trend by cohort period and named segments.
+  Every review layer caught something different; the verifier's catch was the roadmap extractor turning every named
+  segment into null (read as everyone) while a hand-built spec stayed green — now tested along the real path.
 - **2026-10-15**: `owed-on-screen` **shipped dark** (≈$26.25 vs $15–34): owed checks ride the roadmap push, members
   only, and the epic page, board and portfolio show them once `hub.owed_enabled` is on. The verifier caught a producer
   that could 400 a consumer's whole push; the merge's push raced its deploy a second time (now a LEARNINGS class).

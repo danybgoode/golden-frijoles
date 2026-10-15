@@ -6,11 +6,11 @@
 
 _Generated: 2026-10-15_
 
-**97 check(s) owed across 72 file(s)** · 6 cleared.
+**96 check(s) owed across 71 file(s)** · 6 cleared.
 
 | Who can clear it | Count | What it means |
 |---|---|---|
-| publish | 3 | A package publish (npm 2FA): the product owner today, a CI job once trusted publishing is on |
+| publish | 2 | A package publish (npm 2FA): the product owner today, a CI job once trusted publishing is on |
 | credential | 7 | Mints or uses a production credential: only the product owner, named every time |
 | ops | 5 | On the product owner's own accounts or machine |
 | judgment | 30 | An answer only the product owner can give: an _Intent_, an approval, a decision |
@@ -23,13 +23,12 @@ _Generated: 2026-10-15_
 | money-path | 1 | Touches checkout, payment or order state — run these first |
 | auth-path | 27 | Needs a real signed-in session a script cannot mint against production |
 | admin-only | 0 | Behind an admin surface |
-| other | 69 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
+| other | 68 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
 
-## publish (3)
+## publish (2)
 
 - `Roadmap/01-growth-engine/drill-impact-for-agents/sprint-2.md:44` · other — returns the same fields. A CLI release, its npm publish owed to the product owner. **Risk:** low
-- `Roadmap/01-growth-engine/funnel-truth/sprint-1.md:120` · other — Steps 4–5 are signed-in steps, owed to the product owner. Step 6 needs the CLI release on npm (the product owner's 2FA publish).
-- `Roadmap/01-growth-engine/funnel-truth/sprint-2.md:112` · other — Steps 4 and 6 are signed-in steps, owed to the product owner. Steps 1–2 need the CLI 1.9.0 release on npm (the product owner's 2FA publish).
+- `Roadmap/01-growth-engine/funnel-truth/RETROSPECTIVE.md:46` · other — Owed to the product owner: `npm publish` CLI 1.8.0 and 1.9.0 (the skills already pin 1.9.0 / kit 1.10.3); `frijoles flags set bets.funnel_trend_enabled --value true --env production` when the trend should go live; the signed-in smoke steps (sprint-1 3–5, sprint-2 4 and 6) and th…
 
 ## credential (7)
 

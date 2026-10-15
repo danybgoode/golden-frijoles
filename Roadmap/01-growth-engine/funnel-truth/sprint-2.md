@@ -3,7 +3,7 @@ epic: funnel-truth
 sprint: 2
 title: "Segments"
 risk: high
-phase: Shaping
+phase: Shipped
 stories_total: 4
 stories:
   - id: S2.1
@@ -12,32 +12,32 @@ stories:
     i_want: "to name a segment by behaviour, such as people who did X at least N times in the last D days"
     so_that: "a bet can be aimed at the people who have the problem"
     risk: high
-    status: in-review
+    status: shipped
   - id: S2.2
     title: "Targeted is the segment"
     as_a: "a founder whose bet names a segment"
     i_want: "Targeted to be that segment's share of the base, Adopted counted within it, and adopters outside it shown beside"
     so_that: "the funnel tests my targeting hypothesis, not everyone"
     risk: high
-    status: in-review
+    status: shipped
   - id: S2.3
     title: "A bet names its segment"
     as_a: "a founder's agent refining a bet"
     i_want: "target_segment to accept a segment the project defines"
     so_that: "the bet travels with its segment from the seed to the Hub"
     risk: low
-    status: in-review
+    status: shipped
   - id: S2.4
     title: "Segments on screen"
     as_a: "a founder"
     i_want: "my segments listed with their share of the base, and each funnel naming its segment"
     so_that: "I can tell who a number is about"
     risk: low
-    status: in-review
+    status: shipped
 ---
 # Funnel truth — Sprint 2: Segments
 
-**Status:** 🟦 In review
+**Status:** ✅ Shipped 2026-10-15 — # merged `b6f0c1c`, deployed
 
 ## Build contract (locked by the architect before the builder started)
 Cite the epic README's D9–D14; never restate them. **S2.1** = D9 + D10 (migration applied with `supabase db push`
@@ -111,5 +111,9 @@ Env: production · https://goldenfrijoles.com
 
 Steps 4 and 6 are signed-in steps, owed to the product owner. Steps 1–2 need the CLI 1.9.0 release on npm (the
 product owner's 2FA publish).
+
+**Run 2026-10-15 (architect, after the deploy of `b6f0c1c`):** migration `20261017100000` applied before the merge and
+verified on production (RLS on; anon and authenticated hold no privilege; service_role writes; 0 rows). Step 2 ✅ via the
+repo-built CLI: `everyone` 100%. Step 1 (a real definition in production) and steps 3–7 are the product owner's.
 
 If any step fails, note the step number + what you saw — that's the bug report.
