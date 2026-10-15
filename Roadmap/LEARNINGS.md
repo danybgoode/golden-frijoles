@@ -73,8 +73,10 @@ one-liner + why + date shape.
   epics approved the same day can target the same bug from different scope docs. Check
   `git log --oneline -- <the file the story's root-cause names>` + `gh pr list` during research, not
   assumed.
-- **Risk tier decides who merges**: low-risk → the reviewer/agent may merge on green CI; anything
-  touching money / auth / DB / shared infra → the product owner merges. When unsure, treat as high.
+- **Risk tier decides the review scope, not who merges** (WAYS-OF-WORKING → *Review & merge*, since #145,
+  2026-09-16): the builder merges its own PR at every tier once CI is green and findings are resolved; HIGH
+  (money / auth / DB / shared infra, or unsure) adds the security lens. In practice the auto-mode classifier
+  still stops a HIGH merge until the product owner names it, so ask for that go in one question.
   **Corollary — an explicit "merge on green" authorization changes who decides to pause and check in,
   not whether the review layers themselves still run.** "Merge on green" is permission to proceed
   through the established gate without re-asking at each step, not permission to skip the gate.
@@ -390,7 +392,7 @@ one-liner + why + date shape.
   For a new surface, name the layer no test touches (a TTY, the real parser, `jsonb` round-trips)
   before calling the gate complete. For terminal animation, assert the raw redraw stream and run the built
   binary in a real pty: a missing carriage return between frames, or a cursor left hidden by Ctrl-C, shows there
-  while every frame string passes its unit test. *(2026-09-17, golden-frijoles-cli; 2026-10-09, brand-reveal-error-pages.)*
+  while every frame string passes its unit test. *(2026-09-17, golden-frijoles-cli; 2026-10-10, brand-reveal-error-pages.)*
 - **A truncated review posts as a clean pass — guard the SHAPE of the output, not just its
   presence.** A reviewer CLI exhausted its turn budget mid-read and exited 0 with a bare
   `read_file{…}` tool call as its entire output. The runner's guards (non-zero status, empty output)
