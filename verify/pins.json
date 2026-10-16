@@ -1,0 +1,68 @@
+{
+  "$comment": "verify-module D3: what each model mirrors, and the hash it was last checked against. Written by `node scripts/verify-pins.mjs --write`; checked in the static gate. Edit `targets` by hand; never edit `hashes`.",
+  "targets": {
+    "outbox": {
+      "model": ["verify/quint/outbox.qnt"],
+      "sql": [
+        "claim_deliveries",
+        "settle_delivery",
+        "release_deliveries",
+        "delete_destination",
+        "replay_delivery",
+        "ingest_event"
+      ],
+      "ts": {
+        "apps/web/lib/delivery-dispatch.ts": [
+          "sendAndSettle",
+          "settleDelivery",
+          "releaseUnsent",
+          "nextState"
+        ],
+        "apps/web/lib/retry-policy.ts": ["MAX_ATTEMPTS", "retryDecision"]
+      }
+    },
+    "flags": {
+      "model": ["verify/lean/Flageval/Model.lean"],
+      "ts": {
+        "packages/sdk/src/flags.ts": [
+          "sameScalar",
+          "firstFailingClause",
+          "clausesMatch",
+          "rolloutOutcome",
+          "rolloutAdmits",
+          "matchesRule",
+          "evaluateFlag",
+          "explainFlagEvaluation"
+        ]
+      }
+    }
+  },
+  "hashes": {
+    "outbox": {
+      "model:verify/quint/outbox.qnt": "08d6ce0515bbd89642fed08e28aeffd6fd025c88d3df5a5822e7503874a0a581",
+      "sql:claim_deliveries": "bf83f136f1505a13db7624da9b34415a6906a3fa78aa96df1bd9659769c74de3",
+      "sql:settle_delivery": "13629245a3d060efdac6f86c726a293e93ec1b6ea081ded85ea9029b85e32165",
+      "sql:release_deliveries": "cc6fe3bbd44e1f870c25e641d4d7a6a4535f91df915c3ddaebe6eb76e83f709a",
+      "sql:delete_destination": "763cec648d9ed08129707c9b8b0a9d68749e807429183e74033aaf526e68d158",
+      "sql:replay_delivery": "ec08658130dd3fb0086e29d352e097bb74a3578d66104d3ad4777d2bf413452e",
+      "sql:ingest_event": "62245765a2914843fd930bcd44a62e28964709a114ba09f2df7101053865bf01",
+      "ts:apps/web/lib/delivery-dispatch.ts#sendAndSettle": "9b9390d0ea62ffb946e924addedf483e5c204c3c185aa26291bf5c3332ba27ff",
+      "ts:apps/web/lib/delivery-dispatch.ts#settleDelivery": "0754e5a01c9cdcbf4ee07f8c1c0228e57d5d42452012d1495d5b81967c4d4522",
+      "ts:apps/web/lib/delivery-dispatch.ts#releaseUnsent": "2e2349aba7b13e2aca30cdc89b77d271313f89019f5d35baee452ececba22544",
+      "ts:apps/web/lib/delivery-dispatch.ts#nextState": "0be669fc6bb9104544ea107e116c4738e3702f0778efa553bd21f4a6b8babdc5",
+      "ts:apps/web/lib/retry-policy.ts#MAX_ATTEMPTS": "61c58394fe4c9b17fdf18a108a877d5acdc5871e8b945168d5010670911838d9",
+      "ts:apps/web/lib/retry-policy.ts#retryDecision": "f6001f52203945065fd25eeb6e0a1855ffd3b7a65c72ddf48e478f8b1394d3ae"
+    },
+    "flags": {
+      "model:verify/lean/Flageval/Model.lean": "019b8efd867580019ca5ded6e2e68fb3bee2d48609e1193da341f6b5dd9ce1d8",
+      "ts:packages/sdk/src/flags.ts#sameScalar": "51dbfdd08c0a6ed5ec6bc673e3fd39171a9f4e3a327e9d1f58760f63a8e67007",
+      "ts:packages/sdk/src/flags.ts#firstFailingClause": "979ff38f6827a8d10456815d92f6ffc0546062836c354037b91a2e15ac024175",
+      "ts:packages/sdk/src/flags.ts#clausesMatch": "dde7663dc8f38caf8c9b0612ee9de992201e95c164372cd7b999a1e397b37aad",
+      "ts:packages/sdk/src/flags.ts#rolloutOutcome": "dfceffb3cbb2d647a8c7ee408feb602694e3e0935ec1f05814887424c8250a31",
+      "ts:packages/sdk/src/flags.ts#rolloutAdmits": "c6cbc3add349b14f08a347f33531f904c96a14f9da2cceba7c6cc7ecfe1d6ff4",
+      "ts:packages/sdk/src/flags.ts#matchesRule": "60ea516994b3187d5f790b32246c218a1155295e967e2dea5c0dee7154f14e9f",
+      "ts:packages/sdk/src/flags.ts#evaluateFlag": "4a7883a76649c9eb0ab9459d02c0b19b7c35eee9e4de1079059eae1cf60dc32b",
+      "ts:packages/sdk/src/flags.ts#explainFlagEvaluation": "61e4be4a3e6557aff85bef530732e14e17083d349c2920ca3672a0d1a8a58f72"
+    }
+  }
+}
