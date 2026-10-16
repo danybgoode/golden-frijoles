@@ -28,7 +28,7 @@ QUINT=/path/to/quint bash verify/quint/check.sh         # + the exhaustive runs
 Each row prints the result `DECISION.md` § Evidence records next to the result it got. The script
 exits 1 if any row differs **or produces no result** (a missing tool or a checker crash), so a blank
 row can never read as a pass. The four counterexample traces are in
-`quint/traces/*.itf.json`. Print any of them one step per line with
+`verify/quint/traces/*.itf.json`. Print any of them one step per line with
 `node verify/quint/summarize-itf.mjs <trace>`.
 
 ## S1.2 — the Lean proofs and the differential test

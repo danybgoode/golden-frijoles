@@ -34,6 +34,7 @@ export function isDocsOnly(files) {
  */
 const VERIFY_SHARED = [
   'verify/pins.json',
+  'scripts/verify-pins.mjs',
   '.github/workflows/ci.yml',
   'scripts/ci-changes.mjs',
   'scripts/ci-gate.mjs',

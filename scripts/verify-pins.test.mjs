@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { extractSql, extractTs, normalise, run } from './verify-pins.mjs';
+import { extractSql, extractTs, normalise, run, shapeProblems, REQUIRED_GROUPS } from './verify-pins.mjs';
 
 // A tiny repo with one group: a model, one SQL function across two migrations, one TS function. Each test pins it,
 // moves one side, and reads the verdict — the mutation check S1.2 asks for, in both directions.
@@ -50,9 +50,9 @@ function fixture() {
   const lines = [];
   const check = () => {
     lines.length = 0;
-    return run({ root, log: (l) => lines.push(l) });
+    return run({ root, log: (l) => lines.push(l), required: ['outbox'] });
   };
-  assert.equal(run({ root, write: true, log: () => {} }), 0);
+  assert.equal(run({ root, write: true, log: () => {}, required: ['outbox'] }), 0);
   assert.equal(check(), 0, 'a freshly pinned tree is in step');
   return { root, put, check, out: () => lines.join('\n') };
 }
@@ -116,7 +116,7 @@ test('a mirrored function that disappears is drift, never a skip', () => {
   assert.equal(f.check(), 1);
   assert.match(f.out(), /#nextState: not found/);
   assert.equal(
-    run({ root: f.root, write: true, log: () => {} }),
+    run({ root: f.root, write: true, log: () => {}, required: ['outbox'] }),
     1,
     '--write refuses to pin what is not there'
   );
@@ -125,7 +125,7 @@ test('a mirrored function that disappears is drift, never a skip', () => {
 test('re-pinning after a real change puts the tree back in step', () => {
   const f = fixture();
   f.put('apps/web/lib/dispatch.ts', TS.replace('a > 1', 'a > 2'));
-  assert.equal(run({ root: f.root, write: true, log: () => {} }), 0);
+  assert.equal(run({ root: f.root, write: true, log: () => {}, required: ['outbox'] }), 0);
   assert.equal(f.check(), 0);
   assert.ok(JSON.parse(readFileSync(join(f.root, 'verify/pins.json'), 'utf8')).hashes.outbox);
 });
@@ -164,4 +164,35 @@ test('extractSql: the last CREATE in the latest file wins; a commented-out CREAT
 test('normalise keeps comment markers that are inside strings', () => {
   assert.equal(normalise("a // x\n 'b//c' /* q */ d", { line: '//', quotes: ["'"] }), "a 'b//c' d");
   assert.equal(normalise("x = '--not' -- yes", { line: '--', quotes: ["'"] }), "x = '--not'");
+});
+
+test('emptying the targets (or dropping a group) fails, never passes vacuously', () => {
+  const f = fixture();
+  f.put('verify/pins.json', JSON.stringify({ targets: {}, hashes: {} }));
+  assert.equal(f.check(), 1);
+  assert.match(f.out(), /outbox: a required group is missing/);
+  const g = fixture();
+  const pins = JSON.parse(readFileSync(join(g.root, 'verify/pins.json'), 'utf8'));
+  g.put(
+    'verify/pins.json',
+    JSON.stringify({ ...pins, targets: { outbox: { model: pins.targets.outbox.model } } })
+  );
+  assert.equal(g.check(), 1);
+  assert.match(g.out(), /needs a model and at least one mirrored function/);
+});
+
+test('a group pinned but removed from targets is drift', () => {
+  const f = fixture();
+  const pins = JSON.parse(readFileSync(join(f.root, 'verify/pins.json'), 'utf8'));
+  f.put(
+    'verify/pins.json',
+    JSON.stringify({ ...pins, hashes: { ...pins.hashes, gone: { 'model:x': 'abc' } } })
+  );
+  assert.equal(f.check(), 1);
+  assert.match(f.out(), /gone:\n {2}pinned but no longer a target group/);
+});
+
+test('the real check requires both groups', () => {
+  assert.deepEqual(REQUIRED_GROUPS, ['outbox', 'flags']);
+  assert.equal(shapeProblems({ outbox: { model: ['m'], sql: ['f'] } }).length, 1);
 });

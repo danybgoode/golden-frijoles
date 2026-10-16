@@ -88,6 +88,7 @@ test('verify filters: the outbox paths, the evaluator paths, and the wiring that
   assert.deepEqual(v(['verify/lean/Flageval/Model.lean', 'verify/diff-test/run.mjs']).verify_flags, true);
   assert.deepEqual(v(['.github/workflows/ci.yml']), { verify_outbox: true, verify_flags: true });
   assert.deepEqual(v(['verify/pins.json']), { verify_outbox: true, verify_flags: true });
+  assert.deepEqual(v(['scripts/verify-pins.mjs']), { verify_outbox: true, verify_flags: true });
 });
 
 test('verify filters: lookalikes do not match, and the gate seam lib/flags.ts is not the evaluator', () => {

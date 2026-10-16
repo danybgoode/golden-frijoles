@@ -20,6 +20,10 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 export const PINS_PATH = 'verify/pins.json';
 export const MIGRATIONS_DIR = 'apps/web/supabase/migrations';
 
+// The groups that must exist, each with a model and at least one mirrored target. Without this, deleting a group
+// from `targets` (and its hashes) would make the check vacuously green (Codex, PR #386).
+export const REQUIRED_GROUPS = ['outbox', 'flags'];
+
 const sha = (text) => createHash('sha256').update(text).digest('hex');
 
 /** Couldn't look — its own exit code, so it never reads as a verdict. */
@@ -127,9 +131,24 @@ export function currentHashes(targets, { read, migrations }) {
 
 const hashOf = (v) => (v && typeof v === 'object' ? v.hash : v);
 
+/** What is wrong with the targets' shape: a required group missing, or a group with no model or no code. */
+export function shapeProblems(targets, required = REQUIRED_GROUPS) {
+  const problems = [];
+  for (const group of new Set([...required, ...Object.keys(targets)])) {
+    const t = targets[group];
+    const code = (t?.sql?.length ?? 0) + Object.values(t?.ts ?? {}).reduce((n, names) => n + names.length, 0);
+    if (!t) problems.push(`${group}: a required group is missing from targets`);
+    else if (!t.model?.length || code === 0)
+      problems.push(`${group}: a group needs a model and at least one mirrored function`);
+  }
+  return problems;
+}
+
 /** Compare pinned to current. Returns { ok, problems: string[] } — one problem per group that drifted. */
 export function compare(pinned, current) {
   const problems = [];
+  for (const group of Object.keys(pinned ?? {}))
+    if (!(group in current)) problems.push(`${group}:\n  pinned but no longer a target group — re-pin`);
   for (const [group, now] of Object.entries(current)) {
     const was = pinned?.[group] ?? {};
     const missing = Object.keys(now).filter((k) => now[k] === null);
@@ -180,7 +199,7 @@ function load(root) {
 }
 
 /** Run it. Returns the exit code; `log` gets every line. */
-export function run({ root = ROOT, write = false, log = console.log } = {}) {
+export function run({ root = ROOT, write = false, log = console.log, required = REQUIRED_GROUPS } = {}) {
   let pins, current;
   try {
     ({ pins, current } = load(root));
@@ -188,6 +207,11 @@ export function run({ root = ROOT, write = false, log = console.log } = {}) {
     if (!(e instanceof CannotLook)) throw e;
     log(`verify-pins: could not look — ${e.message}`);
     return 2;
+  }
+  const shape = shapeProblems(pins.targets, required);
+  if (shape.length) {
+    log(`verify-pins: ${PINS_PATH} cannot check what it no longer names:\n  ${shape.join('\n  ')}`);
+    return 1;
   }
   if (write) {
     const missing = Object.entries(current).flatMap(([g, h]) =>
