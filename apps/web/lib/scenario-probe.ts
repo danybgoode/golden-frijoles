@@ -5,7 +5,11 @@
 // through it. It does exactly what the SDK README tells a customer to do: resolve the scenario for this target,
 // reserve a lease, apply the closed fault at this seam, settle, and record the execution. Pure over its dependencies,
 // so the whole sequence is tested without a server (`scenario-probe.test.ts`).
-import type { ScenarioExecutionTelemetryInput, ScenarioProvider } from '@golden-frijoles/sdk'
+import {
+  createGrowthEngineClient,
+  type ScenarioExecutionTelemetryInput,
+  type ScenarioProvider,
+} from '@golden-frijoles/sdk'
 
 /** The most a probe will wait, whatever the fault says. The SDK already caps a delay; this is our own ceiling. */
 export const PROBE_MAX_DELAY_MS = 5_000
@@ -45,6 +49,20 @@ export function engineBaseConfig(value: string | undefined): { baseUrl?: string 
  * had a single `scenario_executed` before this. The probe is the actor; each synthetic subject stays the subject.
  */
 export const PROBE_ACTOR = 'scenario-probe'
+
+/** The probe's own SDK client: the ONE place it is built, so the route and the test cannot drift apart (D9). */
+export function createProbeGrowthClient(
+  apiKey: string,
+  engine: { baseUrl?: string },
+  fetchImpl?: typeof fetch
+) {
+  return createGrowthEngineClient({
+    apiKey,
+    userId: PROBE_ACTOR,
+    ...engine,
+    ...(fetchImpl ? { fetchImpl } : {}),
+  })
+}
 
 export function probeEnvironment(vercelEnv: string | undefined): ProbeEnvironment {
   return vercelEnv === 'production' ? 'production' : vercelEnv === 'preview' ? 'preview' : 'development'

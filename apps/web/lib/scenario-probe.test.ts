@@ -3,6 +3,7 @@ import { test } from 'node:test'
 import { createGrowthEngineClient } from '@golden-frijoles/sdk'
 import {
   PROBE_ACTOR,
+  createProbeGrowthClient,
   PROBE_MAX_DELAY_MS,
   engineBaseConfig,
   isSyntheticSubject,
@@ -171,7 +172,7 @@ test('with no GOLDEN_FRIJOLES_URL the SDK config has NO baseUrl key, so the SDK 
 // drill-impact-for-agents D9 — the fake `track` above cannot see what the REAL client does with the probe's input, and
 // that is where every golden-frijoles drill's evidence was lost (NO_USER, swallowed). Drive the real SDK client, built
 // the way the probe route builds it, and watch the request leave.
-test("the probe's real SDK client sends scenario_executed (it reports as PROBE_ACTOR)", async () => {
+test("the probe route's real SDK client sends scenario_executed (it reports as PROBE_ACTOR)", async () => {
   const posted: Array<{ url: string; body: Record<string, unknown> }> = []
   const fetchImpl = (async (url: string, init?: { body?: string }) => {
     posted.push({ url, body: JSON.parse(init?.body ?? '{}') })
@@ -208,12 +209,8 @@ test("the probe's real SDK client sends scenario_executed (it reports as PROBE_A
   assert.equal((await anonymous.trackScenarioExecution(telemetry)).ok, false)
   assert.equal(posted.length, 0)
 
-  const client = createGrowthEngineClient({
-    apiKey: 'gb_key_spec',
-    userId: PROBE_ACTOR,
-    baseUrl: 'https://engine.test',
-    fetchImpl,
-  })
+  // The probe route builds its client with exactly this helper, so removing its user fails here.
+  const client = createProbeGrowthClient('gb_key_spec', { baseUrl: 'https://engine.test' }, fetchImpl)
   assert.equal((await client.trackScenarioExecution(telemetry)).ok, true)
   const executed = posted.find((request) => request.body.event === 'scenario_executed')
   assert.ok(
