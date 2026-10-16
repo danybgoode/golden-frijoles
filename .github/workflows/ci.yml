@@ -291,10 +291,10 @@ jobs:
           path: verify/lean/.lake
           key: lake-${{ runner.os }}-${{ hashFiles('verify/lean/lean-toolchain', 'verify/lean/lake-manifest.json', 'verify/lean/**/*.lean') }}
           restore-keys: lake-${{ runner.os }}-
-      - name: Install elan (the toolchain itself comes from lean-toolchain)
+      - name: Install elan, pinned (the toolchain itself comes from lean-toolchain)
         run: |
           if [ ! -x "$HOME/.elan/bin/elan" ]; then
-            curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
+            curl -sSfL https://raw.githubusercontent.com/leanprover/elan/v4.2.4/elan-init.sh | sh -s -- -y --default-toolchain none
           fi
           echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
       - name: Build · axioms · differential test · teeth

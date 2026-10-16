@@ -54,11 +54,14 @@ itf_of() {
   [ -n "$itf_dir" ] && [ "$4" = '[violation]' ] && [ -f "$f" ] && printf '%s' "$f"
 }
 
+last=""  # the last row's result: teeth needs to know the mutant was CAUGHT, not that the row merely failed
+
 sim() { # module invariant expected — random simulation, 10k traces of ≤25 steps, fixed seed
   local s=$SECONDS out r
   out=$(cd "$spec_dir" && $QUINT run outbox.qnt --main "$1" --invariant "$2" --max-steps 25 --max-samples 10000 \
     --seed 0x1 $(itf_arg sim "$1" "$2") 2>&1)
   r=$(grep -oE '^\[(ok|violation)\]' <<<"$out" | head -1)
+  last=$r
   report sim "$1" "$2" "≤25" "$3" "$r" "$((SECONDS - s))" "$out" "$(itf_of sim "$1" "$2" "$r")"
 }
 
@@ -88,7 +91,8 @@ if [ "$mode" = teeth ]; then
   rows=""
   itf_dir=""
   sim outbox_timed noOrphan '[ok]'
-  if [ "$failures" = 1 ]; then
+  # A crash or an unparseable mutant also MISMATCHes (no result); only a found violation is the mutant caught.
+  if [ "$last" = '[violation]' ]; then
     echo "teeth: the mutant was caught (the MISMATCH above is the expected result)"
     exit 0
   fi
