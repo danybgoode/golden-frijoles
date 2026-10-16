@@ -110,7 +110,9 @@ Read live on `origin/main` 84be973. Each decision is cited by the sprint build c
   `settleDelivery`, `releaseUnsent`, `nextState` (`lib/delivery-dispatch.ts`) and `retryDecision` +
   `MAX_ATTEMPTS` (`lib/retry-policy.ts`). **flags**: model `verify/lean/Flageval/Model.lean`; TS functions
   `sameScalar`, `firstFailingClause`, `clausesMatch`, `rolloutOutcome`, `rolloutAdmits`, `matchesRule`,
-  `evaluateFlag`, `explainFlagEvaluation` (`packages/sdk/src/flags.ts`). Code is hashed NORMALISED (comments
+  `evaluateFlag`, `explainFlagEvaluation`, and the helpers they call that the model's assumptions rest on —
+  `validText` (the `trim()` seam F6 is about), `validScalar`, `validValueForType` (*added 2026-10-16, verifier #386*)
+  (`packages/sdk/src/flags.ts`). Code is hashed NORMALISED (comments
   stripped, whitespace collapsed), so a comment-only edit passes (smoke steps 2 and 4); models are hashed as bytes.
   Any mismatch fails, naming the side: code moved alone → "update the model, or re-pin if the change doesn't affect
   it"; model moved alone → "re-pin after re-running the check". A mirrored function that can't be found is drift,
@@ -121,8 +123,9 @@ Read live on `origin/main` 84be973. Each decision is cited by the sprint build c
   deliveries,webhook-delivery}.ts`, `apps/web/app/api/internal/dispatch-deliveries/`, `verify/quint/`. flags:
   `packages/sdk/src/{flags,bucketing}.ts`, `verify/lean/`, `verify/diff-test/`. Both: `verify/pins.json`,
   `.github/workflows/ci.yml`, `scripts/ci-changes.mjs`, `scripts/ci-gate.mjs`.
-- **D5 — Jobs and the gate.** `verify-outbox` (`check.sh quick`, then `check.sh teeth`: a mutant with the settle
-  budget check removed must MISMATCH) and `verify-flags` (`lake build`, axioms = exactly the three standard ones and
+- **D5 — Jobs and the gate.** `verify-outbox` (`check.sh quick`, then `check.sh teeth`: a mutant whose
+  `delete_destination` no longer drains must make `noOrphan` a found violation — *amended 2026-10-16: the settle-budget
+  mutant first locked here is not reached within 25 random steps, so it proved nothing*) and `verify-flags` (`lake build`, axioms = exactly the three standard ones and
   no `sorryAx`, diff-test seeds 1–3, then the whitespace mutant built in a temp copy must disagree). Toolchains cached
   (`~/.elan` + `.lake` keyed on toolchain/manifest/sources; `~/.quint`). `gate` needs both; `ci-gate.mjs` gains
   `--filtered job=output,…`: a skip is ok only when `changes` set that output to `false`.

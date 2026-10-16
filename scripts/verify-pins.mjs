@@ -30,47 +30,154 @@ const sha = (text) => createHash('sha256').update(text).digest('hex');
 export class CannotLook extends Error {}
 
 /**
- * Strip comments and collapse whitespace, leaving string literals intact. `line` is the line-comment opener
- * (`//` for TS, `--` for SQL); `block` is whether `/* … *\/` comments exist. Quotes are the string delimiters.
+ * Split source into code / string / comment segments, so nothing inside a string is read as a comment or a bracket.
+ * TS: '…' and "…" with backslash escapes; `…` templates whose ${…} expressions are code again; regex literals (a `/`
+ * where an operand cannot stand: after an operator, an opening bracket or a keyword like `return`); // and /* *\/
+ * comments. SQL: '…' with '' as its escape, "…" identifiers, -- and /* *\/ comments.
  */
-export function normalise(text, { line, block = true, quotes }) {
-  let out = '';
-  for (let i = 0; i < text.length;) {
+export function segments(text, lang) {
+  const ts = lang === 'ts';
+  const out = [];
+  let buf = '';
+  let type = 'code';
+  let tail = ''; // the recent code, with every string/regex shown as `x` (an operand): decides what a `/` is
+  let depth = 0; // brace depth, TS only: a `}` at a depth where a ${ opened returns to its template
+  const templates = [];
+  const emit = (next) => {
+    if (buf) out.push({ type, text: buf });
+    buf = '';
+    type = next;
+  };
+  let i = 0;
+  const readTemplate = () => {
+    // buf holds the template's opening (` or }); read to its end or to the next ${.
+    while (i < text.length) {
+      const c = text[i];
+      if (c === '\\') {
+        buf += text.slice(i, i + 2);
+        i += 2;
+      } else if (c === '`') {
+        buf += c;
+        i++;
+        emit('code');
+        tail += 'x';
+        return;
+      } else if (c === '$' && text[i + 1] === '{') {
+        buf += '${';
+        i += 2;
+        emit('code');
+        templates.push(depth++);
+        tail += '(';
+        return;
+      } else {
+        buf += c;
+        i++;
+      }
+    }
+    emit('code');
+  };
+  const regexMayStart = () =>
+    /(?:^|[(,=:[!&|?{};+\-*%<>~^])\s*$/.test(tail) ||
+    /\b(?:return|typeof|case|do|else|in|of|void|yield|await|throw|delete|instanceof)\s*$/.test(tail);
+  while (i < text.length) {
     const c = text[i];
-    if (quotes.includes(c)) {
+    const two = text.slice(i, i + 2);
+    if (two === (ts ? '//' : '--') || two === '/*') {
+      emit('comment');
+      const end = two === '/*' ? text.indexOf('*/', i + 2) : text.indexOf('\n', i);
+      const stop = end < 0 ? text.length : two === '/*' ? end + 2 : end;
+      buf = text.slice(i, stop);
+      i = stop;
+      emit('code');
+    } else if (c === "'" || c === '"') {
+      emit('string');
       let j = i + 1;
-      while (j < text.length && text[j] !== c) j += text[j] === '\\' && c !== "'" ? 2 : 1;
-      // SQL's '' escape is two adjacent strings, which this reads correctly as two.
-      out += text.slice(i, j + 1);
+      while (j < text.length) {
+        if (ts && text[j] === '\\') j += 2;
+        else if (text[j] === c && !ts && text[j + 1] === c) j += 2;
+        else if (text[j] === c || (ts && text[j] === '\n')) break;
+        else j++;
+      }
+      buf = text.slice(i, j + 1);
       i = j + 1;
-    } else if (text.startsWith(line, i)) {
-      while (i < text.length && text[i] !== '\n') i++;
-    } else if (block && text.startsWith('/*', i)) {
-      const end = text.indexOf('*/', i + 2);
-      i = end < 0 ? text.length : end + 2;
+      emit('code');
+      tail += 'x';
+    } else if (ts && c === '`') {
+      emit('string');
+      buf = '`';
+      i++;
+      readTemplate();
+    } else if (ts && c === '/' && regexMayStart()) {
+      emit('string');
+      let j = i + 1;
+      let inClass = false;
+      while (j < text.length && text[j] !== '\n') {
+        if (text[j] === '\\') j++;
+        else if (text[j] === '[') inClass = true;
+        else if (text[j] === ']') inClass = false;
+        else if (text[j] === '/' && !inClass) break;
+        j++;
+      }
+      j++;
+      while (/[a-z]/.test(text[j] ?? '')) j++;
+      buf = text.slice(i, j);
+      i = j;
+      emit('code');
+      tail += 'x';
+    } else if (ts && c === '}' && templates.length && templates.at(-1) === depth - 1) {
+      depth--;
+      templates.pop();
+      emit('string');
+      buf = '}';
+      i++;
+      readTemplate();
     } else {
-      out += c;
+      if (ts && c === '{') depth++;
+      if (ts && c === '}') depth--;
+      buf += c;
+      tail = (tail + c).slice(-40);
       i++;
     }
   }
-  return out.replace(/\s+/g, ' ').trim();
+  emit('code');
+  return out;
 }
+
+/** Comments stripped, whitespace in CODE collapsed; strings kept byte for byte. */
+export const normalise = (text, lang) =>
+  segments(text, lang)
+    .filter((s) => s.type !== 'comment')
+    .map((s) => (s.type === 'code' ? s.text.replace(/\s+/g, ' ') : s.text))
+    .join('')
+    .replace(/\s+/g, ' ')
+    .trim();
 
 /**
  * The source of one top-level TS declaration: `function name`, `async function name`, `const name` (optionally
- * exported). Prettier formats this repo, so a multi-line declaration ends at the first line that is exactly `}`;
- * a one-line `const` ends at its line. null when absent or ambiguous.
+ * exported). It ends at the first newline outside every bracket, string and comment whose next line is not
+ * indented — Prettier indents every continuation — so a multi-line arrow `const`, an inline param type closing at
+ * column 0 and a template literal with a bare `}` line are all read whole. null when absent or ambiguous.
  */
 export function extractTs(source, name) {
   const decl = new RegExp(`^(?:export )?(?:async )?(?:function\\*? |const )${name}\\b`, 'gm');
   const starts = [...source.matchAll(decl)].map((m) => m.index);
   if (starts.length !== 1) return null;
-  const start = starts[0];
-  const firstLineEnd = source.indexOf('\n', start);
-  const firstLine = source.slice(start, firstLineEnd < 0 ? undefined : firstLineEnd);
-  if (/^(?:export )?const /.test(firstLine) && !/[{([]\s*$/.test(firstLine)) return firstLine;
-  const close = source.slice(start).search(/^\}[ \t]*$/m);
-  return close < 0 ? null : source.slice(start, start + close + 1);
+  const rest = source.slice(starts[0]);
+  let at = 0;
+  let depth = 0;
+  for (const seg of segments(rest, 'ts')) {
+    if (seg.type === 'code') {
+      for (let k = 0; k < seg.text.length; k++) {
+        const c = seg.text[k];
+        if ('([{'.includes(c)) depth++;
+        else if (')]}'.includes(c)) depth--;
+        else if (c === '\n' && depth === 0 && !/[ \t]/.test(rest[at + k + 1] ?? ''))
+          return rest.slice(0, at + k);
+      }
+    }
+    at += seg.text.length;
+  }
+  return depth === 0 ? rest.trimEnd() : null;
 }
 
 /** The full `CREATE … FUNCTION name(…) … $tag$ … $tag$ …;` statement at `at`, or null. */
@@ -85,23 +192,44 @@ function sqlStatementAt(sql, at) {
   return sql.slice(at, semi < 0 ? undefined : semi + 1);
 }
 
-/**
- * The latest definition of a SQL function across the migrations: the last `CREATE [OR REPLACE] FUNCTION name(` in
- * the last file (filename order = apply order) that has one. Returns { file, text } or null.
- */
-export function extractSql(migrations, name) {
-  const create = new RegExp(`CREATE\\s+(?:OR\\s+REPLACE\\s+)?FUNCTION\\s+(?:public\\.)?${name}\\s*\\(`, 'gi');
-  for (const { file, sql } of [...migrations].sort((a, b) => (a.file < b.file ? 1 : -1))) {
-    // A commented-out CREATE is not a definition: search the comment-free text's positions in the original.
-    const hits = [...sql.matchAll(create)].filter((m) => !isInLineComment(sql, m.index));
-    if (hits.length === 0) continue;
-    const text = sqlStatementAt(sql, hits.at(-1).index);
-    return text ? { file, text } : null;
+/** The [start, end) ranges of a SQL text's comments: a CREATE or DROP inside one is not a statement. */
+function commentRanges(sql) {
+  const ranges = [];
+  let at = 0;
+  for (const seg of segments(sql, 'sql')) {
+    if (seg.type === 'comment') ranges.push([at, at + seg.text.length]);
+    at += seg.text.length;
   }
-  return null;
+  return ranges;
 }
 
-const isInLineComment = (sql, at) => sql.slice(sql.lastIndexOf('\n', at) + 1, at).includes('--');
+/**
+ * The latest definition of a SQL function across the migrations (filename order = apply order): the last
+ * `CREATE [OR REPLACE] FUNCTION [public.]["]name["](` outside a comment. A `DROP FUNCTION name` after it means the
+ * function is gone, so null — the model now describes something that isn't there. Returns { file, text } or null.
+ */
+export function extractSql(migrations, name) {
+  const ident = `(?:public\\.)?"?${name}"?`;
+  const create = new RegExp(`CREATE\\s+(?:OR\\s+REPLACE\\s+)?FUNCTION\\s+${ident}\\s*\\(`, 'gi');
+  const drop = new RegExp(`DROP\\s+FUNCTION\\s+(?:IF\\s+EXISTS\\s+)?${ident}(?![\\w"])`, 'gi');
+  let latest = null; // { order, index, file, sql } of the last CREATE
+  let dropped = null; // { order, index } of the last DROP
+  const ordered = [...migrations].sort((a, b) => (a.file < b.file ? -1 : 1));
+  ordered.forEach(({ file, sql }, order) => {
+    const ranges = commentRanges(sql);
+    const live = (m) => !ranges.some(([s, e]) => m.index >= s && m.index < e);
+    for (const m of [...sql.matchAll(create)].filter(live)) latest = { order, index: m.index, file, sql };
+    for (const m of [...sql.matchAll(drop)].filter(live)) dropped = { order, index: m.index };
+  });
+  if (!latest) return null;
+  if (
+    dropped &&
+    (dropped.order > latest.order || (dropped.order === latest.order && dropped.index > latest.index))
+  )
+    return null;
+  const text = sqlStatementAt(latest.sql, latest.index);
+  return text ? { file: latest.file, text } : null;
+}
 
 /** Every entry's current hash, from the targets pins.json names. `read(path)` returns text; throws CannotLook. */
 export function currentHashes(targets, { read, migrations }) {
@@ -111,17 +239,13 @@ export function currentHashes(targets, { read, migrations }) {
     for (const path of t.model ?? []) hashes[`model:${path}`] = sha(read(path));
     for (const name of t.sql ?? []) {
       const found = extractSql(migrations, name);
-      hashes[`sql:${name}`] = found
-        ? { hash: sha(normalise(found.text, { line: '--', quotes: ["'"] })), from: found.file }
-        : null;
+      hashes[`sql:${name}`] = found ? { hash: sha(normalise(found.text, 'sql')), from: found.file } : null;
     }
     for (const [file, names] of Object.entries(t.ts ?? {})) {
       const source = read(file);
       for (const name of names) {
         const text = extractTs(source, name);
-        hashes[`ts:${file}#${name}`] = text
-          ? sha(normalise(text, { line: '//', quotes: ["'", '"', '`'] }))
-          : null;
+        hashes[`ts:${file}#${name}`] = text ? sha(normalise(text, 'ts')) : null;
       }
     }
     out[group] = hashes;

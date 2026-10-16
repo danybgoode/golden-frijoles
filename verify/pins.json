@@ -2,7 +2,9 @@
   "$comment": "verify-module D3: what each model mirrors, and the hash it was last checked against. Written by `node scripts/verify-pins.mjs --write`; checked in the static gate. Edit `targets` by hand; never edit `hashes`.",
   "targets": {
     "outbox": {
-      "model": ["verify/quint/outbox.qnt"],
+      "model": [
+        "verify/quint/outbox.qnt"
+      ],
       "sql": [
         "claim_deliveries",
         "settle_delivery",
@@ -18,13 +20,21 @@
           "releaseUnsent",
           "nextState"
         ],
-        "apps/web/lib/retry-policy.ts": ["MAX_ATTEMPTS", "retryDecision"]
+        "apps/web/lib/retry-policy.ts": [
+          "MAX_ATTEMPTS",
+          "retryDecision"
+        ]
       }
     },
     "flags": {
-      "model": ["verify/lean/Flageval/Model.lean"],
+      "model": [
+        "verify/lean/Flageval/Model.lean"
+      ],
       "ts": {
         "packages/sdk/src/flags.ts": [
+          "validText",
+          "validScalar",
+          "validValueForType",
           "sameScalar",
           "firstFailingClause",
           "clausesMatch",
@@ -55,6 +65,9 @@
     },
     "flags": {
       "model:verify/lean/Flageval/Model.lean": "019b8efd867580019ca5ded6e2e68fb3bee2d48609e1193da341f6b5dd9ce1d8",
+      "ts:packages/sdk/src/flags.ts#validText": "8b349a0ef3aa8cea99924391ba020fd88e07828edb46eb2070acba9162699d03",
+      "ts:packages/sdk/src/flags.ts#validScalar": "445246f64bc646e03a8daa2a87edd550d11f8bf6e5eb48a83bce05434767f1ad",
+      "ts:packages/sdk/src/flags.ts#validValueForType": "15644f9a78a97b9f7c3bf1c313cdaee5c38966e5ec19e3ef6a7ecad9380e6655",
       "ts:packages/sdk/src/flags.ts#sameScalar": "51dbfdd08c0a6ed5ec6bc673e3fd39171a9f4e3a327e9d1f58760f63a8e67007",
       "ts:packages/sdk/src/flags.ts#firstFailingClause": "979ff38f6827a8d10456815d92f6ffc0546062836c354037b91a2e15ac024175",
       "ts:packages/sdk/src/flags.ts#clausesMatch": "dde7663dc8f38caf8c9b0612ee9de992201e95c164372cd7b999a1e397b37aad",

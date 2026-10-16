@@ -162,8 +162,89 @@ test('extractSql: the last CREATE in the latest file wins; a commented-out CREAT
 });
 
 test('normalise keeps comment markers that are inside strings', () => {
-  assert.equal(normalise("a // x\n 'b//c' /* q */ d", { line: '//', quotes: ["'"] }), "a 'b//c' d");
-  assert.equal(normalise("x = '--not' -- yes", { line: '--', quotes: ["'"] }), "x = '--not'");
+  assert.equal(normalise("a // x\n 'b//c' /* q */ d", 'ts'), "a 'b//c' d");
+  assert.equal(normalise("x = '--not' -- yes", 'sql'), "x = '--not'");
+  assert.equal(normalise("x = 'it''s -- here' -- gone", 'sql'), "x = 'it''s -- here'");
+});
+
+// The verifier's probe pairs (PR #386): each pair differs in real code, so each must hash differently.
+const differ = (a, b, name = 'f') => {
+  const ea = extractTs(a, name);
+  const eb = extractTs(b, name);
+  assert.ok(ea && eb, 'both extract');
+  assert.notEqual(normalise(ea, 'ts'), normalise(eb, 'ts'), `${JSON.stringify(ea)} vs ${JSON.stringify(eb)}`);
+};
+
+test('extractTs reads a multi-line arrow const and a wrapped const whole', () => {
+  const tail = '\n\nexport function g() {\n  return 1\n}\n';
+  differ(
+    `export const f = (a: number): number =>\n  a + 1${tail}`,
+    `export const f = (a: number): number =>\n  a + 2${tail}`
+  );
+  differ('export const MAX =\n  6\n', 'export const MAX =\n  7\n', 'MAX');
+  assert.equal(extractTs(`export const f = (a) =>\n  a + 1${tail}`, 'f'), 'export const f = (a) =>\n  a + 1');
+});
+
+test('extractTs: a template literal with a bare `}` line does not end the function', () => {
+  differ(
+    'function f() {\n  const s = `\n}\n`\n  return s + 1\n}\n',
+    'function f() {\n  const s = `\n}\n`\n  return s + 2\n}\n'
+  );
+  differ(
+    'function f() {\n  return `${a}\n}${b + 1}`\n}\n',
+    'function f() {\n  return `${a}\n}${b + 2}`\n}\n'
+  );
+});
+
+test('normalise: an escaped quote or a regex with a quote does not turn a later string into a comment', () => {
+  const esc = (n) => `function f() {\n  const x = 'a\\'b'\n  const u = 'http://x' + y + ${n}\n}\n`;
+  differ(esc(1), esc(2));
+  const re = (n) => `function f(s) {\n  return s.replace(/'/g, '') + '//' + v${n}\n}\n`;
+  differ(re(1), re(2));
+  assert.equal(
+    normalise('function f(a) {\n  return a / 2 // half\n}', 'ts'),
+    'function f(a) { return a / 2 }'
+  );
+});
+
+test('extractSql: a quoted name counts; a CREATE inside a block comment does not; a later DROP means gone', () => {
+  const quoted = SQL_OLD.replace('FUNCTION claim_deliveries(', 'FUNCTION public."claim_deliveries"(');
+  assert.equal(
+    extractSql(
+      [
+        { file: '1.sql', sql: SQL_OLD },
+        { file: '2.sql', sql: quoted },
+      ],
+      'claim_deliveries'
+    ).file,
+    '2.sql'
+  );
+  const commented = `/*\n${SQL_NEW}\n*/\n`;
+  assert.equal(
+    extractSql(
+      [
+        { file: '1.sql', sql: SQL_OLD },
+        { file: '2.sql', sql: commented },
+      ],
+      'claim_deliveries'
+    ).file,
+    '1.sql'
+  );
+  const dropped = 'DROP FUNCTION IF EXISTS claim_deliveries(UUID);\n';
+  assert.equal(
+    extractSql(
+      [
+        { file: '1.sql', sql: SQL_OLD },
+        { file: '2.sql', sql: dropped },
+      ],
+      'claim_deliveries'
+    ),
+    null
+  );
+  assert.ok(
+    extractSql([{ file: '1.sql', sql: dropped + SQL_OLD }], 'claim_deliveries'),
+    'DROP then CREATE is a redefinition'
+  );
 });
 
 test('emptying the targets (or dropping a group) fails, never passes vacuously', () => {
