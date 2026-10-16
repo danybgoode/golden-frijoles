@@ -54,7 +54,7 @@ Commands
   scenarios launch          start a run of the newest version of a scenario
   scenarios stop            stop a run now
   scenarios runs            runs, and with --watch their progress until they end
-  scenarios impact          a stopped run's impact: control versus treatment
+  scenarios impact          a run's impact: control versus treatment
 
   segments
   segments define           define (or redefine) a segment: people who did an event at least N times in the last D days

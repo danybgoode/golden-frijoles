@@ -526,3 +526,127 @@ test('S1.1 + S1.3: a drill binds to an experiment at define, and its stop captur
     expect.objectContaining({ id: evidenceId, runId: captured.runId, externalActorId: null }),
   ])
 })
+
+test('S2.1: a plain member reads a run impact in three states, and a stranger cannot', async ({
+  request,
+}) => {
+  test.skip(process.env.SCENARIO_AUTHORING_ENABLED !== 'true', 'the authoring switch is off on this server')
+  const client = db()
+  const owner = await person(client, 'run-impact-owner')
+  const member = await person(client, 'run-impact-member')
+  const stranger = await person(client, 'run-impact-stranger')
+  const project = await drillProject(request, client, owner)
+  await client
+    .from('project_members')
+    .insert({ project_id: project.projectId, user_id: member.id, role: 'member' })
+  const bound = await faultFlag(client, project.projectId, owner.id, 'site.read_bound_fault')
+  const draftOnly = await faultFlag(client, project.projectId, owner.id, 'site.read_draft_fault')
+  const loose = await faultFlag(client, project.projectId, owner.id, 'site.read_loose_fault')
+  const live = await experiment(client, project.projectId, owner.id, `read_live_${Date.now()}`, bound, true)
+  const draft = await experiment(
+    client,
+    project.projectId,
+    owner.id,
+    `read_draft_${Date.now()}`,
+    draftOnly,
+    false
+  )
+  const keyOf = async (id: string) =>
+    (await client.from('experiment_registries').select('key').eq('id', id).single()).data!.key as string
+  const liveKey = await keyOf(live.experiment_id)
+  const draftKey = await keyOf(draft.experiment_id)
+
+  const define = async (
+    scenarioKey: string,
+    flag: { key: string; version: number },
+    experimentRef?: [string, number]
+  ) => {
+    const response = await post(request, owner.auth, {
+      project: project.slug,
+      command: 'define',
+      scenarioKey,
+      targetKey: 'site.probe',
+      flagKey: flag.key,
+      flagVersion: flag.version,
+      ...(experimentRef ? { experimentKey: experimentRef[0], experimentVersion: experimentRef[1] } : {}),
+      requestCap: 10,
+      concurrencyCap: 1,
+      reason: 'spec',
+    })
+    expect(response.status(), await response.text()).toBe(200)
+  }
+  await define('read-plain', { key: 'site.read_loose_fault', version: loose.version })
+  await define('read-failed', { key: 'site.read_draft_fault', version: draftOnly.version }, [
+    draftKey,
+    draft.version,
+  ])
+  await define('read-bound', { key: 'site.read_bound_fault', version: bound.version }, [
+    liveKey,
+    live.version,
+  ])
+
+  const unbound = await launchAndStop(request, client, owner.auth, project, 'read-plain')
+  const failed = await launchAndStop(request, client, owner.auth, project, 'read-failed')
+  const captured = await launchAndStop(
+    request,
+    client,
+    owner.auth,
+    project,
+    'read-bound',
+    async (runId, version) => {
+      const facts = (['control', 'fault'] as const).map((arm, index) => ({
+        project_id: project.projectId,
+        user_id: 'scenario-probe',
+        event: 'scenario_executed',
+        feature_id: 'read-bound',
+        tags: {
+          scenario_definition_version: version,
+          run_id: runId,
+          arm,
+          failed: arm === 'fault',
+          latency_ms: arm === 'fault' ? 40 : 10,
+        },
+        context_version: 1,
+        subject_type: 'synthetic_probe',
+        subject_id: `read-${arm}-${index}`,
+      }))
+      expect((await client.from('events').insert(facts)).error).toBeNull()
+    }
+  )
+
+  const read = (runId: string, auth: Record<string, string>) =>
+    request.get(`/api/v1/cli/scenarios?project=${project.slug}&run=${runId}`, { headers: auth })
+  const impactOf = async (runId: string) => {
+    const response = await read(runId, member.auth)
+    expect(response.status(), await response.text()).toBe(200)
+    const body = (await response.json()) as {
+      project: string
+      runId: string
+      impact: Record<string, unknown>
+    }
+    expect(body).toMatchObject({ project: project.slug, runId })
+    return body.impact
+  }
+
+  expect(await impactOf(unbound.runId)).toEqual({ state: 'unbound' })
+  expect(await impactOf(failed.runId)).toEqual({
+    state: 'not_captured',
+    reason: `no capture recorded — run \`frijoles scenarios impact ${failed.runId} --capture\``,
+  })
+  expect(await impactOf(captured.runId)).toMatchObject({
+    state: 'captured',
+    experiment: { key: liveKey, definitionVersion: live.version },
+    control: { attempts: 1, failures: 0, latencyP95Ms: 10 },
+    treatment: { attempts: 1, failures: 1, latencyP95Ms: 40 },
+    claim: { causal: false },
+  })
+
+  // Without `run` the read is the list, unchanged; an unknown run is not found; a stranger finds no project.
+  const list = (await (
+    await request.get(`/api/v1/cli/scenarios?project=${project.slug}`, { headers: member.auth })
+  ).json()) as { runs: unknown[] }
+  expect(list.runs).toHaveLength(3)
+  const unknownRun = await read('00000000-0000-4000-8000-000000000000', member.auth)
+  expect(unknownRun.status()).toBe(404)
+  expect((await read(captured.runId, stranger.auth)).status()).toBe(404)
+})

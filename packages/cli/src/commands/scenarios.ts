@@ -540,26 +540,80 @@ export const scenariosRunsCommand: Command = {
   },
 }
 
+/** What `GET …/scenarios?run=` answers about one run (drill-impact-for-agents D10, D12). */
+type RunImpactArm = { attempts: number; failures: number; latencyP95Ms: number | null }
+export type RunImpact =
+  | { state: 'unbound' }
+  | { state: 'not_captured'; reason: string }
+  | {
+      state: 'captured'
+      experiment: { key: string; definitionVersion: number }
+      capturedAt: string
+      control: RunImpactArm
+      treatment: RunImpactArm
+      claim: { status: string }
+    }
+
+/** D12 — the member read: a header and a control-versus-treatment table, or exactly one state line. */
+export function describeRunImpact(impact: RunImpact): string {
+  if (impact.state === 'unbound') return 'not bound to an experiment'
+  if (impact.state === 'not_captured') return `not captured yet (${impact.reason})`
+  const arm = (name: string, value: RunImpactArm) => [
+    name,
+    String(value.attempts),
+    String(value.failures),
+    value.latencyP95Ms === null ? '—' : String(value.latencyP95Ms),
+  ]
+  return [
+    `experiment ${impact.experiment.key}@${impact.experiment.definitionVersion} · claim ${impact.claim.status} · captured ${impact.capturedAt}`,
+    table(
+      ['ARM', 'ATTEMPTS', 'FAILURES', 'P95 MS'],
+      [arm('control', impact.control), arm('treatment', impact.treatment)]
+    ),
+  ].join('\n')
+}
+
 export const scenariosImpactCommand: Command = {
   path: ['scenarios', 'impact'],
-  summary: "a stopped run's impact: control versus treatment",
-  usage: 'frijoles scenarios impact <run-id> --capture [--project <slug>]',
+  summary: "a run's impact: control versus treatment",
+  usage: 'frijoles scenarios impact <run-id> [--capture] [--project <slug>] [--json]',
   needsAuth: true,
-  detail: `--capture is owner only: it captures a stopped run's impact from its experiment's canonical analysis, or
+  detail: `Any member can read a run's impact: the bound experiment, then control versus treatment (attempts, failures,
+  p95 latency). A drill that is not bound to an experiment, or whose impact was not captured, says so in one line.
+  --json prints the server's body as is.
+
+  --capture is owner only: it captures a stopped run's impact from its experiment's canonical analysis, or
   returns the capture already recorded. Safe to run again. A stop captures a bound drill's impact by itself; this is
   the retry when that capture failed. Its audit reason is fixed, so a retry names the same evidence.`,
   flags: [PROJECT_FLAG, { name: 'capture', describe: 'capture it now (owner only; idempotent)' }],
   async run(context): Promise<ExitCode> {
     const runId = context.args.positionals[0]
-    if (!runId || !boolFlag(context.args, 'capture')) {
-      context.emit.fail('invalid', 'Usage: `frijoles scenarios impact <run-id> --capture`.')
+    if (!runId) {
+      context.emit.fail('invalid', 'Usage: `frijoles scenarios impact <run-id> [--capture]`.')
       return EXIT.USAGE
     }
-    const done = await ownerWrite<{ impact: ImpactCapture }>(context, 'capture_impact', 'impact --capture', {
-      runId,
-    })
-    if (!done.ok) return done.code
-    context.emit.ok(done.body, describeImpactCapture(done.body.impact, runId))
+    if (boolFlag(context.args, 'capture')) {
+      const done = await ownerWrite<{ impact: ImpactCapture }>(
+        context,
+        'capture_impact',
+        'impact --capture',
+        {
+          runId,
+        }
+      )
+      if (!done.ok) return done.code
+      context.emit.ok(done.body, describeImpactCapture(done.body.impact, runId))
+      return EXIT.OK
+    }
+    const project = resolveProject(context)
+    if (!project) return missingProject(context)
+    const result = await context.api!.get<{ project: string; runId: string; impact: RunImpact }>(
+      'api/v1/cli/scenarios',
+      { project, run: runId }
+    )
+    if (result.kind !== 'ok') return failWith(context, result)
+    const { ok: _ok, ...body } = result.body as typeof result.body & { ok?: boolean }
+    context.emit.ok(body, describeRunImpact(body.impact))
     return EXIT.OK
   },
 }
