@@ -7,6 +7,8 @@ name: CI
 #                      against a LOCAL Supabase and locally built servers: the suite needs a database it can seed and
 #                      clean, plus a second, differently-enved server to prove the dark contracts. A Vercel preview
 #                      offers neither (it points at production Supabase and carries one env set).
+#   verify-outbox, verify-flags — the model checks (verify-module D4/D5), only when `changes` says the PR touches the
+#                      outbox or the flag evaluator: the Quint simulation, and the Lean proofs + differential test.
 #   gate             — the one required check (scripts/ci-gate.mjs, ci-diet D3).
 # Minutes: the repo is public, so GitHub-hosted standard runners are free and wall clock is the scarce thing.
 # If the repo ever goes private again, revisit the job split (ci-diet D9).
@@ -26,6 +28,8 @@ jobs:
     timeout-minutes: 5
     outputs:
       docs_only: ${{ steps.diff.outputs.docs_only }}
+      verify_outbox: ${{ steps.diff.outputs.verify_outbox }}
+      verify_flags: ${{ steps.diff.outputs.verify_flags }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -58,6 +62,10 @@ jobs:
       # regenerates it in the same PR.
       - name: OWED-LEDGER.md is up to date
         run: node scripts/owed-ledger.mjs --check
+      # A model can't drift from the code it mirrors (verify-module D3): every PR, since a migration of any name can
+      # redefine a mirrored function.
+      - name: Verify models are pinned to the code they mirror
+        run: node scripts/verify-pins.mjs
       # Replay only. Shadow expiry is a DATE, so here it would turn every unrelated PR red; jev-expiry.yml runs it
       # daily instead, and that red run is what forces the promote/tune/drop decision.
       - name: Jev — eval replay
@@ -238,17 +246,75 @@ jobs:
       - run: node apps/web/design-system/state-contract.mjs --check
       - run: node apps/web/design-system/render-reference.mjs
 
+  # The outbox's Quint model, simulated over 7 invariants in both timing modes, then a mutant it must catch
+  # (verify/quint/check.sh holds the one expected table). The exhaustive check is nightly (verify-nightly.yml).
+  verify-outbox:
+    name: Model check · outbox
+    needs: changes
+    if: needs.changes.outputs.verify_outbox == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      # Quint's simulator downloads its evaluator into ~/.quint on first use.
+      - uses: actions/cache@v6
+        with:
+          path: ~/.quint
+          key: quint-0.33.0-${{ runner.os }}
+      - name: Simulation table
+        run: bash verify/quint/check.sh quick
+      - name: Teeth — a mutant model must fail the table
+        run: bash verify/quint/check.sh teeth
+
+  # The flag evaluator's Lean proofs, the axioms check and the differential test against packages/sdk/src/flags.ts,
+  # then the whitespace mutant it must catch (verify/lean/check.sh; rule 4 in verify/README.md).
+  verify-flags:
+    name: Proofs + differential test · flags
+    needs: changes
+    if: needs.changes.outputs.verify_flags == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - uses: actions/cache@v6
+        with:
+          path: ~/.elan
+          key: elan-${{ runner.os }}-${{ hashFiles('verify/lean/lean-toolchain') }}
+      - uses: actions/cache@v6
+        with:
+          path: verify/lean/.lake
+          key: lake-${{ runner.os }}-${{ hashFiles('verify/lean/lean-toolchain', 'verify/lean/lake-manifest.json', 'verify/lean/**/*.lean') }}
+          restore-keys: lake-${{ runner.os }}-
+      - name: Install elan (the toolchain itself comes from lean-toolchain)
+        run: |
+          if [ ! -x "$HOME/.elan/bin/elan" ]; then
+            curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
+          fi
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Build · axioms · differential test · teeth
+        run: bash verify/lean/check.sh
+
   # The one check the ruleset requires. Green only when every job succeeded, or was skipped because `changes` said the
-  # PR is docs-only. cancelled, failure, and a skip the rule did not order are red (ci-diet D3).
+  # PR is docs-only (the e2e jobs) or outside a verify job's path filter (--filtered). cancelled, failure, and a skip
+  # the rule did not order are red (ci-diet D3).
   gate:
     name: gate
     if: always()
-    needs: [changes, typecheck-build, e2e-api, e2e-authed, design-contract]
+    needs:
+      [changes, typecheck-build, e2e-api, e2e-authed, design-contract, verify-outbox, verify-flags]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v7
-      - name: Every job passed, or was skipped by the docs-only rule
+      - name: Every job passed, or was skipped by the docs-only rule or its path filter
         env:
           NEEDS: ${{ toJSON(needs) }}
-        run: node scripts/ci-gate.mjs --skippable e2e-api,e2e-authed,design-contract
+        run: >-
+          node scripts/ci-gate.mjs --skippable e2e-api,e2e-authed,design-contract
+          --filtered verify-outbox=verify_outbox,verify-flags=verify_flags

@@ -4,7 +4,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { changedFiles, isDocsOnly } from './ci-changes.mjs';
+import { changedFiles, isDocsOnly, verifyFilters } from './ci-changes.mjs';
 
 // A hook exports GIT_DIR and friends, which override cwd: an unsealed fixture would rewrite the real repo
 // (git-fixtures-sealed.test.mjs).
@@ -72,4 +72,35 @@ test('a code file renamed into Roadmap/ still lists its old path', () => {
 
 test('an uncomputable diff throws, which the CLI turns into docs_only=false', () => {
   assert.throws(() => changedFiles('0000000', 'HEAD'));
+});
+
+test('verify filters: the outbox paths, the evaluator paths, and the wiring that governs both', () => {
+  const v = (files) => verifyFilters(files);
+  assert.deepEqual(v(['Roadmap/x.md']), { verify_outbox: false, verify_flags: false });
+  assert.deepEqual(v(['apps/web/lib/delivery-dispatch.ts']), { verify_outbox: true, verify_flags: false });
+  assert.deepEqual(v(['apps/web/supabase/migrations/20990101000000_anything.sql']), {
+    verify_outbox: true,
+    verify_flags: false,
+  });
+  assert.deepEqual(v(['apps/web/app/api/internal/dispatch-deliveries/route.ts']).verify_outbox, true);
+  assert.deepEqual(v(['verify/quint/outbox.qnt']), { verify_outbox: true, verify_flags: false });
+  assert.deepEqual(v(['packages/sdk/src/flags.ts']), { verify_outbox: false, verify_flags: true });
+  assert.deepEqual(v(['verify/lean/Flageval/Model.lean', 'verify/diff-test/run.mjs']).verify_flags, true);
+  assert.deepEqual(v(['.github/workflows/ci.yml']), { verify_outbox: true, verify_flags: true });
+  assert.deepEqual(v(['verify/pins.json']), { verify_outbox: true, verify_flags: true });
+});
+
+test('verify filters: lookalikes do not match, and the gate seam lib/flags.ts is not the evaluator', () => {
+  const v = (files) => verifyFilters(files);
+  assert.deepEqual(v(['apps/web/lib/flags.ts']), { verify_outbox: false, verify_flags: false });
+  assert.deepEqual(v(['packages/sdk/src/flags.test.ts']), { verify_outbox: false, verify_flags: false });
+  assert.deepEqual(v(['apps/web/lib/delivery-dispatch.test.ts']), {
+    verify_outbox: false,
+    verify_flags: false,
+  });
+  assert.deepEqual(v(['verify/README.md']), { verify_outbox: false, verify_flags: false });
+});
+
+test('verify filters: an empty diff is unsure, so both run', () => {
+  assert.deepEqual(verifyFilters([]), { verify_outbox: true, verify_flags: true });
 });
