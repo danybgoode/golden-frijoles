@@ -6,14 +6,14 @@
 
 _Generated: 2026-10-16_
 
-**96 check(s) owed across 71 file(s)** · 6 cleared.
+**94 check(s) owed across 71 file(s)** · 6 cleared.
 
 | Who can clear it | Count | What it means |
 |---|---|---|
-| publish | 2 | A package publish (npm 2FA): the product owner today, a CI job once trusted publishing is on |
+| publish | 1 | A package publish (npm 2FA): the product owner today, a CI job once trusted publishing is on |
 | credential | 7 | Mints or uses a production credential: only the product owner, named every time |
 | ops | 5 | On the product owner's own accounts or machine |
-| judgment | 30 | An answer only the product owner can give: an _Intent_, an approval, a decision |
+| judgment | 29 | An answer only the product owner can give: an _Intent_, an approval, a decision |
 | signed-in | 23 | A signed-in production walkthrough: an agent can run it once a smoke account exists |
 | interactive | 20 | An interactive plugin or terminal walkthrough: an agent can script it in a scratch repo |
 | unsorted | 9 | Nothing above matched — **not a bin, a to-triage list** |
@@ -23,11 +23,10 @@ _Generated: 2026-10-16_
 | money-path | 1 | Touches checkout, payment or order state — run these first |
 | auth-path | 27 | Needs a real signed-in session a script cannot mint against production |
 | admin-only | 0 | Behind an admin surface |
-| other | 68 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
+| other | 66 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
 
-## publish (2)
+## publish (1)
 
-- `Roadmap/01-growth-engine/drill-impact-for-agents/sprint-2.md:50` · other — returns the same fields. A CLI release, its npm publish owed to the product owner. **Risk:** low
 - `Roadmap/01-growth-engine/funnel-truth/RETROSPECTIVE.md:46` · other — Owed to the product owner: `npm publish` CLI 1.8.0 and 1.9.0 (the skills already pin 1.9.0 / kit 1.10.3); `frijoles flags set bets.funnel_trend_enabled --value true --env production` when the trend should go live; the signed-in smoke steps (sprint-1 3–5, sprint-2 4 and 6) and th…
 
 ## credential (7)
@@ -48,11 +47,10 @@ _Generated: 2026-10-16_
 - `Roadmap/09-platform-infra/plugin-1-0/RETROSPECTIVE.md:43` · other — **Owed to Daniel:** the `_Intent_` word above; Sprint 4's interactive walkthrough steps 2–5; your live routines that name a removed skill (sprint-3 step 7); and two decisions: rename the Notion `Stage` select option (it stores the key "Grooming"), and whether to re-approve the c…
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:55` · other — Remove the three account copies of the coaches.
 
-## judgment (30)
+## judgment (29)
 
 - `Roadmap/01-growth-engine/delivery-stale-reclaim-uncounted/RETROSPECTIVE.md:58` · other — Did we build what was meant? (owed to Daniel: one word)
-- `Roadmap/01-growth-engine/drill-impact-for-agents/sprint-2.md:66` · other — Risk:** low (a judgment, owed to the product owner by name)
-- `Roadmap/01-growth-engine/drill-impact-for-agents/sprint-2.md:89` · other — Steps 4–5 are owed to the product owner by name (signed in, and a judgment). Steps 1–2 need the CLI release on npm.
+- `Roadmap/01-growth-engine/drill-impact-for-agents/RETROSPECTIVE.md:54` · other — **Owed to the product owner (Daniel):** build an experiment on `site.drill_fault` in the console (none exists in golden-frijoles) and **start** it — a draft experiment has no analysis, so a capture answers `lifecycle_unavailable`; publish **CLI 1.10.0** to npm (kit 1.10.4 pins i…
 - `Roadmap/01-growth-engine/proving-workspaces-reading/sprint-1.md:90` · other — Step 2 is signed in and step 3 is a judgment, both owed to the product owner.
 - `Roadmap/02-commercial/account-from-the-terminal/RETROSPECTIVE.md:12` · other — > _Intent_ is provisional ("mostly"), owed to Daniel: GitHub and the email link were cut at the lock, and the Google > round trip worked end to end only after he fixed Supabase's URL settings. His own answer replaces this word.
 - `Roadmap/02-commercial/agentic-pm-public-surface/RETROSPECTIVE.md:78` · other — **Story 1.4 is owed to Daniel by name.** Running the workshop end-to-end in a fresh Claude and a fresh ChatGPT, on a real product. No automated smoke can judge whether a facilitation script facilitates. It must be run against **production**, not a preview — see A13.

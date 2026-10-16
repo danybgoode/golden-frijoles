@@ -58,6 +58,13 @@ independently shippable slice of value.
   or follows the people who first got it in the last 90 or 30 days (the 90-day cap is gone). The feature pane, funnel
   page, epic page, reports, alerts, API and connector all read it; `tars` in the API is replaced by `funnel`.
   **Owed:** the signed-in look with the period choice.
+- ✅ [Drill impact for agents: a drill bound to an experiment, its impact captured at stop](01-growth-engine/drill-impact-for-agents/README.md)
+  — **shipped 2026-10-16** (#382, #384; CLI 1.10.0, plugin + kit 1.10.4; migration `20261018100000`). `frijoles scenarios
+  define … --experiment <key>@<version>` (and the page's Experiment select) binds a drill; stopping it captures the
+  impact through owner-only functions instead of a Miyagi admin key, and never fails the stop;
+  `frijoles scenarios impact <run-id> [--capture]` reads or retries it, and the connector names each run's impact state.
+  Fixed on the way: golden-frijoles' probe had never recorded a drill's evidence (no SDK user). **Owed:** an experiment on
+  `site.drill_fault` (none exists), the CLI npm publish, the walkthroughs and the D11 judgment.
 - ✅ [Funnel truth: a funnel over time, aimed at a segment](01-growth-engine/funnel-truth/README.md) — **shipped
   dark 2026-10-15** (#378, #379; CLI 1.8.0 → 1.9.0, plugin + kit 1.10.1 → 1.10.3). A feature's funnel by the month (or
   week) people first got it, back to its first exposure, each period read or said to be unreadable, never short; on the
@@ -73,7 +80,7 @@ independently shippable slice of value.
   (`frijoles scenarios targets add` → the SDK's ownership handler → `verify`); `frijoles scenarios define · launch · stop
   · runs` run a whole drill from the terminal; the page and a read-only connector tool show it. goldenfrijoles.com is
   the first verified target; a drill was run and stopped in production by an agent and by the product owner, and drills
-  are switched on. **Owed:** recording a drill's impact (`drill-impact-for-agents`).
+  are switched on. Recording a drill's impact shipped with `drill-impact-for-agents` (2026-10-16).
 - ✅ [SDK 1.0: one line to start, who the user is, and North Star inputs](01-growth-engine/sdk-1-0/README.md) —
   **shipped 2026-10-09** (#331; `@golden-frijoles/sdk` 1.0.0). `createGrowthEngineClient({ apiKey })` defaults to
   goldenfrijoles.com (an empty `baseUrl` fails rather than defaulting); `identify`/`reset`; `pushInputValues` for North
@@ -640,6 +647,9 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-16**: `drill-impact-for-agents` **shipped** (≈$21.13 vs $15–34): drills bind to an experiment and capture
+  impact at stop, owner-gated, readable from the CLI and the connector. The lock's live read found golden-frijoles' drills
+  had recorded nothing ever (a swallowed `NO_USER`), and the verifier found three tests passing for the wrong reason.
 - **2026-10-15**: `funnel-truth` **shipped dark** (≈$38.20 vs $49–68): the trend by cohort period and named segments.
   Every review layer caught something different; the verifier's catch was the roadmap extractor turning every named
   segment into null (read as everyone) while a hand-built spec stayed green — now tested along the real path.
