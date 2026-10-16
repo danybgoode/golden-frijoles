@@ -188,6 +188,7 @@ test('each run names its impact state, and nothing of the evidence', () => {
     ]
   )
   assert.ok(!JSON.stringify(out).includes('ev-secret'))
-  // The fixture's definitions carry no experiment: every run reads unbound.
-  assert.deepEqual([...new Set(toScenarioToolView(view).runs.map((r) => r.impact))], ['unbound'])
+  // Unbound because the runs' OWN definition has no experiment (ids aligned), not because it is missing.
+  const unbound = { ...base, definitions: [{ ...base.definitions[0], id: 'sv' }] } as never
+  assert.deepEqual([...new Set(toScenarioToolView(unbound).runs.map((r) => r.impact))], ['unbound'])
 })

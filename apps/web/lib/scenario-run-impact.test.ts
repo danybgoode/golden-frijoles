@@ -19,8 +19,12 @@ function evidence(attempts: number) {
   }
 }
 
+const T = '2026-10-16T09:00:00.000Z'
 function run(id: string, status: string, scenarioVersionId = 'bound') {
-  return { id, scenarioVersionId, status }
+  // Times follow the status, as they do in the database; the reasons read the times, not the status.
+  const startedAt = status === 'draft' ? null : T
+  const stoppedAt = status === 'draft' || status === 'running' ? null : T
+  return { id, scenarioVersionId, status, startedAt, stoppedAt }
 }
 
 function view(overrides: Record<string, unknown> = {}) {
@@ -84,6 +88,20 @@ test('not captured: draft, running, and the retry hint carry D11 reasons exactly
   assert.deepEqual(scenarioRunImpact(view(), 'stopped-bare'), {
     state: 'not_captured',
     reason: 'no capture recorded — run `frijoles scenarios impact stopped-bare --capture`',
+  })
+})
+
+test('the reason follows the times, so an expired run that never started is not sent to retry', () => {
+  const expired = {
+    id: 'expired',
+    scenarioVersionId: 'bound',
+    status: 'expired',
+    startedAt: null,
+    stoppedAt: T,
+  }
+  assert.deepEqual(scenarioRunImpact(view({ runs: [expired] }), 'expired'), {
+    state: 'not_captured',
+    reason: 'the run never started',
   })
 })
 

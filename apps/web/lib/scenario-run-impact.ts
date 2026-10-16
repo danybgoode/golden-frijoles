@@ -23,10 +23,16 @@ export type ScenarioRunImpact =
 
 export type ScenarioRunImpactState = ScenarioRunImpact['state']
 
-/** D11 — the reason is derived from the run's status, with the real run id in the retry hint. */
-function notCapturedReason(status: string, runId: string): string {
-  if (status === 'draft') return 'the run never started'
-  if (status === 'running') return 'the run has not stopped'
+/**
+ * D11 — the reason, derived from the run's start and stop times: the SAME facts the capture checks
+ * (`captureOwnerScenarioImpact`), so the read never sends a retry that the capture would refuse.
+ */
+function notCapturedReason(
+  run: { startedAt: string | null; stoppedAt: string | null },
+  runId: string
+): string {
+  if (!run.startedAt) return 'the run never started'
+  if (!run.stoppedAt) return 'the run has not stopped'
   return `no capture recorded — run \`frijoles scenarios impact ${runId} --capture\``
 }
 
@@ -44,7 +50,7 @@ export function scenarioRunImpact(view: ScenarioDashboardView, runId: string): S
       (best, impact) => (best === null || impact.createdAt > best.createdAt ? impact : best),
       null
     )
-  if (!newest) return { state: 'not_captured', reason: notCapturedReason(run.status, runId) }
+  if (!newest) return { state: 'not_captured', reason: notCapturedReason(run, runId) }
 
   const { evidence } = newest
   return {
