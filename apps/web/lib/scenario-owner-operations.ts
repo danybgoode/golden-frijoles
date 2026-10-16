@@ -283,16 +283,6 @@ export async function scenarioExperimentBindingProblem(
     return 'The experiment could not be read. Try again.'
   }
   if (!version) return `Experiment ${experiment.key} has no version ${experiment.definitionVersion}.`
-  const { data: bindings, error: bindingError } = await supabase
-    .from('experiment_flag_version_bindings')
-    .select('flag_id, flag_version_id')
-    .eq('project_id', projectId)
-    .eq('experiment_version_id', String(version.id))
-    .limit(10)
-  if (bindingError) {
-    console.error('[scenario-owner] experiment binding read failed', { code: bindingError.code })
-    return 'The experiment could not be read. Try again.'
-  }
   const { data: flagRegistry, error: flagError } = await supabase
     .from('flag_registries')
     .select('id')
@@ -314,9 +304,19 @@ export async function scenarioExperimentBindingProblem(
     })
     return 'The experiment could not be read. Try again.'
   }
-  const bound =
-    flagVersion && (bindings ?? []).some((row) => String(row.flag_version_id) === String(flagVersion.id))
-  return bound
-    ? null
-    : `Experiment ${ref} is not bound to ${flag.key}@${flag.definitionVersion}; the drill's flag version must be the one the experiment serves.`
+  const unbound = `Experiment ${ref} is not bound to ${flag.key}@${flag.definitionVersion}; the drill's flag version must be the one the experiment serves.`
+  if (!flagVersion) return unbound
+  // The exact pair, never "the first N bindings": an experiment version may serve many flag versions.
+  const { data: binding, error: bindingError } = await supabase
+    .from('experiment_flag_version_bindings')
+    .select('flag_version_id')
+    .eq('project_id', projectId)
+    .eq('experiment_version_id', String(version.id))
+    .eq('flag_version_id', String(flagVersion.id))
+    .limit(1)
+  if (bindingError) {
+    console.error('[scenario-owner] experiment binding read failed', { code: bindingError.code })
+    return 'The experiment could not be read. Try again.'
+  }
+  return binding && binding.length > 0 ? null : unbound
 }
