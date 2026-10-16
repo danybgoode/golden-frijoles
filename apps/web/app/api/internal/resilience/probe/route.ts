@@ -1,8 +1,13 @@
 import 'server-only'
 import { timingSafeEqual } from 'node:crypto'
-import { createGrowthEngineClient, createScenarioProvider, type ScenarioProvider } from '@golden-frijoles/sdk'
+import { createScenarioProvider, type ScenarioProvider } from '@golden-frijoles/sdk'
 import { isResilienceScenariosEnabled } from '@/lib/flags'
-import { engineBaseConfig, PROBE_ACTOR, probeEnvironment, runScenarioProbe } from '@/lib/scenario-probe'
+import {
+  createProbeGrowthClient,
+  engineBaseConfig,
+  probeEnvironment,
+  runScenarioProbe,
+} from '@/lib/scenario-probe'
 
 // scenarios-light-up S2.2 (D7) — the seam a drill's fault lands on, on our own site. Reached only by
 // `scripts/scenario-drill.mjs` with SCENARIO_PROBE_SECRET, for a `synthetic:` subject (lib/scenario-probe.ts). Every
@@ -61,7 +66,7 @@ export async function POST(request: Request) {
   // drill-impact-for-agents D9: the SDK refuses every track without a user (`NO_USER`), and the catch below hid that: no
   // golden-frijoles drill had recorded a single `scenario_executed` before this. The probe is the actor; the synthetic
   // subject stays the subject.
-  const growth = apiKey ? createGrowthEngineClient({ apiKey, userId: PROBE_ACTOR, ...engine() }) : null
+  const growth = apiKey ? createProbeGrowthClient(apiKey, engine()) : null
 
   const result = await runScenarioProbe(
     {

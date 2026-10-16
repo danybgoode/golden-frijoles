@@ -262,6 +262,13 @@ export type OwnerImpactCapture =
   | { state: 'not_captured'; reason: string }
   | { state: 'unbound' }
 
+/** Both owner functions answer 42501 for two different reasons; say which one. */
+function ownerRefusal(message: string | undefined): string {
+  return /external cohort/.test(message ?? '')
+    ? 'owner capture is unavailable for an external cohort'
+    : 'project ownership is required'
+}
+
 /**
  * D5–D7: capture a stopped run's impact through the owner functions. Never throws: every failure is a `not_captured`
  * with a plain reason, because a stop that reaches here has already happened and must still answer ok.
@@ -329,7 +336,7 @@ export async function captureOwnerScenarioImpact(owner: {
     })
     if (sourceError) {
       if (sourceError.code === '42501')
-        return { state: 'not_captured', reason: 'project ownership is required' }
+        return { state: 'not_captured', reason: ownerRefusal(sourceError.message) }
       console.error('[scenario-impact] owner source failed', { code: sourceError.code })
       return { state: 'not_captured', reason: 'the impact source could not be read' }
     }
@@ -352,8 +359,8 @@ export async function captureOwnerScenarioImpact(owner: {
     })
     if (error) {
       if (error.code === '22023')
-        return { state: 'not_captured', reason: 'the evidence changed while it was captured; retry' }
-      if (error.code === '42501') return { state: 'not_captured', reason: 'project ownership is required' }
+        return { state: 'not_captured', reason: 'the evidence did not match its source; retry' }
+      if (error.code === '42501') return { state: 'not_captured', reason: ownerRefusal(error.message) }
       console.error('[scenario-impact] owner record failed', { code: error.code })
       return { state: 'not_captured', reason: 'the evidence could not be recorded' }
     }

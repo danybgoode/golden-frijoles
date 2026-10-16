@@ -95,6 +95,16 @@ export async function POST(req: NextRequest) {
           'Only resilience drills are defined here; define a security drill on the scenarios page.'
         )
       const environment = text(input.environment) ?? 'production'
+      // A raw caller's malformed experiment is refused, never silently dropped into an unbound drill.
+      if (
+        input.experimentKey !== undefined &&
+        (!text(input.experimentKey) ||
+          !Number.isSafeInteger(Number(input.experimentVersion)) ||
+          Number(input.experimentVersion) < 1)
+      )
+        return cliError('invalid', 'An experiment needs a key and a whole-number version above zero.', {
+          field: 'experiment',
+        })
       const built = buildScenarioDefinition({
         kind: 'resilience',
         cohort: input.cohort === 'internal' ? 'internal' : 'synthetic',

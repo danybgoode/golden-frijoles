@@ -7,6 +7,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { Client as PgClient } from 'pg'
 import { createHash, randomBytes } from 'node:crypto'
 import { requireTestDatabaseUrl } from './helpers/test-db-cleanup'
+import { OWNER_IMPACT_REASON, ownerImpactIdempotencyKey } from '@/lib/scenario-impact-request'
 
 test.describe.configure({ mode: 'serial' })
 
@@ -292,8 +293,11 @@ test('S1.2: the owner impact functions are service-role only, owner only, and re
       p_as_of: asOf,
     })
   // A member and a stranger are refused at the function, before anything about the run is read.
+  // The message, not just the code: the external-cohort refusal below is 42501 too, and must not be what passes here.
   for (const who of [member, stranger]) {
-    expect((await source(who.id)).error?.code).toBe('42501')
+    const refused = await source(who.id)
+    expect(refused.error?.code).toBe('42501')
+    expect(refused.error?.message).toMatch(/requires project ownership/)
     const recorded = await client.rpc('owner_record_scenario_impact_evidence', {
       p_project_id: project.projectId,
       p_actor_user_id: who.id,
@@ -303,6 +307,7 @@ test('S1.2: the owner impact functions are service-role only, owner only, and re
       p_idempotency_key: crypto.randomUUID(),
     })
     expect(recorded.error?.code).toBe('42501')
+    expect(recorded.error?.message).toMatch(/requires project ownership/)
   }
   // The owner is refused too, for this run: owner authoring never reaches an external cohort.
   const external = await source(owner.id)
@@ -513,6 +518,55 @@ test('S1.1 + S1.3: a drill binds to an experiment at define, and its stop captur
       created: false,
     })
   }
+  expect(
+    (await client.from('scenario_impact_evidence').select('id').eq('run_id', captured.runId)).data
+  ).toHaveLength(1)
+
+  // The database's own idempotency, below the service's short-circuit: the same key and evidence name the same row,
+  // and the same key with a different reason is refused.
+  const replay = (reason: string) =>
+    client.rpc('owner_record_scenario_impact_evidence', {
+      p_project_id: project.projectId,
+      p_actor_user_id: owner.id,
+      p_run_id: captured.runId,
+      p_evidence: stored!.evidence,
+      p_reason: reason,
+      p_idempotency_key: ownerImpactIdempotencyKey(captured.runId),
+    })
+  const same = await replay(OWNER_IMPACT_REASON)
+  expect(same.error).toBeNull()
+  expect(same.data?.[0]).toMatchObject({ evidence_id: evidenceId, created: false })
+  expect((await replay('A different reason.')).error?.code).toBe('22023')
+
+  // Tenancy: the owner of ANOTHER project, naming their own project and this project's run, reaches nothing.
+  const foreignOwner = await person(client, 'impact-foreign-owner')
+  const foreign = await drillProject(request, client, foreignOwner)
+  const foreignSource = await client.rpc('owner_get_scenario_impact_source', {
+    p_project_id: foreign.projectId,
+    p_actor_user_id: foreignOwner.id,
+    p_run_id: captured.runId,
+    p_as_of: new Date().toISOString(),
+  })
+  expect(foreignSource.error).toBeNull()
+  expect(foreignSource.data).toEqual([])
+  const foreignRecord = await client.rpc('owner_record_scenario_impact_evidence', {
+    p_project_id: foreign.projectId,
+    p_actor_user_id: foreignOwner.id,
+    p_run_id: captured.runId,
+    p_evidence: stored!.evidence,
+    p_reason: OWNER_IMPACT_REASON,
+    p_idempotency_key: crypto.randomUUID(),
+  })
+  expect(foreignRecord.error).toBeNull()
+  expect(foreignRecord.data).toEqual([])
+  // ...and naming THIS project is refused at ownership, before the run is looked at.
+  const borrowed = await client.rpc('owner_get_scenario_impact_source', {
+    p_project_id: project.projectId,
+    p_actor_user_id: foreignOwner.id,
+    p_run_id: captured.runId,
+    p_as_of: new Date().toISOString(),
+  })
+  expect(borrowed.error?.message).toMatch(/requires project ownership/)
   expect(
     (await client.from('scenario_impact_evidence').select('id').eq('run_id', captured.runId)).data
   ).toHaveLength(1)
