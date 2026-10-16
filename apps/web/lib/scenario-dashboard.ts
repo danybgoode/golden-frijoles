@@ -96,6 +96,8 @@ export type ScenarioDashboardView = {
     faultKinds: ScenarioFaultKind[]
     payloadSummary: string
     targetingSummary: string
+    /** drill-impact-for-agents D3 — the experiment versions bound to THIS flag version: what a drill on it can bind. */
+    experiments: Array<{ key: string; version: number }>
   }>
   runs: ScenarioDashboardRun[]
   securityResults: ScenarioDashboardSecurityResult[]
@@ -133,6 +135,9 @@ export async function getScenarioDashboardView(projectId: string): Promise<Scena
     tripsResult,
     flagRegistriesResult,
     flagVersionsResult,
+    bindingsResult,
+    experimentRegistriesResult,
+    experimentVersionsResult,
   ] = await Promise.all([
     supabase
       .from('scenario_targets')
@@ -197,10 +202,22 @@ export async function getScenarioDashboardView(projectId: string): Promise<Scena
     supabase.from('flag_registries').select('id, key').eq('project_id', projectId).limit(100),
     supabase
       .from('flag_definition_versions')
-      .select('flag_id, version, definition')
+      .select('id, flag_id, version, definition')
       .eq('project_id', projectId)
       .order('created_at', { ascending: false })
       .limit(500),
+    supabase
+      .from('experiment_flag_version_bindings')
+      .select('flag_version_id, experiment_id, experiment_version_id')
+      .eq('project_id', projectId)
+      .limit(500),
+    supabase.from('experiment_registries').select('id, key').eq('project_id', projectId).limit(500),
+    supabase
+      .from('experiment_definition_versions')
+      .select('id, version')
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: false })
+      .limit(1000),
   ])
 
   const results = [
@@ -216,6 +233,9 @@ export async function getScenarioDashboardView(projectId: string): Promise<Scena
     tripsResult,
     flagRegistriesResult,
     flagVersionsResult,
+    bindingsResult,
+    experimentRegistriesResult,
+    experimentVersionsResult,
   ]
   const failed = results.find((result) => result.error)
   if (failed?.error) {
@@ -235,6 +255,21 @@ export async function getScenarioDashboardView(projectId: string): Promise<Scena
   const flagKeys = new Map(
     boundedRows(flagRegistriesResult.data).map((row) => [String(row.id), String(row.key)])
   )
+  const experimentKeys = new Map(
+    boundedRows(experimentRegistriesResult.data).map((row) => [String(row.id), String(row.key)])
+  )
+  const experimentVersions = new Map(
+    boundedRows(experimentVersionsResult.data).map((row) => [String(row.id), Number(row.version)])
+  )
+  const experimentsByFlagVersion = new Map<string, Array<{ key: string; version: number }>>()
+  for (const row of boundedRows(bindingsResult.data)) {
+    const key = experimentKeys.get(String(row.experiment_id))
+    const version = experimentVersions.get(String(row.experiment_version_id))
+    if (!key || version === undefined) continue
+    const list = experimentsByFlagVersion.get(String(row.flag_version_id)) ?? []
+    list.push({ key, version })
+    experimentsByFlagVersion.set(String(row.flag_version_id), list)
+  }
   const states = new Map(boundedRows(statesResult.data).map((row) => [String(row.policy_id), row]))
   let malformedImpactCount = 0
   const impacts = boundedRows(impactResult.data).flatMap((row) => {
@@ -291,7 +326,16 @@ export async function getScenarioDashboardView(projectId: string): Promise<Scena
       if (!summary) return []
       const key = flagKeys.get(String(row.flag_id))
       if (!key) return []
-      return [{ key, version: Number(row.version), ...summary }]
+      return [
+        {
+          key,
+          version: Number(row.version),
+          ...summary,
+          experiments: (experimentsByFlagVersion.get(String(row.id)) ?? []).sort(
+            (a, b) => a.key.localeCompare(b.key) || b.version - a.version
+          ),
+        },
+      ]
     }),
     runs: boundedRows(runsResult.data).flatMap((row) => {
       const version = versions.get(String(row.scenario_version_id))
