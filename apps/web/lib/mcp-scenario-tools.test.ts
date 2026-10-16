@@ -125,3 +125,47 @@ test('status filters runs only', () => {
   )
   assert.equal(out.definitions.length, 1)
 })
+
+test('each run names its impact state, and nothing of the evidence', () => {
+  const bound = { experiment: { key: 'exp', definitionVersion: 1 } }
+  const base = view as unknown as {
+    definitions: Array<{ definition: object }>
+    runs: object[]
+  }
+  const withImpact = {
+    ...base,
+    definitions: [
+      { ...base.definitions[0], id: 'sv', definition: { ...base.definitions[0].definition, ...bound } },
+    ],
+    runs: [...base.runs, { ...base.runs[1], id: 'r3' }],
+    impacts: [
+      {
+        id: 'ev-secret',
+        runId: 'r3',
+        createdAt: '2026-10-16T11:00:00.000Z',
+        evidence: {
+          experiment: bound.experiment,
+          technical: {
+            control: { attempts: 1, failures: 0, latencyP95Ms: 1 },
+            fault: { attempts: 1, failures: 1, latencyP95Ms: 2 },
+            failureRateDelta: 1,
+            latencyP95DeltaMs: 1,
+          },
+          claim: { status: 'internal_noncausal', causal: false, blockers: [] },
+        },
+      },
+    ],
+  } as never
+  const out = toScenarioToolView(withImpact)
+  assert.deepEqual(
+    out.runs.map((r) => [r.id, r.impact]),
+    [
+      ['r1', 'not_captured'],
+      ['r2', 'not_captured'],
+      ['r3', 'captured'],
+    ]
+  )
+  assert.ok(!JSON.stringify(out).includes('ev-secret'))
+  // The fixture's definitions carry no experiment: every run reads unbound.
+  assert.deepEqual([...new Set(toScenarioToolView(view).runs.map((r) => r.impact))], ['unbound'])
+})

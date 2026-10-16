@@ -1,4 +1,5 @@
 import type { ScenarioDashboardView } from './scenario-dashboard'
+import { scenarioRunImpactState } from './scenario-run-impact.ts'
 
 // scenarios-light-up S2.1 — the field selection behind the connector's read-only `list_scenarios`.
 // Types only on purpose: no `server-only`, so the unit test can load it. The selection is an
@@ -47,6 +48,8 @@ export function toScenarioToolView(view: ScenarioDashboardView, status?: string)
         startedAt: r.startedAt,
         stoppedAt: r.stoppedAt,
         stopReason: r.stopReason,
+        // drill-impact-for-agents D13 — the STATE only; the evidence body never reaches a connector reply.
+        impact: scenarioRunImpactState(view, r.id),
       })),
     note: SCENARIO_TOOL_NOTE,
   }
