@@ -3,7 +3,7 @@ epic: verify-module
 sprint: 1
 title: "Per PR"
 risk: low
-phase: Shaping
+phase: Building
 stories_total: 4
 stories:
   - id: S1.1
@@ -38,6 +38,11 @@ stories:
 # Verify module — Sprint 1: Per PR
 
 **Status:** ⬜ not started
+
+## Build contract (locked by the architect before the builder started)
+Cites the README's D1–D6, D11. S1.1 = D1 + D2. S1.2 = D3. S1.3 = D4 (outbox) + D5 (`verify-outbox`, teeth mutant).
+S1.4 = D4 (flags) + D5 (`verify-flags`) + D6 rule 4. The evaluator path is `packages/sdk/src/flags.ts` (README
+correction); the story titles' `lib/flags.ts` means that file. Smoke step 4 edits `packages/sdk/src/flags.ts`.
 
 ## Stories
 <!-- Keep the heading shape `### Story 1.M — <title>`; append ✅ + the commit ref when it ships. Name the story in
