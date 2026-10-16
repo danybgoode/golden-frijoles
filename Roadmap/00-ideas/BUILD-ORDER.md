@@ -24,11 +24,10 @@ _a pitch is waiting at the approval gate._
 
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
 
-## Ready (8)
+## Ready (7)
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
-- [Drill impact for agents](../01-growth-engine/drill-impact-for-agents/README.md) — #94 · 01 Growth Engine · 0/7 stories · risk: High · appetite M · _docs: status scaffolded_
 - [The build view tells one story](../09-platform-infra/build-view-one-story/README.md) — #95 · 09 Platform Infra · 0/7 stories · risk: Low · appetite M · _docs: status scaffolded_
 - [Template scripts hold to the gates their consumers run](../09-platform-infra/template-scripts-consumer-gates/README.md) — #96 · 09 Platform Infra · 0/3 stories · risk: High · appetite S · _docs: status scaffolded_
 - [Verify module](../09-platform-infra/verify-module/README.md) — #97 · 09 Platform Infra · 0/7 stories · risk: Low · appetite M · _docs: status scaffolded_
@@ -45,10 +44,11 @@ _a work branch is on origin. Not in this committed file: `node scripts/build-ord
 
 _a PR is ready for review, or merged and waiting for its close-out. Not in this committed file: `node scripts/build-order.mjs --live` or the Hub board._
 
-## Shipped (89)
+## Shipped (90)
 
 _merged, deployed and closed._
 
+- [Drill impact for agents ✅](../01-growth-engine/drill-impact-for-agents/README.md) — #94 · 01 Growth Engine · 7/7 stories · risk: High · appetite M · _docs: status shipped_
 - [Funnel truth ✅](../01-growth-engine/funnel-truth/README.md) — #93 · 01 Growth Engine · 8/8 stories · risk: High · appetite L · _docs: status shipped_
 - [Owed on screen](../02-commercial/owed-on-screen/README.md) — #92 · 02 Commercial · 6/6 stories · risk: High · appetite M · _docs: status shipped_
 - [Several North Star metrics, one reading rule](../01-growth-engine/north-star-multi-metric-read/README.md) — #91 · 01 Growth Engine · 1/1 stories · risk: Low · appetite S · _docs: status shipped_

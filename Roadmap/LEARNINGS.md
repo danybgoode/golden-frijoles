@@ -360,7 +360,10 @@ one-liner + why + date shape.
   *(one-bet-wired, 2026-10-10.)* **The same holds inside the pipeline: a spec that hand-builds the middle of a path
   skips its producer.** funnel-truth's segment spec pushed a hand-built row and stayed green while the real extractor
   turned every named segment into null (read as everyone); the verifier found it, outside the diff. Test a new field
-  from where it is written (README → extractor → push → board), not from where it is read. *(funnel-truth, 2026-10-15.)*
+  from where it is written (README → extractor → push → board), not from where it is read. *(funnel-truth, 2026-10-15.)* **And a fake at the seam plus a swallowed failure hides a total loss.** golden-frijoles' drill probe faked `track` in
+  its unit test and `.catch(() => undefined)`'d the real one, whose client had no `userId`: every `scenario_executed`
+  answered `NO_USER` and was dropped, 14 probe requests and zero evidence, with nothing red anywhere. Build the real
+  client through the one helper the route uses, and drive it in the test. *(drill-impact-for-agents, 2026-10-16.)*
 - **CI's gates-off pass runs BEFORE `seed:demo`.** A dark spec that assumes the demo project's fixtures 404s there, and
   its failure stops the whole ON api suite from running, while it passes locally on a DB that remembers earlier runs.
   A dark spec provisions what it reads (look-then-insert, as `flag-funnel-dark.spec.ts`). *(funnel-truth, 2026-10-15.)*
@@ -2097,6 +2100,9 @@ one-liner + why + date shape.
   payload, add it to the guard's surface in the same change, derived from the same list the builder reads (`SKELETON`).
   And a closure check sees only imports: a file that is *read* (a template) needs a packed-tarball spec.
   *(2026-10-04, kickoff-generator-path.)*
+  **Here a CLI bump IS a plugin + kit release:** moving the setup skill's `cli@` pin is a shipped-file change, so it
+  needs plugin.json, kit, a CHANGELOG section, every `kit@` pin and both checksum renders in the same PR (70d219d's
+  shape) — a CLI-only bump fails `check-release`. *(drill-impact-for-agents, 2026-10-16.)*
 - **Copy the shared rails into a consumer before calling the wave done.** The consumers' own lint, Prettier and
   reviews found five defects the source repo's gates couldn't see. The copy-in is a gate, not a chore.
 
