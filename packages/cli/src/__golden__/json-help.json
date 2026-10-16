@@ -563,7 +563,7 @@
       {
         "command": "scenarios define",
         "summary": "define a drill: a target, a fault flag version and its bounds",
-        "usage": "frijoles scenarios define <scenario-key> --target <key> --flag <flagKey>@<version> [--cohort synthetic|internal] [--env production|preview|development] [--duration <seconds>] [--requests <n>] [--concurrency <n>] [--reason <text>]",
+        "usage": "frijoles scenarios define <scenario-key> --target <key> --flag <flagKey>@<version> [--experiment <key>@<version>] [--cohort synthetic|internal] [--env production|preview|development] [--duration <seconds>] [--requests <n>] [--concurrency <n>] [--reason <text>]",
         "needsAuth": true,
         "flags": [
           {
@@ -580,6 +580,11 @@
             "flag": "--flag",
             "takesValue": true,
             "describe": "the fault flag and its exact version — required"
+          },
+          {
+            "flag": "--experiment",
+            "takesValue": true,
+            "describe": "the experiment its impact is read from (optional)"
           },
           {
             "flag": "--cohort",
@@ -664,6 +669,24 @@
             "flag": "--watch",
             "takesValue": false,
             "describe": "keep reading until no run is running (10 minutes at most)"
+          }
+        ]
+      },
+      {
+        "command": "scenarios impact",
+        "summary": "a stopped run's impact: control versus treatment",
+        "usage": "frijoles scenarios impact <run-id> --capture [--project <slug>]",
+        "needsAuth": true,
+        "flags": [
+          {
+            "flag": "--project",
+            "takesValue": true,
+            "describe": "the project (default: the remembered one)"
+          },
+          {
+            "flag": "--capture",
+            "takesValue": false,
+            "describe": "capture it now (owner only; idempotent)"
           }
         ]
       },

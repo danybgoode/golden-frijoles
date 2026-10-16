@@ -92,3 +92,15 @@ test('changing fault kind cannot retain an incompatible hidden flag version', ()
   assert.deepEqual(firstCompatibleFaultFlag('synthetic_error', flags), flags[1])
   assert.equal(firstCompatibleFaultFlag('delay', [flags[1]]), null)
 })
+
+test('an experiment binds the drill through the one builder; without one the drill has no impact source', () => {
+  const bound = buildScenarioDefinition({ ...valid, experimentKey: 'drill_probe', experimentVersion: 2 })
+  assert.equal(bound.ok, true)
+  if (bound.ok) assert.deepEqual(bound.definition.experiment, { key: 'drill_probe', definitionVersion: 2 })
+  const unbound = buildScenarioDefinition(valid)
+  assert.equal(unbound.ok, true)
+  if (unbound.ok) assert.equal(unbound.definition.experiment, undefined)
+  // Half a reference is no reference: a key without a version binds nothing.
+  const half = buildScenarioDefinition({ ...valid, experimentKey: 'drill_probe' })
+  assert.equal(half.ok && half.definition.experiment, undefined)
+})

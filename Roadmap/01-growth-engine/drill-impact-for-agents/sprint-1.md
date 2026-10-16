@@ -3,8 +3,8 @@ epic: drill-impact-for-agents
 sprint: 1
 title: "Bind and capture"
 risk: high
-phase: Shaping
-stories_total: 3
+phase: Building
+stories_total: 4
 stories:
   - id: S1.1
     title: "A drill is bound to an experiment"
@@ -27,10 +27,26 @@ stories:
     so_that: "nobody has to remember a second step"
     risk: high
     status: planned
+  - id: S1.4
+    title: "A drill's technical evidence lands"
+    as_a: "a founder reading a drill's comparison"
+    i_want: "the probe's scenario_executed events to reach the engine"
+    so_that: "the comparison is not 0 vs 0"
+    risk: low
+    status: planned
 ---
 # Drill impact for agents — Sprint 1: Bind and capture
 
 **Status:** ⬜ not started
+
+## Build contract (locked by the architect before the builder started)
+Cite the epic README's D1–D9; never restate them. Per story: **S1.1** = D1 + D2 + D3 (draft builder, the named
+define-time refusal in `ownerDirectOperation`, the page's Experiment select). **S1.2** = D4 (one migration, owner-only,
+function-level denial asserted by the spec, the key-path reader accepting a NULL actor). **S1.3** = D5 + D6 + D7 + D8
+(owner capture door, deterministic retry, capture on stop, `capture_impact` + `frijoles scenarios impact --capture`).
+**S1.4** = D9 (added at the lock: the probe's client gets a `userId`). Deviations from the stories as written: owner,
+not member (README corrections); `p_actor_user_id`, not `p_user_id`; the walkthrough's experiment is created in the
+console by the product owner, since none exists in golden-frijoles and no agent path makes one.
 
 ## Stories
 <!-- Keep the heading shape `### Story 1.M — <title>`; append ✅ + the commit ref when it ships. Name the story in
@@ -64,9 +80,17 @@ the S1.2 functions and the canonical analysis (`captureScenarioImpactEvidence`'s
 `impact: not captured (<reason>)`. `frijoles scenarios impact <run-id> --capture` retries, idempotently.
 **Risk:** high (a write on the stop path).
 
+### Story 1.4 — A drill's technical evidence lands
+**As** a founder reading a drill's comparison, **I want** the probe's `scenario_executed` events to reach the engine,
+**so that** the comparison is not 0 vs 0.
+**Acceptance:** D9. The probe route's client carries a `userId`; a unit test drives the real (built) SDK client and sees a
+`scenario_executed` POST. Added at the lock: golden-frijoles' two real runs made 14 requests and recorded none.
+**Risk:** low
+
 ## Sprint QA
-- **api spec(s):** S1.1 → CLI define spec; S1.2 → function-level denial + member success; S1.3 → stop captures, and
-  stop with a forced capture failure still succeeds.
+- **api spec(s):** S1.1 → CLI define spec (bound, unknown key, unknown version, unbound flag version, none); S1.2 →
+  function-level denial + owner success + member/stranger refusal + key-path reader with an owner row; S1.3 → stop
+  captures, stop with a forced capture failure still succeeds, `capture_impact` is idempotent. S1.4 → unit test.
 - **browser smoke owed:** no (Sprint 2 walks it end to end).
 - **deterministic gate:** `tsc --noEmit` + `npm run build` + Playwright `api` green before merge.
 
@@ -74,10 +98,13 @@ the S1.2 functions and the canonical analysis (`captureScenarioImpactEvidence`'s
 Env: production · https://goldenfrijoles.com
 
 1. Run `supabase migration list` (linked to production).
-   → the new owner impact migration shows on both sides.
-2. Run `frijoles scenarios define impact-check --target <a verified target> --flag <its flag>@<version> --experiment <a live experiment>@<its version> --project golden-frijoles`.
+   → `20261018100000` shows on both sides.
+2. **Product owner, signed in:** at https://goldenfrijoles.com/app/experiments/golden-frijoles build an experiment on the
+   `site.drill_fault` feature and save it. Note its key and the flag version it wrote (`frijoles flags get site.drill_fault`).
+   → an experiment exists in golden-frijoles (there was none at the lock).
+3. Run `frijoles scenarios define impact-check --target site.probe --flag site.drill_fault@<that version> --experiment <key>@<version> --project golden-frijoles`.
    → it prints the drill, naming the experiment.
-3. Run the same with `@999`.
+4. Run the same with `--experiment <key>@999`.
    → it refuses, naming the version.
 
 If any step fails, note the step number + what you saw — that's the bug report.

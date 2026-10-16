@@ -1,0 +1,21 @@
+frijoles scenarios impact — a stopped run's impact: control versus treatment
+
+Usage
+  frijoles scenarios impact <run-id> --capture [--project <slug>]
+
+--capture is owner only: it captures a stopped run's impact from its experiment's canonical analysis, or
+  returns the capture already recorded. Safe to run again. A stop captures a bound drill's impact by itself; this is
+  the retry when that capture failed. Its audit reason is fixed, so a retry names the same evidence.
+
+Flags
+  --project <slug>  the project (default: the remembered one)
+  --capture         capture it now (owner only; idempotent)
+
+Exit codes
+  0  ok         it worked
+  1  usage      the command is wrong — nothing was sent
+  2  auth       the credential is not accepted — run `frijoles login`
+  3  not-found  no such thing, or not yours
+  4  conflict   someone else changed it — re-read and retry
+  5  partial    some environments changed and some did not
+  6  server     the server or the network is unwell — retry

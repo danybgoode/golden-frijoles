@@ -79,6 +79,10 @@ type Confirmation =
     }
   | { kind: 'stop'; id: string; label: string; revision: number; environment: string }
 
+// drill-impact-for-agents D3: an experiment is bound to ONE flag version (and to a resilience drill), so changing
+// either clears it.
+const NO_EXPERIMENT = { experimentKey: undefined, experimentVersion: undefined }
+
 export function ScenarioWorkspace({
   projectSlug,
   view,
@@ -382,7 +386,13 @@ export function ScenarioWorkspace({
                   <select
                     {...control}
                     value={draft.kind}
-                    onChange={(event) => update('kind', event.target.value as ScenarioAuthoringDraft['kind'])}
+                    onChange={(event) =>
+                      setDraft((current) => ({
+                        ...current,
+                        kind: event.target.value as ScenarioAuthoringDraft['kind'],
+                        ...NO_EXPERIMENT,
+                      }))
+                    }
                   >
                     {enabledKinds.map((value) => (
                       <option key={value}>{value}</option>
@@ -462,6 +472,7 @@ export function ScenarioWorkspace({
                         ...current,
                         flagKey: nextFlag?.key ?? '',
                         flagVersion: nextFlag?.version ?? 1,
+                        ...NO_EXPERIMENT,
                       }))
                     }}
                   >
@@ -488,12 +499,14 @@ export function ScenarioWorkspace({
                           ...current,
                           flagKey: selected.key,
                           flagVersion: selected.version,
+                          ...NO_EXPERIMENT,
                         }))
                       else
                         setDraft((current) => ({
                           ...current,
                           flagKey: '',
                           flagVersion: 1,
+                          ...NO_EXPERIMENT,
                         }))
                     }}
                   >
@@ -506,6 +519,41 @@ export function ScenarioWorkspace({
                   </select>
                 )}
               </Field>
+              {draft.kind === 'resilience' ? (
+                <Field
+                  label="Experiment (impact comparison)"
+                  hint="Only experiments bound to this exact flag version. When the drill stops, its impact is captured from this experiment's canonical analysis."
+                  error={null}
+                >
+                  {(control) => (
+                    <select
+                      {...control}
+                      value={draft.experimentKey ? `${draft.experimentKey}@${draft.experimentVersion}` : ''}
+                      onChange={(event) => {
+                        const selected = selectedFaultFlag?.experiments.find(
+                          (experiment) => `${experiment.key}@${experiment.version}` === event.target.value
+                        )
+                        setDraft((current) => ({
+                          ...current,
+                          ...(selected
+                            ? { experimentKey: selected.key, experimentVersion: selected.version }
+                            : NO_EXPERIMENT),
+                        }))
+                      }}
+                    >
+                      <option value="">None — no impact comparison</option>
+                      {(selectedFaultFlag?.experiments ?? []).map((experiment) => (
+                        <option
+                          key={`${experiment.key}@${experiment.version}`}
+                          value={`${experiment.key}@${experiment.version}`}
+                        >
+                          {experiment.key} v{experiment.version}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </Field>
+              ) : null}
               {selectedFaultFlag ? (
                 <p>
                   <strong>Payloads:</strong> {selectedFaultFlag.payloadSummary}

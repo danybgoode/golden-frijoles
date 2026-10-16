@@ -25,8 +25,10 @@ import {
   getScenarioOwnerDefinitionContext,
   getScenarioOwnerRunContext,
   getScenarioOwnerStopContext,
+  scenarioExperimentBindingProblem,
   type ScenarioOwnerOperationResult,
 } from './scenario-owner-operations'
+import { captureOwnerScenarioImpact } from './scenario-impact-operations'
 import { createScenarioOwnerToken, hashScenarioOwnerToken } from './scenario-target-proof'
 import { getSupabaseServiceClient } from './supabase'
 
@@ -293,6 +295,15 @@ export async function ownerDirectOperation(
       return { ok: false, error: 'External cohorts are unavailable in owner authoring.' }
     if (!isScenarioKindEnabled(operation.definition.kind, gates))
       return unavailable(operation.definition.kind)
+    // drill-impact-for-agents D2: name what is wrong with the experiment before the database refuses it unnamed.
+    if (operation.definition.experiment) {
+      const problem = await scenarioExperimentBindingProblem(
+        owner.projectId,
+        operation.definition.experiment,
+        operation.definition.flag
+      )
+      if (problem) return { ok: false, error: problem }
+    }
   }
   if (operation.operation === 'revoke_target' && !gates.resilience && !gates.security)
     return {
@@ -306,7 +317,7 @@ export async function ownerDirectOperation(
       return { ok: false, notFound: true, error: 'The scenario run is unavailable.' }
     if (!isScenarioKindEnabled(context.kind, gates)) return unavailable(context.kind)
   }
-  return fromOperation(
+  const result = fromOperation(
     await executeScenarioOwnerOperation({
       projectId: owner.projectId,
       environment: safeEnvironment,
@@ -314,6 +325,38 @@ export async function ownerDirectOperation(
       operation,
     })
   )
+  if (!result.ok) return result
+  // D2: a define says which experiment its impact will come from, or that it has none.
+  if (operation.operation === 'create_definition')
+    return { ...result, impactSource: operation.definition.experiment ?? null }
+  // D7: a stop captures a bound drill's impact, and a failed capture never fails the stop that already happened.
+  if (operation.operation === 'transition_run')
+    return {
+      ...result,
+      impact: await captureOwnerScenarioImpact({
+        projectId: owner.projectId,
+        userId: owner.userId,
+        runId: operation.runId,
+      }),
+    }
+  return result
+}
+
+/** D8: capture (or re-read) a stopped run's impact: `frijoles scenarios impact <run-id> --capture`. */
+export async function captureScenarioRunImpact(
+  owner: ScenarioOwner,
+  input: { runId: unknown }
+): Promise<ScenarioServiceResult> {
+  if (!(await scenarioAuthoringOn())) return AUTHORING_OFF
+  const runId = typeof input.runId === 'string' ? input.runId : ''
+  const context = runId ? await getScenarioOwnerStopContext(owner.projectId, runId) : null
+  if (!context) return { ok: false, notFound: true, error: 'No such run in this project.' }
+  if (!isScenarioKindEnabled(context.kind, await capabilities())) return unavailable(context.kind)
+  return {
+    ok: true,
+    runId,
+    impact: await captureOwnerScenarioImpact({ projectId: owner.projectId, userId: owner.userId, runId }),
+  }
 }
 
 /**

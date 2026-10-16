@@ -54,6 +54,9 @@ export type ScenarioAuthoringDraft = {
   maxErrorRatePercent: number
   flagKey: string
   flagVersion: number
+  /** drill-impact-for-agents D1 — the experiment the drill's impact is read from; both or neither. */
+  experimentKey?: string
+  experimentVersion?: number
   securityTemplate?: ScenarioSecurityTemplate
 }
 
@@ -122,6 +125,9 @@ export function buildScenarioDefinition(draft: ScenarioAuthoringDraft): Scenario
       maxErrorRateBasisPoints: basisPoints,
     },
     flag: { key: draft.flagKey, definitionVersion: draft.flagVersion },
+    ...(draft.experimentKey && draft.experimentVersion !== undefined
+      ? { experiment: { key: draft.experimentKey, definitionVersion: draft.experimentVersion } }
+      : {}),
     ...(draft.kind === 'security' && draft.securityTemplate
       ? { securityTemplate: draft.securityTemplate }
       : {}),

@@ -32,6 +32,12 @@ stories:
 
 **Status:** ⬜ not started
 
+## Build contract (locked by the architect before the builder started)
+Cite the epic README's D10–D14; never restate them. Per story: **S2.1** = D10 + D11 + D12 (the pure run-impact rule,
+derived reasons, the member GET with `run=`, `frijoles scenarios impact`, CLI 1.10.0). **S2.2** = D10 + D13 (the state
+per run in `toScenarioToolView`, nothing else added). **S2.3** is the product owner's judgment. Deviation: "not captured
+yet (<reason>)" is derived from the run, not stored (README corrections).
+
 ## Stories
 <!-- Keep the heading shape `### Story 2.M — <title>`; append ✅ + the commit ref when it ships. Name the story in
      each commit subject (`S2.1 …`). The frontmatter `stories:` entry is what tools read. -->
@@ -67,7 +73,8 @@ epic.
 ## Sprint 2 — Smoke walkthrough (do these in order)
 Env: production · https://goldenfrijoles.com
 
-1. With the drill from Sprint 1's walkthrough, run `frijoles scenarios launch impact-check --project golden-frijoles`, wait a minute, then `frijoles scenarios stop <run-id> --project golden-frijoles`.
+0. Sprint 1's walkthrough steps 2–3 done (the experiment exists and `impact-check` is bound to it).
+1. With the drill from Sprint 1's walkthrough, run `frijoles scenarios launch impact-check --project golden-frijoles`, send probes with `SCENARIO_PROBE_SECRET=… node scripts/scenario-drill.mjs --count 10` (the request cap is 10), then `frijoles scenarios stop <run-id> --project golden-frijoles`.
    → the stop answers ok and says `impact: captured`.
 2. Run `frijoles scenarios impact <run-id> --project golden-frijoles`.
    → a table: control vs treatment, the experiment key@version, when it was captured.

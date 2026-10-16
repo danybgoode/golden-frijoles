@@ -247,3 +247,76 @@ export async function executeScenarioOwnerOperation(input: {
   console.error('[scenario-owner] unsupported operation', unreachable)
   return { ok: false, error: 'Unsupported scenario operation.' }
 }
+
+/**
+ * drill-impact-for-agents D2 — why a drill cannot be bound to this experiment version, named, or null when it can.
+ * The database refuses the same three cases (`create_scenario_definition_version_core`, 22023) and stays the floor;
+ * this read exists so the refusal says which part was wrong instead of "the scenario command is invalid".
+ */
+export async function scenarioExperimentBindingProblem(
+  projectId: string,
+  experiment: { key: string; definitionVersion: number },
+  flag: { key: string; definitionVersion: number }
+): Promise<string | null> {
+  const supabase = getSupabaseServiceClient()
+  const ref = `${experiment.key}@${experiment.definitionVersion}`
+  const { data: registry, error } = await supabase
+    .from('experiment_registries')
+    .select('id')
+    .eq('project_id', projectId)
+    .eq('key', experiment.key)
+    .maybeSingle()
+  if (error) {
+    console.error('[scenario-owner] experiment read failed', { code: error.code })
+    return 'The experiment could not be read. Try again.'
+  }
+  if (!registry) return `No experiment \`${experiment.key}\` in this project.`
+  const { data: version, error: versionError } = await supabase
+    .from('experiment_definition_versions')
+    .select('id')
+    .eq('project_id', projectId)
+    .eq('experiment_id', String(registry.id))
+    .eq('version', experiment.definitionVersion)
+    .maybeSingle()
+  if (versionError) {
+    console.error('[scenario-owner] experiment version read failed', { code: versionError.code })
+    return 'The experiment could not be read. Try again.'
+  }
+  if (!version) return `Experiment ${experiment.key} has no version ${experiment.definitionVersion}.`
+  const { data: flagRegistry, error: flagError } = await supabase
+    .from('flag_registries')
+    .select('id')
+    .eq('project_id', projectId)
+    .eq('key', flag.key)
+    .maybeSingle()
+  const { data: flagVersion, error: flagVersionError } = flagRegistry
+    ? await supabase
+        .from('flag_definition_versions')
+        .select('id')
+        .eq('project_id', projectId)
+        .eq('flag_id', String(flagRegistry.id))
+        .eq('version', flag.definitionVersion)
+        .maybeSingle()
+    : { data: null, error: null }
+  if (flagError || flagVersionError) {
+    console.error('[scenario-owner] flag version read failed', {
+      code: (flagError ?? flagVersionError)?.code,
+    })
+    return 'The experiment could not be read. Try again.'
+  }
+  const unbound = `Experiment ${ref} is not bound to ${flag.key}@${flag.definitionVersion}; the drill's flag version must be the one the experiment serves.`
+  if (!flagVersion) return unbound
+  // The exact pair, never "the first N bindings": an experiment version may serve many flag versions.
+  const { data: binding, error: bindingError } = await supabase
+    .from('experiment_flag_version_bindings')
+    .select('flag_version_id')
+    .eq('project_id', projectId)
+    .eq('experiment_version_id', String(version.id))
+    .eq('flag_version_id', String(flagVersion.id))
+    .limit(1)
+  if (bindingError) {
+    console.error('[scenario-owner] experiment binding read failed', { code: bindingError.code })
+    return 'The experiment could not be read. Try again.'
+  }
+  return binding && binding.length > 0 ? null : unbound
+}

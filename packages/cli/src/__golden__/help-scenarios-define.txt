@@ -1,7 +1,7 @@
 frijoles scenarios define — define a drill: a target, a fault flag version and its bounds
 
 Usage
-  frijoles scenarios define <scenario-key> --target <key> --flag <flagKey>@<version> [--cohort synthetic|internal] [--env production|preview|development] [--duration <seconds>] [--requests <n>] [--concurrency <n>] [--reason <text>]
+  frijoles scenarios define <scenario-key> --target <key> --flag <flagKey>@<version> [--experiment <key>@<version>] [--cohort synthetic|internal] [--env production|preview|development] [--duration <seconds>] [--requests <n>] [--concurrency <n>] [--reason <text>]
 
 Owner only. Defining changes nothing in the app: it records the drill. Bounds you leave out take the
   page's defaults, and the server checks them all (its message is printed as is).
@@ -10,18 +10,23 @@ Owner only. Defining changes nothing in the app: it records the drill. Bounds yo
   A drill defined here is a resilience drill (a delay or a synthetic error at your app's probe). A security drill needs
   a security template and the founder's own approval, so it is defined on the scenarios page, not here.
 
+  --experiment binds the drill to an experiment, so stopping it captures its impact (control versus treatment). The
+  experiment must serve this exact flag version — `frijoles scenarios ls --json` lists each fault flag's bound
+  experiments. Without one the drill still runs; it just has no impact comparison.
+
   Next: `frijoles scenarios launch <scenario-key>`.
 
 Flags
-  --project <slug>            the project (default: the remembered one)
-  --target <key>              a verified target — required
-  --flag <flagKey>@<version>  the fault flag and its exact version — required
-  --cohort <cohort>           synthetic | internal (default: synthetic)
-  --env <environment>         production | preview | development (default: production)
-  --duration <seconds>        how long the window lasts
-  --requests <n>              the request cap
-  --concurrency <n>           the concurrency cap
-  --reason <text>             why — kept in the audit trail (default: names the command)
+  --project <slug>              the project (default: the remembered one)
+  --target <key>                a verified target — required
+  --flag <flagKey>@<version>    the fault flag and its exact version — required
+  --experiment <key>@<version>  the experiment its impact is read from (optional)
+  --cohort <cohort>             synthetic | internal (default: synthetic)
+  --env <environment>           production | preview | development (default: production)
+  --duration <seconds>          how long the window lasts
+  --requests <n>                the request cap
+  --concurrency <n>             the concurrency cap
+  --reason <text>               why — kept in the audit trail (default: names the command)
 
 Exit codes
   0  ok         it worked

@@ -5,7 +5,7 @@
 
 # Build order — the six stages
 
-> **Generated 2026-10-15 — do not hand-edit.** One stage per initiative, decided in one place
+> **Generated 2026-10-16 — do not hand-edit.** One stage per initiative, decided in one place
 > (`scripts/lib/stage.mjs`): Backlog · Refining · Ready · Building · QA · Shipped.
 > This committed file reads the docs alone, so **Building and QA are not here** — they are facts git
 > and GitHub hold. For the live board run `node scripts/build-order.mjs --live`, or open the Hub board.
@@ -28,7 +28,7 @@ _a pitch is waiting at the approval gate._
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
-- [Drill impact for agents](../01-growth-engine/drill-impact-for-agents/README.md) — #94 · 01 Growth Engine · 0/6 stories · risk: High · appetite M · _docs: status scaffolded_
+- [Drill impact for agents](../01-growth-engine/drill-impact-for-agents/README.md) — #94 · 01 Growth Engine · 0/7 stories · risk: High · appetite M · _docs: status scaffolded_
 - [The build view tells one story](../09-platform-infra/build-view-one-story/README.md) — #95 · 09 Platform Infra · 0/7 stories · risk: Low · appetite M · _docs: status scaffolded_
 - [Template scripts hold to the gates their consumers run](../09-platform-infra/template-scripts-consumer-gates/README.md) — #96 · 09 Platform Infra · 0/3 stories · risk: High · appetite S · _docs: status scaffolded_
 - [Verify module](../09-platform-infra/verify-module/README.md) — #97 · 09 Platform Infra · 0/7 stories · risk: Low · appetite M · _docs: status scaffolded_
