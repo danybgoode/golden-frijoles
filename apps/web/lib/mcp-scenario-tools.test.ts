@@ -1,6 +1,28 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { toScenarioToolView } from './mcp-scenario-view.ts'
+import * as Module from 'node:module'
+
+type ResolveHook = (
+  specifier: string,
+  context: Record<string, unknown>,
+  nextResolve: (specifier: string, context: Record<string, unknown>) => unknown
+) => unknown
+
+// The extensionless-import hook scenario-authoring-draft.test.ts uses: mcp-scenario-view.ts imports a sibling's value.
+;(Module as typeof Module & { registerHooks: (hooks: { resolve: ResolveHook }) => void }).registerHooks({
+  resolve(specifier, context, nextResolve) {
+    if (
+      typeof context.parentURL === 'string' &&
+      context.parentURL.includes('/apps/web/lib/') &&
+      specifier.startsWith('./') &&
+      !specifier.endsWith('.ts')
+    )
+      return nextResolve(`${specifier}.ts`, context)
+    return nextResolve(specifier, context)
+  },
+})
+
+const { toScenarioToolView } = await import('./mcp-scenario-view.ts')
 
 const view = {
   targets: [

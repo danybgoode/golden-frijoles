@@ -1,7 +1,7 @@
 import type { ScenarioDashboardView } from './scenario-dashboard'
 
 // drill-impact-for-agents D10, D11 — ONE rule for "what is this run's impact?", read by the CLI route (S2.1) and the
-// connector (S2.2). Types only on purpose: no `server-only`, so unit tests can load it. The state is DERIVED from the
+// connector (S2.2). Pure, with no `server-only`, so unit tests can load it. The state is DERIVED from the
 // dashboard view (the run, its definition's experiment binding, its newest evidence row), never stored.
 
 type Arm = { attempts: number; failures: number; latencyP95Ms: number | null }

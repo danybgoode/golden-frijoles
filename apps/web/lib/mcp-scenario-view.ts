@@ -1,10 +1,11 @@
 import type { ScenarioDashboardView } from './scenario-dashboard'
-import { scenarioRunImpactState } from './scenario-run-impact.ts'
+import { scenarioRunImpactState } from './scenario-run-impact'
 
 // scenarios-light-up S2.1 — the field selection behind the connector's read-only `list_scenarios`.
-// Types only on purpose: no `server-only`, so the unit test can load it. The selection is an
+// No `server-only` on purpose (it imports only pure modules), so the unit test can load it. The selection is an
 // ALLOW-list; anything not named here (actor ids, audit entries, policies, trips, security
-// results, impacts, row ids, definition hashes) cannot reach a connector reply.
+// results, impact evidence, row ids, definition hashes) cannot reach a connector reply; a run carries only
+// its impact STATE (D13).
 
 export const SCENARIO_RUN_STATUSES = ['draft', 'running', 'stopped', 'aborted', 'expired'] as const
 
