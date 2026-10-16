@@ -39,6 +39,13 @@ export function engineBaseConfig(value: string | undefined): { baseUrl?: string 
   return url ? { baseUrl: url } : {}
 }
 
+/**
+ * drill-impact-for-agents D9 — who the probe reports as. The SDK refuses every track without a user (`NO_USER`), and
+ * the probe swallows a failed send, so a client built without one recorded nothing at all: no golden-frijoles drill
+ * had a single `scenario_executed` before this. The probe is the actor; each synthetic subject stays the subject.
+ */
+export const PROBE_ACTOR = 'scenario-probe'
+
 export function probeEnvironment(vercelEnv: string | undefined): ProbeEnvironment {
   return vercelEnv === 'production' ? 'production' : vercelEnv === 'preview' ? 'preview' : 'development'
 }

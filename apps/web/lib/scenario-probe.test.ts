@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { createGrowthEngineClient } from '@golden-frijoles/sdk'
 import {
+  PROBE_ACTOR,
   PROBE_MAX_DELAY_MS,
   engineBaseConfig,
   isSyntheticSubject,
@@ -164,4 +166,59 @@ test('with no GOLDEN_FRIJOLES_URL the SDK config has NO baseUrl key, so the SDK 
     assert.equal(resolveBaseUrl(engineBaseConfig(unset)), 'https://goldenfrijoles.com')
   }
   assert.deepEqual(engineBaseConfig(' http://127.0.0.1:3120 '), { baseUrl: 'http://127.0.0.1:3120' })
+})
+
+// drill-impact-for-agents D9 — the fake `track` above cannot see what the REAL client does with the probe's input, and
+// that is where every golden-frijoles drill's evidence was lost (NO_USER, swallowed). Drive the real SDK client, built
+// the way the probe route builds it, and watch the request leave.
+test("the probe's real SDK client sends scenario_executed (it reports as PROBE_ACTOR)", async () => {
+  const posted: Array<{ url: string; body: Record<string, unknown> }> = []
+  const fetchImpl = (async (url: string, init?: { body?: string }) => {
+    posted.push({ url, body: JSON.parse(init?.body ?? '{}') })
+    return new Response(JSON.stringify({ ok: true }), { status: 200 })
+  }) as unknown as typeof fetch
+  const telemetry = {
+    scenarioKey: 'site-delay',
+    scenarioVersion: 1,
+    runId: '062daf1b-6475-4be5-8fde-c4712c6a553e',
+    runRevision: 2,
+    leaseId: '3ba6bd9f-f17b-48bd-8bad-67d2ec875b59',
+    targetKey: 'site.probe',
+    cohort: 'synthetic' as const,
+    environment: 'production' as const,
+    arm: 'fault' as const,
+    faultKind: 'delay' as const,
+    failed: false,
+    latencyMs: 1502,
+    subject: { type: 'synthetic_probe', id: 'drill-1760000000000-3' },
+    flag: {
+      key: 'site.drill_fault',
+      definitionVersion: 2,
+      variant: 'fault',
+      reason: 'MATCH',
+      snapshotVersion: 12,
+    },
+  }
+  // Without a user the SDK refuses before any request: the failure the probe used to swallow.
+  const anonymous = createGrowthEngineClient({
+    apiKey: 'gb_key_spec',
+    baseUrl: 'https://engine.test',
+    fetchImpl,
+  })
+  assert.equal((await anonymous.trackScenarioExecution(telemetry)).ok, false)
+  assert.equal(posted.length, 0)
+
+  const client = createGrowthEngineClient({
+    apiKey: 'gb_key_spec',
+    userId: PROBE_ACTOR,
+    baseUrl: 'https://engine.test',
+    fetchImpl,
+  })
+  assert.equal((await client.trackScenarioExecution(telemetry)).ok, true)
+  const executed = posted.find((request) => request.body.event === 'scenario_executed')
+  assert.ok(
+    executed,
+    `no scenario_executed POST among ${posted.map((request) => request.body.event).join(', ')}`
+  )
+  assert.equal(executed.body.user_id ?? executed.body.userId, PROBE_ACTOR)
 })
