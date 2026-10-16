@@ -10,15 +10,23 @@ node_run() { node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON "$@"; }
 echo "── lake build"
 (cd "$here" && lake build)
 
-echo "── axioms: every theorem rests on exactly propext, Classical.choice, Quot.sound"
+echo "── axioms: every theorem rests only on the standard axioms (propext, Classical.choice, Quot.sound), never sorryAx"
 axioms=$(cd "$here" && lake env lean Axioms.lean)
 echo "$axioms"
 theorems=$(grep -c '^#print axioms' "$here/Axioms.lean")
-clean=$(grep -cE "^'Flageval\.[A-Za-z_]+' depends on axioms: \[propext, Classical\.choice, Quot\.sound\]$" <<<"$axioms" || true)
-if [ "$clean" != "$theorems" ] || grep -q sorryAx <<<"$axioms"; then
-  echo "axioms: expected $theorems theorem(s) on the three standard axioms, got $clean (or a sorryAx)"
+# One line per theorem, each either axiom-free or listing a subset of the three; any other name (sorryAx) fails.
+clean=$(AX="$axioms" node -e 'const ok=new Set(["propext","Classical.choice","Quot.sound"]);
+  const lines=process.env.AX.split("\n").filter(Boolean);
+  const good=lines.filter(l=>/^.Flageval\.[A-Za-z_]+. does not depend on any axioms$/.test(l)||
+    ((m)=>m&&m[1].split(",").map(s=>s.trim()).every(a=>ok.has(a)))(/^.Flageval\.[A-Za-z_]+. depends on axioms: \[([^\]]*)\]$/.exec(l)));
+  console.log(good.length===lines.length?good.length:-1)')
+if [ "$clean" != "$theorems" ]; then
+  echo "axioms: expected $theorems theorem(s) on the standard axioms only, got $clean (-1 = a line names another axiom)"
   exit 1
 fi
+# Every theorem in the proofs is printed above: a new theorem nobody added to Axioms.lean is not checked.
+declared=$(grep -cE '^(private )?(theorem|lemma) ' "$here/Flageval/Proofs.lean")
+[ "$declared" = "$theorems" ] || { echo "axioms: Proofs.lean declares $declared theorem(s), Axioms.lean prints $theorems"; exit 1; }
 
 echo "── differential test, seeds 1 2 3"
 for seed in 1 2 3; do node_run "$root/verify/diff-test/run.mjs" 2000 "$seed" >/dev/null || {
