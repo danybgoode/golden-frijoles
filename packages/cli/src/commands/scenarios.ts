@@ -103,6 +103,19 @@ function runsTable(runs: Run[]): string {
   return table(['RUN', 'SCENARIO', 'STATUS', 'REQUESTS', 'STOP REASON'], runs.map(describeRun))
 }
 
+/** What a stop or a capture says about a run's impact (drill-impact-for-agents D5). */
+type ImpactCapture =
+  | { state: 'captured'; evidenceId: string; createdAt: string; created: boolean }
+  | { state: 'not_captured'; reason: string }
+  | { state: 'unbound' }
+
+export function describeImpactCapture(impact: ImpactCapture, runId: string): string {
+  if (impact.state === 'captured')
+    return `impact: captured${impact.created ? '' : ' (already recorded)'} — frijoles scenarios impact ${runId}`
+  if (impact.state === 'unbound') return 'impact: none — not bound to an experiment'
+  return `impact: not captured (${impact.reason}) — retry: frijoles scenarios impact ${runId} --capture`
+}
+
 type Failure =
   | { kind: 'error'; code: string; message: string; body: Record<string, unknown> }
   | { kind: 'network'; message: string }
@@ -320,7 +333,7 @@ export const scenariosDefineCommand: Command = {
   path: ['scenarios', 'define'],
   summary: 'define a drill: a target, a fault flag version and its bounds',
   usage:
-    'frijoles scenarios define <scenario-key> --target <key> --flag <flagKey>@<version> [--cohort synthetic|internal] [--env production|preview|development] [--duration <seconds>] [--requests <n>] [--concurrency <n>] [--reason <text>]',
+    'frijoles scenarios define <scenario-key> --target <key> --flag <flagKey>@<version> [--experiment <key>@<version>] [--cohort synthetic|internal] [--env production|preview|development] [--duration <seconds>] [--requests <n>] [--concurrency <n>] [--reason <text>]',
   needsAuth: true,
   detail: `Owner only. Defining changes nothing in the app: it records the drill. Bounds you leave out take the
   page's defaults, and the server checks them all (its message is printed as is).
@@ -328,6 +341,10 @@ export const scenariosDefineCommand: Command = {
   The flag must be a fault flag at an exact version — \`frijoles scenarios ls --json\` lists the compatible ones.
   A drill defined here is a resilience drill (a delay or a synthetic error at your app's probe). A security drill needs
   a security template and the founder's own approval, so it is defined on the scenarios page, not here.
+
+  --experiment binds the drill to an experiment, so stopping it captures its impact (control versus treatment). The
+  experiment must serve this exact flag version — \`frijoles scenarios ls --json\` lists each fault flag's bound
+  experiments. Without one the drill still runs; it just has no impact comparison.
 
   Next: \`frijoles scenarios launch <scenario-key>\`.`,
   flags: [
@@ -337,6 +354,11 @@ export const scenariosDefineCommand: Command = {
       name: 'flag',
       value: '<flagKey>@<version>',
       describe: 'the fault flag and its exact version — required',
+    },
+    {
+      name: 'experiment',
+      value: '<key>@<version>',
+      describe: 'the experiment its impact is read from (optional)',
     },
     { name: 'cohort', value: '<cohort>', describe: `${COHORTS.join(' | ')} (default: synthetic)` },
     { name: 'env', value: '<environment>', describe: `${ENVIRONMENTS.join(' | ')} (default: production)` },
@@ -354,6 +376,15 @@ export const scenariosDefineCommand: Command = {
         'invalid',
         'Usage: `frijoles scenarios define <scenario-key> --target <key> --flag <flagKey>@<version>` ' +
           '(the version is a whole number, e.g. checkout.fault@3).'
+      )
+      return EXIT.USAGE
+    }
+    const experimentText = flagValue(context.args, 'experiment')
+    const experimentRef = experimentText === undefined ? undefined : parseFlagRef(experimentText)
+    if (experimentRef === null) {
+      context.emit.fail(
+        'invalid',
+        '--experiment must be <key>@<version> (the version is a whole number, e.g. checkout_test@2).'
       )
       return EXIT.USAGE
     }
@@ -381,18 +412,30 @@ export const scenariosDefineCommand: Command = {
       numbers[field] = parsed
     }
 
-    const done = await ownerWrite<Record<string, unknown>>(context, 'define', 'define', {
-      scenarioKey,
-      targetKey,
-      ...flagRef,
-      cohort,
-      environment,
-      ...numbers,
-    })
+    const done = await ownerWrite<{ impactSource?: { key: string; definitionVersion: number } | null }>(
+      context,
+      'define',
+      'define',
+      {
+        scenarioKey,
+        targetKey,
+        ...flagRef,
+        ...(experimentRef
+          ? { experimentKey: experimentRef.flagKey, experimentVersion: experimentRef.flagVersion }
+          : {}),
+        cohort,
+        environment,
+        ...numbers,
+      }
+    )
     if (!done.ok) return done.code
+    const source = done.body.impactSource
     context.emit.ok(
       done.body,
       `Defined ${scenarioKey} in ${done.project} against ${targetKey} (${flagRef.flagKey}@${flagRef.flagVersion}).\n` +
+        (source
+          ? `Impact source: experiment ${source.key}@${source.definitionVersion} — captured when a run stops.\n`
+          : 'No impact source — not bound to an experiment (add --experiment <key>@<version> to compare).\n') +
         `Next: frijoles scenarios launch ${scenarioKey}`
     )
     return EXIT.OK
@@ -431,7 +474,8 @@ export const scenariosStopCommand: Command = {
   usage: 'frijoles scenarios stop <run-id> [--reason <text>]',
   needsAuth: true,
   detail: `Owner only. The emergency control: it acts on the run as it is now. Find the id with
-  \`frijoles scenarios runs\`.`,
+  \`frijoles scenarios runs\`. A drill bound to an experiment has its impact captured as it stops; if that capture
+  fails the stop still happened, and \`frijoles scenarios impact <run-id> --capture\` retries it.`,
   flags: [PROJECT_FLAG, REASON_FLAG],
   async run(context): Promise<ExitCode> {
     const runId = context.args.positionals[0]
@@ -439,9 +483,13 @@ export const scenariosStopCommand: Command = {
       context.emit.fail('invalid', 'Usage: `frijoles scenarios stop <run-id>`.')
       return EXIT.USAGE
     }
-    const done = await ownerWrite<Record<string, unknown>>(context, 'stop', 'stop', { runId })
+    const done = await ownerWrite<{ impact?: ImpactCapture }>(context, 'stop', 'stop', { runId })
     if (!done.ok) return done.code
-    context.emit.ok(done.body, `Stop requested for run ${runId} in ${done.project}.`)
+    context.emit.ok(
+      done.body,
+      `Stop requested for run ${runId} in ${done.project}.` +
+        (done.body.impact ? `\n${describeImpactCapture(done.body.impact, runId)}` : '')
+    )
     return EXIT.OK
   },
 }
@@ -489,5 +537,29 @@ export const scenariosRunsCommand: Command = {
       if (changed.length > 0) context.emit.note(runsTable(changed))
       await new Promise((resolve) => setTimeout(resolve, WATCH_INTERVAL_MS))
     }
+  },
+}
+
+export const scenariosImpactCommand: Command = {
+  path: ['scenarios', 'impact'],
+  summary: "a stopped run's impact: control versus treatment",
+  usage: 'frijoles scenarios impact <run-id> --capture [--project <slug>]',
+  needsAuth: true,
+  detail: `--capture is owner only: it captures a stopped run's impact from its experiment's canonical analysis, or
+  returns the capture already recorded. Safe to run again. A stop captures a bound drill's impact by itself; this is
+  the retry when that capture failed. Its audit reason is fixed, so a retry names the same evidence.`,
+  flags: [PROJECT_FLAG, { name: 'capture', describe: 'capture it now (owner only; idempotent)' }],
+  async run(context): Promise<ExitCode> {
+    const runId = context.args.positionals[0]
+    if (!runId || !boolFlag(context.args, 'capture')) {
+      context.emit.fail('invalid', 'Usage: `frijoles scenarios impact <run-id> --capture`.')
+      return EXIT.USAGE
+    }
+    const done = await ownerWrite<{ impact: ImpactCapture }>(context, 'capture_impact', 'impact --capture', {
+      runId,
+    })
+    if (!done.ok) return done.code
+    context.emit.ok(done.body, describeImpactCapture(done.body.impact, runId))
+    return EXIT.OK
   },
 }

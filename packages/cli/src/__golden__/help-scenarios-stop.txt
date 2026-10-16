@@ -4,7 +4,8 @@ Usage
   frijoles scenarios stop <run-id> [--reason <text>]
 
 Owner only. The emergency control: it acts on the run as it is now. Find the id with
-  `frijoles scenarios runs`.
+  `frijoles scenarios runs`. A drill bound to an experiment has its impact captured as it stops; if that capture
+  fails the stop still happened, and `frijoles scenarios impact <run-id> --capture` retries it.
 
 Flags
   --project <slug>  the project (default: the remembered one)

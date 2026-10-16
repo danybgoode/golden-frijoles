@@ -23,7 +23,8 @@ type ResolveHook = (
   },
 })
 
-const { parseFlagRef, parsePositiveInt, describeWindow } = await import('./scenarios.ts')
+const { parseFlagRef, parsePositiveInt, describeWindow, describeImpactCapture } =
+  await import('./scenarios.ts')
 
 test('parseFlagRef splits <flagKey>@<version> and refuses everything else', () => {
   assert.deepEqual(parseFlagRef('checkout.fault@3'), { flagKey: 'checkout.fault', flagVersion: 3 })
@@ -44,4 +45,21 @@ test('describeWindow shows start to end, or a dash', () => {
     '2026-10-13T10:00 → 2026-10-13T10:05'
   )
   assert.equal(describeWindow({}), '—')
+})
+
+test('a stop or a capture says what happened to the run’s impact, and how to retry a failed capture', () => {
+  const run = '062daf1b-6475-4be5-8fde-c4712c6a553e'
+  assert.equal(
+    describeImpactCapture({ state: 'captured', evidenceId: 'e', createdAt: 't', created: true }, run),
+    `impact: captured — frijoles scenarios impact ${run}`
+  )
+  assert.match(
+    describeImpactCapture({ state: 'captured', evidenceId: 'e', createdAt: 't', created: false }, run),
+    /already recorded/
+  )
+  assert.equal(describeImpactCapture({ state: 'unbound' }, run), 'impact: none — not bound to an experiment')
+  assert.equal(
+    describeImpactCapture({ state: 'not_captured', reason: 'the run has not stopped' }, run),
+    `impact: not captured (the run has not stopped) — retry: frijoles scenarios impact ${run} --capture`
+  )
 })

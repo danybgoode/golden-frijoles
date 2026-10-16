@@ -6,6 +6,7 @@ import { buildScenarioDefinition, SCENARIO_AUTHORING_DEFAULTS } from '@/lib/scen
 import { getScenarioDashboardView } from '@/lib/scenario-dashboard'
 import { getScenarioOwnerStopContext } from '@/lib/scenario-owner-operations'
 import {
+  captureScenarioRunImpact,
   launchScenarioRun,
   ownerDirectOperation,
   registerScenarioTarget,
@@ -100,6 +101,13 @@ export async function POST(req: NextRequest) {
         maxErrorRatePercent: int(input.maxErrorRatePercent, SCENARIO_AUTHORING_DEFAULTS.maxErrorRatePercent),
         flagKey: text(input.flagKey) ?? '',
         flagVersion: int(input.flagVersion, 0),
+        // drill-impact-for-agents D1: optional; the service names an experiment that cannot be bound (D2).
+        ...(input.experimentKey === undefined
+          ? {}
+          : {
+              experimentKey: text(input.experimentKey) ?? '',
+              experimentVersion: int(input.experimentVersion, 0),
+            }),
       })
       if (!built.ok) return cliError('invalid', built.error, { field: built.field })
       return answer(
@@ -143,10 +151,14 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    case 'capture_impact':
+      // D8: the retry for a stop whose capture failed; idempotent, so it is safe to run again.
+      return answer(await captureScenarioRunImpact(owner, { runId: input.runId }), project)
+
     default:
       return cliError(
         'invalid',
-        'Unknown command. Use register_target, verify_target, revoke_target, define, launch or stop.'
+        'Unknown command. Use register_target, verify_target, revoke_target, define, launch, stop or capture_impact.'
       )
   }
 }
