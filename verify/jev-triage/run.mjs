@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // verify-spike S1.3 — Jev triage, in SHADOW: nothing gates on these answers, they are only logged.
 //
-//   node Roadmap/09-platform-infra/verify-spike/jev-triage/run.mjs            # asks Jev, writes answers.json
+//   node verify/jev-triage/run.mjs            # asks Jev, writes answers.json
 //
 // For each merged PR that touched the outbox or the flag evaluator, Jev gets the two specs' one-line
 // summaries plus the PR's title and its diff on those paths, and answers the four triage questions.
@@ -13,7 +13,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const root = resolve(here, '../../../..');
+const root = resolve(here, '../..');
 const { askJev, loadJevConfig, DEFAULT_MODEL } = await import(resolve(root, 'scripts/lib/jev.mjs'));
 
 const config = loadJevConfig({ root });

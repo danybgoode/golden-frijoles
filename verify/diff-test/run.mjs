@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// verify-spike S1.2 — differential test: the Lean model vs the shipped TypeScript evaluator.
+// The differential test: the Lean model vs the shipped TypeScript evaluator (verify-spike S1.2; verify-module S1.4).
 //
-//   node Roadmap/09-platform-infra/verify-spike/diff-test/run.mjs [cases=2000] [seed=1]
+//   node verify/diff-test/run.mjs [cases=2000] [seed=1]
 //
 // Generates seeded random (definition × context × call) cases, runs the REAL `evaluateFlag` and
 // `explainFlagEvaluation` from packages/sdk/src/flags.ts, computes the rollout admission with the
@@ -17,12 +17,13 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const root = resolve(here, '../../../..');
+const root = resolve(here, '../..');
 const { evaluateFlag, explainFlagEvaluation, parseFlagDefinition } = await import(
   resolve(root, 'packages/sdk/src/flags.ts')
 );
 const { deterministicFraction } = await import(resolve(root, 'packages/sdk/src/bucketing.ts'));
-const leanBin = resolve(here, '../lean/.lake/build/bin/flageval');
+// FLAGEVAL_BIN points at another build of the model — verify/lean/check.sh's mutant, for the teeth check.
+const leanBin = process.env.FLAGEVAL_BIN || resolve(here, '../lean/.lake/build/bin/flageval');
 
 const CASES = Number(process.argv[2] ?? 2000);
 let seed = Number(process.argv[3] ?? 1) >>> 0;

@@ -1,7 +1,11 @@
 # Reproduce every verify-spike result
 
 Every number in [`DECISION.md`](DECISION.md) comes from one of these commands, run from the repo root
-on macOS arm64 (2026-09-29). Nothing here touches a database, the network (apart from the one-time
+on macOS arm64 (2026-09-29). The models moved to [`verify/`](../../../verify/README.md) on 2026-10-16 (verify-module).
+
+**Since #373 shipped the F2 fix, `check.sh` checks the code as it is now, not as the spike found it.** Its table is
+the post-fix one (in `check.sh`, the one place it lives). The spike's pre-fix model is `outbox_timed_prefix`; its
+rows reproduce with `--main outbox_timed_prefix` in the commands below, and the nightly re-finds F2 on it. Nothing here touches a database, the network (apart from the one-time
 tool downloads and the Jev step), or CI.
 
 ## Tools (one-time)
@@ -17,24 +21,24 @@ No Mathlib. The proofs use core Lean only, which is why they build in about a se
 ## S1.1 — the outbox model check
 
 ```bash
-QUINT=/path/to/quint bash Roadmap/09-platform-infra/verify-spike/quint/check.sh quick   # simulator table, ~1.5 min
-QUINT=/path/to/quint bash Roadmap/09-platform-infra/verify-spike/quint/check.sh         # + the exhaustive runs
+QUINT=/path/to/quint bash verify/quint/check.sh quick   # simulator table, ~1.5 min
+QUINT=/path/to/quint bash verify/quint/check.sh         # + the exhaustive runs
 ```
 
 Each row prints the result `DECISION.md` § Evidence records next to the result it got. The script
 exits 1 if any row differs **or produces no result** (a missing tool or a checker crash), so a blank
 row can never read as a pass. The four counterexample traces are in
 `quint/traces/*.itf.json`. Print any of them one step per line with
-`node Roadmap/09-platform-infra/verify-spike/quint/summarize-itf.mjs <trace>`.
+`node verify/quint/summarize-itf.mjs <trace>`.
 
 ## S1.2 — the Lean proofs and the differential test
 
 ```bash
-cd Roadmap/09-platform-infra/verify-spike/lean
+cd verify/lean
 lake build                        # model + proofs + the diff-test executable (~5 s)
 lake env lean Axioms.lean         # each theorem uses only propext, Classical.choice, Quot.sound; no sorryAx
 cd -
-( for seed in 1 2 3; do node Roadmap/09-platform-infra/verify-spike/diff-test/run.mjs 2000 $seed || exit 1; done )   # exits 1 on the first failing seed
+( for seed in 1 2 3; do node verify/diff-test/run.mjs 2000 $seed || exit 1; done )   # exits 1 on the first failing seed
 ```
 
 Expected: `"disagreements": 0` for seeds 1, 2 and 3 (2,000 cases each, the Lean model ~65 ms per
@@ -47,7 +51,7 @@ use Lean's `c.isWhitespace` instead of `jsWhitespace`, then `lake build` and re-
 ## S1.3 — Jev triage
 
 ```bash
-node Roadmap/09-platform-infra/verify-spike/jev-triage/run.mjs   # needs jev.egress true + TYPESAFE_API_KEY
+node verify/jev-triage/run.mjs   # needs jev.egress true + TYPESAFE_API_KEY
 ```
 
 This rewrites `jev-triage/answers.json`. Jev is a model, so a re-run can differ in the second decimal.
