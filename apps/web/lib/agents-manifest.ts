@@ -96,6 +96,7 @@ Writes by a person-made connector URL or a \`frijoles\` token run as that person
 | Register or remove a drill target | \`frijoles scenarios targets add <key> --origin <https-origin>\`, then \`frijoles scenarios targets verify <key>\`; remove with \`frijoles scenarios targets revoke <key>\` | Verify says the app answers with the target token |
 | Define a drill | \`frijoles scenarios define\` (\`--experiment <key>@<version>\` to compare its impact) | \`frijoles scenarios ls\` shows the new version |
 | Run and stop a drill | \`frijoles scenarios launch <scenario-key>\`, \`frijoles scenarios stop <run-id>\` | \`frijoles scenarios runs --watch\` follows it to its end |
+| Read a run's impact | \`frijoles scenarios impact <run-id>\`; MCP \`list_scenarios\` names which runs have one | It prints control versus treatment, or says why not |
 | Capture a stopped drill's impact | A stop captures it; retry with \`frijoles scenarios impact <run-id> --capture\` | It answers \`impact: captured\` |
 
 ## Roadmap, push and horizon

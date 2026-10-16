@@ -674,8 +674,8 @@
       },
       {
         "command": "scenarios impact",
-        "summary": "a stopped run's impact: control versus treatment",
-        "usage": "frijoles scenarios impact <run-id> --capture [--project <slug>]",
+        "summary": "a run's impact: control versus treatment",
+        "usage": "frijoles scenarios impact <run-id> [--capture] [--project <slug>] [--json]",
         "needsAuth": true,
         "flags": [
           {

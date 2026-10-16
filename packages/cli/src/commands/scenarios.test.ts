@@ -23,7 +23,7 @@ type ResolveHook = (
   },
 })
 
-const { parseFlagRef, parsePositiveInt, describeWindow, describeImpactCapture } =
+const { parseFlagRef, parsePositiveInt, describeWindow, describeImpactCapture, describeRunImpact } =
   await import('./scenarios.ts')
 
 test('parseFlagRef splits <flagKey>@<version> and refuses everything else', () => {
@@ -62,4 +62,31 @@ test('a stop or a capture says what happened to the run’s impact, and how to r
     describeImpactCapture({ state: 'not_captured', reason: 'the run has not stopped' }, run),
     `impact: not captured (the run has not stopped) — retry: frijoles scenarios impact ${run} --capture`
   )
+})
+
+test('describeRunImpact: one line for unbound and for not captured', () => {
+  assert.equal(describeRunImpact({ state: 'unbound' }), 'not bound to an experiment')
+  assert.equal(
+    describeRunImpact({ state: 'not_captured', reason: 'the run has not stopped' }),
+    'not captured yet (the run has not stopped)'
+  )
+})
+
+test('describeRunImpact: captured prints the header and the arm table, null latency as a dash', () => {
+  const text = describeRunImpact({
+    state: 'captured',
+    experiment: { key: 'checkout-exp', definitionVersion: 2 },
+    capturedAt: '2026-10-16T11:00:00.000Z',
+    claim: { status: 'internal_noncausal' },
+    control: { attempts: 10, failures: 0, latencyP95Ms: 120 },
+    treatment: { attempts: 10, failures: 3, latencyP95Ms: null },
+  })
+  const lines = text.split('\n')
+  assert.equal(
+    lines[0],
+    'experiment checkout-exp@2 · claim internal_noncausal · captured 2026-10-16T11:00:00.000Z'
+  )
+  assert.match(lines[1], /^ARM\s+ATTEMPTS\s+FAILURES\s+P95 MS$/)
+  assert.match(lines[3], /^control\s+10\s+0\s+120$/)
+  assert.match(lines[4], /^treatment\s+10\s+3\s+—$/)
 })

@@ -1,6 +1,28 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { toScenarioToolView } from './mcp-scenario-view.ts'
+import * as Module from 'node:module'
+
+type ResolveHook = (
+  specifier: string,
+  context: Record<string, unknown>,
+  nextResolve: (specifier: string, context: Record<string, unknown>) => unknown
+) => unknown
+
+// The extensionless-import hook scenario-authoring-draft.test.ts uses: mcp-scenario-view.ts imports a sibling's value.
+;(Module as typeof Module & { registerHooks: (hooks: { resolve: ResolveHook }) => void }).registerHooks({
+  resolve(specifier, context, nextResolve) {
+    if (
+      typeof context.parentURL === 'string' &&
+      context.parentURL.includes('/apps/web/lib/') &&
+      specifier.startsWith('./') &&
+      !specifier.endsWith('.ts')
+    )
+      return nextResolve(`${specifier}.ts`, context)
+    return nextResolve(specifier, context)
+  },
+})
+
+const { toScenarioToolView } = await import('./mcp-scenario-view.ts')
 
 const view = {
   targets: [
@@ -124,4 +146,49 @@ test('status filters runs only', () => {
     ['r2']
   )
   assert.equal(out.definitions.length, 1)
+})
+
+test('each run names its impact state, and nothing of the evidence', () => {
+  const bound = { experiment: { key: 'exp', definitionVersion: 1 } }
+  const base = view as unknown as {
+    definitions: Array<{ definition: object }>
+    runs: object[]
+  }
+  const withImpact = {
+    ...base,
+    definitions: [
+      { ...base.definitions[0], id: 'sv', definition: { ...base.definitions[0].definition, ...bound } },
+    ],
+    runs: [...base.runs, { ...base.runs[1], id: 'r3' }],
+    impacts: [
+      {
+        id: 'ev-secret',
+        runId: 'r3',
+        createdAt: '2026-10-16T11:00:00.000Z',
+        evidence: {
+          experiment: bound.experiment,
+          technical: {
+            control: { attempts: 1, failures: 0, latencyP95Ms: 1 },
+            fault: { attempts: 1, failures: 1, latencyP95Ms: 2 },
+            failureRateDelta: 1,
+            latencyP95DeltaMs: 1,
+          },
+          claim: { status: 'internal_noncausal', causal: false, blockers: [] },
+        },
+      },
+    ],
+  } as never
+  const out = toScenarioToolView(withImpact)
+  assert.deepEqual(
+    out.runs.map((r) => [r.id, r.impact]),
+    [
+      ['r1', 'not_captured'],
+      ['r2', 'not_captured'],
+      ['r3', 'captured'],
+    ]
+  )
+  assert.ok(!JSON.stringify(out).includes('ev-secret'))
+  // Unbound because the runs' OWN definition has no experiment (ids aligned), not because it is missing.
+  const unbound = { ...base, definitions: [{ ...base.definitions[0], id: 'sv' }] } as never
+  assert.deepEqual([...new Set(toScenarioToolView(unbound).runs.map((r) => r.impact))], ['unbound'])
 })

@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import { cliError, cliOk, readCliBody, requireCliMember, requireCliOwner } from '@/lib/cli-auth'
 import { buildScenarioDefinition, SCENARIO_AUTHORING_DEFAULTS } from '@/lib/scenario-authoring-draft'
 import { getScenarioDashboardView } from '@/lib/scenario-dashboard'
+import { scenarioRunImpact } from '@/lib/scenario-run-impact'
 import { getScenarioOwnerStopContext } from '@/lib/scenario-owner-operations'
 import {
   captureScenarioRunImpact,
@@ -31,6 +32,13 @@ export async function GET(req: NextRequest) {
   const context = await requireCliMember(req, url.searchParams.get('project'))
   if (context instanceof NextResponse) return context
   const view = await getScenarioDashboardView(context.projectId)
+  // drill-impact-for-agents D12 — `run=<id>` narrows the read to one run's impact (member-gated like the list).
+  const runId = url.searchParams.get('run')
+  if (runId) {
+    const impact = scenarioRunImpact(view, runId)
+    if (!impact) return cliError('not_found', 'No such run in this project.')
+    return cliOk({ project: context.projectSlug, runId, impact })
+  }
   return cliOk({
     project: context.projectSlug,
     authoring: await scenarioAuthoringOn(),

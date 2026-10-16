@@ -159,8 +159,10 @@ same way (`owner_*` functions behind `lib/scenario-owner-service.ts`). Tenancy h
   → `unbound` (the run's definition has no `experiment`) | `captured` (the newest `view.impacts` row for the run: its
   experiment key@version, `capturedAt`, technical control and fault arms, deltas, claim status + blockers) |
   `not_captured` with D11's reason. CLI (S2.1) and connector (S2.2) both call it.
-- **D11 · Derived reasons.** `draft` → `the run never started`; `running` → `the run has not stopped`; otherwise →
-  `no capture recorded — run \`frijoles scenarios impact <run-id> --capture\``.
+- **D11 · Derived reasons.** No start time → `the run never started`; started, no stop time → `the run has not stopped`;
+  otherwise → `no capture recorded — run \`frijoles scenarios impact <run-id> --capture\``. *Amended 2026-10-16 (verifier,
+  #384): read from the run's start/stop times, not its status, so the read and the capture (D6) test the same facts —
+  an expired run that never started is not sent to a retry the capture would refuse.*
 - **D12 · CLI read.** `GET /api/v1/cli/scenarios?project=&run=<id>` (member) → `{ project, runId, impact }`; an unknown
   run → `not_found`. `frijoles scenarios impact <run-id> [--json]` prints the table `ARM | ATTEMPTS | FAILURES | P95 MS`
   (control, treatment) with the experiment key@version, claim status and captured-at, or exactly one of the two state

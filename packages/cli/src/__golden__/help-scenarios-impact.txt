@@ -1,9 +1,13 @@
-frijoles scenarios impact — a stopped run's impact: control versus treatment
+frijoles scenarios impact — a run's impact: control versus treatment
 
 Usage
-  frijoles scenarios impact <run-id> --capture [--project <slug>]
+  frijoles scenarios impact <run-id> [--capture] [--project <slug>] [--json]
 
---capture is owner only: it captures a stopped run's impact from its experiment's canonical analysis, or
+Any member can read a run's impact: the bound experiment, then control versus treatment (attempts, failures,
+  p95 latency). A drill that is not bound to an experiment, or whose impact was not captured, says so in one line.
+  --json prints the server's body as is.
+
+  --capture is owner only: it captures a stopped run's impact from its experiment's canonical analysis, or
   returns the capture already recorded. Safe to run again. A stop captures a bound drill's impact by itself; this is
   the retry when that capture failed. Its audit reason is fixed, so a retry names the same evidence.
 
