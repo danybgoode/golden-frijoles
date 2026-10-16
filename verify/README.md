@@ -28,6 +28,16 @@ into CI.
 Every check also runs a **teeth** step: a known mutant it must fail. A check that passes its own mutant has stopped
 checking anything, and says so.
 
+## Nightly, and Jev in shadow
+
+[`verify-nightly.yml`](../.github/workflows/verify-nightly.yml) runs the full table every night
+([`scripts/verify-nightly.mjs`](../scripts/verify-nightly.mjs) reads the rows). A property that should hold and
+doesn't becomes one `claude/verify-<invariant>` PR with a raw seed and the trace, updated on a repeat; a broken check
+goes red. The same run asks Jev how much verification each newly merged PR deserved and logs it beside the
+builder's `Verify depth:` line in [`jev-shadow.jsonl`](jev-shadow.jsonl), on `claude/verify-jev-shadow`. Nothing
+gates on it. `node verify/jev-triage/run.mjs --report` prints the labelled count and the agreement; at 30 labelled
+PRs the product owner is pinged once to refine `verify-for-projects`.
+
 ## Run it locally
 
 ```bash
