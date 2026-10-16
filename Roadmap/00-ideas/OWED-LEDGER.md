@@ -4,7 +4,7 @@
 > Re-derived from the spec tree and the epic docs on every run, never from a maintained list.
 > To clear an item, tick (`✅`) or strike (`~~…~~`) its line where it was written, then regenerate.
 
-_Generated: 2026-10-15_
+_Generated: 2026-10-16_
 
 **96 check(s) owed across 71 file(s)** · 6 cleared.
 
@@ -27,7 +27,7 @@ _Generated: 2026-10-15_
 
 ## publish (2)
 
-- `Roadmap/01-growth-engine/drill-impact-for-agents/sprint-2.md:44` · other — returns the same fields. A CLI release, its npm publish owed to the product owner. **Risk:** low
+- `Roadmap/01-growth-engine/drill-impact-for-agents/sprint-2.md:50` · other — returns the same fields. A CLI release, its npm publish owed to the product owner. **Risk:** low
 - `Roadmap/01-growth-engine/funnel-truth/RETROSPECTIVE.md:46` · other — Owed to the product owner: `npm publish` CLI 1.8.0 and 1.9.0 (the skills already pin 1.9.0 / kit 1.10.3); `frijoles flags set bets.funnel_trend_enabled --value true --env production` when the trend should go live; the signed-in smoke steps (sprint-1 3–5, sprint-2 4 and 6) and th…
 
 ## credential (7)
@@ -51,8 +51,8 @@ _Generated: 2026-10-15_
 ## judgment (30)
 
 - `Roadmap/01-growth-engine/delivery-stale-reclaim-uncounted/RETROSPECTIVE.md:58` · other — Did we build what was meant? (owed to Daniel: one word)
-- `Roadmap/01-growth-engine/drill-impact-for-agents/sprint-2.md:60` · other — Risk:** low (a judgment, owed to the product owner by name)
-- `Roadmap/01-growth-engine/drill-impact-for-agents/sprint-2.md:82` · other — Steps 4–5 are owed to the product owner by name (signed in, and a judgment). Steps 1–2 need the CLI release on npm.
+- `Roadmap/01-growth-engine/drill-impact-for-agents/sprint-2.md:66` · other — Risk:** low (a judgment, owed to the product owner by name)
+- `Roadmap/01-growth-engine/drill-impact-for-agents/sprint-2.md:89` · other — Steps 4–5 are owed to the product owner by name (signed in, and a judgment). Steps 1–2 need the CLI release on npm.
 - `Roadmap/01-growth-engine/proving-workspaces-reading/sprint-1.md:90` · other — Step 2 is signed in and step 3 is a judgment, both owed to the product owner.
 - `Roadmap/02-commercial/account-from-the-terminal/RETROSPECTIVE.md:12` · other — > _Intent_ is provisional ("mostly"), owed to Daniel: GitHub and the email link were cut at the lock, and the Google > round trip worked end to end only after he fixed Supabase's URL settings. His own answer replaces this word.
 - `Roadmap/02-commercial/agentic-pm-public-surface/RETROSPECTIVE.md:78` · other — **Story 1.4 is owed to Daniel by name.** Running the workshop end-to-end in a fresh Claude and a fresh ChatGPT, on a real product. No automated smoke can judge whether a facilitation script facilitates. It must be run against **production**, not a preview — see A13.
