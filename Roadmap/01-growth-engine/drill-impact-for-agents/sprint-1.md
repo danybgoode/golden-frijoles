@@ -3,7 +3,7 @@ epic: drill-impact-for-agents
 sprint: 1
 title: "Bind and capture"
 risk: high
-phase: Shaping
+phase: Building
 stories_total: 4
 stories:
   - id: S1.1
