@@ -131,7 +131,8 @@ Read live on `origin/main` 84be973. Each decision is cited by the sprint build c
   `--filtered job=output,…`: a skip is ok only when `changes` set that output to `false`.
 - **D6 — `verify/README.md` rules**: (1) a model mirrors pinned code; (2) protocols get a per-PR simulation; (3) the
   exhaustive check runs nightly, never per PR; (4) **no proof tier without a differential test against the real code**.
-- **D7 — The nightly** (`verify-nightly.yml`): `schedule` + `workflow_dispatch`, never `pull_request`; `timeout-minutes:
+- **D7 — The nightly** (`verify-nightly.yml`): `schedule` + `workflow_dispatch` (input `depth: full | quick`, *added
+  2026-10-16* so a smoke run on a seeded branch takes minutes, not an hour), never `pull_request`; `timeout-minutes:
   150`; Java 21 + cached Apalache. `check.sh` gains `--itf-dir` so a violating `bmc` row writes its trace.
   `scripts/verify-nightly.mjs` reads the rows: an unexpected violation is a finding; a no-result row or a lost
   expected violation turns the run red and files nothing. A finding goes to branch `claude/verify-<invariant>`
@@ -140,7 +141,8 @@ Read live on `origin/main` 84be973. Each decision is cited by the sprint build c
   pushes to the branch (opens the PR only if none is open); a seed on `main` files nothing. Never pushes to `main`.
 - **D8 — The label.** The PR template gains `Verify depth: off | light | standard | deep`. A body with exactly one
   of the four after `Verify depth:` is labelled; the unfilled template line or anything else is unlabelled.
-- **D9 — Jev in shadow.** The spike's `verify_depth` question and `SPECS`, alone (no `obligation_difficulty`). State
+- **D9 — Jev in shadow.** The log starts at `{"since":"2026-10-17T00:00:00Z"}` (its header line): nothing merged
+  before it is asked. The spike's `verify_depth` question and `SPECS`, alone (no `obligation_difficulty`). State
   = the PR's title, its file stat, and its diff on the spec paths against the merge commit's first parent (60 KB
   cap). The nightly lists PRs merged into `main` (newest 100), skips `claude/` heads and PRs already in the log (on
   `main` or the open shadow branch), and appends `{pr, merged_at, jev, builder_label}` to `verify/jev-shadow.jsonl`
