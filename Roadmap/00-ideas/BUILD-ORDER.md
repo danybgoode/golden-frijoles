@@ -24,11 +24,10 @@ _a pitch is waiting at the approval gate._
 
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
 
-## Ready (5)
+## Ready (4)
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
-- [Template scripts hold to the gates their consumers run](../09-platform-infra/template-scripts-consumer-gates/README.md) — #96 · 09 Platform Infra · 0/3 stories · risk: High · appetite S · _docs: status in-progress_
 - [A reading for proving_workspaces](../01-growth-engine/proving-workspaces-reading/README.md) — #98 · 01 Growth Engine · 0/3 stories · risk: High · appetite S · _docs: status scaffolded_
 - [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #99 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
 - [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #100 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
@@ -42,11 +41,12 @@ _a work branch is on origin. Not in this committed file: `node scripts/build-ord
 
 _a PR is ready for review, or merged and waiting for its close-out. Not in this committed file: `node scripts/build-order.mjs --live` or the Hub board._
 
-## Shipped (92)
+## Shipped (93)
 
 _merged, deployed and closed._
 
 - [Verify module ✅ shipped 2026-10-17 (#386 `77c5dcc`, #387 `b761885`)](../09-platform-infra/verify-module/README.md) — #97 · 09 Platform Infra · 7/7 stories · risk: Low · appetite M · _docs: status shipped_
+- [Template scripts hold to the gates their consumers run ✅](../09-platform-infra/template-scripts-consumer-gates/README.md) — #96 · 09 Platform Infra · 3/3 stories · risk: High · appetite S · _docs: status shipped_
 - [The build view tells one story ✅](../09-platform-infra/build-view-one-story/README.md) — #95 · 09 Platform Infra · 7/7 stories · risk: Low · appetite M · _docs: status shipped_
 - [Drill impact for agents ✅](../01-growth-engine/drill-impact-for-agents/README.md) — #94 · 01 Growth Engine · 7/7 stories · risk: High · appetite M · _docs: status shipped_
 - [Funnel truth ✅](../01-growth-engine/funnel-truth/README.md) — #93 · 01 Growth Engine · 8/8 stories · risk: High · appetite L · _docs: status shipped_
