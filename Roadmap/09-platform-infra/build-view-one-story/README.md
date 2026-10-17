@@ -189,8 +189,8 @@ cites them.
 - **`refine/` is not a work branch** (`lib/work-branch.mjs` reads `feat|fix|chore|spike|bug|docs/`). Smoke step 2
   now uses `docs/<seed>`. An idea's own commits on its branch never lift it out of Refining.
 - **Evidence lifts a docs-only board** (S1.2 fix, seen on this branch). A fresh worktree has no facts snapshot until
-  the first online refresh, so the track said Ready over seven story commits. Story commits now lift it to Building
-  and an open PR to QA. The board's own stage still wins whenever it says more.
+  the first online refresh, so the track said Ready over seven story commits. Story commits now lift it to Building.
+  The board's own stage still wins whenever it says more.
 - **D4 (c) narrowed after review (#396).** It now compares the written phase with the stage the track draws (it
   had compared with the raw board, and said "board has it at Ready" under a lifted Building track). It fires only for
   `Shipped` while the drawn stage is Ready or Building, and never on a docs-only board. Verifying or In review written
