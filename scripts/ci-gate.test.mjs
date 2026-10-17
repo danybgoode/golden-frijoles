@@ -86,4 +86,72 @@ test('ci.yml: gate needs every other job, and --skippable names exactly the e2e 
   assert.match(gate, /if: always\(\)/);
   const skippable = /--skippable ([a-z0-9,-]+)/.exec(gate)[1].split(',');
   assert.deepEqual(skippable.sort(), [...SKIPPABLE].sort());
+  // Each filtered job names the changes output that gates it, and its own `if:` reads that same output.
+  const filtered = /--filtered ([a-z0-9_,=-]+)/
+    .exec(gate)[1]
+    .split(',')
+    .map((p) => p.split('='));
+  assert.deepEqual(filtered.map(([j]) => j).sort(), ['verify-flags', 'verify-outbox']);
+  for (const [j, out] of filtered) {
+    const start = yml.indexOf(`\n  ${j}:`);
+    const next = /\n {2}[A-Za-z0-9_-]+:/g;
+    next.lastIndex = start + 3;
+    const body = yml.slice(start, next.exec(yml)?.index);
+    assert.match(
+      body,
+      new RegExp(`if: needs\\.changes\\.outputs\\.${out} == 'true'`),
+      `${j}'s if: reads ${out}`
+    );
+    assert.match(
+      yml,
+      new RegExp(`${out}: \\$\\{\\{ steps\\.diff\\.outputs\\.${out} \\}\\}`),
+      `changes exports ${out}`
+    );
+  }
+});
+
+const FILTERED = { 'verify-outbox': 'verify_outbox', 'verify-flags': 'verify_flags' };
+const withVerify = (outbox, flags, outboxResult, flagsResult, docsOnly = 'false') => {
+  const n = needs(docsOnly, docsOnly === 'true' ? 'skipped' : 'success', {
+    'verify-outbox': job(outboxResult),
+    'verify-flags': job(flagsResult),
+  });
+  n.changes.outputs.verify_outbox = outbox;
+  n.changes.outputs.verify_flags = flags;
+  return n;
+};
+
+test('green: a verify job skipped by its own path filter', () => {
+  assert.equal(decideGate(withVerify('false', 'false', 'skipped', 'skipped'), SKIPPABLE, FILTERED).ok, true);
+  assert.equal(decideGate(withVerify('true', 'false', 'success', 'skipped'), SKIPPABLE, FILTERED).ok, true);
+  assert.equal(
+    decideGate(withVerify('false', 'false', 'skipped', 'skipped', 'true'), SKIPPABLE, FILTERED).ok,
+    true
+  );
+});
+
+test('red: a verify job skipped although its filter matched, or failed', () => {
+  assert.equal(decideGate(withVerify('true', 'false', 'skipped', 'skipped'), SKIPPABLE, FILTERED).ok, false);
+  assert.equal(decideGate(withVerify('true', 'true', 'success', 'failure'), SKIPPABLE, FILTERED).ok, false);
+});
+
+test('red: a filter output that is missing or not true/false, and a filtered job missing from needs', () => {
+  assert.equal(
+    decideGate(withVerify(undefined, 'false', 'skipped', 'skipped'), SKIPPABLE, FILTERED).ok,
+    false
+  );
+  assert.equal(decideGate(withVerify('', 'false', 'skipped', 'skipped'), SKIPPABLE, FILTERED).ok, false);
+  const n = withVerify('false', 'false', 'skipped', 'skipped');
+  delete n['verify-flags'];
+  assert.equal(decideGate(n, SKIPPABLE, FILTERED).ok, false);
+});
+
+test('a filter skip never excuses an unrelated job, and the docs rule never excuses a verify job', () => {
+  const n = withVerify('false', 'false', 'skipped', 'skipped');
+  n['e2e-api'] = job('skipped');
+  assert.equal(decideGate(n, SKIPPABLE, FILTERED).ok, false);
+  assert.equal(
+    decideGate(withVerify('true', 'true', 'skipped', 'skipped', 'true'), SKIPPABLE, FILTERED).ok,
+    false
+  );
 });

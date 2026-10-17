@@ -1,8 +1,9 @@
-// verify-spike S1.1 — the event-destination-router outbox, as a Quint model.
+// The event-destination-router outbox, as a Quint model (verify-spike S1.1; moved to verify/ by verify-module).
 //
-// Source of truth modelled (read 2026-09-29 on main e20afca):
+// Source of truth modelled (read 2026-09-29 on main e20afca; claim_deliveries re-read 2026-10-16 after #373):
+// Pinned by verify/pins.json — change a mirrored function and this model (or the pin) must change with it.
 //   apps/web/supabase/migrations/20260722110000_delivery_outbox.sql   (status machine)
-//   apps/web/supabase/migrations/20260724100000_delivery_retry.sql    (claim_deliveries)
+//   apps/web/supabase/migrations/20261016100000_delivery_stale_reclaim_charge.sql (claim_deliveries, F2 fixed)
 //   apps/web/supabase/migrations/20260726100000_fanout_serialization.sql
 //     (ingest_event fan-out, delete_destination, settle_delivery w/ coercion, release_deliveries,
 //      replay_delivery)
@@ -23,9 +24,9 @@
 //   A7  At most one operator replay per run (keeps the ghost counters bounded).
 module outbox {
   const STALE_SAFE: bool
-  // FIX_STALE_COUNT models the proposed fix for finding F2: a STALE reclaim counts the lost
+  // FIX_STALE_COUNT models the fix for finding F2, shipped in #373: a STALE reclaim counts the lost
   // attempt (the dead worker may have sent it), and a stale row whose budget is spent is
-  // dead-lettered instead of reclaimed. false = the code as shipped.
+  // dead-lettered instead of reclaimed. true = the code as shipped; false = the code before #373.
   const FIX_STALE_COUNT: bool
 
   pure val EVS = Set("e1", "e2")
@@ -296,15 +297,16 @@ module outbox {
 
 // The production timing assumption holds (TICK_BUDGET 240s < maxDuration 300s <= STALE_CLAIM 300s).
 module outbox_timed {
-  import outbox(STALE_SAFE = true, FIX_STALE_COUNT = false).*
-}
-
-// The shipped code + the proposed F2 fix, under the production timing assumption.
-module outbox_timed_fixed {
   import outbox(STALE_SAFE = true, FIX_STALE_COUNT = true).*
 }
 
 // The timing assumption dropped — what the code guarantees WITHOUT relying on the clock.
 module outbox_untimed {
-  import outbox(STALE_SAFE = false, FIX_STALE_COUNT = false).*
+  import outbox(STALE_SAFE = false, FIX_STALE_COUNT = true).*
+}
+
+// The code BEFORE #373 (F2 unfixed). Only the nightly runs it, as a teeth check: the exhaustive check must
+// still find F2 at depth 12, or it has lost the reach it exists for.
+module outbox_timed_prefix {
+  import outbox(STALE_SAFE = true, FIX_STALE_COUNT = false).*
 }

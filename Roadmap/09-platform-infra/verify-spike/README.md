@@ -19,6 +19,9 @@ actual_basis: "backfill · this machine · 2026-10-02 · 1 session · prices 202
 
 # Epic: Verify spike: Quint on the outbox, Lean on the flag evaluator
 
+> **Moved (2026-10-16):** the spike's models and scripts now live in [`verify/`](../../../verify/README.md), run in CI
+> by [`verify-module`](../verify-module/README.md). This folder keeps the decision, the reproduction notes and the triage.
+
 > **Area:** 09-platform-infra · **Risk:** low · **Class:** Spike · **Scope seed:** [`00-ideas/seeds/verify-spike.md`](../../00-ideas/seeds/verify-spike.md)
 <!-- Class (above) is the Stage-2 classification: Feature, Spike, Bug, or Chore — see SKILL.md's
      Stage 2 table; sourced from scaffold-epic.mjs's --type flag (a fixed 4-value enum, not free

@@ -78,3 +78,5 @@ optimize/reports/*.json
 # Machine-written by scripts/render-plugin-release.mjs; plugin-release.test.ts compares it with the renderer BYTE for
 # byte, so reformatting it would fail that test on a correct renderer (account-from-the-terminal S1.1).
 apps/web/lib/plugin-release.generated.ts
+# Machine-written by `node scripts/verify-pins.mjs --write` (verify-module D3): its hashes are re-pinned, never typed.
+verify/pins.json

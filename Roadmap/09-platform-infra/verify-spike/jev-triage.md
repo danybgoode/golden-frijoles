@@ -5,7 +5,7 @@ answered the four triage questions for every merged PR on `main` that touched th
 evaluator: 9 PRs. It received the two specs' one-paragraph summaries, the PR title, and the PR's diff
 on those paths only, diffed against the first parent (60 KB cap; one diff was truncated). **Nothing
 gated on the answers.** Raw answers: [`jev-triage/answers.json`](jev-triage/answers.json). Re-run:
-`node Roadmap/09-platform-infra/verify-spike/jev-triage/run.mjs`.
+`node verify/jev-triage/run.mjs`.
 
 **Cost:** 9 calls, 2 s total wall clock, ~57k input tokens and ~2k output tokens.
 

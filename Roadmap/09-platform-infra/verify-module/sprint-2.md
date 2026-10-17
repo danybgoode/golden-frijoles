@@ -32,6 +32,11 @@ stories:
 
 **Status:** ⬜ not started
 
+## Build contract (locked by the architect before the builder started)
+Cites the README's D7–D11. S2.1 = D7 (+ D2's `outbox_timed_prefix` teeth row). S2.2 = D8 + D9. S2.3 = D10. Secrets
+`TYPESAFE_API_KEY` (added 2026-10-16, approved) and `TELEGRAM_*` (existing); Actions may open PRs (approved
+2026-10-16).
+
 ## Stories
 <!-- Keep the heading shape `### Story 2.M — <title>`; append ✅ + the commit ref when it ships. Name the story in
      each commit subject (`S2.1 …`). The frontmatter `stories:` entry is what tools read. -->

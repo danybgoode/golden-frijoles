@@ -1,7 +1,7 @@
 // verify-spike finding F3 — the timing order that "nothing is sent after a row is finished" rests on.
 //
-// The Quint model of the outbox (Roadmap/09-platform-infra/verify-spike/quint/outbox.qnt, landed with
-// the spike's docs; findings table in DECISION.md there) shows that
+// The Quint model of the outbox (verify/quint/outbox.qnt, moved there by verify-module from
+// the spike; findings table in Roadmap/09-platform-infra/verify-spike/DECISION.md) shows that
 // with stale reclaim allowed at ANY time, a row can be reclaimed while its first worker is still
 // alive, and both workers send — including after the row is already `delivered`. In production that
 // cannot happen only because of three numbers in two files:
