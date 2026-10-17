@@ -1,3 +1,4 @@
+// smoke: verify-module S1 step 2 (a comment only)
 // event-destination-router · Sprint 2, Story 2.2 — the outbox dispatcher, now SENDING for real.
 //
 // Story 1.2 shipped this dark: it claimed due work and released it, because there was no signed send
