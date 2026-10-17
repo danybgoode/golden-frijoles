@@ -4,7 +4,6 @@ import { getSupabaseServiceClient } from '@/lib/supabase'
 import { isSameRoadmapPayload, parseRoadmapPush, ROADMAP_SCHEMA_VERSION } from '@/lib/roadmap-artifact-schema'
 import { getLatestRoadmapWithOwed } from '@/lib/report-artifacts'
 import {
-  MAX_PROVEN_EVENTS_PER_PUSH,
   newlyProvenEpics,
   workspaceSubject,
   type VerdictRow,
@@ -120,7 +119,7 @@ export async function POST(req: NextRequest) {
   })
 }
 
-// proving-workspaces-reading D2 — one `workspace_proved_bet` per newly proven epic, into Golden Frijoles' own project,
+// proving-workspaces-reading D2 — one `workspace_proved_bet` per push with a newly proven epic, into Golden Frijoles' own project,
 // after the response. The workspace is read from THIS project's row only (its id came from the API key), and is sent
 // as an HMAC (D3). No tags or metadata: the epic slug is the tenant's data, and the self project is public (rule #2).
 // No secret, no event, and no read. Duplicates are harmless: the input counts distinct subjects per month.
@@ -140,7 +139,8 @@ function scheduleProvenEvents(projectId: string, provenSlugs: string[]): void {
     }
     const subject = workspaceSubject(data.workspace_id as string, secret)
     if (!subject) return
-    const count = Math.min(provenSlugs.length, MAX_PROVEN_EVENTS_PER_PUSH)
-    for (let sent = 0; sent < count; sent++) await trackSelfEvent(WORKSPACE_PROVED_BET_EVENT, subject)
+    // ONE event per push however many epics turned proven (verifier, #401): the reading counts distinct workspaces,
+    // and every event spends the self key's shared rate and quota, which the platform's own funnels also use.
+    await trackSelfEvent(WORKSPACE_PROVED_BET_EVENT, subject)
   })
 }

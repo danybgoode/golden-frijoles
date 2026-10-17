@@ -102,8 +102,9 @@ proven only by a live event after the deploy, LEARNINGS' empty-value gotcha).
   unchanged push returns before this (D16), so it sends nothing.
 - **D2 — Emit after the store, inside `after()`.** Only once `push_report_artifact` succeeded, and only when D1 found
   something and the secret is set, the deferred task reads the pushing project's own `workspace_id`
-  (`projects` by `auth.projectId`: one project, its own) and sends one `workspace_proved_bet` per newly proven epic
-  through `trackSelfEvent`, at most 10 per push (more add nothing to a distinct count). **No tags, no metadata:** the
+  (`projects` by `auth.projectId`: one project, its own) and sends **one** `workspace_proved_bet` per push that has a
+  newly proven epic, through `trackSelfEvent` (amended after the verifier on #401: it was one per epic up to 10, and
+  every event spends the self key's rate and quota, which the platform's own funnels share; a distinct count needs one). **No tags, no metadata:** the
   epic slug is the tenant's data and the self project is public (rule #2). The push's answer never waits.
 - **D3 — The subject** is `HMAC-SHA256(key = SELF_SUBJECT_SECRET, message = workspace_id)`, hex, from
   `workspaceSubject()` in the same file. A missing or blank secret returns `null` and nothing is sent or read. Not a
@@ -117,7 +118,7 @@ proven only by a live event after the deploy, LEARNINGS' empty-value gotcha).
   code ignores the column, so the push precedes the merge safely.
 - **D6 — Sync schema:** `aggregate` optional, `count | distinct_monthly`, refused on `external_push`
   (`lib/north-star-schema.ts`). The sync writes `aggregate ?? 'count'`: the file is the truth, so dropping the key
-  reverts the input. `listNorthStar` returns `aggregate` and `pushedValues`.
+  reverts the input. `listNorthStar` returns `aggregate`.
 - **D7 — The one value-source switch allowed:** `external_push → telemetry_event` while the input has **no**
   `input_values` rows (nothing pushed can go invisible, which is what the guard protects). Every other change is still
   refused. The database already refuses an `input_values` row for a telemetry input (`input_values_check_input`), so
@@ -133,7 +134,8 @@ proven only by a live event after the deploy, LEARNINGS' empty-value gotcha).
   "latest on or before 15 Dec" is December's number, never November's. `readInputSeries` selects `user_id` only for
   `distinct_monthly`; the `count` path is unchanged and pinned by a spec over a fixed sequence.
 - **D9 — Surfaces:** `FeatureImpactInput` and the readings view carry `aggregate`; the North Star page labels the input
-  `from your events · distinct per month`.
+  `from your events · distinct per month`. Both "Every reading" tables summarise through one `readingsSummary()`
+  (`lib/input-readings.ts`): a distinct series names its latest level instead of summing a running count (verifier, #401).
 - **D10 — The public read** is the anonymous connector's `get_input_readings` (series is `{date, value}` only). A spec
   pushes a real proven transition from a fresh tenant, then reads the self project's input over the anonymous
   connector and asserts the count and that the subject string appears nowhere in the reply. Smoke step 4 is amended

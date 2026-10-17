@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { inputReadings, isReadingsCut } from './input-readings.ts'
+import { inputReadings, isReadingsCut, readingsSummary } from './input-readings.ts'
 
 // result-record D14 — the readings an agent gets: one input, cut at `to`, the latest named, nothing invented.
 
@@ -56,4 +56,19 @@ test('the cut must be a day', () => {
   assert.equal(isReadingsCut('4 Nov'), false)
   assert.equal(isReadingsCut('2026-02-30'), false)
   assert.equal(isReadingsCut('2026-11-04T00:00:00Z'), false)
+})
+
+// proving-workspaces-reading (verifier, #401) — a running distinct count is a level, never a sum.
+test('readingsSummary sums a count series and names the latest level of a distinct_monthly one', () => {
+  const series = [
+    { date: '2026-11-03', value: 1 },
+    { date: '2026-11-09', value: 2 },
+    { date: '2026-11-20', value: 3 },
+    { date: '2026-12-01', value: 0 },
+  ]
+  assert.equal(readingsSummary({ series }), '4 readings, totalling 6 across 2026-11-03 → 2026-12-01.')
+  const distinct = readingsSummary({ aggregate: 'distinct_monthly', series })
+  assert.ok(distinct.startsWith('3 days with a reading; 0 distinct this month on 2026-12-01'), distinct)
+  assert.ok(!distinct.includes('totalling'))
+  assert.equal(readingsSummary({ aggregate: 'distinct_monthly', series: [] }), 'Nothing recorded yet.')
 })

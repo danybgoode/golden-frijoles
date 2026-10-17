@@ -19,6 +19,7 @@
 // (`app/app/funnel/[projectSlug]/[featureKey]/page.tsx:26`), and a tab that 404s the whole feature
 // page because the OTHER registry has no row would be a regression caused by a missing measurement.
 
+import { readingsSummary } from '@/lib/input-readings'
 import type { ReactNode } from 'react'
 import { Empty as DsEmpty, Field } from '@/design-system/primitives'
 import { DayColumns, SmallMultiple } from '@/design-system/charts'
@@ -187,13 +188,7 @@ export function ImpactPane({ flagKey, result }: { flagKey: string; result: Featu
           <summary>Every reading · {input.name}</summary>
           <div className="ds-disclosure-body">
             <p className="ds-hint">
-              {input.series.length === 0
-                ? 'Nothing recorded yet.'
-                : `${input.series.length} reading${input.series.length === 1 ? '' : 's'}, totalling ${input.series
-                    .reduce((sum, point) => sum + point.value, 0)
-                    .toLocaleString(
-                      'en-US'
-                    )} across ${input.series[0].date} → ${input.series[input.series.length - 1].date}.`}
+              {readingsSummary(input)}
             </p>
             <ImpactSeriesTable inputName={input.name} series={input.series} />
           </div>

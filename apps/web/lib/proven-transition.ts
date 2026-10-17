@@ -10,9 +10,6 @@ import { createHmac } from 'node:crypto'
 /** The fields of a roadmap row this rule reads. */
 export type VerdictRow = { slug: string; grain: string; verdict?: string | null }
 
-/** At most this many events per push: one per epic, and past a handful they add nothing to a distinct-per-month count. */
-export const MAX_PROVEN_EVENTS_PER_PUSH = 10
-
 /**
  * The slugs of the Epic rows that read `proven` in `items` and did not in `previous` (D1).
  *

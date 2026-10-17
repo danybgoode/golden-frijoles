@@ -57,3 +57,21 @@ export function inputReadings(
     latest: readings.length ? readings[readings.length - 1] : null,
   }
 }
+
+/**
+ * proving-workspaces-reading (verifier, #401) — the one-line summary of an input's readings, for every "Every reading"
+ * table. A per-day `count` series is summed; a `distinct_monthly` series is a running level (1, 2, 3 is three
+ * workspaces, never six), so it names its latest reading instead and leaves the 0 reset points out of the count.
+ */
+export function readingsSummary(input: { aggregate?: string; series: { date: string; value: number }[] }): string {
+  const { series } = input
+  if (series.length === 0) return 'Nothing recorded yet.'
+  const span = `${series[0].date} → ${series[series.length - 1].date}`
+  if (input.aggregate === 'distinct_monthly') {
+    const latest = series[series.length - 1]
+    const days = series.filter((point) => point.value > 0).length
+    return `${days} day${days === 1 ? '' : 's'} with a reading; ${latest.value.toLocaleString('en-US')} distinct this month on ${latest.date} (a running count from each month's 1st) across ${span}.`
+  }
+  const total = series.reduce((sum, point) => sum + point.value, 0)
+  return `${series.length} reading${series.length === 1 ? '' : 's'}, totalling ${total.toLocaleString('en-US')} across ${span}.`
+}
