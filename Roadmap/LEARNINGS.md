@@ -2192,6 +2192,10 @@ one-liner + why + date shape.
 - **A transcript's `gitBranch` is the branch of the session's own checkout, not of the work.** A session sitting on
   `feat/semantic-lint` that built `intent-match` in another directory stamped every turn with the wrong epic. Build an
   epic from a session on its branch, or in a worktree on it — and attribute by branch, never guess.
+  **A worktree taken mid-run is not enough** (build-view-one-story, 2026-10-17): the session's OWN checkout still sets
+  `gitBranch`. Another session moved it to `main`, and an M epic stamped ≈$1.70 (its first two minutes). Take the
+  worktree before the first commit (a commit made after the move lands on the other session's branch), and read an
+  actual far below its quote as an attribution failure: don't stamp it.
 - **Count a streamed message once, by `message.id`, at its LARGEST `output_tokens`; let the FIRST occurrence own the
   attribution.** Claude Code writes one entry per content block (half the entries are repeats), and a resumed session
   copies earlier entries into a new file re-stamped with the new branch.
@@ -2400,3 +2404,14 @@ one-liner + why + date shape.
 - **A member-only field on a public read is stripped at the read seam, not at each renderer.** Ten readers serialized the
   public roadmap; one `artifactFromRow(…, { keepOwed })` covers them all, and a closed registry spec turns a new raw
   reader into a red test.
+
+### A view that explains itself (build-view-one-story, 2026-10-17)
+- **A check that explains the screen must read the screen's own value.** The `⚑` sentence compared the board's
+  stored stage while the track drew a lifted one, so the view contradicted itself on its own branch. The sentence now
+  reads the same function the track does.
+- **Delete an evidence rule no state can reach.** The PR→QA lift fired only on live facts, which the board had
+  already read, so it could only ever disagree with the board. No spec could fail it, and the fix was removing it.
+- **To see NEW code against another branch, run a copy of it from outside the tree.** `git switch` swaps the script
+  out from under you: two smoke runs showed `main`'s old view. Copy the bundle to a scratch dir and pass
+  `--repo-root`.
+

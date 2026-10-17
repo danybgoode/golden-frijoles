@@ -3,7 +3,7 @@ epic: build-view-one-story
 sprint: 1
 title: "One story"
 risk: low
-phase: In review
+phase: Shipped
 stories_total: 7
 stories:
   - id: S1.1
@@ -58,7 +58,7 @@ stories:
 ---
 # The build view tells one story — Sprint 1: One story
 
-**Status:** 🔍 in review — PR open (release 1.11.0: d8113d7 · fe5a5a4)
+**Status:** ✅ shipped 2026-10-17 — #396 (merge `9b78a7e`), plugin + kit 1.11.0, deploy success
 
 The approved design, with every state drawn, is in the seed's *The design*
 ([`00-ideas/seeds/build-view-one-story.md`](../../00-ideas/seeds/build-view-one-story.md)). Each story below points
@@ -161,6 +161,17 @@ Env: Claude Code with the new plugin version installed, in this repo.
 6. On `main`, open a shipped epic's view (or a branch of one).
    → `✓`, "N of N stories done", the track at `◉ Shipped` in green.
 
-Every step is owed to the product owner (an interactive walkthrough); an agent can script steps 1–3 in a scratch repo.
+**Run 2026-10-17 (agent, steps 1–2 scripted with the new resolver against this repo, step 3 on the epic branch):**
+1. ✅ On `main`: `golden-frijoles ○ No epic on this branch · main`, the board link, `⋯ Around   1 in QA · 5 ready` with
+   `in other worktrees: The build view tells one story (S1.4, In review)`, `→ Next /build template-scripts-consumer-gates`.
+2. ✅ On `docs/satisfied-ask` (a raw idea): `❧ Idea · The Satisfied ask…`, the track at `◉ Backlog` (raw; a ready
+   idea reads `◉ Refining`, pinned by spec), the seed path, `▸ Now      shaping the plan`.
+3. ✅ On `feat/build-view-one-story`: `▶ Sprint 1 of 1 · The build view tells one story · M · ▲ risk LOW`, the bar
+   `▰▰▰▰▰▰▰  7 of 7 stories done` on its own line (the title and the bar don't share 100 columns), the track at
+   `◉ Building`, the epic link. The colours (red HIGH, green-and-dim bar, bold yellow Building) are pinned in
+   `build-view.mod.test.ts`. They are not seen live.
+
+Steps 4–6, and seeing 1–3 drawn in colour in the band, are owed to the product owner (an interactive walkthrough).
+Step 5 is also the only check that the reset reads in local time.
 
 If any step fails, note the step number + what you saw — that's the bug report.

@@ -577,6 +577,16 @@ independently shippable slice of value.
   invariant as one `claude/verify-<invariant>` PR. It also logs Jev's verify-depth call beside the builder's
   `Verify depth:` line for every merged PR, in shadow, and pings once at 30 labelled PRs to refine
   `verify-for-projects`. No product surface, no landing claim (audit D7).
+- ✅ [The build view tells one story](09-platform-infra/build-view-one-story/README.md) — **shipped 2026-10-17**
+  (#396, plugin + kit 1.11.0). The band reads top to bottom:
+  - a header with the repo, the stage's symbol, the sprint, the title, the size and `▲ risk`, and the stories bar on
+    the right;
+  - the stage track (the Status row is gone), then the epic's link;
+  - `❝ Why`, `⌖ Target` (the target, else `none yet: <grounded_reason>`, then intent match), `▸ Now` (the story, or
+    "between stories"), `$ Spend` (its own bar), `⋯ Around`, and `→ Next /build …` when nothing is in flight.
+
+  A source is named only when two disagree (`⚑`). A shipped epic reads ✓ and N of N. The 5-hour line is a meter, to
+  the minute. Every colour and glyph is pinned by a test. Interactive walkthrough owed to Daniel.
 - ✅ [Intent match (wave 1, advisory)](09-platform-infra/intent-match/README.md): every groomed pitch keeps the ask
   **verbatim** (claims + teach-back) and is **scored against it** by Jev — coverage in and out, clarity, teach-back, a
   total marked *uncalibrated*, and a routed next artifact per gap; no key means "could not look", never a number.
@@ -656,6 +666,13 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-17**: `build-view-one-story` **shipped** (quote $15–34; actual not measured, see the retro). The build
+  view is redrawn as Daniel's approved design. Every state is pinned as golden lines, every colour by a mod test, and
+  every glyph is single-width by rule. Its own branch caught two bugs before review:
+  - the track said Ready over seven story commits, because a fresh worktree has no facts snapshot;
+  - Now said a story was in flight after every story had a commit.
+
+  The verifier found the `⚑` line contradicting the track, and an unreachable PR lift that no spec could fail.
 - **2026-10-17**: `verify-module` **shipped** (≈$30.38 vs $15–34): the spike's model checks run on every PR that
   touches the outbox or the flag evaluator, nightly in depth, and Jev's verify-depth routing is measured in shadow. The
   lock found the evaluator in the SDK, not `lib/flags.ts`; reviewers found two guards that went green when what they

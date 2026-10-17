@@ -1,6 +1,6 @@
 ---
-status: in-progress  # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: In review       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+status: shipped  # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+phase: Shipped         # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
 locked_at: "2026-10-17T13:50:39Z"
 slug: build-view-one-story
@@ -37,7 +37,9 @@ build_order: 95      # integer position in the ONE global build sequence — the
                      # table; plain integers, no "#2a" suffixes. See 00-ideas/README.md → Ordering.
 ---
 
-# Epic: The build view tells one story
+# Epic: The build view tells one story ✅
+
+**Shipped 2026-10-17:** #396 (merge `9b78a7e`), plugin + kit 1.11.0 (tag v1.11.0, npm, mirror), production deploy success.
 
 > **Area:** 09-platform-infra · **Risk:** low · **Class:** Feature · **Scope seed:** [`00-ideas/seeds/build-view-one-story.md`](../../00-ideas/seeds/build-view-one-story.md)
 <!-- Class (above) is the Stage-2 classification: Feature, Spike, Bug, or Chore — see SKILL.md's
@@ -189,8 +191,8 @@ cites them.
 - **`refine/` is not a work branch** (`lib/work-branch.mjs` reads `feat|fix|chore|spike|bug|docs/`). Smoke step 2
   now uses `docs/<seed>`. An idea's own commits on its branch never lift it out of Refining.
 - **Evidence lifts a docs-only board** (S1.2 fix, seen on this branch). A fresh worktree has no facts snapshot until
-  the first online refresh, so the track said Ready over seven story commits. Story commits now lift it to Building
-  and an open PR to QA. The board's own stage still wins whenever it says more.
+  the first online refresh, so the track said Ready over seven story commits. Story commits now lift it to Building.
+  The board's own stage still wins whenever it says more.
 - **D4 (c) narrowed after review (#396).** It now compares the written phase with the stage the track draws (it
   had compared with the raw board, and said "board has it at Ready" under a lifted Building track). It fires only for
   `Shipped` while the drawn stage is Ready or Building, and never on a docs-only board. Verifying or In review written
@@ -214,16 +216,16 @@ is the previous plugin version.
 
 
 ## Definition of Done (epic)
-- [ ] All sprints merged to `main` + smoke-tested (gaps stated — `node scripts/owed-ledger.mjs` counts what is still owed)
-- [ ] Each `sprint-N.md` has its smoke walkthrough (real URLs)
-- [ ] This README marked ✅; every sprint status ticked with commit refs
-- [ ] `RETROSPECTIVE.md` written
-- [ ] Product poster (`Roadmap/README.md`) updated
-- [ ] Team memory + `MEMORY.md` index updated
-- [ ] Durable learnings promoted to `Roadmap/LEARNINGS.md` (dedupe — sharpen, don't append)
-- [ ] **Kill-switch (only if one was planned at refining — Stage 6b):** the flag slice shipped, the flag
+- [x] All sprints merged to `main` + smoke-tested (gaps stated — `node scripts/owed-ledger.mjs` counts what is still owed)
+- [x] Each `sprint-N.md` has its smoke walkthrough (real URLs)
+- [x] This README marked ✅; every sprint status ticked with commit refs
+- [x] `RETROSPECTIVE.md` written
+- [x] Product poster (`Roadmap/README.md`) updated
+- [x] Team memory + `MEMORY.md` index updated
+- [x] Durable learnings promoted to `Roadmap/LEARNINGS.md` (dedupe — sharpen, don't append)
+- [x] **Kill-switch (none planned: carve-out, a terminal band; only if one was planned at refining — Stage 6b):** the flag slice shipped, the flag
       exists **in Golden Frijoles, in every env**, with the stated polarity, **and its switch is set there** —
       `frijoles flags get <key>` must print `on vN` or `off vN` in its PRODUCTION row (a bare `off` with no version
       means nothing is served there, so the app runs on its own built-in default). A newly synced flag goes live as written in its file; a sync never switches an existing one. *Verify-only — not a new gate; whether a high-risk epic needs one
       is decided at refining, not here.*
-- [ ] Feature branch deleted; **this README's frontmatter `status: shipped`** (the SSOT — the board & Notion derive from it; run `node scripts/build-order.mjs`)
+- [x] Feature branch deleted; **this README's frontmatter `status: shipped`** (the SSOT — the board & Notion derive from it; run `node scripts/build-order.mjs`)

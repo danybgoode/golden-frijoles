@@ -24,11 +24,10 @@ _a pitch is waiting at the approval gate._
 
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
 
-## Ready (6)
+## Ready (5)
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
-- [The build view tells one story](../09-platform-infra/build-view-one-story/README.md) — #95 · 09 Platform Infra · 7/7 stories · risk: Low · appetite M · _docs: status in-progress_
 - [Template scripts hold to the gates their consumers run](../09-platform-infra/template-scripts-consumer-gates/README.md) — #96 · 09 Platform Infra · 0/3 stories · risk: High · appetite S · _docs: status scaffolded_
 - [A reading for proving_workspaces](../01-growth-engine/proving-workspaces-reading/README.md) — #98 · 01 Growth Engine · 0/3 stories · risk: High · appetite S · _docs: status scaffolded_
 - [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #99 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
@@ -43,11 +42,12 @@ _a work branch is on origin. Not in this committed file: `node scripts/build-ord
 
 _a PR is ready for review, or merged and waiting for its close-out. Not in this committed file: `node scripts/build-order.mjs --live` or the Hub board._
 
-## Shipped (91)
+## Shipped (92)
 
 _merged, deployed and closed._
 
 - [Verify module ✅ shipped 2026-10-17 (#386 `77c5dcc`, #387 `b761885`)](../09-platform-infra/verify-module/README.md) — #97 · 09 Platform Infra · 7/7 stories · risk: Low · appetite M · _docs: status shipped_
+- [The build view tells one story ✅](../09-platform-infra/build-view-one-story/README.md) — #95 · 09 Platform Infra · 7/7 stories · risk: Low · appetite M · _docs: status shipped_
 - [Drill impact for agents ✅](../01-growth-engine/drill-impact-for-agents/README.md) — #94 · 01 Growth Engine · 7/7 stories · risk: High · appetite M · _docs: status shipped_
 - [Funnel truth ✅](../01-growth-engine/funnel-truth/README.md) — #93 · 01 Growth Engine · 8/8 stories · risk: High · appetite L · _docs: status shipped_
 - [Owed on screen](../02-commercial/owed-on-screen/README.md) — #92 · 02 Commercial · 6/6 stories · risk: High · appetite M · _docs: status shipped_
