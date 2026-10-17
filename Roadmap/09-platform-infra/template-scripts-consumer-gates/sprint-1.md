@@ -3,7 +3,7 @@ epic: template-scripts-consumer-gates
 sprint: 1
 title: "Consumer gates at the source"
 risk: high
-phase: Shaping
+phase: Building
 stories_total: 3
 stories:
   - id: S1.1
@@ -60,6 +60,12 @@ origins unless I opt in, **so that** a config edit can't point my runner at an i
 (`127.0.0.1`, `169.254.169.254`, `10.0.0.1`, and a hostname resolving to one) unless `smoke.perf.allowPrivate: true`;
 it fetches assets only from `baseUrl`'s own origin. A test per refusal. DNS rebinding is a stated residual.
 **Risk:** high (security). Security lens on review.
+
+## Build contract (locked by the architect before the builder started)
+Cites the README's D1–D9. S1.1 = D1 + D2 + D3 (the three baseline findings fixed in the same diff). S1.2 = D4 + D5 + D6
+(all 59 entries, not 22: README, *Corrections*). S1.3 = D7, with the security lens on review. Release = D8. Routing
+= D9. The order inside the PR: D4's helper first (59 files import it), then S1.2, S1.1 and S1.3, then the release last.
+Every acceptance below holds as written except the counts, which D4 corrects.
 
 ## Sprint QA
 - **specs:** node tests in skills-ci for each story; this repo's `check-script-parity`.

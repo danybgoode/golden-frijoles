@@ -8,10 +8,10 @@
 import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, rmSync, symlinkSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const TMP = mkdtempSync(join(tmpdir(), 'rail-link-'));
@@ -26,10 +26,19 @@ const ENTRIES = [
   ['cross-agent-doctor.mjs', ['bogus-family'], /unknown family/],
   ['session-note.mjs', [], /usage|kind|note/i],
   ['session-resume.mjs', ['--help'], /session-resume\.mjs/],
+  // One per spelling that DID break behind a link before lib/is-main.mjs (template-scripts-consumer-gates D6).
+  // (Entries whose proof only prints. owed-ledger was one, until it wrote a ledger into the project it resolved.)
+  ['epic-dod.mjs', ['--bogus'], /usage: node scripts\/epic-dod\.mjs/], // resolve(argv[1]) === fileURLToPath(…)
+  ['babysit-pr.mjs', ['--help'], /unknown argument/], // the same, reversed
+  ['cold-read.mjs', ['--help'], /usage: cold-read\.mjs/], // fileURLToPath(…) === argv[1], no resolve at all
+  ['perf-probe.mjs', ['--help'], /raw compressed transfer baseline/], // pathToFileURL(argv[1]).href
 ];
 
 for (const [entry, args, proof] of ENTRIES) {
-  test(`${entry} runs through a symlinked path`, () => {
+  // A project that copied only some rails (this test travels with them) skips, by name, an entry it does not have.
+  // In the template every entry exists, so the source never skips.
+  const absent = !existsSync(join(HERE, entry));
+  test(`${entry} runs through a symlinked path`, { skip: absent && `${entry} is not in this project's scripts/` }, () => {
     const r = spawnSync(process.execPath, [join(LINK, entry), ...args], { encoding: 'utf8' });
     assert.match(
       `${r.stdout}${r.stderr}`,
@@ -38,3 +47,22 @@ for (const [entry, args, proof] of ENTRIES) {
     );
   });
 }
+
+// The helper itself, through a link: true when run, false when imported (the second half is what keeps a test that
+// imports a rail for its pure helpers from running the rail).
+test('lib/is-main.mjs: true through a symlinked path, false when imported', () => {
+  const probe = join(HERE, 'lib', `.is-main-probe-${process.pid}.mjs`);
+  writeFileSync(probe, "import { isMain } from './is-main.mjs';\nconsole.log(isMain(import.meta.url) ? 'main' : 'imported');\n");
+  try {
+    const run = spawnSync(process.execPath, [join(LINK, 'lib', `.is-main-probe-${process.pid}.mjs`)], { encoding: 'utf8' });
+    assert.equal(run.stdout.trim(), 'main', run.stderr);
+    // Imported by a REAL file run as main, so argv[1] is set (the importer) and only the realpath compare can say
+    // false — under `-e` argv[1] is empty and isMain would be false for the wrong reason (verifier, #399).
+    const importer = join(TMP, 'importer.mjs');
+    writeFileSync(importer, `await import(${JSON.stringify(pathToFileURL(join(LINK, 'lib', `.is-main-probe-${process.pid}.mjs`)).href)});\n`);
+    const imported = spawnSync(process.execPath, [importer], { encoding: 'utf8' });
+    assert.equal(imported.stdout.trim(), 'imported', imported.stderr);
+  } finally {
+    rmSync(probe, { force: true });
+  }
+});
