@@ -3,7 +3,7 @@ epic: proving-workspaces-reading
 sprint: 1
 title: "A reading for proving_workspaces"
 risk: high
-phase: Building
+phase: Shipped
 stories_total: 3
 stories:
   - id: S1.1
@@ -12,31 +12,31 @@ stories:
     i_want: "one event in our own project when any workspace's bet first reads proven, with the workspace unrecognisable"
     so_that: "breadth can be counted without the platform reading any tenant's data"
     risk: high
-    status: planned
+    status: shipped
   - id: S1.2
     title: "An input can count distinct subjects per month"
     as_a: "the product owner"
     i_want: "a telemetry input that counts distinct ids from the 1st of each month"
     so_that: "workspaces this month is a number, not a count of events"
     risk: high
-    status: planned
+    status: shipped
   - id: S1.3
     title: "proving_workspaces reads itself"
     as_a: "the product owner"
     i_want: "the input switched to the new event and synced"
     so_that: "the 15 Dec read is a number already on screen, not a hand count"
     risk: low
-    status: planned
+    status: shipped
 ---
 # A reading for proving_workspaces — Sprint 1: A reading for proving_workspaces
 
-**Status:** ⬜ not started
+**Status:** ✅ shipped 2026-10-17 — PR #401, merge `55758fe` (deploy success)
 
 ## Stories
 <!-- Keep the heading shape `### Story 1.M — <title>`; append ✅ + the commit ref when it ships. Name the story in
      each commit subject (`S1.1 …`). The frontmatter `stories:` entry is what tools read. -->
 
-### Story 1.1 — A proven verdict is recorded in our own project
+### Story 1.1 — A proven verdict is recorded in our own project ✅ `b12c8b2`, `94e1ec8`
 **As** the product owner reading Golden Frijoles' North Star, **I want** one event in our own project when any
 workspace's bet first reads proven, with the workspace unrecognisable, **so that** breadth can be counted without the
 platform reading any tenant's data.
@@ -48,7 +48,7 @@ answer never waits. Api spec on a seeded previous artifact: `unclear → proven`
 **Risk:** high (a request path; a write into the platform's own project, as `scheduleFirstEventActivation` does).
 Security lens on review.
 
-### Story 1.2 — An input can count distinct subjects per month
+### Story 1.2 — An input can count distinct subjects per month ✅ `5a68b12`
 **As** the product owner, **I want** a telemetry input that counts distinct ids from the 1st of each month, **so that**
 workspaces this month is a number, not a count of events.
 **Acceptance:** a migration adds `aggregate TEXT NOT NULL DEFAULT 'count' CHECK (aggregate IN ('count',
@@ -58,7 +58,7 @@ the 1st of its month. Specs: the month boundary, repeats by one id, two ids, and
 unchanged. `supabase db push` before the merge.
 **Risk:** high (a migration; numbers people read).
 
-### Story 1.3 — proving_workspaces reads itself
+### Story 1.3 — proving_workspaces reads itself ✅ `fa740eb`
 **As** the product owner, **I want** the input switched to the new event and synced, **so that** the 15 Dec read is a
 number already on screen, not a hand count.
 **Acceptance:** `Roadmap/00-strategy/north-star.md`'s sync payload sets `proving_workspaces` to `telemetry_event`,
@@ -101,3 +101,15 @@ Env: production · https://goldenfrijoles.com
 Step 2 is signed in and step 3 is a judgment, both owed to the product owner.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+### Smoke run — 2026-10-17 (agent, production)
+1. ✅ `supabase migration list --linked` → `20261019100000` on both sides. Both CHECKs are live
+   (`leading_inputs_aggregate_known`, `leading_inputs_aggregate_telemetry_only`), and all 11 rows read `count`.
+2. ⏳ **Owed to Daniel (signed in):** the page label `from your events · distinct per month`. The agent synced the input
+   first (`frijoles north-star set … --yes` → "synced · 4 inputs"; the 1.5.1 dry run labelled the switch `refused`, as
+   D7's amendment says it would).
+3. ⏳ **Owed to Daniel (a judgment):** a real proven verdict. No epic has one yet, so no event exists, and that first
+   event is also the only live proof that `SELF_SUBJECT_SECRET`'s production value is not empty.
+4. ✅ (the half that can be checked before step 3) `frijoles north-star readings proving_workspaces` and the public
+   connector's `get_input_readings` both answer `telemetry_event · distinct_monthly`, `readings: []`, `latest: null`:
+   an honest "nothing yet", not a zero. After step 3, both should read 1 for this month.

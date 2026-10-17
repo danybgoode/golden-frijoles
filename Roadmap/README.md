@@ -119,6 +119,12 @@ independently shippable slice of value.
 - ✅ [Several North Star metrics, one reading rule](01-growth-engine/north-star-multi-metric-read/README.md) —
   **shipped 2026-10-08** (#321). A project with two North Star metrics shows the newest one and its own inputs, on the
   North Star page and the Pod Report, instead of an error. **Owed:** the signed-in page look.
+- ✅ [A reading for proving_workspaces](01-growth-engine/proving-workspaces-reading/README.md) — **shipped
+  2026-10-17** (#401). The breadth input of the North Star reads itself. A roadmap push that first records a bet
+  `proven` sends one `workspace_proved_bet` into Golden Frijoles' own project, under an HMAC of the workspace id. No
+  tenant reads another's data, and no exemption was needed. Telemetry inputs can count **distinct ids per month**
+  (`aggregate: distinct_monthly`, with a 0 on each month's 1st so a mid-month read never returns last month's
+  number). **Owed:** a real proven verdict (Daniel) and the signed-in page look.
 - ✅ [One bet, wired: the flag knows its epic, its funnel and its read](01-growth-engine/one-bet-wired/README.md) —
   **shipped 2026-10-10** (#341; CLI 1.3.0, plugin + kit 1.5.0). A measured bet's flag funnel on the TARS model
   (Targeted is a segment, exposure is the flag `on`, adopters outside it counted beside), on the epic page and
@@ -672,6 +678,11 @@ independently shippable slice of value.
 ---
 
 ## Recent highlights
+
+- **2026-10-17**: `proving-workspaces-reading` **shipped** (quote $5–17 → ≈$12.12). `proving_workspaces` now reads
+  from events: distinct workspaces this month with a newly proven bet, sent by the push route as an HMAC, so the
+  platform reads no tenant's data. The lock found four scope errors before any code, including a sync that refused the
+  switch the epic needed. The verifier caught a summary that **summed** a running count.
 
 - **2026-10-17**: `template-scripts-consumer-gates` **shipped** (quote $5–17 → ≈$26.24). The plugin's shared
   scripts now pass the gates their consumers run. The lock found 59 hand-rolled entry checks, not 22, and the

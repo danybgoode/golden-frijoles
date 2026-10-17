@@ -364,6 +364,18 @@ one-liner + why + date shape.
   `.maybeSingle()` on a non-unique filter passed for weeks and broke the page the day a project held two. Seed at least
   two of anything a query must choose between, inserted against the order the rule picks.
   *(north-star-multi-metric-read, 2026-10-08.)*
+- **A new way of counting a series changes every place that summarises it, not only the place that computes it.**
+  proving-workspaces-reading added a running distinct-per-month series, and two "Every reading" tables still
+  **summed** it (1, 2, 3 read as "totalling 6"). The architecture lock said "the surfaces carry `aggregate`", and no
+  reader of the PR checked the summaries. When a series' points change meaning, grep for every `reduce` over
+  `series`, and give the summary one function that knows the aggregate. A running level also needs a reset point at
+  each period start: a "latest on or before" read otherwise returns last period's number.
+  *(proving-workspaces-reading, 2026-10-17.)*
+- **A request path that writes into the platform's own project spends a budget shared with the platform's own
+  funnels.** The self key's rate and quota also carry the landing, waitlist and signup events, so one event per epic
+  let a tenant crowd them out. Send the minimum the reading needs (here, one event per push) and check
+  `git check-ignore` before a test reads a repo path: `Roadmap/00-strategy/` is private and never in CI.
+  *(proving-workspaces-reading, 2026-10-17.)*
 - **When a feature reads data someone else must send, test it from the sender's instructions.** One bet, wired passed
   every unit test while its funnel could never fill: the docs never told the app to report evaluations, and the read
   keyed them on the server's own user. Write one test that sends the data exactly as the shipped guidance says.
