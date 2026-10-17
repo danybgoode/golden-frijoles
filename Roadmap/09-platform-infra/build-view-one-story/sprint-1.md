@@ -3,7 +3,7 @@ epic: build-view-one-story
 sprint: 1
 title: "One story"
 risk: low
-phase: Shaping
+phase: Building
 stories_total: 7
 stories:
   - id: S1.1
@@ -63,6 +63,13 @@ stories:
 The approved design, with every state drawn, is in the seed's *The design*
 ([`00-ideas/seeds/build-view-one-story.md`](../../00-ideas/seeds/build-view-one-story.md)). Each story below points
 at its part of it.
+
+## Build contract (locked by the architect before the builder started)
+Cites the README's D1–D12. S1.1 = D1 + D2 + D3. S1.2 = D4 + D7. S1.3 = D5. S1.4 = D6. S1.5 = D8. S1.6 = D9 (the
+"-1h" reproduced as a spec first, and the clock probed live). S1.7 = D10 + D11, plus golden `renderLines` specs for
+each design state: building, refining, nothing in flight, QA, shipped and disagreeing. Release = D12. The size
+correction (no README `appetite:`), the glyphs moving into the resolver and the dropped `Open`/token/source text are
+the README's named corrections. Builders cite them and don't re-decide them.
 
 ## Stories
 <!-- Keep the heading shape `### Story 1.M — <title>`; append ✅ + the commit ref when it ships. Name the story in
