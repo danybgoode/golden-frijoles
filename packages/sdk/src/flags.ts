@@ -1,3 +1,4 @@
+// smoke: verify-module S1 step 4 (a comment only)
 // Flag-serving v1 — a deliberately small, import-safe wire contract and local evaluator.
 //
 // This module must remain usable in any JavaScript runtime. It contains no fetch, timers, Node
