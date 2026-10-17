@@ -19,6 +19,8 @@ export type NorthStarInputView = {
   name: string
   valueSource: string
   sourceEvent: string | null
+  /** proving-workspaces-reading D6 — `count` or `distinct_monthly`. */
+  aggregate: string
   createdAt: string
 }
 
@@ -45,7 +47,7 @@ export async function listNorthStar(projectId: string): Promise<NorthStarMetricV
 
   const { data: inputs, error: inputsError } = await supabase
     .from('leading_inputs')
-    .select('id, metric_id, key, name, value_source, source_event, created_at')
+    .select('id, metric_id, key, name, value_source, source_event, aggregate, created_at')
     .eq('project_id', projectId)
   if (inputsError) {
     console.error('[north-star] inputs lookup failed:', inputsError)
@@ -64,9 +66,33 @@ export async function listNorthStar(projectId: string): Promise<NorthStarMetricV
         name: input.name,
         valueSource: input.value_source,
         sourceEvent: input.source_event,
+        aggregate: input.aggregate ?? 'count',
         createdAt: input.created_at,
       })),
   }))
+}
+
+/**
+ * How many `input_values` rows each of these inputs has, for THIS project. Head-count queries, one per input (only the
+ * inputs a sync asks to switch, D7), and a count is exact where a page of rows is capped at `max_rows`.
+ * `null` when any read failed, so a failure is never read as "nothing was pushed".
+ */
+async function pushedValueCounts(projectId: string, inputIds: string[]): Promise<Map<string, number> | null> {
+  const supabase = getSupabaseServiceClient()
+  const counts = new Map<string, number>()
+  for (const inputId of inputIds) {
+    const { count, error } = await supabase
+      .from('input_values')
+      .select('id', { count: 'exact', head: true })
+      .eq('project_id', projectId)
+      .eq('input_id', inputId)
+    if (error || count === null) {
+      console.error('[north-star] input_values count failed:', error)
+      return null
+    }
+    counts.set(inputId, count)
+  }
+  return counts
 }
 
 export type NorthStarSyncResult =
@@ -101,7 +127,7 @@ export async function syncNorthStar(projectId: string, body: unknown): Promise<N
   // invisible in the report with no error, even though the rows themselves still exist.
   const { data: existingInputs, error: existingInputsError } = await supabase
     .from('leading_inputs')
-    .select('key, value_source')
+    .select('id, key, value_source')
     .eq('project_id', projectId)
     .in(
       'key',
@@ -112,8 +138,23 @@ export async function syncNorthStar(projectId: string, body: unknown): Promise<N
     return { ok: false, status: 500, error: 'Failed to check existing inputs' }
   }
   const valueSourceByKey = new Map(parsed.data.inputs.map((i) => [i.key, i.valueSource]))
-  const changedValueSourceKeys = (existingInputs ?? [])
-    .filter((existing) => valueSourceByKey.get(existing.key) !== existing.value_source)
+  const changed = (existingInputs ?? []).filter(
+    (existing) => valueSourceByKey.get(existing.key) !== existing.value_source
+  )
+  // proving-workspaces-reading D7 — the ONE switch allowed: external_push → telemetry_event while nothing was ever
+  // pushed to the input. With no `input_values` rows there is nothing the switch could hide, which is all the refusal
+  // above protects. The reverse would hide the events-derived series, so it stays refused.
+  const switchable = changed.filter(
+    (existing) =>
+      existing.value_source === 'external_push' && valueSourceByKey.get(existing.key) === 'telemetry_event'
+  )
+  const pushed = await pushedValueCounts(
+    projectId,
+    switchable.map((existing) => existing.id)
+  )
+  if (!pushed) return { ok: false, status: 500, error: 'Failed to check existing inputs' }
+  const changedValueSourceKeys = changed
+    .filter((existing) => !switchable.includes(existing) || (pushed.get(existing.id) ?? 0) > 0)
     .map((existing) => existing.key)
   if (changedValueSourceKeys.length > 0) {
     return {
@@ -149,6 +190,8 @@ export async function syncNorthStar(projectId: string, body: unknown): Promise<N
     name: input.name,
     value_source: input.valueSource,
     source_event: input.sourceEvent ?? null,
+    // D6 — the file is the truth: an input synced without `aggregate` counts per day again.
+    aggregate: input.aggregate ?? 'count',
   }))
 
   const { data: inputs, error: inputsError } = await supabase

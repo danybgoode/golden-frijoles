@@ -11,10 +11,18 @@ const leadingInputSyncEntrySchema = z
     name: z.string().min(1),
     valueSource: z.enum(['telemetry_event', 'external_push']),
     sourceEvent: z.string().min(1).optional(),
+    // proving-workspaces-reading D6 — how a telemetry input counts its event: per day (`count`, the default every input
+    // had before this) or distinct ids since the 1st of each month. Absent means `count`.
+    aggregate: z.enum(['count', 'distinct_monthly']).optional(),
   })
   .refine((input) => (input.valueSource === 'telemetry_event' ? !!input.sourceEvent : !input.sourceEvent), {
-    message: "sourceEvent is required for 'telemetry_event' inputs and must be omitted for 'external_push' inputs",
+    message:
+      "sourceEvent is required for 'telemetry_event' inputs and must be omitted for 'external_push' inputs",
     path: ['sourceEvent'],
+  })
+  .refine((input) => input.valueSource === 'telemetry_event' || input.aggregate === undefined, {
+    message: "aggregate counts events, so it is only for 'telemetry_event' inputs",
+    path: ['aggregate'],
   })
 
 export const northStarSyncSchema = z.object({
@@ -49,7 +57,7 @@ export const inputValuesSchema = z.object({
           .regex(/^\d{4}-\d{2}-\d{2}$/, 'occurredOn must be YYYY-MM-DD')
           .refine(isValidCalendarDate, { message: 'occurredOn must be a real calendar date' }),
         value: z.number().finite(),
-      }),
+      })
     )
     .min(1),
 })

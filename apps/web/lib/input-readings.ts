@@ -8,7 +8,8 @@
 export type InputReading = { date: string; value: number }
 
 export type InputReadingsView = {
-  input: { key: string; name: string; valueSource: string }
+  /** `aggregate` (proving-workspaces-reading D9): `distinct_monthly` readings are distinct ids this month, not events. */
+  input: { key: string; name: string; valueSource: string; aggregate?: string }
   readings: InputReading[]
   /** The last reading on or before `to` (or overall when `to` is absent); null when there is none. */
   latest: InputReading | null
@@ -18,6 +19,7 @@ type InputWithSeries = {
   key: string
   name: string
   valueSource: string
+  aggregate?: string
   series: { date: string; value: number }[]
 }
 
@@ -45,7 +47,12 @@ export function inputReadings(
     .filter((p) => !to || p.date <= to)
     .sort((a, b) => a.date.localeCompare(b.date))
   return {
-    input: { key: input.key, name: input.name, valueSource: input.valueSource },
+    input: {
+      key: input.key,
+      name: input.name,
+      valueSource: input.valueSource,
+      ...(input.aggregate ? { aggregate: input.aggregate } : {}),
+    },
     readings,
     latest: readings.length ? readings[readings.length - 1] : null,
   }
