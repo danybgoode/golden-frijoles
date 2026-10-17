@@ -1,8 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { after, NextRequest, NextResponse } from 'next/server'
 import { resolveProjectFromAuthHeader } from '@/lib/auth'
 import { getSupabaseServiceClient } from '@/lib/supabase'
 import { isSameRoadmapPayload, parseRoadmapPush, ROADMAP_SCHEMA_VERSION } from '@/lib/roadmap-artifact-schema'
 import { getLatestRoadmapWithOwed } from '@/lib/report-artifacts'
+import {
+  MAX_PROVEN_EVENTS_PER_PUSH,
+  newlyProvenEpics,
+  workspaceSubject,
+  type VerdictRow,
+} from '@/lib/proven-transition'
+import { trackSelfEvent, WORKSPACE_PROVED_BET_EVENT } from '@/lib/self-track'
 
 // pod-report · Sprint 1, Story 1.1 — POST /api/v1/roadmap/push
 //
@@ -54,11 +61,13 @@ export async function POST(req: NextRequest) {
   // D16 — an unchanged board is not a new version. The latest artifact is read for THIS project only (the id came
   // from the API key above), and a failed read never blocks the push: the worst case is one duplicate version.
   let latest = null
+  let latestReadFailed = false
   try {
     // The RAW read (owed-on-screen D6): the stripped one would make every push carrying `owed` look changed.
     latest = await getLatestRoadmapWithOwed(auth.projectId)
   } catch {
     latest = null
+    latestReadFailed = true
   }
   if (
     latest &&
@@ -95,11 +104,43 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: 'Failed to store roadmap artifact' }, { status: 500 })
   }
 
+  // proving-workspaces-reading D1/D2 — only once the artifact is stored, and never when the previous one could not be
+  // read: an unknown previous cannot prove a transition.
+  if (!latestReadFailed) {
+    const previousItems = latest ? ((latest.payload as { items?: VerdictRow[] } | null)?.items ?? []) : null
+    scheduleProvenEvents(auth.projectId, newlyProvenEpics(previousItems, items))
+  }
+
   return NextResponse.json({
     ok: true,
     artifactId: data.artifact_id,
     version: data.artifact_version,
     schemaVersion: ROADMAP_SCHEMA_VERSION,
     items: items.length,
+  })
+}
+
+// proving-workspaces-reading D2 — one `workspace_proved_bet` per newly proven epic, into Golden Frijoles' own project,
+// after the response. The workspace is read from THIS project's row only (its id came from the API key), and is sent
+// as an HMAC (D3). No tags or metadata: the epic slug is the tenant's data, and the self project is public (rule #2).
+// No secret, no event, and no read. Duplicates are harmless: the input counts distinct subjects per month.
+function scheduleProvenEvents(projectId: string, provenSlugs: string[]): void {
+  const secret = process.env.SELF_SUBJECT_SECRET
+  if (provenSlugs.length === 0 || !secret?.trim()) return
+  after(async () => {
+    const { data, error } = await getSupabaseServiceClient()
+      .from('projects')
+      .select('workspace_id')
+      .eq('id', projectId)
+      .is('deleted_at', null) // many-products D9: a deleted product proves nothing
+      .maybeSingle()
+    if (error || !data?.workspace_id) {
+      console.warn('[roadmap/push] proven verdict not recorded: workspace lookup failed', error?.message ?? '')
+      return
+    }
+    const subject = workspaceSubject(data.workspace_id as string, secret)
+    if (!subject) return
+    const count = Math.min(provenSlugs.length, MAX_PROVEN_EVENTS_PER_PUSH)
+    for (let sent = 0; sent < count; sent++) await trackSelfEvent(WORKSPACE_PROVED_BET_EVENT, subject)
   })
 }

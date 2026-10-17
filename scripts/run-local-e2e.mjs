@@ -169,6 +169,8 @@ async function main() {
     ...readGateEnv(join(root, 'ci/gates.on.env')),
     ...LOCAL_OVERRIDES,
     SELF_PROJECT_API_KEY: randomBytes(24).toString('hex'),
+    // proving-workspaces-reading D11 — as the CI action does: the push route HMACs a workspace id with it.
+    SELF_SUBJECT_SECRET: randomBytes(32).toString('hex'),
   };
 
   // NEXT_PUBLIC values are inlined at build time, so the build has to use the same local URL as

@@ -61,6 +61,11 @@ export const OWED_VIEWED_EVENT = 'owed_viewed'
 // funnel-truth D7 — a member saw a funnel's trend (flag page, /app/funnel or the epic page), once per page view.
 export const FUNNEL_TREND_VIEWED_EVENT = 'funnel_trend_viewed'
 
+// proving-workspaces-reading D4 — a workspace's bet first read `proven` in a roadmap push. The "user" is an HMAC of the
+// workspace id (lib/proven-transition.ts), never the id itself: this project is public (rule #2), so a reader can count
+// workspaces and cannot name one.
+export const WORKSPACE_PROVED_BET_EVENT = 'workspace_proved_bet'
+
 export type SelfTrackEvent =
   | typeof LANDING_VISITED_EVENT
   | typeof WAITLIST_JOINED_EVENT
@@ -73,6 +78,7 @@ export type SelfTrackEvent =
   | typeof METHODOLOGY_CHAPTER_OPENED_EVENT
   | typeof OWED_VIEWED_EVENT
   | typeof FUNNEL_TREND_VIEWED_EVENT
+  | typeof WORKSPACE_PROVED_BET_EVENT
 
 // The TARS feature each funnel event belongs to. Registered on the self tenant by
 // scripts/seed-self-project.mjs.
@@ -82,6 +88,8 @@ export const ACTIVATION_SIGNAL_KEY = 'activation'
 export const HUB_ENGAGEMENT_SIGNAL_KEY = 'hub_engagement'
 /** methodology-experience S4.1 — registered on the self tenant by scripts/seed-self-project.mjs. */
 export const METHODOLOGY_SIGNAL_KEY = 'methodology_reading'
+/** proving-workspaces-reading D4 — the North Star input reads the event by name, so no registry row is needed for it. */
+export const PROVING_SIGNAL_KEY = 'proving_workspaces'
 
 // ⚠️ THIS MAPPING IS LOAD-BEARING, AND ITS ABSENCE WAS A LIVE PRODUCTION BUG.
 //
@@ -116,4 +124,5 @@ export const EVENT_FEATURE: Record<SelfTrackEvent, string> = {
   [METHODOLOGY_CHAPTER_OPENED_EVENT]: METHODOLOGY_SIGNAL_KEY,
   [OWED_VIEWED_EVENT]: HUB_ENGAGEMENT_SIGNAL_KEY,
   [FUNNEL_TREND_VIEWED_EVENT]: HUB_ENGAGEMENT_SIGNAL_KEY,
+  [WORKSPACE_PROVED_BET_EVENT]: PROVING_SIGNAL_KEY,
 }
