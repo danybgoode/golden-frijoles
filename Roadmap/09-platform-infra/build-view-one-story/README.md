@@ -201,6 +201,18 @@ cites them.
 - **A fourth copy of the resolver**, `skills/scripts/build-state.mjs` (skills CI `cmp`s it against the template), is
   synced with the other three.
 
+**Amended after shipping (2026-10-17, #398, from Daniel's live report on a chore's band):**
+- **D5. The Why reads the README's own Why.** The frontmatter `hypothesis` is null on every chore and bug, so the
+  line vanished. `❝ Why` is now the `hypothesis`, else the doc's own goal paragraph, through the extractor's
+  `firstParagraph` and its headings (an epic's Why/Goal/Problem; a seed's Problem first). That's the Hub's goal
+  reading, and it skips HTML comments, so a scaffold's `<!-- One paragraph… -->` is never shown. The line is capped at
+  `WHY_LINES_MAX` lines. `target.hypothesis` keeps the result record's value, and the drawn text is `target.why`.
+  A chore's or bug's Target reads `none: a chore carries no target`.
+- **D1. An epic always draws its Why line**: `not written yet` when there's none. A missing line read as a missing
+  feature. A seed still omits it.
+- **D2. The plain text never cuts the title.** A title cut to fit 100 columns couldn't be restored by a wider band.
+  The bar takes its own line instead, and the band clips the title to its real width (D3).
+
 **Routing:** one sprint and three hot files that every story touches, so the architect (Opus) builds it in place on
 `feat/build-view-one-story`. There's no fan-out: parallel builders would only collide on `renderLines`. Review goes
 through `review-route.mjs --builder claude`.
