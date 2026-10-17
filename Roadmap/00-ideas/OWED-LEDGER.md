@@ -6,14 +6,14 @@
 
 _Generated: 2026-10-17_
 
-**94 check(s) owed across 71 file(s)** · 7 cleared.
+**96 check(s) owed across 71 file(s)** · 7 cleared.
 
 | Who can clear it | Count | What it means |
 |---|---|---|
 | publish | 1 | A package publish (npm 2FA): the product owner today, a CI job once trusted publishing is on |
 | credential | 7 | Mints or uses a production credential: only the product owner, named every time |
 | ops | 5 | On the product owner's own accounts or machine |
-| judgment | 29 | An answer only the product owner can give: an _Intent_, an approval, a decision |
+| judgment | 31 | An answer only the product owner can give: an _Intent_, an approval, a decision |
 | signed-in | 23 | A signed-in production walkthrough: an agent can run it once a smoke account exists |
 | interactive | 20 | An interactive plugin or terminal walkthrough: an agent can script it in a scratch repo |
 | unsorted | 9 | Nothing above matched — **not a bin, a to-triage list** |
@@ -21,9 +21,9 @@ _Generated: 2026-10-17_
 | Category | Count | What it means |
 |---|---|---|
 | money-path | 1 | Touches checkout, payment or order state — run these first |
-| auth-path | 27 | Needs a real signed-in session a script cannot mint against production |
+| auth-path | 28 | Needs a real signed-in session a script cannot mint against production |
 | admin-only | 0 | Behind an admin surface |
-| other | 66 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
+| other | 67 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
 
 ## publish (1)
 
@@ -47,7 +47,7 @@ _Generated: 2026-10-17_
 - `Roadmap/09-platform-infra/plugin-1-0/RETROSPECTIVE.md:43` · other — **Owed to Daniel:** the `_Intent_` word above; Sprint 4's interactive walkthrough steps 2–5; your live routines that name a removed skill (sprint-3 step 7); and two decisions: rename the Notion `Stage` select option (it stores the key "Grooming"), and whether to re-approve the c…
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:55` · other — Remove the three account copies of the coaches.
 
-## judgment (29)
+## judgment (31)
 
 - `Roadmap/01-growth-engine/delivery-stale-reclaim-uncounted/RETROSPECTIVE.md:58` · other — Did we build what was meant? (owed to Daniel: one word)
 - `Roadmap/01-growth-engine/drill-impact-for-agents/RETROSPECTIVE.md:54` · other — **Owed to the product owner (Daniel):** build an experiment on `site.drill_fault` in the console (none exists in golden-frijoles) and **start** it — a draft experiment has no analysis, so a capture answers `lifecycle_unavailable`; publish **CLI 1.10.0** to npm (kit 1.10.4 pins i…
@@ -69,6 +69,8 @@ _Generated: 2026-10-17_
 - `Roadmap/02-commercial/one-header-one-name/RETROSPECTIVE.md:54` · other — **Owed to Daniel (D10):** re-approve `design-system/surfaces/hub-board*.surface` and `hub-roadmap-areas.surface` with the new words. Their text still reads "To groom … Ready to build". The gate measures structure, not words, so this doesn't block anything.
 - `Roadmap/02-commercial/portfolio-view/RETROSPECTIVE.md:47` · other — **Owed to Daniel:** the signed-in walkthroughs (sprint-1 step 3, sprint-2 steps 1–4), placing his products on the loop, and the retro's `_Intent:_` answer.
 - `Roadmap/02-commercial/result-record/RETROSPECTIVE.md:75` · auth-path — **Owed to Daniel:** sprint 1's grooming walkthrough (steps 1–2) and sprint 2's end-to-end read (ship a tiny epic with today's read date → session line → Today → `epic-read` → approve → push → bean). Then the `_Intent_` word.
+- `Roadmap/09-platform-infra/build-view-one-story/RETROSPECTIVE.md:4` · other — _Intent: owed to Daniel (yes | mostly | no)_
+- `Roadmap/09-platform-infra/build-view-one-story/RETROSPECTIVE.md:66` · other — **Owed to Daniel:** the `_Intent:_` word above.
 - `Roadmap/09-platform-infra/ci-diet/RETROSPECTIVE.md:59` · other — **Owed to Daniel:** the `_Intent:_` answer above.
 - `Roadmap/09-platform-infra/coaches-v2/RETROSPECTIVE.md:47` · other — **Owed to the PO:** interactive walkthroughs: `/golden-frijoles:cold-read` in a real repo, `/golden-frijoles:pmf-narrative` (Step 1 of 8, options, a draft after step 3), `/golden-frijoles:north-star` to the scenario table; the one-pagers opened and printed in a browser; retire t…
 - `Roadmap/09-platform-infra/finops/RETROSPECTIVE.md:60` · auth-path — **Owed to Daniel (by name):** S1 steps 3–4 and S2 steps 2–4 (the band and groom in a live session on the released plugin); S3 steps 1–4 (`spend.telemetry on` + the prod ingest key, the signed-in `/app/finops`, the Hub line, the non-member 404); the `_Intent:` answer above.
@@ -113,7 +115,7 @@ _Generated: 2026-10-17_
 - `Roadmap/02-commercial/commercial-shell/RETROSPECTIVE.md:93` · auth-path — The live browser/session smokes owed to Daniel per Sprint 2/3's QA sections (the connector round-trip, the "paste into a chat app" unfurl check) are still outstanding — unchanged by this session, tracked in their respective sprint docs.
 - `Roadmap/02-commercial/connect-page/RETROSPECTIVE.md:42` · other — **Owed to Daniel:** the walkthrough (a fresh Google signup lands on Connect with no key; the Claude app turns a flag off with the URL it was given).
 - `Roadmap/02-commercial/result-record/RETROSPECTIVE.md:43` · other — The interactive walkthroughs are owed to Daniel (see the sprint files).
-- `Roadmap/09-platform-infra/build-view-one-story/sprint-1.md:164` · other — Every step is owed to the product owner (an interactive walkthrough); an agent can script steps 1–3 in a scratch repo.
+- `Roadmap/09-platform-infra/build-view-one-story/RETROSPECTIVE.md:64` · auth-path — **Owed to Daniel, interactive:** smoke steps 4–6, and seeing steps 1–3 drawn in colour in the band. Step 5 is the only check that the reset reads in local time: the live probe was refused twice in the build session.
 - `Roadmap/09-platform-infra/build-visualization-claude-mods/RETROSPECTIVE.md:65` · auth-path — **Owed to the product owner:** the interactive-TUI half of the Sprint 4 smoke (watching Progress advance and the status become `In review` across turns, with a status row that a headless `-p` session does not have). The mechanics under it are tested; the pixels are not.
 - `Roadmap/09-platform-infra/distribute-what-we-use/RETROSPECTIVE.md:52` · other — the clean-machine stranger install (S2 steps 1–2);
 - `Roadmap/09-platform-infra/distribute-what-we-use/RETROSPECTIVE.md:53` · other — a Telegram test send from your own bot (S3 steps 2–4);
