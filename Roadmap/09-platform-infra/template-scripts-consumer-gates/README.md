@@ -152,10 +152,13 @@ It has a test with fixtures for each of the six spellings found here, and one cl
 `kit/bin.mjs` (already realpath on both sides) are out of its scope.
 
 **D6 — The symlink test grows to prove it.** `rail-entry-symlink.test.mjs` keeps its five entries and adds one
-previously-lexical entry per spelling that was broken: `owed-ledger.mjs` (`resolve`), `cold-read.mjs` (bare `===`),
-`perf-probe.mjs` (`pathToFileURL`, `--help`) and `init.mjs` (`endsWith`). Each one must print its proof through
+previously-lexical entry per spelling that was broken: `epic-dod.mjs` (`resolve`), `babysit-pr.mjs` (the same,
+reversed), `cold-read.mjs` (bare `===`) and `perf-probe.mjs` (`pathToFileURL`). Each one must print its proof through
 the symlinked directory. One more test spawns a temp `is-main` probe through a symlinked dir and checks that
-`isMain` is true there and false when the module is imported.
+`isMain` is true there and false when a real file run as main imports it. **Amended at build (2026-10-17):**
+`owed-ledger.mjs` was dropped because its run wrote a ledger into the project it resolved, and a proof must only print.
+`init.mjs` was dropped because it writes into the project root, and its `endsWith` form never broke behind a link.
+An entry a project didn't copy is skipped by name: this repo's `scripts/` has neither `perf-probe` nor `babysit-pr`.
 
 **D7 — perf-probe only requests the hosts a project names.** All of it is in `perf-probe.mjs`, which is the only user.
 - `isPrivateAddress(ip)`: a `net.BlockList` of IPv4 `0/8, 10/8, 100.64/10, 127/8, 169.254/16, 172.16/12, 192.0.0/24,
@@ -175,10 +178,14 @@ the symlinked directory. One more test spawns a temp `is-main` probe through a s
   a silent skip, which would under-count the bytes. This holds whatever `allowPrivate` says.
 - **Opt-in:** `loadProbeConfig` returns `allowPrivate: raw.allowPrivate === true` (only a literal `true` counts).
   `--base-url` and `--image-url` go through the same checks, because a CLI argument in CI is as editable as the config.
+- **Never through an environment proxy (amended at review, 2026-10-17; the verifier on #399).** Under Node 24's
+  `NODE_USE_ENV_PROXY=1` the global agent hands the request to `HTTP(S)_PROXY`, so the guarded lookup resolves the
+  proxy and not the target. The verifier reproduced a refused name returning 200 through a local proxy. Every request
+  now gets its own direct agent (`directAgent`), and a test runs that same case with the env proxy set. The header's
+  old residual ("node:http ignores HTTP(S)_PROXY") was false, and it is gone.
 - **Redirects** are not followed (`node:http`/`https` never follow them, and a 3xx is already `absent`). That is
   stated in the header.
-- **Residuals, stated in the header:** an HTTP(S) proxy in the environment isn't honoured by `node:http`, so it can't
-  route around the check. NAT64 `64:ff9b::/96` addresses aren't refused, because they embed a public IPv4 on a NAT64
+- **Residuals, stated in the header:** NAT64 `64:ff9b::/96` addresses aren't refused, because they embed a public IPv4 on a NAT64
   network. Anything the operator puts behind `allowPrivate: true` is theirs.
 - **Tests, one per refusal:** `127.0.0.1`, `169.254.169.254`, `10.0.0.1`, a hostname resolving to `10.0.0.1`
   (injected lookup), a rebinding host (preflight public, connect private: refused at connect), an asset on another
