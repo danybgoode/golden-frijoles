@@ -6,14 +6,14 @@
 
 _Generated: 2026-10-17_
 
-**96 check(s) owed across 71 file(s)** · 7 cleared.
+**97 check(s) owed across 72 file(s)** · 7 cleared.
 
 | Who can clear it | Count | What it means |
 |---|---|---|
 | publish | 1 | A package publish (npm 2FA): the product owner today, a CI job once trusted publishing is on |
 | credential | 7 | Mints or uses a production credential: only the product owner, named every time |
 | ops | 5 | On the product owner's own accounts or machine |
-| judgment | 31 | An answer only the product owner can give: an _Intent_, an approval, a decision |
+| judgment | 32 | An answer only the product owner can give: an _Intent_, an approval, a decision |
 | signed-in | 23 | A signed-in production walkthrough: an agent can run it once a smoke account exists |
 | interactive | 20 | An interactive plugin or terminal walkthrough: an agent can script it in a scratch repo |
 | unsorted | 9 | Nothing above matched — **not a bin, a to-triage list** |
@@ -23,7 +23,7 @@ _Generated: 2026-10-17_
 | money-path | 1 | Touches checkout, payment or order state — run these first |
 | auth-path | 28 | Needs a real signed-in session a script cannot mint against production |
 | admin-only | 0 | Behind an admin surface |
-| other | 67 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
+| other | 68 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
 
 ## publish (1)
 
@@ -47,7 +47,7 @@ _Generated: 2026-10-17_
 - `Roadmap/09-platform-infra/plugin-1-0/RETROSPECTIVE.md:43` · other — **Owed to Daniel:** the `_Intent_` word above; Sprint 4's interactive walkthrough steps 2–5; your live routines that name a removed skill (sprint-3 step 7); and two decisions: rename the Notion `Stage` select option (it stores the key "Grooming"), and whether to re-approve the c…
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:55` · other — Remove the three account copies of the coaches.
 
-## judgment (31)
+## judgment (32)
 
 - `Roadmap/01-growth-engine/delivery-stale-reclaim-uncounted/RETROSPECTIVE.md:58` · other — Did we build what was meant? (owed to Daniel: one word)
 - `Roadmap/01-growth-engine/drill-impact-for-agents/RETROSPECTIVE.md:54` · other — **Owed to the product owner (Daniel):** build an experiment on `site.drill_fault` in the console (none exists in golden-frijoles) and **start** it — a draft experiment has no analysis, so a capture answers `lifecycle_unavailable`; publish **CLI 1.10.0** to npm (kit 1.10.4 pins i…
@@ -78,6 +78,7 @@ _Generated: 2026-10-17_
 - `Roadmap/09-platform-infra/intent-match/RETROSPECTIVE.md:52` · other — **Owed to Daniel:** the one-word `_Intent:` answer for the 23 backfilled epics and this one (about fifteen minutes; `intent-outcomes` counts them toward 20); groom one real idea in Cowork to see the new seed and Stage 3.5/4.6 end to end; read this epic's scored pitch and its rea…
 - `Roadmap/09-platform-infra/kickoff-generator-path/RETROSPECTIVE.md:49` · other — **Owed to Daniel:** this retro's `_Intent:_` answer.
 - `Roadmap/09-platform-infra/sketch-specs/RETROSPECTIVE.md:80` · other — Owed to Daniel: did we build what was meant?** Answer on its own line as `_Intent: yes_`, `_mostly_` or `_no_`. The builder does not answer this for the product owner. This epic has no `intent_match:` score, so `epic-dod` does not require it.
+- `Roadmap/09-platform-infra/template-scripts-consumer-gates/RETROSPECTIVE.md:4` · other — _Intent: owed to Daniel (yes | mostly | no)_
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:52` · other — Run the North Star coach on Golden Frijoles and judge the file (S1 smoke step 2).
 - `Roadmap/09-platform-infra/verify-spike/RETROSPECTIVE.md:48` · other — **F7, owed to the product owner:** the delivery cron may not be registered in production (DECISION § 4). Re-checked 2026-10-14: `vercel crons ls` finds no cron jobs, and `delivery.destinations_enabled` is off in production (320 pending on 2026-10-08). Decide whether delivery com…
 
