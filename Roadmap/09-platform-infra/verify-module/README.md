@@ -125,8 +125,8 @@ Read live on `origin/main` 84be973. Each decision is cited by the sprint build c
   `.github/workflows/ci.yml`, `scripts/ci-changes.mjs`, `scripts/ci-gate.mjs`.
 - **D5 — Jobs and the gate.** `verify-outbox` (`check.sh quick`, then `check.sh teeth`: a mutant whose
   `delete_destination` no longer drains must make `noOrphan` a found violation — *amended 2026-10-16: the settle-budget
-  mutant first locked here is not reached within 25 random steps, so it proved nothing*) and `verify-flags` (`lake build`, axioms = exactly the three standard ones and
-  no `sorryAx`, diff-test seeds 1–3, then the whitespace mutant built in a temp copy must disagree). Toolchains cached
+  mutant first locked here is not reached within 25 random steps, so it proved nothing*) and `verify-flags` (`lake build`, axioms = a subset of the three standard ones for
+  every theorem in `Proofs.lean`, never `sorryAx` (*amended 2026-10-16, cf9eb51*), diff-test seeds 1–3, then the whitespace mutant built in a temp copy must disagree). Toolchains cached
   (`~/.elan` + `.lake` keyed on toolchain/manifest/sources; `~/.quint`). `gate` needs both; `ci-gate.mjs` gains
   `--filtered job=output,…`: a skip is ok only when `changes` set that output to `false`.
 - **D6 — `verify/README.md` rules**: (1) a model mirrors pinned code; (2) protocols get a per-PR simulation; (3) the
