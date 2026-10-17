@@ -22,7 +22,7 @@ intent_match: null
 
 # Raw — the nightly model check found `noOrphan` violated
 
-Filed by `verify-nightly.yml` (verify-module S2.1) on 2026-10-17. Run: https://github.com/danybgoode/golden-frijoles/actions/runs/39001310753
+Filed by `verify-nightly.yml` (verify-module S2.1) on 2026-10-17. Run: https://github.com/danybgoode/golden-frijoles/actions/runs/39001461825
 
 - `sim` `outbox_timed`, depth ≤25: expected `[ok]`, got `[violation]` — trace `verify/quint/traces/nightly-sim-outbox_timed-noOrphan.itf.json`
 - `sim` `outbox_untimed`, depth ≤25: expected `[ok]`, got `[violation]` — trace `verify/quint/traces/nightly-sim-outbox_untimed-noOrphan.itf.json`
