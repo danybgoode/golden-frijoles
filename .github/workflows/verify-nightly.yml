@@ -54,8 +54,11 @@ jobs:
           key: quint-0.33.0-apalache-${{ runner.os }}
       # Its exit code is not the verdict: verify-nightly.mjs reads every row (a finding is filed, a broken row is red).
       - name: Model check (${{ inputs.depth || 'full' }})
+        env:
+          DEPTH: ${{ inputs.depth }}
+        # A schedule has no inputs: an empty DEPTH is the nightly's full table. Only `quick` is the short one.
         run: |
-          mode=${{ inputs.depth == 'quick' && 'quick' || 'full' }}
+          if [ "$DEPTH" = quick ]; then mode=quick; else mode=full; fi
           bash verify/quint/check.sh "$mode" --itf-dir "$RUNNER_TEMP/itf" --rows "$RUNNER_TEMP/rows.tsv" \
             || echo "check.sh exited $? — the rows decide"
       - name: File findings · log Jev's calls · the 30 ping
