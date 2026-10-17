@@ -587,6 +587,13 @@ independently shippable slice of value.
 
   A source is named only when two disagree (`⚑`). A shipped epic reads ✓ and N of N. The 5-hour line is a meter, to
   the minute. Every colour and glyph is pinned by a test. Interactive walkthrough owed to Daniel.
+- ✅ [Template scripts hold to the gates their consumers run](09-platform-infra/template-scripts-consumer-gates/README.md)
+  — **shipped 2026-10-17** (#399, plugin + kit 1.12.0). The rails are linted where they're written: one
+  `no-unused-vars` config, run by the mirror and by this repo's `npm run lint`. `frijoles-kit init` writes one marked
+  `.prettierignore` block for the vendored rails. All 59 entries decide "run directly?" through `lib/is-main.mjs`
+  (realpath on both sides), guarded by `check-is-main`. `perf-probe` refuses private, loopback and link-local
+  addresses unless `allowPrivate: true`: before any request, at connect, and never through an env proxy. It also
+  refuses client scripts on another origin.
 - ✅ [Intent match (wave 1, advisory)](09-platform-infra/intent-match/README.md): every groomed pitch keeps the ask
   **verbatim** (claims + teach-back) and is **scored against it** by Jev — coverage in and out, clarity, teach-back, a
   total marked *uncalibrated*, and a routed next artifact per gap; no key means "could not look", never a number.
@@ -666,6 +673,10 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-17**: `template-scripts-consumer-gates` **shipped** (quote $5–17 → ≈$26.24). The plugin's shared
+  scripts now pass the gates their consumers run. The lock found 59 hand-rolled entry checks, not 22, and the
+  verifier found that an env proxy (Node 24) could route the probe around its own address check. Fixed, and tested
+  with the same repro.
 - **2026-10-17**: `build-view-one-story` **shipped** (quote $15–34; actual not measured, see the retro). The build
   view is redrawn as Daniel's approved design. Every state is pinned as golden lines, every colour by a mod test, and
   every glyph is single-width by rule. Its own branch caught two bugs before review:

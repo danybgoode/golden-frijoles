@@ -208,7 +208,10 @@ one-liner + why + date shape.
 - **A script with a co-located pure-logic test file MUST guard its `main()` call with an `isMain`
   check.** Importing a script that calls `main()` unconditionally at module scope re-executes the
   whole script for real (shell-outs, notifications, git pushes, all of it) the moment a test file
-  loads it for its pure helpers: `const isMain = process.argv[1] && …; if (isMain) main()`.
+  loads it for its pure helpers: `if (isMain(import.meta.url)) main()`, with `isMain` from `lib/is-main.mjs`.
+  **Never hand-roll the compare** (template-scripts-consumer-gates, 2026-10-17): a lexical
+  `resolve(argv[1]) === fileURLToPath(…)` is false behind a symlink, so the script exits 0 having done nothing. 34 of 59
+  entries did that. The helper realpaths both sides, and `check-is-main.mjs` fails CI on any other spelling.
 - **Run the repo binaries directly when `npm`/`npx` chokes.** A sibling worktree that reuses the same
   `package.json` name as the main checkout breaks npm **workspace resolution** at the monorepo root.
   Use the binary path directly (`node /…/node_modules/typescript/bin/tsc --noEmit`,
@@ -2415,3 +2418,16 @@ one-liner + why + date shape.
   out from under you: two smoke runs showed `main`'s old view. Copy the bundle to a scratch dir and pass
   `--repo-root`.
 
+### Claims a guard rests on, and rails that act when you look (template-scripts-consumer-gates, 2026-10-17)
+- **A security residual is a claim; test it like one.** perf-probe's header said "node:http ignores HTTP(S)_PROXY".
+  Under Node 24's `NODE_USE_ENV_PROXY=1` the global agent proxies, the guarded lookup checked the PROXY's address,
+  and a refused name returned 200. Two security passes read past it, and the verifier reproduced it in a minute with
+  a local proxy. Write each residual so a test could fail it, or don't write it.
+- **Never run a rail with `--help` to find out what it does.** `build-order-sync.mjs` ignores the flag and runs: it
+  switched the checkout to a branch and committed. The next two commits landed there, and a PR comment cited a fix
+  that wasn't on the PR. `owed-ledger.mjs --bogus` wrote a ledger into the template. Read the arg parser, or run it in
+  a scratch copy. Check `git branch --show-current` before claiming a push.
+- **A diff too big for one external read needs the verifier on the mechanical part, named.** At 292 KB (59 entry
+  migrations plus vendored copies), agy refused on argv size, and gpt-oss refused even 17 files on context. Every
+  external pass was scoped, so the fresh verifier was the only full read of the migration, and it did that because
+  the brief asked for it.
