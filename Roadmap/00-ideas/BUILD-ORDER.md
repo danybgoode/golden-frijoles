@@ -5,16 +5,17 @@
 
 # Build order — the six stages
 
-> **Generated 2026-10-16 — do not hand-edit.** One stage per initiative, decided in one place
+> **Generated 2026-10-17 — do not hand-edit.** One stage per initiative, decided in one place
 > (`scripts/lib/stage.mjs`): Backlog · Refining · Ready · Building · QA · Shipped.
 > This committed file reads the docs alone, so **Building and QA are not here** — they are facts git
 > and GitHub hold. For the live board run `node scripts/build-order.mjs --live`, or open the Hub board.
 
-## Backlog (3)
+## Backlog (4)
 
 _seeds with no pitch yet._
 
 - [Delivery back on: a dispatch schedule the free Vercel plan allows](seeds/delivery-back-on.md) — 01 Growth Engine · seed · Feature · risk: High · _docs: status raw_
+- [Nightly model check: noOrphan violated](seeds/verify-no-orphan.md) — 09 Platform Infra · seed · Bug · risk: High · _docs: status raw_
 - [The Satisfied ask: a rating the product can ask, read as TARS's last stage](seeds/satisfied-ask.md) — 01 Growth Engine · seed · Feature · risk: Low · _docs: status raw_
 - [Verify for projects: the verification depth ladder offered to every project](seeds/verify-for-projects.md) — 09 Platform Infra · seed · Feature · risk: High · _docs: status raw_
 
@@ -140,4 +141,4 @@ _merged, deployed and closed._
 - [The portfolio loop test fails intermittently in CI and has been quarantined](seeds/portfolio-loop-flake.md) — 02 Commercial · seed · Bug · risk: Low · appetite S · _docs: status shipped_
 
 ---
-_101 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._
+_102 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._
