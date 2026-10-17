@@ -287,6 +287,11 @@ test('verify-nightly.yml runs on a schedule or by hand only, never on a PR, with
   assert.match(on, /\n {2}workflow_dispatch:/);
   assert.doesNotMatch(on, /pull_request|push:/);
   assert.match(yml, /timeout-minutes: \d+/);
+  // The depth: a schedule has no inputs, so an empty DEPTH must mean the exhaustive table, never the quick one.
+  assert.match(yml, /DEPTH: \$\{\{ inputs\.depth \}\}/);
+  assert.match(yml, /if \[ "\$DEPTH" = quick \]; then mode=quick; else mode=full; fi/);
+  assert.match(yml, /bash verify\/quint\/check\.sh "\$mode"/);
+  assert.doesNotMatch(yml, /mode=quick\n/);
   assert.match(
     yml,
     /node scripts\/verify-nightly\.mjs --rows "\$RUNNER_TEMP\/rows\.tsv" --itf-dir "\$RUNNER_TEMP\/itf"/
@@ -320,5 +325,15 @@ test('the call sites: main() exits with nightlyExitCode; the shadow is published
   assert.match(src, /publish\(sh, \{\n\s+\.\.\.SHADOW_PUBLISH,/);
   assert.equal((src.match(/force: true/g) ?? []).length, 1, 'only SHADOW_PUBLISH force-pushes');
   assert.match(src, /traceExists: \(p\) => insideDir\(ctx\.itfDir, p\) && existsSync\(p\)/);
+  assert.match(
+    src,
+    /for \(const gone of paths\.remove\?\.\(\) \?\? \[\]\) sh\.run\('git', \['rm', '-q', '--', gone\]\);/
+  );
+  // Nothing after the spread may override where the shadow branch comes from or how it is pushed.
+  const call = src.slice(src.indexOf('...SHADOW_PUBLISH,'));
+  const keys = [...call.slice(0, call.indexOf('\n  });')).matchAll(/^ {4}([a-zA-Z]+)[:,]/gm)].map(
+    (m) => m[1]
+  );
+  assert.deepEqual(keys, ['home', 'dryRun', 'paths', 'message', 'title', 'body']);
   assert.match(src, /\[`HEAD:refs\/heads\/\$\{branch\}`\]|`HEAD:refs\/heads\/\$\{branch\}`/);
 });
