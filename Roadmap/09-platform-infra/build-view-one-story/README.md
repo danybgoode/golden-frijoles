@@ -1,6 +1,6 @@
 ---
-status: scaffolded   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Building       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+status: in-progress  # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+phase: In review       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
 locked_at: "2026-10-17T13:50:39Z"
 slug: build-view-one-story
@@ -172,6 +172,18 @@ cites them.
   `build-state.mjs` stay byte-identical (`render-hook-vendor`, `check-script-parity`, skills-ci `cmp`). Bump, then
   `plugin-checksums`, then `render-plugin-release` (LEARNINGS, build-view-upgrade). No migration, no flag (the
   seed's carve-out). Rollback is the previous plugin version.
+
+**Amended during the build (2026-10-17), said out loud:**
+- **The live clock probe (D9) was not run.** Both a headless session with a probe line and an engine-harness run
+  under two `TZ` values were refused by the session's permissions. `clockTime` uses the runtime's `getHours`, the
+  specs pin it under Node's local time, and smoke step 5 is the check that the mod's runtime agrees.
+- **`refine/` is not a work branch** (`lib/work-branch.mjs` reads `feat|fix|chore|spike|bug|docs/`). Smoke step 2
+  now uses `docs/<seed>`. An idea's own commits on its branch never lift it out of Refining.
+- **Evidence lifts a docs-only board** (S1.2 fix, seen on this branch). A fresh worktree has no facts snapshot until
+  the first online refresh, so the track said Ready over seven story commits. Story commits now lift it to Building
+  and an open PR to QA. The board's own stage still wins whenever it says more.
+- **A fourth copy of the resolver**, `skills/scripts/build-state.mjs` (skills CI `cmp`s it against the template), is
+  synced with the other three.
 
 **Routing:** one sprint and three hot files that every story touches, so the architect (Opus) builds it in place on
 `feat/build-view-one-story`. There's no fan-out: parallel builders would only collide on `renderLines`. Review goes
