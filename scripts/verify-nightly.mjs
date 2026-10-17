@@ -72,19 +72,58 @@ export function classify(rows) {
 }
 
 const kebab = (s) => s.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+// An invariant name becomes a git ref and a file name, so only a plain identifier may (agy security lens, #387).
+export const SAFE_INVARIANT = /^[A-Za-z][A-Za-z0-9]{0,63}$/;
 export const findingSlug = (row) => `verify-${kebab(row.invariant)}`;
 export const findingBranch = (row) => `claude/${findingSlug(row)}`;
 export const seedPath = (row) => `Roadmap/00-ideas/seeds/${findingSlug(row)}.md`;
-export const tracePath = (row) => `verify/quint/traces/nightly-${row.module}-${row.invariant}.itf.json`;
+export const tracePath = (row) =>
+  `verify/quint/traces/nightly-${row.mode}-${row.module}-${row.invariant}.itf.json`;
 
-/** 'new' (open a branch), 'branch' (push to it), or 'on-main' (filed and merged: nothing to do). */
-export const filingState = ({ branchExists, seedOnMain }) =>
-  branchExists ? 'branch' : seedOnMain ? 'on-main' : 'new';
+/**
+ * One filing per invariant: a real violation usually shows in a sim row AND a bmc row, often in both timing modes,
+ * and they belong in one seed (verifier #387). An unsafe name is not filed; it is reported as broken.
+ */
+export function groupFindings(findings) {
+  const groups = new Map();
+  const unsafe = [];
+  for (const r of findings) {
+    if (!SAFE_INVARIANT.test(r.invariant ?? '')) unsafe.push(r);
+    else groups.set(r.invariant, [...(groups.get(r.invariant) ?? []), r]);
+  }
+  return { groups: [...groups.entries()].map(([invariant, rows]) => ({ invariant, rows })), unsafe };
+}
 
-export function seedText(row, summary, { date, runUrl }) {
+/**
+ * What to do with one invariant tonight. A seed already on main is filed, whatever branches survive the merge (this
+ * repo keeps merged branches, so checking the branch first re-filed a merged finding every night — verifier #387).
+ * Rows without a trace are not filed and turn the run red.
+ *   → { state: 'on-main' | 'branch' | 'new', file: rows to file, untraced: rows with no trace }
+ */
+export function findingDecision({ rows, branchExists, seedOnMain, traceExists }) {
+  const state = seedOnMain ? 'on-main' : branchExists ? 'branch' : 'new';
+  if (state === 'on-main') return { state, file: [], untraced: [] };
+  return {
+    state,
+    file: rows.filter((r) => r.itf && traceExists(r.itf)),
+    untraced: rows.filter((r) => !r.itf || !traceExists(r.itf)),
+  };
+}
+
+export function seedText({ invariant, rows }, summaries, { date, runUrl }) {
+  const first = rows[0];
+  const lines = rows
+    .map(
+      (r) =>
+        `- \`${r.mode}\` \`${r.module}\`, depth ${r.depth}: expected \`${r.expected}\`, got \`${r.got}\` — trace \`${tracePath(r)}\``
+    )
+    .join('\n');
+  const traces = rows
+    .map((r, i) => `### \`${r.mode}\` · \`${r.module}\`\n\n\`\`\`\n${summaries[i].trim()}\n\`\`\``)
+    .join('\n\n');
   return `---
-title: "Nightly model check: ${row.invariant} violated in ${row.module}"
-slug: ${findingSlug(row)}
+title: "Nightly model check: ${invariant} violated"
+slug: ${findingSlug(first)}
 status: raw
 area: "09"
 type: bug
@@ -104,22 +143,19 @@ flag_key: null
 intent_match: null
 ---
 
-# Raw — the nightly deep check found \`${row.invariant}\` violated
+# Raw — the nightly model check found \`${invariant}\` violated
 
-Filed by \`verify-nightly.yml\` (verify-module S2.1) on ${date}: the exhaustive check (\`${row.mode}\`, depth ${row.depth})
-expected \`${row.expected}\` for \`${row.invariant}\` in \`${row.module}\` and got \`${row.got}\`.
-Run: ${runUrl}
+Filed by \`verify-nightly.yml\` (verify-module S2.1) on ${date}. Run: ${runUrl}
+
+${lines}
 
 **Before anything else, decide which is wrong: the code or the model.** The model mirrors the functions pinned in
 \`verify/pins.json\`; a model that no longer describes the code is fixed in \`verify/\`, and a real bug is shaped from
-here with \`refine\`. The trace is \`${tracePath(row)}\`; re-print it with
-\`node verify/quint/summarize-itf.mjs ${tracePath(row)}\`.
+here with \`refine\`. Re-print a trace with \`node verify/quint/summarize-itf.mjs <trace>\`.
 
-## The counterexample, one step per line
+## The counterexamples, one step per line
 
-\`\`\`
-${summary.trim()}
-\`\`\`
+${traces}
 `;
 }
 
@@ -130,7 +166,8 @@ ${summary.trim()}
  *   main    — { log: {since, rows} | null, marker: object | null }       what main has
  *   branch  — { log: {since, rows} | null, marker: object | null } | null what the open shadow branch has
  *   merged  — gh's merged PRs
- * Returns { skip } when the log isn't set up on main, null when no PR is new, else { log, marker, ping, report, fresh }
+ * Returns { skip } when the log isn't set up on main, null when nothing is new and no ping is owed, else
+ * { log, marker, ping, report, fresh }
  * — `ping` true only the first time the counted rows reach the threshold with no marker on main or the branch.
  */
 export async function planShadow({ main, branch, merged, ask, diffOf }) {
@@ -143,12 +180,22 @@ export async function planShadow({ main, branch, merged, ask, diffOf }) {
     const { req } = jevRequest({ title: pr.title, ...diffOf(pr) });
     fresh.push(shadowRow(pr, await ask(req), parseLabel(pr.body)));
   }
-  if (fresh.length === 0) return null;
   const rows = [...logged, ...fresh];
   const r = report(rows);
   const marker = main.marker ?? branch?.marker ?? null;
   const ping = decidePing({ counted: r.counted, markerExists: Boolean(marker) });
+  // Nothing new and no ping owed: nothing to write. An undelivered ping is retried even on a night with no merge.
+  if (fresh.length === 0 && !ping) return null;
   return { log: { since: main.log.since, rows }, marker, ping, report: r, fresh };
+}
+
+/**
+ * After the ping (if any): the marker to keep, and whether the marker + owed line must be written to the branch.
+ * The marker exists only once a ping was DELIVERED; it rides the shadow branch until main has it.
+ */
+export function shadowWrites({ plan, mainMarker, delivered, date }) {
+  const marker = plan.ping && delivered ? { pinged_at: date, ...plan.report } : plan.marker;
+  return { marker, writeMarker: Boolean(marker) && !mainMarker };
 }
 
 // ── Side effects ──────────────────────────────────────────────────────────────────────────────────────────────────
@@ -210,39 +257,50 @@ function publish(sh, { branch, from, force, paths, message, title, body, home, d
 }
 
 function fileFindings(sh, findings, ctx) {
-  for (const row of findings) {
-    const branch = findingBranch(row);
-    const branchExists = Boolean(sh.tryRun('git', ['ls-remote', '--exit-code', '--heads', 'origin', branch]));
-    const seedOnMain = sh.tryRun('git', ['cat-file', '-e', `origin/main:${seedPath(row)}`]) !== null;
-    const state = filingState({ branchExists, seedOnMain });
-    console.log(`finding: ${row.module} ${row.invariant} (${row.mode}, depth ${row.depth}) — ${state}`);
-    if (state === 'on-main') continue;
-    if (!row.itf || !existsSync(row.itf)) {
-      console.log(
-        `  no trace at "${row.itf}" — filing without one is filing nothing useful; the run goes red`
-      );
+  const { groups, unsafe } = groupFindings(findings);
+  for (const r of unsafe) {
+    console.log(`finding with an unsafe invariant name "${r.invariant}" — not filed; the run goes red`);
+    ctx.red = true;
+  }
+  for (const group of groups) {
+    const head = group.rows[0];
+    const branch = findingBranch(head);
+    const decision = findingDecision({
+      rows: group.rows,
+      branchExists: Boolean(sh.tryRun('git', ['ls-remote', '--exit-code', '--heads', 'origin', branch])),
+      seedOnMain: sh.tryRun('git', ['cat-file', '-e', `origin/main:${seedPath(head)}`]) !== null,
+      traceExists: existsSync,
+    });
+    console.log(`finding: ${group.invariant} (${group.rows.length} row(s)) — ${decision.state}`);
+    for (const r of decision.untraced) {
+      console.log(`  no trace for ${r.mode} ${r.module} at "${r.itf}" — not filed; the run goes red`);
       ctx.red = true;
-      continue;
     }
-    if (branchExists) sh.run('git', ['fetch', '-q', 'origin', `+${branch}:refs/remotes/origin/${branch}`]);
-    const trace = readFileSync(row.itf, 'utf8');
-    const summary = sh.run('node', ['verify/quint/summarize-itf.mjs', row.itf]);
+    if (decision.file.length === 0) continue;
+    if (decision.state === 'branch')
+      sh.run('git', ['fetch', '-q', 'origin', `+${branch}:refs/remotes/origin/${branch}`]);
+    const filed = { invariant: group.invariant, rows: decision.file };
+    const traces = filed.rows.map((r) => readFileSync(r.itf, 'utf8'));
+    const summaries = filed.rows.map((r) => sh.run('node', ['verify/quint/summarize-itf.mjs', r.itf]));
     publish(sh, {
       branch,
-      from: branchExists ? `origin/${branch}` : 'origin/main',
+      from: decision.state === 'branch' ? `origin/${branch}` : 'origin/main',
       force: false,
       home: ctx.home,
       dryRun: ctx.dryRun,
       paths: {
-        write: [() => put(tracePath(row), trace), () => put(seedPath(row), seedText(row, summary, ctx))],
-        add: [tracePath(row), seedPath(row)],
+        write: [
+          ...filed.rows.map((r, i) => () => put(tracePath(r), traces[i])),
+          () => put(seedPath(head), seedText(filed, summaries, ctx)),
+        ],
+        add: [...filed.rows.map(tracePath), seedPath(head)],
       },
-      message: `chore(verify): nightly — ${row.invariant} violated in ${row.module} (${ctx.date}) [risk LOW]`,
-      title: `verify: nightly model check found ${row.invariant} violated (${row.module})`,
+      message: `chore(verify): nightly — ${group.invariant} violated (${ctx.date}) [risk LOW]`,
+      title: `verify: nightly model check found ${group.invariant} violated`,
       body:
-        `The nightly deep check (\`verify-nightly.yml\`, verify-module S2.1) found \`${row.invariant}\` violated in ` +
-        `\`${row.module}\` at depth ${row.depth}. This PR adds a raw seed and the trace; it changes no code.\n\n` +
-        `Run: ${ctx.runUrl}\n\nDecide first: is the code wrong, or the model? (seed: \`${seedPath(row)}\`)\n\n` +
+        `The nightly model check (\`verify-nightly.yml\`, verify-module S2.1) found \`${group.invariant}\` violated ` +
+        `in ${filed.rows.length} row(s). This PR adds a raw seed and the traces; it changes no code.\n\n` +
+        `Run: ${ctx.runUrl}\n\nDecide first: is the code wrong, or the model? (seed: \`${seedPath(head)}\`)\n\n` +
         'Verify depth: off\n',
     });
   }
@@ -265,7 +323,7 @@ async function shadow(sh, ctx) {
   const { askJev, loadJevConfig } = await import('./lib/jev.mjs');
   if (loadJevConfig({ root: ROOT }).egress !== true || !process.env.TYPESAFE_API_KEY) {
     console.log(
-      'shadow: Jev cannot be asked (egress off or no TYPESAFE_API_KEY) — nothing logged; tomorrow retries'
+      'shadow: Jev cannot be asked (egress off or no TYPESAFE_API_KEY) — nothing logged; the next run retries'
     );
     return;
   }
@@ -287,7 +345,8 @@ async function shadow(sh, ctx) {
     const mc = pr.mergeCommit?.oid;
     if (!mc) return { stat: '', diff: '' };
     return {
-      stat: sh.tryRun('git', ['diff', '--stat', `${mc}^1`, mc]) ?? '',
+      // Capped: Jev's whole state has a budget, and a 500-file stat would crowd out the diff that matters.
+      stat: (sh.tryRun('git', ['diff', '--stat', `${mc}^1`, mc]) ?? '').slice(0, 20_000),
       diff: sh.tryRun('git', ['diff', `${mc}^1`, mc, '--', ...PATHS]) ?? '',
     };
   };
@@ -304,16 +363,14 @@ async function shadow(sh, ctx) {
     console.log(`shadow: #${r.pr} jev=${r.jev ?? `— (${r.jev_error})`} builder=${r.builder_label ?? '—'}`);
   console.log(formatReport(plan.report));
 
-  let marker = plan.marker;
-  if (plan.ping) {
-    const delivered = await ctx.notify(pingText(plan.report));
-    if (delivered) marker = { pinged_at: ctx.date, ...plan.report };
-    else console.log('shadow: the 30 ping was NOT delivered — no marker, so tomorrow tries again');
-  }
+  const delivered = plan.ping ? await ctx.notify(pingText(plan.report)) : false;
+  if (plan.ping && !delivered)
+    console.log('shadow: the 30 ping was NOT delivered — no marker, so the next run tries again');
+  const { marker, writeMarker } = shadowWrites({ plan, mainMarker: main.marker, delivered, date: ctx.date });
   const write = [() => put(LOG_PATH, serialiseLog(plan.log))];
   const add = [LOG_PATH];
   // The marker and its owed line travel together, and are re-applied each night until the shadow PR merges.
-  if (marker && !main.marker) {
+  if (writeMarker) {
     write.push(() => put(MARKER_PATH, `${JSON.stringify(marker, null, 2)}\n`));
     write.push(() =>
       put(

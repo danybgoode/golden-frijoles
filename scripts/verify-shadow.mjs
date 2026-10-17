@@ -44,14 +44,14 @@ export const serialiseLog = ({ since, rows }) =>
   [JSON.stringify({ since }), ...rows.map((r) => JSON.stringify(r))].join('\n') + '\n';
 
 /**
- * The merged PRs still to ask: merged at or after `since`, not a nightly's own `claude/verify-*` data PR, and not
+ * The merged PRs still to ask: merged at or after `since`, not an agent's `claude/` data PR (D9), and not
  * already logged (on main or on the open shadow branch). Oldest first, so the log reads in merge order.
  */
 export function pendingPrs(merged, { since, logged }) {
   const seen = new Set(logged.map((r) => r.pr));
   return merged
     .filter((p) => since && p.mergedAt && p.mergedAt >= since)
-    .filter((p) => !String(p.headRefName ?? '').startsWith('claude/verify-'))
+    .filter((p) => !String(p.headRefName ?? '').startsWith('claude/'))
     .filter((p) => !seen.has(p.number))
     .sort((a, b) => (a.mergedAt < b.mergedAt ? -1 : 1));
 }

@@ -31,10 +31,11 @@ test('the log round-trips its header and rows', () => {
   assert.deepEqual(parseLog(''), { since: null, rows: [] });
 });
 
-test('pending: merged since the start, not a nightly data PR, not already logged, oldest first', () => {
+test("pending: merged since the start, not an agent's claude/ data PR, not already logged, oldest first", () => {
   const merged = [
     { number: 5, mergedAt: '2026-10-20T00:00:00Z', headRefName: 'feat/x' },
     { number: 4, mergedAt: '2026-10-19T00:00:00Z', headRefName: 'claude/verify-jev-shadow' },
+    { number: 6, mergedAt: '2026-10-19T01:00:00Z', headRefName: 'claude/build-order-sync' },
     { number: 3, mergedAt: '2026-10-18T00:00:00Z', headRefName: 'feat/y' },
     { number: 2, mergedAt: '2026-10-17T12:00:00Z', headRefName: 'feat/z' },
     { number: 1, mergedAt: '2026-10-16T00:00:00Z', headRefName: 'feat/old' },

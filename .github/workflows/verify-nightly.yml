@@ -34,9 +34,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 150
     steps:
+      # No token left in .git/config: the model check runs third-party code (npx quint, the Apalache download), and
+      # only the filing step below needs to push. It gets the token through `gh auth setup-git` (agy + verifier, #387).
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-node@v7
         with:
           node-version: 22
@@ -61,9 +64,12 @@ jobs:
           TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CICD_CHAT_ID: ${{ secrets.TELEGRAM_CICD_CHAT_ID }}
-        run: node scripts/verify-nightly.mjs --rows "$RUNNER_TEMP/rows.tsv"
+        run: |
+          gh auth setup-git
+          node scripts/verify-nightly.mjs --rows "$RUNNER_TEMP/rows.tsv"
+      # cancelled() too: a run killed by timeout-minutes (a hung Apalache) ends cancelled, not failed (verifier #387).
       - name: Ping Telegram on red
-        if: failure()
+        if: failure() || cancelled()
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CICD_CHAT_ID: ${{ secrets.TELEGRAM_CICD_CHAT_ID }}

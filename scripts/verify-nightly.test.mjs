@@ -2,12 +2,15 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   classify,
-  filingState,
   findingBranch,
+  findingDecision,
+  groupFindings,
   parseRows,
   planShadow,
   seedPath,
   seedText,
+  shadowWrites,
+  tracePath,
 } from './verify-nightly.mjs';
 
 const row = (o) => ({ mode: 'bmc', module: 'outbox_timed', depth: '10', seconds: '1', itf: '', ...o });
@@ -55,18 +58,86 @@ test("check.sh's --rows format parses, including the trace column", () => {
   });
 });
 
-test('already filed: a branch on the remote is updated; a seed on main files nothing; else a new branch', () => {
-  assert.equal(filingState({ branchExists: false, seedOnMain: false }), 'new');
-  assert.equal(filingState({ branchExists: true, seedOnMain: false }), 'branch');
-  assert.equal(filingState({ branchExists: true, seedOnMain: true }), 'branch');
-  assert.equal(filingState({ branchExists: false, seedOnMain: true }), 'on-main');
+test('already filed: a seed on main files nothing, EVEN while its merged branch survives (verifier #387)', () => {
+  const rows = [row({ invariant: 'noOrphan', itf: '/t/a' })];
+  const has = () => true;
+  assert.equal(
+    findingDecision({ rows, branchExists: true, seedOnMain: true, traceExists: has }).state,
+    'on-main'
+  );
+  assert.deepEqual(
+    findingDecision({ rows, branchExists: true, seedOnMain: true, traceExists: has }).file,
+    []
+  );
+  assert.equal(
+    findingDecision({ rows, branchExists: false, seedOnMain: true, traceExists: has }).state,
+    'on-main'
+  );
+  assert.equal(
+    findingDecision({ rows, branchExists: true, seedOnMain: false, traceExists: has }).state,
+    'branch'
+  );
+  assert.equal(
+    findingDecision({ rows, branchExists: false, seedOnMain: false, traceExists: has }).state,
+    'new'
+  );
+});
+
+test('a row with no trace is not filed and is reported (the run goes red); the traced rows still file', () => {
+  const rows = [
+    row({ invariant: 'noOrphan', itf: '/t/a' }),
+    row({ invariant: 'noOrphan', mode: 'sim', itf: '' }),
+  ];
+  const d = findingDecision({
+    rows,
+    branchExists: false,
+    seedOnMain: false,
+    traceExists: (p) => p === '/t/a',
+  });
+  assert.equal(d.file.length, 1);
+  assert.equal(d.untraced.length, 1);
+});
+
+test('one filing per invariant: sim + bmc rows and both modules land in ONE seed, with a trace each', () => {
+  const findings = [
+    row({ invariant: 'noOrphan', mode: 'sim', module: 'outbox_timed' }),
+    row({ invariant: 'noOrphan', mode: 'bmc', module: 'outbox_timed' }),
+    row({ invariant: 'noOrphan', mode: 'sim', module: 'outbox_untimed' }),
+    row({ invariant: 'noVanish', mode: 'sim', module: 'outbox_timed' }),
+  ];
+  const { groups } = groupFindings(findings);
+  assert.deepEqual(
+    groups.map((g) => [g.invariant, g.rows.length]),
+    [
+      ['noOrphan', 3],
+      ['noVanish', 1],
+    ]
+  );
+  const paths = groups[0].rows.map(tracePath);
+  assert.equal(
+    new Set(paths).size,
+    3,
+    'the mode is in the trace name, so sim and bmc never overwrite each other'
+  );
+  const seed = seedText(groups[0], ['s1', 's2', 's3'], { date: '2026-10-20', runUrl: 'u' });
+  for (const p of paths) assert.ok(seed.includes(p));
+  assert.match(seed, /### `sim` · `outbox_untimed`\n\n```\ns3\n```/);
+});
+
+test('an invariant name that is not a plain identifier is never turned into a ref or a path', () => {
+  const { groups, unsafe } = groupFindings([row({ invariant: '../../main' }), row({ invariant: 'a:b' })]);
+  assert.equal(groups.length, 0);
+  assert.equal(unsafe.length, 2);
 });
 
 test('one branch and one seed per invariant, kebab-cased, never main', () => {
   const r = row({ invariant: 'noSendAfterTerminal' });
   assert.equal(findingBranch(r), 'claude/verify-no-send-after-terminal');
   assert.equal(seedPath(r), 'Roadmap/00-ideas/seeds/verify-no-send-after-terminal.md');
-  const seed = seedText(r, 'step 1\nstep 2\n', { date: '2026-10-20', runUrl: 'https://example.test/run' });
+  const seed = seedText({ invariant: r.invariant, rows: [r] }, ['step 1\nstep 2\n'], {
+    date: 'd',
+    runUrl: 'u',
+  });
   assert.match(seed, /^---\ntitle: .*\nslug: verify-no-send-after-terminal\nstatus: raw\n/);
   assert.match(seed, /```\nstep 1\nstep 2\n```/);
 });
@@ -124,9 +195,19 @@ test('the branch carries rows main lacks; nothing is asked twice', async () => {
   );
 });
 
+// One night the way shadow() runs it: plan, deliver (or not), then shadowWrites decides the marker the branch keeps.
+async function night({ main, branch, merged, delivered = true }) {
+  const plan = await planShadow({ main, branch, merged: [...merged], diffOf, ask });
+  if (!plan) return { branch, pinged: false };
+  const { marker, writeMarker } = shadowWrites({ plan, mainMarker: main.marker, delivered, date: 'd' });
+  return {
+    branch: { log: plan.log, marker: writeMarker ? marker : null },
+    pinged: plan.ping && delivered,
+    plan,
+  };
+}
+
 test('29 → 30 → 31 labelled PRs: exactly one ping, at 30', async () => {
-  // Night by night, the way the nightly runs it: the shadow PR stays open, so the branch carries the rows and,
-  // once the ping is delivered, the marker.
   const main = { log: { since: SINCE, rows: [] }, marker: null };
   let branch = null;
   const merged = [];
@@ -134,12 +215,35 @@ test('29 → 30 → 31 labelled PRs: exactly one ping, at 30', async () => {
   for (let n = 1; n <= 31; n++) {
     merged.push(pr(n));
     if (n < 29) continue; // the first 28 merge before the nights this test watches
-    const plan = await planShadow({ main, branch, merged: [...merged], diffOf, ask });
-    if (plan.ping) pings.push(plan.report.counted);
-    branch = { log: plan.log, marker: plan.ping ? { pinged_at: 'd', ...plan.report } : plan.marker };
+    const out = await night({ main, branch, merged });
+    if (out.pinged) pings.push(out.plan.report.counted);
+    branch = out.branch;
   }
   assert.deepEqual(pings, [30]);
   assert.equal(branch.log.rows.length, 31);
+  assert.equal(branch.marker.counted, 30, 'the marker records the count it pinged at');
+});
+
+test('an undelivered ping writes no marker, and is retried the next night even with no new merge', async () => {
+  const main = { log: { since: SINCE, rows: [] }, marker: null };
+  const merged = Array.from({ length: 30 }, (_, i) => pr(i + 1));
+  const first = await night({ main, branch: null, merged, delivered: false });
+  assert.equal(first.pinged, false);
+  assert.equal(first.branch.marker, null);
+  const second = await night({ main, branch: first.branch, merged, delivered: true });
+  assert.equal(second.pinged, true, 'nothing new merged, but the owed ping is retried');
+  assert.ok(second.branch.marker);
+  const third = await night({ main, branch: second.branch, merged });
+  assert.equal(third.pinged, false);
+});
+
+test('shadowWrites: once main has the marker, the branch stops re-writing it', () => {
+  const plan = { ping: false, marker: { pinged_at: 'd' }, report: {} };
+  assert.equal(
+    shadowWrites({ plan, mainMarker: { pinged_at: 'd' }, delivered: false, date: 'x' }).writeMarker,
+    false
+  );
+  assert.equal(shadowWrites({ plan, mainMarker: null, delivered: false, date: 'x' }).writeMarker, true);
 });
 
 test('a marker already on main never pings again, whatever the count', async () => {
