@@ -80,7 +80,7 @@ cites them.
 
 **Corrections the live system forced (said out loud):**
 - **No epic README carries `appetite:`.** 3 of 92 do. The size comes from `appetite`, else the first letter of
-  `quote_basis` (42 of 92 carry one, e.g. `M, n=24, p25–p75`), else the linked seed's `appetite` (D2).
+  `quote_basis` (40 of 92 carry one, e.g. `M, n=24, p25–p75`), else the linked seed's `appetite` (D2).
 - **The repo name on the header is the plugin's name today.** `index.tsx` hard-codes `golden-frijoles ·` in front of
   every heading. It becomes the repo's own name, from the resolver (D2).
 - **The glyphs move into the resolver.** The design's plain text carries them (`❝ Why`, `▸ Now`), and the CLI output
@@ -101,6 +101,15 @@ cites them.
   longer listed one by one. The JSON keeps `elsewhere.open_epics` (D8).
 - **The token count and the source/age line leave the text.** Both stay in `--json` (`spend.mtok`, `stage_source`,
   `stage_age`, `facts_mode`). The design shows neither, and "each fact once" covers both.
+- **Four more facts leave the text, all kept in `--json`** (named after the verifier's read of #396):
+  - the epic's area (`epic.area`, from the old `Epic` row's `title    area · risk`);
+  - each other worktree's branch name (`elsewhere.worktrees[].branch`), since Around names its title;
+  - the `+N more — node scripts/build-state.mjs --json` pointer, now `+N more`;
+  - the written status in the stage-unknown fallback (`status`, `phase_written`). The `⚑` line still carries the
+    warning.
+- **A title carrying an emoji is one column wide per emoji** (4 of 200 titles on main carry `✅`). The view counts
+  code points as columns (D11 holds for its own glyphs, never for a title someone wrote). This is accepted as a
+  limitation: such a header's right part sits one column past 100.
 
 **Decisions**
 - **D1. Layout, one renderer.** `renderLines(state)` returns the design's lines and nothing else: header, track,
@@ -182,6 +191,11 @@ cites them.
 - **Evidence lifts a docs-only board** (S1.2 fix, seen on this branch). A fresh worktree has no facts snapshot until
   the first online refresh, so the track said Ready over seven story commits. Story commits now lift it to Building
   and an open PR to QA. The board's own stage still wins whenever it says more.
+- **D4 (c) narrowed after review (#396).** It now compares the written phase with the stage the track draws (it
+  had compared with the raw board, and said "board has it at Ready" under a lifted Building track). It fires only for
+  `Shipped` while the drawn stage is Ready or Building, and never on a docs-only board. Verifying or In review written
+  ahead of the board is the cadence. The evidence lift is story commits only: a PR is known only from live facts,
+  and by then the board has read it (a draft as Building).
 - **A fourth copy of the resolver**, `skills/scripts/build-state.mjs` (skills CI `cmp`s it against the template), is
   synced with the other three.
 
