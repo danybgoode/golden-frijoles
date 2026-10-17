@@ -576,7 +576,7 @@ independently shippable slice of value.
   with a mutant it must catch. `verify-nightly.yml` runs the exhaustive check every night and files a violated
   invariant as one `claude/verify-<invariant>` PR. It also logs Jev's verify-depth call beside the builder's
   `Verify depth:` line for every merged PR, in shadow, and pings once at 30 labelled PRs to refine
-  `verify-for-projects`. No product surface, no landing claim (audit D7). **Owed:** when the shadow PR (#392) merges.
+  `verify-for-projects`. No product surface, no landing claim (audit D7).
 - ✅ [Intent match (wave 1, advisory)](09-platform-infra/intent-match/README.md): every groomed pitch keeps the ask
   **verbatim** (claims + teach-back) and is **scored against it** by Jev — coverage in and out, clarity, teach-back, a
   total marked *uncalibrated*, and a routed next artifact per gap; no key means "could not look", never a number.
