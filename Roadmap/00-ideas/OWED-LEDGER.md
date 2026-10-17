@@ -114,7 +114,7 @@ _Generated: 2026-10-17_
 - `Roadmap/02-commercial/commercial-shell/RETROSPECTIVE.md:93` · auth-path — The live browser/session smokes owed to Daniel per Sprint 2/3's QA sections (the connector round-trip, the "paste into a chat app" unfurl check) are still outstanding — unchanged by this session, tracked in their respective sprint docs.
 - `Roadmap/02-commercial/connect-page/RETROSPECTIVE.md:42` · other — **Owed to Daniel:** the walkthrough (a fresh Google signup lands on Connect with no key; the Claude app turns a flag off with the URL it was given).
 - `Roadmap/02-commercial/result-record/RETROSPECTIVE.md:43` · other — The interactive walkthroughs are owed to Daniel (see the sprint files).
-- `Roadmap/09-platform-infra/build-view-one-story/sprint-1.md:152` · other — Every step is owed to the product owner (an interactive walkthrough); an agent can script steps 1–3 in a scratch repo.
+- `Roadmap/09-platform-infra/build-view-one-story/sprint-1.md:164` · other — Every step is owed to the product owner (an interactive walkthrough); an agent can script steps 1–3 in a scratch repo.
 - `Roadmap/09-platform-infra/build-visualization-claude-mods/RETROSPECTIVE.md:65` · auth-path — **Owed to the product owner:** the interactive-TUI half of the Sprint 4 smoke (watching Progress advance and the status become `In review` across turns, with a status row that a headless `-p` session does not have). The mechanics under it are tested; the pixels are not.
 - `Roadmap/09-platform-infra/distribute-what-we-use/RETROSPECTIVE.md:52` · other — the clean-machine stranger install (S2 steps 1–2);
 - `Roadmap/09-platform-infra/distribute-what-we-use/RETROSPECTIVE.md:53` · other — a Telegram test send from your own bot (S3 steps 2–4);
