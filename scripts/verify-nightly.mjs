@@ -16,7 +16,7 @@
 // (rebuilt from main each night, carrying the rows main doesn't have yet). The first time the counted rows reach 30,
 // one Telegram ping, a marker and an owed line ride in the same PR.
 import { execFileSync } from 'node:child_process';
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -109,6 +109,26 @@ export function findingDecision({ rows, branchExists, seedOnMain, traceExists })
     untraced: rows.filter((r) => !r.itf || !traceExists(r.itf)),
   };
 }
+
+/**
+ * The traces a finding branch still carries for this invariant that tonight's rows no longer produce — removed on an
+ * update, so the seed and its traces never disagree (verifier #387).
+ */
+export function staleTraces(existing, invariant, current) {
+  const keep = new Set(current.map((p) => p.split('/').pop()));
+  return existing.filter(
+    (f) => f.startsWith('nightly-') && f.endsWith(`-${invariant}.itf.json`) && !keep.has(f)
+  );
+}
+
+/** Red when the check broke or a finding could not be filed; green otherwise. main() always exits with this. */
+export const nightlyExitCode = ({ broken, red }) => (broken.length > 0 || red ? 1 : 0);
+
+/**
+ * How the shadow branch is published: rebuilt from main and force-pushed every night, so rows main has are never
+ * duplicated and rows only the branch has are carried by planShadow, never lost to a stale base.
+ */
+export const SHADOW_PUBLISH = { branch: SHADOW_BRANCH, from: 'origin/main', force: true };
 
 export function seedText({ invariant, rows }, summaries, { date, runUrl }) {
   const first = rows[0];
@@ -229,6 +249,7 @@ function publish(sh, { branch, from, force, paths, message, title, body, home, d
   sh.run('git', ['switch', '-q', '--force-create', branch, from]);
   try {
     for (const write of paths.write) write();
+    for (const gone of paths.remove?.() ?? []) sh.run('git', ['rm', '-q', '--', gone]);
     sh.run('node', ['scripts/build-order.mjs'], { stdio: 'ignore' });
     sh.run('node', ['scripts/owed-ledger.mjs'], { stdio: 'ignore' });
     sh.run('git', ['add', '--', ...paths.add, ...GENERATED.filter((p) => existsSync(join(ROOT, p)))]);
@@ -294,6 +315,11 @@ function fileFindings(sh, findings, ctx) {
           () => put(seedPath(head), seedText(filed, summaries, ctx)),
         ],
         add: [...filed.rows.map(tracePath), seedPath(head)],
+        remove: () => {
+          const dir = 'verify/quint/traces';
+          const existing = existsSync(join(ROOT, dir)) ? readdirSync(join(ROOT, dir)) : [];
+          return staleTraces(existing, group.invariant, filed.rows.map(tracePath)).map((f) => `${dir}/${f}`);
+        },
       },
       message: `chore(verify): nightly — ${group.invariant} violated (${ctx.date}) [risk LOW]`,
       title: `verify: nightly model check found ${group.invariant} violated`,
@@ -384,9 +410,7 @@ async function shadow(sh, ctx) {
     add.push(MARKER_PATH, RETRO_PATH);
   }
   publish(sh, {
-    branch: SHADOW_BRANCH,
-    from: 'origin/main',
-    force: true,
+    ...SHADOW_PUBLISH,
     home: ctx.home,
     dryRun: ctx.dryRun,
     paths: { write, add },
@@ -443,7 +467,7 @@ async function main() {
     console.log(`  BROKEN: ${b.module ?? ''} ${b.invariant} expected ${b.expected ?? '—'} got ${b.got}`);
   fileFindings(sh, findings, ctx);
   if (!args.includes('--no-shadow')) await shadow(sh, ctx);
-  if (broken.length || ctx.red) process.exit(1);
+  process.exit(nightlyExitCode({ broken, red: ctx.red }));
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {

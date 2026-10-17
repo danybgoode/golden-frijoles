@@ -10,6 +10,9 @@ import {
   seedPath,
   seedText,
   shadowWrites,
+  staleTraces,
+  nightlyExitCode,
+  SHADOW_PUBLISH,
   tracePath,
 } from './verify-nightly.mjs';
 
@@ -267,4 +270,33 @@ test('verify-nightly.yml runs on a schedule or by hand only, never on a PR, with
   assert.doesNotMatch(on, /pull_request|push:/);
   assert.match(yml, /timeout-minutes: \d+/);
   assert.match(yml, /node scripts\/verify-nightly\.mjs --rows/);
+});
+
+test('an updated finding branch drops the traces tonight no longer produces, and only for this invariant', () => {
+  const existing = [
+    'nightly-bmc-outbox_timed-noOrphan.itf.json',
+    'nightly-sim-outbox_timed-noOrphan.itf.json',
+    'nightly-sim-outbox_timed-noVanish.itf.json',
+    'stranded-timed.itf.json',
+  ];
+  const current = [tracePath(row({ invariant: 'noOrphan', mode: 'sim' }))];
+  assert.deepEqual(staleTraces(existing, 'noOrphan', current), [
+    'nightly-bmc-outbox_timed-noOrphan.itf.json',
+  ]);
+});
+
+test('the exit code: red on a broken check or an unfiled finding, green otherwise', () => {
+  assert.equal(nightlyExitCode({ broken: [], red: false }), 0);
+  assert.equal(nightlyExitCode({ broken: [{}], red: false }), 1);
+  assert.equal(nightlyExitCode({ broken: [], red: true }), 1);
+});
+
+test('the call sites: main() exits with nightlyExitCode; the shadow is published by SHADOW_PUBLISH; filing never forces', async () => {
+  const { readFileSync } = await import('node:fs');
+  const src = readFileSync(new URL('./verify-nightly.mjs', import.meta.url), 'utf8');
+  assert.deepEqual(SHADOW_PUBLISH, { branch: 'claude/verify-jev-shadow', from: 'origin/main', force: true });
+  assert.match(src, /process\.exit\(nightlyExitCode\(\{ broken, red: ctx\.red \}\)\)/);
+  assert.match(src, /publish\(sh, \{\n\s+\.\.\.SHADOW_PUBLISH,/);
+  assert.equal((src.match(/force: true/g) ?? []).length, 1, 'only SHADOW_PUBLISH force-pushes');
+  assert.match(src, /\[`HEAD:refs\/heads\/\$\{branch\}`\]|`HEAD:refs\/heads\/\$\{branch\}`/);
 });
