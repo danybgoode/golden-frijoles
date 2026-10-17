@@ -1,6 +1,4 @@
 import { test, expect, type APIRequestContext } from '@playwright/test'
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import { createClient } from '@supabase/supabase-js'
 import { createHash, createHmac } from 'node:crypto'
 import { specWorkspaceId } from './helpers/spec-workspace'
@@ -113,10 +111,22 @@ test('a newly proven verdict records one HMAC-subject event in the self project;
   expect(all.every((row) => row.project_id === self!.id)).toBe(true)
 })
 
-// S1.3 (D10) — the whole path, from the sender's instructions: Golden Frijoles' own `north-star.md` entry synced into
-// the self project, a proven transition pushed by another tenant, then the input read the way the public reads it:
-// the ANONYMOUS connector of the public project. It shows the count, and neither the subject nor the workspace id.
-test('proving_workspaces, synced from north-star.md, reads the transition on the anonymous public connector', async ({
+// S1.3 (D10) — the whole path, from the sender's instructions: the `proving_workspaces` entry exactly as
+// `Roadmap/00-strategy/north-star.md` carries it, synced into the self project; a proven transition pushed by another
+// tenant; then the input read the way the public reads it, on the ANONYMOUS connector of the public project. It shows
+// the count, and neither the subject nor the workspace id.
+//
+// The entry is restated here, not read from the file: `Roadmap/00-strategy/` is private by design (coaches-v2 D9,
+// `.git/info/exclude`), so CI never has it. The live sync of the real file is the rollout's step (D13), read back live.
+const PROVING_WORKSPACES_ENTRY = {
+  key: 'proving_workspaces',
+  name: 'Proving workspaces',
+  valueSource: 'telemetry_event',
+  sourceEvent: 'workspace_proved_bet',
+  aggregate: 'distinct_monthly',
+}
+
+test('proving_workspaces, synced as north-star.md has it, reads the transition on the anonymous public connector', async ({
   request,
 }) => {
   const demoSlug = process.env.DEMO_PROJECT_SLUG?.trim() || 'golden-frijoles'
@@ -127,15 +137,10 @@ test('proving_workspaces, synced from north-star.md, reads the transition on the
   )
   const db = dbClient()
   const selfHeaders = { Authorization: `Bearer ${SELF_KEY}` }
+  const entry = PROVING_WORKSPACES_ENTRY
 
-  // The file's own entry, sent under the self project's CURRENT metric (resent unchanged), so the spec moves no other
-  // spec's North Star: a new metric key would become the current one (lib/north-star-query.ts → currentNorthStar).
-  const markdown = readFileSync(
-    join(__dirname, '..', '..', '..', 'Roadmap', '00-strategy', 'north-star.md'),
-    'utf8'
-  )
-  const [fence] = [...markdown.matchAll(/^```json\n([\s\S]*?)\n```$/gm)].map((m) => m[1])
-  const entry = (JSON.parse(fence).inputs as { key: string }[]).find((i) => i.key === 'proving_workspaces')
+  // Sent under the self project's CURRENT metric (resent unchanged), so the spec moves no other spec's North Star: a new
+  // metric key would become the current one (lib/north-star-query.ts → currentNorthStar).
   const listed = await (await request.get('/api/v1/north-star', { headers: selfHeaders })).json()
   const current = [...listed.metrics].sort(
     (a: { createdAt: string; key: string }, b: { createdAt: string; key: string }) =>

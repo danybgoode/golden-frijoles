@@ -73,7 +73,7 @@ Cite the epic README's D1–D13; do not restate them. Per story:
   `app/api/v1/roadmap/push/route.ts`, `.github/actions/e2e-on-server/action.yml`, `e2e/proven-transition.spec.ts`.
 - **S1.2** — D5, D6, D7, D8, D9. Files: the migration, `lib/north-star.ts` (+ test), `lib/north-star-schema.ts`,
   `lib/north-star-sync.ts`, `lib/north-star-query.ts`, `lib/input-readings.ts`, the North Star page,
-  `packages/cli/src/commands/north-star.ts` (+ test, 1.11.0), `e2e/north-star-sync.spec.ts`.
+  `e2e/north-star-sync.spec.ts` (the CLI is untouched: D7's amendment).
 - **S1.3** — D10, D13. Files: `Roadmap/00-strategy/north-star.md`, the connector spec.
 
 ## Sprint QA

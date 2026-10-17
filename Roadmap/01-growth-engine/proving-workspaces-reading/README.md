@@ -120,8 +120,13 @@ proven only by a live event after the deploy, LEARNINGS' empty-value gotcha).
   reverts the input. `listNorthStar` returns `aggregate` and `pushedValues`.
 - **D7 — The one value-source switch allowed:** `external_push → telemetry_event` while the input has **no**
   `input_values` rows (nothing pushed can go invisible, which is what the guard protects). Every other change is still
-  refused. The CLI's `planSync` says `switches to telemetry_event (nothing was pushed)` for it and compares `aggregate`
-  for `updated`; CLI 1.11.0, **npm publish owed** (Daniel's 2FA). S1.3's sync runs the repo-built CLI, so nothing waits.
+  refused. The database already refuses an `input_values` row for a telemetry input (`input_values_check_input`), so
+  nothing can be pushed after the switch.
+  **Amended during the build (2026-10-17): the CLI is not changed.** A CLI version bump moves the setup skill's pinned
+  version, which is a plugin release (`skills/RELEASING.md`), out of proportion to one dry-run label. The server is the
+  judge and `frijoles north-star set --yes` sends whatever the dry run says, so S1.3 works with the published CLI; its
+  dry run will label this one switch `refused: value source is external_push` and not show `aggregate`. Owed as a
+  follow-up: the CLI's `planSync` learns the D7 switch and `aggregate` with its next release.
 - **D8 — The series:** `computeDistinctMonthlySeries(events, sourceEvent, now)` beside `computeDailySeries`
   (`lib/north-star.ts`): each day with an event reads the distinct `userId`s from the 1st of its UTC month through
   that day, **and the 1st of every later month through `now`'s month reads 0 when it has no event of its own** — so
@@ -138,6 +143,9 @@ proven only by a live event after the deploy, LEARNINGS' empty-value gotcha).
 - **D12 — Routing:** tenancy, a migration and a request path: the architect (Opus) builds every story in place, one
   branch and one PR (one sprint, no review boundary inside it), nothing delegated. Review: `review-route.mjs`
   (general + security lens), plus the fresh `verifier` (high risk).
+- **D10a — amended during the build (2026-10-17): `Roadmap/00-strategy/` is private** (coaches-v2 D9; this checkout
+  excludes it in `.git/info/exclude`), so the `north-star.md` switch is a local edit that never reaches the repo or CI.
+  The spec restates the entry as the file carries it; the real file is synced at D13 and read back live.
 - **D13 — Rollout:** `supabase db push` before the merge, verified live; merge (deploys code and the secret);
   confirm the deploy; sync `north-star.md` with the repo CLI; read `proving_workspaces` back.
 
