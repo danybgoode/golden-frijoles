@@ -14,6 +14,7 @@ import {
   nightlyExitCode,
   SHADOW_PUBLISH,
   tracePath,
+  insideDir,
 } from './verify-nightly.mjs';
 
 const row = (o) => ({ mode: 'bmc', module: 'outbox_timed', depth: '10', seconds: '1', itf: '', ...o });
@@ -127,10 +128,27 @@ test('one filing per invariant: sim + bmc rows and both modules land in ONE seed
   assert.match(seed, /### `sim` · `outbox_untimed`\n\n```\ns3\n```/);
 });
 
-test('an invariant name that is not a plain identifier is never turned into a ref or a path', () => {
-  const { groups, unsafe } = groupFindings([row({ invariant: '../../main' }), row({ invariant: 'a:b' })]);
+test('a row field that is not a plain identifier is never turned into a ref or a path', () => {
+  const { groups, unsafe } = groupFindings([
+    row({ invariant: '../../main' }),
+    row({ invariant: 'a:b' }),
+    row({ invariant: 'noOrphan', module: '../../apps' }),
+    row({ invariant: 'noOrphan', mode: '../x' }),
+  ]);
   assert.equal(groups.length, 0);
-  assert.equal(unsafe.length, 2);
+  assert.equal(unsafe.length, 4);
+});
+
+test('a trace is read only from inside --itf-dir', () => {
+  assert.equal(insideDir('/tmp/itf', '/tmp/itf/bmc-a-b.itf.json'), true);
+  assert.equal(insideDir('/tmp/itf', '/tmp/itf/../secret'), false);
+  assert.equal(insideDir('/tmp/itf', '/etc/passwd'), false);
+  assert.equal(
+    insideDir('/tmp/itf', '/tmp/itfx/a'),
+    false,
+    'a sibling directory with the same prefix is outside'
+  );
+  assert.equal(insideDir(undefined, '/tmp/itf/a'), false, 'no --itf-dir, no trace');
 });
 
 test('one branch and one seed per invariant, kebab-cased, never main', () => {
@@ -269,7 +287,10 @@ test('verify-nightly.yml runs on a schedule or by hand only, never on a PR, with
   assert.match(on, /\n {2}workflow_dispatch:/);
   assert.doesNotMatch(on, /pull_request|push:/);
   assert.match(yml, /timeout-minutes: \d+/);
-  assert.match(yml, /node scripts\/verify-nightly\.mjs --rows/);
+  assert.match(
+    yml,
+    /node scripts\/verify-nightly\.mjs --rows "\$RUNNER_TEMP\/rows\.tsv" --itf-dir "\$RUNNER_TEMP\/itf"/
+  );
 });
 
 test('an updated finding branch drops the traces tonight no longer produces, and only for this invariant', () => {
@@ -298,5 +319,6 @@ test('the call sites: main() exits with nightlyExitCode; the shadow is published
   assert.match(src, /process\.exit\(nightlyExitCode\(\{ broken, red: ctx\.red \}\)\)/);
   assert.match(src, /publish\(sh, \{\n\s+\.\.\.SHADOW_PUBLISH,/);
   assert.equal((src.match(/force: true/g) ?? []).length, 1, 'only SHADOW_PUBLISH force-pushes');
+  assert.match(src, /traceExists: \(p\) => insideDir\(ctx\.itfDir, p\) && existsSync\(p\)/);
   assert.match(src, /\[`HEAD:refs\/heads\/\$\{branch\}`\]|`HEAD:refs\/heads\/\$\{branch\}`/);
 });

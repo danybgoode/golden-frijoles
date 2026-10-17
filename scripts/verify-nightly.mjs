@@ -3,7 +3,7 @@
 // (verify-module S2.1–S2.3, epic README D7, D9, D10). Run by .github/workflows/verify-nightly.yml after
 // `verify/quint/check.sh --rows … --itf-dir …`; never on a pull request.
 //
-//   node scripts/verify-nightly.mjs --rows <rows.tsv> [--no-shadow] [--dry-run]
+//   node scripts/verify-nightly.mjs --rows <rows.tsv> --itf-dir <dir> [--no-shadow] [--dry-run]
 //
 // Findings (D7). A row that expected [ok] and got [violation] is a finding. It goes to ONE branch per invariant,
 // `claude/verify-<invariant>`: a raw seed with the trace's summary, plus the trace. Already filed = that branch exists
@@ -17,7 +17,7 @@
 // one Telegram ping, a marker and an owed line ride in the same PR.
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   LOG_PATH,
@@ -74,6 +74,18 @@ export function classify(rows) {
 const kebab = (s) => s.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
 // An invariant name becomes a git ref and a file name, so only a plain identifier may (agy security lens, #387).
 export const SAFE_INVARIANT = /^[A-Za-z][A-Za-z0-9]{0,63}$/;
+// Every row field that reaches a ref or a path is checked, not just the invariant (agy security lens, #387 round 2).
+export const SAFE_MODULE = /^[a-z][a-z0-9_]{0,63}$/;
+export const SAFE_MODES = ['sim', 'bmc'];
+export const safeRow = (r) =>
+  SAFE_INVARIANT.test(r.invariant ?? '') && SAFE_MODULE.test(r.module ?? '') && SAFE_MODES.includes(r.mode);
+
+/** A trace is read only from inside the run's --itf-dir: a row's itf column never names any other file. */
+export const insideDir = (dir, path) => {
+  if (!dir || !path) return false;
+  const base = resolve(dir) + sep;
+  return resolve(path).startsWith(base);
+};
 export const findingSlug = (row) => `verify-${kebab(row.invariant)}`;
 export const findingBranch = (row) => `claude/${findingSlug(row)}`;
 export const seedPath = (row) => `Roadmap/00-ideas/seeds/${findingSlug(row)}.md`;
@@ -88,7 +100,7 @@ export function groupFindings(findings) {
   const groups = new Map();
   const unsafe = [];
   for (const r of findings) {
-    if (!SAFE_INVARIANT.test(r.invariant ?? '')) unsafe.push(r);
+    if (!safeRow(r)) unsafe.push(r);
     else groups.set(r.invariant, [...(groups.get(r.invariant) ?? []), r]);
   }
   return { groups: [...groups.entries()].map(([invariant, rows]) => ({ invariant, rows })), unsafe };
@@ -290,7 +302,7 @@ function fileFindings(sh, findings, ctx) {
       rows: group.rows,
       branchExists: Boolean(sh.tryRun('git', ['ls-remote', '--exit-code', '--heads', 'origin', branch])),
       seedOnMain: sh.tryRun('git', ['cat-file', '-e', `origin/main:${seedPath(head)}`]) !== null,
-      traceExists: existsSync,
+      traceExists: (p) => insideDir(ctx.itfDir, p) && existsSync(p),
     });
     console.log(`finding: ${group.invariant} (${group.rows.length} row(s)) — ${decision.state}`);
     for (const r of decision.untraced) {
@@ -459,6 +471,7 @@ async function main() {
     dryRun ? (console.log(`[dry-run] ping: ${text}`), false) : notify(text, { sha: home, runUrl });
   sh.run('git', ['fetch', '-q', 'origin', '+main:refs/remotes/origin/main']);
 
+  ctx.itfDir = opt('--itf-dir');
   const rowsPath = opt('--rows');
   const rows = rowsPath && existsSync(rowsPath) ? parseRows(readFileSync(rowsPath, 'utf8')) : [];
   const { findings, broken } = classify(rows);

@@ -69,7 +69,7 @@ jobs:
           TELEGRAM_CICD_CHAT_ID: ${{ secrets.TELEGRAM_CICD_CHAT_ID }}
         run: |
           gh auth setup-git
-          node scripts/verify-nightly.mjs --rows "$RUNNER_TEMP/rows.tsv"
+          node scripts/verify-nightly.mjs --rows "$RUNNER_TEMP/rows.tsv" --itf-dir "$RUNNER_TEMP/itf"
       # cancelled() too: a run killed by timeout-minutes (a hung Apalache) ends cancelled, not failed (verifier #387).
       - name: Ping Telegram on red
         if: failure() || cancelled()
