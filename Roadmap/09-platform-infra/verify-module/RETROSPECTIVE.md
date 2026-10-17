@@ -52,9 +52,7 @@ at 30 labelled PRs it pings once and adds an owed line here. First real log: #38
 
 ## Gaps / follow-ups
 <!-- Smoke gaps owed to the product owner, deferred slices, known limitations. -->
-- **Owed to the product owner (Daniel):** decide when the open shadow PR (`claude/verify-jev-shadow`, #392) merges. A
-  `GITHUB_TOKEN` PR runs no CI, so `gate` appears only after a human push or a close/reopen; the 30 count reads the
-  branch too, so nothing waits on it.
+- ~~**Owed to the product owner (Daniel):** decide when the open shadow PR merges.~~ Done 2026-10-17: Daniel said merge it; the rows landed via #394 (rebuilt on main), and #392 was closed. A shadow PR is data with no decision in it; merge it whenever it's green.
 - The exhaustive nightly takes **84 min** on a GitHub runner (39 of them for `sendsBounded` to depth 14), inside its
   150-minute timeout but with less headroom than the spike's ~50 min local estimate suggested. If a model change
   deepens it, the depth-14 row is the one to split out or move to a weekly run.
