@@ -164,13 +164,21 @@ test('/build with no slug or an unknown one lists the epics and fills nothing', 
 // ── build-view-upgrade S1.4 (D5/D6): the session line, coloured, under the hint — with the time to each reset ─────────
 const HOUR = 3_600_000;
 const NOW = Date.UTC(2026, 9, 8, 1, 0);
-const flat = (node: unknown): { text: string; color?: string }[] => {
-  if (typeof node === 'string') return [{ text: node }];
+type Run = { text: string; color?: string; bold?: boolean; dim?: boolean; italic?: boolean };
+// Every drawn string with the styles it inherits from the Text nodes around it (build-view-one-story S1.7).
+const flat = (node: unknown, inherit: Omit<Run, 'text'> = {}): Run[] => {
+  if (typeof node === 'string') return node ? [{ text: node, ...inherit }] : [];
   if (!node || typeof node !== 'object') return [];
-  const el = node as { type?: string; props?: { color?: string }; children?: unknown };
-  const kids = ([] as unknown[]).concat(el.children ?? []);
-  const out = kids.flatMap(flat);
-  return el.props?.color ? out.map((p) => ({ ...p, color: p.color ?? el.props?.color })) : out;
+  const el = node as { props?: { color?: string; bold?: boolean; dimColor?: boolean; italic?: boolean }; children?: unknown };
+  const p = el.props ?? {};
+  const style = {
+    ...inherit,
+    ...(p.color ? { color: p.color } : {}),
+    ...(p.bold ? { bold: true } : {}),
+    ...(p.dimColor ? { dim: true } : {}),
+    ...(p.italic ? { italic: true } : {}),
+  };
+  return ([] as unknown[]).concat(el.children ?? []).flatMap((c) => flat(c, style));
 };
 
 test('S1.4: session.measure draws each figure in its colour with its reset, and clears the plain status line', async ($, on) => {
@@ -199,12 +207,18 @@ test('S1.4: session.measure draws each figure in its colour with its reset, and 
   expect(parts[0].text).toBe('? for shortcuts'); // the engine's own hint is kept
   const by = (text: string) => parts.find((p) => p.text === text);
   expect(by('Session 48%')?.color).toBe('green');
-  expect(by('5h 78% (-2h)')?.color).toBe('yellow');
-  expect(by('7d 91% (-3d)')?.color).toBe('red');
+  // build-view-one-story D9 — the 5-hour meter: label, filled cells and words in the figure's tone, empty cells dim.
+  expect(by('5h ')?.color).toBe('yellow');
+  expect(by('▰▰▰▰▰▰▰')?.color).toBe('yellow');
+  expect(by('▱▱▱')?.dim).toBe(true);
+  const tail = parts.find((p) => p.text.startsWith(' 78% · resets '));
+  expect(tail?.color).toBe('yellow');
+  expect(tail?.text.endsWith('(in 2h 30m)')).toBe(true);
+  expect(by('7d 91% (in 3d 3h)')?.color).toBe('red');
   expect(parts.some((p) => p.text === ' → keep going')).toBe(true);
-  // The countdown moves with the clock, not only with a new measurement (#312 review).
-  await clock.advance(60 * 60_000);
-  expect(flat(await hint.drawn()).some((p) => p.text === '5h 78% (-1h)')).toBe(true);
+  // The countdown moves with the clock, to the minute, not only with a new measurement (#312 review).
+  await clock.advance(61 * 60_000);
+  expect(flat(await hint.drawn()).some((p) => p.text.endsWith('(in 1h 29m)'))).toBe(true);
 });
 
 test('S1.4: a question waiting shows before the first measurement (#312 review)', async ($, on) => {
@@ -224,38 +238,88 @@ test('S1.4: a question waiting shows before the first measurement (#312 review)'
   expect(seen).toContain('1 question waiting');
 });
 
-test('S1.2: the band draws the per-sprint bars and the stage track the resolver wrote, the marked stage in its tone', async ($, on) => {
+// ── build-view-one-story S1.7 — every colour the band drew before the redesign, and the new ones, pinned ──────────────
+const DESIGN = [
+  'golden-frijoles ▶ Sprint 1 of 2 · Funnel truth · L · ▲ risk HIGH      ▰▰▱│▱▱▱▱▱  2 of 8 stories done',
+  '  Refining ─ Ready ─ ◉ Building ─ QA ─ Shipped',
+  "  ⚑ the epic's docs say Shaping, but this branch has story commits",
+  '  ↗ https://goldenfrijoles.com/hub/golden-frijoles/epic/funnel-truth',
+  '  ❝ Why      A funnel today is one number per period.',
+  '  ⌖ Target   members opening a trend: 0 → 3 · read 13 Nov · intent match 84',
+  '  ▸ Now      S1.3 The trend on the flag page and the epic page',
+  '             As a founder reading a feature, I want the trend, so that I judge the bet.',
+  '  $ Spend    ▰▰▰▱▱▱▱▱▱▱  ≈$22 of the $49–68 quote · 1 session',
+  '  ⋯ Around   1 in QA · 6 ready',
+];
+
+async function band($: never, on: On, lines: string[], bodyColumns = 120) {
   mock.clock(on);
   mock.store(on);
-  world(on, (argv) =>
-    argv.includes('--json')
-      ? {
-          exitCode: 0,
-          stdout: JSON.stringify({
-            facts_mode: 'live',
-            lines: [
-              'Currently building',
-              '  Epic     Build view upgrade    02-commercial · risk LOW',
-              '  Why      no target set',
-              '  Progress ▰▰▱│▱▱ 2 of 5 stories done · in flight S1.2 · Sprint 1 of 2',
-              '  Status   Grooming ─ Ready ─ ◉ Building ─ QA ─ Shipped',
-              '           from git: feat/build-view-upgrade (live)',
-            ],
-          }),
-        }
-      : null,
-  );
-  await $.session.start({ cwd: ROOT, surface: null, isInteractive: true } as never);
-  await $.turn.start({ text: 'go', turnId: 't1' });
-  const band = await $.ui.mount({
-    plugin: 'golden-frijoles',
-    surface: 'terminal',
-    component: 'AbovePrompt',
-    props: { hasSurvey: false, isWorking: false, rows: 20, bodyColumns: 100 } as never,
-  });
-  const parts = flat(await band.drawn());
-  expect(parts.find((p) => p.text === '▰▰')?.color).toBe('green');
-  expect(parts.find((p) => p.text === '◉ Building')?.color).toBe('yellow');
-  expect(parts.some((p) => p.text === '2 of 5 stories done · in flight S1.2 · Sprint 1 of 2')).toBe(true);
-  expect(parts.some((p) => p.text.includes('from git: feat/build-view-upgrade (live)'))).toBe(true);
+  world(on, (argv) => (argv.includes('--json') ? { exitCode: 0, stdout: JSON.stringify({ facts_mode: 'live', lines }) } : null));
+  const $$ = $ as unknown as { session: { start: (e: never) => Promise<unknown> }; turn: { start: (e: never) => Promise<unknown> }; ui: { mount: (e: never) => Promise<{ drawn: () => Promise<unknown> }> } };
+  await $$.session.start({ cwd: ROOT, surface: null, isInteractive: true } as never);
+  await $$.turn.start({ text: 'go', turnId: 't1' } as never);
+  const mounted = await $$.ui.mount({ plugin: 'golden-frijoles', surface: 'terminal', component: 'AbovePrompt', props: { hasSurvey: false, isWorking: false, rows: 30, bodyColumns } } as never);
+  return flat(await mounted.drawn());
+}
+
+test('S1.7: the building state draws every colour of the design — none regressed, the new ones in place', async ($, on) => {
+  const parts = await band($ as never, on, DESIGN);
+  const by = (text: string) => parts.find((p) => p.text === text);
+  // New: the repo dim, the state symbol in the stage's tone.
+  expect(by('golden-frijoles')?.dim).toBe(true);
+  expect(by('▶')?.color).toBe('yellow');
+  // The title bold; the size dim; ▲ risk bold in its level's colour.
+  expect(by('Funnel truth')?.bold).toBe(true);
+  expect(by(' · L')?.dim).toBe(true);
+  expect(by('▲ risk HIGH')).toMatchObject({ color: 'red', bold: true });
+  // The story bar: done green, not yet dim.
+  expect(by('▰▰')?.color).toBe('green');
+  expect(by('▱▱▱▱▱')?.dim).toBe(true);
+  // The track: the current stage bold in its tone, the rest dim.
+  expect(by('◉ Building')).toMatchObject({ color: 'yellow', bold: true });
+  expect(by('Refining ─ Ready ─ ')?.dim).toBe(true);
+  // New: ⚑ red.
+  expect(by('⚑ ')?.color).toBe('red');
+  // Label glyphs cyan, labels dim.
+  expect(by('❝')?.color).toBe('cyan');
+  expect(by('$')?.color).toBe('cyan');
+  expect(by('Why')?.dim).toBe(true);
+  expect(by('↗ ')?.color).toBe('cyan');
+  // The Now user story dim italic.
+  expect(by('As a founder reading a feature, I want the trend, so that I judge the bet.')).toMatchObject({ dim: true, italic: true });
+  // The Spend bar: green under the quote, the remainder dim.
+  expect(by('▰▰▰')?.color).toBe('green');
+  expect(by('▱▱▱▱▱▱▱')?.dim).toBe(true);
+  // Every word of the resolver's text is on screen.
+  const all = parts.map((p) => p.text).join('');
+  for (const w of DESIGN.join(' ').split(/\s+/).filter((x) => x && x !== '·')) expect(all.includes(w)).toBe(true);
+});
+
+test('S1.7: over the quote the Spend bar is full and red and so are its words; QA and Shipped keep their tones; risk by level', async ($, on) => {
+  const parts = await band($ as never, on, [
+    'golden-frijoles ◎ Sprint 2 of 2 · Owed on screen · M · ▲ risk MEDIUM      ▰▰│▰▰▰▰  6 of 6 stories done',
+    '  Refining ─ Ready ─ Building ─ ◉ QA ─ Shipped',
+    '  $ Spend    ▰▰▰▰▰▰▰▰▰▰  ≈$71 · 29% over the $30–55 quote · 9 sessions',
+  ]);
+  const by = (text: string) => parts.find((p) => p.text === text);
+  expect(by('◎')?.color).toBe('cyan');
+  expect(by('◉ QA')).toMatchObject({ color: 'cyan', bold: true });
+  expect(by('▲ risk MEDIUM')).toMatchObject({ color: 'yellow', bold: true });
+  expect(by('▰▰▰▰▰▰▰▰▰▰')?.color).toBe('red');
+  expect(by('29% over')?.color).toBe('red');
+});
+
+test('S1.7: a shipped epic is green throughout, LOW risk is green, and under 90 columns the bar takes its own row', async ($, on) => {
+  const lines = [
+    'golden-frijoles ✓ Sprint 2 of 2 · One bet, wired · L · ▲ risk LOW      ▰▰▰│▰▰▰  6 of 6 stories done',
+    '  Refining ─ Ready ─ Building ─ QA ─ ◉ Shipped',
+  ];
+  const parts = await band($ as never, on, lines, 80);
+  const by = (text: string) => parts.find((p) => p.text === text);
+  expect(by('✓')?.color).toBe('green');
+  expect(by('◉ Shipped')).toMatchObject({ color: 'green', bold: true });
+  expect(by('▲ risk LOW')?.color).toBe('green');
+  expect(by('One bet, wired')?.bold).toBe(true);
+  expect(parts.some((p) => p.text.includes('…'))).toBe(false); // the title fits on its own row: nothing cut
 });

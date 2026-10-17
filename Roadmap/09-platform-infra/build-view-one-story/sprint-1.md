@@ -3,7 +3,7 @@ epic: build-view-one-story
 sprint: 1
 title: "One story"
 risk: low
-phase: Shaping
+phase: In review
 stories_total: 7
 stories:
   - id: S1.1
@@ -12,63 +12,70 @@ stories:
     i_want: "the repo, the state, the sprint, the epic, its size and risk on one line, the stories-done bar on the right, the track and the link under it"
     so_that: "I know what is being built and how far it has got without reading further"
     risk: low
-    status: planned
+    status: done
   - id: S1.2
     title: "A source is named only when two disagree"
     as_a: "a founder watching an agent build"
     i_want: "the stage said once, a ⚑ line only when the docs and the branch disagree, and a shipped epic reading as shipped"
     so_that: "the view never contradicts itself"
     risk: low
-    status: planned
+    status: done
   - id: S1.3
     title: "Why and Target say what we know"
     as_a: "a founder watching an agent build"
     i_want: "the Why in full, and the target or the reason there is none, with the read date and intent match"
     so_that: "I remember why this is being built and how it will be judged"
     risk: low
-    status: planned
+    status: done
   - id: S1.4
     title: "Now tells the story in progress"
     as_a: "a founder watching an agent build"
     i_want: "the story being built as a user story, or between stories, or where the plan stands while refining"
     so_that: "I know what is happening this minute"
     risk: low
-    status: planned
+    status: done
   - id: S1.5
     title: "Spend, Around and Next"
     as_a: "a founder watching an agent build"
     i_want: "spend as a bar against the quote, other work in one Around line, and a Next command when nothing is in flight"
     so_that: "I see the cost, the rest of the board, and what to do next"
     risk: low
-    status: planned
+    status: done
   - id: S1.6
     title: "The 5-hour line as a meter, to the minute"
     as_a: "a founder working in long sessions"
     i_want: "the 5-hour budget as a bar with the reset time and the time left, to the minute"
     so_that: "I can plan around the reset"
     risk: low
-    status: planned
+    status: done
   - id: S1.7
     title: "No colour or symbol regresses"
     as_a: "the product owner"
     i_want: "every colour the band draws today, and the new ones, pinned by a test, and no wide or emoji glyph"
     so_that: "the redesign never quietly loses what already worked"
     risk: low
-    status: planned
+    status: done
 ---
 # The build view tells one story — Sprint 1: One story
 
-**Status:** ⬜ not started
+**Status:** 🔍 in review — PR open (release 1.11.0: d8113d7 · fe5a5a4)
 
 The approved design, with every state drawn, is in the seed's *The design*
 ([`00-ideas/seeds/build-view-one-story.md`](../../00-ideas/seeds/build-view-one-story.md)). Each story below points
 at its part of it.
 
+## Build contract (locked by the architect before the builder started)
+Cites the README's D1–D12. S1.1 = D1 + D2 + D3. S1.2 = D4 + D7. S1.3 = D5. S1.4 = D6. S1.5 = D8. S1.6 = D9 (the
+"-1h" reproduced as a spec first, and the clock probed live). S1.7 = D10 + D11, plus golden `renderLines` specs for
+each design state: building, refining, nothing in flight, QA, shipped and disagreeing. Release = D12. The size
+correction (no README `appetite:`), the glyphs moving into the resolver and the dropped `Open`/token/source text are
+the README's named corrections. Builders cite them and don't re-decide them.
+
 ## Stories
 <!-- Keep the heading shape `### Story 1.M — <title>`; append ✅ + the commit ref when it ships. Name the story in
      each commit subject (`S1.1 …`). The frontmatter `stories:` entry is what tools read. -->
 
-### Story 1.1 — The header says what, and how far
+### Story 1.1 — The header says what, and how far ✅ 44ce141
 **As** a founder watching an agent build, **I want** the repo, the state, the sprint, the epic, its size and risk on
 one line, the stories-done bar on the right, the track and the link under it, **so that** I know what is being built
 and how far it has got without reading further.
@@ -78,7 +85,7 @@ epic URL (or the seed path while refining). A long title shortens with `…`; th
 columns the bar moves to its own line. The state symbols are those in the design's table.
 **Risk:** low
 
-### Story 1.2 — A source is named only when two disagree
+### Story 1.2 — A source is named only when two disagree ✅ da73e0a · cc0499f
 **As** a founder watching an agent build, **I want** the stage said once, a `⚑` line only when the docs and the branch
 disagree, and a shipped epic reading as shipped, **so that** the view never contradicts itself.
 **Acceptance:** one function decides whether the README's `status`/`phase` and the live facts disagree, with a spec
@@ -86,14 +93,14 @@ per disagreeing pair; only then does `⚑ <what each says>` appear under the tra
 stories done" and `▸ Now  shipped <day> · verdict due <day>`.
 **Risk:** low
 
-### Story 1.3 — Why and Target say what we know
+### Story 1.3 — Why and Target say what we know ✅ ebaedb2
 **As** a founder watching an agent build, **I want** the Why in full, and the target or the reason there is none, with
 the read date and intent match, **so that** I remember why this is being built and how it will be judged.
 **Acceptance:** `❝ Why` wraps the full Why. `⌖ Target` shows `<metric>: <from> → <to> · read <day> · intent match N`,
 or `none yet: <grounded_reason> · intent match N`. "no target set" no longer appears when a reason exists.
 **Risk:** low
 
-### Story 1.4 — Now tells the story in progress
+### Story 1.4 — Now tells the story in progress ✅ e3d7a8b · 780e1b0
 **As** a founder watching an agent build, **I want** the story being built as a user story, or between stories, or
 where the plan stands while refining, **so that** I know what is happening this minute.
 **Acceptance:** `▸ Now` shows the in-flight story (id, title, as a / I want / so that), or `between stories: <last> done,
@@ -101,7 +108,7 @@ where the plan stands while refining, **so that** I know what is happening this 
 "session journal" never appear.
 **Risk:** low
 
-### Story 1.5 — Spend, Around and Next
+### Story 1.5 — Spend, Around and Next ✅ 6e20641
 **As** a founder watching an agent build, **I want** spend as a bar against the quote, other work in one Around line,
 and a Next command when nothing is in flight, **so that** I see the cost, the rest of the board, and what to do next.
 **Acceptance:** `$ Spend` keeps today's bar and tones. `⋯ Around` replaces the `Worktree`, `Open`, `Also` and `Board`
@@ -109,15 +116,17 @@ rows: counts by stage, other worktrees, next up. With an epic in flight there is
 one link). With nothing in flight: the board link on line 2 and `→ Next  /build <top of the ready list>`.
 **Risk:** low
 
-### Story 1.6 — The 5-hour line as a meter, to the minute
+### Story 1.6 — The 5-hour line as a meter, to the minute ✅ a5a558a
 **As** a founder working in long sessions, **I want** the 5-hour budget as a bar with the reset time and the time left,
 to the minute, **so that** I can plan around the reset.
-**Acceptance:** reproduce today's line against a real reset first and record what it says. Then
+**Reproduced first (2026-10-17):** against the reset seen 2026-10-10 (7:51 pm, resets 9:20 pm), today's
+`sessionLine` printed `5h 62% (-1h)`: 89 minutes floored to whole hours, and the minus read as "an hour ago". Now
+pinned as a spec. **Acceptance:** reproduce today's line against a real reset first and record what it says. Then
 `5h ▰▰▰▰▰▰▱▱▱▱ 62% · resets 9:20 pm (in 1h 29m)`, its bar in the line's existing tones. A spec covers a reset under an
 hour away (no "-1h").
 **Risk:** low
 
-### Story 1.7 — No colour or symbol regresses
+### Story 1.7 — No colour or symbol regresses ✅ 01001ae
 **As** the product owner, **I want** every colour the band draws today, and the new ones, pinned by a test, and no
 wide or emoji glyph, **so that** the redesign never quietly loses what already worked.
 **Acceptance:** `build-view.mod.test.ts` pins each colour in the design's *Colours that must not regress* (track mark
@@ -137,7 +146,9 @@ Env: Claude Code with the new plugin version installed, in this repo.
 
 1. On `main` with nothing in flight, look at the band.
    → `golden-frijoles ○ No epic on this branch`, the board link, one `⋯ Around` line and a `→ Next /build …` line.
-2. Switch to an idea's branch being refined (`git switch -c refine/owed-on-screen-test`).
+2. Switch to an idea's branch being refined (`git switch -c docs/git-and-releases-legibility`; corrected at the
+   build: `refine/` is not a work branch, so the planned `refine/owed-on-screen-test` names nothing, and
+   owed-on-screen is an epic now).
    → `❧ Idea · …`, the track at `◉ Refining`, the seed path, and `▸ Now  plan ready, waiting for your approval`.
 3. Switch to an epic's feature branch with a story committed.
    → line 1 has the sprint, title, size, red `▲ risk HIGH` and a green-and-dim bar; line 2 the track with `Building`
@@ -145,7 +156,8 @@ Env: Claude Code with the new plugin version installed, in this repo.
 4. Look at the Spend line.
    → a bar, green while under the quote.
 5. Look below the prompt.
-   → `5h` with a bar, a percentage and "resets <time> (in <h>h <m>m)" that matches the clock.
+   → `5h` with a bar, a percentage and "resets <time> (in <h>h <m>m)" that matches the clock. **This step is the
+   only check that the mod's runtime reads local time:** the live probe (D9) was refused twice in the build session.
 6. On `main`, open a shipped epic's view (or a branch of one).
    → `✓`, "N of N stories done", the track at `◉ Shipped` in green.
 

@@ -24,11 +24,8 @@ import {
 import { PHASES } from './lib/roadmap-contract.mjs';
 
 const LOCKED = '2026-10-01T00:00:00Z';
-/** The Status line and its continuation as one string, `<track> | <source>` (build-view-upgrade D3). */
-const statusOf = (lines) => {
-  const at = lines.findIndex((l) => l.startsWith('  Status'));
-  return [lines[at], lines[at + 1]].map((l) => l.slice(11)).join(' | ');
-};
+/** The track line, unlabelled under the header (build-view-one-story D1): its text without the indent. */
+const statusOf = (lines) => (lines.find((l) => /^ {2}\S/.test(l) && l.includes(' ─ ')) ?? '').slice(2);
 // `lockedAt: null` leaves the stamp out — an epic whose architecture lock has not been run (live-build-view D11).
 const EPIC_README = (phase = 'Building', lockedAt = LOCKED) => `---
 status: in-progress
@@ -163,6 +160,7 @@ test('a clean feature branch mid-sprint: epic, story + user story, progress, sta
       story: 2,
       stories: 3,
       sprint: 2,
+      header_sprint: 2,
       sprints: 2,
     });
     assert.equal(s.status, 'Building');
@@ -179,9 +177,16 @@ test('a clean feature branch mid-sprint: epic, story + user story, progress, sta
     f.commit('S2.2 — a second commit on the same story');
     const p = resolveBuildState({ root: f.root, offline: true, gh: noGh });
     assert.equal(p.progress.stories_with_commits, 3, 'S1.1 + S2.1 + S2.2; S1.2 is not a story of this epic');
-    assert.match(
-      renderLines(p).find((l) => l.startsWith('  Progress')),
-      /^ {2}Progress ▰│▰▰ 3 of 3 stories done · in flight S2\.2 · Sprint 2 of 2$/
+    // build-view-one-story D2 — the header says what and how far; the bar sits at column 100.
+    // (The fixture's repo is a long temp-dir name, so the bar takes its own line rather than cutting the title.)
+    const [head, bar] = renderLines(p);
+    assert.match(head, /^build-state-\S+ \S Sprint 2 of 2 · Arranged-only delivery · ▲ risk HIGH$/);
+    assert.equal(bar, '  ▰│▰▰  3 of 3 stories done');
+    // D6 — the tree is clean and HEAD is S2.2's commit, so the work is between stories, and none is left.
+    assert.equal(p.between, true);
+    assert.equal(
+      renderLines(p).find((l) => l.startsWith('  ▸ Now')),
+      '  ▸ Now      between stories: S2.2 done, every story has a commit'
     );
   } finally {
     f.done();
@@ -214,11 +219,13 @@ test('the default branch, a branch naming no epic, and a detached HEAD all say "
     const detached = resolveBuildState({ board: false, root: f.root, offline: true, gh: noGh });
     assert.equal(detached.in_flight, false);
     assert.match(detached.reason, /detached HEAD/);
-    // Nothing here — but the Roadmap says the fixture's epic is in progress, so the view names it.
-    assert.deepEqual(renderLines(detached), [
-      `No epic in flight — ${detached.reason}`,
-      '  Open     Arranged-only delivery · Building · 04-shipping',
-    ]);
+    // build-view-one-story D8 — an epic the Roadmap calls in-progress is counted in Around, never listed one by one
+    // (the JSON keeps it); with no board here there is nothing to count, so the view is the header alone.
+    assert.deepEqual(renderLines(detached), [`${detached.repo} ○ No epic on this branch · detached HEAD`]);
+    assert.equal(detached.elsewhere.open_epics[0].slug, 'arranged-only');
+    // A branch that names nothing says why; the plain "not an epic branch" case does not repeat the header.
+    assert.deepEqual(renderLines(main), [`${main.repo} ○ No epic on this branch · main`]);
+    assert.equal(renderLines(other)[1], `  ▸ Now      ${other.reason}`);
   } finally {
     f.done();
   }
@@ -234,13 +241,13 @@ test('commits with no story convention and no journal → story unknown, never a
     assert.equal(s.story_source, 'unknown');
     assert.equal(s.sprint, null, 'no -s<N> and no story → no sprint either, not "the first unshipped one"');
     assert.equal(s.progress.story, null);
-    assert.equal(renderLines(s)[2], '  Why      no target set');
-    assert.equal(renderLines(s)[3], '  Story    unknown');
-    assert.match(
-      renderLines(s)[5],
-      /^ {2}Progress ▱│▱▱ 0 of 3 stories done · Sprint \? of 2$/,
-      'no story → no "in flight"'
-    );
+    const lines = renderLines(s);
+    assert.ok(lines.includes('  ⌖ Target   none set'), 'no target and no reason: "none set", nothing invented');
+    assert.ok(lines.includes('  ▸ Now      no story started yet · S1.1 next'), 'never "session journal"');
+    // D2 — no story and no -sN: the header's sprint is the first with a story left, never "?".
+    assert.match(lines[0], /^\S+ \S Sprint 1 of 2 · Arranged-only delivery · ▲ risk HIGH$/);
+    assert.equal(lines[1], '  ▱│▱▱  0 of 3 stories done');
+    assert.ok(!lines.join('\n').includes('journal'));
   } finally {
     f.done();
   }
@@ -332,39 +339,294 @@ test('evidence only advances: a story commit lifts to Building, an open PR to In
   }
 });
 
-test('renderLines is a pure function of the state: the exact five lines, no box', () => {
-  const state = {
-    in_flight: true,
-    epic: { title: 'Arranged-only delivery', area: '04-shipping', risk: 'high' },
-    story: {
-      id: 'S2.1',
-      title: 'Agent surface parity',
-      as_a: "a buyer's agent",
-      i_want: 'checkout options to reflect arranged-only listings',
-      so_that: "I'm never offered a carrier rail the seller can't fulfil",
-    },
-    progress: {
-      stories_with_commits: 3,
-      by_sprint: [
-        { n: 1, done: 3, total: 3 },
-        { n: 2, done: 0, total: 4 },
-      ],
-      story: 4,
-      stories: 7,
-      sprint: 2,
-      sprints: 2,
-    },
-    status: 'Building',
-  };
-  assert.deepEqual(renderLines(state), [
-    'Currently building',
-    '  Epic     Arranged-only delivery    04-shipping · risk HIGH',
-    '  Why      no target set',
-    '  Story    S2.1 — Agent surface parity',
-    "           As a buyer's agent, I want checkout options to reflect arranged-only listings, so that I'm never offered a carrier rail the seller can't fulfil.",
-    '  Progress ▰▰▰│▱▱▱▱ 3 of 7 stories done · in flight S2.1 · Sprint 2 of 2',
-    '  Status   Building',
-  ]);
+// ── build-view-one-story S1.7 — each state of the design approved 2026-10-14, rendered from resolver output ──────────
+// The seed's *The design* draws these; the states below are the resolver's JSON for them. A change to any line is a
+// change to the approved design and should arrive with the product owner's say-so.
+const NOW = new Date('2026-10-14T12:00:00Z');
+const HUB = 'https://goldenfrijoles.com/hub/golden-frijoles';
+const board = (over = {}) => ({ building: 0, qa: 1, ready: 6, next: { name: 'Drill impact for agents', slug: 'drill-impact-for-agents', build_order: 93, grain: 'Epic' }, url: `${HUB}/epic/funnel-truth`, ...over });
+const building = {
+  in_flight: true,
+  kind: 'epic',
+  repo: 'golden-frijoles',
+  branch: 'feat/funnel-truth',
+  lifecycle: 'in-progress',
+  stage: 'Building',
+  stage_source: 'git: feat/funnel-truth',
+  epic: { slug: 'funnel-truth', title: 'Funnel truth', risk: 'high', phase: 'Building', locked_at: '2026-10-15T00:00:00Z', path: 'Roadmap/02-commercial/funnel-truth/README.md' },
+  size: 'L',
+  sprint: { n: 1, title: 'The trend', phase: 'Building' },
+  phase_written: 'Building',
+  story: { id: 'S1.3', title: 'The trend on the flag page and the epic page', as_a: 'a founder reading a feature', i_want: 'the trend where I read its funnel', so_that: 'I judge the bet over its whole life' },
+  story_source: 'commit',
+  between: false,
+  next_story: { id: 'S1.4', title: 'x' },
+  target: { hypothesis: "A funnel today is one number per period. Showing it by month lets founders judge a bet over its whole life. We'll know when members open funnel trends.", metric: 'members opening a trend', from: 0, to: 3, read_date: '2026-11-13', grounded_reason: null, intent_match: 84, verdict: null },
+  progress: { stories_with_commits: 2, by_sprint: [{ n: 1, done: 2, total: 3 }, { n: 2, done: 0, total: 5 }], story: 3, stories: 8, sprint: 1, header_sprint: 1, sprints: 2 },
+  spend: { usd: 22, usd_known: true, mtok: 1.1, sessions: 1, basis: 'this machine', push_rejected: 0 },
+  quote: { low: 49, high: 68, basis: 'L, n=24, p25–p75' },
+  evidence: { story_commits: 2 },
+  board: board(),
+  elsewhere: { worktrees: [], open_epics: [] },
+};
+const refining = {
+  in_flight: true,
+  kind: 'feature',
+  repo: 'golden-frijoles',
+  branch: 'refine/owed-on-screen',
+  lifecycle: 'ready',
+  status: 'ready',
+  stage: 'Grooming',
+  seed: { slug: 'owed-on-screen', title: 'Owed on screen', type: 'feature', appetite: 'M', risk: 'high', path: 'Roadmap/00-ideas/seeds/owed-on-screen.md', status: 'ready', quote: { low: 15, high: 34, basis: 'M, n=24, p25–p75' } },
+  target: { hypothesis: 'Owed checks live only in a file nobody opens. Showing them where you already look cuts the open count. We\'ll know when it falls.', metric: null, grounded_reason: null, intent_match: 81 },
+  evidence: { commits: 0 },
+  board: board({ building: 1, qa: 0, ready: 6, next: { name: 'A delivery whose settle fails is reclaimed', slug: 'delivery-stale-reclaim-uncounted', build_order: 87, grain: 'Epic' }, url: `${HUB}/epic/owed-on-screen` }),
+  elsewhere: { worktrees: [], open_epics: [] },
+};
+const idle = {
+  in_flight: false,
+  repo: 'golden-frijoles',
+  reason: 'on docs/seed-consolidation — not an epic branch (feat/<slug>…), so no epic in flight',
+  branch: 'docs/seed-consolidation',
+  quiet: true,
+  board: { building: 1, qa: 1, ready: 7, next: { name: 'Delivery stale reclaim', slug: 'delivery-stale-reclaim-uncounted', build_order: 87, grain: 'Epic' }, url: `${HUB}/board` },
+  elsewhere: {
+    worktrees: [
+      { kind: 'epic', slug: 'outcome-report-any-product', title: 'The outcome report for any product', story: 'S1.3', status: 'Building' },
+      { kind: 'epic', slug: 'golden-welcome', title: 'A golden welcome and recovery pages', story: null, status: 'QA' },
+    ],
+    open_epics: [],
+  },
+};
+const qa = {
+  ...building,
+  stage: 'QA',
+  epic: { ...building.epic, slug: 'owed-on-screen', title: 'Owed on screen' },
+  size: 'M',
+  progress: { stories_with_commits: 6, by_sprint: [{ n: 1, done: 2, total: 2 }, { n: 2, done: 4, total: 4 }], story: 6, stories: 6, sprint: 2, header_sprint: 2, sprints: 2 },
+  story: { ...building.story, id: 'S2.4' },
+  between: true,
+  next_story: null,
+};
+const shipped = {
+  ...building,
+  lifecycle: 'shipped',
+  stage: 'Shipped',
+  shipped_on: '2026-10-10',
+  epic: { ...building.epic, slug: 'one-bet-wired', title: 'One bet, wired', phase: 'Shipped' },
+  phase_written: 'Shipped',
+  target: { ...building.target, read_date: null, metric: 'flags with a funnel', from: 0, to: 2 },
+  progress: { stories_with_commits: 6, by_sprint: [{ n: 1, done: 3, total: 3 }, { n: 2, done: 3, total: 3 }], story: null, stories: 6, sprint: null, header_sprint: 2, sprints: 2 },
+  story: null,
+  evidence: { story_commits: 0 },
+  spend: { ...building.spend, usd: 61, sessions: 4 },
+  quote: { low: 49, high: 79, basis: 'L, n=24, p25–p75' },
+  board: board({ url: `${HUB}/epic/one-bet-wired` }),
+};
+const disagreeing = {
+  ...building,
+  stage: 'Building',
+  epic: { ...building.epic, phase: 'Shaping', locked_at: null },
+  phase_written: 'Shaping',
+};
+
+const GOLDEN = {
+  building: [
+    "golden-frijoles ▶ Sprint 1 of 2 · Funnel truth · L · ▲ risk HIGH      ▰▰▱│▱▱▱▱▱  2 of 8 stories done",
+    "  Refining ─ Ready ─ ◉ Building ─ QA ─ Shipped",
+    "  ↗ https://goldenfrijoles.com/hub/golden-frijoles/epic/funnel-truth",
+    "  ❝ Why      A funnel today is one number per period. Showing it by month lets founders judge a bet",
+    "             over its whole life. We'll know when members open funnel trends.",
+    "  ⌖ Target   members opening a trend: 0 → 3 · read 13 Nov · intent match 84",
+    "  ▸ Now      S1.3 The trend on the flag page and the epic page",
+    "             As a founder reading a feature, I want the trend where I read its funnel, so that I",
+    "             judge the bet over its whole life.",
+    "  $ Spend    ▰▰▰▱▱▱▱▱▱▱  ≈$22 of the $49–68 quote · 1 session",
+    "  ⋯ Around   1 in QA · 6 ready · next up: Drill impact for agents (#93)",
+  ],
+  refining: [
+    "golden-frijoles ❧ Idea · Owed on screen · M · ▲ risk HIGH                               quote $15–34",
+    "  ◉ Refining ─ Ready ─ Building ─ QA ─ Shipped",
+    "  ↗ Roadmap/00-ideas/seeds/owed-on-screen.md",
+    "  ❝ Why      Owed checks live only in a file nobody opens. Showing them where you already look cuts",
+    "             the open count. We'll know when it falls.",
+    "  ▸ Now      plan ready, waiting for your approval",
+    "  ⋯ Around   1 building · 6 ready · next up: A delivery whose settle fails is reclai… (#87)",
+  ],
+  idle: [
+    "golden-frijoles ○ No epic on this branch · docs/seed-consolidation",
+    "  ↗ https://goldenfrijoles.com/hub/golden-frijoles/board",
+    "  ⋯ Around   1 building · 1 in QA · 7 ready",
+    "             in other worktrees: The outcome report for any product (S1.3, Building) · A golden",
+    "             welcome and recovery pages (QA)",
+    "  → Next     /build delivery-stale-reclaim-uncounted   (top of the ready list)",
+  ],
+  qa: [
+    "golden-frijoles ◎ Sprint 2 of 2 · Owed on screen · M · ▲ risk HIGH      ▰▰│▰▰▰▰  6 of 6 stories done",
+    "  Refining ─ Ready ─ Building ─ ◉ QA ─ Shipped",
+    "  ↗ https://goldenfrijoles.com/hub/golden-frijoles/epic/funnel-truth",
+    "  ❝ Why      A funnel today is one number per period. Showing it by month lets founders judge a bet",
+    "             over its whole life. We'll know when members open funnel trends.",
+    "  ⌖ Target   members opening a trend: 0 → 3 · read 13 Nov · intent match 84",
+    "  ▸ Now      between stories: S2.4 done, every story has a commit",
+    "  $ Spend    ▰▰▰▱▱▱▱▱▱▱  ≈$22 of the $49–68 quote · 1 session",
+    "  ⋯ Around   1 in QA · 6 ready · next up: Drill impact for agents (#93)",
+  ],
+  shipped: [
+    "golden-frijoles ✓ Sprint 2 of 2 · One bet, wired · L · ▲ risk HIGH      ▰▰▰│▰▰▰  6 of 6 stories done",
+    "  Refining ─ Ready ─ Building ─ QA ─ ◉ Shipped",
+    "  ↗ https://goldenfrijoles.com/hub/golden-frijoles/epic/one-bet-wired",
+    "  ❝ Why      A funnel today is one number per period. Showing it by month lets founders judge a bet",
+    "             over its whole life. We'll know when members open funnel trends.",
+    "  ⌖ Target   flags with a funnel: 0 → 2 · read 30 days after shipping · intent match 84",
+    "  ▸ Now      shipped 10 Oct · verdict due 9 Nov",
+    "  $ Spend    ▰▰▰▰▰▰▰▰▱▱  ≈$61 of the $49–79 quote · 4 sessions",
+    "  ⋯ Around   1 in QA · 6 ready · next up: Drill impact for agents (#93)",
+  ],
+  disagreeing: [
+    "golden-frijoles ▶ Sprint 1 of 2 · Funnel truth · L · ▲ risk HIGH      ▰▰▱│▱▱▱▱▱  2 of 8 stories done",
+    "  Refining ─ Ready ─ ◉ Building ─ QA ─ Shipped",
+    "  ⚑ the epic's docs say Shaping, but this branch has story commits",
+    "  ↗ https://goldenfrijoles.com/hub/golden-frijoles/epic/funnel-truth",
+    "  ❝ Why      A funnel today is one number per period. Showing it by month lets founders judge a bet",
+    "             over its whole life. We'll know when members open funnel trends.",
+    "  ⌖ Target   members opening a trend: 0 → 3 · read 13 Nov · intent match 84",
+    "  ▸ Now      S1.3 The trend on the flag page and the epic page",
+    "             As a founder reading a feature, I want the trend where I read its funnel, so that I",
+    "             judge the bet over its whole life.",
+    "  $ Spend    ▰▰▰▱▱▱▱▱▱▱  ≈$22 of the $49–68 quote · 1 session",
+    "  ⋯ Around   1 in QA · 6 ready · next up: Drill impact for agents (#93)",
+  ],
+};
+
+for (const [name, lines] of Object.entries(GOLDEN))
+  test(`build-view-one-story golden: the ${name} state reads as the design draws it`, () => {
+    const state = { building, refining, idle, qa, shipped, disagreeing }[name];
+    assert.deepEqual(renderLines(state, NOW), lines);
+    for (const l of lines) assert.ok([...l].length <= 100, `${[...l].length}: ${l}`);
+    // One fact, one place: the stage is said by the track alone, and no line names a source unless two disagree.
+    assert.ok(!lines.some((l) => /from (git|github|docs)|snapshot|session journal|no target set/.test(l)), lines.join('\n'));
+    assert.equal(lines.filter((l) => l.startsWith('  ⚑')).length, name === 'disagreeing' ? 1 : 0);
+  });
+
+test('build-view-one-story D2: a title too long to share the line moves the bar down; only one wider than the line is clipped', () => {
+  const long = { ...building, epic: { ...building.epic, title: 'The outcome report for any product and its pace' } };
+  const lines = renderLines(long, NOW);
+  assert.equal(lines[0], 'golden-frijoles ▶ Sprint 1 of 2 · The outcome report for any product and its pace · L · ▲ risk HIGH');
+  assert.equal(lines[1], '  ▰▰▱│▱▱▱▱▱  2 of 8 stories done', 'the bar is never cut');
+  assert.equal(lines[2], '  Refining ─ Ready ─ ◉ Building ─ QA ─ Shipped', 'the track is never cut');
+  const huge = { ...building, epic: { ...building.epic, title: 'word '.repeat(40).trim() } };
+  const head = renderLines(huge, NOW)[0];
+  assert.equal([...head].length, 100);
+  assert.match(head, /… · L · ▲ risk HIGH$/);
+});
+
+test('build-view-one-story D4: a source is named only when two disagree — one spec per pair', async () => {
+  const { disagreement } = await import('./build-state.mjs');
+  // (a) shipped docs, unmerged story commits — and a close-out branch (no story commit) is NOT a disagreement.
+  assert.equal(
+    disagreement({ ...shipped, evidence: { story_commits: 2 } }),
+    "the epic's docs say Shipped, but this branch has 2 story commits not on main"
+  );
+  assert.equal(disagreement(shipped), null);
+  // (b) story commits before the lock was stamped.
+  assert.equal(disagreement(disagreeing), "the epic's docs say Shaping, but this branch has story commits");
+  assert.equal(
+    disagreement({ ...disagreeing, evidence: { story_commits: 0 } }),
+    null,
+    'no story commit yet: that is Locking, not a disagreement'
+  );
+  // (c) the docs say Shipped while the DRAWN stage is still before review — on facts that can see branches.
+  assert.equal(
+    disagreement({ ...building, phase_written: 'Shipped', sprint: { n: 1 }, facts_mode: 'live' }),
+    "sprint 1's docs say Shipped, but the board has it at Building"
+  );
+  // #396 verifier: the raw board said Ready under a Building track lifted by story commits; the sentence names the
+  // stage the track draws, never the raw one.
+  assert.equal(
+    disagreement({ ...building, stage: 'Ready to build', phase_written: 'Shipped', sprint: { n: 1 }, facts_mode: 'snapshot' }),
+    "sprint 1's docs say Shipped, but the board has it at Building"
+  );
+  assert.equal(
+    disagreement({ ...building, phase_written: 'Shipped', sprint: { n: 1 }, facts_mode: 'docs' }),
+    null,
+    'a docs-only board cannot tell a merged sprint from an unstarted one'
+  );
+  assert.equal(disagreement({ ...qa, phase_written: 'Shipped', facts_mode: 'live' }), null, 'merged, close-out owed');
+  for (const written of ['Verifying', 'In review'])
+    assert.equal(disagreement({ ...building, phase_written: written, facts_mode: 'live' }), null, `${written} before the PR is the cadence`);
+  assert.equal(disagreement({ ...qa, phase_written: 'Building' }), null, 'docs lagging the board is the cadence');
+  // (d) an unreadable sprint.
+  assert.equal(
+    disagreement({ ...building, warning: 'Roadmap/…/sprint-1.md frontmatter could not be read' }),
+    'Roadmap/…/sprint-1.md frontmatter could not be read'
+  );
+  assert.equal(disagreement(building), null);
+  assert.equal(disagreement(idle), null);
+});
+
+test('build-view-one-story D6: between stories only when the tree is clean and HEAD is that story\'s commit', () => {
+  const f = fixture();
+  try {
+    f.git('switch', '-qc', 'feat/arranged-only-s2');
+    f.commit('S2.1 — agent surface parity');
+    const now = () => renderLines(resolveBuildState({ board: false, root: f.root, offline: true, gh: noGh })).find((l) => l.startsWith('  ▸ Now'));
+    assert.equal(now(), '  ▸ Now      between stories: S2.1 done, S2.2 next');
+    writeFileSync(join(f.root, 'half-done.txt'), 'work in progress');
+    assert.equal(now(), '  ▸ Now      S2.1 Agent surface parity', 'uncommitted work: the story stays in flight');
+    rmSync(join(f.root, 'half-done.txt'));
+    f.commit('chore: tidy');
+    assert.equal(now(), '  ▸ Now      S2.1 Agent surface parity', 'HEAD is not the story\'s commit: no claim it is done');
+    f.commit('S2.2 — seller toggle');
+    f.commit('chore(release): 1.2.3');
+    assert.equal(
+      now(),
+      '  ▸ Now      between stories: S2.2 done, every story has a commit',
+      'every story in scope has a commit and the tree is clean: a release on top does not reopen one'
+    );
+  } finally {
+    f.done();
+  }
+});
+
+test('build-view-one-story D7: a shipped epic reads shipped on its close-out branch — N of N, the ship day, the read', () => {
+  const f = fixture();
+  try {
+    f.git('switch', '-qc', 'feat/arranged-only');
+    f.commit('S1.1 — contract');
+    f.git('switch', '-q', 'main');
+    f.git('merge', '-q', '--no-ff', '-m', 'merge', 'feat/arranged-only');
+    f.git('switch', '-qc', 'docs/arranged-only-close');
+    const readme = join(f.root, 'Roadmap', '04-shipping', 'arranged-only', 'README.md');
+    writeFileSync(
+      readme,
+      EPIC_README('Shipped')
+        .replace('status: in-progress', 'status: shipped')
+        .replace('type: feature', 'type: feature\ntarget_metric: arranged_rate\ntarget_from: 1\ntarget_to: 2')
+    );
+    f.git('commit', '-qam', 'docs(arranged-only): close');
+    const s = resolveBuildState({ board: false, root: f.root, offline: true, gh: noGh });
+    const day = f.git('log', '-1', '--format=%cs');
+    assert.equal(s.shipped_on, day, 'the commit that wrote status: shipped');
+    const lines = renderLines(s, new Date(`${day}T12:00:00Z`));
+    assert.match(lines[0], /^\S+ ✓ Sprint 2 of 2 · Arranged-only delivery · ▲ risk HIGH/);
+    assert.ok(lines.includes('  ▰│▰▰  3 of 3 stories done'), 'never "1 of 3" on a branch whose stories are on main');
+    assert.ok(lines.includes('  Refining ─ Ready ─ Building ─ QA ─ ◉ Shipped'));
+    const due = new Date(Date.parse(`${day}T00:00:00Z`) + 30 * 86_400_000);
+    const short = (d) => `${d.getUTCDate()} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getUTCMonth()]}`;
+    const shippedDay = new Date(`${day}T00:00:00Z`);
+    assert.ok(lines.includes(`  ▸ Now      shipped ${short(shippedDay)} · verdict due ${short(due)}`), lines.join('\n'));
+    assert.ok(!lines.some((l) => l.startsWith('  ⚑')), 'a close-out branch carries no story commit: nothing disagrees');
+    writeFileSync(readme, EPIC_README('Shipped').replace('status: in-progress', 'status: shipped'));
+    f.git('commit', '-qam', 'docs: drop the target');
+    assert.ok(
+      renderLines(resolveBuildState({ board: false, root: f.root, offline: true, gh: noGh })).some((l) =>
+        / · no target to read$/.test(l)
+      )
+    );
+  } finally {
+    f.done();
+  }
 });
 
 test("#27 review: a stacked sprint branch never inherits the previous sprint's commits as its story", () => {
@@ -376,7 +638,7 @@ test("#27 review: a stacked sprint branch never inherits the previous sprint's c
     const s = resolveBuildState({ root: f.root, offline: true, gh: noGh });
     assert.equal(s.story, null, 'S1.1 is sprint 1 — this branch is sprint 2');
     assert.equal(s.evidence.story_commits, 0, 'and it does not lift the status either');
-    assert.match(s.story_note, /name S1\.1 — none of them sprint 2 of this epic's/);
+    assert.match(s.story_note, /name S1\.1, none of them sprint 2 of this epic's/);
     assert.equal(s.sprint.n, 2, 'the sprint still comes from the branch');
     f.commit('S2.1 — first of sprint 2');
     assert.equal(resolveBuildState({ root: f.root, offline: true, gh: noGh }).story.id, 'S2.1');
@@ -426,7 +688,7 @@ test('#27 review: it never throws, and the CLI works through a symlinked path', 
       encoding: 'utf8',
       env: sealedEnv(),
     });
-    assert.match(out, /^No epic in flight — /, 'a symlinked invocation still prints the view');
+    assert.match(out, /^\S+ ○ No epic on this branch/, 'a symlinked invocation still prints the view');
   } finally {
     f.done();
   }
@@ -577,10 +839,13 @@ test('codex round 2: a sprint whose frontmatter cannot be read says so', () => {
     assert.equal(s.phase_written, null);
     assert.equal(s.status, null);
     assert.equal(s.status_source, 'unknown');
-    assert.match(
-      renderLines(s).at(-1),
-      /^ {2}Status {3}unknown — .*sprint-2\.md frontmatter could not be read/
-    );
+    // D4 (d) — the unreadable sprint is a ⚑ line under the track, as written.
+    const lines = renderLines(s);
+    const at = lines.indexOf('  stage unknown: the board could not be read');
+    assert.ok(at > 0, lines.join('\n'));
+    // #396 review — the header never claims a stage the track cannot name.
+    assert.match(lines[0], /^\S+ ◌ Sprint 2 of 2 /);
+    assert.match(lines[at + 1], /^ {2}⚑ Roadmap\/…\/sprint-2\.md frontmatter could not be read$/, 'right under the track');
     // A commit naming S2.1 does NOT lift it either: with sprint-2 unreadable, no story list says S2.1
     // exists, so the id is unlisted and the honest answer stays unknown.
     f.commit('S2.1 — work on the branch anyway');
@@ -696,19 +961,82 @@ test('a branch naming a seed with no epic is that bug/chore/spike — with its o
     s = resolveBuildState({ board: false, root: f.root, offline: true, gh: noGh });
     assert.equal(s.status, 'Building', 'a commit on the branch is the evidence');
     assert.deepEqual(renderLines(s), [
-      'Currently fixing',
-      '  Bug      A bug called checkout-typo    appetite S · risk LOW',
-      '  Seed     Roadmap/00-ideas/seeds/checkout-typo.md',
-      '  Status   Building',
+      `${s.repo} ▶ Bug · A bug called checkout-typo · S · ▲ risk LOW`,
+      '  Refining ─ Ready ─ ◉ Building ─ QA ─ Shipped',
+      '  ↗ Roadmap/00-ideas/seeds/checkout-typo.md',
+      '  ▸ Now      1 commit on this branch',
     ]);
     const gh = ghWith({ number: 9, url: 'u' });
     assert.equal(resolveBuildState({ board: false, root: f.root, gh }).status, 'In review');
+    f.git('switch', '-q', 'main');
     addSeed(f, 'why-slow', 'spike');
     f.git('switch', '-qc', 'spike/why-slow');
-    assert.equal(
+    assert.match(
       renderLines(resolveBuildState({ board: false, root: f.root, offline: true, gh: noGh }))[0],
-      'Currently investigating'
+      /^\S+ ❧ Spike · A spike called why-slow · S · ▲ risk LOW$/,
+      'a spike seed not started reads at Refining, by its type word'
     );
+  } finally {
+    f.done();
+  }
+});
+
+test('build-view-one-story D6: an idea being refined on its own docs/ branch reads Refining, its commits included', () => {
+  const f = fixture();
+  try {
+    addSeed(f, 'night-garden', 'feature');
+    const seed = join(f.root, 'Roadmap', '00-ideas', 'seeds', 'night-garden.md');
+    writeFileSync(
+      seed,
+      readFileSync(seed, 'utf8')
+        .replace('appetite: S', 'appetite: M\nhypothesis: "A garden at night."')
+        .replace('# Seed', '# Seed\n\nquote: $15–34 (M, n=24, p25–p75)')
+    );
+    f.git('commit', '-qam', 'seed: hypothesis');
+    f.git('switch', '-qc', 'docs/night-garden');
+    f.commit('docs(night-garden): refine the pitch');
+    const s = resolveBuildState({ board: false, root: f.root, offline: true, gh: noGh });
+    assert.deepEqual(renderLines(s), [
+      // the fixture's repo name is 18 columns, so the quote fits on the header at column 100
+      `${s.repo} ❧ Idea · A feature called night-garden · M · ▲ risk LOW`.padEnd(100 - 'quote $15–34'.length) + 'quote $15–34',
+      '  ◉ Refining ─ Ready ─ Building ─ QA ─ Shipped',
+      '  ↗ Roadmap/00-ideas/seeds/night-garden.md',
+      '  ❝ Why      A garden at night.',
+      '  ▸ Now      plan ready, waiting for your approval',
+    ]);
+  } finally {
+    f.done();
+  }
+});
+
+test('build-view-one-story D7: with no facts snapshot yet, this branch\'s story commits lift the track to Building', () => {
+  const f = fixture({ sprint2: 'Building' });
+  try {
+    f.git('switch', '-qc', 'feat/arranged-only-s2');
+    f.commit('S2.1 — agent surface parity');
+    const s = resolveBuildState({ root: f.root, offline: true, gh: noGh, elsewhere: false });
+    assert.equal(s.facts_mode, 'docs', 'a fresh checkout: no snapshot');
+    assert.equal(s.stage, 'Ready to build', 'the board alone reads the docs');
+    const lines = renderLines(s);
+    assert.match(lines[0], /^\S+ ▶ /);
+    assert.ok(lines.includes('  Refining ─ Ready ─ ◉ Building ─ QA ─ Shipped'), lines.join('\n'));
+  } finally {
+    f.done();
+  }
+});
+
+test('build-view-one-story D7 (#396 verifier): a ready PR lifts the track to QA; a draft one stays Building, as the board reads it', () => {
+  const f = fixture({ sprint2: 'Building' });
+  try {
+    f.git('switch', '-qc', 'feat/arranged-only-s2');
+    f.commit('S2.1 — agent surface parity');
+    const track = (draft) => {
+      const gather = liveFacts([{ number: 7, head: 'feat/arranged-only-s2', state: 'OPEN', draft, url: 'u' }], ['feat/arranged-only-s2']);
+      const s = resolveBuildState({ root: f.root, gather, elsewhere: false });
+      return { drawn: statusOf(renderLines(s)), board: s.stage };
+    };
+    assert.deepEqual(track(false), { drawn: 'Refining ─ Ready ─ Building ─ ◉ QA ─ Shipped', board: 'QA' });
+    assert.deepEqual(track(true), { drawn: 'Refining ─ Ready ─ ◉ Building ─ QA ─ Shipped', board: 'Building' }, 'the drawn stage agrees with the board');
   } finally {
     f.done();
   }
@@ -767,13 +1095,13 @@ test('on main with a builder in a worktree: the view names the worktree, and the
     );
     assert.deepEqual(main.elsewhere.open_epics, [], 'an epic shown from its worktree is not listed twice');
     assert.deepEqual(renderLines(main).slice(1), [
-      '  Worktree Arranged-only delivery · S2.1 · Building · feat/arranged-only-s2',
+      '  ⋯ Around   in other worktrees: Arranged-only delivery (S2.1, Building)',
     ]);
 
     const there = resolveBuildState({ board: false, root: wt, offline: true, gh: noGh });
     assert.equal(there.in_flight, true);
     assert.equal(there.elsewhere.worktrees.length, 0, 'the root is on main, so nothing else is in flight');
-    assert.equal(renderLines(there).length, 7, 'no Also line');
+    assert.ok(!renderLines(there).some((l) => l.includes('Around')), 'nothing else to say: no Around line');
   } finally {
     try {
       f.git('worktree', 'remove', '--force', wt);
@@ -791,7 +1119,7 @@ test('a shipped epic is never "open", and a worktree on it is not in flight else
     f.git('commit', '-qam', 'ship');
     const s = resolveBuildState({ board: false, root: f.root, offline: true, gh: noGh });
     assert.deepEqual(s.elsewhere, { worktrees: [], open_epics: [] });
-    assert.deepEqual(renderLines(s), [`No epic in flight — ${s.reason}`]);
+    assert.deepEqual(renderLines(s), [`${s.repo} ○ No epic on this branch · main`]);
   } finally {
     f.done();
   }
@@ -824,11 +1152,11 @@ test('S3.1: the stage comes from the resolver, said with its source; ONE facts g
     assert.equal(s.stage_source, 'github: PR #7 ready');
     assert.equal(s.evidence.pr.number, 7, 'the PR comes from the same facts — no second gh call');
     const lines = renderLines(s);
-    const at = lines.findIndex((l) => l.startsWith('  Status'));
-    assert.deepEqual(lines.slice(at, at + 2), [
-      '  Status   Refining ─ Ready ─ Building ─ ◉ QA ─ Shipped',
-      '           from github: PR #7 ready (live) · phase Building',
-    ]);
+    assert.equal(statusOf(lines), 'Refining ─ Ready ─ Building ─ ◉ QA ─ Shipped');
+    // build-view-one-story D4 — the source is in the JSON, and named in the text only when two disagree. A phase that
+    // lags the board (Building, PR ready) is the cadence, not a disagreement.
+    assert.equal(s.facts_mode, 'live');
+    assert.ok(!lines.some((l) => l.includes('from github') || l.startsWith('  ⚑')), lines.join('\n'));
   } finally {
     f.done();
   }
@@ -854,14 +1182,13 @@ test('S3.1: offline, the stage is read from the snapshot and says how old it is;
       elsewhere: false,
     });
     assert.equal(s.stage, 'Building');
-    assert.match(
-      statusOf(renderLines(s)),
-      /^Refining ─ Ready ─ ◉ Building ─ QA ─ Shipped \| from git: feat\/arranged-only-s2 \(snapshot, 3h ago\)/
-    );
+    assert.equal(statusOf(renderLines(s)), 'Refining ─ Ready ─ ◉ Building ─ QA ─ Shipped');
+    assert.match(s.stage_source, /^git: feat\/arranged-only-s2\b/);
+    assert.deepEqual([s.facts_mode, s.stage_age], ['snapshot', '3h ago']);
 
     rmSync(join(f.root, '.golden-frijoles'), { recursive: true, force: true });
     const none = resolveBuildState({ root: f.root, offline: true, elsewhere: false });
-    assert.match(statusOf(renderLines(none)), /\(docs only, no snapshot yet\)/);
+    assert.equal(none.facts_mode, 'docs');
   } finally {
     f.done();
   }
@@ -882,18 +1209,15 @@ test('S2.3: a live epic branch with no locked_at reads Locking architecture; the
     snapshot([]);
     const status = () =>
       statusOf(renderLines(resolveBuildState({ root: f.root, offline: true, elsewhere: false })));
-    assert.match(
-      status(),
-      /^Refining ─ Ready ─ ◉ Locking ─ QA ─ Shipped \| from git: feat\/arranged-only-s2 \(snapshot, /
-    );
+    assert.equal(status(), 'Refining ─ Ready ─ ◉ Locking ─ QA ─ Shipped');
     // A draft PR is still the lock in progress; a READY one is QA whatever the docs say (the stage resolver decides).
     snapshot([{ number: 9, head: 'feat/arranged-only-s2', state: 'OPEN', draft: true, url: 'u' }]);
-    assert.match(status(), /◉ Locking .*\| from github: PR #9 draft/);
+    assert.match(status(), /◉ Locking /);
     snapshot([{ number: 9, head: 'feat/arranged-only-s2', state: 'OPEN', draft: false, url: 'u' }]);
-    assert.match(status(), /◉ QA .*\| from github: PR #9 ready/);
+    assert.match(status(), /◉ QA /);
     snapshot([]);
     writeFileSync(readme, EPIC_README('Building'));
-    assert.match(status(), /◉ Building .*\| from git: feat\/arranged-only-s2/);
+    assert.match(status(), /◉ Building /);
   } finally {
     f.done();
   }
@@ -944,7 +1268,7 @@ test('S2.3 (#241 review): an epic built before the lock command — no stamp, ph
       const line = statusOf(
         renderLines(resolveBuildState({ root: f.root, offline: true, elsewhere: false }))
       );
-      assert.match(line, /◉ Building .*\| from git: /, phase);
+      assert.match(line, /◉ Building /, phase);
       assert.doesNotMatch(line, /Locking/, phase);
     } finally {
       f.done();
@@ -978,12 +1302,12 @@ test('build-view-upgrade D4: the link opens the epic page; with no board row it 
     f.git('checkout', '-qb', 'feat/arranged-only-s2');
     const lines = renderLines(resolveBuildState({ root: f.root, gather: liveFacts(), elsewhere: false }));
     assert.ok(
-      lines.includes('           ↗ https://goldenfrijoles.com/hub/demo/epic/arranged-only'),
+      lines.includes('  ↗ https://goldenfrijoles.com/hub/demo/epic/arranged-only'),
       lines.join('\n')
     );
     f.git('checkout', '-q', 'main');
     const idle = renderLines(resolveBuildState({ root: f.root, gather: liveFacts(), elsewhere: false }));
-    assert.ok(idle.includes('           ↗ https://goldenfrijoles.com/hub/demo/board'), idle.join('\n'));
+    assert.equal(idle[1], '  ↗ https://goldenfrijoles.com/hub/demo/board', 'nothing in flight: the board link is line 2');
     writeFileSync(
       join(f.root, 'golden-frijoles.config.json'),
       JSON.stringify({ board: { hubUrl: 'http://goldenfrijoles.com/hub/demo' } })
@@ -999,7 +1323,7 @@ test('build-view-upgrade D4: the link opens the epic page; with no board row it 
   }
 });
 
-test('build-view-upgrade D1: the Why line reads the README target, and says so when there is none', () => {
+test('build-view-one-story D5: Why and Target say what we know — the target, else the reason, then intent match', () => {
   const f = fixture();
   try {
     const readme = join(f.root, 'Roadmap', '04-shipping', 'arranged-only', 'README.md');
@@ -1010,38 +1334,40 @@ test('build-view-upgrade D1: the Why line reads the README target, and says so w
         resolveBuildState({ board: false, root: f.root, offline: true, gh: noGh }),
         now
       );
-      const at = lines.findIndex((l) => l.startsWith('  Why'));
-      return lines.slice(
-        at,
-        lines.findIndex((l) => l.startsWith('  Story'))
-      );
+      const at = lines.findIndex((l) => /^ {2}[❝⌖] /.test(l));
+      return lines.slice(at, lines.findIndex((l) => l.startsWith('  ▸ Now')));
     };
-    assert.deepEqual(why(), ['  Why      no target set']);
+    assert.deepEqual(why(), ['  ⌖ Target   none set']);
     const withTarget = (fields) =>
       writeFileSync(readme, EPIC_README().replace('type: feature', `type: feature\n${fields}`));
     withTarget(
-      'hypothesis: "Sellers who can mark a listing arranged-only stop losing orders to carrier rails they cannot fulfil at checkout time"\ntarget_metric: arranged_checkout_rate\ntarget_from: 12\ntarget_to: 30\nread_date: 2026-12-04'
+      'hypothesis: "Sellers who can mark a listing arranged-only stop losing orders to carrier rails they cannot fulfil at checkout time"\ntarget_metric: arranged_checkout_rate\ntarget_from: 12\ntarget_to: 30\nread_date: 2026-12-04\nintent_match: 84'
     );
     const lines = why();
-    // why-as-a-story D4: the Why wraps in full, then the target.
+    // why-as-a-story D4: the Why wraps in full; the Target is its own line.
     assert.deepEqual(lines, [
-      '  Why      Sellers who can mark a listing arranged-only stop losing orders to',
-      '           carrier rails they cannot fulfil at checkout time',
-      '           arranged_checkout_rate 12 ━━▸ 30 · read 4 Dec',
+      '  ❝ Why      Sellers who can mark a listing arranged-only stop losing orders to carrier rails they',
+      '             cannot fulfil at checkout time',
+      '  ⌖ Target   arranged_checkout_rate: 12 → 30 · read 4 Dec · intent match 84',
     ]);
-    for (const l of lines) assert.ok(l.length <= 80, `${l.length}: ${l}`);
+    for (const l of lines) assert.ok([...l].length <= 100, `${l.length}: ${l}`);
     withTarget('target_metric: "activation rate"\ntarget_from: 0.4\ntarget_to: 0.55\nread_date: null');
-    assert.deepEqual(why(), ['  Why      activation rate 0.4 ━━▸ 0.55 · read 30 days after shipping']);
-    withTarget('hypothesis: "a sentence on its own"\ntarget_metric: null');
-    assert.deepEqual(why(), ['  Why      a sentence on its own', '           no target set']);
+    assert.deepEqual(why(), ['  ⌖ Target   activation rate: 0.4 → 0.55 · read 30 days after shipping']);
+    // "no target set" said less than we know: a funded-anyway epic carries its reason.
+    withTarget('hypothesis: "a sentence on its own"\ntarget_metric: null\ngrounded: false\ngrounded_reason: "A terminal surface; no North Star input counts it."\nintent_match: 81');
+    assert.deepEqual(why(), [
+      '  ❝ Why      a sentence on its own',
+      '  ⌖ Target   none yet: A terminal surface; no North Star input counts it. · intent match 81',
+    ]);
     withTarget('target_metric: tiny\ntarget_from: 0.004\ntarget_to: 0.006');
     assert.deepEqual(
       why(),
-      ['  Why      tiny 0.004 ━━▸ 0.006 · read 30 days after shipping'],
+      ['  ⌖ Target   tiny: 0.004 → 0.006 · read 30 days after shipping'],
       'small numbers keep their digits'
     );
     withTarget('target_metric: half_a_target\ntarget_from: 1');
-    assert.deepEqual(why(), ['  Why      no target set'], 'a metric without both numbers is not a target');
+    assert.deepEqual(why(), ['  ⌖ Target   none set'], 'a metric without both numbers is not a target');
+    assert.ok(!renderLines(resolveBuildState({ board: false, root: f.root, offline: true, gh: noGh })).join('\n').includes('no target set'));
   } finally {
     f.done();
   }
@@ -1109,8 +1435,10 @@ test('S3.1: the Board line links to the card on the Hub when board.hubUrl is set
   try {
     f.git('checkout', '-qb', 'feat/arranged-only-s2');
     const plain = renderLines(resolveBuildState({ root: f.root, gather: liveFacts(), elsewhere: false }));
-    assert.ok(plain.some((l) => l.startsWith('  Board    ')));
-    assert.ok(!plain.some((l) => l.includes('↗')), 'no hub URL configured → no link, no error');
+    // build-view-one-story D8 — the board is other work: one Around line, never this epic itself.
+    assert.ok(plain.includes('  ⋯ Around   nothing else on the board'), plain.join('\n'));
+    // No hub URL configured → the link is the README's path, never an error and never a made-up URL.
+    assert.equal(plain.find((l) => l.startsWith('  ↗')), '  ↗ Roadmap/04-shipping/arranged-only/README.md');
 
     writeFileSync(
       join(f.root, 'golden-frijoles.config.json'),
@@ -1118,7 +1446,7 @@ test('S3.1: the Board line links to the card on the Hub when board.hubUrl is set
     );
     const linked = renderLines(resolveBuildState({ root: f.root, gather: liveFacts(), elsewhere: false }));
     assert.ok(
-      linked.includes('           ↗ https://goldenfrijoles.com/hub/demo/epic/arranged-only'),
+      linked.includes('  ↗ https://goldenfrijoles.com/hub/demo/epic/arranged-only'),
       linked.join('\n')
     );
   } finally {
@@ -1170,6 +1498,8 @@ test('stage agreement: the build view, the extractor rows and the six-column boa
       ([, rows]) => rows.some((r) => r.slug === 'arranged-only')
     )[0];
     assert.deepEqual([s.stage, row.stage, column], ['Building', 'Building', 'Building']);
+    // …and the stage the band DRAWS, not only the one the resolver stores (#396 verifier).
+    assert.equal(statusOf(renderLines(s)), 'Refining ─ Ready ─ ◉ Building ─ QA ─ Shipped');
   } finally {
     f.done();
   }
@@ -1215,12 +1545,13 @@ test('finops 1.3: on an epic branch with a summary row, Spend sits between Progr
     );
     const at = (label) => lines.findIndex((l) => l.startsWith(`  ${label}`));
     assert.equal(
-      lines[at('Spend')],
-      '  Spend    ≈$38 · no quote · 1.9M tok · 4 sessions',
-      'the fixture epic carries no quote'
+      lines[at('$ Spend')],
+      '  $ Spend    ≈$38 · no quote · 4 sessions',
+      'the fixture epic carries no quote, so no bar: a bar only against a known total'
     );
-    assert.equal(at('Spend'), at('Progress') + 1);
-    assert.equal(at('Status'), at('Spend') + 1);
+    // build-view-one-story D1 — what is happening, then what it costs, then what else is going on.
+    assert.ok(at('$ Spend') > at('▸ Now'));
+    assert.equal(at('$ Spend'), lines.length - 1, 'nothing else on this board-less view');
   } finally {
     f.done();
   }
@@ -1233,7 +1564,7 @@ test('finops 1.3: no summary, or no row for this epic, renders no Spend line —
     const state = () =>
       resolveBuildState({ root: f.root, offline: true, gh: noGh, board: false, elsewhere: false });
     assert.equal(state().spend, null);
-    assert.ok(!renderLines(state()).some((l) => l.startsWith('  Spend')));
+    assert.ok(!renderLines(state()).some((l) => l.startsWith('  $ Spend')));
     mkdirSync(join(f.root, '.golden-frijoles'), { recursive: true });
     writeFileSync(join(f.root, '.golden-frijoles', 'usage-summary.json'), SUMMARY({ other: { usd: 5 } }));
     assert.equal(state().spend, null);
@@ -1255,26 +1586,26 @@ test('finops 1.3: a lower bound reads ≥, and cents show only under $1', async 
   assert.equal(dollars(0.65), '≈$0.65');
   assert.equal(
     spendValue({ usd: 3, usd_known: true, mtok: 7.9, sessions: 1, basis: 'this machine' }),
-    '≈$3 · 7.9M tok · 1 session · this machine'
+    '≈$3 · 1 session · this machine'
   );
 });
 
-// ── finops S2.4 — the four states, pinned to the mockup approved at refining (seed → Visuals) ────────────────────────
-test('finops 2.4: the four Spend lines are the approved mockup’s, word for word', async () => {
+// ── finops S2.4's four states, in the words of the design approved 2026-10-14 (build-view-one-story D8) ──────────────
+test('build-view-one-story D8: the Spend line carries its own bar and the approved words', async () => {
   const { spendValue } = await import('./build-state.mjs');
   const q = { low: 30, high: 55, basis: 'M, n=6, p25–p75', appetite: 'M' };
   const spend = (usd, mtok, sessions) => ({ usd, usd_known: true, mtok, sessions, basis: 'this machine' });
-  assert.equal(spendValue(spend(38, 1.9, 4), q), '≈$38 of quote $30–55 (M) · 1.9M tok · 4 sessions');
-  assert.equal(spendValue(spend(71, 3.4, 9), q), '≈$71 · 29% over quote $30–55 (M) · 3.4M tok');
-  assert.equal(spendValue(spend(22, 1.1, 2), null), '≈$22 · no quote · 1.1M tok · 2 sessions');
+  assert.equal(spendValue(spend(38, 1.9, 4), q), '▰▰▰▰▰▰▰▱▱▱  ≈$38 of the $30–55 quote · 4 sessions');
+  assert.equal(spendValue(spend(71, 3.4, 9), q), '▰▰▰▰▰▰▰▰▰▰  ≈$71 · 29% over the $30–55 quote · 9 sessions');
+  assert.equal(spendValue(spend(22, 1.1, 2), null), '≈$22 · no quote · 2 sessions', 'no quote, no bar');
   assert.equal(
     spendValue(spend(55.1, 1, 1), q),
-    '≈$55 · <1% over quote $30–55 (M) · 1M tok',
+    '▰▰▰▰▰▰▰▰▰▰  ≈$55 · <1% over the $30–55 quote · 1 session',
     'never "0% over"'
   );
   assert.equal(
     spendValue(spend(9, 0.4, 1), { low: 25, high: 90, basis: 'M, n=2, wide', appetite: 'M' }),
-    '≈$9 of quote $25–90 (M · 2 past epics, wide) · 0.4M tok · 1 session'
+    '▰▱▱▱▱▱▱▱▱▱  ≈$9 of the $25–90 quote (2 past epics, wide) · 1 session'
   );
 });
 
@@ -1317,9 +1648,11 @@ test('finops 2.4: on a quoted epic branch the resolver prints the inside state',
       resolveBuildState({ root: f.root, offline: true, gh: noGh, board: false, elsewhere: false })
     );
     assert.ok(
-      lines.includes('  Spend    ≈$38 of quote $30–55 (M) · 1.9M tok · 4 sessions'),
+      lines.includes('  $ Spend    ▰▰▰▰▰▰▰▱▱▱  ≈$38 of the $30–55 quote · 4 sessions'),
       lines.join('\n')
     );
+    // D2 — the size comes off `quote_basis` when the README has no `appetite:` (3 of 92 do).
+    assert.match(lines[0], / · Arranged-only delivery · M · ▲ risk HIGH/);
   } finally {
     f.done();
   }
@@ -1330,7 +1663,7 @@ test('finops S3 (round 3, #232): a usage push the engine refused shows on the Sp
   const spend = { usd: 22, usd_known: true, mtok: 1.1, sessions: 2, basis: 'this machine', push_rejected: 2 };
   assert.equal(
     spendValue(spend, null),
-    '≈$22 · no quote · 1.1M tok · 2 sessions · 2 usage pushes refused — epic-actuals --push --json'
+    '≈$22 · no quote · 2 sessions · 2 usage pushes refused — epic-actuals --push --json'
   );
-  assert.equal(spendValue({ ...spend, push_rejected: 0 }, null), '≈$22 · no quote · 1.1M tok · 2 sessions');
+  assert.equal(spendValue({ ...spend, push_rejected: 0 }, null), '≈$22 · no quote · 2 sessions');
 });

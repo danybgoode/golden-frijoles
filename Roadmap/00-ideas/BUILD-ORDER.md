@@ -28,7 +28,7 @@ _a pitch is waiting at the approval gate._
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
-- [The build view tells one story](../09-platform-infra/build-view-one-story/README.md) — #95 · 09 Platform Infra · 0/7 stories · risk: Low · appetite M · _docs: status scaffolded_
+- [The build view tells one story](../09-platform-infra/build-view-one-story/README.md) — #95 · 09 Platform Infra · 7/7 stories · risk: Low · appetite M · _docs: status in-progress_
 - [Template scripts hold to the gates their consumers run](../09-platform-infra/template-scripts-consumer-gates/README.md) — #96 · 09 Platform Infra · 0/3 stories · risk: High · appetite S · _docs: status scaffolded_
 - [A reading for proving_workspaces](../01-growth-engine/proving-workspaces-reading/README.md) — #98 · 01 Growth Engine · 0/3 stories · risk: High · appetite S · _docs: status scaffolded_
 - [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #99 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_

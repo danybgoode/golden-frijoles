@@ -120,66 +120,128 @@ test('the bundle exists and is the real resolver: it emits `lines` for this repo
 
 // ── The band (fix/build-view-band): a status row cut the view off at the right edge and drew its newlines
 // as U+FFFD. The band decorates the resolver's lines; these pin that it never adds or drops a fact.
-const { bandRowsFrom, barsOf, trackOf, toneOf } = view;
+const { bandRowsFrom, barsOf, trackOf, toneOf, headerOf, headerLayout } = view;
 
-test('bandRowsFrom: one row per resolver line, every fact kept', () => {
-  const lines = [
-    'Currently building',
-    '  Epic     Semantic lint — Jev judges    09-platform-infra · risk LOW',
-    '  Story    S1.2 — the rule',
-    '           As a PM, I want X, so that Y.',
-    '  Progress ▰▱│▱▱▱ 1 of 5 stories done · in flight S1.2 · Sprint 1 of 2',
-    '  Status   Grooming ─ Ready ─ ◉ Building ─ QA ─ Shipped',
-    '           from git: feat/y (live)',
-    '  Also     1 more in other worktrees: feat/y',
-  ];
-  const rows = bandRowsFrom(lines.join('\n'));
-  assert.equal(rows.length, lines.length);
-  assert.deepEqual(rows.map((r) => r.kind), ['heading', 'field', 'field', 'note', 'field', 'field', 'note', 'field']);
-  for (const [i, row] of rows.entries()) {
-    const shown = row.kind === 'field' ? `${row.label} ${row.value}` : row.value;
-    assert.equal(shown.replace(/\s+/g, ' '), lines[i].trim().replace(/\s+/g, ' '), `row ${i} is its line`);
+// The design's building and idle states as the resolver prints them (build-state.test.mjs pins the same lines).
+const BUILDING = [
+  'golden-frijoles ▶ Sprint 1 of 2 · Funnel truth · L · ▲ risk HIGH      ▰▰▱│▱▱▱▱▱  2 of 8 stories done',
+  '  Refining ─ Ready ─ ◉ Building ─ QA ─ Shipped',
+  '  ⚑ the epic\'s docs say Shaping, but this branch has story commits',
+  '  ↗ https://goldenfrijoles.com/hub/golden-frijoles/epic/funnel-truth',
+  '  ❝ Why      A funnel today is one number per period. Showing it by month lets founders judge a bet',
+  "             over its whole life. We'll know when members open funnel trends.",
+  '  ⌖ Target   members opening a trend: 0 → 3 · read 13 Nov · intent match 84',
+  '  ▸ Now      S1.3 The trend on the flag page and the epic page',
+  '             As a founder reading a feature, I want the trend where I read its funnel, so that I',
+  '             judge the bet over its whole life.',
+  '  $ Spend    ▰▰▰▱▱▱▱▱▱▱  ≈$22 of the $49–68 quote · 1 session',
+  '  ⋯ Around   1 in QA · 6 ready · next up: Drill impact for agents (#93)',
+];
+const IDLE = [
+  'golden-frijoles ○ No epic on this branch · docs/seed-consolidation',
+  '  ↗ https://goldenfrijoles.com/hub/golden-frijoles/board',
+  '  ⋯ Around   1 building · 1 in QA · 7 ready',
+  '             in other worktrees: The outcome report for any product (S1.3, Building) · A golden',
+  '             welcome and recovery pages (QA)',
+  '  → Next     /build delivery-stale-reclaim-uncounted   (top of the ready list)',
+];
+const words = (t) => t.split(/\s+/).filter((w) => w && w !== '·');
+const drawn = (row) =>
+  row.kind === 'header'
+    ? [row.repo, row.symbol, row.lead, row.title, row.size, row.risk && `▲ risk ${row.risk}`, row.right].filter(Boolean).join(' ')
+    : row.kind === 'field'
+      ? `${row.glyph} ${row.label} ${row.value}`
+      : row.glyph
+        ? `${row.glyph} ${row.value}`
+        : row.value;
+
+test('bandRowsFrom: every word of the resolver\'s lines is drawn, in order — the band adds and drops nothing (D3)', () => {
+  for (const lines of [BUILDING, IDLE]) {
+    const rows = bandRowsFrom(lines.join('\n'));
+    assert.deepEqual(rows.flatMap((r) => words(drawn(r))), words(lines.join(' ')));
   }
-  assert.equal(rows[1].main, 'Semantic lint — Jev judges');
-  assert.equal(rows[1].meta, '09-platform-infra · risk LOW');
-  assert.equal(rows[1].risk, 'LOW');
-  assert.equal(rows[5].tone, 'busy');
-});
-
-test('bandRowsFrom: the idle view, and nothing for no text', () => {
-  const rows = bandRowsFrom('No epic in flight — on main\n  Open     X · Verifying · 09-platform-infra');
-  assert.equal(rows[0].glyph, '◇');
-  assert.equal(rows[1].label, 'Open');
-  assert.equal(rows[1].tone, 'info');
+  const rows = bandRowsFrom(BUILDING.join('\n'));
+  assert.deepEqual(
+    rows.map((r) => r.kind + (r.label ? `:${r.label}` : '')),
+    ['header', 'track', 'flag', 'link', 'field:Why', 'field:Target', 'field:Now', 'story', 'field:Spend', 'field:Around']
+  );
+  // A continuation joins its field (so the band wraps it at its own width); the Now field's user story is its own row.
+  assert.equal(rows[4].value, "A funnel today is one number per period. Showing it by month lets founders judge a bet over its whole life. We'll know when members open funnel trends.");
+  assert.equal(rows[7].value, 'As a founder reading a feature, I want the trend where I read its funnel, so that I judge the bet over its whole life.');
+  assert.deepEqual(
+    { ...rows[0], value: undefined },
+    { kind: 'header', repo: 'golden-frijoles', symbol: '▶', lead: 'Sprint 1 of 2', title: 'Funnel truth', size: 'L', risk: 'HIGH', right: '▰▰▱│▱▱▱▱▱  2 of 8 stories done', tone: 'busy', value: undefined }
+  );
+  assert.equal(rows[1].tone, 'busy');
+  assert.equal(rows[8].tone, 'good');
   for (const none of [null, undefined, '', '  \n']) assert.deepEqual(bandRowsFrom(none), []);
 });
 
-test('barsOf / trackOf / toneOf: colour hints read from the resolver\'s own words', () => {
-  assert.deepEqual(barsOf('▰▰▱│▱ 2 of 4 stories done · Sprint 1 of 2'), {
+test('bandRowsFrom: a bar the resolver put on its own line joins the header; the idle header has no title', () => {
+  const rows = bandRowsFrom(['golden-frijoles ◇ Sprint 1 of 1 · The build view tells one story · M · ▲ risk LOW', '  ▱▱▱▱▱▱▱  0 of 7 stories done', '  Refining ─ ◉ Ready ─ Building ─ QA ─ Shipped'].join('\n'));
+  assert.equal(rows.length, 2);
+  assert.equal(rows[0].right, '▱▱▱▱▱▱▱  0 of 7 stories done');
+  assert.equal(rows[0].title, 'The build view tells one story');
+  const idle = bandRowsFrom(IDLE.join('\n'));
+  assert.deepEqual([idle[0].symbol, idle[0].lead, idle[0].title, idle[0].tone], ['○', 'No epic on this branch · docs/seed-consolidation', null, 'plain']);
+  assert.equal(headerOf('golden-frijoles ❧ Idea · Owed on screen · M · ▲ risk HIGH      quote $15–34').right, 'quote $15–34');
+  assert.equal(headerOf('repo ✓ Sprint 2 of 2 · A · B, with a dot · S').title, 'A · B, with a dot', 'a title may hold the separator');
+});
+
+test('headerLayout: one row when it fits, the bar on its own row under 90 columns, only the title is ever clipped (D3)', () => {
+  const h = headerOf(BUILDING[0]);
+  assert.deepEqual(headerLayout(h, 120), { title: 'Funnel truth', rightRow: false });
+  assert.deepEqual(headerLayout(h, 100), { title: 'Funnel truth', rightRow: false }, 'the design fits 100 columns');
+  assert.deepEqual(headerLayout(h, 89), { title: 'Funnel truth', rightRow: true });
+  const long = { ...h, title: 'The outcome report for any product, with its pace, its spend and its links' };
+  assert.equal(headerLayout(long, 120).rightRow, true, 'the bar moves before the title is cut');
+  const tight = headerLayout(long, 60);
+  assert.equal([...tight.title].length, 58 - [...'golden-frijoles ▶ Sprint 1 of 2 ·  · L · ▲ risk HIGH'].length);
+  assert.ok(tight.title.endsWith('…'));
+});
+
+test('barsOf / trackOf / toneOf / spendOf: colour hints read from the resolver\'s own glyphs and words', () => {
+  assert.deepEqual(barsOf('▰▰▱│▱  2 of 4 stories done'), {
     runs: [
       { kind: 'done', text: '▰▰' },
       { kind: 'todo', text: '▱' },
       { kind: 'sep', text: '│' },
       { kind: 'todo', text: '▱' },
     ],
-    rest: '2 of 4 stories done · Sprint 1 of 2',
+    rest: '2 of 4 stories done',
   });
-  assert.equal(barsOf('3 of 7 stories have commits · Sprint 1 of 2'), null, 'no bar drawn by the mod itself');
-  assert.deepEqual(trackOf('Grooming ─ Ready ─ ◉ Building ─ QA ─ Shipped'), {
-    before: 'Grooming ─ Ready ─ ',
+  assert.equal(barsOf('quote $15–34'), null, 'no bar drawn by the mod itself');
+  assert.deepEqual(trackOf('Refining ─ Ready ─ ◉ Building ─ QA ─ Shipped'), {
+    before: 'Refining ─ Ready ─ ',
     mark: '◉ Building',
     after: ' ─ QA ─ Shipped',
     word: 'Building',
   });
-  assert.equal(trackOf('Grooming ─ Ready ─ Building ─ QA ─ ◉ Shipped').after, '');
+  assert.equal(trackOf('Refining ─ Ready ─ Building ─ QA ─ ◉ Shipped').after, '');
   assert.equal(trackOf('Building'), null);
   // The track always names Shipped: the tone comes from the MARKED word, never from the whole line.
-  assert.equal(bandRowsFrom('Currently building\n  Status   Grooming ─ Ready ─ ◉ Building ─ QA ─ Shipped')[1].tone, 'busy');
-  assert.equal(bandRowsFrom('Currently building\n  Status   Grooming ─ Ready ─ Building ─ ◉ QA ─ Shipped')[1].tone, 'info');
-  assert.equal(bandRowsFrom('Currently building\n  Status   Grooming ─ Ready ─ ◉ Locking ─ QA ─ Shipped')[1].tone, 'busy');
+  const tone = (track) => bandRowsFrom(`r ▶ Sprint 1 of 1 · X\n  ${track}`)[1].tone;
+  assert.equal(tone('Refining ─ Ready ─ ◉ Building ─ QA ─ Shipped'), 'busy');
+  assert.equal(tone('Refining ─ Ready ─ Building ─ ◉ QA ─ Shipped'), 'info');
+  assert.equal(tone('Refining ─ Ready ─ ◉ Locking ─ QA ─ Shipped'), 'busy');
+  assert.equal(tone('◉ Refining ─ Ready ─ Building ─ QA ─ Shipped'), 'busy');
+  assert.equal(tone('Refining ─ Ready ─ Building ─ QA ─ ◉ Shipped'), 'good');
   assert.equal(toneOf('unknown — no README'), 'bad');
-  assert.equal(toneOf('Shipped'), 'good');
   assert.equal(toneOf('Something else'), 'plain');
+  assert.deepEqual(view.spendOf('▰▰▰▰▰▰▰▱▱▱  ≈$38 of the $30–55 quote · 4 sessions'), {
+    tone: 'good',
+    bar: { filled: 7, width: 10 },
+    rest: '≈$38 of the $30–55 quote · 4 sessions',
+    over: null,
+  });
+  assert.deepEqual(view.spendOf('▰▰▰▰▰▰▰▰▰▰  ≈$71 · 29% over the $30–55 quote · 9 sessions'), {
+    tone: 'bad',
+    bar: { filled: 10, width: 10 },
+    rest: '≈$71 · 29% over the $30–55 quote · 9 sessions',
+    over: '29% over',
+  });
+  assert.equal(view.spendOf('▰▰▰▰▰▰▰▰▰▰  ≈$55 · <1% over the $30–55 quote · 1 session').over, '<1% over');
+  assert.deepEqual(view.spendOf('≈$22 · no quote · 2 sessions'), { tone: 'plain', bar: null, rest: '≈$22 · no quote · 2 sessions', over: null });
 });
 
 // ── attempt: the guard every `$.state` call goes through (fix/build-view-no-state-at-start) ─────────────
@@ -216,20 +278,6 @@ test('attempt turns a rejection into the fallback, and a failing onFail cannot u
 });
 
 // ── finops S1.3 ──────────────────────────────────────────────────────────────────────────────────────────────────────
-test('finops 1.3: the Spend row is a field with the $ glyph, plain tone, words untouched', () => {
-  const rows = view.bandRowsFrom('Currently building\n  Spend    ≈$38 · 1.9M tok · 4 sessions · this machine');
-  assert.deepEqual(rows[1], {
-    kind: 'field',
-    glyph: '$',
-    label: 'Spend',
-    value: '≈$38 · 1.9M tok · 4 sessions · this machine',
-    main: '≈$38 · 1.9M tok · 4 sessions · this machine',
-    meta: null,
-    risk: null,
-    tone: 'plain',
-  });
-});
-
 test('finops 1.3 (D24): the usage refresh runs the BUNDLED script, at most once a minute, only with a repo', () => {
   assert.deepEqual(view.epicActualsArgv('/r', '/plugin/vendor/epic-actuals.mjs'), [
     'node',
@@ -244,15 +292,6 @@ test('finops 1.3 (D24): the usage refresh runs the BUNDLED script, at most once 
   assert.equal(view.shouldRefreshUsage(1_000_000 - 30_000, '/r', 1_000_000), false);
   assert.equal(view.shouldRefreshUsage(1_000_000 - 61_000, '/r', 1_000_000), true);
   assert.equal(view.shouldRefreshUsage(null, null, 1_000_000), false, 'no repo root, nothing to refresh');
-});
-
-test('finops 2.4: the Spend bar and tone come from the resolver’s own words', () => {
-  assert.deepEqual(view.spendOf('≈$38 of quote $30–55 (M) · 1.9M tok · 4 sessions'), { tone: 'good', bar: { filled: 7, width: 10 } });
-  assert.deepEqual(view.spendOf('≈$71 · 29% over quote $30–55 (M) · 3.4M tok'), { tone: 'bad', bar: { filled: 10, width: 10 } });
-  assert.deepEqual(view.spendOf('≈$22 · no quote · 1.1M tok · 2 sessions'), { tone: 'plain', bar: null });
-  assert.deepEqual(view.spendOf('≈$9 of quote $25–90 (M · 2 past epics, wide) · 0.4M tok'), { tone: 'good', bar: { filled: 1, width: 10 } });
-  assert.equal(view.bandRowsFrom('Currently building\n  Spend    ≈$71 · 29% over quote $30–55 (M) · 3.4M tok')[1].tone, 'bad');
-  assert.deepEqual(view.spendOf('≈$55 · <1% over quote $30–55 (M) · 1M tok'), { tone: 'bad', bar: { filled: 10, width: 10 } });
 });
 
 // ── live-build-view S1 ──────────────────────────────────────────────────────────────────────────────────────
@@ -307,7 +346,7 @@ test('isOnlineTrigger: a push or a PR state change, nothing else', () => {
 });
 
 test('versionRow: only when the PUBLISHED release is higher', () => {
-  assert.equal(view.versionRow('0.24.0', '0.24.1'), '  Plugin   0.24.0 installed · 0.24.1 published — /plugin to update');
+  assert.equal(view.versionRow('0.24.0', '0.24.1'), '  ⬆ Plugin   0.24.0 installed · 0.24.1 published — /plugin to update');
   assert.equal(view.versionRow('0.14.1', '0.24.1') !== null, true, 'minor beats patch numerically, not as text');
   assert.equal(view.versionRow('0.24.1', '0.24.1'), null);
   assert.equal(view.versionRow('0.25.0', '0.24.1'), null, 'a newer dev copy is not "older"');
@@ -449,7 +488,7 @@ test('createViewer: the Plugin row rides under the resolver lines, never on its 
   const v = view.createViewer(io);
   v.setPluginRow(view.versionRow('0.24.0', '0.25.0'));
   await v.check('turn');
-  assert.match(io.shown.at(-1), /^Currently building\n {2}Plugin {3}0\.24\.0 installed/);
+  assert.match(io.shown.at(-1), /^Currently building\n {2}⬆ Plugin {3}0\.24\.0 installed/);
   const empty = fakeIo({ resolveStdout: '{}' });
   const w = view.createViewer(empty);
   w.setPluginRow(view.versionRow('0.24.0', '0.25.0'));
@@ -590,4 +629,44 @@ test('#240 review r2: a cache write that fails still draws the view (the store f
   assert.equal(await v.check('turn'), 'resolved');
   assert.deepEqual(io.shown, ['Currently building']);
   assert.ok(io.logs.some((l) => /could not cache the view/.test(l)));
+});
+
+// ── build-view-one-story S1.7 (D11) — no glyph the view draws is wide or an emoji ────────────────────────────────────
+// A wide or emoji glyph takes two columns in some terminals and shifts every column after it, so the band's layout
+// (which counts code points as columns) and the CLI's alignment would both break. The rule: no code point whose East
+// Asian Width is W or F, and none with Emoji_Presentation. Ambiguous-width glyphs (`◇ ─ │ ▶`) stay allowed.
+// The W and F ranges of Unicode's EastAsianWidth.txt (15.1), collapsed; the SMP emoji blocks are taken whole.
+const WIDE = [
+  [0x1100, 0x115f], [0x231a, 0x231b], [0x2329, 0x232a], [0x23e9, 0x23ec], [0x23f0, 0x23f0], [0x23f3, 0x23f3],
+  [0x25fd, 0x25fe], [0x2614, 0x2615], [0x2648, 0x2653], [0x267f, 0x267f], [0x2693, 0x2693], [0x26a1, 0x26a1],
+  [0x26aa, 0x26ab], [0x26bd, 0x26be], [0x26c4, 0x26c5], [0x26ce, 0x26ce], [0x26d4, 0x26d4], [0x26ea, 0x26ea],
+  [0x26f2, 0x26f3], [0x26f5, 0x26f5], [0x26fa, 0x26fa], [0x26fd, 0x26fd], [0x2705, 0x2705], [0x270a, 0x270b],
+  [0x2728, 0x2728], [0x274c, 0x274c], [0x274e, 0x274e], [0x2753, 0x2755], [0x2757, 0x2757], [0x2795, 0x2797],
+  [0x27b0, 0x27b0], [0x27bf, 0x27bf], [0x2b1b, 0x2b1c], [0x2b50, 0x2b50], [0x2b55, 0x2b55], [0x2e80, 0x303e],
+  [0x3041, 0x33ff], [0x3400, 0x4dbf], [0x4e00, 0x9fff], [0xa000, 0xa4cf], [0xa960, 0xa97f], [0xac00, 0xd7a3],
+  [0xf900, 0xfaff], [0xfe10, 0xfe19], [0xfe30, 0xfe6f], [0xff00, 0xff60], [0xffe0, 0xffe6], [0x16fe0, 0x16fe4],
+  [0x17000, 0x18cff], [0x1b000, 0x1b2ff], [0x1f004, 0x1f004], [0x1f0cf, 0x1f0cf], [0x1f18e, 0x1f18e],
+  [0x1f191, 0x1f19a], [0x1f200, 0x1f251], [0x1f300, 0x1f64f], [0x1f680, 0x1f6ff], [0x1f7e0, 0x1f7eb],
+  [0x1f90c, 0x1f9ff], [0x1fa70, 0x1faff], [0x20000, 0x3fffd],
+];
+const tooWide = (ch) => {
+  const cp = ch.codePointAt(0);
+  return WIDE.some(([lo, hi]) => cp >= lo && cp <= hi) || /\p{Emoji_Presentation}/u.test(ch);
+};
+
+test('D11: the width rule itself — it catches emoji and CJK, and lets the view\'s own ambiguous glyphs through', () => {
+  for (const bad of ['✅', '🚀', '中', '⌚', '⭐', '❌']) assert.equal(tooWide(bad), true, bad);
+  for (const ok of ['▶', '◇', '─', '│', '◉', '▰', '▱', '⚑', '❝', '⌖', '⋯', '↗', '❧', '✓', '◎', '○', '▲', '⬆', '$'])
+    assert.equal(tooWide(ok), false, ok);
+});
+
+test('D11: every glyph in the band, the session line and the bundled resolver is single-width text', async () => {
+  const { GLYPHS, STATE_SYMBOLS } = await import('./vendor/build-state.mjs');
+  const drawn = [...Object.values(GLYPHS), ...Object.values(STATE_SYMBOLS), ...Object.keys(view.SYMBOL_TONES), ...BUILDING, ...IDLE];
+  for (const file of ['index.tsx', 'build-view.mjs', 'vendor/build-state.mjs', '../skills/refine/session-budget.mjs'])
+    drawn.push(readFileSync(join(HERE, file), 'utf8'));
+  const offenders = new Set();
+  for (const text of drawn) for (const ch of text) if (ch.codePointAt(0) > 127 && tooWide(ch)) offenders.add(ch);
+  assert.deepEqual([...offenders], [], `wide or emoji glyphs: ${[...offenders].join(' ')}`);
+  assert.equal(new Set(Object.values(GLYPHS)).size, Object.values(GLYPHS).length, 'one glyph per meaning');
 });
