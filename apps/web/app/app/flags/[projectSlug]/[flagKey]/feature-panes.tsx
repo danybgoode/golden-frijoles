@@ -187,9 +187,7 @@ export function ImpactPane({ flagKey, result }: { flagKey: string; result: Featu
         <details className="ds-gaps" key={`${input.key}-readings`}>
           <summary>Every reading · {input.name}</summary>
           <div className="ds-disclosure-body">
-            <p className="ds-hint">
-              {readingsSummary(input)}
-            </p>
+            <p className="ds-hint">{readingsSummary(input)}</p>
             <ImpactSeriesTable inputName={input.name} series={input.series} />
           </div>
         </details>

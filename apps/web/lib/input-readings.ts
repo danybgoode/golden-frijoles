@@ -63,7 +63,10 @@ export function inputReadings(
  * table. A per-day `count` series is summed; a `distinct_monthly` series is a running level (1, 2, 3 is three
  * workspaces, never six), so it names its latest reading instead and leaves the 0 reset points out of the count.
  */
-export function readingsSummary(input: { aggregate?: string; series: { date: string; value: number }[] }): string {
+export function readingsSummary(input: {
+  aggregate?: string
+  series: { date: string; value: number }[]
+}): string {
   const { series } = input
   if (series.length === 0) return 'Nothing recorded yet.'
   const span = `${series[0].date} → ${series[series.length - 1].date}`

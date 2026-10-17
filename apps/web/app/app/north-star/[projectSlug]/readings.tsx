@@ -33,9 +33,7 @@ export function NorthStarReadings({ inputs }: { inputs: FeatureImpactInput[] }) 
         inputs.map((input) => (
           <section key={input.key}>
             <h2>{input.name}</h2>
-            <p className="ds-hint">
-              {readingsSummary(input)}
-            </p>
+            <p className="ds-hint">{readingsSummary(input)}</p>
             <ImpactSeriesTable inputName={input.name} series={input.series} />
           </section>
         ))
