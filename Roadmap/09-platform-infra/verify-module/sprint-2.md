@@ -2,7 +2,7 @@
 epic: verify-module
 sprint: 2
 title: "Nightly and shadow"
-risk: low
+risk: high   # re-tiered 2026-10-16: the first contents:write workflow here + a new secret (shared infra; #387)
 phase: Shaping
 stories_total: 3
 stories:
@@ -80,8 +80,10 @@ count across 29 → 30 → 31 and sees exactly one ping.
 Env: GitHub, this repo.
 
 1. Run `verify-nightly.yml` by hand (workflow_dispatch) on `main`.
-   → it finishes green within its timeout and opens no PR.
-2. Run it on a branch whose model has a seeded violation.
+   → it finishes green within its timeout and opens no `claude/verify-<invariant>` PR. (*Amended 2026-10-16:* the
+   shadow log is the same run, so once a PR has merged since the log's start it does open or update
+   `claude/verify-jev-shadow` — that is S2.2 working, not a finding.)
+2. Run it with `depth: quick` on a branch whose model has a seeded violation.
    → one `claude/verify-…` PR appears with a seed and a trace; a second run updates it instead of opening another.
 3. Merge a PR with `Verify depth: light` in its body, then run the nightly by hand.
    → its `claude/` PR adds a line to `verify/jev-shadow.jsonl` with Jev's call and `light`; no comment on the merged PR.

@@ -29,6 +29,13 @@
   claims to defend (Roadmap/LEARNINGS.md: a spec can be unreachable-by-construction and still pass):
 - **Smoke run / owed to Daniel:**
 
+## Verify depth
+<!-- Your call, kept beside Jev's in verify/jev-shadow.jsonl (verify-module S2.2; shadow only, nothing gates on it).
+     Keep exactly ONE word after the colon. off = can't affect the outbox or the flag evaluator; light = re-running
+     the existing model checks/proofs is enough; standard = the spec needs updating + a bounded check or diff test;
+     deep = new invariants or proofs, and a human reads the counterexamples. -->
+Verify depth: off | light | standard | deep
+
 ## Cross-agent review — required on every non-trivial PR
 <!-- The builder does not approve its own diff. Runs LOCALLY (a runner has no agy/devin auth), so
      nothing enforces this but you — an unrun cross-review is a blocked merge. Re-run the finder

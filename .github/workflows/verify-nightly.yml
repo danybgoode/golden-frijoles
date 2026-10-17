@@ -1,0 +1,83 @@
+# The outbox model's exhaustive check, nightly, plus Jev's verify-depth calls in shadow (verify-module S2, D7–D10).
+# Never on a pull request: the exhaustive table takes most of an hour (verify/README.md, rule 3).
+#   - A property that should hold and doesn't → one `claude/verify-<invariant>` PR with a raw seed and the trace; a
+#     repeat updates it. A row with no result, or a lost expected violation, is the check breaking → red + a ping.
+#   - Every PR merged since the shadow log's start → Jev's call beside the builder's label, on `claude/verify-jev-shadow`.
+#   - The day the log reaches 30 labelled PRs → one Telegram ping and an owed line, once.
+# Nothing is pushed to main. PRs opened with GITHUB_TOKEN don't trigger CI, so `gate` appears on them after a push or
+# a close/reopen (approved 2026-10-16 with "Allow GitHub Actions to create pull requests").
+name: verify-nightly
+
+on:
+  schedule:
+    # 00:41 in Mexico City (UTC-6): off the hour, and before browser-nightly, so the two never queue together.
+    - cron: '41 6 * * *'
+  workflow_dispatch:
+    inputs:
+      depth:
+        description: 'full = the exhaustive table (nightly); quick = the simulation table only (for a smoke run)'
+        type: choice
+        options: [full, quick]
+        default: full
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: verify-nightly
+  cancel-in-progress: false
+
+jobs:
+  nightly:
+    name: Deep model check + Jev shadow log
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      # No token left in .git/config: the model check runs third-party code (npx quint, the Apalache download), and
+      # only the filing step below needs to push. It gets the token through `gh auth setup-git` (agy + verifier, #387).
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+      # Quint's evaluator and the Apalache jar `quint verify` downloads on first use.
+      - uses: actions/cache@v6
+        with:
+          path: ~/.quint
+          key: quint-0.33.0-apalache-${{ runner.os }}
+      # Its exit code is not the verdict: verify-nightly.mjs reads every row (a finding is filed, a broken row is red).
+      - name: Model check (${{ inputs.depth || 'full' }})
+        env:
+          DEPTH: ${{ inputs.depth }}
+        # A schedule has no inputs: an empty DEPTH is the nightly's full table. Only `quick` is the short one.
+        run: |
+          if [ "$DEPTH" = quick ]; then mode=quick; else mode=full; fi
+          bash verify/quint/check.sh "$mode" --itf-dir "$RUNNER_TEMP/itf" --rows "$RUNNER_TEMP/rows.tsv" \
+            || echo "check.sh exited $? — the rows decide"
+      - name: File findings · log Jev's calls · the 30 ping
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CICD_CHAT_ID: ${{ secrets.TELEGRAM_CICD_CHAT_ID }}
+        run: |
+          gh auth setup-git
+          node scripts/verify-nightly.mjs --rows "$RUNNER_TEMP/rows.tsv" --itf-dir "$RUNNER_TEMP/itf"
+      # cancelled() too: a run killed by timeout-minutes (a hung Apalache) ends cancelled, not failed (verifier #387).
+      - name: Ping Telegram on red
+        if: failure() || cancelled()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CICD_CHAT_ID: ${{ secrets.TELEGRAM_CICD_CHAT_ID }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: >-
+          node scripts/telegram-notify.mjs --repo golden-frijoles --icon 🔴 --sha "$GITHUB_SHA"
+          --subject "verify-nightly is RED: the model check broke, or a finding could not be filed"
+          --url "$RUN_URL" --link-label "the run"
