@@ -343,6 +343,13 @@ one-liner + why + date shape.
 
 ## Review quality
 
+- **Ask every guard what it does when the thing it guards is absent, or already done.** verify-module's two
+  Blocking findings were the same question from two reviewers: a pin check that passed when `targets` was emptied
+  (nothing to compare, so nothing differed), and a nightly that re-filed a finding every night after it merged
+  (merged branches survive here, and it checked "branch exists" before "already on main"). Both were green by
+  construction, and both closed as a class: required groups that must be present, and the done-state checked
+  first. *(2026-10-17, verify-module #386/#387.)*
+
 - **Two surfaces that show "the same" thing need a test against EACH OTHER.** The flags page and `frijoles flags get` were
   each tested and each right by their own definition, and they disagreed in production. A parity test (one fixture
   set, both views, mutation-checked) is what makes a split go red. And a display rule reaches every reader of its data:
@@ -701,7 +708,10 @@ one-liner + why + date shape.
   `grep -c` disproves in one line each and that a green `tsc` makes impossible. On the passes where
   it did NOT fall back it found two real defects in a guard that had already been mutation-verified.
   **Both halves are the lesson:** the fallback line in the output is the signal to verify every
-  finding before acting, and the layer still earns its place. *(2026-09-01, design-system-rails S6.)*
+  finding before acting, and the layer still earns its place. *(2026-09-01, design-system-rails S6.)* **Same again
+  across families (2026-10-17, verify-module #387):** Codex capped mid-epic, the rail fell back to agy-gemini, and both
+  of its Blocking findings were false ("`actions/*@v7` doesn't exist"; "`a && 'x' || 'y'` yields a boolean"). Only the
+  comment's `_Model:_` line showed who had reviewed — read it before triaging.
 - **`0 did not fit the budget` is not proof the reviewer read anything.** agy's documented 256 KB
   argv cap is not the binding limit — the MODEL gives out well before it, and fails as *garbage
   output* rather than as an error (171 KB returned `agy -p failed: "`; 19 KB reviewed cleanly; the
@@ -1101,7 +1111,10 @@ one-liner + why + date shape.
   **and passed identically against a deliberately re-broken build.** The route only consults `next`
   *after* a successful auth-code exchange, so an unauthenticated request never reached the branch at
   all; the specs were asserting the fallback path in both directions. Neither review round would ever
-  have caught this: the specs *look* correct, and CI was green. **The generalizable rules:** (1) run
+  have caught this: the specs *look* correct, and CI was green. **A pure function with teeth is not a call site
+  with teeth (verify-module #387):** `decidePing` and friends were mutation-proof while the lines that USED them — the
+  exit code, the force-push, marker-only-after-delivery — could be deleted with all 19 tests green. Name each decision
+  as a function AND pin its call site. **The generalizable rules:** (1) run
   the mutation check on every security-critical spec, not just when a test was written after the code —
   "the spec passes" and "the spec can fail" are different facts; (2) when a guard sits behind an
   auth/state precondition your test harness can't satisfy, an HTTP-level spec is structurally incapable

@@ -568,6 +568,15 @@ independently shippable slice of value.
   nightly exhaustive checks, and no proof without a differential test. **Shipped 2026-09-29.** No landing
   claim yet (audit D7). ⚠️ **Owed to Daniel (F7):** confirm the delivery cron is registered in production
   (Vercel → Settings → Cron Jobs). Root Directory is `.`, but the `crons` entry lives only in `apps/web/vercel.json`.
+  Moved into CI by `verify-module` (2026-10-17).
+- ✅ [Verify module: the outbox and the flag evaluator are model-checked on every PR that touches them](09-platform-infra/verify-module/README.md)
+  — **shipped 2026-10-17** (#386, #387). The spike's models live in `verify/`, pinned to the code they mirror
+  (`verify/pins.json`: the static gate fails when one side moves alone). An outbox PR runs the Quint simulation, and an
+  evaluator PR runs the Lean proofs and the differential test, each path-filtered into the required `gate` and each
+  with a mutant it must catch. `verify-nightly.yml` runs the exhaustive check every night and files a violated
+  invariant as one `claude/verify-<invariant>` PR. It also logs Jev's verify-depth call beside the builder's
+  `Verify depth:` line for every merged PR, in shadow, and pings once at 30 labelled PRs to refine
+  `verify-for-projects`. No product surface, no landing claim (audit D7). **Owed:** when the shadow PR (#392) merges.
 - ✅ [Intent match (wave 1, advisory)](09-platform-infra/intent-match/README.md): every groomed pitch keeps the ask
   **verbatim** (claims + teach-back) and is **scored against it** by Jev — coverage in and out, clarity, teach-back, a
   total marked *uncalibrated*, and a routed next artifact per gap; no key means "could not look", never a number.
@@ -647,6 +656,10 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-17**: `verify-module` **shipped** (≈$30.38 vs $15–34): the spike's model checks run on every PR that
+  touches the outbox or the flag evaluator, nightly in depth, and Jev's verify-depth routing is measured in shadow. The
+  lock found the evaluator in the SDK, not `lib/flags.ts`; reviewers found two guards that went green when what they
+  guarded was absent, and both were fixed as a class.
 - **2026-10-16**: `drill-impact-for-agents` **shipped** (≈$21.13 vs $15–34): drills bind to an experiment and capture
   impact at stop, owner-gated, readable from the CLI and the connector. The lock's live read found golden-frijoles' drills
   had recorded nothing ever (a swallowed `NO_USER`), and the verifier found three tests passing for the wrong reason.
