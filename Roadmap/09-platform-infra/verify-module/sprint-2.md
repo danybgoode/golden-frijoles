@@ -2,7 +2,7 @@
 epic: verify-module
 sprint: 2
 title: "Nightly and shadow"
-risk: low
+risk: high   # re-tiered 2026-10-16: the first contents:write workflow here + a new secret (shared infra; #387)
 phase: Shaping
 stories_total: 3
 stories:
