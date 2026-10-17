@@ -224,7 +224,7 @@ function fileFindings(sh, findings, ctx) {
       ctx.red = true;
       continue;
     }
-    if (branchExists) sh.run('git', ['fetch', '-q', 'origin', `${branch}:refs/remotes/origin/${branch}`]);
+    if (branchExists) sh.run('git', ['fetch', '-q', 'origin', `+${branch}:refs/remotes/origin/${branch}`]);
     const trace = readFileSync(row.itf, 'utf8');
     const summary = sh.run('node', ['verify/quint/summarize-itf.mjs', row.itf]);
     publish(sh, {
@@ -254,7 +254,7 @@ async function shadow(sh, ctx) {
     sh.tryRun('git', ['ls-remote', '--exit-code', '--heads', 'origin', SHADOW_BRANCH])
   );
   if (branchExists)
-    sh.run('git', ['fetch', '-q', 'origin', `${SHADOW_BRANCH}:refs/remotes/origin/${SHADOW_BRANCH}`]);
+    sh.run('git', ['fetch', '-q', 'origin', `+${SHADOW_BRANCH}:refs/remotes/origin/${SHADOW_BRANCH}`]);
   const read = (ref) => ({
     log: show(ref, LOG_PATH) === null ? null : parseLog(show(ref, LOG_PATH)),
     marker: show(ref, MARKER_PATH) === null ? null : JSON.parse(show(ref, MARKER_PATH)),
@@ -318,7 +318,10 @@ async function shadow(sh, ctx) {
     write.push(() =>
       put(
         RETRO_PATH,
-        addOwedLine(readFileSync(join(ROOT, RETRO_PATH), 'utf8'), owedLine(marker, marker.pinged_at))
+        addOwedLine(
+          existsSync(join(ROOT, RETRO_PATH)) ? readFileSync(join(ROOT, RETRO_PATH), 'utf8') : '',
+          owedLine(marker, marker.pinged_at)
+        )
       )
     );
     add.push(MARKER_PATH, RETRO_PATH);
@@ -373,7 +376,7 @@ async function main() {
   const ctx = { home, runUrl, dryRun, date: new Date().toISOString().slice(0, 10), red: false };
   ctx.notify = (text) =>
     dryRun ? (console.log(`[dry-run] ping: ${text}`), false) : notify(text, { sha: home, runUrl });
-  sh.run('git', ['fetch', '-q', 'origin', 'main:refs/remotes/origin/main']);
+  sh.run('git', ['fetch', '-q', 'origin', '+main:refs/remotes/origin/main']);
 
   const rowsPath = opt('--rows');
   const rows = rowsPath && existsSync(rowsPath) ? parseRows(readFileSync(rowsPath, 'utf8')) : [];
