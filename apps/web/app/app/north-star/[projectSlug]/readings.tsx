@@ -14,6 +14,7 @@
 // The trigger is SECONDARY: `measure-north-star`'s head carries `action: null`, and reading your own
 // numbers is not the primary thing to do on this screen.
 
+import { readingsSummary } from '@/lib/input-readings'
 import { NewThingDialog } from '@/components/product/NewThingDialog'
 import { ImpactSeriesTable } from '@/app/app/impact/[projectSlug]/[featureKey]/series-table'
 import type { FeatureImpactInput } from '@/lib/north-star-query'
@@ -32,15 +33,7 @@ export function NorthStarReadings({ inputs }: { inputs: FeatureImpactInput[] }) 
         inputs.map((input) => (
           <section key={input.key}>
             <h2>{input.name}</h2>
-            <p className="ds-hint">
-              {input.series.length === 0
-                ? 'Nothing recorded yet.'
-                : `${input.series.length} reading${input.series.length === 1 ? '' : 's'}, totalling ${input.series
-                    .reduce((sum, point) => sum + point.value, 0)
-                    .toLocaleString(
-                      'en-US'
-                    )} across ${input.series[0].date} → ${input.series[input.series.length - 1].date}.`}
-            </p>
+            <p className="ds-hint">{readingsSummary(input)}</p>
             <ImpactSeriesTable inputName={input.name} series={input.series} />
           </section>
         ))

@@ -11,6 +11,10 @@ runs:
     - name: Generate the self-tracking project's API key
       shell: bash
       run: echo "SELF_PROJECT_API_KEY=$(openssl rand -hex 24)" >> "$GITHUB_ENV"
+    # proving-workspaces-reading D11 — the key the push route HMACs a workspace id with; the spec recomputes it.
+    - name: Generate the self-tracking subject secret
+      shell: bash
+      run: echo "SELF_SUBJECT_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
     - name: Start the app in the background
       shell: bash
       working-directory: apps/web

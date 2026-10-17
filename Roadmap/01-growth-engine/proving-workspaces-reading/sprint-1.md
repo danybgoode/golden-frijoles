@@ -3,7 +3,7 @@ epic: proving-workspaces-reading
 sprint: 1
 title: "A reading for proving_workspaces"
 risk: high
-phase: Shaping
+phase: Building
 stories_total: 3
 stories:
   - id: S1.1
@@ -67,6 +67,15 @@ number already on screen, not a hand count.
 (spec).
 **Risk:** low
 
+## Build contract (locked by the architect before the builder started)
+Cite the epic README's D1–D13; do not restate them. Per story:
+- **S1.1** — D1, D2, D3, D4, D11. Files: `lib/proven-transition.ts` (+ `.test.ts`), `lib/self-track-events.ts`,
+  `app/api/v1/roadmap/push/route.ts`, `.github/actions/e2e-on-server/action.yml`, `e2e/proven-transition.spec.ts`.
+- **S1.2** — D5, D6, D7, D8, D9. Files: the migration, `lib/north-star.ts` (+ test), `lib/north-star-schema.ts`,
+  `lib/north-star-sync.ts`, `lib/north-star-query.ts`, `lib/input-readings.ts`, the North Star page,
+  `e2e/north-star-sync.spec.ts` (the CLI is untouched: D7's amendment).
+- **S1.3** — D10, D13. Files: `Roadmap/00-strategy/north-star.md`, the connector spec.
+
 ## Sprint QA
 - **api spec(s):** S1.1 → push transition spec; S1.3 → public connector spec. Pure specs for S1.2.
 - **browser smoke owed:** no; the walkthrough reads the North Star from the CLI and the public page.
@@ -84,8 +93,10 @@ Env: production · https://goldenfrijoles.com
 3. Stamp a real proven verdict on a shipped epic (`node scripts/epic-read.mjs --epic <slug> --write`, verdict
    `proven`), merge it, and let the roadmap push run.
    → the push run is green.
-4. Reload the North Star page, then open https://goldenfrijoles.com/api/v1/public/north-star signed out.
-   → `proving_workspaces` reads 1 for this month on both, and no id appears in either.
+4. Reload the North Star page, then run `frijoles north-star readings proving_workspaces --project golden-frijoles`
+   and read it over the anonymous public connector (`get_input_readings`, inputKey `proving_workspaces`).
+   → `proving_workspaces` reads 1 for this month on all three, and no id appears in any.
+   _(Amended at the lock, D10: `/api/v1/public/north-star` is feature-scoped and this input feeds no feature.)_
 
 Step 2 is signed in and step 3 is a judgment, both owed to the product owner.
 

@@ -1,7 +1,8 @@
 ---
 status: scaffolded   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Shaping       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+phase: Building       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
+locked_at: "2026-10-17T19:30:27Z"
 slug: proving-workspaces-reading
 title: "A reading for proving_workspaces"
 area: 01-growth-engine
@@ -69,6 +70,86 @@ HMAC and never shown.
 - `apps/web/lib/self-track.ts`, the `after()` pattern in `apps/web/app/api/v1/track/route.ts`.
 - `apps/web/lib/north-star.ts` (`computeDailySeries`), `lib/north-star-schema.ts`, `lib/north-star-query.ts`,
   `20260716100000_north_star.sql`; `Roadmap/00-strategy/north-star.md`; `frijoles north-star set`.
+
+
+## Architecture lock (2026-10-17, verified against live code and live data)
+
+Live data read before the lock (production, `slweidgffcfndnskcskc`): `proving_workspaces` exists on `golden-frijoles`
+as `external_push` with **0** pushed values; `leading_inputs` holds 11 rows (10 `external_push`, 1 `telemetry_event`);
+the latest roadmap artifact of both pushing projects (`golden-frijoles` v486, `aomx` v32) carries **no** `proven`
+verdict, so nothing is backfilled by accident; `SELF_SUBJECT_SECRET` is listed in Vercel production (its value is
+proven only by a live event after the deploy, LEARNINGS' empty-value gotcha).
+
+**Scope the live system disproved, corrected out loud:**
+- **There is no `north_star_inputs` table** (sprint-1.md S1.2). The inputs live in `leading_inputs`
+  (`20260716100000_north_star.sql`); the column goes there.
+- **The sync refuses the switch S1.3 needs.** `lib/north-star-sync.ts` rejects any change to an existing input's
+  `value_source` ("Cannot change value_source of an existing input"), and the CLI's dry run says `refused`. S1.3 as
+  written would 400. Corrected by D7.
+- **`/api/v1/public/north-star` is feature-scoped** (`?project=&feature=`, `getFeatureImpact` through
+  `feature_inputs`), and `proving_workspaces` is linked to no feature, so smoke step 4's URL cannot show it. The
+  public read of an input is the anonymous connector's `get_input_readings` (D10).
+- **A running monthly count read "latest on or before" a day reads last month's number** when this month has no
+  event yet: `inputReadings` (`lib/input-readings.ts`) takes the last point ≤ `to`, which is exactly how the 15 Dec read
+  is taken. Corrected by D8's reset point.
+
+**Decisions**
+- **D1 — The transition rule** is one pure function, `newlyProvenEpics(previousItems, items)` in
+  `lib/proven-transition.ts` (no server-only import, unit-tested). Epic rows only (`grain === 'Epic'`), matched by
+  `slug`; newly proven = `verdict === 'proven'` now and the previous row absent or not `proven`. No previous artifact
+  (a project's first push) → every proven epic counts. The previous read **failed** → nothing is sent: an unknown
+  previous cannot prove a transition, and inventing one would count a workspace in a month it proved nothing. An
+  unchanged push returns before this (D16), so it sends nothing.
+- **D2 — Emit after the store, inside `after()`.** Only once `push_report_artifact` succeeded, and only when D1 found
+  something and the secret is set, the deferred task reads the pushing project's own `workspace_id`
+  (`projects` by `auth.projectId`: one project, its own) and sends **one** `workspace_proved_bet` per push that has a
+  newly proven epic, through `trackSelfEvent` (amended after the verifier on #401: it was one per epic up to 10, and
+  every event spends the self key's rate and quota, which the platform's own funnels share; a distinct count needs one). **No tags, no metadata:** the
+  epic slug is the tenant's data and the self project is public (rule #2). The push's answer never waits.
+- **D3 — The subject** is `HMAC-SHA256(key = SELF_SUBJECT_SECRET, message = workspace_id)`, hex, from
+  `workspaceSubject()` in the same file. A missing or blank secret returns `null` and nothing is sent or read. Not a
+  gate (rule #6 is about gates; this is a secret).
+- **D4 — Vocabulary:** `WORKSPACE_PROVED_BET_EVENT = 'workspace_proved_bet'` in `lib/self-track-events.ts`,
+  mapped in `EVENT_FEATURE` to a new `PROVING_SIGNAL_KEY = 'proving_workspaces'` (the `Record` makes a missing row a
+  build error). The North Star read filters by event, not feature, so no registry row is required for the reading.
+- **D5 — Migration** `20261019100000_leading_inputs_aggregate.sql`: `leading_inputs.aggregate TEXT NOT NULL DEFAULT
+  'count' CHECK (aggregate IN ('count','distinct_monthly'))` plus `CHECK (aggregate = 'count' OR value_source =
+  'telemetry_event')`. A constant default is metadata-only on PG17; 11 rows all become `count`. Expand-only: the old
+  code ignores the column, so the push precedes the merge safely.
+- **D6 — Sync schema:** `aggregate` optional, `count | distinct_monthly`, refused on `external_push`
+  (`lib/north-star-schema.ts`). The sync writes `aggregate ?? 'count'`: the file is the truth, so dropping the key
+  reverts the input. `listNorthStar` returns `aggregate`.
+- **D7 — The one value-source switch allowed:** `external_push → telemetry_event` while the input has **no**
+  `input_values` rows (nothing pushed can go invisible, which is what the guard protects). Every other change is still
+  refused. The database already refuses an `input_values` row for a telemetry input (`input_values_check_input`), so
+  nothing can be pushed after the switch.
+  **Amended during the build (2026-10-17): the CLI is not changed.** A CLI version bump moves the setup skill's pinned
+  version, which is a plugin release (`skills/RELEASING.md`), out of proportion to one dry-run label. The server is the
+  judge and `frijoles north-star set --yes` sends whatever the dry run says, so S1.3 works with the published CLI; its
+  dry run will label this one switch `refused: value source is external_push` and not show `aggregate`. Owed as a
+  follow-up: the CLI's `planSync` learns the D7 switch and `aggregate` with its next release.
+- **D8 — The series:** `computeDistinctMonthlySeries(events, sourceEvent, now)` beside `computeDailySeries`
+  (`lib/north-star.ts`): each day with an event reads the distinct `userId`s from the 1st of its UTC month through
+  that day, **and the 1st of every later month through `now`'s month reads 0 when it has no event of its own** — so
+  "latest on or before 15 Dec" is December's number, never November's. `readInputSeries` selects `user_id` only for
+  `distinct_monthly`; the `count` path is unchanged and pinned by a spec over a fixed sequence.
+- **D9 — Surfaces:** `FeatureImpactInput` and the readings view carry `aggregate`; the North Star page labels the input
+  `from your events · distinct per month`. Both "Every reading" tables summarise through one `readingsSummary()`
+  (`lib/input-readings.ts`): a distinct series names its latest level instead of summing a running count (verifier, #401).
+- **D10 — The public read** is the anonymous connector's `get_input_readings` (series is `{date, value}` only). A spec
+  pushes a real proven transition from a fresh tenant, then reads the self project's input over the anonymous
+  connector and asserts the count and that the subject string appears nowhere in the reply. Smoke step 4 is amended
+  to it.
+- **D11 — CI** (shared surface, done first): `.github/actions/e2e-on-server/action.yml` exports a random
+  `SELF_SUBJECT_SECRET` beside the self key; specs compute the expected subject from it.
+- **D12 — Routing:** tenancy, a migration and a request path: the architect (Opus) builds every story in place, one
+  branch and one PR (one sprint, no review boundary inside it), nothing delegated. Review: `review-route.mjs`
+  (general + security lens), plus the fresh `verifier` (high risk).
+- **D10a — amended during the build (2026-10-17): `Roadmap/00-strategy/` is private** (coaches-v2 D9; this checkout
+  excludes it in `.git/info/exclude`), so the `north-star.md` switch is a local edit that never reaches the repo or CI.
+  The spec restates the entry as the file carries it; the real file is synced at D13 and read back live.
+- **D13 — Rollout:** `supabase db push` before the merge, verified live; merge (deploys code and the secret);
+  confirm the deploy; sync `north-star.md` with the repo CLI; read `proving_workspaces` back.
 
 
 ## Scope — stories

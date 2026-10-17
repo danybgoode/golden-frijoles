@@ -1,6 +1,11 @@
 import 'server-only'
 import { getSupabaseServiceClient } from './supabase'
-import { computeDailySeries, type DailySeriesPoint } from './north-star'
+import {
+  computeDailySeries,
+  computeDistinctMonthlySeries,
+  type DailySeriesPoint,
+  type InputAggregate,
+} from './north-star'
 
 // Growth Engine v1 · Sprint 3, Story 3.4 — the DB-touching half of the per-feature
 // impact report. Shared by both the authed JSON endpoint
@@ -13,6 +18,8 @@ export interface FeatureImpactInput {
   name: string
   metricKey: string
   valueSource: 'telemetry_event' | 'external_push'
+  /** proving-workspaces-reading D9 — how a telemetry input counts its event; `count` for every pushed input. */
+  aggregate: InputAggregate
   series: DailySeriesPoint[]
 }
 
@@ -75,7 +82,9 @@ export async function getFeatureImpactByProjectId(
 
   const { data: links, error: linksError } = await supabase
     .from('feature_inputs')
-    .select('input_id, leading_inputs(key, name, value_source, source_event, north_star_metrics(key))')
+    .select(
+      'input_id, leading_inputs(key, name, value_source, source_event, aggregate, north_star_metrics(key))'
+    )
     .eq('project_id', projectId)
     .eq('feature_key', featureKey)
   if (linksError) {
@@ -95,6 +104,7 @@ export async function getFeatureImpactByProjectId(
       name: string
       value_source: 'telemetry_event' | 'external_push'
       source_event: string | null
+      aggregate: InputAggregate | null
       north_star_metrics: { key: string } | null
     } | null
     if (!input) continue
@@ -108,6 +118,7 @@ export async function getFeatureImpactByProjectId(
       name: input.name,
       metricKey: input.north_star_metrics?.key ?? '',
       valueSource: input.value_source,
+      aggregate: input.aggregate ?? 'count',
       series,
     })
   }
@@ -135,7 +146,11 @@ const EVENT_READ_BOUND = 200_000
 async function readInputSeries(
   projectId: string,
   inputId: string,
-  input: { value_source: 'telemetry_event' | 'external_push'; source_event: string | null },
+  input: {
+    value_source: 'telemetry_event' | 'external_push'
+    source_event: string | null
+    aggregate?: InputAggregate | null
+  },
   featureKey?: string
 ): Promise<{ ok: true; series: DailySeriesPoint[] } | { ok: false }> {
   const supabase = getSupabaseServiceClient()
@@ -144,26 +159,28 @@ async function readInputSeries(
   // TypeScript can't see that correlation across a nullable DB column, so guard it here.
   if (input.value_source === 'telemetry_event' && input.source_event) {
     const sourceEvent = input.source_event
+    // proving-workspaces-reading D8 — a distinct count needs whose event it was; the per-day count never reads it.
+    const distinct = input.aggregate === 'distinct_monthly'
     // ⚠️ PAGED, in order (fresh review, #293). PostgREST caps a select at `max_rows` (1000 here), so an unbounded select
     // past that returned an ARBITRARY subset and the daily series — and the `latest` an agent writes into a verdict —
     // was silently wrong. Past the hard bound the read FAILS rather than returning a partial series as if it were whole.
     const page = (from: number, to: number) => {
       let query = supabase
         .from('events')
-        .select('event, created_at')
+        .select(distinct ? 'event, created_at, user_id' : 'event, created_at')
         .eq('project_id', projectId)
         .eq('event', sourceEvent)
       if (featureKey !== undefined) query = query.eq('feature_id', featureKey)
       return query.order('created_at', { ascending: true }).order('id', { ascending: true }).range(from, to)
     }
-    const events: { event: string; created_at: string }[] = []
+    const events: { event: string; created_at: string; user_id?: string }[] = []
     for (;;) {
       const { data, error: eventsError } = await page(events.length, events.length + EVENT_PAGE - 1)
       if (eventsError) {
         console.error('[north-star-query] events query failed:', eventsError)
         return { ok: false }
       }
-      events.push(...((data ?? []) as { event: string; created_at: string }[]))
+      events.push(...((data ?? []) as unknown as { event: string; created_at: string; user_id?: string }[]))
       if ((data ?? []).length < EVENT_PAGE) break
       if (events.length >= EVENT_READ_BOUND) {
         // At the bound exactly is still whole (codex, #293): refuse only when one MORE row proves it was exceeded.
@@ -177,12 +194,12 @@ async function readInputSeries(
         break
       }
     }
+    const rows = events.map((e) => ({ event: e.event, createdAt: e.created_at, userId: e.user_id }))
     return {
       ok: true,
-      series: computeDailySeries(
-        events.map((e) => ({ event: e.event, createdAt: e.created_at })),
-        sourceEvent
-      ),
+      series: distinct
+        ? computeDistinctMonthlySeries(rows, sourceEvent, new Date())
+        : computeDailySeries(rows, sourceEvent),
     }
   }
   if (input.value_source === 'telemetry_event') {
@@ -253,7 +270,7 @@ export async function getProjectNorthStarByProjectId(
   // Only THIS metric's inputs: another metric's inputs beside them would chart a North Star the page doesn't name.
   const { data: rows, error: inputsError } = await supabase
     .from('leading_inputs')
-    .select('id, key, name, value_source, source_event, north_star_metrics(key)')
+    .select('id, key, name, value_source, source_event, aggregate, north_star_metrics(key)')
     .eq('project_id', projectId)
     .eq('metric_id', metric.id)
     .order('key')
@@ -272,6 +289,7 @@ export async function getProjectNorthStarByProjectId(
       name: string
       value_source: 'telemetry_event' | 'external_push'
       source_event: string | null
+      aggregate: InputAggregate | null
       north_star_metrics: { key: string } | null
     }
     const read = await readInputSeries(projectId, joined.id, joined)
@@ -281,6 +299,7 @@ export async function getProjectNorthStarByProjectId(
       name: joined.name,
       metricKey: joined.north_star_metrics?.key ?? '',
       valueSource: joined.value_source,
+      aggregate: joined.aggregate ?? 'count',
       series: read.series,
     })
   }
@@ -301,6 +320,7 @@ export type InputSeriesByKeyResult =
         name: string
         metricKey: string
         valueSource: 'telemetry_event' | 'external_push'
+        aggregate: InputAggregate
         series: DailySeriesPoint[]
       }
     }
@@ -321,7 +341,7 @@ export async function getInputSeriesByKey(
   const supabase = getSupabaseServiceClient()
   const { data: row, error } = await supabase
     .from('leading_inputs')
-    .select('id, key, name, value_source, source_event, north_star_metrics(key)')
+    .select('id, key, name, value_source, source_event, aggregate, north_star_metrics(key)')
     .eq('project_id', projectId)
     .eq('key', inputKey)
     .maybeSingle()
@@ -337,6 +357,7 @@ export async function getInputSeriesByKey(
     name: string
     value_source: 'telemetry_event' | 'external_push'
     source_event: string | null
+    aggregate: InputAggregate | null
     north_star_metrics: { key: string } | null
   }
   const read = await readInputSeries(projectId, joined.id, joined)
@@ -348,6 +369,7 @@ export async function getInputSeriesByKey(
       name: joined.name,
       metricKey: joined.north_star_metrics?.key ?? '',
       valueSource: joined.value_source,
+      aggregate: joined.aggregate ?? 'count',
       series: read.series,
     },
   }

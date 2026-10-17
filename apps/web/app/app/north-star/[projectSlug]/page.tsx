@@ -162,7 +162,13 @@ function InputPlot({ input }: { input: import('@/lib/north-star-query').FeatureI
 
   return (
     <SmallMultiple
-      label={`${input.name} · ${input.valueSource === 'external_push' ? 'pushed in' : 'from your events'}`}
+      label={`${input.name} · ${
+        input.valueSource === 'external_push'
+          ? 'pushed in'
+          : input.aggregate === 'distinct_monthly'
+            ? 'from your events · distinct per month'
+            : 'from your events'
+      }`}
       // `latest.value`, not a sum: the tile is a level, and a total over a window is a different
       // quantity that the series beneath it does not draw.
       value={latest?.value ?? null}
