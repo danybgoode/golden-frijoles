@@ -77,6 +77,8 @@ rides the existing roadmap push beside `satisfied_event`. No new table, no new r
 - **D4 — the read.** Only when `satisfiedEvent === 'satisfaction_rated'` is the score read: a retained person counts if
   their LATEST `satisfaction_rated` at/after adoption has `score ≥ bar`. Any other event: unchanged (any answer), bar
   ignored. `readMeasureEvents` adds `score:tags->>score`; `toEvent` parses it to a number or null. No migration.
+  **Found at build:** a flag's measure read is not `feature_id`-scoped, so the standard rating counts only when its
+  `featureId` is the bet's flag key; otherwise one flag's rating would satisfy every flag's bet.
 - **D5 — the gate.** `bets.satisfaction_ask_enabled`, a `GATES` row (enablement, fallback false), read only by the
   console prompt. `rateSatisfaction` needs no gate (it is `track`).
 - **D6 — the dogfood prompt** sends through the real SDK client server-side (rule #1) with the

@@ -11,6 +11,10 @@
 // enter its rates. The older TAR funnels (`lib/tars.ts`) read through this model too (tars-one-model).
 
 export const FLAG_EVALUATED_EVENT = 'flag_evaluated'
+/** satisfied-ask D1 — the SDK's standard rating (packages/sdk/src/satisfaction.ts; pinned equal by the spec). */
+export const SATISFACTION_RATED_EVENT = 'satisfaction_rated'
+/** satisfied-ask D3 — the bar when a bet sets none: the top two of five. */
+export const DEFAULT_SATISFIED_MIN_SCORE = 4
 /** Users the instrumentation guide gives to the server itself: not people, never in the base. */
 const isSystemUser = (userId: string) => userId.startsWith('system:')
 
@@ -32,6 +36,8 @@ export type FunnelEvent = {
   createdAt: string
   featureId: string | null
   variant: string | null
+  /** satisfied-ask D4 — `tags.score` as a number, when the event carries one; read only on `satisfaction_rated`. */
+  score?: number | null
 }
 
 /** What counts as being exposed: a flag's `on` evaluation, or a registry feature's target event (any of its events when null). */
@@ -186,17 +192,32 @@ export function computeFunnel(
 
   let satisfied: number | null = null
   if (measure.adoptedEvent !== null && measure.satisfiedEvent !== null) {
+    // satisfied-ask D4 — on the standard rating a person counts by their LATEST score since adopting: someone who said 2
+    // and later 5 is satisfied, and someone who said 5 and later 2 is not. Any other event keeps the old read, where
+    // sending it at all counts (a bet that named its own event never asked for a threshold).
+    // One event name serves every flag, so a rating counts only for the flag it names (its featureId): a flag's measure
+    // read is not feature-scoped (flag-funnel-read), and without this a rating of flag A would satisfy flag B.
+    const scored = measure.satisfiedEvent === SATISFACTION_RATED_EVENT
+    const ratedKey = rule.kind === 'flag' ? rule.flagKey : rule.featureKey
+    const bar = measure.satisfiedMinScore ?? DEFAULT_SATISFIED_MIN_SCORE
+    const latest = new Map<string, { t: number; score: number | null }>()
     const happy = new Set<string>()
     for (const e of people) {
       const adoptedAt = firstAdoption.get(e.userId)
+      const t = ms(e.createdAt)
       if (
-        retained.has(e.userId) &&
-        adoptedAt !== undefined &&
-        e.event === measure.satisfiedEvent &&
-        ms(e.createdAt) >= adoptedAt
+        !retained.has(e.userId) ||
+        adoptedAt === undefined ||
+        e.event !== measure.satisfiedEvent ||
+        t < adoptedAt
       )
-        happy.add(e.userId)
+        continue
+      if (!scored) happy.add(e.userId)
+      else if (e.featureId !== ratedKey) continue
+      else if (!latest.has(e.userId) || t >= latest.get(e.userId)!.t)
+        latest.set(e.userId, { t, score: e.score ?? null })
     }
+    for (const [userId, answer] of latest) if (answer.score !== null && answer.score >= bar) happy.add(userId)
     satisfied = happy.size
   }
 
