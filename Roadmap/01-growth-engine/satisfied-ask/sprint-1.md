@@ -3,7 +3,7 @@ epic: satisfied-ask
 sprint: 1
 title: "The send, the bar, the read"
 risk: high
-phase: In review
+phase: Shipped
 stories_total: 5
 stories:
   - id: S1.1
@@ -44,7 +44,7 @@ stories:
 ---
 # The Satisfied ask — Sprint 1: The send, the bar, the read
 
-**Status:** 🔍 in review: PR #403
+**Status:** ✅ shipped 2026-10-17 — PR #403, merge `0bf691a` (deploy success)
 
 ## Stories
 
@@ -117,3 +117,13 @@ Env: production · https://goldenfrijoles.com   (or the preview URL while testin
    push carrying `satisfied_event: satisfaction_rated` has landed.
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+### Smoke run — 2026-10-17 (agent, production)
+1. ✅ `frijoles flags get bets.satisfaction_ask_enabled --project golden-frijoles` → development `on (everyone) v2`,
+   preview `on (everyone) v2`, production `off v1`. Production goes on after step 2–5 (D5).
+2. ⏳ **Owed to Daniel (signed in):** the ask under the funnel trend. `bets.funnel_trend_enabled` is ON in production
+   and OFF in development and preview, so the ask can only show in production: switch it on there
+   (`frijoles flags set bets.satisfaction_ask_enabled --value true --env production --project golden-frijoles`), then
+   run steps 2–5. Signed out, the flag page answers 307 → `/login` (checked).
+3–5. ⏳ **Owed to Daniel:** follow from step 2.
+

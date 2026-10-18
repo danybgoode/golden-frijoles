@@ -125,6 +125,12 @@ independently shippable slice of value.
   tenant reads another's data, and no exemption was needed. Telemetry inputs can count **distinct ids per month**
   (`aggregate: distinct_monthly`, with a 0 on each month's 1st so a mid-month read never returns last month's
   number). **Owed:** a real proven verdict (Daniel) and the signed-in page look.
+- ✅ [The Satisfied ask: a rating the product can ask](01-growth-engine/satisfied-ask/README.md) — **shipped
+  2026-10-17** (#403; SDK 1.3.0, plugin + kit 1.13.0). A bet's last funnel stage gets numbers. The SDK sends one standard
+  rating (`rateSatisfaction(flagKey, score)`, 1–5), a bet sets the score that counts (`satisfied_min_score`, default 4),
+  and a person counts by their latest answer since adopting, for that flag only. The console asks members to rate the
+  funnel trend behind `bets.satisfaction_ask_enabled` (off in production until the smoke). **Owed:** the signed-in
+  smoke, the SDK npm publish, Miyagi's side.
 - ✅ [One bet, wired: the flag knows its epic, its funnel and its read](01-growth-engine/one-bet-wired/README.md) —
   **shipped 2026-10-10** (#341; CLI 1.3.0, plugin + kit 1.5.0). A measured bet's flag funnel on the TARS model
   (Targeted is a segment, exposure is the flag `on`, adopters outside it counted beside), on the epic page and
@@ -678,6 +684,11 @@ independently shippable slice of value.
 ---
 
 ## Recent highlights
+
+- **2026-10-17**: `satisfied-ask` **shipped** (quote $8–20 → ≈$14.66). Satisfied stops reading "not measured": one
+  standard rating from the SDK, a per-bet bar, and our own console asking members about the funnel trend. The build
+  found that one shared event name would have let a rating of one flag satisfy every bet; the verifier found the funnel
+  cache ignoring the bar. Both fixed, and the cache key is now pinned to the measure's type.
 
 - **2026-10-17**: `proving-workspaces-reading` **shipped** (quote $5–17 → ≈$12.12). `proving_workspaces` now reads
   from events: distinct workspaces this month with a newly proven bet, sent by the push route as an HMAC, so the

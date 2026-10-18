@@ -23,11 +23,10 @@ _a pitch is waiting at the approval gate._
 
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
 
-## Ready (4)
+## Ready (3)
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
-- [The Satisfied ask](../01-growth-engine/satisfied-ask/README.md) — #99 · 01 Growth Engine · 5/5 stories · risk: High · appetite S · _docs: status in-progress_
 - [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #100 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
 - [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #101 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
 - [CMS-neutral experiment integration + Payload go/no-go](../01-growth-engine/cms-integration-spike/README.md) — #102 · 01 Growth Engine · 0/6 stories · risk: Low · _docs: status scaffolded_
@@ -40,10 +39,11 @@ _a work branch is on origin. Not in this committed file: `node scripts/build-ord
 
 _a PR is ready for review, or merged and waiting for its close-out. Not in this committed file: `node scripts/build-order.mjs --live` or the Hub board._
 
-## Shipped (94)
+## Shipped (95)
 
 _merged, deployed and closed._
 
+- [The Satisfied ask ✅](../01-growth-engine/satisfied-ask/README.md) — #99 · 01 Growth Engine · 5/5 stories · risk: High · appetite S · _docs: status shipped_
 - [A reading for proving_workspaces ✅](../01-growth-engine/proving-workspaces-reading/README.md) — #98 · 01 Growth Engine · 3/3 stories · risk: High · appetite S · _docs: status shipped_
 - [Verify module ✅ shipped 2026-10-17 (#386 `77c5dcc`, #387 `b761885`)](../09-platform-infra/verify-module/README.md) — #97 · 09 Platform Infra · 7/7 stories · risk: Low · appetite M · _docs: status shipped_
 - [Template scripts hold to the gates their consumers run ✅](../09-platform-infra/template-scripts-consumer-gates/README.md) — #96 · 09 Platform Infra · 3/3 stories · risk: High · appetite S · _docs: status shipped_
