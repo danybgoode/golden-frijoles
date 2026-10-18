@@ -26,8 +26,9 @@ CREATE EXTENSION IF NOT EXISTS pg_net WITH SCHEMA extensions;
 -- not https:// — the bearer is never put on a plaintext connection.
 --
 -- THE TIMEOUT is above the route's maxDuration (300 s) so pg_net never drops the connection while the
--- route is still dispatching, and the */5 schedule is no shorter than it, so ticks do not overlap
--- (D4). lib/delivery-timing.test.ts pins both against the route's literal.
+-- route is still dispatching. What must not overlap is the ROUTE's work, and the platform kills it at
+-- maxDuration, which is no longer than the */5 interval (D4); pg_net's client-side wait outliving the
+-- kill by a few seconds overlaps nothing. lib/delivery-timing.test.ts pins both against the route.
 CREATE OR REPLACE FUNCTION public.dispatch_tick()
 RETURNS BIGINT
 LANGUAGE plpgsql
@@ -60,8 +61,8 @@ END;
 $$;
 
 -- No API role may call it: only pg_cron (running as the owner) and an operator on the database.
--- A re-CREATE restores PUBLIC's default EXECUTE, so the REVOKE travels with the definition
--- (e2e/delivery-waker.spec.ts asserts a function-level denial).
+-- A DROP + CREATE would re-apply the default privileges (PUBLIC, and Supabase's grants to the API
+-- roles), so the REVOKE travels with the definition (e2e/delivery-waker.spec.ts pins every role).
 REVOKE ALL ON FUNCTION public.dispatch_tick() FROM PUBLIC, anon, authenticated, service_role;
 
 -- The schedule. Scheduling an existing job name updates it in place, so a re-run is harmless.

@@ -135,7 +135,7 @@ test("pg_net waits for the route: dispatch_tick()'s timeout is above maxDuration
   )
 })
 
-test('ticks do not overlap: the schedule interval is at least maxDuration', () => {
+test("one tick's route run ends before the next starts: the schedule interval is at least maxDuration", () => {
   const match = /cron\.schedule\('dispatch-deliveries', '\*\/(\d+) \* \* \* \*'/.exec(scheduleSql)
   assert.ok(match, "the dispatch-deliveries schedule is no longer '*/N * * * *' — update this guard")
   const intervalMs = Number(match[1]) * 60_000

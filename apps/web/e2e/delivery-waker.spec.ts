@@ -127,20 +127,30 @@ test('no API role can call dispatch_tick() — a function-level denial, never a 
       true
     )
   }
-  // PGRST202 would also pass if the function did not exist at all, so pin that it does, owner-side.
+  // The API can only reach anon and service_role from here; the database answers for every role,
+  // authenticated included. PGRST202 above would also pass if the function did not exist, so this
+  // also pins that it does.
+  const privileges = await withOwner((client) =>
+    client.query<{ role: string; can: boolean }>(
+      `SELECT r AS role, has_function_privilege(r, 'public.dispatch_tick()', 'EXECUTE') AS can
+         FROM unnest(ARRAY['anon', 'authenticated', 'service_role']) AS r`
+    )
+  )
+  expect(privileges.rows).toEqual([
+    { role: 'anon', can: false },
+    { role: 'authenticated', can: false },
+    { role: 'service_role', can: false },
+  ])
   const exists = await withOwner((client) =>
     client.query(`SELECT 1 FROM pg_proc WHERE oid = 'public.dispatch_tick()'::regprocedure`)
   )
   expect(exists.rowCount).toBe(1)
 })
 
-// ── Story 1.2: the July backlog expiry ─────────────────────────────────────────────────────────
-const expiry = readFileSync(
-  join(__dirname, '..', 'supabase', 'migrations', '20261020110000_delivery_backlog_expiry.sql'),
-  'utf8'
-)
+// ── Story 1.2: the July backlog expiry (an ops file run at switch-on, not a migration) ─────────────────────────────────────────────────────────
+const expiry = readFileSync(join(__dirname, '..', 'supabase', 'ops', 'delivery-backlog-expiry.sql'), 'utf8')
 
-test('the backlog expiry dead-letters rows from the dark window only, once, and each stays replayable', async () => {
+test('the backlog expiry dead-letters rows older than an hour, never rewrites one twice, and each stays replayable', async () => {
   const db = dbClient()
   const { data: proj } = await db
     .from('projects')
@@ -191,10 +201,10 @@ test('the backlog expiry dead-letters rows from the dark window only, once, and 
 
     const expired = await read(oldId)
     expect(expired.status).toBe('dead')
-    expect(expired.last_error).toBe('expired: delivery was off 2026-07-22 → 2026-10-17')
+    expect(expired.last_error).toBe('expired: queued while delivery was off (2026-07-22 to its switch-on)')
     expect((await read(freshId)).status).toBe('pending')
 
-    // A second run changes nothing: the expired row is already dead, the fresh one is past the cutoff.
+    // A re-run never rewrites an expired row, and the fresh one is inside the hour.
     await withOwner((client) => client.query(expiry))
     expect((await read(oldId)).updated_at).toBe(expired.updated_at)
     expect((await read(freshId)).status).toBe('pending')

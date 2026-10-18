@@ -65,7 +65,7 @@ registered to Supabase `pg_cron` + `pg_net`. The route stays the one registered 
 ## Decisions
 - **D1 — the waker is pg_cron + pg_net** (Daniel approved the plan, 2026-10-17, recommended option): free, minute-level,
   no new service. Vercel Pro stays open as a later money decision.
-- **D2 — the July backlog is expired, not sent** (approved with the plan): rows become `dead` with an `expired:` reason,
+- **D2 — the July backlog is expired, not sent** (approved with the plan): rows older than an hour at switch-on become `dead` with an `expired:` reason (an ops SQL step, not a migration),
   each still replayable by the operator.
 - **D3 — the switch-on is Daniel's** (Vault secrets + flag flip are production writes): the runbook in sprint-1 is owed
   to him by name.
@@ -87,11 +87,13 @@ registered to Supabase `pg_cron` + `pg_net`. The route stays the one registered 
 | 1 | 1.3 Switch-on, with Daniel | high |
 
 ## Deploy order
-1. `supabase db push` the migrations **before** the merge (the waker no-ops until Vault holds its secrets; the
-   backlog expiry only touches rows already pending).
-2. Merge (the route comment + dead-cron removal + guard ship; no runtime behaviour changes).
-3. Daniel's runbook (sprint-1 → Story 1.3): Vault secrets → dark tick proves URL + secret → receiver check → flag on.
-
+Rule #4's order, in one sitting with Daniel (HIGH: Daniel merges):
+1. `supabase db push` the waker migration **before** the merge. It is inert until Vault holds its two secrets
+   (every tick returns NULL).
+2. Merge (the route comment, the dead-cron removal and the guard: no runtime behaviour changes).
+3. Daniel's switch-on (sprint-1 → Story 1.3): Vault secrets → a dark tick proves URL + secret → **the backlog expiry**
+   (`apps/web/supabase/ops/delivery-backlog-expiry.sql`, an ops step and deliberately not a migration, so no
+   unrelated `db push` can fire it early) → receiver check → flag on → watch the first attempts.
 ## Definition of Done (epic)
 - [ ] All sprints merged to `main` + smoke-tested (gaps stated — `node scripts/owed-ledger.mjs` counts what is still owed)
 - [ ] Each `sprint-N.md` has its smoke walkthrough (real URLs)
