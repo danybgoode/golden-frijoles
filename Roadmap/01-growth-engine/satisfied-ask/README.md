@@ -62,6 +62,29 @@ Yes: Satisfied is already a stage of the one funnel model (`computeFunnel`), fed
 rating is an ordinary event through `/api/v1/track` via the SDK (rule #1); the score rides in `tags.score`; the bar
 rides the existing roadmap push beside `satisfied_event`. No new table, no new route, no migration.
 
+## Architecture lock (D1–D7, verified against live code 2026-10-17)
+- **D1 — the event.** `satisfaction_rated`, `featureId` = the flag key, the score in `tags.score` (integer 1–5). Defined
+  once in the SDK (`packages/sdk/src/satisfaction.ts`, zero imports) and mirrored in `apps/web/lib/flag-funnel.ts`,
+  pinned equal by a spec (the app's lib is zero-import too, like `FLAG_EVALUATED_EVENT`).
+- **D2 — the call follows the client's user** (deviation from the pitch's `{ flagKey, userId, score }`): every SDK send
+  uses the configured/identified user (`track`, `trackAdoption`), so the call is `rateSatisfaction(flagKey, score,
+  props?)`. A bad key or score returns `{ ok: false, code: 'INVALID_SATISFACTION' }`, never throws, never sends.
+- **D3 — the bar is `satisfied_min_score`**, integer 1–5 or null (null = 4), a BET field beside `satisfied_event` in
+  the kit contract (`BET_FIELDS`, `validateBet`), the extractor, the scaffolder + both templates, the app's push schema,
+  `hub-board.ts`'s `BetMeasureCard`, and `FunnelMeasure.satisfiedMinScore` (optional, so every existing measure
+  literal stays valid). Source of the kit side: `skills/template/scripts/` → copied to `scripts/`, `skills/scripts/`
+  and the plugin vendors (`render-hook-vendor.mjs`); parity checks enforce it.
+- **D4 — the read.** Only when `satisfiedEvent === 'satisfaction_rated'` is the score read: a retained person counts if
+  their LATEST `satisfaction_rated` at/after adoption has `score ≥ bar`. Any other event: unchanged (any answer), bar
+  ignored. `readMeasureEvents` adds `score:tags->>score`; `toEvent` parses it to a number or null. No migration.
+- **D5 — the gate.** `bets.satisfaction_ask_enabled`, a `GATES` row (enablement, fallback false), read only by the
+  console prompt. `rateSatisfaction` needs no gate (it is `track`).
+- **D6 — the dogfood prompt** sends through the real SDK client server-side (rule #1) with the
+  `SELF_PROJECT_API_KEY` self-tracking path the console already uses; "answered" is read from the member's own
+  `satisfaction_rated`/`satisfaction_dismissed` events in the self project, never another project.
+- **D7 — SDK and kit releases.** SDK minor bump (add-only, `surface-freeze.test.ts`); plugin + kit minor bump with a
+  CHANGELOG section and `plugin-checksums.mjs`. npm publish of the SDK is Daniel's 2FA step (owed).
+
 ## What already exists (reuse, don't rebuild)
 - `apps/web/lib/flag-funnel.ts` → `computeFunnel`, `FunnelMeasure`, `FunnelEvent`.
 - `apps/web/lib/flag-funnel-read.ts` → `readMeasureEvents` (already fetches `satisfiedEvent`).
