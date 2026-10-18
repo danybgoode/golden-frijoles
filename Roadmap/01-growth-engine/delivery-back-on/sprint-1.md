@@ -72,14 +72,16 @@ gets an attempt within 5 minutes. The poster's F7 "owed" line is cleared.
 Run SQL from `apps/web` with `supabase db query --linked "<sql>"` (or `-f <file>`). It uses the CLI's own auth, so no
 key goes in the shell. **No secret value is ever typed on a command line:** the bearer goes in through the dashboard.
 
-1. **Before the merge, push the waker:** `supabase link --project-ref <ref> && supabase migration list` →
-   `20261020100000` pending, then `supabase db push`, then `supabase migration list` → applied. Then merge PR #405.
+1. **The waker is pushed:** from `apps/web`, `supabase link --project-ref <ref> && supabase migration list` →
+   `20261020100000` applied remotely. If it is still pending, `supabase db push` (it is inert until step 3).
 2. **The extensions exist, owned right:**
    `select extname, extversion from pg_extension where extname in ('pg_cron','pg_net');` → two rows;
    `select username, schedule, active from cron.job where jobname = 'dispatch-deliveries';` → `postgres`, `*/5 * * * *`;
-   `select pg_get_userbyid(proowner) from pg_proc where proname = 'dispatch_tick';` → `postgres`.
-3. **Vault secrets** (Supabase dashboard → Project Settings → Vault → *Add new secret*, so the value never touches a
-   shell): `dispatch_deliveries_url` = `https://goldenfrijoles.com/api/internal/dispatch-deliveries`;
+   `select pg_get_userbyid(proowner) from pg_proc where proname = 'dispatch_tick';` → `postgres`. If either is another
+   role, stop: the job would run as that role and step 4 may not be allowed to call the function. Ask the builder
+   (re-own with `alter function public.dispatch_tick() owner to postgres;` and re-schedule as `postgres`).
+3. **Vault secrets** (Supabase dashboard → Integrations → Vault → Secrets → *Add new secret*, so the value never
+   touches a shell): `dispatch_deliveries_url` = `https://goldenfrijoles.com/api/internal/dispatch-deliveries`;
    `dispatch_deliveries_cron_secret` = the same value as Vercel's `CRON_SECRET`. **Rotate both together** from now on
    (the dashboard's edit, or `vault.update_secret(<id>, …)`). A mismatch shows as `401` in step 4, never a silent pass.
 4. **Dark tick** (flag still off): `select public.dispatch_tick();` → a request id `<id>`. A few seconds later,
@@ -102,9 +104,10 @@ key goes in the shell. **No secret value is ever typed on a command line:** the 
    from the destination's page. Then two scheduled ticks:
    `select status, start_time from cron.job_run_details where jobid = (select jobid from cron.job where jobname =
    'dispatch-deliveries') order by start_time desc limit 2;` → both `succeeded`, and
-   `select id, status_code, left(content, 200) from net._http_response where id > <id> order by id;` → one `200` per
-   tick with `"enabled":true` (no migration here uses pg_net for anything else, so each id after step 4's should be a
-   tick).
+   `select id, status_code, left(content, 200) from net._http_response where id > <id> order by id desc limit 2;` →
+   the two newest, each `200` with `"enabled":true`. Ticks that fired between step 3 and step 7 read
+   `"enabled":false`, which is expected (no migration here uses pg_net for anything else, so each id after step 4's
+   is a tick).
 
 **Rollback:** `frijoles flags kill delivery.destinations_enabled --env production` (lands within 30 s), and/or
 `select cron.unschedule('dispatch-deliveries');`.

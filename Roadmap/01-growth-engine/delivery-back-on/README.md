@@ -87,13 +87,14 @@ registered to Supabase `pg_cron` + `pg_net`. The route stays the one registered 
 | 1 | 1.3 Switch-on, with Daniel | high |
 
 ## Deploy order
-Rule #4's order, in one sitting with Daniel (HIGH: Daniel merges):
-1. `supabase db push` the waker migration **before** the merge. It is inert until Vault holds its two secrets
-   (every tick returns NULL).
-2. Merge (the route comment, the dead-cron removal and the guard: no runtime behaviour changes).
-3. Daniel's switch-on (sprint-1 → Story 1.3): Vault secrets → a dark tick proves URL + secret → **the backlog expiry**
-   (`apps/web/supabase/ops/delivery-backlog-expiry.sql`, an ops step and deliberately not a migration, so no
-   unrelated `db push` can fire it early) → receiver check → flag on → watch the first attempts.
+1. **Merge** once CI is green and findings are answered (the builder merges at every tier, WAYS-OF-WORKING → *Review &
+   merge*). The merge changes no runtime behaviour: a route comment, the dead-cron removal and the guard.
+2. **`supabase db push` the waker migration** (agents may). No deployed code reads it, and it is inert until Vault holds
+   its two secrets (every tick returns NULL), so pushing it after the merge is safe — and so is an unrelated agent's
+   push picking it up.
+3. **Daniel's switch-on** (sprint-1 → Story 1.3, one sitting): Vault secrets → a dark tick proves URL + secret → **the
+   backlog expiry** (`apps/web/supabase/ops/delivery-backlog-expiry.sql`, an ops step and deliberately not a
+   migration; one-shot per project) → receiver check → flag on → watch the first attempts.
 ## Definition of Done (epic)
 - [ ] All sprints merged to `main` + smoke-tested (gaps stated — `node scripts/owed-ledger.mjs` counts what is still owed)
 - [ ] Each `sprint-N.md` has its smoke walkthrough (real URLs)
