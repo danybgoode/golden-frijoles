@@ -45,6 +45,8 @@ const CONSOLE_SURFACES = [
   '../app/app/flags/[projectSlug]/[flagKey]/flag-version-serve.tsx',
   '../app/app/flags/[projectSlug]/[flagKey]/flag-authoring.tsx',
   '../app/app/flags/[projectSlug]/[flagKey]/feature-panes.tsx',
+  '../app/app/flags/[projectSlug]/[flagKey]/satisfaction-ask.tsx',
+  '../app/app/flags/[projectSlug]/[flagKey]/satisfaction-actions.ts',
   // ⚠️ `flag-credentials/page.tsx` and its manager are GONE — design-system-rails S4.5 retired the
   // route into a permanent redirect and deleted the manager. What replaced them is listed below: the
   // merged Setup › Keys page, its mint flow and its revoke control, which now carry every
