@@ -58,6 +58,7 @@ test('one-bet-wired D7: a funnel shows only for an Epic with a flag and an adopt
     retainedEvent: null,
     retentionDays: 7,
     satisfiedEvent: null,
+    satisfiedMinScore: null,
   }
   assert.deepEqual(funnelBetOf({ grain: 'Epic', flagKey: 'a.b_enabled', measure }), {
     flagKey: 'a.b_enabled',
@@ -65,6 +66,7 @@ test('one-bet-wired D7: a funnel shows only for an Epic with a flag and an adopt
     retainedEvent: null,
     retentionDays: 7,
     satisfiedEvent: null,
+    satisfiedMinScore: null,
   })
   assert.equal(funnelBetOf({ grain: 'Epic', flagKey: null, measure }), null)
   assert.equal(funnelBetOf({ grain: 'Epic', flagKey: 'a.b_enabled', measure: null }), null)

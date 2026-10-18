@@ -46,6 +46,11 @@ export type FunnelMeasure = {
   retentionDays: number
   /** null: satisfaction is not measured. */
   satisfiedEvent: string | null
+  /**
+   * satisfied-ask D3/D4 — read only when `satisfiedEvent` is `satisfaction_rated`: the score its latest answer needs.
+   * Absent or null = DEFAULT_SATISFIED_MIN_SCORE. Optional so every measure written before it stays one.
+   */
+  satisfiedMinScore?: number | null
 }
 
 /** A measured flag's bet: its flag and what it reads (one-bet-wired D1). */
