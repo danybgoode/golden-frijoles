@@ -81,6 +81,8 @@ export type BetMeasureCard = {
   retainedEvent: string | null
   retentionDays: number
   satisfiedEvent: string | null
+  /** satisfied-ask D3 — the bar a `satisfaction_rated` score must meet; null = the reader's default (4). */
+  satisfiedMinScore: number | null
 }
 
 /** The row fields `epicResult` reads. ⚠️ Kept in step with `lib/roadmap-result.ts` by `hub-board.test.ts`. */
@@ -206,6 +208,7 @@ export function toCard(row: RoadmapRow, project: string | null = null): BoardCar
             retainedEvent: typeof r.retained_event === 'string' ? r.retained_event : null,
             retentionDays: typeof r.retention_days === 'number' ? r.retention_days : 7,
             satisfiedEvent: typeof r.satisfied_event === 'string' ? r.satisfied_event : null,
+            satisfiedMinScore: typeof r.satisfied_min_score === 'number' ? r.satisfied_min_score : null,
           }
         : null,
   }

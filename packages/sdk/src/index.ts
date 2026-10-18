@@ -29,6 +29,12 @@ import {
   validateScenarioExecutionTelemetry,
   type ScenarioExecutionTelemetryInput,
 } from './scenario-telemetry'
+import {
+  SATISFACTION_DISMISSED_EVENT,
+  SATISFACTION_MAX,
+  SATISFACTION_RATED_EVENT,
+  satisfactionProblem,
+} from './satisfaction'
 import { scrubClientText, SDK_MAX_MESSAGE, SDK_MAX_STACK } from './scrub'
 import { DEFAULT_BASE_URL, resolveBaseUrl } from './defaults'
 import { inputValuesProblems, type InputValue, type PushInputValuesResult } from './input-values'
@@ -50,6 +56,12 @@ export type {
   FlagEvaluationTelemetryInput,
 } from './flag-telemetry'
 export { SCENARIO_EXECUTED_EVENT } from './scenario-telemetry'
+export {
+  SATISFACTION_DISMISSED_EVENT,
+  SATISFACTION_MAX,
+  SATISFACTION_MIN,
+  SATISFACTION_RATED_EVENT,
+} from './satisfaction'
 export type { ScenarioExecutionTelemetryInput } from './scenario-telemetry'
 export {
   FLAG_CONTRACT_VERSION,
@@ -356,6 +368,19 @@ export interface GrowthEngineClient {
   pushInputValues(inputKey: string, values: InputValue[]): Promise<PushInputValuesResult>
   track(event: string, props?: TrackEventProps): Promise<TrackResult>
   trackAdoption(featureKey: string, props?: Omit<TrackEventProps, 'featureId'>): Promise<TrackResult>
+  /**
+   * satisfied-ask D2 — the current user rated `flagKey`'s feature `score` (a whole number 1–5): `satisfaction_rated`
+   * with the score in `tags.score`. A bet whose `satisfied_event` is `satisfaction_rated` counts a retained person whose
+   * latest score meets its `satisfied_min_score` (default 4). A bad key or score is refused here and nothing is sent
+   * (`INVALID_SATISFACTION`). Never throws. You draw the prompt and choose when to show it.
+   */
+  rateSatisfaction(
+    flagKey: string,
+    score: number,
+    props?: Omit<TrackEventProps, 'featureId'>
+  ): Promise<TrackResult>
+  /** The current user declined to rate `flagKey` ("Not now"): `satisfaction_dismissed`. Never counts as satisfied. */
+  dismissSatisfaction(flagKey: string, props?: Omit<TrackEventProps, 'featureId'>): Promise<TrackResult>
   syncFeatures(features: FeatureSyncEntry[]): Promise<SyncResult>
   /**
    * Deterministically resolves the configured userId into a variant for `experimentKey`, given
@@ -597,6 +622,27 @@ export function createGrowthEngineClient(config: GrowthEngineClientConfig): Grow
     return { ok: true, variant }
   }
 
+  // satisfied-ask D2 — validated before the send: a rating the funnel cannot read (score 0, 4.5, a typo'd key) must not
+  // land looking like data. The score is written LAST so a caller's own `tags.score` cannot replace it.
+  async function rateSatisfaction(
+    flagKey: string,
+    score: number,
+    props: Omit<TrackEventProps, 'featureId'> = {}
+  ): Promise<TrackResult> {
+    const problem = satisfactionProblem(flagKey, score)
+    if (problem) return { ok: false, error: problem, code: 'INVALID_SATISFACTION' }
+    return track(SATISFACTION_RATED_EVENT, { ...props, featureId: flagKey, tags: { ...props.tags, score } })
+  }
+
+  async function dismissSatisfaction(
+    flagKey: string,
+    props: Omit<TrackEventProps, 'featureId'> = {}
+  ): Promise<TrackResult> {
+    const problem = satisfactionProblem(flagKey, SATISFACTION_MAX)
+    if (problem) return { ok: false, error: problem, code: 'INVALID_SATISFACTION' }
+    return track(SATISFACTION_DISMISSED_EVENT, { ...props, featureId: flagKey })
+  }
+
   async function trackExposure(
     experimentKey: string,
     variant: string,
@@ -822,6 +868,8 @@ export function createGrowthEngineClient(config: GrowthEngineClientConfig): Grow
     pushInputValues,
     track,
     trackAdoption: (featureKey, props) => track('feature_adopted', { ...props, featureId: featureKey }),
+    rateSatisfaction,
+    dismissSatisfaction,
     syncFeatures,
     bucket,
     trackExposure,

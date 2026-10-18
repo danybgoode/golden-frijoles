@@ -413,8 +413,39 @@ test('a push carrying a bet measurement stores it; a named segment and a bad win
     { target_segment: 'a'.repeat(49) },
     { retention_days: 0 },
     { adopted_event: 'has space' },
+    { satisfied_min_score: 0 },
+    { satisfied_min_score: 6 },
+    { satisfied_min_score: 4.5 },
+    { satisfied_min_score: '4' },
   ]) {
     const res = parseRoadmapPush(push({ items: [row(bad as unknown as Partial<RoadmapRow>)] }))
     assert.equal(res.ok, false, JSON.stringify(bad))
   }
+})
+
+// satisfied-ask D3 — the bar rides beside satisfied_event; a push without it (every pusher before it) stays valid.
+test('a push carrying satisfied_min_score stores it, and the card carries it into the measure', async () => {
+  const { toCard } = await import('./hub-board.ts')
+  const parsed = parseRoadmapPush(
+    push({
+      items: [
+        row({
+          stage: 'Building',
+          flag_key: 'bets.funnel_trend_enabled',
+          adopted_event: 'funnel_trend_viewed',
+          satisfied_event: 'satisfaction_rated',
+          satisfied_min_score: 5,
+        } as Partial<RoadmapRow>),
+      ],
+    })
+  )
+  assert.equal(parsed.ok, true)
+  if (!parsed.ok) return
+  const card = toCard(parsed.value.items[0] as unknown as Parameters<typeof toCard>[0])
+  assert.equal(card?.measure?.satisfiedMinScore, 5)
+  const without = toCard({
+    ...parsed.value.items[0],
+    satisfied_min_score: undefined,
+  } as unknown as Parameters<typeof toCard>[0])
+  assert.equal(without?.measure?.satisfiedMinScore, null)
 })

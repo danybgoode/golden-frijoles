@@ -7,8 +7,15 @@ import type { BoardCard } from './hub-board'
 /** The bet an epic card measures, or null: an Epic with a flag and an adoption event (one-bet-wired D1, D7). */
 export function funnelBetOf(card: Pick<BoardCard, 'grain' | 'flagKey' | 'measure'>): BetMeasure | null {
   if (card.grain !== 'Epic' || !card.flagKey || !card.measure) return null
-  const { adoptedEvent, retainedEvent, retentionDays, satisfiedEvent } = card.measure
-  return { flagKey: card.flagKey, adoptedEvent, retainedEvent, retentionDays, satisfiedEvent }
+  const { adoptedEvent, retainedEvent, retentionDays, satisfiedEvent, satisfiedMinScore } = card.measure
+  return {
+    flagKey: card.flagKey,
+    adoptedEvent,
+    retainedEvent,
+    retentionDays,
+    satisfiedEvent,
+    satisfiedMinScore,
+  }
 }
 
 export type FunnelRow = { stage: string; people: string; share: string }

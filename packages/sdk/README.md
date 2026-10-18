@@ -35,6 +35,11 @@ await growth.pushInputValues('attributed_revenue', [{ occurredOn: today, value: 
 - **ESM and CommonJS:** `import` and `require` both work, with types.
 - **Every method returns an envelope** (`{ ok: true, … }` or `{ ok: false, error, code }`) and never throws.
 
+## 1.3 — ask whether a feature satisfied people
+
+**Added only.** `rateSatisfaction(flagKey, score)` and `dismissSatisfaction(flagKey)` send the standard rating a bet's
+Satisfied stage reads ([Ask whether it satisfied them](#ask-whether-it-satisfied-them)). Nothing else changes.
+
 ## 1.2 — one flag switch
 
 **Added only.** `flagSwitchState(definition)` says whether a served flag is **on** or **off** — the rule the Golden
@@ -145,6 +150,43 @@ const growth = createGrowthEngineClient({
 
 await growth.track('checkout_completed', { featureId: 'checkout' })
 ```
+
+## Ask whether it satisfied them
+
+A bet's funnel ends at **Satisfied**: the people who kept using the feature and liked it. You draw the question; the SDK
+sends the answer in the one shape the funnel reads.
+
+1. **Ask after the person retained** (they used the feature again), and once: the funnel only counts answers from retained
+   people, so an earlier ask is not wrong, just wasted.
+2. **Draw your own prompt**, for example:
+
+   ```html
+   <p>Did the new checkout make paying easier?</p>
+   <button data-score="1">1</button> … <button data-score="5">5</button>
+   <button data-dismiss>Not now</button>
+   ```
+
+3. **Send the answer**:
+
+   ```ts
+   await growth.rateSatisfaction('checkout.one_step_enabled', 4) // a whole number 1–5
+   await growth.dismissSatisfaction('checkout.one_step_enabled') // "Not now": never counts as satisfied
+   ```
+
+   The event names are exported too (`SATISFACTION_RATED_EVENT`, `SATISFACTION_DISMISSED_EVENT`), with the score
+   range (`SATISFACTION_MIN`, `SATISFACTION_MAX`). A score that is not a whole number from 1 to 5, or a key that cannot
+   be a flag key, returns
+   `{ ok: false, code: 'INVALID_SATISFACTION' }` and sends nothing.
+
+4. **Point the bet at it**, in the epic README's frontmatter:
+
+   ```yaml
+   satisfied_event: satisfaction_rated
+   satisfied_min_score: 4   # optional, 1–5; the score that counts as satisfied (default 4)
+   ```
+
+A person counts by their **latest** answer since adopting, and only for the flag the rating names. A bet that names its
+own event instead (`satisfied_event: my_rating`) keeps counting every answer, and ignores `satisfied_min_score`.
 
 ## Server-side flag provider
 

@@ -31,7 +31,8 @@ target_segment: everyone   # the bet's measurement (one-bet-wired D1), copied fr
 adopted_event: funnel_trend_viewed
 retained_event: null
 retention_days: null
-satisfied_event: null
+satisfied_event: satisfaction_rated   # satisfied-ask S1.4: the console asks members to rate the trend
+satisfied_min_score: null
 build_order: 93      # integer position in the ONE global build sequence — the SSOT once the epic
                      # exists (the seed's value is only a fallback). Fill it in at the betting
                      # table; plain integers, no "#2a" suffixes. See 00-ideas/README.md → Ordering.

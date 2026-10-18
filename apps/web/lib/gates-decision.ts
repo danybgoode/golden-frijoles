@@ -115,6 +115,12 @@ export const GATES = {
   owedOnScreen: { key: 'hub.owed_enabled', envVar: 'HUB_OWED_ENABLED', fallback: false },
   // funnel-truth D6 — a funnel's trend by cohort period and the segment screens. An enablement: born dark.
   funnelTrend: { key: 'bets.funnel_trend_enabled', envVar: 'FUNNEL_TREND_ENABLED', fallback: false },
+  // satisfied-ask D5 — the console asks members to rate the funnel trend. An enablement: born dark.
+  satisfactionAsk: {
+    key: 'bets.satisfaction_ask_enabled',
+    envVar: 'SATISFACTION_ASK_ENABLED',
+    fallback: false,
+  },
 } as const satisfies Record<string, Gate>
 
 export type GateName = keyof typeof GATES

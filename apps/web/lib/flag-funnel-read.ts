@@ -70,6 +70,7 @@ type Row = {
   occurred_at: string | null
   feature_id: string | null
   variant?: string | null
+  score?: string | null
 }
 
 const when = (r: Row) => r.occurred_at ?? r.created_at
@@ -136,7 +137,12 @@ async function readMeasureEvents(
     ),
   ]
   return paged((a, b) => {
-    let q = client.from('events').select(COLS).eq('project_id', projectId).in('event', names)
+    // satisfied-ask D4 — the score rides in tags; only the standard rating's is read (computeFunnel).
+    let q = client
+      .from('events')
+      .select(`${COLS}, score:tags->>score`)
+      .eq('project_id', projectId)
+      .in('event', names)
     if (source.kind === 'feature') q = q.eq('feature_id', keyOf(source))
     return q
       .gte('created_at', from)
@@ -202,7 +208,14 @@ const toEvent = (r: Row): FunnelEvent => ({
   createdAt: when(r),
   featureId: r.feature_id,
   variant: r.variant ?? null,
+  score: scoreOf(r.score),
 })
+
+/** `tags->>score` arrives as text: a whole number 1–5, else null (a score the SDK would never send counts as none). */
+function scoreOf(raw: string | null | undefined): number | null {
+  const n = raw == null ? NaN : Number(raw)
+  return Number.isInteger(n) && n >= 1 && n <= 5 ? n : null
+}
 
 /** The one read (tars-one-model D3): a flag or a registry feature, followed over a period. One project. */
 export async function readFunnel(

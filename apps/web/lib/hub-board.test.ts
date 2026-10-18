@@ -302,6 +302,7 @@ test('toCard carries the bet measurement for an Epic with a flag and an adoption
     retainedEvent: null,
     retentionDays: 7,
     satisfiedEvent: null,
+    satisfiedMinScore: null,
   })
   assert.equal(card({ adopted_event: 'order_placed' })?.measure, null, 'no flag, nothing to measure')
   assert.equal(card({ flag_key: 'a.b_enabled' })?.measure, null, 'no adoption event, nothing to measure')

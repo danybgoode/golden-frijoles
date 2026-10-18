@@ -280,3 +280,80 @@ test('verifier #344: the cohort is decided by the EARLIEST exposure, whatever or
     'and newest first: a rule that keeps the FIRST exposure seen is wrong too'
   )
 })
+
+// satisfied-ask D4 — on the standard rating, a retained person counts by their latest score since adopting, against
+// the bet's bar (default 4), and only for the flag the rating names. Any other event still counts every answer.
+test('satisfied-ask D4: the standard rating counts the latest score at or above the bar, for this flag only', async () => {
+  const { SATISFACTION_RATED_EVENT: sdkName } = await import('../../../packages/sdk/src/satisfaction.ts')
+  const { SATISFACTION_RATED_EVENT, DEFAULT_SATISFIED_MIN_SCORE } = await import('./flag-funnel.ts')
+  assert.equal(SATISFACTION_RATED_EVENT, sdkName, 'the app reads the event the SDK sends')
+  assert.equal(DEFAULT_SATISFIED_MIN_SCORE, 4)
+
+  // Six retained people (exposed day 1, adopted day 1, again day 2), each with a different answer history.
+  const retained = (u: string) => [
+    on(u, 1),
+    ev(u, 'order_placed', 1, { createdAt: at(1, 1) }),
+    ev(u, 'order_placed', 2),
+  ]
+  const rate = (u: string, day: number, score: number | null, featureId = 'checkout.one_step') =>
+    ev(u, 'satisfaction_rated', day, { featureId, score })
+  const events = [
+    ...retained('five'),
+    rate('five', 3, 5),
+    ...retained('two'),
+    rate('two', 3, 2),
+    ...retained('two-then-four'),
+    rate('two-then-four', 3, 2),
+    rate('two-then-four', 4, 4),
+    ...retained('four-then-two'),
+    rate('four-then-two', 3, 4),
+    rate('four-then-two', 4, 2),
+    ...retained('no-score'),
+    rate('no-score', 3, null),
+    ...retained('other-flag'),
+    rate('other-flag', 3, 5, 'search.v2'),
+    // Rated 5 without adopting: not counted, as before.
+    on('drive-by', 1),
+    rate('drive-by', 2, 5),
+  ]
+  const read = (satisfiedMinScore?: number | null) =>
+    computeFlagFunnel(events, { ...bet, satisfiedEvent: 'satisfaction_rated', satisfiedMinScore }).satisfied
+
+  assert.equal(read(), 2, 'default bar 4: five and two-then-four')
+  assert.equal(read(null), 2, 'null is the default')
+  assert.equal(
+    read(3),
+    2,
+    'bar 3: still five and two-then-four (two-then-four ends on 4, four-then-two on 2)'
+  )
+  assert.equal(read(5), 1, 'bar 5: only five')
+  assert.equal(read(1), 4, 'bar 1: every scored latest answer for this flag (not no-score, not other-flag)')
+  // Latest, not earliest: alone, the two-then-four person counts and the four-then-two person does not (the mixed set
+  // above cannot tell, since the two swap places).
+  const alone = (u: string) =>
+    computeFlagFunnel(
+      events.filter((e) => e.userId === u),
+      { ...bet, satisfiedEvent: 'satisfaction_rated' }
+    ).satisfied
+  assert.deepEqual([alone('two-then-four'), alone('four-then-two')], [1, 0])
+
+  // A bet that named its own event keeps the old read: any answer counts, the bar and the score are ignored.
+  const custom = computeFlagFunnel(
+    events.map((e) => (e.event === 'satisfaction_rated' ? { ...e, event: 'my_rating' } : e)),
+    { ...bet, satisfiedEvent: 'my_rating', satisfiedMinScore: 5 }
+  )
+  assert.equal(custom.satisfied, 6, 'every retained person who sent it, whatever the score or flag')
+})
+
+test('satisfied-ask D4: a rating sent before adopting never counts, whatever its score', () => {
+  const f = computeFlagFunnel(
+    [
+      on('early', 1),
+      ev('early', 'satisfaction_rated', 1, { featureId: 'checkout.one_step', score: 5 }),
+      ev('early', 'order_placed', 1, { createdAt: at(1, 1) }),
+      ev('early', 'order_placed', 2),
+    ],
+    { ...bet, satisfiedEvent: 'satisfaction_rated' }
+  )
+  assert.deepEqual([f.retained, f.satisfied], [1, 0])
+})

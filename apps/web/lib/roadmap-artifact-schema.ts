@@ -270,6 +270,13 @@ const roadmapRowSchema = z
       .string()
       .regex(/^[A-Za-z0-9_.:$-]{1,200}$/, 'satisfied_event must be an event name')
       .nullish(),
+    // satisfied-ask D3 — the score a `satisfaction_rated` answer needs to count as satisfied; null = 4 (the reader's).
+    satisfied_min_score: z
+      .number({ invalid_type_error: 'satisfied_min_score must be a number' })
+      .int('satisfied_min_score must be a whole number from 1 to 5')
+      .min(1, 'satisfied_min_score must be a whole number from 1 to 5')
+      .max(5, 'satisfied_min_score must be a whole number from 1 to 5')
+      .nullish(),
     // many-products D14 — the destinations this epic lights, by id into the push's `horizon`. Nullish so an older
     // pusher stays valid; whether each id is DECLARED is checked on the push (the row cannot see its siblings).
     destinations: z.array(destinationId).max(HORIZON_MAX).nullish(),

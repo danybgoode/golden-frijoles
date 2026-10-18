@@ -4,16 +4,16 @@
 > Re-derived from the spec tree and the epic docs on every run, never from a maintained list.
 > To clear an item, tick (`✅`) or strike (`~~…~~`) its line where it was written, then regenerate.
 
-_Generated: 2026-10-17_
+_Generated: 2026-10-18_
 
-**96 check(s) owed across 71 file(s)** · 7 cleared.
+**97 check(s) owed across 72 file(s)** · 7 cleared.
 
 | Who can clear it | Count | What it means |
 |---|---|---|
 | publish | 1 | A package publish (npm 2FA): the product owner today, a CI job once trusted publishing is on |
 | credential | 7 | Mints or uses a production credential: only the product owner, named every time |
 | ops | 5 | On the product owner's own accounts or machine |
-| judgment | 31 | An answer only the product owner can give: an _Intent_, an approval, a decision |
+| judgment | 32 | An answer only the product owner can give: an _Intent_, an approval, a decision |
 | signed-in | 23 | A signed-in production walkthrough: an agent can run it once a smoke account exists |
 | interactive | 20 | An interactive plugin or terminal walkthrough: an agent can script it in a scratch repo |
 | unsorted | 9 | Nothing above matched — **not a bin, a to-triage list** |
@@ -23,7 +23,7 @@ _Generated: 2026-10-17_
 | money-path | 1 | Touches checkout, payment or order state — run these first |
 | auth-path | 28 | Needs a real signed-in session a script cannot mint against production |
 | admin-only | 0 | Behind an admin surface |
-| other | 67 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
+| other | 68 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
 
 ## publish (1)
 
@@ -47,10 +47,11 @@ _Generated: 2026-10-17_
 - `Roadmap/09-platform-infra/plugin-1-0/RETROSPECTIVE.md:43` · other — **Owed to Daniel:** the `_Intent_` word above; Sprint 4's interactive walkthrough steps 2–5; your live routines that name a removed skill (sprint-3 step 7); and two decisions: rename the Notion `Stage` select option (it stores the key "Grooming"), and whether to re-approve the c…
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:55` · other — Remove the three account copies of the coaches.
 
-## judgment (31)
+## judgment (32)
 
 - `Roadmap/01-growth-engine/delivery-stale-reclaim-uncounted/RETROSPECTIVE.md:58` · other — Did we build what was meant? (owed to Daniel: one word)
 - `Roadmap/01-growth-engine/drill-impact-for-agents/RETROSPECTIVE.md:54` · other — **Owed to the product owner (Daniel):** build an experiment on `site.drill_fault` in the console (none exists in golden-frijoles) and **start** it — a draft experiment has no analysis, so a capture answers `lifecycle_unavailable`; publish **CLI 1.10.0** to npm (kit 1.10.4 pins i…
+- `Roadmap/01-growth-engine/satisfied-ask/sprint-1.md:107` · other — (signed in — owed to Daniel) Go to https://goldenfrijoles.com/app/flags/golden-frijoles/bets.funnel_trend_enabled?tab=funnel (any flag's Funnel tab works: the ask sits under the trend, and the trend needs that flag's registry funnel) → under the funnel trend, "Did the funnel tre…
 - `Roadmap/02-commercial/account-from-the-terminal/RETROSPECTIVE.md:12` · other — > _Intent_ is provisional ("mostly"), owed to Daniel: GitHub and the email link were cut at the lock, and the Google > round trip worked end to end only after he fixed Supabase's URL settings. His own answer replaces this word.
 - `Roadmap/02-commercial/agentic-pm-public-surface/RETROSPECTIVE.md:78` · other — **Story 1.4 is owed to Daniel by name.** Running the workshop end-to-end in a fresh Claude and a fresh ChatGPT, on a real product. No automated smoke can judge whether a facilitation script facilitates. It must be run against **production**, not a preview — see A13.
 - `Roadmap/02-commercial/app-component-kit-adoption/RETROSPECTIVE.md:78` · other — **Owed to the product owner:** the **consequence copy**. Whether each sentence tells a PM what they're about to lose is the one judgement in this epic no spec makes — walkthrough step 7 in `sprint-3.md`. Also the signed-in visual parity pass across the six converted routes.

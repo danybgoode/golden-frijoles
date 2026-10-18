@@ -72,6 +72,37 @@ function timeoutFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Res
   return fetch(input, { ...init, signal: AbortSignal.timeout(TRACK_TIMEOUT_MS) })
 }
 
+/**
+ * satisfied-ask S1.4 — a member's answer to the console's satisfaction ask, through the REAL SDK's rating call (rule #1:
+ * the same `satisfaction_rated` a customer sends, never a direct insert). Same contract as trackSelfEvent: no key is a
+ * no-op, never throws, returns whether it landed; callers run it in `after()`.
+ */
+export async function trackSelfSatisfaction(
+  userId: string,
+  flagKey: string,
+  answer: number | 'dismissed'
+): Promise<boolean> {
+  const apiKey = selfApiKey()
+  if (!apiKey) return false
+  try {
+    const engine = createGrowthEngineClient({
+      baseUrl: getSiteUrl(),
+      apiKey,
+      userId,
+      fetchImpl: timeoutFetch,
+    })
+    const result =
+      answer === 'dismissed'
+        ? await engine.dismissSatisfaction(flagKey)
+        : await engine.rateSatisfaction(flagKey, answer)
+    if (!result.ok) console.warn(`[self-track] satisfaction for ${userId} did not land: ${result.error}`)
+    return result.ok
+  } catch (err) {
+    console.warn('[self-track] satisfaction threw unexpectedly:', err)
+    return false
+  }
+}
+
 // Fire one funnel event for `userId` through the REAL SDK (POST /api/v1/track, Bearer=self key).
 // Total by construction: no key -> no-op; the SDK returns {ok:false} on any HTTP/network error (it
 // never throws) and we swallow+log; the surrounding try/catch is belt-and-suspenders for anything

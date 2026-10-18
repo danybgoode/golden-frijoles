@@ -179,3 +179,8 @@ export function isOwedOnScreenEnabled(): Promise<boolean> {
 export function isFunnelTrendEnabled(): Promise<boolean> {
   return gate(GATES.funnelTrend)
 }
+
+/** The console's ask to rate the funnel trend (satisfied-ask D5). An enablement: born dark. */
+export function isSatisfactionAskEnabled(): Promise<boolean> {
+  return gate(GATES.satisfactionAsk)
+}
