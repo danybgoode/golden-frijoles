@@ -6,7 +6,7 @@
 
 _Generated: 2026-10-18_
 
-**103 check(s) owed across 73 file(s)** · 7 cleared.
+**104 check(s) owed across 73 file(s)** · 7 cleared.
 
 | Who can clear it | Count | What it means |
 |---|---|---|
@@ -16,14 +16,14 @@ _Generated: 2026-10-18_
 | judgment | 32 | An answer only the product owner can give: an _Intent_, an approval, a decision |
 | signed-in | 25 | A signed-in production walkthrough: an agent can run it once a smoke account exists |
 | interactive | 20 | An interactive plugin or terminal walkthrough: an agent can script it in a scratch repo |
-| unsorted | 9 | Nothing above matched — **not a bin, a to-triage list** |
+| unsorted | 10 | Nothing above matched — **not a bin, a to-triage list** |
 
 | Category | Count | What it means |
 |---|---|---|
 | money-path | 1 | Touches checkout, payment or order state — run these first |
 | auth-path | 29 | Needs a real signed-in session a script cannot mint against production |
 | admin-only | 0 | Behind an admin surface |
-| other | 73 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
+| other | 74 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
 
 ## publish (2)
 
@@ -137,9 +137,10 @@ _Generated: 2026-10-18_
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:54` · other — The interactive coach runs (S1 smoke steps 1 and 3; S2 smoke step 1).
 - `Roadmap/09-platform-infra/why-as-a-story/RETROSPECTIVE.md:50` · other — **Owed to the product owner:** the refine walkthrough on a new idea (the Why drafted as a story, the guard, the build view showing it in full) and a Plan gate with the Crew block.
 
-## unsorted (9)
+## unsorted (10)
 
 - `apps/web/e2e/app-auth.spec.ts:7` · auth-path — owed to Daniel; here we pin the api-testable negatives that make the boundary real:
+- `Roadmap/01-growth-engine/delivery-back-on/sprint-1.md:33` · other — Status:** 🔍 in review — S1.1 + S1.2 built; S1.3 (switch-on) owed to Daniel after the migrations are pushed
 - `Roadmap/01-growth-engine/delivery-stale-reclaim-uncounted/RETROSPECTIVE.md:55` · other — (F7, still owed to Daniel).
 - `Roadmap/01-growth-engine/signals-loop/sprint-1.md:145` · other — throw a real error in the demo app → watch the signal appear (**owed to Daniel by name**)._
 - `Roadmap/01-growth-engine/signals-loop/sprint-2.md:96` · other — `list_tasks` → evidence sanity), **owed to Daniel by name**

@@ -3,7 +3,7 @@ epic: delivery-back-on
 sprint: 1
 title: "Delivery back on"
 risk: high
-phase: Building
+phase: In review
 stories_total: 3
 stories:
   - id: S1.1
@@ -12,14 +12,14 @@ stories:
     i_want: "the dispatcher woken every five minutes on the free Vercel plan"
     so_that: "my events arrive within minutes, not never"
     risk: high
-    status: planned
+    status: done
   - id: S1.2
     title: "The July backlog, expired before the flip"
     as_a: "a tenant's receiver"
     i_want: "deliveries stranded since July expired, not sent three months late"
     so_that: "switching delivery on sends fresh events only"
     risk: high
-    status: planned
+    status: done
   - id: S1.3
     title: "Switch-on, with Daniel"
     as_a: "the product owner"
@@ -30,11 +30,11 @@ stories:
 ---
 # Delivery back on: a dispatch schedule the free Vercel plan allows — Sprint 1: Delivery back on
 
-**Status:** 🔨 building
+**Status:** 🔍 in review — S1.1 + S1.2 built; S1.3 (switch-on) owed to Daniel after the migrations are pushed
 
 ## Stories
 
-### Story 1.1 — A minute-level waker on the database
+### Story 1.1 — A minute-level waker on the database ✅ `c22209e`
 **As a** tenant with a destination, **I want** the dispatcher woken every five minutes on the free Vercel plan, **so
 that** my events arrive within minutes, not never.
 **Acceptance:**
@@ -50,7 +50,7 @@ that** my events arrive within minutes, not never.
 - The route's header comment and the AGENTS registry *Caller* note name the pg_cron waker.
 **Risk:** high (migration, shared infra)
 
-### Story 1.2 — The July backlog, expired before the flip
+### Story 1.2 — The July backlog, expired before the flip ✅ `eb462f5`
 **As a** tenant's receiver, **I want** deliveries stranded since July expired, not sent three months late, **so that**
 switching delivery on sends fresh events only.
 **Acceptance:**
