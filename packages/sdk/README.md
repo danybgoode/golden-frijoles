@@ -173,7 +173,9 @@ sends the answer in the one shape the funnel reads.
    await growth.dismissSatisfaction('checkout.one_step_enabled') // "Not now": never counts as satisfied
    ```
 
-   A score that is not a whole number from 1 to 5, or a key that cannot be a flag key, returns
+   The event names are exported too (`SATISFACTION_RATED_EVENT`, `SATISFACTION_DISMISSED_EVENT`), with the score
+   range (`SATISFACTION_MIN`, `SATISFACTION_MAX`). A score that is not a whole number from 1 to 5, or a key that cannot
+   be a flag key, returns
    `{ ok: false, code: 'INVALID_SATISFACTION' }` and sends nothing.
 
 4. **Point the bet at it**, in the epic README's frontmatter:

@@ -202,9 +202,11 @@ export default async function FlagDetailPage({
       : null
   if (trend) await noteFunnelTrendViewed(membership.projectId)
   // satisfied-ask S1.4 — under a trend a member is reading, once per browser, behind its own switch.
+  // A trend that failed to read renders its unreadable state: nothing to rate, so no ask (agy, #403).
+  const trendShown = trend?.ok === true
   const askSatisfaction = shouldAskSatisfaction({
-    gateOn: trend !== null && (await isSatisfactionAskEnabled()),
-    trendShown: trend !== null,
+    gateOn: trendShown && (await isSatisfactionAskEnabled()),
+    trendShown,
     answeredCookie: (await cookies()).get(SATISFACTION_ASK_COOKIE)?.value,
   })
   const impact =
