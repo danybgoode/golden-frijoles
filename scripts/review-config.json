@@ -11,6 +11,7 @@
     "apps/web/lib/site-url*",
     "apps/web/middleware.ts",
     "apps/web/supabase/migrations/*.sql",
+    "apps/web/supabase/ops/*.sql",
     "packages/sdk/src/**",
     ".github/workflows/**",
     ".claude/settings.json",

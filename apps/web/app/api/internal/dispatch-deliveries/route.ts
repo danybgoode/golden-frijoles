@@ -7,14 +7,17 @@ import { isDestinationDeliveryEnabled } from '@/lib/flags'
 
 // event-destination-router · Sprint 2, Story 2.2 — the production dispatch trigger.
 //
-// This is the cron target (see vercel.json's `crons`). Story 1.2's dispatcher was a seam nothing
+// This is the cron target. Its waker is pg_cron, every five minutes, through pg_net with the same
+// bearer (`dispatch_tick()`, 20261020100000_delivery_waker.sql; delivery-back-on): the free Vercel plan
+// refuses a cron that runs more than daily, so vercel.json declares none. Story 1.2's dispatcher was a seam nothing
 // invoked in production; this is what finally invokes it — enumerating the projects with due work and
 // dispatching once PER PROJECT, because the dispatcher is unconditionally single-tenant (AGENTS.md
 // rule #1). One tenant's flaky receiver cannot stall another's queue.
 //
 // TWO GATES, in order:
-//   1. AUTH — this endpoint moves outbound traffic, so it must not be publicly triggerable. Vercel
-//      Cron sends `Authorization: Bearer $CRON_SECRET`; we require it and compare constant-time. With
+//   1. AUTH — this endpoint moves outbound traffic, so it must not be publicly triggerable. The
+//      waker sends `Authorization: Bearer $CRON_SECRET` (its copy lives in Supabase Vault; rotate both
+//      together); we require it and compare constant-time. With
 //      CRON_SECRET unset we FAIL CLOSED (401) rather than open — an unauthenticated dispatcher is a
 //      worse failure than a cron that 401s until the secret is set.
 //   2. DELIVERY FLAG — even authenticated, a pass no-ops while DESTINATION_DELIVERY_ENABLED is OFF.

@@ -229,7 +229,12 @@ compliance.
 
 | Function | Returns | Caller |
 |---|---|---|
-| `projects_with_due_work()` (`20260724100000_delivery_retry.sql`) | `project_id` only | `app/api/internal/dispatch-deliveries` (cron, `CRON_SECRET`-gated) |
+| `projects_with_due_work()` (`20260724100000_delivery_retry.sql`) | `project_id` only | `app/api/internal/dispatch-deliveries` (cron, `CRON_SECRET`-gated; woken by pg_cron's `dispatch_tick()`, which reads no tenant data — delivery-back-on, 2026-10-17) |
+
+The waker, `dispatch_tick()` (`20261020100000_delivery_waker.sql`), is **not** an exempt function and is not in this
+registry: it returns a pg_net request id, reads only two Vault secrets, and is callable by **no API role**, `service_role`
+included (only pg_cron and an operator, as `postgres`). Condition 3 binds the registered function above, which keeps its
+service-role-only grant.
 
 **This exemption does NOT permit — do not cite it for any of these:**
 
