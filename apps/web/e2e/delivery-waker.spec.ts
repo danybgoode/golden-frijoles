@@ -217,6 +217,23 @@ test('the backlog expiry dead-letters rows older than an hour, never rewrites on
     })
     expect(replayed).toBeTruthy()
     expect((await read(oldId)).status).toBe('pending')
+
+    // One-shot per project: once the project has an attempt since the switch-on, a re-run (an hour
+    // later, say) leaves even its old rows alone.
+    await db.from('event_deliveries').update({ created_at: '2026-08-01T00:00:00Z' }).eq('id', freshId)
+    const { error: attemptError } = await db.from('event_delivery_attempts').insert({
+      project_id: pid,
+      delivery_id: oldId,
+      destination_id: dest!.id,
+      event_id: eventId('old_one'),
+      outcome: 'delivered',
+      http_status: 200,
+      attempt_no: 1,
+    })
+    expect(attemptError).toBeNull()
+    await withOwner((client) => client.query(expiry))
+    expect((await read(oldId)).status).toBe('pending')
+    expect((await read(freshId)).status).toBe('pending')
   } finally {
     await db.from('projects').delete().eq('id', pid)
   }

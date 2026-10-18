@@ -15,10 +15,20 @@
 -- operator can still send any one of them. Only rows that are not already dead are touched, so a
 -- re-run never rewrites an expired row. No dispatcher runs while the gate is off, so an `in_flight`
 -- row from that window has no live worker to race.
-UPDATE event_deliveries
+-- ONE-SHOT PER PROJECT (Codex, PR #405 round 2): the hour-old cutoff moves, so a re-run AFTER the
+-- switch-on could dead-letter live work (a retry in backoff is often older than an hour). Nothing was
+-- attempted anywhere between July and this epic, so a project with ANY attempt since 2026-10-17 has
+-- had delivery back on, and its rows are never touched again.
+UPDATE event_deliveries d
    SET status = 'dead',
        last_error = 'expired: queued while delivery was off (2026-07-22 to its switch-on)',
        claimed_at = NULL,
        updated_at = now()
- WHERE status IN ('pending', 'failed', 'in_flight')
-   AND created_at < now() - INTERVAL '1 hour';
+ WHERE d.status IN ('pending', 'failed', 'in_flight')
+   AND d.created_at < now() - INTERVAL '1 hour'
+   AND NOT EXISTS (
+     SELECT 1
+       FROM event_delivery_attempts a
+      WHERE a.project_id = d.project_id
+        AND a.created_at >= TIMESTAMPTZ '2026-10-17 00:00:00+00'
+   );
