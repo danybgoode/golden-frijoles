@@ -5,17 +5,16 @@
 
 # Build order — the six stages
 
-> **Generated 2026-10-17 — do not hand-edit.** One stage per initiative, decided in one place
+> **Generated 2026-10-18 — do not hand-edit.** One stage per initiative, decided in one place
 > (`scripts/lib/stage.mjs`): Backlog · Refining · Ready · Building · QA · Shipped.
 > This committed file reads the docs alone, so **Building and QA are not here** — they are facts git
 > and GitHub hold. For the live board run `node scripts/build-order.mjs --live`, or open the Hub board.
 
-## Backlog (3)
+## Backlog (2)
 
 _seeds with no pitch yet._
 
 - [Delivery back on: a dispatch schedule the free Vercel plan allows](seeds/delivery-back-on.md) — 01 Growth Engine · seed · Feature · risk: High · _docs: status raw_
-- [The Satisfied ask: a rating the product can ask, read as TARS's last stage](seeds/satisfied-ask.md) — 01 Growth Engine · seed · Feature · risk: Low · _docs: status raw_
 - [Verify for projects: the verification depth ladder offered to every project](seeds/verify-for-projects.md) — 09 Platform Infra · seed · Feature · risk: High · _docs: status raw_
 
 ## Refining (1)
@@ -24,13 +23,14 @@ _a pitch is waiting at the approval gate._
 
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
 
-## Ready (3)
+## Ready (4)
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
-- [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #99 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
-- [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #100 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
-- [CMS-neutral experiment integration + Payload go/no-go](../01-growth-engine/cms-integration-spike/README.md) — #101 · 01 Growth Engine · 0/6 stories · risk: Low · _docs: status scaffolded_
+- [The Satisfied ask](../01-growth-engine/satisfied-ask/README.md) — #99 · 01 Growth Engine · 0/5 stories · risk: High · appetite S · _docs: status scaffolded_
+- [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #100 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
+- [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #101 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
+- [CMS-neutral experiment integration + Payload go/no-go](../01-growth-engine/cms-integration-spike/README.md) — #102 · 01 Growth Engine · 0/6 stories · risk: Low · _docs: status scaffolded_
 
 ## Building — live only
 
