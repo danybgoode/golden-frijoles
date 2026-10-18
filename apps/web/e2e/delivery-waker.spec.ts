@@ -1,6 +1,9 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { test, expect } from '@playwright/test'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { Client as PgClient } from 'pg'
+import { specWorkspaceId } from './helpers/spec-workspace'
 import { requireTestDatabaseUrl } from './helpers/test-db-cleanup'
 
 // delivery-back-on · Sprint 1 — the pg_cron waker (Story 1.1) and the July backlog expiry (Story 1.2).
@@ -8,6 +11,13 @@ import { requireTestDatabaseUrl } from './helpers/test-db-cleanup'
 // The tick's positive cases run INSIDE a transaction that is rolled back: pg_net's worker only sees a
 // committed request, so nothing is ever sent, and the Vault secrets they create never persist. That is
 // also what makes them deterministic — a committed request could be dequeued before the spec reads it.
+
+function dbClient(): SupabaseClient {
+  const url = process.env.SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !key) throw new Error('SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY must be set to run this spec')
+  return createClient(url, key, { auth: { persistSession: false } })
+}
 
 async function withOwner<T>(run: (client: PgClient) => Promise<T>): Promise<T> {
   const client = new PgClient({ connectionString: requireTestDatabaseUrl() })
@@ -122,4 +132,82 @@ test('no API role can call dispatch_tick() — a function-level denial, never a 
     client.query(`SELECT 1 FROM pg_proc WHERE oid = 'public.dispatch_tick()'::regprocedure`)
   )
   expect(exists.rowCount).toBe(1)
+})
+
+// ── Story 1.2: the July backlog expiry ─────────────────────────────────────────────────────────
+const expiry = readFileSync(
+  join(__dirname, '..', 'supabase', 'migrations', '20261020110000_delivery_backlog_expiry.sql'),
+  'utf8'
+)
+
+test('the backlog expiry dead-letters rows from the dark window only, once, and each stays replayable', async () => {
+  const db = dbClient()
+  const { data: proj } = await db
+    .from('projects')
+    .insert({
+      workspace_id: await specWorkspaceId(db),
+      slug: `waker-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      api_key_hash: `h-${Math.random()}`,
+    })
+    .select('id')
+    .single()
+  const pid = proj!.id as string
+  try {
+    const { data: dest } = await db
+      .from('event_destinations')
+      .insert({
+        project_id: pid,
+        name: 'waker-dest',
+        enabled: true,
+        target_url: 'https://receiver.example.test/hook',
+        signing_secret: 'whsec_waker_spec_secret_0123456789',
+        secret_set_at: new Date().toISOString(),
+      })
+      .select('id')
+      .single()
+    const { data: events } = await db
+      .from('events')
+      .insert([
+        { project_id: pid, user_id: 'waker-u', event: 'old_one' },
+        { project_id: pid, user_id: 'waker-u', event: 'fresh_one' },
+      ])
+      .select('id, event')
+    const eventId = (name: string) => events!.find((e) => e.event === name)!.id as string
+    const { data: rows } = await db
+      .from('event_deliveries')
+      .insert([
+        { project_id: pid, event_id: eventId('old_one'), destination_id: dest!.id },
+        { project_id: pid, event_id: eventId('fresh_one'), destination_id: dest!.id },
+      ])
+      .select('id, event_id')
+    const oldId = rows!.find((r) => r.event_id === eventId('old_one'))!.id as string
+    const freshId = rows!.find((r) => r.event_id === eventId('fresh_one'))!.id as string
+    // Queued in the dark window.
+    await db.from('event_deliveries').update({ created_at: '2026-08-01T00:00:00Z' }).eq('id', oldId)
+
+    await withOwner((client) => client.query(expiry))
+    const read = async (id: string) =>
+      (await db.from('event_deliveries').select('status, last_error, updated_at').eq('id', id).single()).data!
+
+    const expired = await read(oldId)
+    expect(expired.status).toBe('dead')
+    expect(expired.last_error).toBe('expired: delivery was off 2026-07-22 → 2026-10-17')
+    expect((await read(freshId)).status).toBe('pending')
+
+    // A second run changes nothing: the expired row is already dead, the fresh one is past the cutoff.
+    await withOwner((client) => client.query(expiry))
+    expect((await read(oldId)).updated_at).toBe(expired.updated_at)
+    expect((await read(freshId)).status).toBe('pending')
+
+    // Reversible per row: the operator's replay sends it again.
+    const { data: replayed } = await db.rpc('replay_delivery', {
+      p_project_id: pid,
+      p_delivery_id: oldId,
+      p_now: new Date().toISOString(),
+    })
+    expect(replayed).toBeTruthy()
+    expect((await read(oldId)).status).toBe('pending')
+  } finally {
+    await db.from('projects').delete().eq('id', pid)
+  }
 })
