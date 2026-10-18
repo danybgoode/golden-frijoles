@@ -82,8 +82,10 @@ rides the existing roadmap push beside `satisfied_event`. No new table, no new r
 - **D5 — the gate.** `bets.satisfaction_ask_enabled`, a `GATES` row (enablement, fallback false), read only by the
   console prompt. `rateSatisfaction` needs no gate (it is `track`).
 - **D6 — the dogfood prompt** sends through the real SDK client server-side (rule #1) with the
-  `SELF_PROJECT_API_KEY` self-tracking path the console already uses; "answered" is read from the member's own
-  `satisfaction_rated`/`satisfaction_dismissed` events in the self project, never another project.
+  `SELF_PROJECT_API_KEY` self-tracking path the console already uses. **Amended at build:** "answered" is a cookie
+  in the member's browser (`lib/satisfaction-ask.ts`), not a read of their events: re-querying `events` on a request
+  path to decide a UI hint is the ad-hoc read rule #1 keeps out, and a member asked again on a new browser costs
+  nothing (the funnel counts their latest answer).
 - **D7 — SDK and kit releases.** SDK minor bump (add-only, `surface-freeze.test.ts`); plugin + kit minor bump with a
   CHANGELOG section and `plugin-checksums.mjs`. npm publish of the SDK is Daniel's 2FA step (owed).
 

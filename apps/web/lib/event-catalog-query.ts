@@ -110,6 +110,8 @@ const funnelCacheKey = (projectId: string, source: ExposureRule, measure: Funnel
   measure.retainedEvent ?? '',
   String(measure.retentionDays),
   measure.satisfiedEvent ?? '',
+  // satisfied-ask D3 — the bar changes the Satisfied count, so a cached funnel read under another bar is a different read.
+  String(measure.satisfiedMinScore ?? ''),
 ]
 export function getFunnel(
   projectId: string,

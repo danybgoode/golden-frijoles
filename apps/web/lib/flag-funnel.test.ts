@@ -344,3 +344,16 @@ test('satisfied-ask D4: the standard rating counts the latest score at or above 
   )
   assert.equal(custom.satisfied, 6, 'every retained person who sent it, whatever the score or flag')
 })
+
+test('satisfied-ask D4: a rating sent before adopting never counts, whatever its score', () => {
+  const f = computeFlagFunnel(
+    [
+      on('early', 1),
+      ev('early', 'satisfaction_rated', 1, { featureId: 'checkout.one_step', score: 5 }),
+      ev('early', 'order_placed', 1, { createdAt: at(1, 1) }),
+      ev('early', 'order_placed', 2),
+    ],
+    { ...bet, satisfiedEvent: 'satisfaction_rated' }
+  )
+  assert.deepEqual([f.retained, f.satisfied], [1, 0])
+})

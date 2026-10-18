@@ -72,21 +72,6 @@ function timeoutFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Res
   return fetch(input, { ...init, signal: AbortSignal.timeout(TRACK_TIMEOUT_MS) })
 }
 
-// Fire one funnel event for `userId` through the REAL SDK (POST /api/v1/track, Bearer=self key).
-// Total by construction: no key -> no-op; the SDK returns {ok:false} on any HTTP/network error (it
-// never throws) and we swallow+log; the surrounding try/catch is belt-and-suspenders for anything
-// unexpected (including an AbortSignal.timeout() abort). Returns nothing meaningful — callers must
-// not branch on success in the request path.
-//
-// Callers must invoke this via `next/server`'s `after()`, never inline-`await`ed before building a
-// response — a cross-review catch: the SDK call is a real network round-trip (this app calling its
-// own public URL), and awaiting it directly in a route handler would delay that route's response
-// (and, for self-visit specifically, delay delivering the Set-Cookie the waitlist route depends on
-// for a shared visitor identity) by however long the call takes, timeout included.
-// Returns whether the event actually LANDED. Callers that use the send as a one-shot state
-// transition (the ingest route stamping projects.first_event_at) must branch on this: committing
-// the "already sent" marker on a send that silently failed loses that funnel stage permanently,
-// because no later event ever retries it (cross-review, Codex 2026-07-20).
 /**
  * satisfied-ask S1.4 — a member's answer to the console's satisfaction ask, through the REAL SDK's rating call (rule #1:
  * the same `satisfaction_rated` a customer sends, never a direct insert). Same contract as trackSelfEvent: no key is a
@@ -118,6 +103,21 @@ export async function trackSelfSatisfaction(
   }
 }
 
+// Fire one funnel event for `userId` through the REAL SDK (POST /api/v1/track, Bearer=self key).
+// Total by construction: no key -> no-op; the SDK returns {ok:false} on any HTTP/network error (it
+// never throws) and we swallow+log; the surrounding try/catch is belt-and-suspenders for anything
+// unexpected (including an AbortSignal.timeout() abort). Returns nothing meaningful — callers must
+// not branch on success in the request path.
+//
+// Callers must invoke this via `next/server`'s `after()`, never inline-`await`ed before building a
+// response — a cross-review catch: the SDK call is a real network round-trip (this app calling its
+// own public URL), and awaiting it directly in a route handler would delay that route's response
+// (and, for self-visit specifically, delay delivering the Set-Cookie the waitlist route depends on
+// for a shared visitor identity) by however long the call takes, timeout included.
+// Returns whether the event actually LANDED. Callers that use the send as a one-shot state
+// transition (the ingest route stamping projects.first_event_at) must branch on this: committing
+// the "already sent" marker on a send that silently failed loses that funnel stage permanently,
+// because no later event ever retries it (cross-review, Codex 2026-07-20).
 export async function trackSelfEvent(
   event: SelfTrackEvent,
   userId: string,

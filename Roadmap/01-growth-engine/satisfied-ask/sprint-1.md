@@ -104,13 +104,16 @@ Env: production · https://goldenfrijoles.com   (or the preview URL while testin
 
 1. Run `frijoles flags get bets.satisfaction_ask_enabled`
    → each environment prints `on vN` or `off vN`, never a bare `off`.
-2. (signed in — owed to Daniel) Go to https://goldenfrijoles.com/app/flags/bets.funnel_trend_enabled
+2. (signed in — owed to Daniel) Go to https://goldenfrijoles.com/app/flags/golden-frijoles/bets.funnel_trend_enabled?tab=funnel
+   (any flag's Funnel tab works: the ask sits under the trend, and the trend needs that flag's registry funnel)
    → under the funnel trend, "Did the funnel trend help you judge this bet?" with 1–5 and "Not now".
 3. Click 4.
    → the prompt disappears; reloading the page does not bring it back.
 4. Run `frijoles events ls --event satisfaction_rated --limit 1` (or the console's event catalog)
    → one `satisfaction_rated` event with `feature_id` `bets.funnel_trend_enabled` and score 4.
-5. Open the bet's funnel on the same page
-   → Satisfied shows a count (no longer "not measured") once a retained member has answered 4 or 5.
+5. Open funnel-truth's epic page, https://goldenfrijoles.com/hub/golden-frijoles/epic/funnel-truth (the BET's funnel;
+   the flag page's Funnel tab is the registry funnel, which names no satisfaction event)
+   → Satisfied shows a count (no longer "not measured") once a retained member has answered 4 or 5 and the roadmap
+   push carrying `satisfied_event: satisfaction_rated` has landed.
 
 If any step fails, note the step number + what you saw — that's the bug report.
