@@ -15,9 +15,16 @@
 // `getFlagRegistryView()` already returns every definition, version and activation for the project.
 // This page selects ONE row out of what the list page already reads. There is no per-flag fetch.
 
+import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { requireProjectMembership } from '@/lib/dashboard-auth'
-import { isFlagConsoleEnabled, isFlagRuleBuilderEnabled, isFunnelTrendEnabled } from '@/lib/flags'
+import {
+  isFlagConsoleEnabled,
+  isFlagRuleBuilderEnabled,
+  isFunnelTrendEnabled,
+  isSatisfactionAskEnabled,
+} from '@/lib/flags'
+import { SATISFACTION_ASK_COOKIE, shouldAskSatisfaction } from '@/lib/satisfaction-ask'
 import { isOwner } from '@/lib/roles'
 import { getFlagRegistryView } from '@/lib/flag-registry'
 import { getFeatureFunnelByProjectId, getFeatureFunnelTrendByProjectId } from '@/lib/tars-query'
@@ -39,6 +46,7 @@ import { FlagSwitch, type FlagSwitchEnvironment } from './flag-switch'
 import { FlagVersionServe, type ServeTarget } from './flag-version-serve'
 import { FLAG_STATE_PRESENTATION, TYPE_LABEL, CRITICALITY_LABEL } from '../flag-vocabulary'
 import { FunnelPane, ImpactPane } from './feature-panes'
+import { SatisfactionAsk } from './satisfaction-ask'
 
 export const dynamic = 'force-dynamic'
 
@@ -193,6 +201,12 @@ export default async function FlagDetailPage({
       ? await getFeatureFunnelTrendByProjectId(membership.projectId, projectSlug, flag.key, by)
       : null
   if (trend) await noteFunnelTrendViewed(membership.projectId)
+  // satisfied-ask S1.4 — under a trend a member is reading, once per browser, behind its own switch.
+  const askSatisfaction = shouldAskSatisfaction({
+    gateOn: trend !== null && (await isSatisfactionAskEnabled()),
+    trendShown: trend !== null,
+    answeredCookie: (await cookies()).get(SATISFACTION_ASK_COOKIE)?.value,
+  })
   const impact =
     tab === 'impact' ? await getFeatureImpactByProjectId(membership.projectId, projectSlug, flag.key) : null
 
@@ -345,11 +359,14 @@ export default async function FlagDetailPage({
               hrefFor={(p) => `${basePath}?tab=funnel&period=${p}${trend ? `&by=${by}` : ''}`}
               trend={
                 trend ? (
-                  <FunnelTrend
-                    view={funnelTrendView(trend.ok ? trend.trend : null)}
-                    by={by}
-                    hrefFor={(b) => `${basePath}?tab=funnel&period=${period}&by=${b}`}
-                  />
+                  <>
+                    <FunnelTrend
+                      view={funnelTrendView(trend.ok ? trend.trend : null)}
+                      by={by}
+                      hrefFor={(b) => `${basePath}?tab=funnel&period=${period}&by=${b}`}
+                    />
+                    {askSatisfaction ? <SatisfactionAsk slug={projectSlug} /> : null}
+                  </>
                 ) : undefined
               }
             />

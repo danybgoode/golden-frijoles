@@ -87,6 +87,37 @@ function timeoutFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Res
 // transition (the ingest route stamping projects.first_event_at) must branch on this: committing
 // the "already sent" marker on a send that silently failed loses that funnel stage permanently,
 // because no later event ever retries it (cross-review, Codex 2026-07-20).
+/**
+ * satisfied-ask S1.4 — a member's answer to the console's satisfaction ask, through the REAL SDK's rating call (rule #1:
+ * the same `satisfaction_rated` a customer sends, never a direct insert). Same contract as trackSelfEvent: no key is a
+ * no-op, never throws, returns whether it landed; callers run it in `after()`.
+ */
+export async function trackSelfSatisfaction(
+  userId: string,
+  flagKey: string,
+  answer: number | 'dismissed'
+): Promise<boolean> {
+  const apiKey = selfApiKey()
+  if (!apiKey) return false
+  try {
+    const engine = createGrowthEngineClient({
+      baseUrl: getSiteUrl(),
+      apiKey,
+      userId,
+      fetchImpl: timeoutFetch,
+    })
+    const result =
+      answer === 'dismissed'
+        ? await engine.dismissSatisfaction(flagKey)
+        : await engine.rateSatisfaction(flagKey, answer)
+    if (!result.ok) console.warn(`[self-track] satisfaction for ${userId} did not land: ${result.error}`)
+    return result.ok
+  } catch (err) {
+    console.warn('[self-track] satisfaction threw unexpectedly:', err)
+    return false
+  }
+}
+
 export async function trackSelfEvent(
   event: SelfTrackEvent,
   userId: string,

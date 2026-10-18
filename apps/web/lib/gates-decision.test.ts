@@ -28,6 +28,7 @@ test('the gate table: 22 gates, their keys, the variables they replaced, and eac
     ['auth.terminal_sign_in_enabled', null, true],
     ['bets.flag_funnels_enabled', 'FLAG_FUNNELS_ENABLED', true],
     ['bets.funnel_trend_enabled', 'FUNNEL_TREND_ENABLED', false],
+    ['bets.satisfaction_ask_enabled', 'SATISFACTION_ASK_ENABLED', false],
     ['connector.mcp_enabled', 'CONNECTOR_ENABLED', true],
     ['connector.writes_enabled', 'CONNECTOR_WRITES_ENABLED', true],
     ['console.agent_rail_enabled', 'AGENT_RAIL_ENABLED', true],
