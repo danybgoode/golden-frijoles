@@ -6,15 +6,15 @@
 
 _Generated: 2026-10-18_
 
-**97 check(s) owed across 72 file(s)** · 7 cleared.
+**99 check(s) owed across 72 file(s)** · 7 cleared.
 
 | Who can clear it | Count | What it means |
 |---|---|---|
-| publish | 1 | A package publish (npm 2FA): the product owner today, a CI job once trusted publishing is on |
+| publish | 2 | A package publish (npm 2FA): the product owner today, a CI job once trusted publishing is on |
 | credential | 7 | Mints or uses a production credential: only the product owner, named every time |
 | ops | 5 | On the product owner's own accounts or machine |
 | judgment | 32 | An answer only the product owner can give: an _Intent_, an approval, a decision |
-| signed-in | 23 | A signed-in production walkthrough: an agent can run it once a smoke account exists |
+| signed-in | 24 | A signed-in production walkthrough: an agent can run it once a smoke account exists |
 | interactive | 20 | An interactive plugin or terminal walkthrough: an agent can script it in a scratch repo |
 | unsorted | 9 | Nothing above matched — **not a bin, a to-triage list** |
 
@@ -23,11 +23,12 @@ _Generated: 2026-10-18_
 | money-path | 1 | Touches checkout, payment or order state — run these first |
 | auth-path | 28 | Needs a real signed-in session a script cannot mint against production |
 | admin-only | 0 | Behind an admin surface |
-| other | 68 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
+| other | 70 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
 
-## publish (1)
+## publish (2)
 
 - `Roadmap/01-growth-engine/funnel-truth/RETROSPECTIVE.md:46` · other — Owed to the product owner: `npm publish` CLI 1.8.0 and 1.9.0 (the skills already pin 1.9.0 / kit 1.10.3); `frijoles flags set bets.funnel_trend_enabled --value true --env production` when the trend should go live; the signed-in smoke steps (sprint-1 3–5, sprint-2 4 and 6) and th…
+- `Roadmap/01-growth-engine/satisfied-ask/RETROSPECTIVE.md:48` · other — **Owed to Daniel:** `npm publish` of `@golden-frijoles/sdk@1.3.0` (2FA).
 
 ## credential (7)
 
@@ -51,7 +52,7 @@ _Generated: 2026-10-18_
 
 - `Roadmap/01-growth-engine/delivery-stale-reclaim-uncounted/RETROSPECTIVE.md:58` · other — Did we build what was meant? (owed to Daniel: one word)
 - `Roadmap/01-growth-engine/drill-impact-for-agents/RETROSPECTIVE.md:54` · other — **Owed to the product owner (Daniel):** build an experiment on `site.drill_fault` in the console (none exists in golden-frijoles) and **start** it — a draft experiment has no analysis, so a capture answers `lifecycle_unavailable`; publish **CLI 1.10.0** to npm (kit 1.10.4 pins i…
-- `Roadmap/01-growth-engine/satisfied-ask/sprint-1.md:107` · other — (signed in — owed to Daniel) Go to https://goldenfrijoles.com/app/flags/golden-frijoles/bets.funnel_trend_enabled?tab=funnel (any flag's Funnel tab works: the ask sits under the trend, and the trend needs that flag's registry funnel) → under the funnel trend, "Did the funnel tre…
+- `Roadmap/01-growth-engine/satisfied-ask/RETROSPECTIVE.md:49` · other — **Owed to Daniel:** the Intent answer above (yes, mostly or no).
 - `Roadmap/02-commercial/account-from-the-terminal/RETROSPECTIVE.md:12` · other — > _Intent_ is provisional ("mostly"), owed to Daniel: GitHub and the email link were cut at the lock, and the Google > round trip worked end to end only after he fixed Supabase's URL settings. His own answer replaces this word.
 - `Roadmap/02-commercial/agentic-pm-public-surface/RETROSPECTIVE.md:78` · other — **Story 1.4 is owed to Daniel by name.** Running the workshop end-to-end in a fresh Claude and a fresh ChatGPT, on a real product. No automated smoke can judge whether a facilitation script facilitates. It must be run against **production**, not a preview — see A13.
 - `Roadmap/02-commercial/app-component-kit-adoption/RETROSPECTIVE.md:78` · other — **Owed to the product owner:** the **consequence copy**. Whether each sentence tells a PM what they're about to lose is the one judgement in this epic no spec makes — walkthrough step 7 in `sprint-3.md`. Also the signed-in visual parity pass across the six converted routes.
@@ -82,7 +83,7 @@ _Generated: 2026-10-18_
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:52` · other — Run the North Star coach on Golden Frijoles and judge the file (S1 smoke step 2).
 - `Roadmap/09-platform-infra/verify-spike/RETROSPECTIVE.md:48` · other — **F7, owed to the product owner:** the delivery cron may not be registered in production (DECISION § 4). Re-checked 2026-10-14: `vercel crons ls` finds no cron jobs, and `delivery.destinations_enabled` is off in production (320 pending on 2026-10-08). Decide whether delivery com…
 
-## signed-in (23)
+## signed-in (24)
 
 - `apps/web/e2e/app-auth.spec.ts:121` · auth-path — authed member-vs-owner HTTP path needs a real session (browser smoke owed to Daniel), so the
 - `apps/web/e2e/delivery-replay.spec.ts:20` · auth-path — The authenticated /app replay + delivery-history UI is a real-session BROWSER smoke owed to Daniel.
@@ -94,6 +95,7 @@ _Generated: 2026-10-18_
 - `Roadmap/01-growth-engine/flags-console-parity/RETROSPECTIVE.md:130` · money-path — **Owed to the product owner: the signed-in walkthroughs for all three sprints.** Every surface is credential-gated, so nothing in this repo reaches past the login redirect. Sprint 2's includes the money-path confirm on preview **and** production (cancel both).
 - `Roadmap/01-growth-engine/north-star-multi-metric-read/RETROSPECTIVE.md:28` · other — **Owed to Daniel:** the signed-in look at https://goldenfrijoles.com/app/north-star/golden-frijoles (sprint-1 step 2). ~~The `_Intent_` word~~: answered yes on 2026-10-14.
 - `Roadmap/01-growth-engine/one-bet-wired/RETROSPECTIVE.md:50` · other — **Owed to the product owner:** a signed-in look at a measured epic's funnel once a bet reports evaluations, and the interactive refine walkthrough of Stage 6b.
+- `Roadmap/01-growth-engine/satisfied-ask/RETROSPECTIVE.md:46` · other — **Owed to Daniel (signed in):** smoke steps 2–5, in production only (the funnel trend is off in development and preview). Then switch `bets.satisfaction_ask_enabled` on in production.
 - `Roadmap/01-growth-engine/tars-one-model/RETROSPECTIVE.md:52` · other — **Owed to the product owner:** the signed-in look at a feature's funnel with the period choice, ~~and the _Intent_ word~~ (answered: yes).
 - `Roadmap/02-commercial/account-from-the-terminal/RETROSPECTIVE.md:57` · auth-path — **Owed to Daniel:** the sprint walkthroughs on production — S1 steps 4–5 (an agent reading install.md and waiting), S2 steps 2 and 4–6 (Google with a fresh account, `gf login` on a clean machine, expiry), S3 steps 2–5 (the Claude app turning a flag off, Get a new URL, Disconnect…
 - `Roadmap/02-commercial/app-shell-and-agent-rail/RETROSPECTIVE.md:112` · auth-path — **The SIGNED-IN production walkthrough has not been run.** The anonymous half was verified in production against `102f494` on 2026-08-07: all routes healthy, `/app` 307s to login, the rail markers are **absent** from both anonymously-readable demo dashboards (the dark spec's pro…

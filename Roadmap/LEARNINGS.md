@@ -363,7 +363,9 @@ one-liner + why + date shape.
 - **A fixture with ONE of something cannot catch a bug that needs two.** Every North Star spec seeded one metric, so
   `.maybeSingle()` on a non-unique filter passed for weeks and broke the page the day a project held two. Seed at least
   two of anything a query must choose between, inserted against the order the rule picks.
-  *(north-star-multi-metric-read, 2026-10-08.)*
+  *(north-star-multi-metric-read, 2026-10-08.)* **Two that mirror each other hide it too:** satisfied-ask's "latest
+  score wins" fixture held a 2-then-4 and a 4-then-2 person, so "earliest wins" swapped them and kept the count at 2;
+  the mutation stayed green until each was asserted alone. *(satisfied-ask, 2026-10-17.)*
 - **A new way of counting a series changes every place that summarises it, not only the place that computes it.**
   proving-workspaces-reading added a running distinct-per-month series, and two "Every reading" tables still
   **summed** it (1, 2, 3 read as "totalling 6"). The architecture lock said "the surfaces carry `aggregate`", and no
@@ -2443,3 +2445,14 @@ one-liner + why + date shape.
   migrations plus vendored copies), agy refused on argv size, and gpt-oss refused even 17 files on context. Every
   external pass was scoped, so the fresh verifier was the only full read of the migration, and it did that because
   the brief asked for it.
+
+### One event name, many keys (satisfied-ask, 2026-10-17)
+- **A standard event shared across keys must be scoped by its key where it is read, not where it is sent.** One
+  `satisfaction_rated` serves every flag, and a flag's measure read is not `feature_id`-scoped (a custom satisfied
+  event never needed it), so a rating of flag A would have satisfied flag B's bet. It was found while wiring the read.
+  Before reusing one name for many keys, check that every read filters by the key.
+- **A cache key derived from inputs by hand drifts the day a new input arrives; pin it to the type.** The new
+  `satisfiedMinScore` changed the Satisfied count but not the funnel cache key, so a changed bar would have served the
+  old number for five minutes (the fresh verifier caught it). The spec now reads `FunnelMeasure`'s fields from source and
+  fails on any the key omits: the class, not the instance.
+
