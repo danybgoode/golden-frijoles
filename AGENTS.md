@@ -229,7 +229,7 @@ compliance.
 
 | Function | Returns | Caller |
 |---|---|---|
-| `projects_with_due_work()` (`20260724100000_delivery_retry.sql`) | `project_id` only | `app/api/internal/dispatch-deliveries` (cron, `CRON_SECRET`-gated) |
+| `projects_with_due_work()` (`20260724100000_delivery_retry.sql`) | `project_id` only | `app/api/internal/dispatch-deliveries` (cron, `CRON_SECRET`-gated; woken by pg_cron's `dispatch_tick()`, which reads no tenant data — delivery-back-on, 2026-10-17) |
 
 **This exemption does NOT permit — do not cite it for any of these:**
 

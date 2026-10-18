@@ -23,7 +23,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -91,4 +91,56 @@ test('no vercel.json functions block overrides the route maxDuration this guard 
       `${path} (from apps/web/lib) now has a \`functions\` block — extend this guard to read its maxDuration`
     )
   }
+})
+
+// delivery-back-on (verify-spike F7) — the waker lives in the database, not in vercel.json. The free
+// Vercel plan fails any deploy whose cron runs more than daily, and a second waker beside pg_cron would
+// double the ticks. The LATEST migration that defines dispatch_tick() and the latest that schedules it
+// are the ones in force, so a later redefinition is what this guard reads.
+const migrationsDir = join(here, '../supabase/migrations')
+function latestMigration(pattern: RegExp, name: string): string {
+  const files = readdirSync(migrationsDir)
+    .filter((f) => f.endsWith('.sql'))
+    .sort()
+    .map((f) => readFileSync(join(migrationsDir, f), 'utf8'))
+    .filter((sql) => pattern.test(sql))
+  assert.ok(files.length > 0, `no migration ${name} — this guard must be updated, not skipped`)
+  return files[files.length - 1]
+}
+const tickSql = latestMigration(/FUNCTION public\.dispatch_tick\(\)/, 'defines dispatch_tick()')
+const scheduleSql = latestMigration(
+  /cron\.schedule\('dispatch-deliveries'/,
+  "schedules 'dispatch-deliveries'"
+)
+
+test('no vercel.json declares crons — the waker is pg_cron (the free plan refuses sub-daily crons)', () => {
+  for (const { path, config } of vercelConfigs) {
+    assert.equal(
+      config.crons,
+      undefined,
+      `${path} (from apps/web/lib) declares \`crons\`; the waker is dispatch_tick()`
+    )
+  }
+})
+
+test("pg_net waits for the route: dispatch_tick()'s timeout is above maxDuration", () => {
+  const timeoutMs = literalMs(
+    tickSql,
+    /timeout_milliseconds := ([\d_]+)/,
+    'dispatch_tick timeout_milliseconds'
+  )
+  assert.ok(
+    timeoutMs > maxDurationMs,
+    `pg_net timeout ${timeoutMs}ms must be > maxDuration ${maxDurationMs}ms, or the connection drops mid-dispatch`
+  )
+})
+
+test('ticks do not overlap: the schedule interval is at least maxDuration', () => {
+  const match = /cron\.schedule\('dispatch-deliveries', '\*\/(\d+) \* \* \* \*'/.exec(scheduleSql)
+  assert.ok(match, "the dispatch-deliveries schedule is no longer '*/N * * * *' — update this guard")
+  const intervalMs = Number(match[1]) * 60_000
+  assert.ok(
+    intervalMs >= maxDurationMs,
+    `the */${match[1]} schedule (${intervalMs}ms) must be >= maxDuration ${maxDurationMs}ms`
+  )
 })
