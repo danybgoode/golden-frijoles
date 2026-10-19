@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { asPeriod } from '@/lib/flag-funnel'
+import { FUNNEL_PERIODS, parsePeriod, unknownPeriodError } from '@/lib/flag-funnel'
 import { resolveProjectFromAuthHeader } from '@/lib/auth'
 import { getSupabaseServiceClient } from '@/lib/supabase'
 import { getFeatureFunnelByProjectId } from '@/lib/tars-query'
@@ -10,6 +10,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ key:
     return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status })
   }
   const { key } = await params
+
+  // landing-launch-experiment D9: an unknown period is named, never read as `all`. Before any read.
+  const rawPeriod = req.nextUrl.searchParams.get('period')
+  const period = parsePeriod(rawPeriod)
+  if (period === null) {
+    return NextResponse.json(
+      { ok: false, error: unknownPeriodError(rawPeriod), accepted: [...FUNNEL_PERIODS] },
+      { status: 400 }
+    )
+  }
 
   const supabase = getSupabaseServiceClient()
   const { data: project, error } = await supabase
@@ -26,7 +36,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ key:
     auth.projectId,
     project.slug,
     key,
-    asPeriod(req.nextUrl.searchParams.get('period'))
+    period
   )
   if (!result.ok) {
     if (result.reason === 'query_failed') {

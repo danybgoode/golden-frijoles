@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { getFeatureFunnel, getFeatureFunnelTrend } from '@/lib/tars-query'
-import { asPeriod, asTrendBy } from '@/lib/flag-funnel'
+import { asTrendBy, parsePeriod, unknownPeriodError } from '@/lib/flag-funnel'
 import { isFunnelTrendEnabled } from '@/lib/flags'
 import { funnelTrendView } from '@/lib/flag-funnel-view'
 import { noteFunnelTrendViewed } from '@/lib/funnel-trend-screen'
@@ -42,7 +42,9 @@ export default async function FunnelPage({
   const { projectSlug, featureKey } = await params
   await requireDashboardAccess(projectSlug)
   const rawPeriod = (await searchParams).period
-  const period = asPeriod(Array.isArray(rawPeriod) ? rawPeriod[0] : rawPeriod)
+  const periodParam = Array.isArray(rawPeriod) ? rawPeriod[0] : rawPeriod
+  const parsedPeriod = parsePeriod(periodParam)
+  const period = parsedPeriod ?? 'all'
   const result = await getFeatureFunnel(projectSlug, featureKey, period)
   // ⚠️ `query_failed` THROWS and everything else 404s — unchanged. A failed read must not render as
   // an absent feature: `FunnelPane`'s own empty states say which absence they are, and a database
@@ -77,6 +79,11 @@ export default async function FunnelPage({
           <strong>This page is a view of a feature, so it also lives on the feature.</strong> The link is
           shareable and the tab is where you will actually find it — same design, two mounts, not two designs.
         </Answer>
+        {parsedPeriod === null ? (
+          <p className="ds-hint" role="status">
+            {unknownPeriodError(periodParam)} Showing all time.
+          </p>
+        ) : null}
         <FunnelPane
           flagKey={featureKey}
           result={result}

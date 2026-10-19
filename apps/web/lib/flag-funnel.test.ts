@@ -3,7 +3,9 @@ import { test } from 'node:test'
 import {
   computeFlagFunnel,
   computeFunnel,
+  parsePeriod,
   personOf,
+  unknownPeriodError,
   type BetMeasure,
   type FunnelEvent,
 } from './flag-funnel.ts'
@@ -356,4 +358,20 @@ test('satisfied-ask D4: a rating sent before adopting never counts, whatever its
     { ...bet, satisfiedEvent: 'satisfaction_rated' }
   )
   assert.deepEqual([f.retained, f.satisfied], [1, 0])
+})
+
+test('parsePeriod: a known period is itself, a missing one is all, an unknown or non-string one is null (D9)', () => {
+  assert.equal(parsePeriod('30d'), '30d')
+  assert.equal(parsePeriod('90d'), '90d')
+  assert.equal(parsePeriod('all'), 'all')
+  assert.equal(parsePeriod(undefined), 'all')
+  assert.equal(parsePeriod(null), 'all')
+  assert.equal(parsePeriod(''), 'all')
+  assert.equal(parsePeriod('7d'), null)
+  assert.equal(parsePeriod(30), null)
+  assert.equal(parsePeriod({}), null)
+})
+
+test('unknownPeriodError names the value and every accepted period', () => {
+  assert.equal(unknownPeriodError('7d'), 'Unknown period "7d". Use one of: all, 90d, 30d.')
 })

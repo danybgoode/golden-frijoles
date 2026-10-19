@@ -11,7 +11,7 @@ import { HubShell } from '../../../hub-shell'
 import { EmptyBoard } from '../../board/board-components'
 import { FlagFunnel } from '@/components/product/FlagFunnel'
 import { PeriodChoice } from '@/components/product/PeriodChoice'
-import { asPeriod, asTrendBy, type FunnelPeriod, type TrendBy } from '@/lib/flag-funnel'
+import { asTrendBy, parsePeriod, unknownPeriodError, type FunnelPeriod, type TrendBy } from '@/lib/flag-funnel'
 import { betFunnelView, betTrendView } from '@/lib/bet-funnel'
 import { funnelBetOf } from '@/lib/flag-funnel-view'
 import { isFlagFunnelsEnabled, isFunnelTrendEnabled } from '@/lib/flags'
@@ -103,7 +103,9 @@ export default async function HubEpicPage({
   const flag = await readEpicFlag(result.projectId, card.flagKey, card.flagNote)
   // one-bet-wired D7 — the measured flag's funnel, for THIS project (the id the access gate resolved), behind its switch.
   const funnelBet = funnelBetOf(card)
-  const period = asPeriod(Array.isArray(query.period) ? query.period[0] : query.period)
+  const periodParam = Array.isArray(query.period) ? query.period[0] : query.period
+  const parsedPeriod = parsePeriod(periodParam)
+  const period = parsedPeriod ?? 'all'
   // The period link keeps the filters the page was opened with (they only matter to Back).
   const by = asTrendBy(Array.isArray(query.by) ? query.by[0] : query.by)
   const epicHref = (extra: Record<string, string>) =>
@@ -145,6 +147,11 @@ export default async function HubEpicPage({
         <section className="ds-epic-section" aria-label="The flag's funnel">
           <h2 className="ds-label">The flag&apos;s funnel</h2>
           <PeriodChoice period={period} hrefFor={periodHref} />
+          {parsedPeriod === null ? (
+            <p className="ds-hint" role="status">
+              {unknownPeriodError(periodParam)} Showing all time.
+            </p>
+          ) : null}
           <FlagFunnel view={funnel} />
         </section>
       ) : null}

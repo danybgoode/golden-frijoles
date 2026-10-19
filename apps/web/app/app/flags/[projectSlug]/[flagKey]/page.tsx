@@ -28,7 +28,7 @@ import { SATISFACTION_ASK_COOKIE, shouldAskSatisfaction } from '@/lib/satisfacti
 import { isOwner } from '@/lib/roles'
 import { getFlagRegistryView } from '@/lib/flag-registry'
 import { getFeatureFunnelByProjectId, getFeatureFunnelTrendByProjectId } from '@/lib/tars-query'
-import { asPeriod, asTrendBy } from '@/lib/flag-funnel'
+import { asTrendBy, parsePeriod, unknownPeriodError } from '@/lib/flag-funnel'
 import { funnelTrendView } from '@/lib/flag-funnel-view'
 import { noteFunnelTrendViewed } from '@/lib/funnel-trend-screen'
 import { FunnelTrend } from '@/components/product/FunnelTrend'
@@ -187,7 +187,9 @@ export default async function FlagDetailPage({
   // shape AGENTS rule #1 exists to keep out of this codebase. Same id, one fewer query, and no
   // second place where a slug becomes a tenant.
   const rawPeriod = (await searchParams).period
-  const period = asPeriod(Array.isArray(rawPeriod) ? rawPeriod[0] : rawPeriod)
+  const periodParam = Array.isArray(rawPeriod) ? rawPeriod[0] : rawPeriod
+  const parsedPeriod = parsePeriod(periodParam)
+  const period = parsedPeriod ?? 'all'
   const funnel =
     tab === 'funnel'
       ? await getFeatureFunnelByProjectId(membership.projectId, projectSlug, flag.key, period)
@@ -354,6 +356,11 @@ export default async function FlagDetailPage({
             the result and render the absence. */}
         {tab === 'funnel' && funnel !== null && (
           <Pane>
+            {parsedPeriod === null ? (
+              <p className="ds-hint" role="status">
+                {unknownPeriodError(periodParam)} Showing all time.
+              </p>
+            ) : null}
             <FunnelPane
               flagKey={flag.key}
               result={funnel}

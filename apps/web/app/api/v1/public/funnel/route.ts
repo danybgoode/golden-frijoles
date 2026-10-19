@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { asPeriod } from '@/lib/flag-funnel'
+import { FUNNEL_PERIODS, parsePeriod, unknownPeriodError } from '@/lib/flag-funnel'
 import { assertPublicAllowedSlug } from '@/lib/public-demo'
 import { getFeatureFunnel } from '@/lib/tars-query'
 
@@ -22,7 +22,17 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: false, error: allowed.error }, { status: allowed.status })
   }
 
-  const result = await getFeatureFunnel(project, feature, asPeriod(req.nextUrl.searchParams.get('period')))
+  // landing-launch-experiment D9: an unknown period is named, never read as `all`. Before any read.
+  const rawPeriod = req.nextUrl.searchParams.get('period')
+  const period = parsePeriod(rawPeriod)
+  if (period === null) {
+    return NextResponse.json(
+      { ok: false, error: unknownPeriodError(rawPeriod), accepted: [...FUNNEL_PERIODS] },
+      { status: 400 }
+    )
+  }
+
+  const result = await getFeatureFunnel(project, feature, period)
   if (!result.ok) {
     if (result.reason === 'query_failed') {
       return NextResponse.json({ ok: false, error: 'Funnel lookup failed' }, { status: 500 })
