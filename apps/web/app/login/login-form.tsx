@@ -1,6 +1,5 @@
 'use client'
 import { useState, type FormEvent } from 'react'
-import { useRouter } from 'next/navigation'
 import { createAuthBrowserClient } from '@/lib/supabase-browser'
 import { Button, Field } from '@/design-system/primitives'
 import { GoogleSignIn } from '@/components/auth/GoogleSignIn'
@@ -66,7 +65,6 @@ export function LoginForm({
     return `${target.pathname}${target.search}`
   })()
 
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fieldError, setFieldError] = useState<string | null>(null)
@@ -88,8 +86,10 @@ export function LoginForm({
       else setFormError(error.message)
       return
     }
-    router.push(landing)
-    router.refresh()
+    // landing-launch-experiment D8 (verifier, #408): a FULL load, not `router.push`. /login is a marketing page, so a
+    // visitor who once accepted analytics has Clarity running in this document; a client-side push would render their
+    // console inside it before anything could stop the recorder. A fresh document carries no third-party script.
+    window.location.assign(landing)
   }
 
   return (

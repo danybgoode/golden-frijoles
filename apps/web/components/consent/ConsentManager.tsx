@@ -76,6 +76,35 @@ export function ConsentManager() {
   // the document: a soft link from the landing to /install or /app would carry Clarity's recorder onto a page that must
   // never be recorded. So leaving the allow-list after they loaded costs a full load, which starts a clean document.
   const thirdPartiesLoaded = useRef(false)
+
+  // The reload below runs AFTER the next page has rendered, so on its own it is too late: the console would be in the
+  // recording for a frame (verifier, #408). So once third parties run, a click on an internal link to an off-list page
+  // becomes a full load BEFORE Next's <Link> handles it (capture phase, document level, ahead of React's root
+  // listener; <Link> skips a click whose default was prevented). Programmatic pushes are handled where they are made
+  // (`app/login/login-form.tsx` assigns `window.location`); the reload stays as the backstop for anything else.
+  useEffect(() => {
+    if (!allowed) return
+    const onClick = (event: MouseEvent) => {
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      )
+        return
+      const anchor = (event.target as Element | null)?.closest?.('a[href]') as HTMLAnchorElement | null
+      if (!anchor || (anchor.target && anchor.target !== '_self') || anchor.hasAttribute('download')) return
+      const url = new URL(anchor.href, window.location.href)
+      if (url.origin !== window.location.origin || isMarketingPath(url.pathname)) return
+      event.preventDefault()
+      window.location.assign(url.href)
+    }
+    document.addEventListener('click', onClick, true)
+    return () => document.removeEventListener('click', onClick, true)
+  }, [allowed])
+
   useEffect(() => {
     if (allowed) {
       loadClarity()
