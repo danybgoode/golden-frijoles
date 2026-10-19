@@ -1,0 +1,73 @@
+/* landing-launch-experiment · S3.1 — B's nav and hero (prototype v3). Every selector starts with `.lb`. */
+.lb .lb-nav__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-block: 18px;
+}
+.lb .lb-nav__links {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 14.5px;
+}
+.lb .lb-nav a.lb-nav__plain,
+.lb .lb-nav a.lb-nav__plain:link,
+.lb .lb-nav a.lb-nav__plain:visited {
+  color: var(--dim);
+}
+.lb .lb-nav a.lb-nav__plain:hover {
+  color: var(--crema);
+}
+.lb .lb-nav a.lb-nav__signin {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font: inherit;
+}
+@media (max-width: 640px) {
+  .lb .lb-nav a.lb-nav__plain {
+    display: none;
+  }
+}
+
+.lb .lb-hero {
+  padding-block: 72px 88px;
+}
+.lb .lb-wrap.lb-hero__wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 820px;
+}
+.lb .lb-hero h1 {
+  font-size: clamp(46px, 8.4vw, 96px);
+  font-weight: 900;
+  font-stretch: 115%;
+  letter-spacing: -0.03em;
+  line-height: 0.98;
+}
+.lb .lb-hero__sub {
+  font-size: clamp(20px, 2.6vw, 28px);
+  font-weight: 700;
+  font-stretch: 105%;
+  color: var(--crema);
+  line-height: 1.25;
+}
+.lb .lb-hero__copy {
+  font-size: 18px;
+  color: var(--dim);
+  max-width: 60ch;
+}
+.lb .lb-hero__prompt {
+  min-width: 0;
+}
+.lb .lb-hero__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 22px;
+}
