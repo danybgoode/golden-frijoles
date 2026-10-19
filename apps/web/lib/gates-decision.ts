@@ -43,6 +43,13 @@ export type ServedEnvironment = {
   readable: boolean
   /** Storage, never shown: `never` (not set here), `off` (taken out), `on` (serving). From `toGateRows`. */
   activation?: string
+  /**
+   * landing-launch-experiment D1 — the version this environment serves, for `variant()` (lib/variant-decision.ts),
+   * which buckets one visitor with the SDK's evaluator. A gate never reads it: a gate is one global answer.
+   */
+  flag?: { key: string; definitionVersion: number; definition: unknown }
+  /** landing-launch-experiment D1 — the environment's snapshot version, named on every exposure. */
+  snapshotVersion?: number
 }
 
 /** flag key → what each environment serves. `null` = the catalog could not be read. */
