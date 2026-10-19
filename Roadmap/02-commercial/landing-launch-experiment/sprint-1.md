@@ -12,32 +12,32 @@ stories:
     i_want: "GA4 and Clarity to load only after I accept, and nothing third-party if I decline"
     so_that: "the team can see sources and recordings without tracking anyone who said no"
     risk: high
-    status: planned
+    status: done   # 595cd70, 3340393, fd01513, 9649305 · #408 → 749695a
   - id: S1.2
     title: "Visitor \u2192 user join, with the acquisition variant"
     as_a: "the product owner"
     i_want: "a landing visit, its signup and the workspace it creates to share one identity"
     so_that: "any landing change can be read against signups and proven bets"
     risk: high
-    status: planned
+    status: done   # ef7cca6, ff586a0 · #408
   - id: S1.3
     title: "The landing funnel, retargeted"
     as_a: "the product owner"
     i_want: "the landing funnel to count visit \u2192 prompt copied \u2192 signup"
     so_that: "it stops reading 0 against a CTA that no longer exists"
     risk: low
-    status: planned
+    status: done   # f019023 · feature synced live 2026-10-19
   - id: S1.4
     title: "Instruments verified, quota raised"
     as_a: "the product owner"
     i_want: "proof that GA4, Clarity and our own funnel all see a visit, and room in our quota for launch day"
     so_that: "launch traffic is counted, not dropped"
     risk: low
-    status: planned
+    status: in-progress   # rate raised + Clarity MCP live; GA4/Clarity visit check owed to Daniel
 ---
 # Launch: the first landing A/B on goldenfrijoles.com, run on Golden Frijoles — Sprint 1: Instruments
 
-**Status:** 🟦 In review — PR #408 (wave 1, with Sprint 2)
+**Status:** ✅ Shipped 2026-10-19 — PR #408, merge `749695a`, production deploy success; migration `20261021100000` applied first. Owed: S1.4's GA4/Clarity visit check and steps 1–6 below in a real browser (Daniel).
 
 ## Stories
 
@@ -116,3 +116,14 @@ Env: production · https://goldenfrijoles.com   (or the PR preview while testing
    → the landing funnel shows visit → copy → signup for one visitor
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+### Run log — 2026-10-19 (agent, production, after `749695a` deployed)
+- `GET /` → 200 with `Set-Cookie: gb_vid=…` (middleware, D2); the HTML carries no `googletagmanager`, `clarity.ms` or the GA4 id (D8).
+- Beacon `surface: landing` → `Set-Cookie: gb_variant=a; HttpOnly` (flag off → A); `surface: landing-copy` → 200. In `events`: `landing_visited` and `start_prompt_copied` under that visitor, `feature_id = landing_conversion`, `subject_type = visitor` (D3, D4).
+- `landing_conversion` synced (and `waitlist_conversion` disabled) on `golden-frijoles`; the public funnel reads **3 visited → 1 copied** for 30d — non-zero (S1.3).
+- `workspaces.acquisition_variant` live: nullable text, 4 rows all NULL, an `'c'` insert refused with `23514`.
+- `ingest_rate_per_min` 600 → 3,000 on `golden-frijoles` (D12).
+- Clarity MCP registered at local scope (token read from the root `.env.local` at start, never in a config file); `query-analytics-dashboard` answers, with an empty result — nobody has accepted the banner yet.
+- `proving_landing_workspaces` added to the North Star (`frijoles north-star set`, dry run first: one new input).
+- **Incident, fixed:** the root `.env.local`'s `SELF_PROJECT_API_KEY` belongs to **miyagisanchez**, not `golden-frijoles`; the first sync wrote two feature rows there. Both deleted on Daniel's go (no events referenced them); the sync was redone with a one-use `golden-frijoles` ingest key, minted and revoked in the same step.
+- Steps 1–6 (consent in a real browser, GA4 realtime, Clarity recording, a real signup) are **owed to Daniel**.
