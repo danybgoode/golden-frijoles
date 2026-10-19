@@ -7,3 +7,168 @@
   background: var(--roast);
   color: var(--crema);
 }
+
+/* ── Shared by every B section (the prototype's base). Section-only styles live in each section's own CSS file. ── */
+.lb {
+  font: 16px/1.55 var(--sans);
+}
+.lb .lb-wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding-inline: max(16px, env(safe-area-inset-left, 0px));
+}
+.lb h1,
+.lb h2,
+.lb h3 {
+  margin: 0;
+  text-wrap: balance;
+}
+.lb p {
+  margin: 0;
+}
+.lb a {
+  color: var(--gold);
+  text-decoration: none;
+}
+.lb a:hover {
+  color: var(--gold-hot);
+}
+.lb :focus-visible {
+  outline: 2px solid var(--gold-hot);
+  outline-offset: 3px;
+}
+.lb .lb-kicker {
+  font: 600 12px var(--mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.lb .lb-foil {
+  background: var(--foil);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.lb .lb-note {
+  font: italic 400 12.5px var(--mono);
+  color: var(--dim);
+}
+.lb .lb-band {
+  padding-block: 88px;
+  border-top: 1px solid var(--line);
+}
+.lb .lb-band--alt {
+  background: var(--lb-roast-2);
+}
+.lb .lb-head {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 720px;
+  margin-bottom: 56px;
+}
+.lb .lb-head h2 {
+  font-size: clamp(32px, 4.6vw, 52px);
+  font-weight: 900;
+  font-stretch: 112%;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+}
+.lb .lb-head p {
+  font-size: 18px;
+  color: var(--dim);
+}
+
+/* The app-window frame every product shot sits in. */
+.lb .lb-win {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgb(0 0 0 / 45%);
+  overflow: hidden;
+  min-width: 0;
+}
+.lb .lb-win-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--espresso);
+  font: 600 11.5px var(--mono);
+  color: var(--lb-dim-2);
+}
+.lb .lb-dots {
+  display: flex;
+  gap: 5px;
+}
+.lb .lb-dots i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--line);
+}
+.lb .lb-win-body {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-size: 14px;
+}
+.lb .lb-win img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.lb .lb-illus {
+  font: italic 11px var(--mono);
+  color: var(--lb-dim-2);
+  text-align: right;
+  margin-top: 8px;
+}
+.lb .lb-lbl {
+  font: 600 10.5px var(--mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lb-dim-2);
+}
+.lb .lb-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 600 11px var(--mono);
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--dim);
+  white-space: nowrap;
+}
+.lb .lb-chip--g {
+  color: var(--green);
+  border-color: var(--green-line);
+}
+.lb .lb-chip--y {
+  color: var(--gold);
+  border-color: var(--gold-deep);
+}
+.lb .lb-chip--r {
+  color: var(--red);
+  border-color: color-mix(in srgb, var(--red) 45%, var(--roast));
+}
+.lb .lb-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.lb .lb-num {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--gold-hot);
+}
+@media (prefers-reduced-motion: reduce) {
+  .lb * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
