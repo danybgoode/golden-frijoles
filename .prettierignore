@@ -80,3 +80,5 @@ optimize/reports/*.json
 apps/web/lib/plugin-release.generated.ts
 # Machine-written by `node scripts/verify-pins.mjs --write` (verify-module D3): its hashes are re-pinned, never typed.
 verify/pins.json
+# landing-launch-experiment S3.4 — A's markup snapshot is compared byte for byte; formatting it would break the pin.
+apps/web/e2e/_fixtures/landing-a.html

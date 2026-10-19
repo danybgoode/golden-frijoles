@@ -73,6 +73,9 @@ const CALLERS: Record<string, { kind: 'informational' } | { kind: 'durable'; gat
   // `installPrompt(getSiteUrl())` and the file imports the seam again. A prompt is read now:
   // informational.
   'components/landing/MakerClosingCta.tsx': { kind: 'informational' },
+  // landing-launch-experiment S3.1/S3.3 — variant B's two prompt cards: the same install prompt A renders, read now.
+  'components/landing-b/HeroB.tsx': { kind: 'informational' },
+  'components/landing-b/ClosingB.tsx': { kind: 'informational' },
   // account-from-the-terminal D1 — the plain page the install prompt sends an agent to.
   'app/install.md/route.ts': { kind: 'informational' },
   // account-from-the-terminal D4 — the door pages hand `getSiteUrl()` to "Continue with Google" as
