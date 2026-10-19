@@ -20,7 +20,7 @@ export function AgentStripB() {
           <span className="lb-o">frijoles north-star readings checkout_rate</span>
           {'\n'}2026-10-12 47% 2026-10-05 44% 2026-09-28 41%{'\n'}
           <span className="lb-p">$</span> <span className="lb-o">frijoles scenarios launch black-friday</span>
-          {'\n'}Launched black-friday · stop with: frijoles scenarios stop 4
+          {'\n'}Launched black-friday in my-shop.{'\n'}Next: frijoles scenarios runs --watch
         </pre>
       </div>
     </section>
