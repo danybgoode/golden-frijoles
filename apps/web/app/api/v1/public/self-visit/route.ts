@@ -156,6 +156,8 @@ export async function POST(req: NextRequest) {
       maxAge: 60 * 60 * 24 * 90,
     })
     const agrees = beacon.rendered === undefined || beacon.rendered === letter
+    // Awaited before the response, unlike the sends: the acquisition cookie above needs the answer. The catalog read is
+    // the gates' shared 30 s cache (bounded at 1.5 s when cold), and this is a keepalive beacon nobody waits on.
     if (answer.experiment && agrees && !isLikelyBot(req.headers.get('user-agent'))) {
       after(() => trackSelfExposure('landingVariantB', visitorId, answer))
     }

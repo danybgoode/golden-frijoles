@@ -202,8 +202,10 @@ export function trackVisitorEvent(event: SelfTrackEvent, visitorId: unknown): Pr
 /**
  * landing-launch-experiment D3 — ONE exposure, through the SDK's bound-experiment path (`trackFlagEvaluation` with
  * `experiment` → `experiment_exposed`, feature = the experiment key). Only for a visitor a running experiment's rule
- * assigned (`answer.experiment`); the SDK's idempotency key (subject, flag, version, variant, …) makes a reload the same
- * event, so this is one per visitor per version. Same contract as trackSelfEvent: never throws, no key is a no-op.
+ * assigned (`answer.experiment`); the SDK's idempotency key (subject, flag, version, variant, environment snapshot, …)
+ * makes a reload the same event. A change to ANY flag in this environment moves the snapshot, so a returning visitor
+ * can be exposed again then (verifier, #408) — harmless to the readout, which keys assignments by subject and keeps the
+ * first (`lib/experiment-analysis.ts`). Same contract as trackSelfEvent: never throws, no key is a no-op.
  */
 export async function trackSelfExposure(
   name: ExperimentFlagName,

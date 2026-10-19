@@ -18,6 +18,10 @@ import { VISITOR_COOKIE } from '@/lib/marketing-paths'
 // The workspace half (D5: the callback records the acquisition variant) needs a signed-in browser and lives in
 // `landing-identity.authed.spec.ts`; the column's constraint is asserted here by attempting the refused write.
 
+// Serial: the last test serves an experiment-bound flag on this server's catalog, which would change the variant the
+// earlier tests read. (The page itself renders A whatever is served until S3.4.)
+test.describe.configure({ mode: 'serial' })
+
 const SELF_SLUG =
   process.env.SELF_PROJECT_SLUG?.trim() || process.env.DEMO_PROJECT_SLUG?.trim() || 'golden-frijoles'
 const configured = !!process.env.SELF_PROJECT_API_KEY?.trim()
@@ -170,4 +174,117 @@ test('a workspace can record a or b and nothing else (D5) — the database refus
   } finally {
     await client.from('workspaces').delete().eq('id', workspace!.id)
   }
+})
+
+// verifier, #408 (Should-fix) — the exposure, driven through the route where it runs: an experiment-bound flag served
+// here, then exactly one `experiment_exposed` per visitor (subject = visitor, feature = the experiment key), none for a
+// bot, none when the rendered arm disagrees with the server's answer, and none twice for a reload.
+test.describe('the beacon writes the exposure (D3)', () => {
+  test.skip(!configured, 'needs SELF_PROJECT_API_KEY — the self tenant must be seeded (CI seeds it)')
+  const EXPERIMENT = 'landing-b-spec'
+  const FLAG = 'landing.variant_b_enabled'
+
+  test('one exposure per visitor; never for a bot or a disagreeing render', async ({ request }) => {
+    test.setTimeout(90_000)
+    const client = db()
+    const { data: project } = await client.from('projects').select('id').eq('slug', SELF_SLUG).single()
+    const projectId = project!.id as string
+    const { data: created } = await client.auth.admin.createUser({
+      email: `spec-exposure-${randomUUID().slice(0, 8)}@example.invalid`,
+      password: `pw-${randomUUID()}`,
+      email_confirm: true,
+    })
+    const actor = created!.user!.id
+    await client.from('project_members').insert({ user_id: actor, project_id: projectId, role: 'owner' })
+    const snapshot = async () =>
+      Number(
+        (
+          await client
+            .from('flag_environment_states')
+            .select('snapshot_version')
+            .eq('project_id', projectId)
+            .eq('environment', 'development')
+            .maybeSingle()
+        ).data?.snapshot_version ?? 0
+      )
+    let flagId: string | null = null
+    try {
+      const { data: version, error } = await client.rpc('create_flag_definition_version', {
+        p_project_id: projectId,
+        p_flag_key: FLAG,
+        p_definition: {
+          valueType: 'boolean',
+          description: 'landing B (exposure spec)',
+          defaultVariantKey: 'off',
+          variants: [
+            { key: 'off', value: false },
+            { key: 'on', value: true },
+          ],
+          rules: [{ priority: 0, clauses: [], rollout: { basisPoints: 10_000 }, variantKey: 'on' }],
+          metadata: { experiment_key: EXPERIMENT, experiment_version: 1, experiment_rules: '0' },
+        },
+        p_reason: 'exposure spec',
+        p_actor_user_id: actor,
+      })
+      if (error || !version?.[0]) throw new Error(`version: ${error?.message}`)
+      flagId = version[0].flag_id as string
+      const activated = await client.rpc('set_flag_activation', {
+        p_project_id: projectId,
+        p_environment: 'development',
+        p_flag_id: flagId,
+        p_version_id: version[0].version_id,
+        p_expected_snapshot_version: await snapshot(),
+        p_reason: 'exposure spec',
+        p_actor_user_id: actor,
+      })
+      if (activated.error) throw new Error(`activate: ${activated.error.message}`)
+
+      const visit = (vid: string, rendered: 'a' | 'b', ua = BROWSER_UA) =>
+        request.post('/api/v1/public/self-visit', {
+          headers: { Cookie: `${VISITOR_COOKIE}=${vid}`, 'x-forwarded-for': randomIp(), 'user-agent': ua },
+          data: { surface: 'landing', rendered },
+        })
+      // The gate cache answers for 30 s: wait until this server serves the new version.
+      await expect
+        .poll(async () => cookieValue(await visit(randomUUID(), 'b'), ACQUISITION_VARIANT_COOKIE), {
+          timeout: 45_000,
+        })
+        .toBe('b')
+
+      const exposures = async (vid: string) =>
+        (await eventsFor(vid, ['experiment_exposed'], 6000)).filter(
+          (row) => row.event === 'experiment_exposed'
+        )
+
+      const person = randomUUID()
+      await visit(person, 'b')
+      await visit(person, 'b') // a reload
+      const mine = await exposures(person)
+      expect(mine).toHaveLength(1)
+      expect(mine[0]).toMatchObject({
+        feature_id: EXPERIMENT,
+        subject_type: VISITOR_SUBJECT_TYPE,
+        subject_id: person,
+      })
+
+      const bot = randomUUID()
+      await visit(bot, 'b', 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)')
+      const disagreeing = randomUUID()
+      await visit(disagreeing, 'a')
+      expect(await exposures(bot)).toEqual([])
+      expect(await exposures(disagreeing)).toEqual([])
+    } finally {
+      if (flagId)
+        await client.rpc('deactivate_flag', {
+          p_project_id: projectId,
+          p_environment: 'development',
+          p_flag_id: flagId,
+          p_expected_snapshot_version: await snapshot(),
+          p_reason: 'exposure spec cleanup',
+          p_actor_user_id: actor,
+        })
+      await client.from('project_members').delete().eq('user_id', actor).eq('project_id', projectId)
+      await client.auth.admin.deleteUser(actor)
+    }
+  })
 })

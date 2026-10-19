@@ -207,6 +207,15 @@ Every PR gets the fresh `verifier` (high risk) plus the routed external passes.
 6. **"Raise the quota"** — the monthly quota is not the risk; the per-minute rate is (D12).
 7. **"70 started / 1 confirmed"** — not in the events: live, `golden-frijoles` has 1 `signup_started` / 1
    `account_confirmed` (both 2026-10-14) and the archived `golden-beans` 3 / 2. Recorded in S1.2's notes.
+8. **D1's file (verifier, #408, 2026-10-19)** — `EXPERIMENT_FLAGS` and `resolveVariant` live in
+   `lib/variant-decision.ts`, not `gates-decision.ts`: bucketing needs the SDK's evaluator, and `gates-decision.ts` is
+   import-free on purpose (the Playwright process reads it). The rule is unchanged.
+9. **D6's lookup (verifier, #408)** — the push reads the workspace's `acquisition_variant` in a SECOND query, after
+   `workspace_proved_bet` is sent, so a failed read can never cost the existing event. Still the pushing project's own
+   workspace row only.
+10. **D3's "one per visitor per version" (verifier, #408)** — the SDK's idempotency key includes the environment's
+   snapshot version, so any flag change in production can expose a returning visitor again. The readout keeps each
+   subject's first assignment, so the counts are unchanged.
 
 ## What already exists (reuse, don't rebuild)
 - `apps/web/lib/gates.ts → gate()`, `lib/gates-decision.ts → GATES` — the one gate seam; `variant()` goes beside it.

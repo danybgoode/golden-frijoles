@@ -66,6 +66,13 @@ test('the landing visitor, their signup and their workspace share one identity (
           `user:${ACCOUNT_CONFIRMED_EVENT}:activation`,
         ])
       )
+    // The activation funnel keeps the user id: no visitor-keyed copy may ever land in it (D4).
+    const { data: stray } = await db
+      .from('events')
+      .select('event')
+      .eq('user_id', vid)
+      .eq('feature_id', 'activation')
+    expect(stray ?? []).toEqual([])
   } finally {
     await context.close()
     const { data: projects } = await db.from('projects').select('id').eq('created_by', userId)
