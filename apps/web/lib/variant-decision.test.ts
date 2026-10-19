@@ -3,7 +3,13 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
-import { A_UNASSIGNED, EXPERIMENT_FLAGS, isVisitorId, resolveVariant, type VariantSource } from './variant-decision.ts'
+import {
+  A_UNASSIGNED,
+  EXPERIMENT_FLAGS,
+  isVisitorId,
+  resolveVariant,
+  type VariantSource,
+} from './variant-decision.ts'
 
 const KEY = EXPERIMENT_FLAGS.landingVariantB.key
 const variants = [

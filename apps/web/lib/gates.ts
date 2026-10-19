@@ -19,7 +19,12 @@ import {
   type Gate,
   type ServedCatalog,
 } from './gates-decision'
-import { EXPERIMENT_FLAGS, resolveVariant, type ExperimentFlagName, type VariantAnswer } from './variant-decision'
+import {
+  EXPERIMENT_FLAGS,
+  resolveVariant,
+  type ExperimentFlagName,
+  type VariantAnswer,
+} from './variant-decision'
 
 // The cache's rules (30 s, a 1.5 s bound, keep the last good catalog, an older read never wins) live in the pure
 // `createCatalogCache` so they are unit-tested; this file only supplies the database reader.

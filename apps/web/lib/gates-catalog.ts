@@ -36,12 +36,16 @@ export async function readServedCatalog(): Promise<ServedCatalog> {
           // landing-launch-experiment D1 — the served version itself, for `variant()`. The same activation rule the
           // row's own `activation` came from, so the two can never name different versions.
           const { versionId } = resolveActivationState(flag.activations, row.environment)
-          const version = versionId ? flag.versions.find((candidate) => candidate.id === versionId) : undefined
+          const version = versionId
+            ? flag.versions.find((candidate) => candidate.id === versionId)
+            : undefined
           const snapshotVersion = snapshots.get(row.environment)
           return {
             ...row,
             ...(version
-              ? { flag: { key: flag.key, definitionVersion: version.version, definition: version.definition } }
+              ? {
+                  flag: { key: flag.key, definitionVersion: version.version, definition: version.definition },
+                }
               : {}),
             ...(snapshotVersion !== undefined ? { snapshotVersion } : {}),
           }
