@@ -3,7 +3,7 @@ epic: delivery-back-on
 sprint: 1
 title: "Delivery back on"
 risk: high
-phase: In review
+phase: Shipped
 stories_total: 3
 stories:
   - id: S1.1
@@ -26,11 +26,11 @@ stories:
     i_want: "a runbook that proves the waker dark before the flag goes on"
     so_that: "a wrong URL or secret never dead-letters a tenant's events"
     risk: high
-    status: planned
+    status: done
 ---
 # Delivery back on: a dispatch schedule the free Vercel plan allows — Sprint 1: Delivery back on
 
-**Status:** 🔍 in review — S1.1 + S1.2 built; S1.3 (switch-on) owed to Daniel after the migrations are pushed
+**Status:** ✅ shipped — merged `a7a9d71` (PR #405), switched on by Daniel 2026-10-18
 
 ## Stories
 
@@ -61,7 +61,7 @@ switching delivery on sends fresh events only.
 - Each expired row is still replayable (`replay_delivery`: `dead → pending`).
 **Risk:** high (production data)
 
-### Story 1.3 — Switch-on, with Daniel
+### Story 1.3 — Switch-on, with Daniel ✅ 2026-10-18 18:20 UTC
 **As the** product owner, **I want** a runbook that proves the waker dark before the flag goes on, **so that** a wrong
 URL or secret is caught before any tenant event is sent, and a bad first attempt is stopped and replayed.
 **Acceptance:** Daniel runs the runbook below in order. Two scheduled ticks succeed, and a fresh `miyagisanchez` event
@@ -122,11 +122,14 @@ key goes in the shell. **No secret value is ever typed on a command line:** the 
 ## Sprint 1 — Smoke walkthrough (do these in order)
 Env: production · https://goldenfrijoles.com
 
-1. Run the switch-on runbook above, steps 1–8 (owed to Daniel: production writes).
-   → step 8 shows two `succeeded` ticks returning `"enabled":true`.
+1. ✅ Run the switch-on runbook above, steps 1–8 (Daniel, 2026-10-18).
+   → step 8 shows two `succeeded` ticks returning `"enabled":true`. **Seen:** 447 runs succeeded by 2026-10-19, every
+   retained response `200`.
 2. Go to https://goldenfrijoles.com/app, open **miyagisanchez**, then its destinations (owed to Daniel: signed in).
    → the `miyagi-merchant-lifecycle` destination shows a *last attempt* less than 5 minutes old.
-3. Trigger any tracked action on https://miyagisanchez.com (for example, open the setup guide).
+3. ✅ Send any event Miyagi tracks (its recent ones: `setup_guide_viewed`, `flag_evaluated`; read the list with the
+   event catalog, not from memory).
    → within 5 minutes a new attempt appears on that destination, `delivered` (HTTP 202 for a non-merchant event).
+   **Seen:** 3 events delivered at 2026-10-18 18:20 UTC, all `202`.
 
 If any step fails, note the step number + what you saw — that's the bug report.

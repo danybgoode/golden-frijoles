@@ -1,6 +1,6 @@
 ---
-status: in-progress  # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: In review      # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+status: shipped      # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+phase: Shipped        # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
 slug: delivery-back-on
 title: "Delivery back on: a dispatch schedule the free Vercel plan allows"
@@ -36,7 +36,7 @@ build_order: 100     # integer position in the ONE global build sequence — the
                      # table; plain integers, no "#2a" suffixes. See 00-ideas/README.md → Ordering.
 ---
 
-# Epic: Delivery back on: a dispatch schedule the free Vercel plan allows
+# Epic: Delivery back on: a dispatch schedule the free Vercel plan allows ✅
 
 > **Area:** 01-growth-engine · **Risk:** high · **Class:** Bug · **Scope seed:** [`00-ideas/seeds/delivery-back-on.md`](../../00-ideas/seeds/delivery-back-on.md)
 <!-- Class (above) is the Stage-2 classification: Feature, Spike, Bug, or Chore — see SKILL.md's
