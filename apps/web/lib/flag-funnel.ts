@@ -77,7 +77,7 @@ export const parsePeriod = (raw: unknown): FunnelPeriod | null => {
 }
 /** The one sentence for an unknown period: the 400's error and the pages' visible line share it. */
 export const unknownPeriodError = (raw: unknown): string =>
-  `Unknown period "${String(raw)}". Use one of: ${FUNNEL_PERIODS.join(', ')}.`
+  `Unknown period "${String(raw).slice(0, 32)}". Use one of: ${FUNNEL_PERIODS.join(', ')}.`
 
 export type Funnel = {
   base: number

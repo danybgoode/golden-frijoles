@@ -32,12 +32,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ key:
     return NextResponse.json({ ok: false, error: 'Project lookup failed' }, { status: 500 })
   }
 
-  const result = await getFeatureFunnelByProjectId(
-    auth.projectId,
-    project.slug,
-    key,
-    period
-  )
+  const result = await getFeatureFunnelByProjectId(auth.projectId, project.slug, key, period)
   if (!result.ok) {
     if (result.reason === 'query_failed') {
       return NextResponse.json({ ok: false, error: 'Funnel lookup failed' }, { status: 500 })

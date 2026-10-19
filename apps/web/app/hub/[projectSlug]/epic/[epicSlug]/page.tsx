@@ -11,7 +11,13 @@ import { HubShell } from '../../../hub-shell'
 import { EmptyBoard } from '../../board/board-components'
 import { FlagFunnel } from '@/components/product/FlagFunnel'
 import { PeriodChoice } from '@/components/product/PeriodChoice'
-import { asTrendBy, parsePeriod, unknownPeriodError, type FunnelPeriod, type TrendBy } from '@/lib/flag-funnel'
+import {
+  asTrendBy,
+  parsePeriod,
+  unknownPeriodError,
+  type FunnelPeriod,
+  type TrendBy,
+} from '@/lib/flag-funnel'
 import { betFunnelView, betTrendView } from '@/lib/bet-funnel'
 import { funnelBetOf } from '@/lib/flag-funnel-view'
 import { isFlagFunnelsEnabled, isFunnelTrendEnabled } from '@/lib/flags'
