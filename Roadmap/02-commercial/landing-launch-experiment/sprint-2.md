@@ -37,7 +37,7 @@ stories:
 ---
 # Launch: the first landing A/B on goldenfrijoles.com, run on Golden Frijoles — Sprint 2: Experiment rail
 
-**Status:** ⬜ not started
+**Status:** 🟦 In review — PR #408 (wave 1, with Sprint 1)
 
 ## Stories
 

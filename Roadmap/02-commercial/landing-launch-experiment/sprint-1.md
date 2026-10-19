@@ -37,7 +37,7 @@ stories:
 ---
 # Launch: the first landing A/B on goldenfrijoles.com, run on Golden Frijoles — Sprint 1: Instruments
 
-**Status:** ⬜ not started
+**Status:** 🟦 In review — PR #408 (wave 1, with Sprint 2)
 
 ## Stories
 
@@ -61,6 +61,9 @@ stories:
 - A spec signs up a visitor and reads the visit, the guardrail event and the workspace's variant under the right ids.
 - Check the activation funnel's 70 started / 1 confirmed reading and record what it was.
 **Risk:** high (auth path, tenancy — escalate trigger)
+**Recorded (2026-10-19):** the events do not hold 70 / 1. Live, `golden-frijoles` has 1 `signup_started` / 1
+`account_confirmed` (both 2026-10-14) and the archived `golden-beans` 3 / 2 (2026-07-21 → 2026-10-06), 6 auth users in
+all. The 70 was not an activation count; README deviation 7.
 
 ### Story 1.3 — The landing funnel, retargeted
 **As** the product owner, **I want** the landing funnel to count visit → prompt copied → signup, **so that** it stops reading 0 against a CTA that no longer exists.
