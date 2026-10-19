@@ -36,7 +36,8 @@ export function PricingB() {
             </ul>
             <Button href="/signup">Start free</Button>
             <p className="lb-note">
-              Billing is not live yet: nobody can be charged today. Start free; we will ask before moving you.
+              Billing is not live yet: nobody can be charged today. Start free; Growth opens when checkout
+              does.
             </p>
           </div>
           <div className="lb-tier">
