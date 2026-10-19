@@ -1,0 +1,9 @@
+/* landing-launch-experiment · Sprint 3 (epic D18) — variant B's styles. EVERY selector starts with `.lb`: A is the
+   control and must not change by one pixel. Colours come from brand/tokens.css only; the prototype's two extra shades
+   are local variables derived from them here. */
+.lb {
+  --lb-roast-2: color-mix(in srgb, var(--roast) 88%, var(--card));
+  --lb-dim-2: color-mix(in srgb, var(--dim) 72%, var(--roast));
+  background: var(--roast);
+  color: var(--crema);
+}

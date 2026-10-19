@@ -1,0 +1,4 @@
+// landing-launch-experiment · Sprint 3 (epic D18) — B's AgentStrip section. Placeholder until its story lands.
+export function AgentStripB() {
+  return null
+}

@@ -9,6 +9,11 @@ import { PricingSection } from '@/components/landing/PricingSection'
 import { MakerClosingCta } from '@/components/landing/MakerClosingCta'
 import { Footer } from '@/components/landing/Footer'
 import { SelfTrackBeacon } from '@/components/landing/SelfTrackBeacon'
+import { LandingB } from '@/components/landing-b/LandingB'
+import { cookies } from 'next/headers'
+import { variant } from '@/lib/gates'
+import { forcedVariant } from '@/lib/landing-variant'
+import { VISITOR_COOKIE } from '@/lib/marketing-paths'
 
 // The Golden Frijoles public landing, per references/golden-frijoles-maker-ops-landing-v0.2.html
 // and Roadmap/02-commercial/landing-maker-ops/ (which supersedes landing-frijoles-rebrand's mockup).
@@ -57,15 +62,36 @@ import { SelfTrackBeacon } from '@/components/landing/SelfTrackBeacon'
 // edited rather than left alone when the section it half-described went away.
 export const dynamic = 'force-dynamic'
 
-export default function Home() {
+// landing-launch-experiment · Sprint 3, Story 3.4 (epic D1, D11, D18) — `/` serves A or B per visitor, decided HERE, on
+// the server, from the same `variant()` the beacon re-asks (no client-side swap, so no flicker and nothing to cache).
+// The visitor id exists on a first visit because the middleware minted it into this request (D2). A preview has no
+// catalog, so `/?variant=b` forces the tree there (D11); production ignores the parameter.
+//
+// A's tree below is the page as it was: its markup is pinned by e2e/landing-variants.spec.ts.
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const forced = forcedVariant((await searchParams).variant, process.env.VERCEL_ENV)
+  const visitorId = (await cookies()).get(VISITOR_COOKIE)?.value
+  const showB = forced ? forced === 'b' : (await variant('landingVariantB', visitorId)).b
+  if (showB) {
+    return (
+      <>
+        <SelfTrackBeacon rendered="b" forced={forced !== null} />
+        <LandingB />
+      </>
+    )
+  }
   return (
     <>
       {/* Story 3.1 — dogfood funnel entry beacon (fires `landing_visited`, mints the visitor id).
           It stays first through every redesign: it is the only instrumentation on this page, and
           the landing → signup conversion this epic is judged on is read through it. */}
-      {/* landing-launch-experiment D3 — this tree is A. Until the A/B pick on / ships (S3.4) it is the only tree, so a
-          visitor the flag would put in B renders A and the beacon's disagreement check sends them no exposure. */}
-      <SelfTrackBeacon rendered="a" />
+      {/* landing-launch-experiment D3 — the beacon names the arm it rendered; the route only uses it to VETO an
+          exposure whose server-side answer disagrees (a kill that landed between render and beacon). */}
+      <SelfTrackBeacon rendered="a" forced={forced !== null} />
       <Nav />
       <MakerHero />
       <MakerLoopSection />
