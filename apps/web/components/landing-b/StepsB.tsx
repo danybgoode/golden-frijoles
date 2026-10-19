@@ -119,13 +119,82 @@ export function StepsB() {
               Each launch gets a funnel: how many people it targeted, how many adopted it, how many came back.
               It also shows which North Star input it was meant to move, and whether that input moved.
             </Txt>
-            <Real
-              title="Outcome report · North Star input"
-              src="/landing-b/measure.png"
-              alt="A chart from the public Golden Frijoles outcome report: the Grounded bets input as it actually moved, against the dashed line the shipped epics' targets drew."
-              width={1100}
-              height={330}
-            />
+            <div className="lb-shot">
+              <div className="lb-win">
+                <WinBar title="Measure · one-step checkout" />
+                <div className="lb-win-body">
+                  <div className="lb-split">
+                    <div className="lb-funnel" aria-label="Funnel">
+                      <span className="lb-lbl">Funnel · last 30 days</span>
+                      <div className="lb-fr">
+                        <span>Targeted</span>
+                        <span className="lb-track">
+                          <b style={{ width: '100%' }} />
+                        </span>
+                        <span>4,820</span>
+                      </div>
+                      <div className="lb-fr">
+                        <span>Adopted</span>
+                        <span className="lb-track">
+                          <b style={{ width: '52%' }} />
+                        </span>
+                        <span>2,506</span>
+                      </div>
+                      <div className="lb-fr">
+                        <span>Retained</span>
+                        <span className="lb-track">
+                          <b style={{ width: '31%' }} />
+                        </span>
+                        <span>1,494</span>
+                      </div>
+                    </div>
+                    <div className="lb-ns">
+                      <span className="lb-lbl">North Star · weekly orders</span>
+                      <div className="lb-ns-big">
+                        <b>1,212</b>
+                        <span className="lb-chip lb-chip--g">+9% vs target pace</span>
+                      </div>
+                      <svg
+                        className="lb-spark"
+                        viewBox="0 0 200 56"
+                        preserveAspectRatio="none"
+                        aria-hidden="true"
+                      >
+                        <path
+                          className="lb-spark-fill"
+                          d="M0 44 L25 42 L50 40 L75 38 L100 33 L125 30 L150 24 L175 20 L200 14 L200 56 L0 56 Z"
+                        />
+                        <path
+                          d="M0 44 L25 42 L50 40 L75 38 L100 33 L125 30 L150 24 L175 20 L200 14"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        />
+                        <circle cx="198" cy="14" r="3" fill="currentColor" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="lb-inputs">
+                    <div className="lb-inp">
+                      <span>Checkout rate</span>
+                      <b>47%</b>
+                      <i>▲ 6 pts</i>
+                    </div>
+                    <div className="lb-inp">
+                      <span>Repeat buyers</span>
+                      <b>22%</b>
+                      <i>▲ 1 pt</i>
+                    </div>
+                    <div className="lb-inp">
+                      <span>New sellers</span>
+                      <b>38</b>
+                      <i>▲ 4</i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <Illus />
+            </div>
           </article>
 
           <article className="lb-step">

@@ -82,6 +82,102 @@
   justify-content: space-between;
 }
 
+/* measure */
+.lb .lb-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+@media (max-width: 520px) {
+  .lb .lb-split {
+    grid-template-columns: 1fr;
+  }
+}
+.lb .lb-funnel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.lb .lb-fr {
+  display: grid;
+  grid-template-columns: 78px 1fr 64px;
+  gap: 10px;
+  align-items: center;
+  font-size: 13px;
+}
+.lb .lb-fr span:first-child {
+  color: var(--dim);
+}
+.lb .lb-track {
+  height: 20px;
+  background: var(--espresso);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.lb .lb-track b {
+  display: block;
+  height: 100%;
+  background: var(--bar);
+  border-radius: 4px;
+}
+.lb .lb-fr span:last-child {
+  text-align: right;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--gold-hot);
+}
+.lb .lb-ns {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.lb .lb-ns-big {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.lb .lb-ns-big b {
+  font: 700 34px var(--mono);
+  color: var(--gold-hot);
+}
+.lb .lb-inputs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.lb .lb-inp {
+  background: var(--espresso);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.lb .lb-inp span {
+  font-size: 11.5px;
+  color: var(--dim);
+}
+.lb .lb-inp b {
+  font: 600 16px var(--mono);
+  color: var(--crema);
+}
+.lb .lb-inp i {
+  font: normal 11px var(--mono);
+  color: var(--green);
+}
+.lb .lb-spark {
+  width: 100%;
+  height: 56px;
+  display: block;
+  color: var(--gold-hot);
+}
+.lb .lb-spark-fill {
+  fill: color-mix(in srgb, var(--gold) 18%, transparent);
+}
+
 /* rehearse */
 .lb .lb-timeline {
   display: flex;
