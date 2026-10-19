@@ -7,6 +7,8 @@ import { FounderNoteB } from './FounderNoteB'
 import { PricingB } from './PricingB'
 import { ClosingB } from './ClosingB'
 import './landing-b.css'
+// close.css styles four sections (agent strip, note, pricing, closing CTA), so it is owned here, not by one of them.
+import './close.css'
 
 // landing-launch-experiment · Sprint 3 (epic D18) — variant B of the landing, the story under test: the founder's job
 // first ("did any of it pay off?"), then the six things that happen to a bet, in the order they happen. The contract is

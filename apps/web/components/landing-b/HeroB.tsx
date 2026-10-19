@@ -27,7 +27,7 @@ export function HeroB() {
           />
         </div>
         <div className="lb-hero__row">
-          <Link href="/#loop">See how it works →</Link>
+          <Link href="#loop">See how it works →</Link>
           <span className="lb-note">
             Free for one workspace. No credit card. Your agent reads the install page before it touches
             anything.

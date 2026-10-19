@@ -1,5 +1,3 @@
-import './close.css'
-
 // landing-launch-experiment · S3.3 — B's agent strip. All three commands are real `frijoles` verbs
 // (flags rollout, north-star readings, scenarios launch); the output lines are examples, not our own metrics.
 export function AgentStripB() {
