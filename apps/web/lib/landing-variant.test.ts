@@ -37,6 +37,7 @@ test('crawlers, previews and scripts are bots; real browsers are not (rabbit hol
     'curl/8.7.1',
     'python-requests/2.32.3',
     'node',
+    'Playwright/1.56.1 (arm64; macOS 15.0) node/24.18',
     '',
     null,
     undefined,

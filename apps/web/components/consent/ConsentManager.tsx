@@ -22,6 +22,10 @@ import { isMarketingPath } from '@/lib/marketing-paths'
 // 1. The PATH: only the marketing allow-list (lib/marketing-paths.ts). Clarity records the screen, so a member's
 //    console, a share link or /install's minted connector URL must never be on a page that can load it. Off the list
 //    this component renders nothing at all — no banner, no script — whatever the visitor once answered.
+//    And it is the DOCUMENT's first path that must be on the list, not only the current one (verifier, #408, round 2):
+//    a document that began on /install or /app and soft-navigated onto /methodology would otherwise load the recorder,
+//    and Back would then render the off-list page inside it before anything could react. With this rule every page in
+//    a recorded document's history is a marketing page, because every exit from one is a full load (below).
 // 2. The VISITOR: deny by default (lib/consent.ts). Before an explicit yes there is no third-party script tag in the
 //    document, which is what the spec asserts; "denied" is the same as "never asked", minus the banner.
 //
@@ -55,7 +59,10 @@ function loadClarity() {
 
 export function ConsentManager() {
   const pathname = usePathname()
-  const onMarketing = isMarketingPath(pathname ?? '')
+  // Read once per document: this component lives in the root layout, which a soft navigation never remounts. `null`
+  // on the server, where nothing renders anyway.
+  const [firstPath] = useState(() => (typeof window === 'undefined' ? null : window.location.pathname))
+  const onMarketing = firstPath !== null && isMarketingPath(firstPath) && isMarketingPath(pathname ?? '')
   // `undefined` until mounted: the server cannot read localStorage, so nothing renders before hydration and the
   // server HTML never carries a third-party tag.
   const [stored, setStored] = useState<StoredConsent | null | undefined>(undefined)

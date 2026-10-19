@@ -22,7 +22,7 @@ export function parseAcquisitionVariant(raw: unknown): VariantLetter | null {
 // one counted as exposed would sit in the denominator of both arms. Deliberately coarse: a missing user agent is a
 // script, and a real browser names itself. This decides exposure only; the visit itself is still counted, as before.
 const BOT_USER_AGENT =
-  /bot|crawl|spider|slurp|headless|lighthouse|pagespeed|preview|facebookexternalhit|embedly|curl|wget|python|httpclient|okhttp|go-http|node-fetch|axios|undici|postman|^node\b/i
+  /bot|crawl|spider|slurp|headless|lighthouse|pagespeed|preview|facebookexternalhit|embedly|curl|wget|python|httpclient|okhttp|go-http|node-fetch|axios|undici|postman|playwright|^node\b|\bnode\//i
 
 export function isLikelyBot(userAgent: string | null | undefined): boolean {
   return !userAgent || !userAgent.trim() || BOT_USER_AGENT.test(userAgent)
