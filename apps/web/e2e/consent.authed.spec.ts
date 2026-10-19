@@ -102,34 +102,38 @@ test('a document that began off the allow-list never loads them, even on a marke
   await page.context().close()
 })
 
-test('after a yes on the landing, a link to an off-list page is a full load, never a soft one', async ({
-  browser,
-}) => {
-  const page = await freshPage(browser, 'granted')
-  await page.goto('/')
-  await expect.poll(() => thirdPartyScripts(page)).not.toEqual([])
-  // An internal link to an off-list page, the shape a <Link> renders: the guard must turn the click into a full load.
-  await page.evaluate(() => {
-    const link = document.createElement('a')
-    link.href = '/install'
-    link.textContent = 'to install'
-    link.id = 'spec-off-list'
-    link.addEventListener('click', (event) => {
-      // What next/link does on a plain click — unless the guard already prevented the default.
-      if (event.defaultPrevented) return
-      event.preventDefault()
-      ;(window as unknown as { next: { router: { push(href: string): void } } }).next.router.push('/install')
-    })
-    document.body.appendChild(link)
+// /login redirects a signed-in member to /app on the server, so it is a full load too (verifier, #408, round 3).
+for (const target of ['/install', '/login']) {
+  test(`after a yes on the landing, a link to ${target} is a full load, never a soft one`, async ({
+    browser,
+  }) => {
+    const page = await freshPage(browser, 'granted')
+    await page.goto('/')
+    await expect.poll(() => thirdPartyScripts(page)).not.toEqual([])
+    // An internal link to an off-list page, the shape a <Link> renders: the guard must turn the click into a full load.
+    await page.evaluate((target) => {
+      const link = document.createElement('a')
+      link.href = target
+      link.textContent = 'to install'
+      link.id = 'spec-off-list'
+      link.addEventListener('click', (event) => {
+        // What next/link does on a plain click — unless the guard already prevented the default.
+        if (event.defaultPrevented) return
+        event.preventDefault()
+        ;(window as unknown as { next: { router: { push(href: string): void } } }).next.router.push(target)
+      })
+      document.body.appendChild(link)
+    }, target)
+    await armSoftNavigationTripwire(page)
+    await page.click('#spec-off-list')
+    await page.waitForURL(`**${target}`)
+    await page.waitForLoadState('load')
+    expect(await page.evaluate(() => sessionStorage.getItem('gf_soft_nav'))).toBeNull()
+    // /login is a marketing page, so a fresh document there may load them again; /install never.
+    if (target === '/install') expect(await thirdPartyScripts(page)).toEqual([])
+    await page.context().close()
   })
-  await armSoftNavigationTripwire(page)
-  await page.click('#spec-off-list')
-  await page.waitForURL('**/install')
-  await page.waitForLoadState('load')
-  expect(await page.evaluate(() => sessionStorage.getItem('gf_soft_nav'))).toBeNull()
-  expect(await thirdPartyScripts(page)).toEqual([])
-  await page.context().close()
-})
+}
 
 test('signing in after Accept lands the console in a fresh document (no soft navigation)', async ({
   browser,

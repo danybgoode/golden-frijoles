@@ -104,7 +104,11 @@ export function ConsentManager() {
       const anchor = (event.target as Element | null)?.closest?.('a[href]') as HTMLAnchorElement | null
       if (!anchor || (anchor.target && anchor.target !== '_self') || anchor.hasAttribute('download')) return
       const url = new URL(anchor.href, window.location.href)
-      if (url.origin !== window.location.origin || isMarketingPath(url.pathname)) return
+      // /login and /signup are on the list but redirect a signed-in member to /app on the server; a soft visit would
+      // render that redirect inside this document (verifier, #408, round 3). So they are full loads too.
+      const redirectsOffList = url.pathname === '/login' || url.pathname === '/signup'
+      if (url.origin !== window.location.origin || (isMarketingPath(url.pathname) && !redirectsOffList))
+        return
       event.preventDefault()
       window.location.assign(url.href)
     }
