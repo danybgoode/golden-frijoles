@@ -172,3 +172,41 @@
     animation: none !important;
   }
 }
+
+/* The shared prompt card (components/landing/CopyPromptCard.tsx), skinned to the approved prototype ON B ONLY: an
+   uppercase mono label, a gold copy button and the prototype's 14px prompt. Scoped under `.lb` — A's card is the
+   control and keeps its look; the component and what it copies are unchanged (D18). */
+.lb .prompt-card {
+  background: var(--espresso);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 18px 44px rgb(0 0 0 / 34%);
+}
+.lb .prompt-head {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.lb .prompt-head__label {
+  font: 600 12px var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.lb .prompt-head .btn-mini {
+  background: var(--gold);
+  color: var(--roast);
+  border: 0;
+  border-radius: 6px;
+  padding: 6px 12px;
+  min-height: 32px;
+  font: 600 12px var(--mono);
+}
+.lb .prompt-head .btn-mini:hover {
+  background: var(--gold-hot);
+  color: var(--roast);
+}
+.lb .prompt-copy {
+  padding: 16px 18px;
+  font: 14px/1.65 var(--mono);
+  color: var(--crema);
+}
