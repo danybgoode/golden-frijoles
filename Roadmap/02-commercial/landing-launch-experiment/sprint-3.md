@@ -1,0 +1,91 @@
+---
+epic: landing-launch-experiment
+sprint: 3
+title: "Variant B"
+risk: high
+phase: Shaping
+stories_total: 4
+stories:
+  - id: S3.1
+    title: "Hero and nav"
+    as_a: "a founder landing on B"
+    i_want: "a single-column hero that says what this is in one line, with the prompt right there"
+    so_that: "I can start in one paste"
+    risk: low
+    status: planned
+  - id: S3.2
+    title: "From why to paid off"
+    as_a: "a founder reading B"
+    i_want: "six blocks in the order a bet moves, each with a real product shot"
+    so_that: "I see my own job: why, measure, cost, rehearse, decide, release"
+    risk: low
+    status: planned
+  - id: S3.3
+    title: "Agent strip, founder note, pricing and closing CTA"
+    as_a: "a founder deciding on B"
+    i_want: "the reason it exists, the price and one more chance to start"
+    so_that: "I can decide without leaving the page"
+    risk: low
+    status: planned
+  - id: S3.4
+    title: "/ serves A or B"
+    as_a: "the product owner"
+    i_want: "`/` to render A or B per visitor from the flag"
+    so_that: "the test runs and can be killed in 30 s"
+    risk: high
+    status: planned
+---
+# Launch: the first landing A/B on goldenfrijoles.com, run on Golden Frijoles — Sprint 3: Variant B
+
+**Status:** ⬜ not started
+
+## Stories
+
+### Story 3.1 — Hero and nav
+**As a** founder landing on B, **I want** a single-column hero that says what this is in one line, with the prompt right there, **so that** I can start in one paste.
+**Acceptance:**
+- "Ship work that matters" · "Thousands of PRs a day. Did any of them pay off?" · the install prompt card, as in the approved prototype (v3).
+- `check-design-drift` passes (no terminal full stop on headings).
+**Risk:** low
+
+### Story 3.2 — From why to paid off
+**As a** founder reading B, **I want** six blocks in the order a bet moves, each with a real product shot, **so that** I see my own job: why, measure, cost, rehearse, decide, release.
+**Acceptance:**
+- Screenshots of the public golden-frijoles project, never invented numbers (CODE-QUALITY #9).
+- Cost shows spend vs quote and result vs target as two separate signals with symbols; Rehearse shows a real drill run; Release shows the flag in plain language (who sees it).
+**Risk:** low
+
+### Story 3.3 — Agent strip, founder note, pricing and closing CTA
+**As a** founder deciding on B, **I want** the reason it exists, the price and one more chance to start, **so that** I can decide without leaving the page.
+**Acceptance:**
+- Founder note signed, with the methodology link; tiers with no subheadings; Growth CTA "Get Growth"; Set up with us "from $1,500" → `/talk`.
+- Closing CTA "Your next epic could be the one that pays off" with the prompt card.
+**Risk:** low
+
+### Story 3.4 — / serves A or B
+**As** the product owner, **I want** `/` to render A or B per visitor from the flag, **so that** the test runs and can be killed in 30 s.
+**Acceptance:**
+- `variant()` picks the tree on the server; `force-dynamic` kept; no client-side swap.
+- A's markup unchanged (snapshot against `main`).
+- Kill verified in production: rollout 50 → kill → a B visitor sees A within the cache window.
+- The mobile route sweep covers both variants.
+**Risk:** high (the public front door)
+
+## Sprint QA
+- A snapshot spec (S3.4), landing-prompts spec on B, mobile sweep on both
+- browser smoke owed: yes, to Daniel — read B on phone and desktop; the kill switch in production
+- **deterministic gate:** `tsc --noEmit` + `npm run build` + Playwright `api` green before merge
+
+## Sprint 3 — Smoke walkthrough (do these in order)
+Env: production · https://goldenfrijoles.com   (or the PR preview while testing pre-merge)
+
+1. Run `frijoles flags rollout landing.variant_b_enabled --percent 100 --env preview`, open the PR preview
+   → B renders: single-column hero, six blocks, founder note, pricing, closing CTA
+2. Set it to 0 on the preview, reload
+   → A renders, unchanged
+3. (launch day — Daniel) `--percent 50 --env production`, open goldenfrijoles.com in two private windows
+   → both variants are served; each window keeps its variant on reload
+4. `frijoles flags kill landing.variant_b_enabled --env production`, wait 30 s, reload the B window
+   → A renders
+
+If any step fails, note the step number + what you saw — that's the bug report.
