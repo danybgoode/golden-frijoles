@@ -208,6 +208,12 @@ test.describe('the beacon writes the exposure (D3)', () => {
         ).data?.snapshot_version ?? 0
       )
     let flagId: string | null = null
+    // The rule serves B ONLY to these ids (verifier, #408, round 2): the api project runs in parallel, and a rule that
+    // put every visitor in B would hand other specs' beacons an exposure and a `b` they never asked for.
+    const probe = randomUUID()
+    const person = randomUUID()
+    const bot = randomUUID()
+    const disagreeing = randomUUID()
     try {
       const { data: version, error } = await client.rpc('create_flag_definition_version', {
         p_project_id: projectId,
@@ -220,7 +226,16 @@ test.describe('the beacon writes the exposure (D3)', () => {
             { key: 'off', value: false },
             { key: 'on', value: true },
           ],
-          rules: [{ priority: 0, clauses: [], rollout: { basisPoints: 10_000 }, variantKey: 'on' }],
+          rules: [
+            {
+              priority: 0,
+              clauses: [
+                { field: 'targetingKey', operator: 'one_of', values: [probe, person, bot, disagreeing] },
+              ],
+              rollout: { basisPoints: 10_000 },
+              variantKey: 'on',
+            },
+          ],
           metadata: { experiment_key: EXPERIMENT, experiment_version: 1, experiment_rules: '0' },
         },
         p_reason: 'exposure spec',
@@ -246,7 +261,7 @@ test.describe('the beacon writes the exposure (D3)', () => {
         })
       // The gate cache answers for 30 s: wait until this server serves the new version.
       await expect
-        .poll(async () => cookieValue(await visit(randomUUID(), 'b'), ACQUISITION_VARIANT_COOKIE), {
+        .poll(async () => cookieValue(await visit(probe, 'b'), ACQUISITION_VARIANT_COOKIE), {
           timeout: 45_000,
         })
         .toBe('b')
@@ -256,9 +271,11 @@ test.describe('the beacon writes the exposure (D3)', () => {
           (row) => row.event === 'experiment_exposed'
         )
 
-      const person = randomUUID()
       await visit(person, 'b')
       await visit(person, 'b') // a reload
+      expect(await exposures(person)).not.toHaveLength(0)
+      // Both sends run in `after()`: a duplicate would land AFTER the first row is visible. Settle, then count.
+      await new Promise((resolve) => setTimeout(resolve, 3000))
       const mine = await exposures(person)
       expect(mine).toHaveLength(1)
       expect(mine[0]).toMatchObject({
@@ -267,9 +284,7 @@ test.describe('the beacon writes the exposure (D3)', () => {
         subject_id: person,
       })
 
-      const bot = randomUUID()
       await visit(bot, 'b', 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)')
-      const disagreeing = randomUUID()
       await visit(disagreeing, 'a')
       expect(await exposures(bot)).toEqual([])
       expect(await exposures(disagreeing)).toEqual([])
