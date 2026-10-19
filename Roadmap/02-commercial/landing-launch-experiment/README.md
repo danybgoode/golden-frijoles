@@ -205,7 +205,11 @@ agent strip, founder note, pricing, closing CTA, the shared `Footer`) and one fi
 prompt cards are the shared `CopyPromptCard` with `trackSurface="landing-copy"` and `installPrompt(getSiteUrl())` (the
 prototype's prompt text IS that prompt), so the copy event and the copied text cannot diverge from A's.
 
-**D19 · Product shots: real where a public page shows the step, the approved illustration where none does.** The
+**D19 · Product shots: the approved mockup's drawn branding shots, all six — AMENDED 2026-10-19 (Daniel, on PR #409:
+"these must be branding shots, not that. same for cost section").** Every window is the prototype's drawn window with its
+"Illustration · sample data" label; the two real screenshots (Why, Cost) were removed. The sample numbers belong to an
+invented shop and are labelled as such, which is how CODE-QUALITY #9 holds; D14's "real screenshots" is superseded.
+*Original wording, kept for the record:* **Product shots: real where a public page shows the step, the approved illustration where none does.** The
 prototype's six windows are drawn stand-ins (its ribbon says so); D14 holds — a screenshot of a PUBLIC
 `golden-frijoles` page from production, captured into `public/landing-b/`. A step with no honest public page keeps the
 prototype's drawn window, labelled "Illustration · sample data" exactly as the prototype and A label theirs. Which step

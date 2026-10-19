@@ -103,11 +103,9 @@ If any step fails, note the step number + what you saw — that's the bug report
   passed against `main`'s `page.tsx`; a one-word change to an A section turns it red).
 - `/?variant=b` (non-production, D11) → B: hero, six steps, agent strip, founder note, pricing, closing CTA, the shared footer.
   Both variants pass the mobile rail at 360 and 390 (`e2e/landing-variants.authed.spec.ts`, run by CI); no horizontal scroll.
-- The six shots (D19): **01 Why** — real, `/hub/golden-frijoles/epic/landing-launch-experiment`; **02 Measure** — illustration
-  (no public funnel page; a cropped North Star chart was unreadable and was not the funnel the copy names); **03 Cost** —
-  real, `/hub/golden-frijoles/report` (spend vs quote and result vs target in separate columns, ▲ marks an overrun);
-  **04 Rehearse, 05 Decide, 06 Release** — illustrations (drills, experiments and the flag console are members-only).
-  Real shots captured 2026-10-19; no email or person id in either.
+- The six shots (D19, amended by Daniel on #409): all six are the mockup's drawn branding shots, each labelled
+  "Illustration · sample data". An earlier build used real screenshots for Why and Cost; Daniel asked for the mockup's
+  windows instead, and the screenshots were removed.
 - Deviations from the prototype: the shared `BrandLockup` instead of the drawn bean; the shared `CopyPromptCard`, skinned on
   B to the prototype's look but with a 44px copy button (the mobile tap-target rule) and its own "copy prompt" wording;
   Growth's CTA is "Start free" with the billing-not-live line (D20); "Book a conversation" → `/talk` (D21); the agent strip's
