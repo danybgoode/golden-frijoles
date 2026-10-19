@@ -1,7 +1,8 @@
 ---
-status: scaffolded   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Shaping       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+status: in-progress  # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+phase: Building             # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
+locked_at: "2026-10-19T20:38:51Z"
 slug: landing-launch-experiment
 title: "Launch: the first landing A/B on goldenfrijoles.com, run on Golden Frijoles"
 area: 02-commercial
@@ -14,7 +15,7 @@ quote_low_usd: 41    # ≈ API $ — copied from the seed's `quote:` by scaffold
 quote_high_usd: 62
 quote_basis: "L, n=8, p25–p75"
 hypothesis: "Today a founder who ships with agents lands on our page and reads about an operating context, not their job: knowing which of that work paid off. Show that job first and more of them will start and prove a first bet. We'll know when founders who came in through the new page prove bets by the read date."   # the result record — copied from the seed by scaffold-epic; null = no target (never an error)
-target_metric: "proving_workspaces"   # which number: a North Star input key (grounded) or free text (not grounded)
+target_metric: "proving_landing_workspaces"   # D6 (2026-10-19) — which number: a North Star input key (grounded) or free text (not grounded)
 target_from: 0   # from what, a number
 target_to: 5       # to what, a number
 read_date: 2026-12-31       # YYYY-MM-DD; null = 30 days after shipping, derived by the extract and never written back
@@ -71,6 +72,142 @@ exposures (`experiment_exposed`), A/B reads with intervals (`lib/ab*.ts`), exper
 GA4 and Clarity IDs are config, not gates. Tenancy holds: a plan is per workspace and nothing reads one across
 workspaces; "comped" replaces an admin bypass.
 
+## Architecture lock (2026-10-19, verified against live code and the production database)
+
+Each decision names where its contract lives; builders cite the D-number, never a paraphrase. Waves 2 and 3 are
+re-verified against live data at their boundary (the L bet is re-funded there), and any decision that moves is amended
+here, dated.
+
+**D1 · `variant()` is a second reader of the SAME catalog cache, not a second cache.** `lib/gates-decision.ts` grows
+`EXPERIMENT_FLAGS` (today one row: `landingVariantB: { key: 'landing.variant_b_enabled' }`) and a pure
+`resolveVariant(row, visitorId)`, which runs the SDK's `evaluateFlag` (`packages/sdk/src/flags.ts:541`) over the
+served version's definition with `{ targetingKey: visitorId }`. `ServedEnvironment` gains the served version's
+`flag` snapshot (`{ key, definitionVersion, definition }`) and the environment's `snapshotVersion`; `gates-catalog.ts`
+fills both from `getFlagRegistryView` (it already returns `environments[].snapshotVersion`). `variant()` in
+`lib/gates.ts` returns `{ b: boolean, variant, reason, flagVersion, snapshotVersion, experiment? }` where `experiment`
+is `experimentForResolution(...)` (`packages/sdk/src/flag-telemetry.ts:65`). Anything unreadable — no catalog, no
+served version, an invalid definition, no visitor id — is **A, with no experiment** (never B by accident, never an
+exposure for a page nobody was assigned). `gate()` is untouched; a spec pins that its rows and answers did not move.
+`variant()` never emits: exposure is D3's job, so a page render can never write an event.
+
+**D2 · The visitor id exists before the first server render.** `middleware.ts` mints `gb_vid` on the public landing
+paths when absent (same attributes as `SelfTrackBeacon.ensureVisitorId`: not httpOnly, `samesite=lax`, `path=/`, 1 y),
+setting it on the request too so the page reads it in the same render. The Supabase refresh keeps running only on
+`/app` and `/cli` (its matcher today), branched inside. Without this, a first visit has no id, the server cannot pick a
+variant and the client would mint a different one: the visit and the exposure would be two people.
+
+**D3 · The beacon is the only exposure writer, and it decides server-side.** `POST /api/v1/public/self-visit` keeps
+its closed surface list (rule: no caller-named events) and grows one surface, `landing-copy` →
+`start_prompt_copied`. For `landing` it (1) sends `landing_visited`, (2) recomputes `variant()` from the `gb_vid`
+cookie — never from the body — and, when the served version binds an experiment AND the user agent is not an obvious
+bot, sends ONE exposure through the SDK's `trackFlagEvaluation` with `experiment` set (`packages/sdk/src/index.ts:700`),
+whose idempotency key (`flagEvaluationFingerprint`) makes it one per visitor per version however often they reload,
+and (3) sets an httpOnly `gb_variant` cookie (`a`|`b`, from the server's own answer) for D5. The beacon may post the
+variant it rendered; a mismatch with the server's answer (a kill landed between render and beacon) sends no exposure.
+Every landing event carries `context.subject = { type: 'visitor', id: gb_vid }`, because the governed analysis joins
+metric to exposure on the event SUBJECT (`lib/experiment-analysis.ts:299`), not on `user_id`.
+
+**D4 · Which events go under which id (the dated note S1.2 requires — 2026-10-19).** No alias table.
+| Event | Under the user id (unchanged) | Under the visitor id (new, only when a `gb_vid` cookie is present) |
+|---|---|---|
+| `landing_visited`, `start_prompt_copied`, `experiment_exposed` | — | yes, feature `landing_conversion`, subject `visitor` |
+| `signup_started` | yes, feature `activation` (signup route) | yes, feature `landing_conversion` — sent from the signup route AND from the auth callback / `/app/provision` on `created`, because a Google sign-up never reaches the signup route (dedup is free: every read counts distinct ids) |
+| `account_confirmed` | yes, feature `activation` | yes, feature `landing_conversion` (callback / `/app/provision`, on `created`) |
+The activation funnel reads `feature_id = activation` and so is byte-for-byte unchanged; the A/B and landing reads
+see only the visitor copies. `trackSelfEvent` gains an optional `{ featureId, subject }` (the typed `EVENT_FEATURE`
+map stays the default, so no event can lose its feature). A confirmation link opened in another browser has no
+`gb_vid` and is not joined — stated, not fixed (an alias primitive is dogfood gap 1's seed).
+
+**D5 · The workspace records its acquisition variant, once, at creation.** Migration
+`workspaces.acquisition_variant text null check (acquisition_variant in ('a','b'))`, expand-only, no backfill (4 rows,
+all ours — they correctly read none). `provisionTenantForUser` takes it (both callers: the auth callback and
+`/app/provision`) from the validated `gb_variant` cookie and writes it only when it CREATES the workspace
+(`claimWorkspace`), never on a later sign-in. Nothing reads it across workspaces: its one reader is D6, which reads the
+pushing project's own workspace row. A visitor can forge their own cookie and mislabel only their own workspace.
+
+**D6 · The target gets its own input, because `proving_workspaces` counts us.** Live data: Golden Frijoles' own
+workspace pushes proven verdicts into the same project, so `proving_workspaces` would count our bets toward a target
+about founders acquired through the page. The roadmap push (`app/api/v1/roadmap/push/route.ts:124`) reads
+`acquisition_variant` in the SAME single-row lookup it already does and, when set, sends a second event
+`landing_workspace_proved_bet` (same HMAC subject, `tags.acquisition_variant`). A new North Star input
+`proving_landing_workspaces` (`distinct_monthly`, telemetry) counts it; this epic's `target_metric` moves to it (0 → 5
+unchanged). `proving_workspaces` is untouched.
+
+**D7 · The landing funnel is retargeted, not rebuilt.** `EVENT_FEATURE[landing_visited]` → `landing_conversion`; new
+`start_prompt_copied` → `landing_conversion`; the feature registered on the self project (stages `landing_visited →
+start_prompt_copied → signup_started`) through the same path `scripts/seed-self-project.mjs` uses.
+`waitlist_joined` keeps `waitlist_conversion` (its history stays readable); the feature stops receiving visits and is
+marked retired where the registry supports it.
+
+**D8 · Consent gates the third parties, and only on marketing pages.** A `ConsentManager` client component (deny by
+default, the choice in `localStorage` with its date, reopened by a footer "Cookie settings" link) renders GA4
+(`@next/third-parties/google`) and Clarity (inline loader + `clarity('consentv2', …)`) only after accept. It mounts
+only on an allow-list of public marketing paths — `/`, `/methodology/**`, `/talk`, `/signup`, `/login` — and NEVER on
+`/app`, `/hub`, `/s`, `/install`, `/cli` or `/auth`: Clarity records the screen, and a member's console, a share link
+or `/install`'s minted connector URL must never reach a recording (tenancy). The IDs are constants in
+`lib/analytics-ids.ts` (they ship in page source anyway; see deviation 2). The first-party beacon is outside consent.
+
+**D9 · Unknown period is an error at the edge, a visible fallback on a page.** `asPeriod` is replaced by
+`parsePeriod(raw): FunnelPeriod | null` (missing → `all`, unknown → `null`) in `lib/flag-funnel.ts`, so no caller can
+keep the silent behaviour. The two API callers (`api/v1/public/funnel`, `api/v1/features/[key]/funnel`) answer 400
+naming `all`, `90d`, `30d`; the three page callers (flag page, funnel page, epic page) fall back to `all` and say so on
+the page. (The plan said 6 callers; `grep` finds 5.)
+
+**D10 · Launch day is the experiment builder's Start, not a CLI rollout.** Start activates the experiment's flag
+version in Production with the experiment's rules and metadata (`lib/experiment-builder-command.ts:151`).
+`frijoles flags rollout --percent 50` writes a plain rollout with no experiment metadata, so `experimentForResolution`
+returns nothing and the readout would read 0 exposures, forever, looking healthy. S2.3 saves the draft (entity
+`visitor`, metric `start_prompt_copied` increase, guardrails `signup_started` + `account_confirmed`, split 50, ~880 per
+variant); launch day presses Start (its window is the read date). Kill stays `frijoles flags kill` (serves false,
+clears every rule → everyone gets A within 30 s, and exposures stop because no experiment rule matches).
+
+**D11 · B can be seen before launch on a preview, without touching production.** Previews have no database
+(`SUPABASE_*` is Production-only, verified with `vercel env ls`), so the catalog never answers there and every preview
+serves A. On `VERCEL_ENV !== 'production'`, `/?variant=b` (or `a`) forces the tree, sends no exposure and sets no
+`gb_variant`. Production ignores the parameter.
+
+**D12 · Quota: raise the rate, not the month.** Live: the self project used 201 events in the last 30 days of a
+200,000 monthly quota; launch adds ≈ 4 events × ~2,000 visitors. The per-minute rate (600, per key, shared by every
+self-tracked event) is what a launch-post spike can exceed: S1.4 raises `ingest_rate_per_min` to 3,000 with a data
+`UPDATE`; the monthly quota stays.
+
+**D13 · A stays A.** Variant A's markup changes in exactly two places, both required: `CopyPromptCard` gains an
+optional `trackSurface` prop (A's two landing cards pass it), and the footer gains "Cookie settings" (D8). B lives in
+`components/landing-b/*`; `app/page.tsx` picks the tree. A spec pins A's rendered HTML minus those two.
+
+**D14 · B's product shots are real.** Screenshots of the public `golden-frijoles` project captured from production
+into `public/landing-b/`, never invented numbers (CODE-QUALITY #9), each with its capture date in the alt text's source
+comment.
+
+**D15 · Wave 3 is locked at its boundary, with one focused question.** S4 is money, a migration and tenancy, and Stripe
+is a new external dependency: before S4 starts, the product owner answers one question (Stripe account/entity, test vs
+live, the price) and S4's decisions (plan → limits map, the pool's expand/contract so no ceiling drops, the webhook's
+idempotency table) are locked against the data on that day. Facts today: 4 workspaces, `product_limit` 10 each,
+every product 200,000/month and 600/min.
+
+**D16 · One PR for wave 1.** S1 and S2 do not split along a review boundary: S2.1's seam is S1.2's exposure, and
+S1.2, S1.3 and S2.2 all change the beacon route and `trackSelfEvent`. Wave 1 ships as one PR on
+`feat/landing-launch-experiment`; S3, S4 and S5 stack as `-s3`, `-s4`, `-s5`.
+
+**D17 · Routing.** The architect (Opus) builds everything shared or high-risk: S2.1, S1.1, S1.2, S1.3, S2.2, S2.3,
+S1.4, S3.4 and all of S4. Bounded stories go to a Sonnet builder on its own worktree: S2.4, S3.1–S3.3, S5.1–S5.2.
+Every PR gets the fresh `verifier` (high risk) plus the routed external passes.
+
+### Deviations from the plan (corrected out loud, 2026-10-19)
+1. **Launch command** — `frijoles flags rollout --percent 50` would run a test that can never read (D10). Launch is
+   the builder's Start. S3's smoke and the Deploy order are corrected.
+2. **"IDs are public env vars"** → constants (D8). An env var adds a deploy-ordering step and a preview with no value,
+   to hide a string every visitor's browser downloads.
+3. **"A CSP allow-list for exactly these hosts"** → dropped. There is no CSP in this app to extend (no `headers()`, an
+   empty `vercel.json`); a site-wide CSP needs nonces for Next's inline scripts and is its own piece of work (logged as
+   dogfood gap 9).
+4. **The flag already exists** — refine created `landing.variant_b_enabled` off v1 in all three environments
+   (`frijoles flags get`, 2026-10-19). S2.3 verifies it rather than creating it.
+5. **The target input** — `proving_workspaces` → `proving_landing_workspaces` (D6).
+6. **"Raise the quota"** — the monthly quota is not the risk; the per-minute rate is (D12).
+7. **"70 started / 1 confirmed"** — not in the events: live, `golden-frijoles` has 1 `signup_started` / 1
+   `account_confirmed` (both 2026-10-14) and the archived `golden-beans` 3 / 2. Recorded in S1.2's notes.
+
 ## What already exists (reuse, don't rebuild)
 - `apps/web/lib/gates.ts → gate()`, `lib/gates-decision.ts → GATES` — the one gate seam; `variant()` goes beside it.
 - `packages/sdk/src/flags.ts → evaluateFlag`, the SDK's bound-experiment exposure (`index.ts:655–704`), `identify`.
@@ -106,10 +243,11 @@ workspaces; "comped" replaces an admin bypass.
 
 ## Deploy order
 Three waves, each re-bet at its boundary (appetite L).
-1. **Wave 1 — S1 + S2.** S2.1 first (shared seam). Raise the self project's quota (S1.4) before any launch post.
-   The flag ships off, so A records its real prompt-copy baseline before B exists.
-2. **Wave 2 — S3.** B merges dark (flag off). Launch day: `frijoles flags rollout landing.variant_b_enabled --percent 50
-   --env production`, then set the experiment's read date (21 days or ~880 per variant).
+1. **Wave 1 — S1 + S2, one PR (D16).** S2.1 first (shared seam). Apply the `acquisition_variant` migration before the
+   merge. Raise the self project's rate (S1.4, D12) before any launch post. The flag ships off, so A records its real
+   prompt-copy baseline before B exists; the experiment draft is saved once a real `start_prompt_copied` is in the catalog.
+2. **Wave 2 — S3.** B merges dark (flag off). Launch day: press **Start** on the experiment in the builder (D10 — not
+   `frijoles flags rollout`, which would record no exposures); its window is the read date (21 days or ~880 per variant).
 3. **Wave 3 — S4 + S5**, independent of the test and of each other. S4's migrations are applied with `supabase db push`
    BEFORE the merge that reads them; checkout ships behind `billing.checkout_enabled`; S4.4's copy only after a real
    purchase works in production.

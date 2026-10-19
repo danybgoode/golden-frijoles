@@ -41,6 +41,10 @@ stories:
 - The résumé hook change (its own line instead of "Ship work that matters") is a PR in `miyagisanchez-resume`, named in the close-out — not in this repo.
 **Risk:** low
 
+## Build contract (locked by the architect before the builder started)
+Re-verified at the wave-3 boundary. Bounded copy and links: a Sonnet builder on its own worktree (README D17). The
+booking embed keeps its measured height; links to `/talk` only.
+
 ## Sprint QA
 - link check over B and /talk
 - browser smoke owed: yes, to Daniel — book a test slot

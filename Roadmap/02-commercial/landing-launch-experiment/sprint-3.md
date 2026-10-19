@@ -71,6 +71,13 @@ stories:
 - The mobile route sweep covers both variants.
 **Risk:** high (the public front door)
 
+## Build contract (locked by the architect before the builder started)
+Re-verified at the wave-2 boundary. Stacked as `feat/landing-launch-experiment-s3`.
+- **S3.1–S3.3** → D13 (B in `components/landing-b/*`, `brand/tokens.css` + design-system primitives, no raw hex), D14
+  (real screenshots). The approved prototype v3 is the contract (WAYS-OF-WORKING: an approved design IS scope).
+- **S3.4** → D1 (`variant()` picks the tree on the server), D11 (`?variant=` on non-production only), D10 (launch is
+  Start; kill is `frijoles flags kill`).
+
 ## Sprint QA
 - A snapshot spec (S3.4), landing-prompts spec on B, mobile sweep on both
 - browser smoke owed: yes, to Daniel — read B on phone and desktop; the kill switch in production
@@ -79,11 +86,11 @@ stories:
 ## Sprint 3 — Smoke walkthrough (do these in order)
 Env: production · https://goldenfrijoles.com   (or the PR preview while testing pre-merge)
 
-1. Run `frijoles flags rollout landing.variant_b_enabled --percent 100 --env preview`, open the PR preview
+1. Open the PR preview at `/?variant=b` (previews have no database, so the flag cannot answer there — D11)
    → B renders: single-column hero, six blocks, founder note, pricing, closing CTA
-2. Set it to 0 on the preview, reload
+2. Open the same preview at `/`
    → A renders, unchanged
-3. (launch day — Daniel) `--percent 50 --env production`, open goldenfrijoles.com in two private windows
+3. (launch day — Daniel) https://goldenfrijoles.com/app → Experiments → the landing experiment → Start (D10), then open goldenfrijoles.com in two private windows
    → both variants are served; each window keeps its variant on reload
 4. `frijoles flags kill landing.variant_b_enabled --env production`, wait 30 s, reload the B window
    → A renders

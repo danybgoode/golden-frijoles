@@ -73,6 +73,16 @@ stories:
 - Spec covers a valid, a missing and an unknown period.
 **Risk:** low
 
+## Build contract (locked by the architect before the builder started)
+Ships in wave 1's single PR with Sprint 1 (README D16).
+- **S2.1** → D1. Pure `resolveVariant` in `lib/gates-decision.ts` with its spec (10,000 ids: stable, ~50/50 at a 50%
+  rollout, A on every unreadable input); `gate()`'s behaviour pinned unchanged.
+- **S2.2** → D3 (`landing-copy` surface; bot UAs get no exposure), D13 (`CopyPromptCard` `trackSurface` prop, only on
+  the landing's cards — never `/install`, Connect or the methodology).
+- **S2.3** → D10 and README deviation 4: the flag exists off v1 everywhere; the experiment is saved as a builder DRAFT
+  (entity `visitor`) once a real `start_prompt_copied` is in the catalog. Start is launch day, in Sprint 3.
+- **S2.4** → D9 (`parsePeriod`, 5 callers).
+
 ## Sprint QA
 - `lib/gates` bucketing spec (S2.1), beacon event-list spec (S2.2), period spec (S2.4)
 - browser smoke owed: no — S2.3 is CLI-verified
@@ -86,6 +96,6 @@ Env: production · https://goldenfrijoles.com   (or the PR preview while testing
 2. https://goldenfrijoles.com/api/v1/public/funnel?project=golden-frijoles&feature=landing_conversion&period=7d
    → 400 naming the accepted periods
 3. https://goldenfrijoles.com/app → Experiments
-   → the landing experiment shows its metric, guardrails, sample size and the bound flag
+   → the landing experiment's draft shows its metric, guardrails, sample size and the bound flag (Start is launch day)
 
 If any step fails, note the step number + what you saw — that's the bug report.
