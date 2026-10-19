@@ -5,7 +5,13 @@ import { safeRedirectPath } from '@/lib/safe-redirect'
 import { isSignupEnabled } from '@/lib/flags'
 import { displayNameFrom } from '@/lib/display-name'
 import { provisionTenantForUser, registerStarterFeature } from '@/lib/provisioning'
-import { trackSelfEvent, ACCOUNT_CONFIRMED_EVENT } from '@/lib/self-track'
+import {
+  trackSelfEvent,
+  trackVisitorSignupCreated,
+  ACCOUNT_CONFIRMED_EVENT,
+  VISITOR_COOKIE,
+} from '@/lib/self-track'
+import { ACQUISITION_VARIANT_COOKIE, parseAcquisitionVariant } from '@/lib/landing-variant'
 
 // multi-tenant-activation · Sprint 1, Story 1.1 — the code-exchange landing. Supabase links back
 // here with a `code`; we exchange it for a session (setting the auth cookies) and send the user on.
@@ -34,10 +40,15 @@ export async function GET(request: NextRequest) {
       // in inboxes when the flip happened. A gate checked only at the front door leaves a queue of
       // pending links that can still create tenants behind it.
       if (user && (await isSignupEnabled())) {
+        // landing-launch-experiment D4/D5 — the landing's identity rides in two first-party cookies this browser already
+        // holds (an OAuth return is a top-level GET, so `lax` cookies arrive). A link opened in another browser has
+        // neither, and is simply not joined.
+        const visitorId = request.cookies.get(VISITOR_COOKIE)?.value
         const result = await provisionTenantForUser(
           user.id,
           user.email ?? '',
-          displayNameFrom(user.user_metadata)
+          displayNameFrom(user.user_metadata),
+          parseAcquisitionVariant(request.cookies.get(ACQUISITION_VARIANT_COOKIE)?.value)
         )
         if (!result.ok) {
           console.error('[auth/callback] provisioning failed:', result.error)
@@ -57,6 +68,7 @@ export async function GET(request: NextRequest) {
             after(() => registerStarterFeature(starterKey))
           }
           after(() => trackSelfEvent(ACCOUNT_CONFIRMED_EVENT, user.id))
+          after(() => trackVisitorSignupCreated(visitorId))
           // account-from-the-terminal D8: a brand-new account that signed up FROM `frijoles login`'s
           // browser page goes back to that page, or the terminal waits on a code nobody confirms.
           if (new URL(target).pathname === '/cli/connect') return NextResponse.redirect(target)

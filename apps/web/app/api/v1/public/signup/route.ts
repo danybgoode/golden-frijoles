@@ -5,7 +5,7 @@ import { isSignupEnabled } from '@/lib/flags'
 import { signupSchema } from '@/lib/signup-schema'
 import { checkRateLimit, hashIp } from '@/lib/rate-limit'
 import { recordAudit } from '@/lib/audit'
-import { trackSelfEvent, SIGNUP_STARTED_EVENT } from '@/lib/self-track'
+import { trackSelfEvent, trackVisitorEvent, SIGNUP_STARTED_EVENT, VISITOR_COOKIE } from '@/lib/self-track'
 import { parseDisplayName } from '@/lib/display-name'
 
 // POST /api/v1/public/signup — multi-tenant-activation · Sprint 2, Story 2.1.
@@ -103,6 +103,10 @@ export async function POST(req: NextRequest) {
   if (funnelUserId) {
     after(() => trackSelfEvent(SIGNUP_STARTED_EVENT, funnelUserId))
   }
+  // landing-launch-experiment D4 — the same step under the landing's visitor id (the A/B guardrail and the landing
+  // funnel read it there). Not branched on `funnelUserId`: an existing address still started a signup from the page.
+  const visitorId = req.cookies.get(VISITOR_COOKIE)?.value
+  after(() => trackVisitorEvent(SIGNUP_STARTED_EVENT, visitorId))
 
   // No project_id yet (that's the callback's job) and the email is deliberately absent from the
   // metadata — an audit row records that a signup was attempted from this deployment, not who.

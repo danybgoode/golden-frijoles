@@ -49,7 +49,9 @@ async function findOwnWorkspace(db: SupabaseClient, userId: string) {
 export async function claimWorkspace(
   db: SupabaseClient,
   userId: string,
-  name: string
+  name: string,
+  /** landing-launch-experiment D5 — written only if THIS call creates the workspace; an existing one is never relabelled. */
+  acquisitionVariant: 'a' | 'b' | null = null
 ): Promise<WorkspaceClaim> {
   const existing = await findOwnWorkspace(db, userId)
   if (existing.error) return { ok: false, error: existing.error }
@@ -58,7 +60,15 @@ export async function claimWorkspace(
   let created = false
 
   if (!workspaceId) {
-    const inserted = await db.from('workspaces').insert({ name, created_by: userId }).select('id').single()
+    const inserted = await db
+      .from('workspaces')
+      .insert({
+        name,
+        created_by: userId,
+        ...(acquisitionVariant ? { acquisition_variant: acquisitionVariant } : {}),
+      })
+      .select('id')
+      .single()
     if (!inserted.error && inserted.data) {
       workspaceId = inserted.data.id as string
       created = true

@@ -66,6 +66,15 @@ export const FUNNEL_TREND_VIEWED_EVENT = 'funnel_trend_viewed'
 // workspaces and cannot name one.
 export const WORKSPACE_PROVED_BET_EVENT = 'workspace_proved_bet'
 
+// landing-launch-experiment D3 — a visitor copied the landing's start prompt: the hero's only action, and the A/B
+// test's primary metric. Sent by the beacon route under the visitor id, never named by the caller.
+export const START_PROMPT_COPIED_EVENT = 'start_prompt_copied'
+
+// landing-launch-experiment D6 — a workspace that came in through the landing (it records an acquisition variant) had a
+// bet first read `proven`. Sent beside `workspace_proved_bet`, never instead of it: `proving_workspaces` also counts
+// our own workspace, which is exactly why this epic's target needs a number that cannot.
+export const LANDING_WORKSPACE_PROVED_BET_EVENT = 'landing_workspace_proved_bet'
+
 export type SelfTrackEvent =
   | typeof LANDING_VISITED_EVENT
   | typeof WAITLIST_JOINED_EVENT
@@ -79,10 +88,15 @@ export type SelfTrackEvent =
   | typeof OWED_VIEWED_EVENT
   | typeof FUNNEL_TREND_VIEWED_EVENT
   | typeof WORKSPACE_PROVED_BET_EVENT
+  | typeof START_PROMPT_COPIED_EVENT
+  | typeof LANDING_WORKSPACE_PROVED_BET_EVENT
 
 // The TARS feature each funnel event belongs to. Registered on the self tenant by
 // scripts/seed-self-project.mjs.
 export const WAITLIST_SIGNAL_KEY = 'waitlist_conversion'
+/** landing-launch-experiment D7 — visit → start prompt copied → signup, under the visitor id. Replaces the waitlist
+ *  funnel as the landing's: the waitlist CTA it measured no longer exists, so it read 0 forever. */
+export const LANDING_SIGNAL_KEY = 'landing_conversion'
 export const ACTIVATION_SIGNAL_KEY = 'activation'
 /** pod-report S3.2 — registered on the self tenant by scripts/seed-self-project.mjs. */
 export const HUB_ENGAGEMENT_SIGNAL_KEY = 'hub_engagement'
@@ -90,6 +104,12 @@ export const HUB_ENGAGEMENT_SIGNAL_KEY = 'hub_engagement'
 export const METHODOLOGY_SIGNAL_KEY = 'methodology_reading'
 /** proving-workspaces-reading D4 — the North Star input reads the event by name, so no registry row is needed for it. */
 export const PROVING_SIGNAL_KEY = 'proving_workspaces'
+/** landing-launch-experiment D6 — the North Star input reads the event by name, like `proving_workspaces`. */
+export const PROVING_LANDING_SIGNAL_KEY = 'proving_landing_workspaces'
+
+/** landing-launch-experiment D3/D4 — the subject type every landing event and exposure carries. It must equal the
+ *  experiment's assignment entity, or the governed analysis joins nothing (lib/experiment-analysis.ts). */
+export const VISITOR_SUBJECT_TYPE = 'visitor'
 
 // ⚠️ THIS MAPPING IS LOAD-BEARING, AND ITS ABSENCE WAS A LIVE PRODUCTION BUG.
 //
@@ -106,7 +126,7 @@ export const PROVING_SIGNAL_KEY = 'proving_workspaces'
 // that silently requires a tag the caller had no reason to set produces an honest-looking zero
 // rather than an error, and zeros do not page anyone.
 export const EVENT_FEATURE: Record<SelfTrackEvent, string> = {
-  [LANDING_VISITED_EVENT]: WAITLIST_SIGNAL_KEY,
+  [LANDING_VISITED_EVENT]: LANDING_SIGNAL_KEY,
   [WAITLIST_JOINED_EVENT]: WAITLIST_SIGNAL_KEY,
   [SIGNUP_STARTED_EVENT]: ACTIVATION_SIGNAL_KEY,
   [ACCOUNT_CONFIRMED_EVENT]: ACTIVATION_SIGNAL_KEY,
@@ -125,4 +145,6 @@ export const EVENT_FEATURE: Record<SelfTrackEvent, string> = {
   [OWED_VIEWED_EVENT]: HUB_ENGAGEMENT_SIGNAL_KEY,
   [FUNNEL_TREND_VIEWED_EVENT]: HUB_ENGAGEMENT_SIGNAL_KEY,
   [WORKSPACE_PROVED_BET_EVENT]: PROVING_SIGNAL_KEY,
+  [START_PROMPT_COPIED_EVENT]: LANDING_SIGNAL_KEY,
+  [LANDING_WORKSPACE_PROVED_BET_EVENT]: PROVING_LANDING_SIGNAL_KEY,
 }

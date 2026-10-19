@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { VISITOR_COOKIE_ATTRIBUTES, isMarketingPath, VISITOR_COOKIE } from '@/lib/marketing-paths'
 
 // multi-tenant-activation · Sprint 1, Story 1.1 — auth session refresh.
 //
@@ -9,6 +10,19 @@ import { NextResponse, type NextRequest } from 'next/server'
 // (lib/membership.ts), never a URL-pattern guard here. Scoped to /app so the shipped public
 // surface (landing, /api/v1/*) is untouched and pays no auth cost.
 export async function middleware(request: NextRequest) {
+  // landing-launch-experiment D2 — a public marketing page needs the visitor id IN THE REQUEST it renders, or the
+  // server cannot pick an A/B variant for a first visit and the client would mint a different id: the visit and the
+  // exposure would be two people. Set on the request (the page reads it in this same render) and on the response (the
+  // browser keeps it). No Supabase work here: these pages carry no session to refresh.
+  if (isMarketingPath(request.nextUrl.pathname)) {
+    if (request.cookies.get(VISITOR_COOKIE)?.value) return NextResponse.next()
+    const visitorId = crypto.randomUUID()
+    request.cookies.set(VISITOR_COOKIE, visitorId)
+    const minted = NextResponse.next({ request })
+    minted.cookies.set(VISITOR_COOKIE, visitorId, VISITOR_COOKIE_ATTRIBUTES)
+    return minted
+  }
+
   let response = NextResponse.next({ request })
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -44,6 +58,17 @@ export async function middleware(request: NextRequest) {
 
 // account-from-the-terminal D8: `/cli/connect` reads the session too (the device-code confirm), and
 // a stale access token there would show a signed-in person the signed-out page.
+// landing-launch-experiment D2: the marketing paths are listed in lib/marketing-paths.ts too, and a spec pins that the
+// two lists agree (a matcher must be a static literal, so it cannot import the list).
 export const config = {
-  matcher: ['/app/:path*', '/cli/:path*'],
+  matcher: [
+    '/app/:path*',
+    '/cli/:path*',
+    '/',
+    '/methodology/:path*',
+    '/methodology',
+    '/talk',
+    '/signup',
+    '/login',
+  ],
 }
