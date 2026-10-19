@@ -193,6 +193,32 @@ S1.2, S1.3 and S2.2 all change the beacon route and `trackSelfEvent`. Wave 1 shi
 S1.4, S3.4 and all of S4. Bounded stories go to a Sonnet builder on its own worktree: S2.4, S3.1–S3.3, S5.1–S5.2.
 Every PR gets the fresh `verifier` (high risk) plus the routed external passes.
 
+### Wave 2 lock (2026-10-19, re-verified at the boundary; the contract is `references/landing-b-prototype-v3.html`)
+
+The approved prototype was saved locally by Daniel (`references/` is gitignored — it is the visual contract, not shipped
+source). Read in full before any builder started.
+
+**D18 · B is one tree, scoped.** `components/landing-b/` holds B: `LandingB.tsx` (the order: nav, hero, the six steps,
+agent strip, founder note, pricing, closing CTA, the shared `Footer`) and one file per section. Its CSS lives in
+`components/landing-b/landing-b.css`, every selector under `.lb` so nothing reaches A; colours only from
+`brand/tokens.css` (the prototype's own `--roast-2` and `--dim-2` become local `.lb` variables derived there). The
+prompt cards are the shared `CopyPromptCard` with `trackSurface="landing-copy"` and `installPrompt(getSiteUrl())` (the
+prototype's prompt text IS that prompt), so the copy event and the copied text cannot diverge from A's.
+
+**D19 · Product shots: real where a public page shows the step, the approved illustration where none does.** The
+prototype's six windows are drawn stand-ins (its ribbon says so); D14 holds — a screenshot of a PUBLIC
+`golden-frijoles` page from production, captured into `public/landing-b/`. A step with no honest public page keeps the
+prototype's drawn window, labelled "Illustration · sample data" exactly as the prototype and A label theirs. Which step
+is which is listed in sprint-3's run log; no invented number is presented as ours.
+
+**D20 · Pricing stays honest until Checkout exists.** Until S4.3 is live (S4.4), B's Growth card carries A's line that
+billing is not live yet, and its CTA is "Start free" → `/signup`, not "Get Growth". S4.4 turns it into "Get Growth" →
+Checkout on both variants, as planned. The third tier's CTA goes to `/talk` (S5.2's target), not the prototype's `#note`.
+
+**D21 · Links on B are real routes.** "Sign in" → `/login`, "Start free" → `#start`, "Read the methodology" →
+`/methodology`, the founder note's conversation link → `/talk`. Plain `<a>` (or the design system `Button`) for `/login`
+and `/signup` — they are full loads by D8's guard anyway.
+
 ### Deviations from the plan (corrected out loud, 2026-10-19)
 1. **Launch command** — `frijoles flags rollout --percent 50` would run a test that can never read (D10). Launch is
    the builder's Start. S3's smoke and the Deploy order are corrected.

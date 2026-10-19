@@ -73,6 +73,7 @@ stories:
 
 ## Build contract (locked by the architect before the builder started)
 Re-verified at the wave-2 boundary. Stacked as `feat/landing-launch-experiment-s3`.
+- **All of S3** → D18–D21 (README § Wave 2 lock) and the prototype at `references/landing-b-prototype-v3.html`.
 - **S3.1–S3.3** → D13 (B in `components/landing-b/*`, `brand/tokens.css` + design-system primitives, no raw hex), D14
   (real screenshots). The approved prototype v3 is the contract (WAYS-OF-WORKING: an approved design IS scope).
 - **S3.4** → D1 (`variant()` picks the tree on the server), D11 (`?variant=` on non-production only), D10 (launch is
