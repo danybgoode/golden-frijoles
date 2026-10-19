@@ -3,7 +3,7 @@ epic: landing-launch-experiment
 sprint: 1
 title: "Instruments"
 risk: high
-phase: Shaping
+phase: Building
 stories_total: 4
 stories:
   - id: S1.1
@@ -37,7 +37,7 @@ stories:
 ---
 # Launch: the first landing A/B on goldenfrijoles.com, run on Golden Frijoles — Sprint 1: Instruments
 
-**Status:** ⬜ not started
+**Status:** 🟦 In review — PR #408 (wave 1, with Sprint 2)
 
 ## Stories
 
@@ -61,6 +61,9 @@ stories:
 - A spec signs up a visitor and reads the visit, the guardrail event and the workspace's variant under the right ids.
 - Check the activation funnel's 70 started / 1 confirmed reading and record what it was.
 **Risk:** high (auth path, tenancy — escalate trigger)
+**Recorded (2026-10-19):** the events do not hold 70 / 1. Live, `golden-frijoles` has 1 `signup_started` / 1
+`account_confirmed` (both 2026-10-14) and the archived `golden-beans` 3 / 2 (2026-07-21 → 2026-10-06), 6 auth users in
+all. The 70 was not an activation count; README deviation 7.
 
 ### Story 1.3 — The landing funnel, retargeted
 **As** the product owner, **I want** the landing funnel to count visit → prompt copied → signup, **so that** it stops reading 0 against a CTA that no longer exists.
@@ -76,6 +79,20 @@ stories:
 - Clarity readable by an agent: a project-level Clarity MCP server using `CLARITY_TOKEN` from the root `.env.local` (never committed), or the claude.ai connector updated by Daniel; one query about the site answers.
 - `projects.monthly_event_quota` / `ingest_rate_per_min` for `golden-frijoles` raised for launch (a data `UPDATE`, rabbit hole 3).
 **Risk:** low
+
+## Build contract (locked by the architect before the builder started)
+Ships in wave 1's single PR with Sprint 2 (README D16). Cite the D-number; never restate it.
+- **S1.1** → D8 (allow-listed marketing paths only; constants in `lib/analytics-ids.ts`; deny by default; footer
+  "Cookie settings"). CSP dropped (README deviation 3). Spec: no `googletagmanager`/`clarity.ms` script before consent,
+  and none on `/app` or `/install` ever.
+- **S1.2** → D2 (middleware mints `gb_vid`), D3 (beacon is the only exposure writer; subject `visitor`), D4 (the id
+  table — the dated note), D5 (migration `workspaces.acquisition_variant`, applied before merge), D6 (the second event
+  and the `proving_landing_workspaces` input). Spec: a visitor signs up and the visit, the visitor-keyed
+  `signup_started`, and the workspace's `acquisition_variant` all line up; the activation funnel's events keep the user id.
+- **S1.3** → D7. The non-zero check is the production read after deploy (CI has no self key, so `trackSelfEvent` no-ops
+  there by design).
+- **S1.4** → D12 (rate 600 → 3,000/min, a data `UPDATE`); Clarity MCP at project scope with `CLARITY_TOKEN` read from
+  the environment, never committed.
 
 ## Sprint QA
 - `e2e`: consent spec (S1.1), identity-join spec (S1.2), non-zero landing funnel (S1.3)

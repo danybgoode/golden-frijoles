@@ -19,6 +19,22 @@ test.describe('GET /v1/public/funnel', () => {
     expect(res.status()).toBe(400)
   })
 
+  test('an unknown period → 400 naming the accepted periods, never read as all (landing-launch-experiment D9)', async ({
+    request,
+  }) => {
+    const res = await request.get(`/api/v1/public/funnel?project=${DEMO_SLUG}&feature=setup_guide&period=7d`)
+    expect(res.status()).toBe(400)
+    const body = await res.json()
+    expect(body.ok).toBe(false)
+    expect(body.error).toBe('Unknown period "7d". Use one of: all, 90d, 30d.')
+    expect(body.accepted).toEqual(['all', '90d', '30d'])
+  })
+
+  test('a valid period does not 400', async ({ request }) => {
+    const res = await request.get(`/api/v1/public/funnel?project=${DEMO_SLUG}&feature=setup_guide&period=30d`)
+    expect(res.status()).not.toBe(400)
+  })
+
   test('the demo project slug → 200 with real numbers (seeded by scripts/seed-demo-project.mjs)', async ({
     request,
   }) => {

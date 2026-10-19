@@ -2,7 +2,10 @@ import { NextRequest, NextResponse, after } from 'next/server'
 import { randomUUID } from 'node:crypto'
 import {
   trackSelfEvent,
+  trackSelfExposure,
+  trackVisitorEvent,
   LANDING_VISITED_EVENT,
+  START_PROMPT_COPIED_EVENT,
   METHODOLOGY_VISITED_EVENT,
   METHODOLOGY_CHAPTER_OPENED_EVENT,
   VISITOR_COOKIE,
@@ -10,6 +13,8 @@ import {
 } from '@/lib/self-track'
 import { METHODOLOGY_CHAPTER_IDS } from '@/lib/methodology-chapters'
 import { checkRateLimit, hashIp } from '@/lib/rate-limit'
+import { variant } from '@/lib/gates'
+import { ACQUISITION_VARIANT_COOKIE, isLikelyBot, variantLetter } from '@/lib/landing-variant'
 
 // POST /v1/public/self-visit — Story 3.1 (commercial-shell/sprint-3.md). The visited-side half of
 // the dogfood funnel. The landing page is a Server Component and Server Components can't set
@@ -49,6 +54,8 @@ import { checkRateLimit, hashIp } from '@/lib/rate-limit'
 // cannot become a dimension in the query layer.
 const SURFACE_EVENT: Record<string, SelfTrackEvent> = {
   landing: LANDING_VISITED_EVENT,
+  // landing-launch-experiment D3 — the start prompt was copied on the landing (A or B). The A/B test's primary metric.
+  'landing-copy': START_PROMPT_COPIED_EVENT,
   methodology: METHODOLOGY_VISITED_EVENT,
   'methodology-chapter': METHODOLOGY_CHAPTER_OPENED_EVENT,
 }
@@ -56,9 +63,16 @@ const SURFACE_EVENT: Record<string, SelfTrackEvent> = {
 /** Parse the optional body. Anything unrecognised falls back to the landing — never an error, and
  *  never a caller-chosen event. A malformed body must not break a beacon on a page that renders
  *  fine, and must not 500 a route whose entire contract is "always 200". */
-async function resolveBeacon(
-  req: NextRequest
-): Promise<{ event: SelfTrackEvent; tags?: Record<string, string> }> {
+type Beacon = {
+  event: SelfTrackEvent
+  tags?: Record<string, string>
+  /** landing-launch-experiment D3 — the arm the page says it rendered, only to CHECK the server's own answer. */
+  rendered?: 'a' | 'b'
+  /** D11 — a preview's `?variant=` view: never an exposure, never an acquisition. */
+  forced?: boolean
+}
+
+async function resolveBeacon(req: NextRequest): Promise<Beacon> {
   let body: unknown = null
   try {
     body = await req.json()
@@ -72,6 +86,11 @@ async function resolveBeacon(
   const event = typeof surface === 'string' ? SURFACE_EVENT[surface] : undefined
   if (!event) return { event: LANDING_VISITED_EVENT }
 
+  if (event === LANDING_VISITED_EVENT) {
+    const raw = body as Record<string, unknown>
+    const rendered = raw.rendered === 'a' || raw.rendered === 'b' ? raw.rendered : undefined
+    return { event, ...(rendered ? { rendered } : {}), ...(raw.forced === true ? { forced: true } : {}) }
+  }
   if (event !== METHODOLOGY_CHAPTER_OPENED_EVENT) return { event }
 
   const chapter =
@@ -112,7 +131,36 @@ export async function POST(req: NextRequest) {
   // Read the body BEFORE `after()`: the request stream is not guaranteed readable once the
   // response has been returned, and a beacon that silently fell back to `landing_visited` for every
   // methodology page would be indistinguishable from one that worked.
-  const { event, tags } = await resolveBeacon(req)
-  after(() => trackSelfEvent(event, visitorId, tags))
+  const beacon = await resolveBeacon(req)
+  const { event, tags } = beacon
+
+  // landing-launch-experiment D4 — the landing's events go under the visitor, as the visitor (its subject), into
+  // `landing_conversion`. The methodology's keep their own funnel and their old shape.
+  if (event === LANDING_VISITED_EVENT || event === START_PROMPT_COPIED_EVENT) {
+    after(() => trackVisitorEvent(event, visitorId))
+  } else {
+    after(() => trackSelfEvent(event, visitorId, tags))
+  }
+
+  // D3 — the variant is the SERVER's answer for this cookie, never the body's. The body's `rendered` only vetoes: a
+  // kill that landed between the render and this beacon must not count a B visitor as exposed to A (or the reverse).
+  if (event === LANDING_VISITED_EVENT && !beacon.forced) {
+    const answer = await variant('landingVariantB', visitorId)
+    const letter = variantLetter(answer)
+    // The variant this visitor was LAST shown before signing up (D5 reads it). Latest, not first: a visitor who saw A
+    // before launch and B after it signed up having read B.
+    res.cookies.set(ACQUISITION_VARIANT_COOKIE, letter, {
+      httpOnly: true,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 90,
+    })
+    const agrees = beacon.rendered === undefined || beacon.rendered === letter
+    // Awaited before the response, unlike the sends: the acquisition cookie above needs the answer. The catalog read is
+    // the gates' shared 30 s cache (bounded at 1.5 s when cold), and this is a keepalive beacon nobody waits on.
+    if (answer.experiment && agrees && !isLikelyBot(req.headers.get('user-agent'))) {
+      after(() => trackSelfExposure('landingVariantB', visitorId, answer))
+    }
+  }
   return res
 }

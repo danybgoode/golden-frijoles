@@ -43,7 +43,12 @@ export function MakerClosingCta() {
           Frijoles gives you the rails to turn it into a product you can build, operate, test and grow.
         </p>
 
-        <CopyPromptCard label="Paste this into your agent" prompt={prompt} className="prompt-card--center" />
+        <CopyPromptCard
+          trackSurface="landing-copy"
+          label="Paste this into your agent"
+          prompt={prompt}
+          className="prompt-card--center"
+        />
 
         <div className="center-cta__actions">
           <RunYourFirstBet />

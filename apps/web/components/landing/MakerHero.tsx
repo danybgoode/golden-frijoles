@@ -75,7 +75,11 @@ export function MakerHero() {
 
         {/* The install prompt names `<site>/install.md`, so it takes `getSiteUrl()` (AGENTS rule #5). */}
         <div className="hero-magic">
-          <CopyPromptCard label="Paste this into your agent" prompt={installPrompt(getSiteUrl())} />
+          <CopyPromptCard
+            trackSurface="landing-copy"
+            label="Paste this into your agent"
+            prompt={installPrompt(getSiteUrl())}
+          />
         </div>
       </div>
     </section>

@@ -196,7 +196,9 @@ async function insertConnectorToken(
 export async function provisionTenantForUser(
   userId: string,
   email: string,
-  displayName?: string | null
+  displayName?: string | null,
+  /** landing-launch-experiment D5 — the validated `gb_variant` cookie; recorded only on the workspace this call creates. */
+  acquisitionVariant: 'a' | 'b' | null = null
 ): Promise<ProvisionResult> {
   // Every caller is a Route Handler and can therefore set the one-time key cookie, so there is no
   // "provision without revealing a key" mode. An earlier version had one, for a retry path that
@@ -233,7 +235,12 @@ export async function provisionTenantForUser(
   // Claimed BEFORE the project, so the project is born inside it and there is never a project without a workspace
   // (lock D4: the column becomes NOT NULL once this code is live). Every `ok: false` below releases the claim, and
   // releaseWorkspace only ever deletes a workspace THIS call created — a retry never removes a tenant that exists.
-  const claim = await claimWorkspace(supabase, userId, workspaceNameFor(displayName, email))
+  const claim = await claimWorkspace(
+    supabase,
+    userId,
+    workspaceNameFor(displayName, email),
+    acquisitionVariant
+  )
   if (!claim.ok) {
     console.error('[provisioning] workspace claim failed:', claim.error)
     return { ok: false, error: 'Could not set up your workspace — try signing in again.' }
@@ -439,13 +446,22 @@ export async function createProductForUser(
   // "taken", never a silent bind to somebody else's product.
   const { data, error } = await supabase
     .from('projects')
-    .insert({ slug, created_by: userId, workspace_id: claim.workspaceId, api_key_hash: null, from_signup: false })
+    .insert({
+      slug,
+      created_by: userId,
+      workspace_id: claim.workspaceId,
+      api_key_hash: null,
+      from_signup: false,
+    })
     .select('id')
     .single()
   if (error || !data) {
     // The database's own enforcement of the cap (20261014120000): a create that raced past the check above.
     if (error?.code === 'P0001' && error.hint === 'workspace_product_limit') {
-      return fail('limit', `Your workspace is at its product limit (${limit}). Delete one, or ask us to raise the limit.`)
+      return fail(
+        'limit',
+        `Your workspace is at its product limit (${limit}). Delete one, or ask us to raise the limit.`
+      )
     }
     if (error?.code === PG_UNIQUE_VIOLATION) {
       // Two creates of one name racing: the loser re-checks, so its retry (or this answer) says "already yours".

@@ -3,6 +3,7 @@ import { Archivo, IBM_Plex_Mono } from 'next/font/google'
 import { getSiteUrl } from '@/lib/site-url'
 import { CATEGORY } from '@/lib/positioning'
 import { NavigationLoader } from '@/components/brand/NavigationLoader'
+import { ConsentManager } from '@/components/consent/ConsentManager'
 import './globals.css'
 import './console.css'
 // ⚠️ The design system's own stylesheet. Every selector is scoped `.ds .ds-…`, so importing it
@@ -104,6 +105,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <NavigationLoader />
         {children}
+        {/* landing-launch-experiment D8 — renders only on the marketing allow-list, and loads nothing before a yes. */}
+        <ConsentManager />
       </body>
     </html>
   )

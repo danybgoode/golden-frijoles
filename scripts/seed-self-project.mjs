@@ -68,6 +68,12 @@ const METHODOLOGY_TARGET_EVENT = 'methodology_visited';
 const METHODOLOGY_ADOPTED_EVENT = 'methodology_chapter_opened';
 const TARGET_EVENT = 'landing_visited';
 const ADOPTED_EVENT = 'waitlist_joined';
+// landing-launch-experiment D7 — the landing's funnel since 2026-10-19: visit → start prompt copied → signup, all under
+// the visitor id. The names mirror apps/web/lib/self-track-events.ts (LANDING_SIGNAL_KEY and its events).
+const LANDING_KEY = 'landing_conversion';
+const LANDING_TARGET_EVENT = 'landing_visited';
+const LANDING_ADOPTED_EVENT = 'start_prompt_copied';
+const LANDING_RETAINED_EVENT = 'signup_started';
 const RETENTION_DAYS = 7; // schema default; retention isn't meaningful for a one-shot join, but the
 //                          column is NOT NULL-defaulted to 7 server-side — set it explicitly here.
 
@@ -177,13 +183,25 @@ async function registerGrowerSignal(baseUrl, apiKey) {
     body: JSON.stringify({
       features: [
         {
+          // Retired 2026-10-19 (landing-launch-experiment D7): the waitlist CTA it measured is gone, so it read 0
+          // forever. Kept registered, disabled, so its history stays readable.
           key: SIGNAL_KEY,
-          enabled: true,
+          enabled: false,
           targetEvent: TARGET_EVENT,
           adoptedEvent: ADOPTED_EVENT,
           retentionDays: RETENTION_DAYS,
           description:
-            'Golden Frijoles landing dogfood funnel: visitor → waitlist (Grower signal, Story 3.1).',
+            'Retired 2026-10-19 — replaced by landing_conversion. Was: visitor → waitlist (Story 3.1).',
+        },
+        {
+          key: LANDING_KEY,
+          enabled: true,
+          targetEvent: LANDING_TARGET_EVENT,
+          adoptedEvent: LANDING_ADOPTED_EVENT,
+          retainedEvent: LANDING_RETAINED_EVENT,
+          retentionDays: RETENTION_DAYS,
+          description:
+            'Golden Frijoles landing funnel, per visitor: visit → start prompt copied → signup (landing-launch-experiment D7).',
         },
         {
           key: ACTIVATION_KEY,

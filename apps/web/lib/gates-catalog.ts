@@ -2,6 +2,7 @@ import 'server-only'
 import { getSupabaseServiceClient } from './supabase'
 import { getFlagRegistryView } from './flag-registry'
 import { toGateRows } from './cli-flag-view'
+import { resolveActivationState } from './flag-list-view'
 import { GATE_CATALOG_PROJECT_SLUG, type ServedCatalog, type ServedEnvironment } from './gates-decision'
 
 // one-product-project · Sprint 2, Story 2.1 — what Golden Frijoles' own catalog serves, for lib/gates.ts.
@@ -26,8 +27,31 @@ export async function readServedCatalog(): Promise<ServedCatalog> {
       return null
     }
     const registry = await getFlagRegistryView(project.id as string)
+    const snapshots = new Map(registry.environments.map((row) => [row.environment, row.snapshotVersion]))
     const served = new Map<string, readonly ServedEnvironment[]>()
-    for (const flag of registry.flags) served.set(flag.key, toGateRows(flag))
+    for (const flag of registry.flags) {
+      served.set(
+        flag.key,
+        toGateRows(flag).map((row) => {
+          // landing-launch-experiment D1 — the served version itself, for `variant()`. The same activation rule the
+          // row's own `activation` came from, so the two can never name different versions.
+          const { versionId } = resolveActivationState(flag.activations, row.environment)
+          const version = versionId
+            ? flag.versions.find((candidate) => candidate.id === versionId)
+            : undefined
+          const snapshotVersion = snapshots.get(row.environment)
+          return {
+            ...row,
+            ...(version
+              ? {
+                  flag: { key: flag.key, definitionVersion: version.version, definition: version.definition },
+                }
+              : {}),
+            ...(snapshotVersion !== undefined ? { snapshotVersion } : {}),
+          }
+        })
+      )
+    }
     return served
   } catch (err) {
     console.error(

@@ -4236,3 +4236,46 @@ a.stat-card:hover {
 .methodology-next__inner strong {
   font-size: 17px;
 }
+
+/* landing-launch-experiment D8 — the consent banner (components/consent/ConsentManager.tsx). Fixed to the bottom so it
+   never shifts the page under a reader; it stays inside the 16px phone gutter. */
+.consent-banner {
+  position: fixed;
+  inset-inline: 16px;
+  bottom: 16px;
+  z-index: 60;
+  max-width: 640px;
+  margin-inline: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 20px;
+  padding: 16px 18px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  color: var(--crema);
+}
+
+.consent-banner__text {
+  flex: 1 1 300px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--dim);
+}
+
+.consent-banner__actions {
+  display: flex;
+  gap: 10px;
+}
+
+.consent-settings-link {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}

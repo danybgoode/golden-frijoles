@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { BrandLockup } from '@/components/brand/BrandLockup'
 import { Icon } from '@/components/ui/Icon'
+import { CookieSettingsLink } from '@/components/consent/ConsentManager'
 
 // methodology-experience · Story 2.4 — the footer links the methodology.
 //
@@ -20,6 +21,8 @@ export function Footer() {
           <a className="icon-link" href="https://github.com/danybgoode/golden-frijoles">
             <Icon name="external" /> GitHub
           </a>
+          {/* landing-launch-experiment D8 — the visitor can change their analytics answer at any time. */}
+          <CookieSettingsLink />
           <span className="footer__agent-manifest">
             <Icon name="sparkles" /> agent-readable: <a href="/llms.txt">/llms.txt</a> ·{' '}
             <a href="/northstar-self-serve.md">/northstar-self-serve.md</a> · <a href="/install">/install</a>

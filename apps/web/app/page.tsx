@@ -63,7 +63,9 @@ export default function Home() {
       {/* Story 3.1 — dogfood funnel entry beacon (fires `landing_visited`, mints the visitor id).
           It stays first through every redesign: it is the only instrumentation on this page, and
           the landing → signup conversion this epic is judged on is read through it. */}
-      <SelfTrackBeacon />
+      {/* landing-launch-experiment D3 — this tree is A. Until the A/B pick on / ships (S3.4) it is the only tree, so a
+          visitor the flag would put in B renders A and the beacon's disagreement check sends them no exposure. */}
+      <SelfTrackBeacon rendered="a" />
       <Nav />
       <MakerHero />
       <MakerLoopSection />

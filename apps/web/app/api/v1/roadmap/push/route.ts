@@ -8,7 +8,8 @@ import {
   workspaceSubject,
   type VerdictRow,
 } from '@/lib/proven-transition'
-import { trackSelfEvent, WORKSPACE_PROVED_BET_EVENT } from '@/lib/self-track'
+import { trackSelfEvent, WORKSPACE_PROVED_BET_EVENT, LANDING_WORKSPACE_PROVED_BET_EVENT } from '@/lib/self-track'
+import { parseAcquisitionVariant } from '@/lib/landing-variant'
 
 // pod-report · Sprint 1, Story 1.1 — POST /api/v1/roadmap/push
 //
@@ -142,5 +143,23 @@ function scheduleProvenEvents(projectId: string, provenSlugs: string[]): void {
     // ONE event per push however many epics turned proven (verifier, #401): the reading counts distinct workspaces,
     // and every event spends the self key's shared rate and quota, which the platform's own funnels also use.
     await trackSelfEvent(WORKSPACE_PROVED_BET_EVENT, subject)
+
+    // landing-launch-experiment D6 — the same fact again, only for a workspace that came in through the landing, tagged
+    // with the variant it came through, so `proving_landing_workspaces` counts founders the page brought and never our
+    // own workspace (whose bets land in this same project). The row read is THIS project's own workspace, by the id
+    // the API key resolved above; a failed read sends nothing rather than guessing a variant.
+    const { data: workspace, error: workspaceError } = await getSupabaseServiceClient()
+      .from('workspaces')
+      .select('acquisition_variant')
+      .eq('id', data.workspace_id as string)
+      .maybeSingle()
+    if (workspaceError) {
+      console.warn('[roadmap/push] landing proven verdict not recorded:', workspaceError.message)
+      return
+    }
+    const acquisitionVariant = parseAcquisitionVariant(workspace?.acquisition_variant)
+    if (acquisitionVariant) {
+      await trackSelfEvent(LANDING_WORKSPACE_PROVED_BET_EVENT, subject, { acquisition_variant: acquisitionVariant })
+    }
   })
 }

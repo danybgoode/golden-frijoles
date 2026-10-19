@@ -66,8 +66,18 @@ export type BetMeasure = FunnelMeasure & { flagKey: string; adoptedEvent: string
 export const FUNNEL_PERIODS = ['all', '90d', '30d'] as const
 export type FunnelPeriod = (typeof FUNNEL_PERIODS)[number]
 export const PERIOD_DAYS: Record<FunnelPeriod, number | null> = { all: null, '90d': 90, '30d': 30 }
-export const asPeriod = (v: unknown): FunnelPeriod =>
-  (FUNNEL_PERIODS as readonly unknown[]).includes(v) ? (v as FunnelPeriod) : 'all'
+/**
+ * landing-launch-experiment D9 — a missing period is `all`; a known one is itself; anything else is `null`, so the
+ * caller must decide (the API says 400, a page falls back and says so). Never a silent `all`: an agent must not read
+ * all-time numbers as last week's.
+ */
+export const parsePeriod = (raw: unknown): FunnelPeriod | null => {
+  if (raw === null || raw === undefined || raw === '') return 'all'
+  return (FUNNEL_PERIODS as readonly unknown[]).includes(raw) ? (raw as FunnelPeriod) : null
+}
+/** The one sentence for an unknown period: the 400's error and the pages' visible line share it. */
+export const unknownPeriodError = (raw: unknown): string =>
+  `Unknown period "${String(raw).slice(0, 32)}". Use one of: ${FUNNEL_PERIODS.join(', ')}.`
 
 export type Funnel = {
   base: number

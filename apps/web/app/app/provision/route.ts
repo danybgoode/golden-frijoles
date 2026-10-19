@@ -1,11 +1,18 @@
 import { NextResponse, after } from 'next/server'
+import { cookies } from 'next/headers'
 import { getSessionUser } from '@/lib/supabase-auth'
 import { getUserProjects } from '@/lib/membership'
 import { getSiteUrl } from '@/lib/site-url'
 import { isSignupEnabled } from '@/lib/flags'
 import { displayNameFrom } from '@/lib/display-name'
 import { provisionTenantForUser, registerStarterFeature } from '@/lib/provisioning'
-import { trackSelfEvent, ACCOUNT_CONFIRMED_EVENT } from '@/lib/self-track'
+import {
+  trackSelfEvent,
+  trackVisitorSignupCreated,
+  ACCOUNT_CONFIRMED_EVENT,
+  VISITOR_COOKIE,
+} from '@/lib/self-track'
+import { ACQUISITION_VARIANT_COOKIE, parseAcquisitionVariant } from '@/lib/landing-variant'
 
 // multi-tenant-activation · Sprint 2 — the provisioning RETRY, as a Route Handler.
 //
@@ -37,7 +44,15 @@ export async function GET() {
   const projects = await getUserProjects(user.id)
   if (projects.length > 0) return NextResponse.redirect(backToApp)
 
-  const result = await provisionTenantForUser(user.id, user.email ?? '', displayNameFrom(user.user_metadata))
+  // landing-launch-experiment D4/D5 — same cookies, same rule as the auth callback (this is its retry path).
+  const cookieStore = await cookies()
+  const visitorId = cookieStore.get(VISITOR_COOKIE)?.value
+  const result = await provisionTenantForUser(
+    user.id,
+    user.email ?? '',
+    displayNameFrom(user.user_metadata),
+    parseAcquisitionVariant(cookieStore.get(ACQUISITION_VARIANT_COOKIE)?.value)
+  )
   if (!result.ok) {
     console.error('[app/provision] retry failed:', result.error)
     // `?provision=failed` is what tells /app not to bounce straight back here — the loop breaker.
@@ -52,6 +67,7 @@ export async function GET() {
     // users who most needed the retry (cross-review, Codex 2026-07-20). Double-firing across the
     // two paths is harmless: TARS counts DISTINCT users per event.
     after(() => trackSelfEvent(ACCOUNT_CONFIRMED_EVENT, user.id))
+    after(() => trackVisitorSignupCreated(visitorId))
 
     // connect-page D3: the first key registers the starter feature (through the SDK, AGENTS rule #1)
     // and is never handed to the browser. It stays listed and revocable under Setup › Keys.

@@ -71,6 +71,11 @@ stories:
 - "No billing rail yet" removed only once S4.3 is live in production; Growth CTA goes to Checkout on both variants.
 **Risk:** low
 
+## Build contract (locked by the architect before the builder started)
+Locked at the wave-3 boundary (README D15): one focused question to the product owner first (Stripe account and
+entity, test vs live, the price), then the plan → limits map, the pool's expand/contract and the webhook's idempotency
+store are locked against that day's data and written here. Never delegated (money, migration, tenancy).
+
 ## Sprint QA
 - webhook signature + idempotency spec, plan → limits spec, tenancy spec (no cross-workspace plan read)
 - browser smoke owed: yes, to Daniel by name — a real Growth purchase and cancel
