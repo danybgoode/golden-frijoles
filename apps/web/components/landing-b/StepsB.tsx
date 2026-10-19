@@ -1,7 +1,6 @@
-// landing-launch-experiment · Sprint 3 S3.2 (epic D18/D19) — B's six steps. Steps 1–3 show a real screenshot of a public
-// golden-frijoles page in production (captured 2026-10-19); 4–6 have no public page, so they keep the approved drawn
-// window and its "Illustration · sample data" label. Nothing invented is presented as ours (CODE-QUALITY #9).
-import Image from 'next/image'
+// landing-launch-experiment · Sprint 3 S3.2 (epic D18/D19) — B's six steps. Every window is the approved mockup's drawn
+// branding shot, labelled "Illustration · sample data" (Daniel, 2026-10-19: branding shots, not screenshots — D19
+// amended). The sample numbers belong to an invented shop, never to us, and every window says so (CODE-QUALITY #9).
 import './steps.css'
 
 function WinBar({ title }: { title: string }) {
@@ -18,30 +17,6 @@ function WinBar({ title }: { title: string }) {
 }
 
 const Illus = () => <p className="lb-illus">Illustration · sample data</p>
-
-function Real({
-  title,
-  src,
-  alt,
-  width,
-  height,
-}: {
-  title: string
-  src: string
-  alt: string
-  width: number
-  height: number
-}) {
-  return (
-    <div className="lb-shot">
-      <div className="lb-win">
-        <WinBar title={title} />
-        <Image src={src} alt={alt} width={width} height={height} sizes="(max-width: 860px) 100vw, 700px" />
-      </div>
-      <p className="lb-illus">golden-frijoles, live · captured 2026-10-19</p>
-    </div>
-  )
-}
 
 function Txt({
   no,
@@ -67,6 +42,49 @@ function Txt({
     </div>
   )
 }
+
+type Tone = 'g' | 'w' | 'r' | 'p'
+type SignalProps = { tone: Tone; mark: string; value: string; of: string; note: string }
+
+// The cost window's two signals per row — spend vs quote, result vs target — each a symbol, a value, what it is read
+// against, and the words. Kept apart on purpose: an epic can be over budget and on target, and one merged colour would
+// hide which.
+function Signal({ tone, mark, value, of, note }: SignalProps) {
+  return (
+    <>
+      <span className={`lb-sig lb-sig-${tone}`}>{mark}</span>
+      <span className="lb-m">{value}</span>
+      <span className="lb-of">{of}</span>
+      <span className={`lb-d lb-sig-${tone}`}>{note}</span>
+    </>
+  )
+}
+
+const COST_ROWS: Array<{
+  epic: string
+  spend: SignalProps
+  result: SignalProps
+  call: { label: string; tone: string }
+}> = [
+  {
+    epic: 'One-step checkout',
+    spend: { tone: 'w', mark: '▲', value: '$44', of: 'of $38', note: '16% over' },
+    result: { tone: 'g', mark: '✓', value: '50%', of: 'of 50%', note: 'on target' },
+    call: { label: 'Keep', tone: 'lb-chip--g' },
+  },
+  {
+    epic: 'Seller onboarding',
+    spend: { tone: 'g', mark: '▼', value: '$19', of: 'of $22', note: '14% under' },
+    result: { tone: 'p', mark: '◷', value: '—', of: 'of 30 sellers', note: 'reads 2 Nov' },
+    call: { label: 'Waiting', tone: '' },
+  },
+  {
+    epic: 'Saved searches',
+    spend: { tone: 'r', mark: '▲', value: '$31', of: 'of $15', note: '107% over' },
+    result: { tone: 'r', mark: '✕', value: '3%', of: 'of 10%', note: 'below target' },
+    call: { label: 'Kill', tone: 'lb-chip--r' },
+  },
+]
 
 export function StepsB() {
   return (
@@ -97,13 +115,42 @@ export function StepsB() {
               Every epic carries its why, the target it should move, the hypothesis behind it and the date
               you’ll check. Agents build against it. Your team reads it without opening a pull request.
             </Txt>
-            <Real
-              title="Epic · landing-launch-experiment"
-              src="/landing-b/why.png"
-              alt="The public Golden Frijoles page for an epic: its title, stage track, why we are building this, and the target with its read date."
-              width={1100}
-              height={670}
-            />
+            <div className="lb-shot">
+              <div className="lb-win">
+                <WinBar title="Epic · checkout-in-one-step" />
+                <div className="lb-win-body">
+                  <div className="lb-row">
+                    <span className="lb-chip lb-chip--y">Building · sprint 2 of 3</span>
+                    <span className="lb-chip">Read date 14 Nov</span>
+                  </div>
+                  <p className="lb-why">
+                    Half of mobile buyers leave at the address step. One step should keep them.
+                  </p>
+                  <dl className="lb-kv">
+                    <dt>Target</dt>
+                    <dd>
+                      Checkout completion <span className="lb-num">41% → 50%</span>
+                    </dd>
+                    <dt>Hypothesis</dt>
+                    <dd>Fewer fields on mobile means fewer abandoned carts</dd>
+                    <dt>Decision owed</dt>
+                    <dd>
+                      Keep guest checkout? · <b>Ana, Product</b>
+                    </dd>
+                  </dl>
+                  <div>
+                    <div className="lb-row lb-between">
+                      <span className="lb-lbl">Stories done</span>
+                      <span className="lb-num">7 / 11</span>
+                    </div>
+                    <div className="lb-prog">
+                      <b style={{ width: '64%' }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <Illus />
+            </div>
           </article>
 
           <article className="lb-step">
@@ -210,13 +257,60 @@ export function StepsB() {
               Each epic is quoted before it starts and read against what the agents actually spent. Set that
               next to the payout you expected and decide what to fund next on numbers, not on momentum.
             </Txt>
-            <Real
-              title="Outcome report · golden-frijoles"
-              src="/landing-b/cost.png"
-              alt="The public Golden Frijoles outcome report: total agent spend, and a table of each epic's bet, its expected and actual metric, its result and its spend against the quoted range."
-              width={1100}
-              height={700}
-            />
+            <div className="lb-shot">
+              <div className="lb-win">
+                <WinBar title="Outcome report · October" />
+                <div className="lb-win-body">
+                  <div className="lb-tableclip">
+                    <table className="lb-cost">
+                      <thead>
+                        <tr>
+                          <th>Epic</th>
+                          <th>Spend vs quote</th>
+                          <th>Result vs target</th>
+                          <th>Call</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {COST_ROWS.map((row) => (
+                          <tr key={row.epic}>
+                            <td>{row.epic}</td>
+                            <td>
+                              <Signal {...row.spend} />
+                            </td>
+                            <td>
+                              <Signal {...row.result} />
+                            </td>
+                            <td>
+                              <span className={`lb-chip ${row.call.tone}`}>{row.call.label}</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="lb-legend">
+                    <span>
+                      <span className="lb-sig-g">✓ ▼</span> on target or under budget
+                    </span>
+                    <span>
+                      <span className="lb-sig-w">▲</span> over budget
+                    </span>
+                    <span>
+                      <span className="lb-sig-r">✕ ▲</span> missed, or far over
+                    </span>
+                  </p>
+                  <div className="lb-row lb-between">
+                    <span className="lb-lbl">Spent this month</span>
+                    <span className="lb-num">$94 of $120 funded</span>
+                  </div>
+                  <div className="lb-prog">
+                    <b style={{ width: '78%' }} />
+                  </div>
+                </div>
+              </div>
+              <Illus />
+            </div>
           </article>
 
           <article className="lb-step">
