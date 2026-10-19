@@ -52,7 +52,7 @@ type SignalProps = { tone: Tone; mark: string; value: string; of: string; note: 
 function Signal({ tone, mark, value, of, note }: SignalProps) {
   return (
     <>
-      <span className={`lb-sig lb-sig-${tone}`}>{mark}</span>
+      <span className={`lb-signal lb-sig-${tone}`}>{mark}</span>
       <span className="lb-m">{value}</span>
       <span className="lb-of">{of}</span>
       <span className={`lb-d lb-sig-${tone}`}>{note}</span>

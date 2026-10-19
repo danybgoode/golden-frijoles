@@ -396,7 +396,7 @@
   border-bottom: 1px solid var(--line);
   vertical-align: top;
 }
-.lb .lb-sig {
+.lb .lb-signal {
   display: inline-block;
   width: 16px;
   font-family: var(--mono);
