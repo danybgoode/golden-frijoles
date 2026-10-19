@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-
-const VISITOR_COOKIE = 'gb_vid'
+import { VISITOR_COOKIE } from '@/lib/marketing-paths'
 
 // A cross-review catch (Sprint 3 PR, round 2): mint/read the visitor id HERE, synchronously,
 // before firing any network request — not by waiting on the self-visit route's Set-Cookie
@@ -40,10 +39,19 @@ function ensureVisitorId(): string {
 export function SelfTrackBeacon({
   surface = 'landing',
   chapter,
+  rendered,
+  forced,
 }: {
   surface?: 'landing' | 'methodology' | 'methodology-chapter'
   /** Only meaningful for `methodology-chapter`; validated server-side against the module's ids. */
   chapter?: string
+  /**
+   * landing-launch-experiment D3 — the arm this page rendered. The route decides the variant itself, from the cookie;
+   * this only lets it skip an exposure when the two disagree (a kill landed between render and beacon).
+   */
+  rendered?: 'a' | 'b'
+  /** D11 — a preview's `?variant=` view: no exposure, no acquisition cookie. */
+  forced?: boolean
 } = {}) {
   useEffect(() => {
     ensureVisitorId()
@@ -52,9 +60,14 @@ export function SelfTrackBeacon({
       method: 'POST',
       keepalive: true,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ surface, ...(chapter ? { chapter } : {}) }),
+      body: JSON.stringify({
+        surface,
+        ...(chapter ? { chapter } : {}),
+        ...(rendered ? { rendered } : {}),
+        ...(forced ? { forced: true } : {}),
+      }),
     }).catch(() => {})
-  }, [surface, chapter])
+  }, [surface, chapter, rendered, forced])
 
   return null
 }

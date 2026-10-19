@@ -33,11 +33,18 @@ export function CopyPromptCard({
   label,
   prompt,
   className = '',
+  trackSurface,
 }: {
   /** The small mono label in the card's header, e.g. "HANDOFF PROMPT · PUBLIC ROUTES". */
   label: string
   prompt: string
   className?: string
+  /**
+   * landing-launch-experiment D3/D13 — set ONLY on the landing's cards (A and B): a successful copy posts
+   * `start_prompt_copied` through the self-visit beacon, under the visitor. Unset on /install, Connect and the
+   * methodology, so the A/B test's primary metric counts the landing and nothing else. The route picks the event.
+   */
+  trackSurface?: 'landing-copy'
 }) {
   const promptRef = useRef<HTMLPreElement>(null)
   const [state, setState] = useState<'idle' | 'copied' | 'select'>('idle')
@@ -63,6 +70,15 @@ export function CopyPromptCard({
 
     try {
       await navigator.clipboard.writeText(text)
+      if (trackSurface) {
+        // Fire-and-forget, like the visit beacon: a failed count must never touch the copy the reader asked for.
+        fetch('/api/v1/public/self-visit', {
+          method: 'POST',
+          keepalive: true,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ surface: trackSurface }),
+        }).catch(() => {})
+      }
       setState('copied')
       resetTimer.current = setTimeout(() => setState('idle'), 2000)
     } catch {
