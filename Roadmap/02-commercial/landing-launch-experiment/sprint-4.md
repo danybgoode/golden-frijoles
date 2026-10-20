@@ -69,6 +69,10 @@ stories:
 **As a** visitor reading pricing, **I want** the price to be one I can actually pay, **so that** the page stops saying billing is not live.
 **Acceptance:**
 - "No billing rail yet" removed only once S4.3 is live in production; Growth CTA goes to Checkout on both variants.
+- D28's signed-out path is the BUTTON's job (codex r4, #412): signed out, "Get Growth" links to `/signup`; signed in, it is
+  the POST form to checkout. The route's own signed-out answer (303 `/login?next=/#pricing`) only catches a session that
+  expired on the page — `/signup` takes no `next`, so it would lose the visitor's place.
+- A "Manage billing" POST form to the portal for the workspace owner (the only cancel path, D27).
 **Risk:** low
 
 ## Build contract (locked by the architect before the builder started)
