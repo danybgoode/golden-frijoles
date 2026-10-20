@@ -32,6 +32,8 @@ ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;
 ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;
 -- The `created` time of the last subscription event applied: Stripe does not guarantee order, so an older event is ignored.
 ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS stripe_subscription_event_at TIMESTAMPTZ;
+-- When a checkout last started for this workspace: one atomic claim serializes concurrent checkouts (codex, #412).
+ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS checkout_started_at TIMESTAMPTZ;
 CREATE UNIQUE INDEX IF NOT EXISTS workspaces_stripe_customer_id_key
   ON workspaces (stripe_customer_id) WHERE stripe_customer_id IS NOT NULL;
 

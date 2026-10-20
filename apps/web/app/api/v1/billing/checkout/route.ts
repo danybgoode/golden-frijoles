@@ -3,7 +3,7 @@ import { getSessionUser } from '@/lib/supabase-auth'
 import { getSiteUrl } from '@/lib/site-url'
 import { isBillingCheckoutEnabled } from '@/lib/flags'
 import { getStripe, GROWTH_PRICE_LOOKUP_KEY } from '@/lib/stripe'
-import { ownWorkspaceForBilling, rememberStripeCustomer } from '@/lib/billing'
+import { claimCheckout, ownWorkspaceForBilling, rememberStripeCustomer } from '@/lib/billing'
 import { integrationIdentifier } from '@/lib/billing-decision'
 
 // landing-launch-experiment · Sprint 4, Story 4.3 (epic D25) — "Get Growth": a POST (a form button, never a link: a
@@ -32,6 +32,13 @@ export async function POST() {
 
   const stripe = getStripe()
   if (!stripe) return NextResponse.json({ ok: false, error: 'Billing is not configured.' }, { status: 503 })
+  // One checkout at a time for this workspace (lib/billing.ts → claimCheckout); the loser is told, never given a second
+  // payable session.
+  if (!(await claimCheckout(workspace.id)))
+    return NextResponse.json(
+      { ok: false, error: 'A checkout is already starting for this workspace.' },
+      { status: 409 }
+    )
 
   try {
     const prices = await stripe.prices.list({

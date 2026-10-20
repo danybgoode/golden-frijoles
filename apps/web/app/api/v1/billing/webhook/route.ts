@@ -77,7 +77,17 @@ export async function POST(req: NextRequest) {
       const holder = await workspaceForCustomer(action.customerId)
       if (!holder)
         console.error(`[billing/webhook] ${event.type} ${event.id}: Stripe customer matches NO workspace`)
-      workspaceId = holder
+      // A SECOND live Growth subscription on a workspace that already holds one: the slot guard (rightly) declined it, but
+      // that customer is being charged for nothing — loud, so someone refunds it (verifier, #412).
+      else if (
+        action.plan === 'growth' &&
+        holder.subscriptionId &&
+        holder.subscriptionId !== action.subscriptionId
+      )
+        console.error(
+          `[billing/webhook] ${event.type} ${event.id}: a second Growth subscription is being charged for workspace ${holder.id}; refund it`
+        )
+      workspaceId = holder?.id ?? null
     }
     await recordBillingEvent(event.id, event.type, workspaceId)
     return NextResponse.json({ ok: true })

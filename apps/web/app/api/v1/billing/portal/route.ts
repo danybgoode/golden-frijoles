@@ -1,18 +1,17 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/supabase-auth'
 import { getSiteUrl } from '@/lib/site-url'
-import { isBillingCheckoutEnabled } from '@/lib/flags'
 import { getStripe } from '@/lib/stripe'
 import { ownWorkspaceForBilling } from '@/lib/billing'
 
 // landing-launch-experiment · Sprint 4, Story 4.3 (epic D27) — "Manage billing": Stripe's own portal for the caller's OWN
 // workspace's customer. The portal is the only cancel path; a cancel there ends the subscription at period end and the
-// webhook moves the workspace to Free when Stripe deletes it. Same gate as checkout.
+// webhook moves the workspace to Free when Stripe deletes it. NOT gated by `billing.checkout_enabled` (codex, #412):
+// switching new checkouts off must never stop a paying customer from cancelling. A workspace with no Stripe customer is
+// sent to pricing; nothing else is exposed.
 export const dynamic = 'force-dynamic'
 
 export async function POST() {
-  if (!(await isBillingCheckoutEnabled()))
-    return NextResponse.json({ ok: false, error: 'Not found.' }, { status: 404 })
   const site = getSiteUrl()
   const user = await getSessionUser()
   if (!user) return NextResponse.redirect(new URL('/login?next=/app', site), 303)

@@ -34,6 +34,27 @@ export async function ownWorkspaceForBilling(userId: string): Promise<BillingWor
   }
 }
 
+/** How long one checkout's claim holds: longer than creating a session takes, short enough that a retry is not stuck. */
+export const CHECKOUT_CLAIM_SECONDS = 30
+
+/**
+ * One checkout at a time per workspace (codex, #412): two concurrent requests could both expire the open sessions and then
+ * both create one — two payable sessions, two subscriptions. A single conditional UPDATE is atomic, so exactly one request
+ * wins the claim; the other is told a checkout is already starting. A later request (after the window) expires the
+ * earlier session before creating its own, so at most one session is ever open.
+ */
+export async function claimCheckout(workspaceId: string, now = new Date()): Promise<boolean> {
+  const cutoff = new Date(now.getTime() - CHECKOUT_CLAIM_SECONDS * 1000).toISOString()
+  const { data, error } = await getSupabaseServiceClient()
+    .from('workspaces')
+    .update({ checkout_started_at: now.toISOString() })
+    .eq('id', workspaceId)
+    .or(`checkout_started_at.is.null,checkout_started_at.lt."${cutoff}"`)
+    .select('id')
+  if (error) throw new Error(`checkout claim failed: ${error.message}`)
+  return (data?.length ?? 0) === 1
+}
+
 /** Records the workspace's Stripe customer the first time; a workspace that already has one keeps it. */
 export async function rememberStripeCustomer(workspaceId: string, customerId: string): Promise<boolean> {
   const { error } = await getSupabaseServiceClient()
@@ -70,14 +91,18 @@ export async function recordBillingEvent(
 }
 
 /** Whether any workspace holds this Stripe customer — to tell "an event about nobody of ours" from "a stale event". */
-export async function workspaceForCustomer(customerId: string): Promise<string | null> {
+export async function workspaceForCustomer(
+  customerId: string
+): Promise<{ id: string; subscriptionId: string | null } | null> {
   const { data, error } = await getSupabaseServiceClient()
     .from('workspaces')
-    .select('id')
+    .select('id, stripe_subscription_id')
     .eq('stripe_customer_id', customerId)
     .maybeSingle()
   if (error) throw new Error(`workspace lookup failed: ${error.message}`)
-  return (data?.id as string | undefined) ?? null
+  return data
+    ? { id: data.id as string, subscriptionId: (data.stripe_subscription_id as string | null) ?? null }
+    : null
 }
 
 /**

@@ -245,19 +245,19 @@ test('a comped workspace is never touched by a payment event', async ({ request 
   }
 })
 
-test('checkout and the portal do not exist while the switch is off, and need a session when it is on', async ({
+test('checkout does not exist while the switch is off; the portal always answers, and both need a session', async ({
   request,
 }) => {
   const checkout = await request.post('/api/v1/billing/checkout', { maxRedirects: 0 })
   const portal = await request.post('/api/v1/billing/portal', { maxRedirects: 0 })
+  // The portal is never gated: a paying customer can always cancel. Signed out, it asks for a session.
+  expect(portal.status()).toBe(303)
+  expect(portal.headers().location).toContain('/login')
   if (process.env.BILLING_CHECKOUT_ENABLED === 'true') {
     // Signed out: sent to sign in, never to Stripe.
     expect(checkout.status()).toBe(303)
     expect(checkout.headers().location).toContain('/login?next=/#pricing')
-    expect(portal.status()).toBe(303)
-    expect(portal.headers().location).toContain('/login')
   } else {
     expect(checkout.status()).toBe(404)
-    expect(portal.status()).toBe(404)
   }
 })
