@@ -288,7 +288,11 @@ S4.4 replaces that line with something true — the D22 either/or, taken.
   involved; the webhook acts on `customer.subscription.*` alone, only for the `gf_growth_monthly` price, only forward in
   event time (`stripe_subscription_event_at`), binding Growth to an empty or the same subscription slot and Free to the
   subscription held. `checkout.session.completed` and Payment Link sessions move nothing. Stripe's `created` is whole
-  seconds, so a same-second tie goes to Free (Growth must be strictly later; Codex r3).
+  seconds, so a same-second tie goes to Free (Growth must be strictly later; Codex r3). **Revised (Codex r5, verifier r5):**
+  the lookup key decides only GRANTING Growth. An event that ends a subscription (deleted, canceled, expired) records it in
+  `billing_ended_subscriptions` whatever the workspace holds, and Growth never binds an ended one — a `deleted` delivered
+  before its `created` is final. Off the Growth price (moved, or its key moved) is Free for the subscription held. All of it
+  runs in ONE database function, `apply_subscription_event`, under a lock on the workspace row (service role only).
 - **D25, one sale per workspace (Codex r2, verifier r3):** checkout claims the workspace for 30 seconds
   (`workspaces.checkout_started_at`; a lost claim is 409) and asks STRIPE whether the customer already holds a live or
   pending Growth subscription before opening a session — a late webhook cannot let a second one be sold. Both the session

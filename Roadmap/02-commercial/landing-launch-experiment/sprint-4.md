@@ -62,7 +62,8 @@ stories:
 - Stripe via the Vercel Marketplace integration; Checkout for one monthly price.
 - Signed webhook, idempotent on the event id, sets the plan on the ONE workspace from server-side session metadata, never the request body.
 - Cancel in the portal returns the workspace to free at period end.
-- Behind the kill switch `billing.checkout_enabled` (a `GATES` row, on). Local testing with `stripe listen`.
+- Behind the switch `billing.checkout_enabled` (a `GATES` row, born OFF — see the deviation below; the portal is never
+  gated). Local testing with `stripe listen`.
 **Risk:** high (money)
 
 ### Story 4.4 — Pricing copy on A and B
@@ -111,7 +112,8 @@ still growth; deleted → **free**. Every forwarded event answered 200 and was r
 `checkout.stripe.com`, a real `cus_` recorded; portal → 303 `billing.stripe.com`; **two checkouts at once → 303 + 409** (the
 claim); a paid sandbox subscription → growth (subscription matched); then, with the row forced back to Free while Stripe
 held the subscription (a late webhook), **checkout → 303 `/app?billing=already`**, no session; cancel at period end → still
-growth; deleted → free. `billing_events` held created, updated and deleted.
+growth; deleted → free. `billing_events` held created, updated and deleted. Re-run after the review-round-5 changes
+(`apply_subscription_event`, the login path): the same, and `/login?next=%2F%23pricing` → password sign-in → `/#pricing`.
 
 ## Sprint QA
 - webhook signature + idempotency spec, plan → limits spec, tenancy spec (no cross-workspace plan read)
