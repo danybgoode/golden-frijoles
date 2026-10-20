@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
   const stripe = getStripe()
   if (!secret || !stripe) {
     console.error(
-      '[billing/webhook] STRIPE_WEBHOOK_SECRET or STRIPE_SECRET_KEY is not set; refusing every event'
+      '[billing/webhook] STRIPE_WEBHOOK_SECRET or the Stripe key (STRIPE_LIVE_SECRET_KEY in production, else STRIPE_SECRET_KEY) is not set; refusing every event'
     )
     return NextResponse.json({ ok: false, error: 'Webhook is not configured.' }, { status: 500 })
   }

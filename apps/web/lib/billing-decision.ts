@@ -157,3 +157,11 @@ export function integrationIdentifier(random: () => number = Math.random): strin
   )
   return `gf-growth-checkout-${letters}`
 }
+
+/** The Stripe key a deployment uses. Production reads `STRIPE_LIVE_SECRET_KEY` (a live restricted key, Production-scoped)
+ *  first: the Stripe integration owns `STRIPE_SECRET_KEY` (one sandbox value across every environment, read-only in Vercel).
+ *  Only on Vercel production, so a live key in a local env file never makes dev or a preview charge a real card. */
+export function stripeSecretKey(env: Record<string, string | undefined> = process.env): string | undefined {
+  const live = env.VERCEL_ENV === 'production' ? env.STRIPE_LIVE_SECRET_KEY?.trim() : undefined
+  return live || env.STRIPE_SECRET_KEY?.trim() || undefined
+}

@@ -5,6 +5,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import {
+  stripeSecretKey,
   GROWTH_PRICE_LOOKUP_KEY,
   decideBillingAction,
   holdsGrowthSubscription,
@@ -186,4 +187,13 @@ test('the integration identifier is the prefix plus 8 lowercase letters', () => 
     integrationIdentifier(() => 0),
     'gf-growth-checkout-aaaaaaaa'
   )
+})
+
+test('stripeSecretKey: the live key only on Vercel production, else the integration key', () => {
+  const both = { STRIPE_LIVE_SECRET_KEY: ' rk_live_x ', STRIPE_SECRET_KEY: 'sk_test_y' }
+  assert.equal(stripeSecretKey({ ...both, VERCEL_ENV: 'production' }), 'rk_live_x')
+  assert.equal(stripeSecretKey({ ...both, VERCEL_ENV: 'preview' }), 'sk_test_y')
+  assert.equal(stripeSecretKey(both), 'sk_test_y')
+  assert.equal(stripeSecretKey({ VERCEL_ENV: 'production', STRIPE_SECRET_KEY: 'sk_test_y' }), 'sk_test_y')
+  assert.equal(stripeSecretKey({ VERCEL_ENV: 'production', STRIPE_LIVE_SECRET_KEY: '  ' }), undefined)
 })
