@@ -223,6 +223,13 @@ Checkout on both variants, as planned. The third tier's CTA goes to `/talk` (S5.
 `/methodology`, the founder note's conversation link → `/talk`. Plain `<a>` (or the design system `Button`) for `/login`
 and `/signup` — they are full loads by D8's guard anyway.
 
+**D22 · B's copy is the approved copy, including two claims ahead of the product (Daniel, 2026-10-19, on #409).** The
+verifier flagged, under CODE-QUALITY #9: the Rehearse step's "floods the site with ten times the traffic and pulls a server"
+(drills inject only delays and synthetic errors today), and pricing's "Add as many products and people as you like",
+Growth's "Unlimited products and seats" and "Longer history" (every workspace is capped at 10 products; Free has no history
+limit). Daniel kept the prototype's wording. **Sprint 4 inherits the debt:** Growth must lift the product cap and define a
+history limit that Free does not have, or S4.4 changes the copy — the pricing claims are not left untrue after Checkout ships.
+
 ### Deviations from the plan (corrected out loud, 2026-10-19)
 1. **Launch command** — `frijoles flags rollout --percent 50` would run a test that can never read (D10). Launch is
    the builder's Start. S3's smoke and the Deploy order are corrected.
