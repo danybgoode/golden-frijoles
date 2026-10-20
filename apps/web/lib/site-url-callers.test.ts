@@ -113,6 +113,9 @@ const CALLERS: Record<string, { kind: 'informational' } | { kind: 'durable'; gat
   'app/api/v1/public/signup/route.ts': { kind: 'durable', gatedBy: 'isSignupEnabled' },
   'app/auth/callback/route.ts': { kind: 'durable', gatedBy: 'isSignupEnabled' },
   'app/app/provision/route.ts': { kind: 'durable', gatedBy: 'isSignupEnabled' },
+  // landing-launch-experiment D25/D27 — success, cancel and return URLs handed to Stripe and followed minutes later.
+  'app/api/v1/billing/checkout/route.ts': { kind: 'durable', gatedBy: 'isBillingCheckoutEnabled' },
+  'app/api/v1/billing/portal/route.ts': { kind: 'durable', gatedBy: 'isBillingCheckoutEnabled' },
 }
 
 // SKIP_DIRS applies at the TOP LEVEL only. Matching bare directory names at any depth looked
