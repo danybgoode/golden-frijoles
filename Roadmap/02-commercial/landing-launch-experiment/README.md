@@ -299,6 +299,9 @@ S4.4 replaces that line with something true — the D22 either/or, taken.
   a second owner. Choosing among several owned workspaces would need the request to name one, which D25 forbids. Revisit
   when ownership can move.
 - **D27, the portal is never gated (Codex r2):** a paying customer can always cancel, whatever the checkout switch says.
+- **D28's order (verifier r4):** the console billing form (Get Growth / Manage billing, for the workspace owner) ships BEFORE
+  the switch goes on — it is how the first real purchase is made and the only way to reach the portal. Only S4.4's public
+  pricing copy waits for that purchase.
 
 **Routing:** all of S4 is money, a migration and tenancy — built by the architect, never delegated; the verifier and both
 external passes on the PR; the migration applied and verified before the merge.

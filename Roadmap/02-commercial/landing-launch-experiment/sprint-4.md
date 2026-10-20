@@ -72,7 +72,6 @@ stories:
 - D28's signed-out path is the BUTTON's job (codex r4, #412): signed out, "Get Growth" links to `/signup`; signed in, it is
   the POST form to checkout. The route's own signed-out answer (303 `/login?next=/#pricing`) only catches a session that
   expired on the page — `/signup` takes no `next`, so it would lose the visitor's place.
-- A "Manage billing" POST form to the portal for the workspace owner (the only cancel path, D27).
 **Risk:** low
 
 ## Build contract (locked by the architect before the builder started)
@@ -95,8 +94,11 @@ The webhook is not gated: subscriptions must keep reaching their workspace whate
 - `invoice.payment_failed`: Stripe's dunning moves the subscription to `past_due`/`unpaid` (handled), but the owner is not told.
 - Stripe Tax: Daniel decides whether to register/collect before the first live charge (an accountant question, seed).
 - A restricted API key (`rk_`) in place of the Marketplace's `sk_` for the app's server calls.
-- A way to REACH the portal (verifier r3): nothing in the app posts to `/api/v1/billing/portal` yet, and D27 makes it the only
-  cancel path. A "Manage billing" form for the workspace owner ships with S4.4, before the switch.
+- A way to REACH checkout and the portal from the console (verifier r3/r4): nothing in the app posts to either yet, and D27
+  makes the portal the only cancel path. A console billing form for the workspace owner — "Get Growth" (POST checkout)
+  while the switch is on, "Manage billing" (POST portal) whenever the workspace holds a Stripe customer — ships in its own
+  PR BEFORE the switch: the portal is ungated, so it does not wait for the purchase, and it is how Daniel makes the first
+  real purchase. S4.4 (the public pricing copy) still waits for that purchase.
 
 **Run log — 2026-10-19 (agent, Stripe sandbox, local production build):** `scripts/stripe-ensure-growth-price.mjs` created
 `Golden Frijoles Growth` at $49.00 USD/month (`gf_growth_monthly`); a re-run created nothing. Through the local server with
