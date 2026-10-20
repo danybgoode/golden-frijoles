@@ -2,8 +2,9 @@
 // app/terms and app/privacy, and pinned by lib/legal.test.ts against the facts the code itself decides (the plan limits,
 // the price, the analytics that need consent), so a page cannot quietly drift from what the product does.
 //
-// ⚠️ DRAFT for Daniel's approval (2026-10-20). Plain-language terms written from what the code does; not legal advice.
-// The operator's legal name and the governing law are the two facts only Daniel can state (OPERATOR below).
+// Approved by Daniel 2026-10-20 (PR #416). Plain-language terms written from what the code does; not legal advice.
+// His decisions: no personal name, operated from Mexico City; contact, law, refunds and notice periods as drafted; gb_vid and
+// gb_variant stay as they are (no consent gate), disclosed below.
 
 /** Cookie and storage names, as the modules that set them spell them. Literals, because this module is imported by the
  *  unit layer and stays import-free; lib/legal.test.ts asserts each equals its source constant, so a rename fails CI. */
@@ -23,11 +24,10 @@ export type LegalDoc = { title: string; updated: string; lede: string; sections:
 
 export const LEGAL_UPDATED = '2026-10-20'
 
-/** Who runs the service and where disputes go. Daniel's to confirm before this ships. */
+/** Who runs the service and where disputes go. Daniel, 2026-10-20: no personal name, only where it is operated from. */
 export const OPERATOR = {
   name: 'Golden Frijoles',
-  // ⚠️ Daniel: replace with your full legal name (or your company's) before this ships.
-  operatedBy: 'its founder, Daniel, an individual based in Mexico City, Mexico',
+  operatedBy: 'from Mexico City, Mexico',
   contact: 'miyagi@despachobonsai.com',
   law: 'the laws of Mexico, with the courts of Mexico City',
 } as const
@@ -45,7 +45,7 @@ const n = (value: number) => value.toLocaleString('en-US')
 export const TERMS: LegalDoc = {
   title: 'Terms of Service',
   updated: LEGAL_UPDATED,
-  lede: `These terms are the agreement between you and ${OPERATOR.name}, operated by ${OPERATOR.operatedBy}. By creating an account or using the service you accept them. If you use it for a company, you accept them for that company.`,
+  lede: `These terms are the agreement between you and ${OPERATOR.name}, operated ${OPERATOR.operatedBy}. By creating an account or using the service you accept them. If you use it for a company, you accept them for that company.`,
   sections: [
     {
       heading: 'The service',
@@ -121,7 +121,7 @@ export const PRIVACY: LegalDoc = {
     {
       heading: 'Who is responsible',
       paragraphs: [
-        `${OPERATOR.name}, operated by ${OPERATOR.operatedBy}. Write to ${OPERATOR.contact} about anything on this page.`,
+        `${OPERATOR.name}, operated ${OPERATOR.operatedBy}. Write to ${OPERATOR.contact} about anything on this page.`,
       ],
     },
     {
