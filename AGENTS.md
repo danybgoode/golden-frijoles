@@ -171,6 +171,11 @@ products in the caller's OWN workspace (`createProductForUser` in `lib/provision
 inside a project. It counts projects the caller may not be a member of (hand-seeded ones), which is the point: the cap
 belongs to the workspace.
 
+**A third named carve-out, also not a data read (Daniel, 2026-10-20, landing-launch-experiment D24):** the event-pool notice
+on Today (`lib/workspace-pool.ts`) shows the caller's OWN workspace's events used this month against its pool, to the
+WORKSPACE owner only (`workspace_members.role = 'owner'`) — workspace administration that returns one number, like the
+product cap, never anything from inside a project.
+
 - **The workspace is a boundary, not a grant** (access model A). `project_members` is still the access list: a
   workspace member cannot open a project they are not a member of. `workspace_members.role` gates workspace
   administration only, and nothing reads it for project access.

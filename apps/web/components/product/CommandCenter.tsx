@@ -93,8 +93,8 @@ export async function CommandCenter({ project }: { project: CommandCenterProject
     firstEventOn
       ? getFirstEventForBand(project.id, FIRST_EVENT_WINDOW_DAYS).catch(() => null)
       : Promise.resolve(null),
-    // landing-launch-experiment D24 — the workspace pool is workspace administration, so only an owner is told.
-    project.role === 'owner' ? readPoolNotice(project.id) : Promise.resolve(null),
+    // landing-launch-experiment D24 — workspace administration: readPoolNotice checks the WORKSPACE owner role itself.
+    readPoolNotice(project.id),
   ])
   const firstEvent = firstEventOn ? firstEventBand(eventMarks) : null
 
@@ -201,7 +201,7 @@ export async function CommandCenter({ project }: { project: CommandCenterProject
           {pool.used.toLocaleString('en-US')} of {pool.pool.toLocaleString('en-US')} events across all its
           products
           {pool.kind === 'over' ? '; new events are refused until the 1st.' : '.'}{' '}
-          {pool.canUpgrade ? <Link href="/#pricing">Growth raises it to 2,000,000</Link> : null}
+          {pool.canUpgrade ? <Link href="/#pricing">Growth makes the pool the only limit</Link> : null}
         </Callout>
       ) : null}
 
