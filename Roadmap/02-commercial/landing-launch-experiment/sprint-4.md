@@ -94,16 +94,20 @@ The webhook is not gated: subscriptions must keep reaching their workspace whate
   each does (at least: tell the owner and the operator) before real money flows.
 - `invoice.payment_failed`: Stripe's dunning moves the subscription to `past_due`/`unpaid` (handled), but the owner is not told.
 - Stripe Tax: Daniel decides whether to register/collect before the first live charge (an accountant question, seed).
-- A restricted API key (`rk_`) in place of the Marketplace's `sk_` for the app's server calls.
+- ~~A restricted API key (`rk_`) in place of the Marketplace's `sk_` for the app's server calls.~~ ✅ 2026-10-20: Daniel made
+  a live `rk_` (Customers, Checkout Sessions, Customer portal: write; Subscriptions, Prices, Products: read) and set it as
+  `STRIPE_LIVE_SECRET_KEY` (Production only). The integration owns `STRIPE_SECRET_KEY` (read-only in Vercel), so production
+  reads the new var first, and only on `VERCEL_ENV=production` (`lib/billing-decision.ts → stripeSecretKey`).
 - Two live Growth subscriptions on one customer can leave one paid and unalerted (verifier r7 nit): a decline racing a
   concurrent Free for the held one, or a second checkout while the first is `unpaid` (`holdsGrowthSubscription` does not
   count `unpaid`). Both need two subscriptions; decide whether `unpaid` blocks a re-buy and add a reconciliation check
   (Stripe's live Growth subscriptions vs workspaces on Growth) before real money flows.
-- A way to REACH checkout and the portal from the console (verifier r3/r4): nothing in the app posts to either yet, and D27
+- ~~A way to REACH checkout and the portal from the console (verifier r3/r4): nothing in the app posts to either yet, and D27
   makes the portal the only cancel path. A console billing form for the workspace owner — "Get Growth" (POST checkout)
   while the switch is on, "Manage billing" (POST portal) whenever the workspace holds a Stripe customer — ships in its own
   PR BEFORE the switch: the portal is ungated, so it does not wait for the purchase, and it is how Daniel makes the first
-  real purchase. S4.4 (the public pricing copy) still waits for that purchase.
+  real purchase. S4.4 (the public pricing copy) still waits for that purchase.~~ ✅ 2026-10-20: `/app/billing` (Plan & billing), from the account
+  menu and the pool notice; checkout and the portal return there with a sentence for every outcome.
 
 **Run log — 2026-10-19 (agent, Stripe sandbox, local production build):** `scripts/stripe-ensure-growth-price.mjs` created
 `Golden Frijoles Growth` at $49.00 USD/month (`gf_growth_monthly`); a re-run created nothing. Through the local server with
@@ -119,6 +123,17 @@ held the subscription (a late webhook), **checkout → 303 `/app?billing=already
 growth; deleted → free. `billing_events` held created, updated and deleted. Re-run after the review-round-5 changes
 (`apply_subscription_event`, the login path): the same, and `/login?next=%2F%23pricing` → password sign-in → `/#pricing`.
 
+**Run log — 2026-10-20, live set-up (agent + Daniel, Stripe CLI on the live account `acct_1USRSi87jkUevmPf`):** the live
+product `prod_VTfmZpbWctXspO` and price `price_1USiRB87jkUevmPfMiIo7mR5` ($49.00 USD/month, licensed, `gf_growth_monthly`,
+tax code SaaS-business) created by the agent. Daniel: the live webhook `we_1USiHd…` → `goldenfrijoles.com/api/v1/billing/webhook`
+(created/updated/deleted/paused; `updated` was missing at first and added), its secret in Vercel Production (POST without
+a signature → 400 "Missing signature", no longer 500); the default portal configuration `bpc_1USiWG…` (invoices, card,
+customer details, cancel at period end with reasons, no plan switching; the route sets each session's return to `/app/billing`); the live `rk_` above.
+The auto-mode classifier refused the agent the webhook update, the portal create and reading the production env, so those
+ran as Daniel's own commands. Still Daniel's, in the Dashboard: the public business name (Checkout shows
+"stripe-bole-school", website miyagisanchez.com), branding, support email, customer emails, the ID document payouts wait
+on; and `/terms` + `/privacy` do not exist yet.
+
 ## Sprint QA
 - webhook signature + idempotency spec, plan → limits spec, tenancy spec (no cross-workspace plan read)
 - browser smoke owed: yes, to Daniel by name — a real Growth purchase and cancel
@@ -131,7 +146,7 @@ Env: production · https://goldenfrijoles.com   (or the PR preview while testing
    → Stripe Checkout opens for $49/month
 2. Pay with a Stripe test card in test mode
    → back on the app; the workspace shows Growth; products limit lifted
-3. Settings → Billing → Manage
+3. Account → Plan & billing → Manage billing
    → the Stripe portal opens; cancel
 4. At period end (test clock)
    → the workspace is back on Free
