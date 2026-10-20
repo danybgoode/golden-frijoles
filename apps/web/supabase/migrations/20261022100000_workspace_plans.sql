@@ -30,7 +30,8 @@ ALTER TABLE workspaces
 -- so a webhook that names a customer can only ever reach one row.
 ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;
 ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;
--- The `created` time of the last subscription event applied: Stripe does not guarantee order, so an older event is ignored.
+-- The event time of the subscription state last applied to this workspace — a record for an operator; the ORDER of events
+-- is decided by `billing_subscription_states` below, never by this column.
 ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS stripe_subscription_event_at TIMESTAMPTZ;
 -- When a checkout last started for this workspace: one atomic claim serializes concurrent checkouts (codex, #412).
 ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS checkout_started_at TIMESTAMPTZ;
@@ -82,6 +83,8 @@ REVOKE ALL ON TABLE billing_events FROM PUBLIC, anon, authenticated;
 -- event would never be taken back (codex r5, verifier r6, #412). So every event updates this record first — only forward
 -- in event time, a same-second tie going to Free, and `ended` (deleted, canceled, expired) sticky for good — and the
 -- workspace is then set from the RECORD, never from the event alone.
+-- It keeps a row for EVERY subscription the Stripe account sends (other products record as 'free'): small, service role
+-- only, and needed — an event about a subscription no workspace holds yet may decide it later.
 CREATE TABLE IF NOT EXISTS billing_subscription_states (
   stripe_subscription_id TEXT PRIMARY KEY,
   plan TEXT NOT NULL CHECK (plan IN ('growth', 'free')),

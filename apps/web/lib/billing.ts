@@ -5,8 +5,8 @@ import type { BillingAction } from './billing-decision'
 // landing-launch-experiment · Sprint 4, Story 4.3 (epic D25–D27) — the billing reads and writes, each pinned to ONE workspace.
 //
 // Tenancy: checkout and the portal act on the CALLER's own workspace — the one they created AND own — resolved here from
-// the session's user id, never from the request. The webhook acts on the workspace OUR server named when it created the
-// Checkout session, or later on the one workspace holding the Stripe customer (`stripe_customer_id` is unique). A comped
+// the session's user id, never from the request. The webhook acts only on the one workspace holding the Stripe customer
+// (`stripe_customer_id` is unique, recorded by OUR checkout route); no session or browser field ever names one. A comped
 // workspace is never touched by a webhook: a grant is not something a payment event can take away.
 
 export type BillingWorkspace = { id: string; plan: string; stripeCustomerId: string | null }

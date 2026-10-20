@@ -9,10 +9,10 @@
 // name a workspace, and a subscription on any other price grants nothing.
 //
 // ── Which subscription, and in what order ─────────────────────────────────────────────────────────────────────────────
-// Stripe does not guarantee order and retries for days. The apply step (lib/billing.ts) only moves a workspace forward in
-// event time (`stripe_subscription_event_at`), binds Growth only to an empty or the SAME subscription slot, and moves to
-// Free only the subscription it holds — so a stale "active" after a deletion, or a second subscription's lifecycle, cannot
-// change the plan.
+// Stripe does not guarantee order and retries for days. The apply step (lib/billing.ts → `apply_subscription_event`) keeps
+// each subscription's LATEST state (`billing_subscription_states`: forward in event time, a same-second tie to Free, ended
+// sticky) and sets the workspace from that record — Growth only into an empty or the SAME slot, Free only for the
+// subscription held — so a stale "active", a Free delivered before `created`, or a second subscription cannot change it.
 
 /** The lookup key of the one price that sells Growth. The checkout route and the price script read this constant. */
 export const GROWTH_PRICE_LOOKUP_KEY = 'gf_growth_monthly'
