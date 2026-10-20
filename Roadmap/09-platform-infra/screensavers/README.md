@@ -8,7 +8,7 @@ area: 09-platform-infra
 risk: low
 type: feature
 sprints_total: 1
-stories_total: 4   # the sum of every sprint's stories_total — keep it in step when a story is added
+stories_total: 5   # the sum of every sprint's stories_total — keep it in step when a story is added
 intent_match: null   # copied from the seed by scaffold-epic (intent-match); the reader at the lock may update it
 quote_low_usd: null    # ≈ API $ — copied from the seed's `quote:` by scaffold-epic (finops); null = not quoted, never 0
 quote_high_usd: null
@@ -81,6 +81,11 @@ commands `install.md` already gives. Once installed, the band names the next ste
   every scene went over its 1000 ms budget), painted two pixels to a cell, 2:1 kept, box-averaged, 94 colours a clip.
   `/screensaver now` plays with an epic in flight too: the person asked. Where the band leaves no room it folds to its
   header while the scene plays; the first key brings it back, and the answer to `now` says so. Asleep after 20 minutes.
+- **D8 — back to text pieces, eight categories (2026-10-20, the product owner).** Tried on a real terminal, the scenes fell
+  short of ascii.rest: a band holds about a quarter of their resolution, and the terminal's colour table turned their dark
+  navies grey. So the screensaver plays ascii.rest's one-ink text pieces again, from shapes, space, physics, nature,
+  creatures, objects, generative and effects only (no logos, companies or distros: no brand ever plays) — 96 of them,
+  each at its own size, rendered in a Node process as the scenes were (`hooks/piece-render.mjs`).
 - **D6 — standalone.** It plays in any folder the plugin is loaded in; outside a Golden Frijoles repo the band names
   the step that lights it up.
 
@@ -91,6 +96,7 @@ commands `install.md` already gives. Once installed, the band names the next ste
 | 1 | S1.2 One line installs it, and the band shows the rest | low |
 | 1 | S1.3 The post goes out, and the read is taken | low |
 | 1 | S1.4 Colour scenes, and `now` with an epic in flight | low |
+| 1 | S1.5 Text pieces from eight categories, rendered in Node | low |
 
 ## The install line (S1.2)
 ```

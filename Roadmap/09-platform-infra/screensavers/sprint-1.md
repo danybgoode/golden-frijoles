@@ -4,7 +4,7 @@ sprint: 1
 title: "Screensavers, and the line that installs them"
 risk: low
 phase: Building
-stories_total: 4
+stories_total: 5
 stories:
   - id: S1.1
     title: "It plays when you are away, at its own size"
@@ -34,6 +34,13 @@ stories:
     so_that: "the picture is worth posting and I always know how to get the band back"
     risk: low
     status: done
+  - id: S1.5
+    title: "Text pieces from eight categories, rendered in Node"
+    as_a: "a builder who leaves Claude Code running"
+    i_want: "crisp one-ink animations from shapes, space, physics, nature, creatures, objects, generative and effects, never a brand"
+    so_that: "the screensaver looks sharp in any terminal"
+    risk: low
+    status: done
 ---
 
 # Claude Code screensavers — Sprint 1: Screensavers, and the line that installs them
@@ -53,6 +60,10 @@ The line is the README's *The install line*. In a repo with no `Roadmap/` the re
 ### Story 1.4 — Colour scenes, and `now` with an epic in flight
 `hooks/scene-render.mjs` (a scene → a clip, in Node), `hooks/scene-player.mjs` (size, fold, frames → runs),
 `hooks/scenes/` (34 scenes, MIT, vendored by `scripts/vendor-ascii-scenes.mjs`). D7 in the README.
+
+### Story 1.5 — Text pieces from eight categories, rendered in Node
+`hooks/piece-render.mjs` (a piece → a clip, in Node), `hooks/piece-player.mjs` (what fits, crop, frames → lines),
+`hooks/pieces/` (96 pieces, MIT, vendored by `scripts/vendor-ascii-pieces.mjs`). D8 in the README.
 
 ### Story 1.3 — The post goes out, and the read is taken
 Owed to the product owner: post the screenshot with the line; on 2026-11-30 read
