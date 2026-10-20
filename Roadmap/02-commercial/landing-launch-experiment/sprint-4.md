@@ -95,6 +95,10 @@ The webhook is not gated: subscriptions must keep reaching their workspace whate
 - `invoice.payment_failed`: Stripe's dunning moves the subscription to `past_due`/`unpaid` (handled), but the owner is not told.
 - Stripe Tax: Daniel decides whether to register/collect before the first live charge (an accountant question, seed).
 - A restricted API key (`rk_`) in place of the Marketplace's `sk_` for the app's server calls.
+- Two live Growth subscriptions on one customer can leave one paid and unalerted (verifier r7 nit): a decline racing a
+  concurrent Free for the held one, or a second checkout while the first is `unpaid` (`holdsGrowthSubscription` does not
+  count `unpaid`). Both need two subscriptions; decide whether `unpaid` blocks a re-buy and add a reconciliation check
+  (Stripe's live Growth subscriptions vs workspaces on Growth) before real money flows.
 - A way to REACH checkout and the portal from the console (verifier r3/r4): nothing in the app posts to either yet, and D27
   makes the portal the only cancel path. A console billing form for the workspace owner — "Get Growth" (POST checkout)
   while the switch is on, "Manage billing" (POST portal) whenever the workspace holds a Stripe customer — ships in its own
