@@ -22,8 +22,8 @@ export function LegalPage({ doc, other }: { doc: LegalDoc; other: { href: string
         {doc.sections.map((section) => (
           <section key={section.heading}>
             <h2>{section.heading}</h2>
-            {section.paragraphs.map((paragraph) => (
-              <p key={paragraph.slice(0, 48)}>{paragraph}</p>
+            {section.paragraphs.map((paragraph, index) => (
+              <p key={index}>{paragraph}</p>
             ))}
           </section>
         ))}

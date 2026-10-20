@@ -5,6 +5,19 @@
 // ⚠️ DRAFT for Daniel's approval (2026-10-20). Plain-language terms written from what the code does; not legal advice.
 // The operator's legal name and the governing law are the two facts only Daniel can state (OPERATOR below).
 
+/** Cookie and storage names, as the modules that set them spell them. Literals, because this module is imported by the
+ *  unit layer and stays import-free; lib/legal.test.ts asserts each equals its source constant, so a rename fails CI. */
+export const STORAGE_NAMES = {
+  visitorCookie: 'gb_vid', // lib/marketing-paths.ts → VISITOR_COOKIE
+  variantCookie: 'gb_variant', // lib/landing-variant.ts → ACQUISITION_VARIANT_COOKIE
+  consentKey: 'gf_consent', // lib/consent.ts → CONSENT_STORAGE_KEY
+  progressKey: 'gf.methodology.read.v1', // lib/methodology-progress.ts → PROGRESS_STORAGE_KEY
+} as const
+const VISITOR_COOKIE_NAME = STORAGE_NAMES.visitorCookie
+const VARIANT_COOKIE_NAME = STORAGE_NAMES.variantCookie
+const CONSENT_KEY = STORAGE_NAMES.consentKey
+const PROGRESS_KEY = STORAGE_NAMES.progressKey
+
 export type LegalSection = { heading: string; paragraphs: string[] }
 export type LegalDoc = { title: string; updated: string; lede: string; sections: LegalSection[] }
 
@@ -68,7 +81,7 @@ export const TERMS: LegalDoc = {
       heading: 'Your data',
       paragraphs: [
         'The events, flags and other data your products send stay yours. You give us the right to store and process them only to run the service for you. Do not send us data you have no right to share, or special-category data (health, biometrics and the like) about the people who use your products.',
-        `You can delete a product from the console; it disappears at once and its data is purged after. To close your account and delete everything, write to ${OPERATOR.contact}.`,
+        `You can delete a product from the console; it disappears at once, and 30 days later you can purge its data for good with \`frijoles projects purge\`, or ask us to. To close your account and delete everything, write to ${OPERATOR.contact}.`,
       ],
     },
     {
@@ -114,17 +127,19 @@ export const PRIVACY: LegalDoc = {
     {
       heading: 'What we collect',
       paragraphs: [
-        'Your account: your email address, a password (stored hashed by our authentication provider) or your Google sign-in, the name you choose to show, your workspace and its products, and the credentials you create (stored only as hashes).',
-        'Billing: when you buy Growth, Stripe collects your card and billing details. We keep only the Stripe customer and subscription identifiers and your plan; we never see your card number.',
-        'Your products’ data: the events, flags and settings your products send. For this data you decide what is sent and why; we process it on your behalf to run the service.',
-        'Our own product use: we record what accounts do in the console (for example, that an account signed up or created a product) in our own Golden Frijoles project, to improve the product. Our site sets one first-party cookie, gb_vid, a random visitor id kept for a year, so a visit and a later sign-up count as the same visitor.',
-        'The waitlist and booking: if you join the waitlist we keep your email. If you book a session on /talk, Cal.com collects your booking details.',
+        'Your account: your email address, a password (stored hashed by our authentication provider) or your Google sign-in, the name you choose to show, your workspace and its products, and the credentials you create. API keys and share links are stored only as hashes; connector tokens and webhook signing secrets are stored as issued, because the service has to present them.',
+        'Billing: when you buy Growth we give Stripe your account email, and Stripe collects your card and billing details. We keep only the Stripe customer and subscription identifiers and your plan; we never see your card number.',
+        'Your products’ data: the events, flags and settings your products send. For this data you decide what is sent and why; we process it on your behalf to run the service, and send it on only to the destinations (webhooks) you configure.',
+        'Our own product use: we record what visitors do on our site (visits to the home page and the methodology, which landing version they saw, joining the waitlist, starting a sign-up) and what accounts do in the product (for example signing up, creating a product, a product sending its first event, opening a shared report), in our own Golden Frijoles project, to improve the product. These records carry a random visitor id or an account id, never your name or email.',
+        `Cookies and browser storage: ${VISITOR_COOKIE_NAME}, a random visitor id kept for a year, so a visit and a later sign-up count as the same visitor; ${VARIANT_COOKIE_NAME}, which version of the home page you were shown, kept for 90 days; and, when you sign in, the session cookies that keep you signed in. Your browser also stores your analytics answer (${CONSENT_KEY}) and which methodology chapters you have read (${PROGRESS_KEY}); neither leaves your device.`,
+        'Abuse protection: we keep a one-way hash of your IP address for a short time to rate-limit sign-ups, the waitlist and other public forms.',
+        'The waitlist and booking: if you join the waitlist we keep your email. The /talk page embeds the Cal.com calendar, so opening it sends your browser’s request (your IP address and browser details) to Cal.com, and booking a session gives Cal.com your booking details.',
       ],
     },
     {
       heading: 'Analytics, only with your yes',
       paragraphs: [
-        'On our public pages (the home page, the methodology, /talk, sign-up and sign-in) we ask before loading Google Analytics and Microsoft Clarity. Clarity records how the page is used, including clicks and scrolling. Nothing loads until you say yes, it never loads inside the console, and you can change your answer at any time from “Cookie settings” in the footer.',
+        'On our public pages (the home page, the methodology, /talk, sign-up and sign-in) we ask before loading Google Analytics and Microsoft Clarity. Clarity records how the page is used, including clicks and scrolling. Nothing loads until you say yes, it never loads inside the console, and you can change your answer at any time from “Cookie settings” in the footer of our home page.',
       ],
     },
     {
@@ -142,7 +157,7 @@ export const PRIVACY: LegalDoc = {
     {
       heading: 'How long we keep it',
       paragraphs: [
-        'Account and workspace data: while your account is open. Your products’ data: until you delete the product or close your account. Billing records: as long as tax law requires. Server logs: a few days to weeks, as our hosts keep them.',
+        'Account and workspace data: while your account is open. Your products’ data: until you purge a deleted product or close your account. Billing records: as long as tax law requires. Server logs: as long as our hosting providers keep them, typically days to weeks.',
       ],
     },
     {

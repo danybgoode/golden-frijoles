@@ -829,7 +829,7 @@ export const ROUTE_MANIFEST: readonly CoverageRow[] = [
       until: '2026-12-31',
       why:
         'Terms of Service is built from the design system (Frame, the prose tokens) but has no approved picture; it shipped so ' +
-        'Checkout, the portal and sign-up have a real page to link to. Approve it and this row claims coverage.',
+        'Checkout, the portal and the footer have a real page to link to. Approve it and this row claims coverage.',
     },
   },
   // landing-launch-experiment · Sprint 4 — Privacy notice: prose from lib/legal.ts in the public frame (components/legal). No
@@ -850,7 +850,7 @@ export const ROUTE_MANIFEST: readonly CoverageRow[] = [
       until: '2026-12-31',
       why:
         'Privacy notice is built from the design system (Frame, the prose tokens) but has no approved picture; it shipped so ' +
-        'Checkout, the portal and sign-up have a real page to link to. Approve it and this row claims coverage.',
+        'Checkout, the portal and the footer have a real page to link to. Approve it and this row claims coverage.',
     },
   },
 
