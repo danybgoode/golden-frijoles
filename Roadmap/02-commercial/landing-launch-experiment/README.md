@@ -287,7 +287,18 @@ S4.4 replaces that line with something true — the D22 either/or, taken.
 - **D26, only the subscription moves a plan:** checkout records the workspace's customer server-side before Stripe is
   involved; the webhook acts on `customer.subscription.*` alone, only for the `gf_growth_monthly` price, only forward in
   event time (`stripe_subscription_event_at`), binding Growth to an empty or the same subscription slot and Free to the
-  subscription held. `checkout.session.completed` and Payment Link sessions move nothing.
+  subscription held. `checkout.session.completed` and Payment Link sessions move nothing. Stripe's `created` is whole
+  seconds, so a same-second tie goes to Free (Growth must be strictly later; Codex r3).
+- **D25, one sale per workspace (Codex r2, verifier r3):** checkout claims the workspace for 30 seconds
+  (`workspaces.checkout_started_at`; a lost claim is 409) and asks STRIPE whether the customer already holds a live or
+  pending Growth subscription before opening a session — a late webhook cannot let a second one be sold. Both the session
+  (`metadata.workspace_id`, `client_reference_id`) and the subscription carry the workspace id, as written; nothing reads
+  them to move a plan.
+- **D25's "owner" is the workspace's CREATOR who is also its owner** (deviation, recorded): the house's own-workspace seam
+  (`lib/workspace-tenancy.ts → findOwnWorkspace`) is `created_by`, one per person, and no flow transfers a workspace or adds
+  a second owner. Choosing among several owned workspaces would need the request to name one, which D25 forbids. Revisit
+  when ownership can move.
+- **D27, the portal is never gated (Codex r2):** a paying customer can always cancel, whatever the checkout switch says.
 
 **Routing:** all of S4 is money, a migration and tenancy — built by the architect, never delegated; the verifier and both
 external passes on the PR; the migration applied and verified before the merge.

@@ -91,6 +91,8 @@ The webhook is not gated: subscriptions must keep reaching their workspace whate
 - `invoice.payment_failed`: Stripe's dunning moves the subscription to `past_due`/`unpaid` (handled), but the owner is not told.
 - Stripe Tax: Daniel decides whether to register/collect before the first live charge (an accountant question, seed).
 - A restricted API key (`rk_`) in place of the Marketplace's `sk_` for the app's server calls.
+- A way to REACH the portal (verifier r3): nothing in the app posts to `/api/v1/billing/portal` yet, and D27 makes it the only
+  cancel path. A "Manage billing" form for the workspace owner ships with S4.4, before the switch.
 
 **Run log — 2026-10-19 (agent, Stripe sandbox, local production build):** `scripts/stripe-ensure-growth-price.mjs` created
 `Golden Frijoles Growth` at $49.00 USD/month (`gf_growth_monthly`); a re-run created nothing. Through the local server with
@@ -98,6 +100,12 @@ The webhook is not gated: subscriptions must keep reaching their workspace whate
 `checkout.stripe.com`, a real `cus_` recorded on the workspace; `/api/v1/billing/portal` → 303 `billing.stripe.com`; a paid
 sandbox subscription → `customer.subscription.created/updated` → **growth** (subscription id matched); cancel at period end →
 still growth; deleted → **free**. Every forwarded event answered 200 and was recorded once in `billing_events`.
+
+**Run log — 2026-10-20 (agent, same sandbox set-up, after the review fixes; every call a POST):** checkout → 303
+`checkout.stripe.com`, a real `cus_` recorded; portal → 303 `billing.stripe.com`; **two checkouts at once → 303 + 409** (the
+claim); a paid sandbox subscription → growth (subscription matched); then, with the row forced back to Free while Stripe
+held the subscription (a late webhook), **checkout → 303 `/app?billing=already`**, no session; cancel at period end → still
+growth; deleted → free. `billing_events` held created, updated and deleted.
 
 ## Sprint QA
 - webhook signature + idempotency spec, plan → limits spec, tenancy spec (no cross-workspace plan read)
