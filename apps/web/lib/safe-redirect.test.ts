@@ -17,7 +17,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { safeRedirectPath } from './safe-redirect.ts'
+import { safeLandingPath, safeRedirectPath } from './safe-redirect.ts'
 
 const base = 'https://goldenfrijoles.com'
 const baseOrigin = new URL(base).origin
@@ -91,4 +91,23 @@ test('safeRedirectPath preserves query strings and hash fragments on a legitimat
     safeRedirectPath('/app/funnel/x?tab=summary#section-2', base),
     `${base}/app/funnel/x?tab=summary#section-2`
   )
+})
+
+// landing-launch-experiment · S4.3 (verifier r5, #412): the PATH a browser navigates to after a password sign-in. A
+// same-origin URL whose path starts with `//` passed the origin check and became a protocol-relative redirect.
+test('safeLandingPath never yields a protocol-relative path, and keeps query and fragment', () => {
+  for (const next of [
+    '/.//evil.example/x',
+    '/%2e//evil.example/x',
+    `${base}//evil.example/x`,
+    '/./../..//evil.example',
+  ]) {
+    const landing = safeLandingPath(next, base)
+    assert.ok(landing.startsWith('/') && !landing.startsWith('//'), `${next} → ${landing}`)
+    assertOnOrigin(new URL(landing, base).toString())
+  }
+  assert.equal(safeLandingPath('/#pricing', base), '/#pricing')
+  assert.equal(safeLandingPath('/cli/connect?code=1', base), '/cli/connect?code=1')
+  assert.equal(safeLandingPath('https://evil.example/x', base), '/app')
+  assert.equal(safeLandingPath(null, base), '/app')
 })

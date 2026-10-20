@@ -23,3 +23,14 @@ export function safeRedirectPath(nextParam: string | null, baseUrl: string, fall
     return fallback
   }
 }
+
+/**
+ * The same guard, as a PATH for a browser to navigate to (path + query + fragment). A same-origin URL whose path begins
+ * with `//` — `/.//evil.example`, `https://<site>//evil.example` — passes the origin check, but as a bare path it is
+ * protocol-relative, and `location.assign('//evil.example')` leaves the site. Leading slashes collapse to one, so the path
+ * always stays on this origin (verifier r5, #412).
+ */
+export function safeLandingPath(nextParam: string | null, baseUrl: string, fallbackPath = '/app'): string {
+  const target = new URL(safeRedirectPath(nextParam, baseUrl, fallbackPath))
+  return `${target.pathname.replace(/^\/+/, '/')}${target.search}${target.hash}`
+}
