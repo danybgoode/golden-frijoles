@@ -8,7 +8,7 @@ area: 09-platform-infra
 risk: low
 type: feature
 sprints_total: 1
-stories_total: 3   # the sum of every sprint's stories_total — keep it in step when a story is added
+stories_total: 4   # the sum of every sprint's stories_total — keep it in step when a story is added
 intent_match: null   # copied from the seed by scaffold-epic (intent-match); the reader at the lock may update it
 quote_low_usd: null    # ≈ API $ — copied from the seed's `quote:` by scaffold-epic (finops); null = not quoted, never 0
 quote_high_usd: null
@@ -76,6 +76,11 @@ commands `install.md` already gives. Once installed, the band names the next ste
   hooks module — the band included.
 - **D5 — the switch** is `/screensaver on|off|now|stop|<minutes>`, saved in the plugin's store. No catalog flag: the
   plugin never calls the network from a hook.
+- **D7 — scenes, and `now` mid-epic (2026-10-20, the product owner).** Only ascii.rest's `scenes` play: 34 colour pictures,
+  rendered once per size by the person's own Node (`hooks/scene-render.mjs`; the drawing sandbox is ~10× slower and
+  every scene went over its 1000 ms budget), painted two pixels to a cell, 2:1 kept, box-averaged, 94 colours a clip.
+  `/screensaver now` plays with an epic in flight too: the person asked. Where the band leaves no room it folds to its
+  header while the scene plays; the first key brings it back, and the answer to `now` says so. Asleep after 20 minutes.
 - **D6 — standalone.** It plays in any folder the plugin is loaded in; outside a Golden Frijoles repo the band names
   the step that lights it up.
 
@@ -85,6 +90,7 @@ commands `install.md` already gives. Once installed, the band names the next ste
 | 1 | S1.1 It plays when you are away, at its own size | low |
 | 1 | S1.2 One line installs it, and the band shows the rest | low |
 | 1 | S1.3 The post goes out, and the read is taken | low |
+| 1 | S1.4 Colour scenes, and `now` with an epic in flight | low |
 
 ## The install line (S1.2)
 ```

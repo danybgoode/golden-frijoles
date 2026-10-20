@@ -4,7 +4,7 @@ sprint: 1
 title: "Screensavers, and the line that installs them"
 risk: low
 phase: Building
-stories_total: 3
+stories_total: 4
 stories:
   - id: S1.1
     title: "It plays when you are away, at its own size"
@@ -27,6 +27,13 @@ stories:
     so_that: "the bet is judged on a number, not a feeling"
     risk: low
     status: planned
+  - id: S1.4
+    title: "Colour scenes, and now with an epic in flight"
+    as_a: "a builder who leaves Claude Code running"
+    i_want: "ascii.rest's colour scenes at their own 2:1 shape, and /screensaver now to play even mid-epic with the band folding out of the way"
+    so_that: "the picture is worth posting and I always know how to get the band back"
+    risk: low
+    status: done
 ---
 
 # Claude Code screensavers — Sprint 1: Screensavers, and the line that installs them
@@ -42,6 +49,10 @@ stories:
 ### Story 1.2 — One line installs it, and the band shows the rest
 The line is the README's *The install line*. In a repo with no `Roadmap/` the resolver adds
 `→ Next /golden-frijoles:setup`; outside any repo the caption ends `· goldenfrijoles.com`.
+
+### Story 1.4 — Colour scenes, and `now` with an epic in flight
+`hooks/scene-render.mjs` (a scene → a clip, in Node), `hooks/scene-player.mjs` (size, fold, frames → runs),
+`hooks/scenes/` (34 scenes, MIT, vendored by `scripts/vendor-ascii-scenes.mjs`). D7 in the README.
 
 ### Story 1.3 — The post goes out, and the read is taken
 Owed to the product owner: post the screenshot with the line; on 2026-11-30 read
