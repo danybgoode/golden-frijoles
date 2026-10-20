@@ -71,7 +71,9 @@ commands `install.md` already gives. Once installed, the band names the next ste
 - **D3 — aspect ratio.** Never scaled: a piece is drawn at its own size, centred. A short band crops it by at most a
   quarter of its height from the side it keeps (a fire its base, a tree its pot); below that, or wider than the band,
   it is skipped. A terminal with room for none draws the band alone.
-- **D4 — a surface that cannot draw it** turns it off for the session and says so once (`ui.fault`).
+- **D4 — a surface that cannot draw it** leaves the region out and keeps the band; the engine does not retry a failed
+  region. No `ui.fault` hook: the engine the plugin's CI pins has no such event, and an unknown event refuses the whole
+  hooks module — the band included.
 - **D5 — the switch** is `/screensaver on|off|now|stop|<minutes>`, saved in the plugin's store. No catalog flag: the
   plugin never calls the network from a hook.
 - **D6 — standalone.** It plays in any folder the plugin is loaded in; outside a Golden Frijoles repo the band names
