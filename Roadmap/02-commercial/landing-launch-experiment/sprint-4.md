@@ -142,15 +142,21 @@ on; and `/terms` + `/privacy` do not exist yet.
 ## Sprint 4 — Smoke walkthrough (do these in order)
 Env: production · https://goldenfrijoles.com   (or the PR preview while testing pre-merge)
 
-1. (money — owed to Daniel) Signed in to a test workspace, https://goldenfrijoles.com/#pricing → Get Growth
-   → Stripe Checkout opens for $49/month
-2. Pay with a Stripe test card in test mode
-   → back on the app; the workspace shows Growth; products limit lifted
-3. Account → Plan & billing → Manage billing
-   → the Stripe portal opens; cancel
-4. At period end (test clock)
-   → the workspace is back on Free
-5. Daniel's own workspace
-   → shows Comped; no checkout prompt
+0. (Daniel, once) `frijoles flags set billing.checkout_enabled --value true --env production --project golden-frijoles`
+   (`frijoles flags get` → `on vN`). Buy from an account whose workspace is FREE: Daniel's own is comped and is never
+   offered Growth, so a second Google account. If the purchase fails, `frijoles flags kill billing.checkout_enabled --env
+   production` puts it back.
+1. (money — owed to Daniel) Signed in as that account → Account → Plan & billing → Get Growth · $49/month
+   → Stripe Checkout opens for $49.00/month, "Golden Frijoles Growth", in LIVE mode (no "Sandbox" badge)
+2. Pay with a real card
+   → back on Plan & billing: "Payment received…"; within a minute (refresh) the plan reads Growth, products Unlimited,
+   2,000,000 events
+3. Plan & billing → Manage billing
+   → the Stripe portal opens (headline "Golden Frijoles: manage your Growth plan"); cancel → "cancels at period end";
+   the workspace stays Growth
+4. Refund the charge in the Stripe Dashboard and cancel the subscription immediately
+   → the workspace is back on Free (the `deleted` webhook); Manage billing still opens the portal
+5. Daniel's own workspace → Plan & billing
+   → Comped, Unlimited, No limit; no Get Growth button
 
 If any step fails, note the step number + what you saw — that's the bug report.
