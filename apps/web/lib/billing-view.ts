@@ -107,3 +107,24 @@ export const BILLING_PAGE = '/app/billing'
 export function billingHref(outcome?: BillingOutcome): string {
   return outcome ? `${BILLING_PAGE}?billing=${outcome}` : BILLING_PAGE
 }
+
+/** S4.4 (D28) — what the landing's Growth tier offers, on A and B alike. Signed in: the POST form to checkout (the route
+ *  resolves the workspace itself, and lands every outcome on Plan & billing). Signed out: sign-up first — `/signup` takes no
+ *  `next`, so the route's own signed-out answer would lose the visitor's place (codex r4, #412). With the checkout switch
+ *  off, Growth is paused, not hidden: the tier keeps its price and says so. No `/signup` either: the page's waitlist. */
+export type GrowthCta = 'checkout' | 'signup' | 'paused' | 'waitlist'
+export function growthCta(facts: { checkoutOn: boolean; signedIn: boolean; signupOn: boolean }): GrowthCta {
+  if (facts.checkoutOn && facts.signedIn) return 'checkout'
+  if (!facts.signupOn) return 'waitlist'
+  return facts.checkoutOn ? 'signup' : 'paused'
+}
+
+/** The sentence under the Growth tier's button, for each answer above. */
+export const GROWTH_CTA_NOTE: Record<GrowthCta, string> = {
+  checkout: 'Billed monthly through Stripe. Cancel any time from Plan & billing.',
+  signup:
+    'Create your free account, then upgrade from Plan & billing. Billed monthly through Stripe; cancel any time.',
+  paused:
+    'Growth is paused for new subscriptions right now. Start free; your workspace can upgrade when it reopens.',
+  waitlist: 'Growth opens to new accounts with sign-up. Join the waitlist to hear when.',
+}

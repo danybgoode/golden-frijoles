@@ -1,9 +1,11 @@
 import { Button } from '@/components/ui/Button'
 import { WaitlistForm } from '@/components/landing/WaitlistForm'
+import { GrowthCta } from '@/components/landing/GrowthCta'
 import { isSignupEnabled } from '@/lib/flags'
 
-// landing-launch-experiment · S3.3 — B's pricing: three tiers, prototype v3's copy. Growth links to /signup (there is
-// no checkout) and says so on the card, as A's PricingSection does.
+// landing-launch-experiment · S3.3 — B's pricing: three tiers, prototype v3's copy. S4.4 (D28): Growth's button and its
+// sentence come from GrowthCta, the same component A's tier uses, so the two arms make the same offer. "Longer history"
+// was never built (Free has no history limit), so the line names the allowance in numbers instead (D22's debt).
 // The signup gate is read per request, as A's PricingSection reads it: with `auth.signup_enabled` killed there is no
 // `/signup` to send anyone to, so the two self-serve tiers offer A's waitlist instead of a button into a 404 (verifier,
 // #409 — "read the flag", the same class Codex caught on A).
@@ -43,14 +45,14 @@ export async function PricingB() {
             </p>
             <ul>
               <li>Unlimited products and seats</li>
-              <li>Larger event allowance</li>
-              <li>Longer history</li>
+              <li>2,000,000 events a month (Free: 200,000)</li>
+              <li>Cancel any time from Plan &amp; billing</li>
             </ul>
-            {startFree('gold')}
-            <p className="lb-note">
-              Billing is not live yet: nobody can be charged today. Start free; Growth opens when checkout
-              does.
-            </p>
+            <GrowthCta
+              variant="gold"
+              waitlist={<WaitlistForm compact />}
+              note={(text) => <p className="lb-note">{text}</p>}
+            />
           </div>
           <div className="lb-tier">
             <p className="lb-kicker">Set up with us</p>
