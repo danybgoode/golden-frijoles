@@ -106,7 +106,8 @@ export async function workspaceForCustomer(
 }
 
 /**
- * Applies a decided action to the ONE workspace holding the customer, never a comped one, and only forward in event time.
+ * Applies a decided action to the ONE workspace holding the customer, never a comped one, and only forward in event time
+ * (a same-second tie goes to Free).
  * Growth binds to an empty or the SAME subscription slot (a second subscription cannot take the slot); Free applies only to
  * the subscription the workspace holds (another subscription's deletion cannot demote it). Idempotent: it sets values.
  * Returns the workspace it changed, or null when the guards left it alone. Throws on a database error (→ 500, Stripe retries).
@@ -123,7 +124,11 @@ export async function applyBillingAction(action: BillingAction): Promise<string 
     })
     .eq('stripe_customer_id', action.customerId)
     .neq('plan', 'comped')
-    .or(`stripe_subscription_event_at.is.null,stripe_subscription_event_at.lte."${action.eventAt}"`)
+    // Stripe's `created` is whole seconds, so two events can share one. A tie goes to Free: Growth must be strictly LATER
+    // than the last applied event, so a stale "active" in the same second as a deletion cannot undo it (codex r3, #412).
+    .or(
+      `stripe_subscription_event_at.is.null,stripe_subscription_event_at.${action.plan === 'growth' ? 'lt' : 'lte'}."${action.eventAt}"`
+    )
   query =
     action.plan === 'growth'
       ? query.or(`stripe_subscription_id.is.null,stripe_subscription_id.eq.${action.subscriptionId}`)

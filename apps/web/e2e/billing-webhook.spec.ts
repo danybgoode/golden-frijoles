@@ -177,6 +177,27 @@ test('an older "active" arriving after the deletion cannot put the workspace bac
   }
 })
 
+test('a stale "active" in the SAME second as the deletion cannot undo it (a tie goes to Free)', async ({
+  request,
+}) => {
+  const client = db()
+  const { customer, sub } = ids()
+  const ws = await workspace(client, 'free', customer)
+  const events: string[] = []
+  try {
+    const t = ++clock
+    const created = subEvent('customer.subscription.created', customer, sub, 'active', { created: t })
+    const deleted = subEvent('customer.subscription.deleted', customer, sub, 'canceled', { created: t + 1 })
+    const staleUpdate = subEvent('customer.subscription.updated', customer, sub, 'active', { created: t + 1 })
+    clock = t + 2
+    events.push(created.id, deleted.id, staleUpdate.id)
+    for (const e of [created, deleted, staleUpdate]) expect((await send(request, e)).status()).toBe(200)
+    expect((await row(client, ws))?.plan).toBe('free')
+  } finally {
+    await cleanup(client, ws, events)
+  }
+})
+
 test('a second subscription cannot take the slot, and its deletion cannot demote the workspace', async ({
   request,
 }) => {
@@ -256,7 +277,7 @@ test('checkout does not exist while the switch is off; the portal always answers
   if (process.env.BILLING_CHECKOUT_ENABLED === 'true') {
     // Signed out: sent to sign in, never to Stripe.
     expect(checkout.status()).toBe(303)
-    expect(checkout.headers().location).toContain('/login?next=/#pricing')
+    expect(checkout.headers().location).toContain(`/login?next=${encodeURIComponent('/#pricing')}`)
   } else {
     expect(checkout.status()).toBe(404)
   }

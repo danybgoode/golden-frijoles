@@ -23,7 +23,8 @@ export async function POST() {
   const site = getSiteUrl()
 
   const user = await getSessionUser()
-  if (!user) return NextResponse.redirect(new URL('/login?next=/#pricing', site), 303)
+  if (!user)
+    return NextResponse.redirect(new URL(`/login?next=${encodeURIComponent('/#pricing')}`, site), 303)
 
   const workspace = await ownWorkspaceForBilling(user.id)
   if (!workspace) return NextResponse.redirect(new URL('/app?billing=no-workspace', site), 303)
@@ -81,6 +82,7 @@ export async function POST() {
       customer: customerId,
       line_items: [{ price: price.id, quantity: 1 }],
       client_reference_id: workspace.id,
+      metadata: { workspace_id: workspace.id },
       subscription_data: { metadata: { workspace_id: workspace.id } },
       success_url: new URL('/app?billing=success', site).toString(),
       cancel_url: new URL('/#pricing', site).toString(),
