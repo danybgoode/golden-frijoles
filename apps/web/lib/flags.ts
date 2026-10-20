@@ -184,3 +184,8 @@ export function isFunnelTrendEnabled(): Promise<boolean> {
 export function isSatisfactionAskEnabled(): Promise<boolean> {
   return gate(GATES.satisfactionAsk)
 }
+
+/** Growth checkout (landing-launch-experiment D25); the billing portal is never gated. Born OFF until live Stripe keys are verified. */
+export function isBillingCheckoutEnabled(): Promise<boolean> {
+  return gate(GATES.billingCheckout)
+}

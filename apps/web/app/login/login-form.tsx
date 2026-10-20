@@ -3,7 +3,7 @@ import { useState, type FormEvent } from 'react'
 import { createAuthBrowserClient } from '@/lib/supabase-browser'
 import { Button, Field } from '@/design-system/primitives'
 import { GoogleSignIn } from '@/components/auth/GoogleSignIn'
-import { safeRedirectPath } from '@/lib/safe-redirect'
+import { safeLandingPath } from '@/lib/safe-redirect'
 
 // multi-tenant-activation · Sprint 1, Story 1.1 — SIGN-IN ONLY. Account creation lives on
 // `/signup`, behind `SIGNUP_ENABLED`, and the door links there only when that gate is open.
@@ -60,10 +60,9 @@ export function LoginForm({
   next: string | null
   google: boolean
 }) {
-  const landing = (() => {
-    const target = new URL(safeRedirectPath(next, siteUrl))
-    return `${target.pathname}${target.search}`
-  })()
+  // Path, query AND fragment (a checkout sends a signed-out visitor here to come back to `/#pricing`), never a
+  // protocol-relative `//host` (lib/safe-redirect.ts → safeLandingPath; verifier r5, #412).
+  const landing = safeLandingPath(next, siteUrl)
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')

@@ -15,6 +15,13 @@ runs:
     - name: Generate the self-tracking subject secret
       shell: bash
       run: echo "SELF_SUBJECT_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+    # landing-launch-experiment D26 — the billing webhook verifies Stripe's signature with this secret; the spec signs its
+    # events with the same one. Not a Stripe credential: nothing in CI talks to Stripe (the key below is never sent).
+    - name: Generate the billing webhook secret
+      shell: bash
+      run: |
+        echo "STRIPE_WEBHOOK_SECRET=whsec_ci_$(openssl rand -hex 24)" >> "$GITHUB_ENV"
+        echo "STRIPE_SECRET_KEY=ci-placeholder-never-sent" >> "$GITHUB_ENV"
     - name: Start the app in the background
       shell: bash
       working-directory: apps/web

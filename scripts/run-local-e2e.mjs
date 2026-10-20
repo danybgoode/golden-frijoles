@@ -171,6 +171,10 @@ async function main() {
     SELF_PROJECT_API_KEY: randomBytes(24).toString('hex'),
     // proving-workspaces-reading D11 — as the CI action does: the push route HMACs a workspace id with it.
     SELF_SUBJECT_SECRET: randomBytes(32).toString('hex'),
+    // landing-launch-experiment D26 — as the CI action does: the billing webhook's signing secret, shared with the spec.
+    // The key is a placeholder; nothing in the suite talks to Stripe.
+    STRIPE_WEBHOOK_SECRET: `whsec_local_${randomBytes(24).toString('hex')}`,
+    STRIPE_SECRET_KEY: 'local-placeholder-never-sent',
   };
 
   // NEXT_PUBLIC values are inlined at build time, so the build has to use the same local URL as

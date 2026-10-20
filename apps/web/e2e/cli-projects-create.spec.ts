@@ -232,6 +232,43 @@ test.describe('frijoles projects create — a product by name (many-products S1.
     }
   })
 
+  // landing-launch-experiment D23 — Growth and comped workspaces have NO product cap (product_limit NULL). Pinned through
+  // the real route because the trap is in the app's own pre-check: in JavaScript `count >= null` is `count >= 0`, so a
+  // no-cap workspace would be refused every product while the database trigger happily allowed it.
+  test('a workspace with no product cap (Growth, comped) creates past where Free stops', async ({
+    request,
+  }) => {
+    const client = db()
+    const founder = await person(client, 'mp-nocap')
+    try {
+      const first = slugFor('mp-nocap')
+      expect(
+        (
+          await request.post('/api/v1/cli/projects', { headers: founder.auth, data: { slug: first } })
+        ).status()
+      ).toBe(200)
+      const { data: workspace } = await client
+        .from('workspaces')
+        .select('id')
+        .eq('created_by', founder.id)
+        .single()
+      await client.from('workspaces').update({ plan: 'growth' }).eq('id', workspace!.id)
+      const { data: row } = await client
+        .from('workspaces')
+        .select('product_limit')
+        .eq('id', workspace!.id)
+        .single()
+      expect(row?.product_limit).toBeNull()
+      const second = await request.post('/api/v1/cli/projects', {
+        headers: founder.auth,
+        data: { slug: slugFor('mp-nocap-2') },
+      })
+      expect(second.status()).toBe(200)
+    } finally {
+      await cleanup(client, [founder.id])
+    }
+  })
+
   test('a token made for ONE product cannot make siblings; its own name answers "already yours"', async ({
     request,
   }) => {

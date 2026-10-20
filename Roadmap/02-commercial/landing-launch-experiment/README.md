@@ -233,6 +233,85 @@ history limit that Free does not have, or S4.4 changes the copy — the pricing 
 products and people as you like" read for the FREE tier (capped at 10 products) have no follow-up: Daniel accepted them
 as the page's ambition. A future drills or pricing epic that changes either should revisit this line.
 
+### Wave 3 lock (2026-10-19, re-verified at the boundary — D15's question answered)
+
+**Daniel's answers:** Stripe goes **live now at $49/month** (not test-first), installed through the Vercel Marketplace by
+Daniel (accepting Stripe's terms and claiming the account is his step); and **no email at the pool** for now (no new
+vendor — a console notice instead; email is a follow-up seed). Live data on 2026-10-19: 4 workspaces, every
+`product_limit` 10, every product 200,000 events/month. Daniel's workspace is `9e58bc7d…` ("Daniel's products",
+daniel@despachobonsai.com, 4 products, 800,000 summed quota).
+
+**D23 · The plan is one column, and its limits are derived in ONE place: the database.** Migration:
+`workspaces.plan text not null default 'free' check (plan in ('free','growth','comped'))`, `product_limit` becomes
+nullable (NULL = no cap — `enforce_workspace_product_limit()` already reads NULL as "no cap"), and a new nullable
+`monthly_event_pool`. A `BEFORE INSERT OR UPDATE OF plan` trigger sets both from the plan: **free** → 10 products,
+200,000 events/month; **growth** → no product cap, 2,000,000 events/month; **comped** → no cap, no pool. The app reads the
+columns, never a copy of the table (CODE-QUALITY #2). Expand-only: every existing workspace starts `free` (10, 200,000),
+which equals its ceiling today, except Daniel's, set to `comped` in the same step. No ceiling drops.
+
+**D24 · The pool is charged beside the project quota, not instead of it.** `track` resolves the key's project, then its
+OWN workspace's pool (one row, by id — tenancy holds), and charges a second counter `quota:ws:<workspace_id>` exactly as
+`checkMonthlyQuota` charges the project one (increment, compare, refund on reject). A NULL pool skips it. Past the pool:
+the same 429 shape with the reset date, and the console shows the owner an "over this month's pool" notice with the
+upgrade link. No email (Daniel), never a charge.
+
+**D25 · Checkout acts on the caller's OWN workspace, resolved on the server.** `POST /api/v1/billing/checkout`
+(session; the caller must OWN a project in the workspace — `workspace_members.role = 'owner'`) creates a Stripe Checkout
+Session for the one $49/month price, with `client_reference_id` and `metadata.workspace_id` set from the server's
+lookup, never the request body; success/cancel URLs from `getSiteUrl()` (rule #5). Behind the kill switch
+`billing.checkout_enabled` (a `GATES` row, born ON; `frijoles flags kill` stops new checkouts in 30 s).
+
+**D26 · The webhook is signed, idempotent and sets ONE workspace.** `POST /api/v1/billing/webhook` verifies the Stripe
+signature with `STRIPE_WEBHOOK_SECRET` (the SDK's constant-time check) before reading anything; records each event id in a
+new `billing_events (stripe_event_id primary key, …)` table first, so a replay is a 200 no-op; and acts only on the
+workspace named by the Checkout Session's server-written metadata, matched against the stored `stripe_customer_id`
+thereafter. `checkout.session.completed` → `growth` (+ customer and subscription ids); `customer.subscription.deleted` →
+`free`; a cancel in the portal sets `cancel_at_period_end`, so the workspace stays Growth until Stripe deletes the
+subscription at period end. Service-role writes only; RLS stays ON with no policies on the new table.
+
+**D27 · The portal is the only cancel path.** `POST /api/v1/billing/portal` (owner session) opens Stripe's billing portal
+for the workspace's stored customer; no cancel logic of our own.
+
+**D28 · Pricing copy (S4.4) and D22's debt.** After a real purchase works in production: "billing is not live" goes, and
+Growth's CTA becomes "Get Growth" → checkout on A and B (a signed-out visitor goes to `/signup` first). D23 makes "unlimited
+products" and the larger allowance true for Growth; **"Longer history" is not built** (Free has no history limit), so
+S4.4 replaces that line with something true — the D22 either/or, taken.
+
+**Amended 2026-10-20 (verifier + Codex on #412, Daniel's calls):**
+- **D24, pool-only on Growth and comped (Daniel):** a product's own monthly quota applies only on Free; on Growth and comped
+  the workspace pool is the only monthly limit (the ingest view carries the workspace's plan).
+- **D24's notice is a named tenancy carve-out (Daniel):** AGENTS § tenancy now lists it — one number about the caller's own
+  workspace, to its workspace owner only.
+- **D25/D27 are POST** (as planned): checkout and the portal are form submissions, never links a prefetch could follow; the
+  checkout expires the customer's other open sessions first, so two tabs cannot become two subscriptions.
+- **D26, only the subscription moves a plan:** checkout records the workspace's customer server-side before Stripe is
+  involved; the webhook acts on `customer.subscription.*` alone, only for the `gf_growth_monthly` price, only forward in
+  event time (`stripe_subscription_event_at`), binding Growth to an empty or the same subscription slot and Free to the
+  subscription held. `checkout.session.completed` and Payment Link sessions move nothing. Stripe's `created` is whole
+  seconds, so a same-second tie goes to Free (Growth must be strictly later; Codex r3). **Revised (Codex r5, verifier r5):**
+  the lookup key decides only GRANTING Growth; off the Growth price (moved, or its key moved) is Free for the subscription
+  held. **Revised again (verifier r6):** every event first updates `billing_subscription_states` — the subscription's LATEST
+  state, whatever the workspace holds: forward in event time only, a same-second tie to Free, `ended` (deleted, canceled,
+  expired) sticky — and the workspace is set from that record, never from the event alone. So a `deleted`, `unpaid` or move
+  off the price delivered before the subscription's `created` still wins. All of it is ONE database function,
+  `apply_subscription_event`, locking the record then the workspace row (service role only).
+- **D25, one sale per workspace (Codex r2, verifier r3):** checkout claims the workspace for 30 seconds
+  (`workspaces.checkout_started_at`; a lost claim is 409) and asks STRIPE whether the customer already holds a live or
+  pending Growth subscription before opening a session — a late webhook cannot let a second one be sold. Both the session
+  (`metadata.workspace_id`, `client_reference_id`) and the subscription carry the workspace id, as written; nothing reads
+  them to move a plan.
+- **D25's "owner" is the workspace's CREATOR who is also its owner** (deviation, recorded): the house's own-workspace seam
+  (`lib/workspace-tenancy.ts → findOwnWorkspace`) is `created_by`, one per person, and no flow transfers a workspace or adds
+  a second owner. Choosing among several owned workspaces would need the request to name one, which D25 forbids. Revisit
+  when ownership can move.
+- **D27, the portal is never gated (Codex r2):** a paying customer can always cancel, whatever the checkout switch says.
+- **D28's order (verifier r4):** the console billing form (Get Growth / Manage billing, for the workspace owner) ships BEFORE
+  the switch goes on — it is how the first real purchase is made and the only way to reach the portal. Only S4.4's public
+  pricing copy waits for that purchase.
+
+**Routing:** all of S4 is money, a migration and tenancy — built by the architect, never delegated; the verifier and both
+external passes on the PR; the migration applied and verified before the merge.
+
 ### Deviations from the plan (corrected out loud, 2026-10-19)
 1. **Launch command** — `frijoles flags rollout --percent 50` would run a test that can never read (D10). Launch is
    the builder's Start. S3's smoke and the Deploy order are corrected.

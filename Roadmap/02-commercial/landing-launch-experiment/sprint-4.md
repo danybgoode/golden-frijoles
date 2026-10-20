@@ -3,7 +3,7 @@ epic: landing-launch-experiment
 sprint: 4
 title: "Plans + Stripe"
 risk: high
-phase: Shaping
+phase: Building
 stories_total: 4
 stories:
   - id: S4.1
@@ -12,21 +12,21 @@ stories:
     i_want: "each workspace to carry a plan (free, growth, comped) that sets its limits"
     so_that: "pricing is per workspace and my own workspace is comped, not an admin bypass"
     risk: high
-    status: planned
+    status: done   # edfac38 · migration 20261022100000
   - id: S4.2
     title: "One event pool per workspace"
     as_a: "the product owner"
     i_want: "the event quota counted per workspace"
     so_that: "making more products never multiplies the quota"
     risk: high
-    status: planned
+    status: done   # ea2ae4f, 06b06b7, 0283529 · migration 20261022110000
   - id: S4.3
     title: "Checkout, webhook and portal"
     as_a: "a founder on the free tier"
     i_want: "to buy Growth in one step and cancel on my own"
     so_that: "paying is as easy as starting"
     risk: high
-    status: planned
+    status: done   # 8ad84a8 · sandbox lifecycle verified 2026-10-19; live keys owed
   - id: S4.4
     title: "Pricing copy on A and B"
     as_a: "a visitor reading pricing"
@@ -37,7 +37,7 @@ stories:
 ---
 # Launch: the first landing A/B on goldenfrijoles.com, run on Golden Frijoles — Sprint 4: Plans + Stripe
 
-**Status:** ⬜ not started
+**Status:** 🟦 In review — S4.1–S4.3 built; S4.4 waits for a real purchase in production
 
 ## Stories
 
@@ -62,23 +62,62 @@ stories:
 - Stripe via the Vercel Marketplace integration; Checkout for one monthly price.
 - Signed webhook, idempotent on the event id, sets the plan on the ONE workspace from server-side session metadata, never the request body.
 - Cancel in the portal returns the workspace to free at period end.
-- Behind the kill switch `billing.checkout_enabled` (a `GATES` row, on). Local testing with `stripe listen`.
+- Behind the switch `billing.checkout_enabled` (a `GATES` row, born OFF — see the deviation below; the portal is never
+  gated). Local testing with `stripe listen`.
 **Risk:** high (money)
 
 ### Story 4.4 — Pricing copy on A and B
 **As a** visitor reading pricing, **I want** the price to be one I can actually pay, **so that** the page stops saying billing is not live.
 **Acceptance:**
 - "No billing rail yet" removed only once S4.3 is live in production; Growth CTA goes to Checkout on both variants.
+- D28's signed-out path is the BUTTON's job (codex r4, #412): signed out, "Get Growth" links to `/signup`; signed in, it is
+  the POST form to checkout. The route's own signed-out answer (303 `/login?next=/#pricing`) only catches a session that
+  expired on the page — `/signup` takes no `next`, so it would lose the visitor's place.
 **Risk:** low
 
 ## Build contract (locked by the architect before the builder started)
-Locked at the wave-3 boundary (README D15): one focused question to the product owner first (Stripe account and
-entity, test vs live, the price), then the plan → limits map, the pool's expand/contract and the webhook's idempotency
-store are locked against that day's data and written here. Never delegated (money, migration, tenancy).
+Locked 2026-10-19 — README **§ Wave 3 lock, D23–D28**. Live at $49/month (Daniel); Stripe installed by Daniel via the
+Vercel Marketplace; no email at the pool. S4.1 → D23; S4.2 → D24; S4.3 → D25, D26, D27; S4.4 → D28 (and D22's debt).
+Never delegated (money, migration, tenancy).
 
 **Inherited from Sprint 3 (README D22):** B's (and A's) pricing says Growth has unlimited products and seats and a longer
 history. S4.1's plan → limits map must make that true (Growth lifts `product_limit`; Free gets a history window Growth
 exceeds), or S4.4 rewrites the copy before Checkout goes live.
+
+**Deviation (2026-10-19):** `billing.checkout_enabled` is born **OFF**, not ON as planned. The Marketplace install
+provisioned a Stripe **sandbox** (test keys in every environment, Production included), so an ON gate would sell Growth for
+a test card. It is switched on — and from then on serves as the kill switch — only after live keys are verified in production.
+The webhook is not gated: subscriptions must keep reaching their workspace whatever the switch says.
+
+**Owed before `billing.checkout_enabled` goes ON (verifier, #412; Stripe's production guidance):**
+- `charge.dispute.created`, `charge.refunded`, `radar.early_fraud_warning.created`: today recorded only; decide and build what
+  each does (at least: tell the owner and the operator) before real money flows.
+- `invoice.payment_failed`: Stripe's dunning moves the subscription to `past_due`/`unpaid` (handled), but the owner is not told.
+- Stripe Tax: Daniel decides whether to register/collect before the first live charge (an accountant question, seed).
+- A restricted API key (`rk_`) in place of the Marketplace's `sk_` for the app's server calls.
+- Two live Growth subscriptions on one customer can leave one paid and unalerted (verifier r7 nit): a decline racing a
+  concurrent Free for the held one, or a second checkout while the first is `unpaid` (`holdsGrowthSubscription` does not
+  count `unpaid`). Both need two subscriptions; decide whether `unpaid` blocks a re-buy and add a reconciliation check
+  (Stripe's live Growth subscriptions vs workspaces on Growth) before real money flows.
+- A way to REACH checkout and the portal from the console (verifier r3/r4): nothing in the app posts to either yet, and D27
+  makes the portal the only cancel path. A console billing form for the workspace owner — "Get Growth" (POST checkout)
+  while the switch is on, "Manage billing" (POST portal) whenever the workspace holds a Stripe customer — ships in its own
+  PR BEFORE the switch: the portal is ungated, so it does not wait for the purchase, and it is how Daniel makes the first
+  real purchase. S4.4 (the public pricing copy) still waits for that purchase.
+
+**Run log — 2026-10-19 (agent, Stripe sandbox, local production build):** `scripts/stripe-ensure-growth-price.mjs` created
+`Golden Frijoles Growth` at $49.00 USD/month (`gf_growth_monthly`); a re-run created nothing. Through the local server with
+`stripe listen` forwarding genuinely signed events: a signed-in owner's `GET /api/v1/billing/checkout` → 303
+`checkout.stripe.com`, a real `cus_` recorded on the workspace; `/api/v1/billing/portal` → 303 `billing.stripe.com`; a paid
+sandbox subscription → `customer.subscription.created/updated` → **growth** (subscription id matched); cancel at period end →
+still growth; deleted → **free**. Every forwarded event answered 200 and was recorded once in `billing_events`.
+
+**Run log — 2026-10-20 (agent, same sandbox set-up, after the review fixes; every call a POST):** checkout → 303
+`checkout.stripe.com`, a real `cus_` recorded; portal → 303 `billing.stripe.com`; **two checkouts at once → 303 + 409** (the
+claim); a paid sandbox subscription → growth (subscription matched); then, with the row forced back to Free while Stripe
+held the subscription (a late webhook), **checkout → 303 `/app?billing=already`**, no session; cancel at period end → still
+growth; deleted → free. `billing_events` held created, updated and deleted. Re-run after the review-round-5 changes
+(`apply_subscription_event`, the login path): the same, and `/login?next=%2F%23pricing` → password sign-in → `/#pricing`.
 
 ## Sprint QA
 - webhook signature + idempotency spec, plan → limits spec, tenancy spec (no cross-workspace plan read)
