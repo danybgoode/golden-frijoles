@@ -100,13 +100,24 @@ export async function checkWorkspacePool(
 
 const poolKey = (workspaceId: string) => `quota:ws:${workspaceId}`
 
+/**
+ * landing-launch-experiment D24 (Daniel, 2026-10-19) — whether a product's OWN monthly quota applies. Only on Free (and for a
+ * key with no workspace read): on Growth and comped the workspace pool is the only monthly limit, or a one-product Growth
+ * workspace could never reach the 2,000,000 it bought.
+ */
+export function projectQuotaApplies(workspacePlan: string | null): boolean {
+  return workspacePlan !== 'growth' && workspacePlan !== 'comped'
+}
+
 /** Both monthly charges back, for an event that was charged and then failed to persist (the ingest route). */
 export async function refundEventCharges(charged: {
   projectId: string
   workspaceId: string | null
   monthlyEventPool: number | null
+  workspacePlan: string | null
 }): Promise<void> {
-  await refundMonthlyQuota(charged.projectId)
+  // Refund exactly what was charged: the project counter only where it applies.
+  if (projectQuotaApplies(charged.workspacePlan)) await refundMonthlyQuota(charged.projectId)
   if (charged.workspaceId && charged.monthlyEventPool !== null) await refundCounter(poolKey(charged.workspaceId))
 }
 

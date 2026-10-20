@@ -2,8 +2,9 @@
 -- pool in the same read it already does, so charging the pool costs no extra query per event.
 --
 -- `active_ingest_keys` stays the security property it was built to be (20260803100000): the scope, revocation, expiry
--- and soft-delete filters are untouched. Two columns are APPENDED (CREATE OR REPLACE VIEW can only add at the end), from
--- the key's OWN project's workspace — one row by id, never a read across workspaces (AGENTS.md § tenancy). A LEFT JOIN, so
+-- and soft-delete filters are untouched. Three columns are APPENDED (CREATE OR REPLACE VIEW can only add at the end), from
+-- the key's OWN project's workspace — one row by id, never a read across workspaces (AGENTS.md § tenancy): its pool, and its
+-- plan, because on Growth and comped the pool is the ONLY monthly limit (Daniel, 2026-10-19). A LEFT JOIN, so
 -- the workspace can never be the reason a valid key stops authenticating; `projects.workspace_id` is NOT NULL anyway.
 
 CREATE OR REPLACE VIEW active_ingest_keys AS
@@ -16,7 +17,8 @@ CREATE OR REPLACE VIEW active_ingest_keys AS
     p.created_by,
     p.first_event_at,
     p.workspace_id,
-    w.monthly_event_pool
+    w.monthly_event_pool,
+    w.plan AS workspace_plan
   FROM api_keys k
   JOIN projects p ON p.id = k.project_id
   LEFT JOIN workspaces w ON w.id = p.workspace_id

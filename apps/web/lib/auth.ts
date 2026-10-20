@@ -20,6 +20,8 @@ export type AuthSuccess = {
   /** landing-launch-experiment D24 — the key's OWN project's workspace, and its monthly event pool (NULL = no pool). */
   workspaceId: string | null
   monthlyEventPool: number | null
+  /** The workspace's plan (D23). On Growth and comped the pool is the only monthly limit; null = no workspace read. */
+  workspacePlan: string | null
 }
 
 export type AuthResult = AuthSuccess | { ok: false; status: number; error: string }
@@ -57,7 +59,7 @@ export async function resolveProjectFromAuthHeader(authHeader: string | null): P
   const { data, error } = await supabase
     .from('active_ingest_keys')
     .select(
-      'id, project_id, monthly_event_quota, ingest_rate_per_min, created_by, first_event_at, workspace_id, monthly_event_pool'
+      'id, project_id, monthly_event_quota, ingest_rate_per_min, created_by, first_event_at, workspace_id, monthly_event_pool, workspace_plan'
     )
     .eq('key_hash', hashApiKey(key))
     .maybeSingle()
@@ -84,5 +86,6 @@ export async function resolveProjectFromAuthHeader(authHeader: string | null): P
     firstEventAt: (data.first_event_at as string | null) ?? null,
     workspaceId: (data.workspace_id as string | null) ?? null,
     monthlyEventPool: (data.monthly_event_pool as number | null) ?? null,
+    workspacePlan: (data.workspace_plan as string | null) ?? null,
   }
 }

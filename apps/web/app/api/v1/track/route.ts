@@ -8,6 +8,7 @@ import {
   checkIngestRate,
   checkMonthlyQuota,
   checkWorkspacePool,
+  projectQuotaApplies,
   refundEventCharges,
   refundMonthlyQuota,
   MAX_TRACK_PAYLOAD_BYTES,
@@ -181,7 +182,11 @@ export async function POST(req: NextRequest) {
   // NON-duplicate event is ever charged (the earliest version charged malformed JSON; cross-review,
   // Codex 2026-07-20). checkMonthlyQuota increments-then-compares and REFUNDS its own rejection
   // (lib/quota.ts), so a 429 here has already handed the unit back.
-  const quota = await checkMonthlyQuota(auth.projectId, auth.monthlyEventQuota)
+  // landing-launch-experiment D24 — only on Free: on Growth and comped the workspace pool (3b) is the only monthly limit.
+  const projectQuota = projectQuotaApplies(auth.workspacePlan)
+  const quota = projectQuota
+    ? await checkMonthlyQuota(auth.projectId, auth.monthlyEventQuota)
+    : ({ ok: true } as const)
   if (!quota.ok) {
     // The concurrent-first-attempt race (cross-review, Codex round 3): two same-key requests both
     // missed the pre-check above; one won the last quota unit and committed the event, this one lost
@@ -207,7 +212,7 @@ export async function POST(req: NextRequest) {
   // drain every product's project quota with events that were never stored.
   const pool = await checkWorkspacePool(auth.workspaceId, auth.monthlyEventPool)
   if (!pool.ok) {
-    await refundMonthlyQuota(auth.projectId)
+    if (projectQuota) await refundMonthlyQuota(auth.projectId)
     return NextResponse.json({ ok: false, error: pool.error }, { status: pool.status })
   }
 

@@ -419,6 +419,23 @@ test.describe('workspace event pool', () => {
     }
   })
 
+  test('on Growth the pool is the ONLY monthly limit: a product past its own quota keeps accepting (D24)', async ({
+    request,
+  }) => {
+    const db = dbClient()
+    const workspaceId = await specWorkspaceId(db, 'pool spec growth')
+    await db.from('workspaces').update({ plan: 'growth' }).eq('id', workspaceId)
+    // A project quota of 1 would refuse the 2nd event on Free; on Growth only the 2,000,000 pool counts.
+    const a = await projectIn(db, workspaceId, 1)
+    try {
+      for (const e of ['e1', 'e2', 'e3'])
+        expect((await fire(request, a, { userId: 'u1', event: e })).status()).toBe(201)
+    } finally {
+      await destroyTenant(db, a)
+      await db.from('workspaces').delete().eq('id', workspaceId)
+    }
+  })
+
   test('a workspace with no pool (comped) is not limited by one', async ({ request }) => {
     const db = dbClient()
     const workspaceId = await specWorkspaceId(db, 'pool spec comped')
