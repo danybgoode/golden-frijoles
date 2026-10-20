@@ -22,6 +22,7 @@ export const SCREEN_WORDS = {
   portfolio: 'Portfolio',
   agentQueue: 'Agent queue',
   flagHistory: 'Flag history',
+  billing: 'Plan & billing',
 } as const
 
 /**

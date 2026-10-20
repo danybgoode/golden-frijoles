@@ -23,6 +23,13 @@ export function Footer() {
           </a>
           {/* landing-launch-experiment D8 — the visitor can change their analytics answer at any time. */}
           <CookieSettingsLink />
+          {/* landing-launch-experiment S4 — the Terms and the Privacy notice (lib/legal.ts). */}
+          <Link className="icon-link" href="/terms">
+            Terms
+          </Link>
+          <Link className="icon-link" href="/privacy">
+            Privacy
+          </Link>
           <span className="footer__agent-manifest">
             <Icon name="sparkles" /> agent-readable: <a href="/llms.txt">/llms.txt</a> ·{' '}
             <a href="/northstar-self-serve.md">/northstar-self-serve.md</a> · <a href="/install">/install</a>

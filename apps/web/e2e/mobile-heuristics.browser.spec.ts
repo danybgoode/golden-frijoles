@@ -81,6 +81,9 @@ export const PUBLIC_MOBILE_ROUTES = [
   { path: '/signup', status: 200, needs: 'SIGNUP_ENABLED' as const },
   { path: '/s/gbs_thistokencannotexistanywhereatall00', status: 404 },
   { path: '/talk', status: 200 },
+  // landing-launch-experiment S4 — the legal pages are long prose: the likeliest to scroll sideways on a phone.
+  { path: '/terms', status: 200 },
+  { path: '/privacy', status: 200 },
   { path: '/methodology', status: 200 },
   { path: '/methodology/design-it', status: 200 },
 ] as const

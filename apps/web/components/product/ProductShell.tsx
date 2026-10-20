@@ -2,6 +2,8 @@ import 'server-only'
 import type { ProjectRouteSegment } from '@/lib/project-route-inventory'
 import { BrandLockup } from '@/components/brand/BrandLockup'
 import { Icon } from '@/components/ui/Icon'
+import { billingHref } from '@/lib/billing-view'
+import { SCREEN_WORDS } from '@/lib/screen-words'
 import { getShellNav } from '@/lib/shell-nav'
 import {
   groupProjectChoices,
@@ -429,6 +431,9 @@ export async function ProductShell({
                           until a name is set. */}
                       <AccountName current={userName} />
                       <p>{userEmail}</p>
+                      {/* landing-launch-experiment S4 — the way to a workspace's plan and the Stripe portal (the only
+                          cancel path, D27). Every signed-in person sees it; the page tells a non-owner who can act. */}
+                      <a href={billingHref()}>{SCREEN_WORDS.billing}</a>
                       <SignOutButton />
                     </div>
                   </details>

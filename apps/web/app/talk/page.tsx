@@ -6,7 +6,7 @@ import { Frame, FrameLink } from '@/design-system/Frame'
 export const metadata: Metadata = {
   title: 'Golden Frijoles — Set up with us',
   description:
-    'A half-day working session with Daniel on a live project of yours: we run your first bet with your team. From $1,500, growth included for 3 months.',
+    'A half-day working session on a live project of yours: we run your first bet with your team. From $1,500, growth included for 3 months.',
 }
 
 // landing-maker-ops · Sprint 5 — the Pods booking flow; since landing-launch-experiment S5.1, "Set up with us": the
@@ -74,8 +74,8 @@ export default function TalkPage() {
     >
       <h1>Set up with us</h1>
       <p className="ds-lede">
-        A half-day working session with Daniel on a live project of yours, where we run your first bet with
-        your team. From $1,500. The calendar books a 20-minute first conversation to scope it.
+        A half-day working session on a live project of yours, where we run your first bet with your team.
+        From $1,500. The calendar books a 20-minute first conversation to scope it.
       </p>
 
       <div className="ds-talkgrid">
@@ -90,15 +90,14 @@ export default function TalkPage() {
             isolation that matters (it cannot read this page) is inherent to cross-origin framing and
             is not something sandbox adds. */}
         <div className="ds-talkslot">
-          <iframe src={bookingEmbedUrl()} title="Book a time with Daniel on Cal.com" loading="lazy" />
+          <iframe src={bookingEmbedUrl()} title="Book a time on Cal.com" loading="lazy" />
         </div>
 
         <div className="ds-talkaside">
           <div className="ds-talkitem">
             <b>What the session is</b>
             <span>
-              Half a day, working with Daniel on a live project of yours. We run your first bet with your
-              team.
+              Half a day, working together on a live project of yours. We run your first bet with your team.
             </span>
           </div>
           <div className="ds-talkitem">
