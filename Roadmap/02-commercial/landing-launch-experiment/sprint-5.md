@@ -12,18 +12,18 @@ stories:
     i_want: "one page that says what the session is, what I leave with and the price"
     so_that: "I can book without a sales call first"
     risk: low
-    status: done   # 4eab9df, ef476c7 · founder-site link owed (no URL in the repo to point at)
+    status: done   # 4eab9df, ef476c7, 14714aa · founder-site link owed (no URL in the repo to point at)
   - id: S5.2
     title: "Cross-links"
     as_a: "a visitor"
     i_want: "the founder note and the third tier to lead to the same page"
     so_that: "the offer is never a dead end"
     risk: low
-    status: done   # 5119dc5 · the résumé hook change is a PR in miyagisanchez-resume, outside this repo
+    status: done   # 5119dc5, fa0da60, cd39d44 · the résumé hook change is a PR in miyagisanchez-resume, outside this repo
 ---
 # Launch: the first landing A/B on goldenfrijoles.com, run on Golden Frijoles — Sprint 5: White-glove
 
-**Status:** 🟦 In review — PR #410 (ships ahead of Sprint 4; independent of billing)
+**Status:** ✅ Shipped 2026-10-19 — PR #410, merge `5c33159`, production deploy success. Live: `/talk` is "Set up with us" (from $1,500, the 20-minute first conversation); A's and B's third tiers both lead there. Owed: the founder-site link (no URL in the repo); Daniel books a test slot; the résumé hook PR in `miyagisanchez-resume`.
 
 ## Stories
 

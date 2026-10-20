@@ -3,7 +3,7 @@ epic: landing-launch-experiment
 sprint: 4
 title: "Plans + Stripe"
 risk: high
-phase: Shaping
+phase: Building
 stories_total: 4
 stories:
   - id: S4.1
@@ -12,21 +12,21 @@ stories:
     i_want: "each workspace to carry a plan (free, growth, comped) that sets its limits"
     so_that: "pricing is per workspace and my own workspace is comped, not an admin bypass"
     risk: high
-    status: planned
+    status: done   # edfac38 · migration 20261022100000
   - id: S4.2
     title: "One event pool per workspace"
     as_a: "the product owner"
     i_want: "the event quota counted per workspace"
     so_that: "making more products never multiplies the quota"
     risk: high
-    status: planned
+    status: done   # ea2ae4f, 06b06b7, 0283529 · migration 20261022110000
   - id: S4.3
     title: "Checkout, webhook and portal"
     as_a: "a founder on the free tier"
     i_want: "to buy Growth in one step and cancel on my own"
     so_that: "paying is as easy as starting"
     risk: high
-    status: planned
+    status: done   # 8ad84a8 · sandbox lifecycle verified 2026-10-19; live keys owed
   - id: S4.4
     title: "Pricing copy on A and B"
     as_a: "a visitor reading pricing"
@@ -37,7 +37,7 @@ stories:
 ---
 # Launch: the first landing A/B on goldenfrijoles.com, run on Golden Frijoles — Sprint 4: Plans + Stripe
 
-**Status:** ⬜ not started
+**Status:** 🟦 In review — S4.1–S4.3 built; S4.4 waits for a real purchase in production
 
 ## Stories
 
@@ -79,6 +79,18 @@ Never delegated (money, migration, tenancy).
 **Inherited from Sprint 3 (README D22):** B's (and A's) pricing says Growth has unlimited products and seats and a longer
 history. S4.1's plan → limits map must make that true (Growth lifts `product_limit`; Free gets a history window Growth
 exceeds), or S4.4 rewrites the copy before Checkout goes live.
+
+**Deviation (2026-10-19):** `billing.checkout_enabled` is born **OFF**, not ON as planned. The Marketplace install
+provisioned a Stripe **sandbox** (test keys in every environment, Production included), so an ON gate would sell Growth for
+a test card. It is switched on — and from then on serves as the kill switch — only after live keys are verified in production.
+The webhook is not gated: subscriptions must keep reaching their workspace whatever the switch says.
+
+**Run log — 2026-10-19 (agent, Stripe sandbox, local production build):** `scripts/stripe-ensure-growth-price.mjs` created
+`Golden Frijoles Growth` at $49.00 USD/month (`gf_growth_monthly`); a re-run created nothing. Through the local server with
+`stripe listen` forwarding genuinely signed events: a signed-in owner's `GET /api/v1/billing/checkout` → 303
+`checkout.stripe.com`, a real `cus_` recorded on the workspace; `/api/v1/billing/portal` → 303 `billing.stripe.com`; a paid
+sandbox subscription → `customer.subscription.created/updated` → **growth** (subscription id matched); cancel at period end →
+still growth; deleted → **free**. Every forwarded event answered 200 and was recorded once in `billing_events`.
 
 ## Sprint QA
 - webhook signature + idempotency spec, plan → limits spec, tenancy spec (no cross-workspace plan read)
