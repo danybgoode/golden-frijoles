@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { getProjectOutcome } from '@/lib/pod-report-query'
 import { getFlagRegistryView } from '@/lib/flag-registry'
 import { getDeliveryHealth } from '@/lib/deliveries'
@@ -6,6 +7,7 @@ import { listTasksByProjectId, type TaskRow } from '@/lib/tasks'
 import { isFirstEventBandEnabled, isSignalsEnabled } from '@/lib/flags'
 import { getFirstEventForBand } from '@/lib/event-catalog-query'
 import { FIRST_EVENT_WINDOW_DAYS, firstEventBand } from '@/lib/first-event-band'
+import { readPoolNotice } from '@/lib/workspace-pool'
 import { formatUtc } from '@/lib/format-utc'
 import { projectFlagRows, summariseFlagList } from '@/lib/flag-list-view'
 import { splitTaskBands } from '@/lib/today-bands'
@@ -76,7 +78,7 @@ export async function CommandCenter({ project }: { project: CommandCenterProject
   // The queue is not read at all when its gate is dark — a dark capability is not a slow one.
   // result-record D10 — reads due come from the latest pushed roadmap, and fail SOFT to none: Today must not
   // become an error page because a roadmap payload could not be read.
-  const [outcome, flags, tasks, deliveries, agentFacts, dueReads, eventMarks] = await Promise.all([
+  const [outcome, flags, tasks, deliveries, agentFacts, dueReads, eventMarks, pool] = await Promise.all([
     getProjectOutcome(project.id, project.slug).catch(() => null),
     getFlagRegistryView(project.id).catch(() => null),
     signals
@@ -88,7 +90,11 @@ export async function CommandCenter({ project }: { project: CommandCenterProject
       .then((artifact) => readsDue(artifact?.payload ?? null))
       .catch((): EpicResult[] => []),
     // setup-instruments-connects D4 — read only with the band's switch on; a failed read shows no band, never "waiting".
-    firstEventOn ? getFirstEventForBand(project.id, FIRST_EVENT_WINDOW_DAYS).catch(() => null) : Promise.resolve(null),
+    firstEventOn
+      ? getFirstEventForBand(project.id, FIRST_EVENT_WINDOW_DAYS).catch(() => null)
+      : Promise.resolve(null),
+    // landing-launch-experiment D24 — the workspace pool is workspace administration, so only an owner is told.
+    project.role === 'owner' ? readPoolNotice(project.id) : Promise.resolve(null),
   ])
   const firstEvent = firstEventOn ? firstEventBand(eventMarks) : null
 
@@ -178,8 +184,24 @@ export async function CommandCenter({ project }: { project: CommandCenterProject
         </Callout>
       ) : firstEvent?.kind === 'arrived' ? (
         <Callout>
-          <strong>Your first event arrived: {firstEvent.event}</strong>, at {formatUtc(firstEvent.at)}. Everything your
-          product sends from here is counted.
+          <strong>Your first event arrived: {firstEvent.event}</strong>, at {formatUtc(firstEvent.at)}.
+          Everything your product sends from here is counted.
+        </Callout>
+      ) : null}
+
+      {/* landing-launch-experiment D24 — the workspace's monthly event pool, shared by all its products. The only alert
+          there is (no email yet, Daniel 2026-10-19): past the pool, events are refused, never charged. */}
+      {pool ? (
+        <Callout>
+          <strong>
+            {pool.kind === 'over'
+              ? "This workspace has used this month's event pool."
+              : "This workspace is near this month's event pool."}
+          </strong>{' '}
+          {pool.used.toLocaleString('en-US')} of {pool.pool.toLocaleString('en-US')} events across all its
+          products
+          {pool.kind === 'over' ? '; new events are refused until the 1st.' : '.'}{' '}
+          {pool.canUpgrade ? <Link href="/#pricing">Growth raises it to 2,000,000</Link> : null}
         </Callout>
       ) : null}
 
