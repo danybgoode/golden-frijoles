@@ -434,11 +434,13 @@ export async function createProductForUser(
     console.error('[provisioning] product cap read failed:', limitError ?? countError)
     return fail('error', 'Could not check how many products you have right now.')
   }
-  const limit = workspace.product_limit as number
-  if (count >= limit) {
+  // landing-launch-experiment D23 — NULL is "no cap" (Growth, comped). Tested explicitly, never compared: in JavaScript
+  // `count >= null` is `count >= 0`, true for every count, so a no-cap workspace would have been refused every product.
+  const limit = workspace.product_limit as number | null
+  if (limit !== null && count >= limit) {
     return fail(
       'limit',
-      `Your workspace already holds ${count} products, its limit is ${limit}. Delete one, or ask us to raise the limit.`
+      `Your workspace already holds ${count} products, its limit is ${limit}. Delete one, or move this workspace to Growth.`
     )
   }
 
@@ -460,7 +462,7 @@ export async function createProductForUser(
     if (error?.code === 'P0001' && error.hint === 'workspace_product_limit') {
       return fail(
         'limit',
-        `Your workspace is at its product limit (${limit}). Delete one, or ask us to raise the limit.`
+        `Your workspace is at its product limit (${limit}). Delete one, or move this workspace to Growth.`
       )
     }
     if (error?.code === PG_UNIQUE_VIOLATION) {
