@@ -4,7 +4,7 @@ import { getSiteUrl } from '@/lib/site-url'
 import { isBillingCheckoutEnabled } from '@/lib/flags'
 import { getStripe, GROWTH_PRICE_LOOKUP_KEY } from '@/lib/stripe'
 import { claimCheckout, ownWorkspaceForBilling, rememberStripeCustomer } from '@/lib/billing'
-import { integrationIdentifier } from '@/lib/billing-decision'
+import { holdsGrowthSubscription, integrationIdentifier } from '@/lib/billing-decision'
 
 // landing-launch-experiment · Sprint 4, Story 4.3 (epic D25) — "Get Growth": a POST (a form button, never a link: a
 // prefetch, crawler or <img> must never create a Stripe customer — codex, #412) that sends the signed-in owner to Stripe
@@ -33,15 +33,15 @@ export async function POST() {
 
   const stripe = getStripe()
   if (!stripe) return NextResponse.json({ ok: false, error: 'Billing is not configured.' }, { status: 503 })
-  // One checkout at a time for this workspace (lib/billing.ts → claimCheckout); the loser is told, never given a second
-  // payable session.
-  if (!(await claimCheckout(workspace.id)))
-    return NextResponse.json(
-      { ok: false, error: 'A checkout is already starting for this workspace.' },
-      { status: 409 }
-    )
-
   try {
+    // One checkout at a time for this workspace (lib/billing.ts → claimCheckout); the loser is told, never given a second
+    // payable session. Inside the try, so a database error is this route's 502, not a bare 500 (verifier r3, #412).
+    if (!(await claimCheckout(workspace.id)))
+      return NextResponse.json(
+        { ok: false, error: 'A checkout is already starting for this workspace.' },
+        { status: 409 }
+      )
+
     const prices = await stripe.prices.list({
       lookup_keys: [GROWTH_PRICE_LOOKUP_KEY],
       active: true,
@@ -70,6 +70,19 @@ export async function POST() {
         )
       customerId = held
     }
+
+    // Stripe, not our plan column, says whether this customer already pays for Growth: a paid session whose webhook is
+    // late or retrying leaves the workspace on Free, and a second checkout then would be a second charge (verifier r3).
+    const subscriptions = await stripe.subscriptions.list({ customer: customerId, status: 'all', limit: 20 })
+    if (
+      holdsGrowthSubscription(
+        subscriptions.data.map((sub) => ({
+          status: sub.status,
+          priceLookupKeys: sub.items.data.map((item) => item.price.lookup_key),
+        }))
+      )
+    )
+      return NextResponse.redirect(new URL('/app?billing=already', site), 303)
 
     // Two tabs must not become two subscriptions (verifier, #412): this customer's other OPEN sessions are expired first,
     // so at most one can be paid. (The webhook's subscription slot is the second guard.)

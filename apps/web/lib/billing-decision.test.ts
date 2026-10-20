@@ -7,6 +7,7 @@ import { join } from 'node:path'
 import {
   GROWTH_PRICE_LOOKUP_KEY,
   decideBillingAction,
+  holdsGrowthSubscription,
   integrationIdentifier,
   planForSubscriptionStatus,
 } from './billing-decision.ts'
@@ -100,6 +101,19 @@ test('the price script sells the lookup key the app reads (one key, two files th
     'utf8'
   )
   assert.match(script, new RegExp(`GROWTH_PRICE_LOOKUP_KEY = '${GROWTH_PRICE_LOOKUP_KEY}'`))
+})
+
+test('a customer holding a live or pending Growth subscription is not sold another; an ended one or another price is', () => {
+  const growth = [GROWTH_PRICE_LOOKUP_KEY]
+  for (const status of ['active', 'trialing', 'past_due', 'incomplete'])
+    assert.equal(holdsGrowthSubscription([{ status, priceLookupKeys: growth }]), true, status)
+  for (const status of ['canceled', 'unpaid', 'incomplete_expired'])
+    assert.equal(holdsGrowthSubscription([{ status, priceLookupKeys: growth }]), false, status)
+  assert.equal(
+    holdsGrowthSubscription([{ status: 'active', priceLookupKeys: ['someone_elses_price', null] }]),
+    false
+  )
+  assert.equal(holdsGrowthSubscription([]), false)
 })
 
 test('the integration identifier is the prefix plus 8 lowercase letters', () => {

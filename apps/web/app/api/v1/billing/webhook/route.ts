@@ -77,15 +77,16 @@ export async function POST(req: NextRequest) {
       const holder = await workspaceForCustomer(action.customerId)
       if (!holder)
         console.error(`[billing/webhook] ${event.type} ${event.id}: Stripe customer matches NO workspace`)
-      // A SECOND live Growth subscription on a workspace that already holds one: the slot guard (rightly) declined it, but
-      // that customer is being charged for nothing — loud, so someone refunds it (verifier, #412).
+      // A Growth subscription the slot guard (rightly) declined, because the workspace holds a different one. Usually a
+      // stale event for an old subscription; but if THIS one is live, its customer is paying for nothing — so it is logged
+      // with every id an operator needs to check it in Stripe and refund it (verifier r2/r3, #412).
       else if (
         action.plan === 'growth' &&
         holder.subscriptionId &&
         holder.subscriptionId !== action.subscriptionId
       )
         console.error(
-          `[billing/webhook] ${event.type} ${event.id}: a second Growth subscription is being charged for workspace ${holder.id}; refund it`
+          `[billing/webhook] ${event.type} ${event.id}: declined Growth subscription ${action.subscriptionId} (customer ${action.customerId}); workspace ${holder.id} holds ${holder.subscriptionId}. If ${action.subscriptionId} is live in Stripe, it is a second charge: cancel and refund it`
         )
       workspaceId = holder?.id ?? null
     }

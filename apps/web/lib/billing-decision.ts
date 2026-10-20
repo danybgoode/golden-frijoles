@@ -90,6 +90,21 @@ export function decideBillingAction(event: BillingEventFacts): BillingAction {
   }
 }
 
+/**
+ * Whether a customer already holds a Growth subscription Stripe could still charge — the check the checkout route makes
+ * against STRIPE (the source of truth) before opening a session, so a webhook that is late or retrying cannot let a second
+ * one be sold (verifier r3, #412). `incomplete` counts: its first payment may still succeed.
+ */
+export function holdsGrowthSubscription(
+  subscriptions: { status: string; priceLookupKeys: (string | null)[] }[]
+): boolean {
+  return subscriptions.some(
+    (s) =>
+      (planForSubscriptionStatus(s.status) === 'growth' || s.status === 'incomplete') &&
+      s.priceLookupKeys.includes(GROWTH_PRICE_LOOKUP_KEY)
+  )
+}
+
 /** Stripe's `integration_identifier` label for our Checkout sessions: a fixed prefix plus 8 random letters (Stripe's
  *  guidance), so the Dashboard can compare this flow with any later one. */
 export function integrationIdentifier(random: () => number = Math.random): string {

@@ -185,7 +185,7 @@ export function isSatisfactionAskEnabled(): Promise<boolean> {
   return gate(GATES.satisfactionAsk)
 }
 
-/** Growth checkout and the billing portal (landing-launch-experiment D25). Born OFF until live Stripe keys are verified. */
+/** Growth checkout (landing-launch-experiment D25); the billing portal is never gated. Born OFF until live Stripe keys are verified. */
 export function isBillingCheckoutEnabled(): Promise<boolean> {
   return gate(GATES.billingCheckout)
 }
