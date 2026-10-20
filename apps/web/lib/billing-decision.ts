@@ -17,6 +17,32 @@
 /** The lookup key of the one price that sells Growth. The checkout route and the price script read this constant. */
 export const GROWTH_PRICE_LOOKUP_KEY = 'gf_growth_monthly'
 
+/** What Growth costs: $49.00 USD, every month. A price under the lookup key that says anything else is never sold. */
+export const GROWTH_PRICE = {
+  unitAmount: 4900,
+  currency: 'usd',
+  interval: 'month',
+  intervalCount: 1,
+} as const
+
+/**
+ * Whether a Stripe price is exactly Growth's — the lookup key names a price, it does not vouch for it. A key moved onto a
+ * wrong amount, currency or interval in the Dashboard must stop checkout, not silently charge it (codex r4, #412).
+ */
+export function isGrowthPrice(price: {
+  unit_amount: number | null
+  currency: string
+  recurring: { interval: string; interval_count: number; usage_type?: string } | null
+}): boolean {
+  return (
+    price.unit_amount === GROWTH_PRICE.unitAmount &&
+    price.currency === GROWTH_PRICE.currency &&
+    price.recurring?.interval === GROWTH_PRICE.interval &&
+    price.recurring.interval_count === GROWTH_PRICE.intervalCount &&
+    (price.recurring.usage_type ?? 'licensed') === 'licensed'
+  )
+}
+
 /** The Stripe fields the decision reads. Everything else in an event is ignored. */
 export type BillingEventFacts =
   | {

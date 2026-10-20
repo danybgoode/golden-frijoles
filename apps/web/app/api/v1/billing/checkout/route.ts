@@ -4,7 +4,7 @@ import { getSiteUrl } from '@/lib/site-url'
 import { isBillingCheckoutEnabled } from '@/lib/flags'
 import { getStripe, GROWTH_PRICE_LOOKUP_KEY } from '@/lib/stripe'
 import { claimCheckout, ownWorkspaceForBilling, rememberStripeCustomer } from '@/lib/billing'
-import { holdsGrowthSubscription, integrationIdentifier } from '@/lib/billing-decision'
+import { holdsGrowthSubscription, integrationIdentifier, isGrowthPrice } from '@/lib/billing-decision'
 
 // landing-launch-experiment · Sprint 4, Story 4.3 (epic D25) — "Get Growth": a POST (a form button, never a link: a
 // prefetch, crawler or <img> must never create a Stripe customer — codex, #412) that sends the signed-in owner to Stripe
@@ -50,6 +50,13 @@ export async function POST() {
     const price = prices.data[0]
     if (!price) {
       console.error('[billing/checkout] no active price with lookup key', GROWTH_PRICE_LOOKUP_KEY)
+      return NextResponse.json({ ok: false, error: 'Billing is not configured.' }, { status: 503 })
+    }
+    // The lookup key names a price; it does not vouch for it. Anything but $49.00 USD a month is never sold (codex r4).
+    if (!isGrowthPrice(price)) {
+      console.error(
+        `[billing/checkout] price ${price.id} under ${GROWTH_PRICE_LOOKUP_KEY} is not $49.00 USD/month; refusing to sell it`
+      )
       return NextResponse.json({ ok: false, error: 'Billing is not configured.' }, { status: 503 })
     }
 

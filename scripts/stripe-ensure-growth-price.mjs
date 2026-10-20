@@ -30,9 +30,22 @@ export async function main(argv = process.argv.slice(2), env = process.env) {
   });
   if (existing.data[0]) {
     const price = existing.data[0];
-    process.stdout.write(
-      `already there: ${price.id} · ${price.unit_amount} ${price.currency}/${price.recurring?.interval} · lookup ${GROWTH_PRICE_LOOKUP_KEY}\n`
-    );
+    const described = `${price.id} · ${price.unit_amount} ${price.currency}/${price.recurring?.interval_count ?? '?'} ${price.recurring?.interval ?? 'one-off'} · lookup ${GROWTH_PRICE_LOOKUP_KEY}`;
+    // The app sells only exactly this (apps/web/lib/billing-decision.ts → isGrowthPrice); a key on anything else is a
+    // misconfiguration to fix in the Dashboard, never "already there" (codex r4, #412).
+    const exact =
+      price.unit_amount === GROWTH_UNIT_AMOUNT &&
+      price.currency === 'usd' &&
+      price.recurring?.interval === 'month' &&
+      price.recurring.interval_count === 1 &&
+      (price.recurring.usage_type ?? 'licensed') === 'licensed';
+    if (!exact) {
+      process.stderr.write(
+        `stripe-ensure-growth-price: WRONG price under the lookup key: ${described}. Checkout refuses it; move the key to a $49.00 USD/month price.\n`
+      );
+      return 1;
+    }
+    process.stdout.write(`already there: ${described}\n`);
     return 0;
   }
   if (dryRun) {

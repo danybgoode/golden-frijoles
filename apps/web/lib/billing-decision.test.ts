@@ -8,6 +8,7 @@ import {
   GROWTH_PRICE_LOOKUP_KEY,
   decideBillingAction,
   holdsGrowthSubscription,
+  isGrowthPrice,
   integrationIdentifier,
   planForSubscriptionStatus,
 } from './billing-decision.ts'
@@ -114,6 +115,35 @@ test('a customer holding a live or pending Growth subscription is not sold anoth
     false
   )
   assert.equal(holdsGrowthSubscription([]), false)
+})
+
+test('only $49.00 USD a month, licensed, is Growth: any other amount, currency or interval stops the sale', () => {
+  const growth = {
+    unit_amount: 4900,
+    currency: 'usd',
+    recurring: { interval: 'month', interval_count: 1, usage_type: 'licensed' },
+  }
+  assert.equal(isGrowthPrice(growth), true)
+  for (const wrong of [
+    { ...growth, unit_amount: 490 },
+    { ...growth, unit_amount: null },
+    { ...growth, currency: 'eur' },
+    { ...growth, recurring: null },
+    { ...growth, recurring: { ...growth.recurring, interval: 'year' } },
+    { ...growth, recurring: { ...growth.recurring, interval_count: 3 } },
+    { ...growth, recurring: { ...growth.recurring, usage_type: 'metered' } },
+  ])
+    assert.equal(isGrowthPrice(wrong), false, JSON.stringify(wrong))
+})
+
+test('the price script creates exactly what the app will sell', () => {
+  const script = readFileSync(
+    join(import.meta.dirname, '..', '..', '..', 'scripts', 'stripe-ensure-growth-price.mjs'),
+    'utf8'
+  )
+  assert.match(script, new RegExp(`GROWTH_UNIT_AMOUNT = ${4900}`))
+  assert.match(script, /currency: 'usd'/)
+  assert.match(script, /recurring: \{ interval: 'month' \}/)
 })
 
 test('the integration identifier is the prefix plus 8 lowercase letters', () => {
