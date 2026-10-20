@@ -76,6 +76,10 @@ Locked at the wave-3 boundary (README D15): one focused question to the product 
 entity, test vs live, the price), then the plan → limits map, the pool's expand/contract and the webhook's idempotency
 store are locked against that day's data and written here. Never delegated (money, migration, tenancy).
 
+**Inherited from Sprint 3 (README D22):** B's (and A's) pricing says Growth has unlimited products and seats and a longer
+history. S4.1's plan → limits map must make that true (Growth lifts `product_limit`; Free gets a history window Growth
+exceeds), or S4.4 rewrites the copy before Checkout goes live.
+
 ## Sprint QA
 - webhook signature + idempotency spec, plan → limits spec, tenancy spec (no cross-workspace plan read)
 - browser smoke owed: yes, to Daniel by name — a real Growth purchase and cancel

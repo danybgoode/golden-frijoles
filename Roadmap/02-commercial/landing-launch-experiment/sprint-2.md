@@ -12,32 +12,32 @@ stories:
     i_want: "our own site to read a per-visitor variant through the one gate seam"
     so_that: "a page can be tested without a second flag system"
     risk: high
-    status: planned
+    status: done   # c56ab49 · #408
   - id: S2.2
     title: "Prompt-copy and exposure events"
     as_a: "the product owner"
     i_want: "copying the start prompt to be counted on A and B"
     so_that: "the test has a frequent primary metric"
     risk: low
-    status: planned
+    status: done   # c958ebd · #408
   - id: S2.3
     title: "The flag and the experiment, registered"
     as_a: "the product owner"
     i_want: "`landing.variant_b_enabled` and its experiment ready before launch day"
     so_that: "launch day is one rollout command"
     risk: low
-    status: planned
+    status: in-progress   # flag verified off v1; builder draft owed (needs a signed-in browser)
   - id: S2.4
     title: "Unknown funnel period is an error"
     as_a: "an agent reading a funnel"
     i_want: "an unknown `period` to fail loudly"
     so_that: "I never read all-time numbers as last week's"
     risk: low
-    status: planned
+    status: done   # ffc8044, 6535969 · #408
 ---
 # Launch: the first landing A/B on goldenfrijoles.com, run on Golden Frijoles — Sprint 2: Experiment rail
 
-**Status:** 🟦 In review — PR #408 (wave 1, with Sprint 1)
+**Status:** ✅ Shipped 2026-10-19 — PR #408, merge `749695a`. Owed: S2.3's builder draft (the browser extension was not connected; it is needed only before launch day's Start).
 
 ## Stories
 
@@ -99,3 +99,8 @@ Env: production · https://goldenfrijoles.com   (or the PR preview while testing
    → the landing experiment's draft shows its metric, guardrails, sample size and the bound flag (Start is launch day)
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+### Run log — 2026-10-19 (agent, production)
+1. `frijoles flags get landing.variant_b_enabled --project golden-frijoles` → production `off v1` ✅
+2. `…/api/v1/public/funnel?project=golden-frijoles&feature=landing_conversion&period=7d` → `400 {"error":"Unknown period \"7d\". Use one of: all, 90d, 30d.","accepted":[…]}` ✅
+3. The builder draft — **owed**: `start_prompt_copied` (subject `visitor`) is now in the catalog, so the builder can offer it; saving the draft needs a signed-in browser.

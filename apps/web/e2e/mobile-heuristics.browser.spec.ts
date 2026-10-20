@@ -72,6 +72,8 @@ export { assertMobileClean } from './helpers/mobile-heuristics'
 // wiring the project into CI is a decision this sprint did not make.
 export const PUBLIC_MOBILE_ROUTES = [
   { path: '/', status: 200 },
+  // landing-launch-experiment S3.4 — variant B, forced (D11: honoured off production only, which every test server is).
+  { path: '/?variant=b', status: 200 },
   { path: '/install', status: 200 },
   { path: '/login', status: 200 },
   // Gate-dependent: 200 with `SIGNUP_ENABLED`, 404 without (`app/signup/page.tsx` calls

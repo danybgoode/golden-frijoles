@@ -12,32 +12,32 @@ stories:
     i_want: "a single-column hero that says what this is in one line, with the prompt right there"
     so_that: "I can start in one paste"
     risk: low
-    status: planned
+    status: done   # 339983b, ca658f6
   - id: S3.2
     title: "From why to paid off"
     as_a: "a founder reading B"
     i_want: "six blocks in the order a bet moves, each with a real product shot"
     so_that: "I see my own job: why, measure, cost, rehearse, decide, release"
     risk: low
-    status: planned
+    status: done   # e43d3c3, 95b610c
   - id: S3.3
     title: "Agent strip, founder note, pricing and closing CTA"
     as_a: "a founder deciding on B"
     i_want: "the reason it exists, the price and one more chance to start"
     so_that: "I can decide without leaving the page"
     risk: low
-    status: planned
+    status: done   # c61b2cc, 856b351
   - id: S3.4
     title: "/ serves A or B"
     as_a: "the product owner"
     i_want: "`/` to render A or B per visitor from the flag"
     so_that: "the test runs and can be killed in 30 s"
     risk: high
-    status: planned
+    status: done   # 8abc5e5, 23e4402 · kill verified on launch day
 ---
 # Launch: the first landing A/B on goldenfrijoles.com, run on Golden Frijoles — Sprint 3: Variant B
 
-**Status:** ⬜ not started
+**Status:** 🟦 In review — Sprint 3 PR (B dark: the flag stays off; launch is the builder's Start, D10)
 
 ## Stories
 
@@ -73,6 +73,7 @@ stories:
 
 ## Build contract (locked by the architect before the builder started)
 Re-verified at the wave-2 boundary. Stacked as `feat/landing-launch-experiment-s3`.
+- **All of S3** → D18–D21 (README § Wave 2 lock) and the prototype at `references/landing-b-prototype-v3.html`.
 - **S3.1–S3.3** → D13 (B in `components/landing-b/*`, `brand/tokens.css` + design-system primitives, no raw hex), D14
   (real screenshots). The approved prototype v3 is the contract (WAYS-OF-WORKING: an approved design IS scope).
 - **S3.4** → D1 (`variant()` picks the tree on the server), D11 (`?variant=` on non-production only), D10 (launch is
@@ -96,3 +97,16 @@ Env: production · https://goldenfrijoles.com   (or the PR preview while testing
    → A renders
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+### Build log — 2026-10-19 (agent, local production build)
+- `/` with no flag served → A; its markup equals `main`'s (`e2e/landing-variants.spec.ts`, fixture generated on this branch and
+  passed against `main`'s `page.tsx`; a one-word change to an A section turns it red).
+- `/?variant=b` (non-production, D11) → B: hero, six steps, agent strip, founder note, pricing, closing CTA, the shared footer.
+  Both variants pass the mobile rail at 360 and 390 (`e2e/landing-variants.authed.spec.ts`, run by CI); no horizontal scroll.
+- The six shots (D19, amended by Daniel on #409): all six are the mockup's drawn branding shots, each labelled
+  "Illustration · sample data". An earlier build used real screenshots for Why and Cost; Daniel asked for the mockup's
+  windows instead, and the screenshots were removed.
+- Deviations from the prototype: the shared `BrandLockup` instead of the drawn bean; the shared `CopyPromptCard`, skinned on
+  B to the prototype's look but with a 44px copy button (the mobile tap-target rule) and its own "copy prompt" wording;
+  Growth's CTA is "Start free" with the billing-not-live line (D20); "Book a conversation" → `/talk` (D21); the agent strip's
+  third command is `frijoles scenarios launch black-friday` (`--watch` belongs to `scenarios runs`).

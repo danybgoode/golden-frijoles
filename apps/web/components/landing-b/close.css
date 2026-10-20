@@ -1,0 +1,150 @@
+/* landing-launch-experiment · S3.3 — B's agent strip, founder note, pricing and closing CTA. Every selector starts with
+   `.lb`; colours come from brand/tokens.css (plus the two local shades in landing-b.css). */
+
+/* agent strip */
+.lb .lb-agentgrid {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 48px;
+  align-items: center;
+}
+.lb .lb-agentgrid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.lb .lb-agentgrid h3 {
+  font-size: clamp(28px, 3.6vw, 40px);
+  font-weight: 900;
+  font-stretch: 110%;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+.lb .lb-agentgrid p:not(.lb-kicker) {
+  font-size: 18px;
+  color: var(--dim);
+}
+.lb .lb-term {
+  margin: 0;
+  min-width: 0;
+  background: var(--espresso);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px 20px;
+  font: 14px/1.8 var(--mono);
+  color: var(--dim);
+  overflow-x: auto;
+}
+.lb .lb-term .lb-p {
+  color: var(--gold);
+}
+.lb .lb-term .lb-o {
+  color: var(--crema);
+}
+@media (max-width: 860px) {
+  .lb .lb-agentgrid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+/* founder note */
+.lb .lb-letter {
+  max-width: 720px;
+  background-color: var(--kraft);
+  background-image: var(--kraft-fibers);
+  color: var(--stamp);
+  border-radius: 4px;
+  padding: 40px clamp(20px, 5vw, 48px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 18px 44px rgb(0 0 0 / 34%);
+}
+.lb .lb-letter .lb-kicker {
+  color: var(--stamp);
+}
+.lb .lb-letter p:not(.lb-kicker) {
+  font-size: 18px;
+  line-height: 1.6;
+  max-width: 62ch;
+}
+.lb .lb-letter .lb-sig {
+  font: 700 16px var(--sans);
+}
+.lb .lb-letter a {
+  color: var(--stamp);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 700;
+}
+
+/* pricing */
+.lb .lb-tiers {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+.lb .lb-tier {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.lb .lb-tier--feat {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px var(--gold) inset;
+}
+.lb .lb-price {
+  font: 800 40px var(--sans);
+  font-stretch: 110%;
+}
+.lb .lb-price small {
+  font-size: 16px;
+  color: var(--dim);
+  font-weight: 600;
+}
+.lb .lb-tier ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 15px;
+  flex: 1;
+}
+.lb .lb-tier li::before {
+  content: '✓ ';
+  color: var(--green);
+  font-family: var(--mono);
+}
+@media (max-width: 900px) {
+  .lb .lb-tiers {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* closing */
+.lb .lb-closing .lb-wrap {
+  max-width: 820px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.lb .lb-closing h2 {
+  font-size: clamp(34px, 5.4vw, 60px);
+  font-weight: 900;
+  font-stretch: 112%;
+  letter-spacing: -0.025em;
+  line-height: 1.02;
+}
+.lb .lb-closing .lb-copy {
+  font-size: 18px;
+  color: var(--dim);
+  max-width: 60ch;
+}

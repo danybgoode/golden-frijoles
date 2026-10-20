@@ -1,0 +1,438 @@
+/* landing-launch-experiment · Sprint 3 S3.2 — B's six steps. Every selector starts with `.lb`; colours from brand/tokens.css. */
+.lb .lb-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 96px;
+}
+.lb .lb-step {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 48px;
+  align-items: center;
+}
+.lb .lb-step:nth-child(even) .lb-txt {
+  order: 2;
+}
+.lb .lb-txt {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.lb .lb-stepno {
+  font: 600 13px var(--mono);
+  color: var(--gold);
+  letter-spacing: 0.1em;
+}
+.lb .lb-txt h3 {
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 800;
+  font-stretch: 108%;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+.lb .lb-txt p {
+  color: var(--dim);
+  font-size: 17px;
+  max-width: 46ch;
+}
+.lb .lb-txt ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 15px;
+}
+.lb .lb-txt li {
+  display: flex;
+  gap: 10px;
+}
+.lb .lb-txt li::before {
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 6px;
+  margin-top: 9px;
+  border-radius: 50%;
+  background: var(--gold);
+}
+.lb .lb-shot {
+  min-width: 0;
+}
+@media (max-width: 860px) {
+  .lb .lb-step {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .lb .lb-step:nth-child(even) .lb-txt {
+    order: 0;
+  }
+}
+
+/* drawn windows */
+.lb .lb-why {
+  border-left: 3px solid var(--gold);
+  padding: 4px 0 4px 12px;
+  color: var(--crema);
+  font-size: 15px;
+}
+.lb .lb-between {
+  justify-content: space-between;
+}
+
+/* measure */
+.lb .lb-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+@media (max-width: 520px) {
+  .lb .lb-split {
+    grid-template-columns: 1fr;
+  }
+}
+.lb .lb-funnel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.lb .lb-fr {
+  display: grid;
+  grid-template-columns: 78px 1fr 64px;
+  gap: 10px;
+  align-items: center;
+  font-size: 13px;
+}
+.lb .lb-fr span:first-child {
+  color: var(--dim);
+}
+.lb .lb-track {
+  height: 20px;
+  background: var(--espresso);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.lb .lb-track b {
+  display: block;
+  height: 100%;
+  background: var(--bar);
+  border-radius: 4px;
+}
+.lb .lb-fr span:last-child {
+  text-align: right;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--gold-hot);
+}
+.lb .lb-ns {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.lb .lb-ns-big {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.lb .lb-ns-big b {
+  font: 700 34px var(--mono);
+  color: var(--gold-hot);
+}
+.lb .lb-inputs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.lb .lb-inp {
+  background: var(--espresso);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.lb .lb-inp span {
+  font-size: 11.5px;
+  color: var(--dim);
+}
+.lb .lb-inp b {
+  font: 600 16px var(--mono);
+  color: var(--crema);
+}
+.lb .lb-inp i {
+  font: normal 11px var(--mono);
+  color: var(--green);
+}
+.lb .lb-spark {
+  width: 100%;
+  height: 56px;
+  display: block;
+  color: var(--gold-hot);
+}
+.lb .lb-spark-fill {
+  fill: color-mix(in srgb, var(--gold) 18%, transparent);
+}
+
+/* rehearse */
+.lb .lb-timeline {
+  display: flex;
+  flex-direction: column;
+  border-left: 2px solid var(--line);
+  margin-left: 6px;
+}
+.lb .lb-ev {
+  position: relative;
+  padding: 0 0 12px 18px;
+  font-size: 13.5px;
+}
+.lb .lb-ev::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--card);
+  border: 2px solid var(--gold);
+}
+.lb .lb-ev--bad::before {
+  border-color: var(--red);
+}
+.lb .lb-ev--ok::before {
+  border-color: var(--green);
+}
+.lb .lb-ev time {
+  font: 600 11.5px var(--mono);
+  color: var(--lb-dim-2);
+  margin-right: 8px;
+}
+
+/* decide */
+.lb .lb-variants {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.lb .lb-var {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+.lb .lb-key {
+  font: 700 13px var(--mono);
+  color: var(--roast);
+  background: var(--kraft);
+  border-radius: 6px;
+  text-align: center;
+  padding: 3px 0;
+}
+.lb .lb-ci {
+  position: relative;
+  height: 22px;
+  background: var(--espresso);
+  border-radius: 4px;
+}
+.lb .lb-ci-band {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--gold) 40%, transparent);
+}
+.lb .lb-ci-pt {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  width: 3px;
+  margin-left: -1px;
+  background: var(--gold-hot);
+  border-radius: 2px;
+}
+
+/* release */
+.lb .lb-cohorts {
+  gap: 10px;
+}
+.lb .lb-toggle {
+  width: 40px;
+  height: 22px;
+  border-radius: 11px;
+  background: var(--green);
+  position: relative;
+  flex: none;
+}
+.lb .lb-toggle::after {
+  content: '';
+  position: absolute;
+  right: 3px;
+  top: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--crema);
+}
+.lb .lb-aud {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.lb .lb-aud li {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr) auto 52px;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--espresso);
+}
+.lb .lb-aud li + li {
+  border-top: 1px solid var(--line);
+}
+.lb .lb-aud-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.lb .lb-aud-dot--on {
+  background: var(--green);
+}
+.lb .lb-aud-dot--part {
+  background: conic-gradient(var(--green) 0 36deg, var(--line) 36deg);
+}
+.lb .lb-aud-dot--off {
+  background: var(--line);
+}
+.lb .lb-aud-name {
+  color: var(--crema);
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+}
+.lb .lb-aud-name small {
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--lb-dim-2);
+}
+.lb .lb-aud-share {
+  font: 600 12px var(--mono);
+  color: var(--gold);
+}
+.lb .lb-aud-n {
+  font: 600 13px var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--dim);
+  text-align: right;
+}
+.lb .lb-offbtn {
+  font: 700 12.5px var(--sans);
+  color: var(--red);
+  border: 1px solid color-mix(in srgb, var(--red) 45%, var(--roast));
+  border-radius: 8px;
+  padding: 6px 12px;
+  white-space: nowrap;
+}
+
+/* why (step 1) */
+.lb .lb-kv {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 14px;
+  margin: 0;
+  font-size: 13.5px;
+}
+.lb .lb-kv dt {
+  color: var(--lb-dim-2);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.lb .lb-kv dd {
+  margin: 0;
+  color: var(--crema);
+}
+.lb .lb-prog {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--espresso);
+  overflow: hidden;
+}
+.lb .lb-prog b {
+  display: block;
+  height: 100%;
+  background: var(--bar);
+}
+
+/* cost (step 3): spend vs quote and result vs target, two signals per row */
+.lb .lb-tableclip {
+  overflow-x: auto;
+}
+.lb .lb-cost {
+  width: 100%;
+  min-width: 470px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.lb .lb-cost th {
+  font: 600 10.5px var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lb-dim-2);
+  text-align: left;
+  padding: 6px;
+  border-bottom: 1px solid var(--line);
+}
+.lb .lb-cost td {
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.lb .lb-signal {
+  display: inline-block;
+  width: 16px;
+  font-family: var(--mono);
+  font-weight: 700;
+}
+.lb .lb-m {
+  font: 600 15px var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--crema);
+  margin-right: 5px;
+}
+.lb .lb-of {
+  font: 12px var(--mono);
+  color: var(--lb-dim-2);
+}
+.lb .lb-d {
+  display: block;
+  margin-left: 16px;
+  font: 600 11.5px var(--mono);
+}
+.lb .lb-sig-g {
+  color: var(--green);
+}
+.lb .lb-sig-w {
+  color: var(--gold);
+}
+.lb .lb-sig-r {
+  color: var(--red);
+}
+.lb .lb-sig-p {
+  color: var(--dim);
+}
+.lb .lb-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  font: 11.5px var(--mono);
+  color: var(--lb-dim-2);
+}
