@@ -78,3 +78,9 @@ test('back from Stripe: "switches on" while the webhook is pending, "is on Growt
   assert.match(billingMessage('success', 'free')?.text ?? '', /refresh to see it/)
   assert.equal(billingMessage('success', 'growth')?.text, 'Payment received: this workspace is on Growth.')
 })
+
+test('no failure sentence denies a charge it cannot rule out (verifier, #414)', () => {
+  assert.doesNotMatch(billingMessage('failed')?.text ?? '', /nothing was charged/i)
+  assert.match(billingMessage('failed')?.text ?? '', /refresh before trying again/)
+  assert.ok(billingMessage('portal-failed'))
+})

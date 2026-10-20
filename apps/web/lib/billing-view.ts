@@ -76,10 +76,16 @@ export const BILLING_MESSAGES = {
     tone: 'warn',
     text: 'Billing is not available right now. Nothing was charged; try again later.',
   },
-  failed: { tone: 'warn', text: 'We could not reach Stripe. Nothing was charged; try again.' },
+  // Checkout's own failure can follow a payment made in another tab (the expire of a session that was just paid throws),
+  // and Stripe's errors do not say whether money moved: so this never claims nothing was charged (verifier, #414).
+  failed: {
+    tone: 'warn',
+    text: 'Checkout could not start. If you just paid in another tab, Growth appears here within a minute: refresh before trying again.',
+  },
+  'portal-failed': { tone: 'warn', text: 'We could not open billing. Nothing changed; try again.' },
   'no-workspace': {
     tone: 'warn',
-    text: 'Only the person who created this workspace can buy or manage its plan.',
+    text: 'We could not find a workspace you own. Only the person who created a workspace can buy or manage its plan.',
   },
 } as const satisfies Record<string, { tone: 'info' | 'warn'; text: string }>
 

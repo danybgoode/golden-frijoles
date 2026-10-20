@@ -44,8 +44,8 @@ export default async function BillingPage({
             <PageHead title={SCREEN_WORDS.billing} lede="Your plan and how you pay for it." />
             {message ? <Callout tone={message.tone}>{message.text}</Callout> : null}
             <Empty
-              title="Only a workspace's owner manages its plan."
-              body="You are a member of someone else's workspace. Its owner can buy Growth or change billing from this page."
+              title="No workspace of yours to show."
+              body="Only the person who created a workspace manages its plan, from this page. If you created one and see this, refresh: the read may have failed."
             />
           </>
         ) : (

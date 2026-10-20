@@ -30,6 +30,6 @@ export async function POST() {
     return NextResponse.redirect(session.url, 303)
   } catch (err) {
     console.error('[billing/portal] failed:', err instanceof Error ? err.message : err)
-    return NextResponse.redirect(new URL(billingHref('failed'), site), 303)
+    return NextResponse.redirect(new URL(billingHref('portal-failed'), site), 303)
   }
 }
