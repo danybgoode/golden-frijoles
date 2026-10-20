@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import type Stripe from 'stripe'
 import { getStripe } from '@/lib/stripe'
 import { decideBillingAction, type BillingEventFacts } from '@/lib/billing-decision'
-import { applyBillingAction, billingEventSeen, recordBillingEvent } from '@/lib/billing'
+import { applyBillingAction, billingEventSeen, recordBillingEvent, workspaceForCustomer } from '@/lib/billing'
 
 // landing-launch-experiment · Sprint 4, Story 4.3 (epic D26) — Stripe's webhook. The only path that changes a plan.
 //
@@ -10,7 +10,8 @@ import { applyBillingAction, billingEventSeen, recordBillingEvent } from '@/lib/
 //   1. Verify the signature over the RAW body (Stripe's constant-time check, `STRIPE_WEBHOOK_SECRET`) before reading a
 //      single field. No secret configured → 500, never "accept unsigned": fail closed.
 //   2. Seen this event id before → 200, nothing done (Stripe redelivers; a replay must be a no-op).
-//   3. Decide (pure, lib/billing-decision.ts) and apply (lib/billing.ts) — one workspace, never a comped one.
+//   3. Decide (pure, lib/billing-decision.ts) and apply (lib/billing.ts) — one workspace, never a comped one, only the
+//      Growth price, only forward in event time, only the subscription the workspace holds.
 //   4. Record the event id LAST. If applying throws, nothing is recorded and the 500 makes Stripe retry; the apply is a
 //      set, not an increment, so a retry that races a slow first delivery cannot double anything.
 //
@@ -23,22 +24,8 @@ function idOf(value: string | { id: string } | null | undefined): string | null 
   return typeof value === 'string' ? value : value.id
 }
 
-/** The fields the decision reads, from the event's own object. Everything else is ignored. */
+/** The fields the decision reads, from the event's own subscription object. Everything else is ignored. */
 function factsOf(event: Stripe.Event): BillingEventFacts {
-  if (
-    event.type === 'checkout.session.completed' ||
-    event.type === 'checkout.session.async_payment_succeeded'
-  ) {
-    const session = event.data.object as Stripe.Checkout.Session
-    return {
-      type: event.type,
-      mode: session.mode ?? null,
-      paymentStatus: session.payment_status ?? null,
-      clientReferenceId: session.client_reference_id ?? null,
-      customerId: idOf(session.customer as string | { id: string } | null),
-      subscriptionId: idOf(session.subscription as string | { id: string } | null),
-    }
-  }
   if (
     event.type === 'customer.subscription.created' ||
     event.type === 'customer.subscription.updated' ||
@@ -50,6 +37,10 @@ function factsOf(event: Stripe.Event): BillingEventFacts {
       customerId: idOf(subscription.customer as string | { id: string } | null),
       subscriptionId: subscription.id ?? null,
       status: subscription.status ?? null,
+      priceLookupKeys: (subscription.items?.data ?? [])
+        .map((item) => item.price?.lookup_key)
+        .filter((key): key is string => typeof key === 'string'),
+      createdAt: event.created,
     }
   }
   return { type: event.type }
@@ -79,9 +70,15 @@ export async function POST(req: NextRequest) {
   try {
     if (await billingEventSeen(event.id)) return NextResponse.json({ ok: true, duplicate: true })
     const action = decideBillingAction(factsOf(event))
-    const workspaceId = await applyBillingAction(action)
-    if (action.kind !== 'none' && workspaceId === null)
-      console.warn(`[billing/webhook] ${event.type} ${event.id} matched no workspace (${action.kind})`)
+    let workspaceId = await applyBillingAction(action)
+    if (action.kind === 'set-plan' && workspaceId === null) {
+      // Two different things, told apart: a customer nobody of ours holds is LOUD (money with no workspace to give it to —
+      // CODE-QUALITY #7); a known customer whose guards declined (a stale or second subscription) is the guards working.
+      const holder = await workspaceForCustomer(action.customerId)
+      if (!holder)
+        console.error(`[billing/webhook] ${event.type} ${event.id}: Stripe customer matches NO workspace`)
+      workspaceId = holder
+    }
     await recordBillingEvent(event.id, event.type, workspaceId)
     return NextResponse.json({ ok: true })
   } catch (err) {

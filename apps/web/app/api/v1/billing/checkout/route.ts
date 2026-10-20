@@ -6,23 +6,24 @@ import { getStripe, GROWTH_PRICE_LOOKUP_KEY } from '@/lib/stripe'
 import { ownWorkspaceForBilling, rememberStripeCustomer } from '@/lib/billing'
 import { integrationIdentifier } from '@/lib/billing-decision'
 
-// landing-launch-experiment · Sprint 4, Story 4.3 (epic D25) — "Get Growth": a GET that sends the signed-in owner to Stripe
-// Checkout for THEIR OWN workspace, or to sign in first. A redirect rather than a page: no new console surface, and the
-// pricing CTA can be a plain link. A cross-site GET can only send someone to a Stripe page they then choose to pay on.
+// landing-launch-experiment · Sprint 4, Story 4.3 (epic D25) — "Get Growth": a POST (a form button, never a link: a
+// prefetch, crawler or <img> must never create a Stripe customer — codex, #412) that sends the signed-in owner to Stripe
+// Checkout for THEIR OWN workspace, or to sign in first. A redirect rather than a page: no new console surface.
 //
 // Every id that matters is resolved here, on the server: the workspace from the session's user (created AND owned, in
-// lib/billing.ts), and it travels to Stripe as `client_reference_id` — the one field the webhook trusts to name a
-// workspace, because only this route writes it. Nothing from the request body or query is used.
+// lib/billing.ts), and its Stripe customer, recorded HERE before Stripe is involved. That customer id is how the webhook
+// finds the workspace later (lib/billing-decision.ts: only subscription events move a plan, never a session field), so
+// nothing a browser can set ever names a workspace. Nothing from the request body or query is used.
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export async function POST() {
   // FIRST: while the switch is off the route does not exist, exactly like every other gated surface.
   if (!(await isBillingCheckoutEnabled()))
     return NextResponse.json({ ok: false, error: 'Not found.' }, { status: 404 })
   const site = getSiteUrl()
 
   const user = await getSessionUser()
-  if (!user) return NextResponse.redirect(new URL('/login?next=/api/v1/billing/checkout', site), 303)
+  if (!user) return NextResponse.redirect(new URL('/login?next=/#pricing', site), 303)
 
   const workspace = await ownWorkspaceForBilling(user.id)
   if (!workspace) return NextResponse.redirect(new URL('/app?billing=no-workspace', site), 303)
@@ -52,8 +53,20 @@ export async function GET() {
       })
       await rememberStripeCustomer(workspace.id, customer.id)
       // Re-read: a concurrent checkout may have recorded ITS customer first; use the one the workspace holds.
-      customerId = (await ownWorkspaceForBilling(user.id))?.stripeCustomerId ?? customer.id
+      const held = (await ownWorkspaceForBilling(user.id))?.stripeCustomerId
+      // Fail closed: a workspace that holds no customer after the write is not one to charge (codex, #412).
+      if (!held)
+        return NextResponse.json(
+          { ok: false, error: 'Could not start checkout. Try again.' },
+          { status: 502 }
+        )
+      customerId = held
     }
+
+    // Two tabs must not become two subscriptions (verifier, #412): this customer's other OPEN sessions are expired first,
+    // so at most one can be paid. (The webhook's subscription slot is the second guard.)
+    const open = await stripe.checkout.sessions.list({ customer: customerId, status: 'open', limit: 20 })
+    for (const stale of open.data) await stripe.checkout.sessions.expire(stale.id)
 
     // Never `payment_method_types` (Stripe's guidance): the Dashboard decides which methods are offered.
     const session = await stripe.checkout.sessions.create({

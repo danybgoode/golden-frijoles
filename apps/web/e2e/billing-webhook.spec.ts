@@ -37,24 +37,47 @@ const evt = (type: string, object: Record<string, unknown>) => ({
   data: { object },
 })
 
-const completed = (workspaceId: string, customer: string, subscription: string) =>
-  evt('checkout.session.completed', {
-    object: 'checkout.session',
-    id: `cs_spec_${randomBytes(6).toString('hex')}`,
-    mode: 'subscription',
-    payment_status: 'paid',
-    client_reference_id: workspaceId,
+const GROWTH = 'gf_growth_monthly'
+let clock = Math.floor(Date.now() / 1000)
+/** A subscription event as Stripe sends it: the subscription object, its items' prices, the event's `created`. */
+const subEvent = (
+  type: string,
+  customer: string,
+  id: string,
+  status: string,
+  opts: { lookupKey?: string | null; created?: number } = {}
+) => ({
+  ...evt(type, {
+    object: 'subscription',
+    id,
     customer,
-    subscription,
-  })
+    status,
+    items: {
+      object: 'list',
+      data: [
+        {
+          object: 'subscription_item',
+          price: { object: 'price', lookup_key: opts.lookupKey === undefined ? GROWTH : opts.lookupKey },
+        },
+      ],
+    },
+  }),
+  created: opts.created ?? ++clock,
+})
 
-const subscriptionEvent = (type: string, customer: string, id: string, status: string) =>
-  evt(type, { object: 'subscription', id, customer, status })
+const ids = () => ({
+  customer: `cus_${randomBytes(6).toString('hex')}`,
+  sub: `sub_${randomBytes(6).toString('hex')}`,
+})
 
-async function workspace(client: SupabaseClient, plan = 'free') {
+async function workspace(client: SupabaseClient, plan = 'free', customer?: string) {
   const { data, error } = await client
     .from('workspaces')
-    .insert({ name: `spec billing ${randomUUID().slice(0, 8)}`, plan })
+    .insert({
+      name: `spec billing ${randomUUID().slice(0, 8)}`,
+      plan,
+      ...(customer ? { stripe_customer_id: customer } : {}),
+    })
     .select('id')
     .single()
   if (error || !data) throw new Error(`workspace fixture: ${error?.message}`)
@@ -70,19 +93,19 @@ async function row(client: SupabaseClient, id: string) {
   return data
 }
 
+async function cleanup(client: SupabaseClient, ws: string, events: string[]) {
+  if (events.length) await client.from('billing_events').delete().in('stripe_event_id', events)
+  await client.from('workspaces').delete().eq('id', ws)
+}
+
 test('an unsigned or forged event is refused and changes nothing', async ({ request }) => {
   const client = db()
-  const ws = await workspace(client)
+  const { customer, sub } = ids()
+  const ws = await workspace(client, 'free', customer)
   try {
-    const event = completed(
-      ws,
-      `cus_${randomBytes(6).toString('hex')}`,
-      `sub_${randomBytes(6).toString('hex')}`
-    )
-    const unsigned = await request.post('/api/v1/billing/webhook', { data: event })
-    expect(unsigned.status()).toBe(400)
-    const forged = await send(request, event, 'whsec_not_the_real_secret')
-    expect(forged.status()).toBe(400)
+    const event = subEvent('customer.subscription.created', customer, sub, 'active')
+    expect((await request.post('/api/v1/billing/webhook', { data: event })).status()).toBe(400)
+    expect((await send(request, event, 'whsec_not_the_real_secret')).status()).toBe(400)
     expect((await row(client, ws))?.plan).toBe('free')
     const { data: recorded } = await client
       .from('billing_events')
@@ -90,112 +113,147 @@ test('an unsigned or forged event is refused and changes nothing', async ({ requ
       .eq('stripe_event_id', event.id)
     expect(recorded).toEqual([])
   } finally {
-    await client.from('workspaces').delete().eq('id', ws)
+    await cleanup(client, ws, [])
   }
 })
 
-test('a paid checkout puts OUR workspace on Growth; a replay is a no-op; cancellation returns it to Free', async ({
+test("a Growth subscription puts the customer's workspace on Growth; a replay is a no-op; deletion returns it to Free", async ({
   request,
 }) => {
   const client = db()
-  const ws = await workspace(client)
-  const customer = `cus_${randomBytes(6).toString('hex')}`
-  const subscription = `sub_${randomBytes(6).toString('hex')}`
-  const ids: string[] = []
+  const { customer, sub } = ids()
+  const ws = await workspace(client, 'free', customer)
+  const events: string[] = []
   try {
-    const paid = completed(ws, customer, subscription)
-    ids.push(paid.id)
-    expect((await send(request, paid)).status()).toBe(200)
+    const created = subEvent('customer.subscription.created', customer, sub, 'active')
+    events.push(created.id)
+    expect((await send(request, created)).status()).toBe(200)
     expect(await row(client, ws)).toMatchObject({
       plan: 'growth',
       product_limit: null,
       monthly_event_pool: 2000000,
-      stripe_customer_id: customer,
-      stripe_subscription_id: subscription,
+      stripe_subscription_id: sub,
     })
-
-    // Stripe redelivers: the same event id must change nothing and be recorded once.
-    const replay = await send(request, paid)
-    expect(replay.status()).toBe(200)
+    const replay = await send(request, created)
     expect(await replay.json()).toMatchObject({ duplicate: true })
     const { data: recorded } = await client
       .from('billing_events')
       .select('workspace_id')
-      .eq('stripe_event_id', paid.id)
+      .eq('stripe_event_id', created.id)
     expect(recorded).toEqual([{ workspace_id: ws }])
 
-    // A cancel in the portal schedules the end; Stripe deletes the subscription at period end.
-    const deleted = subscriptionEvent('customer.subscription.deleted', customer, subscription, 'canceled')
-    ids.push(deleted.id)
+    const deleted = subEvent('customer.subscription.deleted', customer, sub, 'canceled')
+    events.push(deleted.id)
     expect((await send(request, deleted)).status()).toBe(200)
     expect(await row(client, ws)).toMatchObject({
       plan: 'free',
       product_limit: 10,
       monthly_event_pool: 200000,
-      stripe_customer_id: customer,
       stripe_subscription_id: null,
     })
   } finally {
-    await client.from('billing_events').delete().in('stripe_event_id', ids)
-    await client.from('workspaces').delete().eq('id', ws)
+    await cleanup(client, ws, events)
+  }
+})
+
+test('an older "active" arriving after the deletion cannot put the workspace back on Growth (event order)', async ({
+  request,
+}) => {
+  const client = db()
+  const { customer, sub } = ids()
+  const ws = await workspace(client, 'free', customer)
+  const events: string[] = []
+  try {
+    const t = ++clock
+    const created = subEvent('customer.subscription.created', customer, sub, 'active', { created: t })
+    const staleUpdate = subEvent('customer.subscription.updated', customer, sub, 'active', { created: t + 1 })
+    const deleted = subEvent('customer.subscription.deleted', customer, sub, 'canceled', { created: t + 2 })
+    clock = t + 3
+    events.push(created.id, staleUpdate.id, deleted.id)
+    for (const e of [created, deleted, staleUpdate]) expect((await send(request, e)).status()).toBe(200)
+    expect((await row(client, ws))?.plan).toBe('free')
+  } finally {
+    await cleanup(client, ws, events)
+  }
+})
+
+test('a second subscription cannot take the slot, and its deletion cannot demote the workspace', async ({
+  request,
+}) => {
+  const client = db()
+  const { customer, sub } = ids()
+  const second = `sub_${randomBytes(6).toString('hex')}`
+  const ws = await workspace(client, 'free', customer)
+  const events: string[] = []
+  try {
+    for (const e of [
+      subEvent('customer.subscription.created', customer, sub, 'active'),
+      subEvent('customer.subscription.created', customer, second, 'active'),
+      subEvent('customer.subscription.deleted', customer, second, 'canceled'),
+    ]) {
+      events.push(e.id)
+      expect((await send(request, e)).status()).toBe(200)
+    }
+    expect(await row(client, ws)).toMatchObject({ plan: 'growth', stripe_subscription_id: sub })
+  } finally {
+    await cleanup(client, ws, events)
+  }
+})
+
+test('a subscription on another price grants nothing; an unknown customer changes nothing', async ({
+  request,
+}) => {
+  const client = db()
+  const { customer, sub } = ids()
+  const ws = await workspace(client, 'free', customer)
+  const events: string[] = []
+  try {
+    const other = subEvent('customer.subscription.created', customer, sub, 'active', {
+      lookupKey: 'someone_elses_price',
+    })
+    const stranger = subEvent(
+      'customer.subscription.created',
+      `cus_${randomBytes(6).toString('hex')}`,
+      sub,
+      'active'
+    )
+    events.push(other.id, stranger.id)
+    expect((await send(request, other)).status()).toBe(200)
+    expect((await send(request, stranger)).status()).toBe(200)
+    expect((await row(client, ws))?.plan).toBe('free')
+  } finally {
+    await cleanup(client, ws, events)
   }
 })
 
 test('a comped workspace is never touched by a payment event', async ({ request }) => {
   const client = db()
-  const ws = await workspace(client, 'comped')
-  const customer = `cus_${randomBytes(6).toString('hex')}`
-  await client.from('workspaces').update({ stripe_customer_id: customer }).eq('id', ws)
-  const ids: string[] = []
+  const { customer, sub } = ids()
+  const ws = await workspace(client, 'comped', customer)
+  const events: string[] = []
   try {
-    const deleted = subscriptionEvent(
-      'customer.subscription.deleted',
-      customer,
-      `sub_${randomBytes(6).toString('hex')}`,
-      'canceled'
-    )
-    ids.push(deleted.id)
-    expect((await send(request, deleted)).status()).toBe(200)
-    const paid = completed(ws, customer, `sub_${randomBytes(6).toString('hex')}`)
-    ids.push(paid.id)
-    expect((await send(request, paid)).status()).toBe(200)
+    for (const e of [
+      subEvent('customer.subscription.created', customer, sub, 'active'),
+      subEvent('customer.subscription.deleted', customer, sub, 'canceled'),
+    ]) {
+      events.push(e.id)
+      expect((await send(request, e)).status()).toBe(200)
+    }
     expect((await row(client, ws))?.plan).toBe('comped')
   } finally {
-    await client.from('billing_events').delete().in('stripe_event_id', ids)
-    await client.from('workspaces').delete().eq('id', ws)
-  }
-})
-
-test('a checkout naming a workspace with a DIFFERENT customer cannot take it over', async ({ request }) => {
-  const client = db()
-  const ws = await workspace(client)
-  const owner = `cus_${randomBytes(6).toString('hex')}`
-  await client.from('workspaces').update({ stripe_customer_id: owner }).eq('id', ws)
-  const ids: string[] = []
-  try {
-    const intruder = completed(
-      ws,
-      `cus_${randomBytes(6).toString('hex')}`,
-      `sub_${randomBytes(6).toString('hex')}`
-    )
-    ids.push(intruder.id)
-    expect((await send(request, intruder)).status()).toBe(200)
-    expect(await row(client, ws)).toMatchObject({ plan: 'free', stripe_customer_id: owner })
-  } finally {
-    await client.from('billing_events').delete().in('stripe_event_id', ids)
-    await client.from('workspaces').delete().eq('id', ws)
+    await cleanup(client, ws, events)
   }
 })
 
 test('checkout and the portal do not exist while the switch is off, and need a session when it is on', async ({
   request,
 }) => {
-  const checkout = await request.get('/api/v1/billing/checkout', { maxRedirects: 0 })
-  const portal = await request.get('/api/v1/billing/portal', { maxRedirects: 0 })
+  const checkout = await request.post('/api/v1/billing/checkout', { maxRedirects: 0 })
+  const portal = await request.post('/api/v1/billing/portal', { maxRedirects: 0 })
   if (process.env.BILLING_CHECKOUT_ENABLED === 'true') {
     // Signed out: sent to sign in, never to Stripe.
     expect(checkout.status()).toBe(303)
-    expect(checkout.headers().location).toContain('/login?next=/api/v1/billing/checkout')
+    expect(checkout.headers().location).toContain('/login?next=/#pricing')
     expect(portal.status()).toBe(303)
     expect(portal.headers().location).toContain('/login')
   } else {

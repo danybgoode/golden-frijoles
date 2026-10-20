@@ -69,39 +69,41 @@ export async function recordBillingEvent(
   if (error) throw new Error(`billing_events write failed: ${error.message}`)
 }
 
+/** Whether any workspace holds this Stripe customer — to tell "an event about nobody of ours" from "a stale event". */
+export async function workspaceForCustomer(customerId: string): Promise<string | null> {
+  const { data, error } = await getSupabaseServiceClient()
+    .from('workspaces')
+    .select('id')
+    .eq('stripe_customer_id', customerId)
+    .maybeSingle()
+  if (error) throw new Error(`workspace lookup failed: ${error.message}`)
+  return (data?.id as string | undefined) ?? null
+}
+
 /**
- * Applies a decided action. Idempotent by construction (it sets a value, never increments one), so a replay that slips
- * past `billingEventSeen` does no harm. Returns the workspace it touched, or null. Throws on a database error so the
- * route answers 500 and Stripe retries.
+ * Applies a decided action to the ONE workspace holding the customer, never a comped one, and only forward in event time.
+ * Growth binds to an empty or the SAME subscription slot (a second subscription cannot take the slot); Free applies only to
+ * the subscription the workspace holds (another subscription's deletion cannot demote it). Idempotent: it sets values.
+ * Returns the workspace it changed, or null when the guards left it alone. Throws on a database error (→ 500, Stripe retries).
  */
 export async function applyBillingAction(action: BillingAction): Promise<string | null> {
-  const supabase = getSupabaseServiceClient()
   if (action.kind === 'none') return null
-  if (action.kind === 'link') {
-    // Only the workspace our server named, only if it is not comped, and only if it has no OTHER customer.
-    const { data, error } = await supabase
-      .from('workspaces')
-      .update({
-        plan: 'growth',
-        stripe_customer_id: action.customerId,
-        stripe_subscription_id: action.subscriptionId,
-      })
-      .eq('id', action.workspaceId)
-      .neq('plan', 'comped')
-      .or(`stripe_customer_id.is.null,stripe_customer_id.eq.${action.customerId}`)
-      .select('id')
-    if (error) throw new Error(`billing link failed: ${error.message}`)
-    return (data?.[0]?.id as string | undefined) ?? null
-  }
-  const { data, error } = await supabase
+  const supabase = getSupabaseServiceClient()
+  let query = supabase
     .from('workspaces')
     .update({
       plan: action.plan,
       stripe_subscription_id: action.plan === 'growth' ? action.subscriptionId : null,
+      stripe_subscription_event_at: action.eventAt,
     })
     .eq('stripe_customer_id', action.customerId)
     .neq('plan', 'comped')
-    .select('id')
+    .or(`stripe_subscription_event_at.is.null,stripe_subscription_event_at.lte."${action.eventAt}"`)
+  query =
+    action.plan === 'growth'
+      ? query.or(`stripe_subscription_id.is.null,stripe_subscription_id.eq.${action.subscriptionId}`)
+      : query.eq('stripe_subscription_id', action.subscriptionId)
+  const { data, error } = await query.select('id')
   if (error) throw new Error(`billing plan update failed: ${error.message}`)
   return (data?.[0]?.id as string | undefined) ?? null
 }

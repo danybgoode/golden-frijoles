@@ -2,46 +2,46 @@
 // pure function of the event's fields. The webhook route verifies the signature, extracts these fields and applies the
 // answer; every rule about money that can be decided without I/O lives here, so the unit layer pins it.
 //
-// ── Events map to workspaces through Stripe's own objects, not metadata (Stripe's guidance) ──────────────────────────
-// The ONE place a workspace id enters is `checkout.session.completed`'s `client_reference_id`, which OUR server wrote when
-// it created the session for the caller's own workspace (D25) — never the browser. That event links the workspace to its
-// Stripe customer; every later event is resolved through the customer id, which is unique per workspace in the database.
+// ── Only the subscription moves a plan (verifier, #412) ───────────────────────────────────────────────────────────────
+// The workspace's Stripe customer is recorded by OUR checkout route, from the session's own user, before Stripe is ever
+// involved. So the plan follows `customer.subscription.*` events alone: they carry the subscription's status AND its price,
+// and are resolved through the customer id (unique per workspace). A Checkout or Payment Link session can therefore never
+// name a workspace, and a subscription on any other price grants nothing.
+//
+// ── Which subscription, and in what order ─────────────────────────────────────────────────────────────────────────────
+// Stripe does not guarantee order and retries for days. The apply step (lib/billing.ts) only moves a workspace forward in
+// event time (`stripe_subscription_event_at`), binds Growth only to an empty or the SAME subscription slot, and moves to
+// Free only the subscription it holds — so a stale "active" after a deletion, or a second subscription's lifecycle, cannot
+// change the plan.
 
-export type Plan = 'free' | 'growth' | 'comped'
+/** The lookup key of the one price that sells Growth. The checkout route and the price script read this constant. */
+export const GROWTH_PRICE_LOOKUP_KEY = 'gf_growth_monthly'
 
 /** The Stripe fields the decision reads. Everything else in an event is ignored. */
 export type BillingEventFacts =
-  | {
-      type: 'checkout.session.completed' | 'checkout.session.async_payment_succeeded'
-      mode: string | null
-      paymentStatus: string | null
-      clientReferenceId: string | null
-      customerId: string | null
-      subscriptionId: string | null
-    }
   | {
       type:
         'customer.subscription.created' | 'customer.subscription.updated' | 'customer.subscription.deleted'
       customerId: string | null
       subscriptionId: string | null
       status: string | null
+      /** Every price lookup key on the subscription's items. */
+      priceLookupKeys: string[]
+      /** The event's `created`, seconds since the epoch. */
+      createdAt: number
     }
   | { type: string }
 
 export type BillingAction =
-  /** Bind the workspace named by our own client_reference_id to its Stripe customer, on Growth. */
-  | { kind: 'link'; workspaceId: string; customerId: string; subscriptionId: string | null }
-  /** Set the plan of the ONE workspace holding this Stripe customer. */
-  | { kind: 'set-plan'; customerId: string; plan: 'growth' | 'free'; subscriptionId: string | null }
+  /** Set the plan of the ONE workspace holding this Stripe customer, for this subscription, at this event time. */
+  | { kind: 'set-plan'; customerId: string; plan: 'growth' | 'free'; subscriptionId: string; eventAt: string }
   /** Nothing to change; the event is still recorded. */
   | { kind: 'none'; reason: string }
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-// Stripe's id shapes. The apply step puts the customer id inside a PostgREST filter, so only an id of exactly this shape
-// may ever reach it — even from a signature-verified event.
+// Stripe's id shapes. The apply step puts these inside PostgREST filters, so only an id of exactly this shape may ever
+// reach one — even from a signature-verified event.
 const CUSTOMER_ID = /^cus_[A-Za-z0-9]{1,250}$/
 const SUBSCRIPTION_ID = /^sub_[A-Za-z0-9]{1,250}$/
-const subscriptionOrNull = (id: string | null) => (id && SUBSCRIPTION_ID.test(id) ? id : null)
 
 /**
  * A subscription status → the plan it buys. Growth while Stripe still treats the subscription as live, including
@@ -66,44 +66,28 @@ export function planForSubscriptionStatus(status: string | null): 'growth' | 'fr
 
 export function decideBillingAction(event: BillingEventFacts): BillingAction {
   if (
-    event.type === 'checkout.session.completed' ||
-    event.type === 'checkout.session.async_payment_succeeded'
-  ) {
-    const e = event as Extract<BillingEventFacts, { mode: string | null }>
-    if (e.mode !== 'subscription') return { kind: 'none', reason: 'not a subscription checkout' }
-    // An async method (a bank debit) completes the session before the money arrives; Growth waits for
-    // `async_payment_succeeded`. `no_payment_required` covers a fully discounted first invoice.
-    if (e.paymentStatus !== 'paid' && e.paymentStatus !== 'no_payment_required')
-      return { kind: 'none', reason: `payment ${e.paymentStatus ?? 'unknown'}` }
-    if (!e.clientReferenceId || !UUID.test(e.clientReferenceId))
-      return { kind: 'none', reason: 'no workspace on the session' }
-    if (!e.customerId || !CUSTOMER_ID.test(e.customerId))
-      return { kind: 'none', reason: 'no customer on the session' }
-    return {
-      kind: 'link',
-      workspaceId: e.clientReferenceId,
-      customerId: e.customerId,
-      subscriptionId: subscriptionOrNull(e.subscriptionId),
-    }
+    event.type !== 'customer.subscription.created' &&
+    event.type !== 'customer.subscription.updated' &&
+    event.type !== 'customer.subscription.deleted'
+  )
+    return { kind: 'none', reason: `not acted on: ${event.type}` }
+  const e = event as Extract<BillingEventFacts, { status: string | null }>
+  if (!e.customerId || !CUSTOMER_ID.test(e.customerId))
+    return { kind: 'none', reason: 'no customer on the subscription' }
+  if (!e.subscriptionId || !SUBSCRIPTION_ID.test(e.subscriptionId))
+    return { kind: 'none', reason: 'no subscription id' }
+  if (!e.priceLookupKeys.includes(GROWTH_PRICE_LOOKUP_KEY))
+    return { kind: 'none', reason: 'not the Growth price' }
+  if (!Number.isSafeInteger(e.createdAt) || e.createdAt <= 0) return { kind: 'none', reason: 'no event time' }
+  const plan = event.type === 'customer.subscription.deleted' ? 'free' : planForSubscriptionStatus(e.status)
+  if (!plan) return { kind: 'none', reason: `subscription ${e.status ?? 'unknown'}` }
+  return {
+    kind: 'set-plan',
+    customerId: e.customerId,
+    plan,
+    subscriptionId: e.subscriptionId,
+    eventAt: new Date(e.createdAt * 1000).toISOString(),
   }
-  if (
-    event.type === 'customer.subscription.created' ||
-    event.type === 'customer.subscription.updated' ||
-    event.type === 'customer.subscription.deleted'
-  ) {
-    const e = event as Extract<BillingEventFacts, { status: string | null }>
-    if (!e.customerId || !CUSTOMER_ID.test(e.customerId))
-      return { kind: 'none', reason: 'no customer on the subscription' }
-    const plan = event.type === 'customer.subscription.deleted' ? 'free' : planForSubscriptionStatus(e.status)
-    if (!plan) return { kind: 'none', reason: `subscription ${e.status ?? 'unknown'}` }
-    return {
-      kind: 'set-plan',
-      customerId: e.customerId,
-      plan,
-      subscriptionId: subscriptionOrNull(e.subscriptionId),
-    }
-  }
-  return { kind: 'none', reason: `not acted on: ${event.type}` }
 }
 
 /** Stripe's `integration_identifier` label for our Checkout sessions: a fixed prefix plus 8 random letters (Stripe's

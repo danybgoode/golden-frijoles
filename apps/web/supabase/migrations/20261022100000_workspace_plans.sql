@@ -6,9 +6,11 @@
 --   growth → no product cap, 2,000,000 events a month
 --   comped → no product cap, no pool              (granted, never bought: replaces an admin bypass)
 --
--- EXPAND-only and ceiling-preserving. On 2026-10-19 there are 4 workspaces, each `product_limit` 10 and each product
--- 200,000 events a month; every workspace becomes `free` (10, 200,000), which is its ceiling today. Daniel's workspace is
--- set to `comped` as a separate production data step after this applies (its id is production data, not schema).
+-- EXPAND-only, and no ceiling drops on the data it meets. Production on 2026-10-20: 4 workspaces. Daniel's holds 4
+-- products and is set to `comped` (no pool) as a separate data step after this applies (its id is production data, not
+-- schema). The other three hold ONE product each (0 events this month), so a 200,000 pool equals that product's own
+-- 200,000 ceiling. NOTE what this does change for a future multi-product Free workspace: its products SHARE 200,000 a
+-- month, where before each had its own — that is the point of a pool (D24), and Growth lifts it.
 --
 -- NULL means "no cap" for both limits: `enforce_workspace_product_limit()` already reads a NULL `product_limit` as no
 -- cap, and the pool check (lib/quota.ts) skips a NULL pool. So `product_limit` loses its NOT NULL; its 0–1000 range check
@@ -28,6 +30,8 @@ ALTER TABLE workspaces
 -- so a webhook that names a customer can only ever reach one row.
 ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;
 ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;
+-- The `created` time of the last subscription event applied: Stripe does not guarantee order, so an older event is ignored.
+ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS stripe_subscription_event_at TIMESTAMPTZ;
 CREATE UNIQUE INDEX IF NOT EXISTS workspaces_stripe_customer_id_key
   ON workspaces (stripe_customer_id) WHERE stripe_customer_id IS NOT NULL;
 
@@ -58,7 +62,8 @@ CREATE TRIGGER workspaces_apply_plan
 -- Every existing row takes its plan's limits now (the trigger fires on UPDATE OF plan even when the value is the same).
 UPDATE workspaces SET plan = plan;
 
--- D26 — every Stripe event we have acted on, recorded BEFORE acting: a replay finds its id here and is a no-op.
+-- D26 — every Stripe event we have handled, recorded AFTER it is applied (so a failed apply is retried by Stripe, not
+-- marked done): a later delivery of the same id finds it here and is a no-op.
 CREATE TABLE IF NOT EXISTS billing_events (
   stripe_event_id TEXT PRIMARY KEY,
   type TEXT NOT NULL,

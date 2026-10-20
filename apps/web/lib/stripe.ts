@@ -8,9 +8,9 @@ import Stripe from 'stripe'
 /** Pinned so a Stripe-side default change can never silently change what our webhook receives. */
 export const STRIPE_API_VERSION = '2026-09-30.endive'
 
-/** The Growth price is found by this lookup key, not by an id in config: the same code reads the sandbox's price and,
- *  after the claim, the live account's — `scripts/stripe-ensure-growth-price.mjs` creates it where it is missing. */
-export const GROWTH_PRICE_LOOKUP_KEY = 'gf_growth_monthly'
+/** The Growth price is found by its lookup key (lib/billing-decision.ts), not by an id in config: the same code reads the
+ *  sandbox's price and, after the claim, the live account's — `scripts/stripe-ensure-growth-price.mjs` creates it. */
+export { GROWTH_PRICE_LOOKUP_KEY } from './billing-decision'
 
 export function getStripe(): Stripe | null {
   const key = process.env.STRIPE_SECRET_KEY?.trim()

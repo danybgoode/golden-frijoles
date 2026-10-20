@@ -10,12 +10,12 @@ import { ownWorkspaceForBilling } from '@/lib/billing'
 // webhook moves the workspace to Free when Stripe deletes it. Same gate as checkout.
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export async function POST() {
   if (!(await isBillingCheckoutEnabled()))
     return NextResponse.json({ ok: false, error: 'Not found.' }, { status: 404 })
   const site = getSiteUrl()
   const user = await getSessionUser()
-  if (!user) return NextResponse.redirect(new URL('/login?next=/api/v1/billing/portal', site), 303)
+  if (!user) return NextResponse.redirect(new URL('/login?next=/app', site), 303)
   const workspace = await ownWorkspaceForBilling(user.id)
   if (!workspace?.stripeCustomerId) return NextResponse.redirect(new URL('/#pricing', site), 303)
   const stripe = getStripe()
