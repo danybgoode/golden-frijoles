@@ -108,7 +108,7 @@ export default function TalkPage() {
           </div>
           <div className="ds-talkitem">
             <b>Price</b>
-            <span>From $1,500. Growth included for 3 months.</span>
+            <span>The session is from $1,500. Growth included for 3 months.</span>
           </div>
           {/* Unconditional, and deliberately not styled as an error. See the header comment: this
               page cannot detect a blocked frame, so the escape hatch has to be ordinary copy that is
