@@ -71,6 +71,8 @@ commands `install.md` already gives. Once installed, the band names the next ste
 - **D3 — aspect ratio.** Never scaled: a piece is drawn at its own size, centred. A short band crops it by at most a
   quarter of its height from the side it keeps (a fire its base, a tree its pot); below that, or wider than the band,
   it is skipped. A terminal with room for none draws the band alone.
+  Amended 2026-10-20 (1.16.1): when nothing fits trimming a quarter — the Mac app's fullscreen band — the piece that keeps
+  the most of itself plays, down to half its height and never under 8 rows.
 - **D4 — a surface that cannot draw it** leaves the region out and keeps the band; the engine does not retry a failed
   region. No `ui.fault` hook: the engine the plugin's CI pins has no such event, and an unknown event refuses the whole
   hooks module — the band included.
