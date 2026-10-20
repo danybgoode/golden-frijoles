@@ -41,3 +41,15 @@ test('`?variant=b` renders B off production (D11); `?variant=a` renders A', asyn
   const a = await (await request.get('/?variant=a')).text()
   expect(a).not.toContain('class="lb"')
 })
+
+// landing-launch-experiment · Sprint 5, Story 5.2 (D21) — B's founder note and third tier both lead to `/talk`, and
+// `/talk` is the "Set up with us" page they promise.
+test("B's offer links land on /talk, which is Set up with us", async ({ request }) => {
+  const b = await (await request.get('/?variant=b')).text()
+  expect(b.match(/href="\/talk"/g)?.length ?? 0).toBeGreaterThanOrEqual(2)
+  const res = await request.get('/talk')
+  expect(res.status()).toBe(200)
+  const talk = await res.text()
+  expect(talk).toContain('Set up with us')
+  expect(talk).toContain('from $1,500')
+})
