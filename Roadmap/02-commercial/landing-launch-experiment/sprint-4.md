@@ -72,9 +72,9 @@ stories:
 **Risk:** low
 
 ## Build contract (locked by the architect before the builder started)
-Locked at the wave-3 boundary (README D15): one focused question to the product owner first (Stripe account and
-entity, test vs live, the price), then the plan → limits map, the pool's expand/contract and the webhook's idempotency
-store are locked against that day's data and written here. Never delegated (money, migration, tenancy).
+Locked 2026-10-19 — README **§ Wave 3 lock, D23–D28**. Live at $49/month (Daniel); Stripe installed by Daniel via the
+Vercel Marketplace; no email at the pool. S4.1 → D23; S4.2 → D24; S4.3 → D25, D26, D27; S4.4 → D28 (and D22's debt).
+Never delegated (money, migration, tenancy).
 
 **Inherited from Sprint 3 (README D22):** B's (and A's) pricing says Growth has unlimited products and seats and a longer
 history. S4.1's plan → limits map must make that true (Growth lifts `product_limit`; Free gets a history window Growth
