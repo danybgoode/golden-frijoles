@@ -50,6 +50,6 @@ test("B's offer links land on /talk, which is Set up with us", async ({ request 
   const res = await request.get('/talk')
   expect(res.status()).toBe(200)
   const talk = await res.text()
-  expect(talk).toContain('Set up with us')
+  expect(talk).toContain('<h1>Set up with us</h1>')
   expect(talk).toContain('from $1,500')
 })

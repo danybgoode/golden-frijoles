@@ -125,10 +125,8 @@ test('the landing never names the second move "Shape" — the surviving "shape" 
   )
   expect(
     occurrences.map((occurrence) => occurrence.slice(1, occurrence.indexOf('"', 1))),
-    `exactly one ordinary-English "shape" survives on the landing.\n${occurrences.join('\n')}`
-  ).toEqual(['shape'])
-
-  expect(text).toContain('No price until we both know the shape of it.')
+    `no "shape" survives on the landing (the one ordinary-English use went with the Pods tier, landing-launch-experiment S5.1).\n${occurrences.join('\n')}`
+  ).toEqual([])
 })
 
 // ── Story 1.3 ────────────────────────────────────────────────────────────────────────────────

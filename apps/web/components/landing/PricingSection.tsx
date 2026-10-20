@@ -111,35 +111,28 @@ export async function PricingSection() {
               </p>
             </Panel>
 
-            {/* ── The one tier with no price, on purpose (landing-maker-ops, product-owner call) ──
-                The other two tiers carry a number because a number is what they are. A Pod is
-                scoped per team, so any figure here would be invented — and this page has spent ten
-                sections arguing that invented numbers are the thing it does not do. The slot the
-                price would occupy says what it is instead of standing empty, which keeps the three
-                tiers aligned without pretending to a figure.
-
-                The CTA used to point at a GitHub profile, which answers none of the questions
-                someone reading an unpriced tier actually has. It goes to `/talk` — our page, our
-                framing of what the conversation is, with the real scheduler embedded in it. */}
+            {/* landing-launch-experiment S5.1 (Daniel, 2026-10-19) — the third tier is "Set up with us", from $1,500, the
+                same offer B makes and /talk now describes. Changed in BOTH arms before launch, so the A/B test compares
+                the story, not the offer; A's markup pin was regenerated for exactly this edit. */}
             <Panel className="tier">
-              <p className="kicker">The vault</p>
-              <p className="tier__price tier__price--quoted">Pods</p>
+              <p className="kicker">Set up with us</p>
+              <p className="tier__price">
+                <small>from</small> $1,500
+              </p>
               <p className="card-copy">
-                Your team, augmented with the same ways of working we use ourselves. Benchmarked before and
-                after, because &ldquo;it felt faster&rdquo; isn&apos;t a Pod Report.
+                A half-day working session with Daniel on a live project of yours: we run your first bet with
+                your team.
               </p>
               <ul className="plain-list">
-                <li>Scoped to your team</li>
-                <li>Measured before and after</li>
-                <li>Priced after we talk</li>
+                <li>Half-day working session on a live project</li>
+                <li>A written readout</li>
+                <li>Growth included for 3 months</li>
               </ul>
               <Button href="/talk" variant="ghost" className="panel-tail">
                 Book a conversation
                 <Icon name="arrow-right" />
               </Button>
-              <p className="note">
-                Twenty minutes with a human. No price until we both know the shape of it.
-              </p>
+              <p className="note">A 20-minute first conversation to scope it.</p>
             </Panel>
           </div>
 
