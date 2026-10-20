@@ -3713,6 +3713,38 @@
   margin-bottom: 26px;
 }
 
+/* landing-launch-experiment S4 — the Terms and the Privacy notice (components/legal/LegalPage.tsx): long prose at a
+   reading measure, sections that a reader can scan by heading. Tokens only. */
+.ds .ds-legal {
+  max-width: 68ch;
+}
+
+.ds .ds-legal-updated {
+  font-size: 13px;
+  color: var(--dim);
+  margin-bottom: 28px;
+}
+
+.ds .ds-legal section {
+  /* A bare <section> carries the landing's band spacing (globals.css); a legal section is a paragraph group. */
+  padding: 0;
+  margin: 0;
+  min-height: 0;
+}
+
+.ds .ds-legal h2 {
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  margin: 28px 0 8px;
+}
+
+.ds .ds-legal section p {
+  font-size: 15px;
+  line-height: 1.65;
+  margin-bottom: 12px;
+}
+
 /* one-header-one-name D11 — the hub's tier 2 (`.ds-pubnav`) and its wider measure (`.ds-public--hub`) are GONE with
    `Frame`'s `hub` variant: the Hub renders in `ProductShell` now (audit decision 3 reverses DD2). */
 
@@ -3787,7 +3819,7 @@
 .ds .ds-recovery-orbit--two {
   inset: 27px -2px;
   transform: rotate(27deg);
-  opacity: .52;
+  opacity: 0.52;
 }
 
 .ds .ds-recovery-bean {
@@ -3799,7 +3831,9 @@
   border-radius: 54% 46% 51% 49% / 60% 42% 58% 40%;
   transform: rotate(-27deg);
   background: linear-gradient(105deg, var(--gold-deep), var(--gold-hot), var(--gold), var(--gold-deep));
-  box-shadow: inset -11px -9px 0 color-mix(in srgb, var(--roast) 23%, transparent), var(--elevation-raised);
+  box-shadow:
+    inset -11px -9px 0 color-mix(in srgb, var(--roast) 23%, transparent),
+    var(--elevation-raised);
   color: var(--roast);
   font-family: var(--sans);
   font-size: 30px;
@@ -3821,7 +3855,7 @@
   font-family: var(--mono);
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: .18em;
+  letter-spacing: 0.18em;
   margin-bottom: 12px;
 }
 
@@ -3829,7 +3863,7 @@
   color: var(--crema);
   font-size: clamp(36px, 7vw, 62px);
   line-height: 1.07;
-  letter-spacing: -.035em;
+  letter-spacing: -0.035em;
   margin-bottom: 16px;
 }
 
@@ -3857,7 +3891,9 @@
 }
 
 @media (max-width: 480px) {
-  .ds .ds-recovery-actions > * { width: 100%; }
+  .ds .ds-recovery-actions > * {
+    width: 100%;
+  }
 }
 
 .ds .ds-gone {

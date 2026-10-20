@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getSessionUser } from '@/lib/supabase-auth'
 import { getUserProjects } from '@/lib/membership'
@@ -113,7 +114,8 @@ function BillingBody({
           <p>
             Growth lifts the product limit and raises the shared event pool to 2,000,000 a month. You pay
             through Stripe; cancel any time from Manage billing, and the workspace keeps Growth until the end
-            of the month you paid for.
+            of the month you paid for. Buying it accepts the <Link href="/terms">Terms</Link>; the{' '}
+            <Link href="/privacy">Privacy notice</Link> says what Stripe and we keep.
           </p>
         </ListCard>
       ) : null}

@@ -120,8 +120,7 @@ export async function PricingSection() {
                 <small>from</small> $1,500
               </p>
               <p className="card-copy">
-                A half-day working session with Daniel on a live project of yours: we run your first bet with
-                your team.
+                A half-day working session on a live project of yours: we run your first bet with your team.
               </p>
               <ul className="plain-list">
                 <li>Half-day working session on a live project</li>
