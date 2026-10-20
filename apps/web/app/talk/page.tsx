@@ -2,12 +2,11 @@ import type { Metadata } from 'next'
 import { BOOKING_URL, bookingEmbedUrl } from '@/lib/booking'
 import { Icon } from '@/components/ui/Icon'
 import { Frame, FrameLink } from '@/design-system/Frame'
-import { Callout } from '@/design-system/primitives'
 
 export const metadata: Metadata = {
-  title: 'Golden Frijoles — book a Pods conversation',
+  title: 'Golden Frijoles — Set up with us',
   description:
-    'A short call about running a Pod with your team: what you would be measured on, and whether it is worth it.',
+    'A half-day working session with Daniel on a live project of yours: we run your first bet with your team. From $1,500, growth included for 3 months.',
 }
 
 // landing-maker-ops · Sprint 5 — the Pods booking flow.
@@ -71,10 +70,10 @@ export default function TalkPage() {
         </>
       }
     >
-      <h1>Let&apos;s work out whether a Pod is worth it</h1>
+      <h1>Set up with us</h1>
       <p className="ds-lede">
-        Twenty minutes, no deck. Bring a number you want to move and we will say plainly whether this is the
-        thing that moves it.
+        A half-day working session with Daniel on a live project of yours, where we run your first bet with
+        your team. From $1,500.
       </p>
 
       <div className="ds-talkgrid">
@@ -89,28 +88,27 @@ export default function TalkPage() {
             isolation that matters (it cannot read this page) is inherent to cross-origin framing and
             is not something sandbox adds. */}
         <div className="ds-talkslot">
-          <iframe
-            src={bookingEmbedUrl()}
-            title="Book a Pods conversation with Miyagi Sánchez on Cal.com"
-            loading="lazy"
-          />
+          <iframe src={bookingEmbedUrl()} title="Book a time with Daniel on Cal.com" loading="lazy" />
         </div>
 
         <div className="ds-talkaside">
           <div className="ds-talkitem">
-            <b>What we will actually do</b>
+            <b>What the session is</b>
             <span>
-              Look at your funnel, pick the one number worth moving first, and name what would have to be true
-              for it to move. Not a demo, and not a sales call.
+              Half a day, working with Daniel on a live project of yours. We run your first bet with your
+              team.
             </span>
           </div>
           <div className="ds-talkitem">
             <b>What you leave with</b>
             <span>
-              A written answer either way — including &ldquo;not yet, and here is what to do instead.&rdquo;
-              If it is not a fit we will say so on the call; that is cheaper for both of us than finding out
-              in month two.
+              A first bet placed with its why, target and read date, so it can be proved by that date. A
+              written readout. Golden Frijoles set up in your repo.
             </span>
+          </div>
+          <div className="ds-talkitem">
+            <b>Price</b>
+            <span>From $1,500. Growth included for 3 months.</span>
           </div>
           {/* Unconditional, and deliberately not styled as an error. See the header comment: this
               page cannot detect a blocked frame, so the escape hatch has to be ordinary copy that is
@@ -135,12 +133,6 @@ export default function TalkPage() {
           </div>
         </div>
       </div>
-
-      <Callout>
-        A third-party embed cannot be made to match the design system, so it is not pretended into one — it
-        gets a dashed slot that says &ldquo;this is somebody else&apos;s frame&rdquo;. Styling around an
-        iframe until it almost matches is worse than admitting the seam.
-      </Callout>
     </Frame>
   )
 }
