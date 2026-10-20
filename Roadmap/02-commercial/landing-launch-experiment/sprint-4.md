@@ -134,6 +134,15 @@ ran as Daniel's own commands. Still Daniel's, in the Dashboard: the public busin
 "stripe-bole-school", website miyagisanchez.com), branding, support email, customer emails, the ID document payouts wait
 on; and `/terms` + `/privacy` do not exist yet.
 
+**Run log — 2026-10-20, the whole purchase through the UI (agent, main @ 6348233, local production build, Stripe sandbox,
+`stripe listen` forwarding signed events):** a fresh account → Account → Plan & billing → **Get Growth** → Checkout at
+$49.00 → test card 4242 → back on `/app/billing?billing=success`, "Payment received: this workspace is on Growth" (the
+webhook beat the redirect) → plan **growth**, products unlimited, pool 2,000,000, subscription recorded; no Get Growth
+button, and a forced second checkout POST → 303 `?billing=already`. **Manage billing** → the portal (plan, card, invoice
+paid) → cancel with a reason → Stripe sets `cancel_at`, the plan stays **growth**; the subscription cancelled now (the
+period end, compressed) → `deleted` → **free**, products 10, pool 200,000, customer kept so Manage billing still opens.
+`billing_events`: created, updated ×2, deleted; all 19 forwarded deliveries across the runs answered 200.
+
 ## Sprint QA
 - webhook signature + idempotency spec, plan → limits spec, tenancy spec (no cross-workspace plan read)
 - browser smoke owed: yes, to Daniel by name — a real Growth purchase and cancel
