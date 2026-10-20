@@ -277,6 +277,18 @@ Growth's CTA becomes "Get Growth" → checkout on A and B (a signed-out visitor 
 products" and the larger allowance true for Growth; **"Longer history" is not built** (Free has no history limit), so
 S4.4 replaces that line with something true — the D22 either/or, taken.
 
+**Amended 2026-10-20 (verifier + Codex on #412, Daniel's calls):**
+- **D24, pool-only on Growth and comped (Daniel):** a product's own monthly quota applies only on Free; on Growth and comped
+  the workspace pool is the only monthly limit (the ingest view carries the workspace's plan).
+- **D24's notice is a named tenancy carve-out (Daniel):** AGENTS § tenancy now lists it — one number about the caller's own
+  workspace, to its workspace owner only.
+- **D25/D27 are POST** (as planned): checkout and the portal are form submissions, never links a prefetch could follow; the
+  checkout expires the customer's other open sessions first, so two tabs cannot become two subscriptions.
+- **D26, only the subscription moves a plan:** checkout records the workspace's customer server-side before Stripe is
+  involved; the webhook acts on `customer.subscription.*` alone, only for the `gf_growth_monthly` price, only forward in
+  event time (`stripe_subscription_event_at`), binding Growth to an empty or the same subscription slot and Free to the
+  subscription held. `checkout.session.completed` and Payment Link sessions move nothing.
+
 **Routing:** all of S4 is money, a migration and tenancy — built by the architect, never delegated; the verifier and both
 external passes on the PR; the migration applied and verified before the merge.
 

@@ -85,6 +85,13 @@ provisioned a Stripe **sandbox** (test keys in every environment, Production inc
 a test card. It is switched on — and from then on serves as the kill switch — only after live keys are verified in production.
 The webhook is not gated: subscriptions must keep reaching their workspace whatever the switch says.
 
+**Owed before `billing.checkout_enabled` goes ON (verifier, #412; Stripe's production guidance):**
+- `charge.dispute.created`, `charge.refunded`, `radar.early_fraud_warning.created`: today recorded only; decide and build what
+  each does (at least: tell the owner and the operator) before real money flows.
+- `invoice.payment_failed`: Stripe's dunning moves the subscription to `past_due`/`unpaid` (handled), but the owner is not told.
+- Stripe Tax: Daniel decides whether to register/collect before the first live charge (an accountant question, seed).
+- A restricted API key (`rk_`) in place of the Marketplace's `sk_` for the app's server calls.
+
 **Run log — 2026-10-19 (agent, Stripe sandbox, local production build):** `scripts/stripe-ensure-growth-price.mjs` created
 `Golden Frijoles Growth` at $49.00 USD/month (`gf_growth_monthly`); a re-run created nothing. Through the local server with
 `stripe listen` forwarding genuinely signed events: a signed-in owner's `GET /api/v1/billing/checkout` → 303
