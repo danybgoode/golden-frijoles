@@ -6,7 +6,7 @@
 
 _Generated: 2026-10-20_
 
-**109 check(s) owed across 76 file(s)** · 7 cleared.
+**110 check(s) owed across 76 file(s)** · 7 cleared.
 
 | Who can clear it | Count | What it means |
 |---|---|---|
@@ -16,14 +16,14 @@ _Generated: 2026-10-20_
 | judgment | 32 | An answer only the product owner can give: an _Intent_, an approval, a decision |
 | signed-in | 26 | A signed-in production walkthrough: an agent can run it once a smoke account exists |
 | interactive | 20 | An interactive plugin or terminal walkthrough: an agent can script it in a scratch repo |
-| unsorted | 14 | Nothing above matched — **not a bin, a to-triage list** |
+| unsorted | 15 | Nothing above matched — **not a bin, a to-triage list** |
 
 | Category | Count | What it means |
 |---|---|---|
 | money-path | 2 | Touches checkout, payment or order state — run these first |
 | auth-path | 30 | Needs a real signed-in session a script cannot mint against production |
 | admin-only | 0 | Behind an admin surface |
-| other | 77 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
+| other | 78 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
 
 ## publish (2)
 
@@ -138,7 +138,7 @@ _Generated: 2026-10-20_
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:54` · other — The interactive coach runs (S1 smoke steps 1 and 3; S2 smoke step 1).
 - `Roadmap/09-platform-infra/why-as-a-story/RETROSPECTIVE.md:50` · other — **Owed to the product owner:** the refine walkthrough on a new idea (the Why drafted as a story, the guard, the build view showing it in full) and a Plan gate with the Crew block.
 
-## unsorted (14)
+## unsorted (15)
 
 - `apps/web/e2e/app-auth.spec.ts:7` · auth-path — owed to Daniel; here we pin the api-testable negatives that make the boundary real:
 - `Roadmap/01-growth-engine/delivery-back-on/sprint-1.md:33` · other — Status:** 🔍 in review — S1.1 + S1.2 built; S1.3 (switch-on) owed to Daniel after the migrations are pushed
@@ -152,6 +152,7 @@ _Generated: 2026-10-20_
 - `Roadmap/02-commercial/landing-launch-experiment/sprint-1.md:129` · other — Steps 1–6 (consent in a real browser, GA4 realtime, Clarity recording, a real signup) are **owed to Daniel**.
 - `Roadmap/02-commercial/owed-on-screen/RETROSPECTIVE.md:45` · other — The result read on the target (open owed checks 96 → 40), due ~2026-11-14: `node scripts/epic-read.mjs --epic owed-on-screen`.
 - `Roadmap/09-platform-infra/cli-think-skills-followups/RETROSPECTIVE.md:36` · other — **Owed to Daniel by name:** ~~`cd packages/cli && npm publish` (npm 2FA) for `@golden-frijoles/cli@0.4.1`~~ (published; checked 2026-10-14), then smoke steps 4–5 in `sprint-1.md`.
-- `Roadmap/09-platform-infra/screensavers/sprint-1.md:45` · other — Owed to the product owner: post the screenshot with the line; on 2026-11-30 read `gh api repos/golden-frijoles/skills/traffic/clones --jq .uniques` and stamp the verdict.
+- `Roadmap/09-platform-infra/screensavers/sprint-1.md:34` · other — Status:** 🔨 building — S1.1 and S1.2 built on `feat/screensavers`; S1.3 (the post and the read) owed to the product owner
+- `Roadmap/09-platform-infra/screensavers/sprint-1.md:47` · other — Owed to the product owner: post the screenshot with the line; on 2026-11-30 read `gh api repos/golden-frijoles/skills/traffic/clones --jq .uniques` and stamp the verdict.
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:53` · other — The live `--yes` against `golden-beans` with that file, then check the North Star surface (S3 smoke steps 2–3).
 

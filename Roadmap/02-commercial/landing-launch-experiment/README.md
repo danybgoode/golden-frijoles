@@ -229,6 +229,9 @@ verifier flagged, under CODE-QUALITY #9: the Rehearse step's "floods the site wi
 Growth's "Unlimited products and seats" and "Longer history" (every workspace is capped at 10 products; Free has no history
 limit). Daniel kept the prototype's wording. **Sprint 4 inherits the debt:** Growth must lift the product cap and define a
 history limit that Free does not have, or S4.4 changes the copy — the pricing claims are not left untrue after Checkout ships.
+**Deliberately unowned (verifier r2, #409):** the Rehearse claim (load floods, servers pulled) and the header's "as many
+products and people as you like" read for the FREE tier (capped at 10 products) have no follow-up: Daniel accepted them
+as the page's ambition. A future drills or pricing epic that changes either should revisit this line.
 
 ### Deviations from the plan (corrected out loud, 2026-10-19)
 1. **Launch command** — `frijoles flags rollout --percent 50` would run a test that can never read (D10). Launch is

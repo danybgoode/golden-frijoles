@@ -3,7 +3,7 @@ epic: landing-launch-experiment
 sprint: 5
 title: "White-glove"
 risk: low
-phase: Shaping
+phase: Building
 stories_total: 2
 stories:
   - id: S5.1
@@ -12,18 +12,18 @@ stories:
     i_want: "one page that says what the session is, what I leave with and the price"
     so_that: "I can book without a sales call first"
     risk: low
-    status: planned
+    status: done   # 4eab9df, ef476c7 · founder-site link owed (no URL in the repo to point at)
   - id: S5.2
     title: "Cross-links"
     as_a: "a visitor"
     i_want: "the founder note and the third tier to lead to the same page"
     so_that: "the offer is never a dead end"
     risk: low
-    status: planned
+    status: done   # 5119dc5 · the résumé hook change is a PR in miyagisanchez-resume, outside this repo
 ---
 # Launch: the first landing A/B on goldenfrijoles.com, run on Golden Frijoles — Sprint 5: White-glove
 
-**Status:** ⬜ not started
+**Status:** 🟦 In review — PR #410 (ships ahead of Sprint 4; independent of billing)
 
 ## Stories
 
@@ -44,6 +44,12 @@ stories:
 ## Build contract (locked by the architect before the builder started)
 Re-verified at the wave-3 boundary. Bounded copy and links: a Sonnet builder on its own worktree (README D17). The
 booking embed keeps its measured height; links to `/talk` only.
+
+**Decision (Daniel, 2026-10-19, on #410):** A's third tier ("Pods — priced after we talk") contradicted the new `/talk`
+("from $1,500") and would have sent A's visitors to B's offer. It is aligned NOW, before launch: both arms show "Set up
+with us · from $1,500" → `/talk`, so the A/B test compares the story, not the offer. A's markup pin was regenerated for
+exactly this edit (the diff is the third tier only). `/talk` also says its calendar books a 20-minute first conversation,
+not the session itself.
 
 ## Sprint QA
 - link check over B and /talk

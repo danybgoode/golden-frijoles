@@ -1,12 +1,12 @@
 {
-  "total": 109,
+  "total": 110,
   "cleared": 7,
   "files": 76,
   "byCategory": {
     "money-path": 2,
     "auth-path": 30,
     "admin-only": 0,
-    "other": 77
+    "other": 78
   },
   "byKind": {
     "publish": 2,
@@ -15,7 +15,7 @@
     "judgment": 32,
     "signed-in": 26,
     "interactive": 20,
-    "unsorted": 14
+    "unsorted": 15
   },
   "generatedAt": "2026-10-20"
 }
