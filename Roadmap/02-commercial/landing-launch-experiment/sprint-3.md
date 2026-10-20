@@ -33,11 +33,11 @@ stories:
     i_want: "`/` to render A or B per visitor from the flag"
     so_that: "the test runs and can be killed in 30 s"
     risk: high
-    status: done   # 8abc5e5, 23e4402 · kill verified on launch day
+    status: done   # 8abc5e5, 23e4402, 6d0a3b2 · the production kill is verified on launch day
 ---
 # Launch: the first landing A/B on goldenfrijoles.com, run on Golden Frijoles — Sprint 3: Variant B
 
-**Status:** 🟦 In review — Sprint 3 PR (B dark: the flag stays off; launch is the builder's Start, D10)
+**Status:** ✅ Shipped dark 2026-10-19 — PR #409, merge `28249c4`, production deploy success. Live check: `/` and `/?variant=b` both serve A in production (flag `off v1`, D11). Owed: Daniel reads B on the PR preview; launch-day Start and the production kill (steps 3–4).
 
 ## Stories
 
