@@ -601,6 +601,9 @@ const REACHABLE: Record<string, ((slug: string) => string) | { coveredBy: string
   '/cli/connect': () => '/cli/connect',
   '/install': () => '/install',
   '/talk': () => '/talk',
+  // landing-launch-experiment S4 — the legal pages, opened like /talk.
+  '/terms': () => '/terms',
+  '/privacy': () => '/privacy',
   '/hub/[projectSlug]': (slug) => `/hub/${slug}`,
   '/hub/[projectSlug]/board': (slug) => `/hub/${slug}/board`,
   '/hub/[projectSlug]/horizon': (slug) => `/hub/${slug}/horizon`,

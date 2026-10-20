@@ -113,7 +113,8 @@ function BillingBody({
           <p>
             Growth lifts the product limit and raises the shared event pool to 2,000,000 a month. You pay
             through Stripe; cancel any time from Manage billing, and the workspace keeps Growth until the end
-            of the month you paid for.
+            of the month you paid for. Buying it accepts the <a href="/terms">Terms</a>; the{' '}
+            <a href="/privacy">Privacy notice</a> says what Stripe and we keep.
           </p>
         </ListCard>
       ) : null}

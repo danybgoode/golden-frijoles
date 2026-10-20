@@ -811,6 +811,48 @@ export const ROUTE_MANIFEST: readonly CoverageRow[] = [
     retiresIn: null,
     deferred: null,
   },
+  // landing-launch-experiment · Sprint 4 — Terms of Service: prose from lib/legal.ts in the public frame (components/legal). No
+  // approved picture, so the DENOMINATOR with a dated deferral, like Plan & billing.
+  {
+    route: '/terms',
+    page: 'terms/page.tsx',
+    label: 'Terms of Service',
+    frame: 'public',
+    seam: 'frame',
+    surface: null,
+    referenceState: null,
+    rendersFromDesignSystem: false,
+    landsIn: 6,
+    retiresIn: null,
+    deferred: {
+      owner: 'Daniel',
+      until: '2026-12-31',
+      why:
+        'Terms of Service is built from the design system (Frame, the prose tokens) but has no approved picture; it shipped so ' +
+        'Checkout, the portal and sign-up have a real page to link to. Approve it and this row claims coverage.',
+    },
+  },
+  // landing-launch-experiment · Sprint 4 — Privacy notice: prose from lib/legal.ts in the public frame (components/legal). No
+  // approved picture, so the DENOMINATOR with a dated deferral, like Plan & billing.
+  {
+    route: '/privacy',
+    page: 'privacy/page.tsx',
+    label: 'Privacy notice',
+    frame: 'public',
+    seam: 'frame',
+    surface: null,
+    referenceState: null,
+    rendersFromDesignSystem: false,
+    landsIn: 6,
+    retiresIn: null,
+    deferred: {
+      owner: 'Daniel',
+      until: '2026-12-31',
+      why:
+        'Privacy notice is built from the design system (Frame, the prose tokens) but has no approved picture; it shipped so ' +
+        'Checkout, the portal and sign-up have a real page to link to. Approve it and this row claims coverage.',
+    },
+  },
 
   // ── The Hub — Plan's three views, the epic page and the workspace board, plus Measure's Outcome report ──────────
   // one-header-one-name D11: these were seam B (`Frame`'s `hub` variant, a PEER of the console per DD2). Audit decision

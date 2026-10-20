@@ -53,6 +53,9 @@ export function publicRoutes(chapterIds: readonly string[]): PublicRoute[] {
     { path: '/methodology/edition.md', changeFrequency: 'monthly', priority: 0.7 },
     { path: '/install', changeFrequency: 'monthly', priority: 0.6 },
     { path: '/talk', changeFrequency: 'monthly', priority: 0.5 },
+    // landing-launch-experiment S4 — the legal pages (lib/legal.ts).
+    { path: '/terms', changeFrequency: 'monthly', priority: 0.2 },
+    { path: '/privacy', changeFrequency: 'monthly', priority: 0.2 },
     // Agent-facing manifests. Listing them is not decoration: it is how a crawler that has never
     // seen this site finds the machine-readable entry points at all.
     { path: '/llms.txt', changeFrequency: 'monthly', priority: 0.5 },
