@@ -78,6 +78,12 @@ export async function POST() {
       customerId = held
     }
 
+    // Two tabs must not become two subscriptions (verifier, #412): this customer's other OPEN sessions are expired first,
+    // so at most one can be paid. FIRST, before asking Stripe about subscriptions: a session paid between the two calls
+    // makes `expire` throw (→ 502) instead of slipping past the check (verifier r4). The webhook's slot guard is the last.
+    const open = await stripe.checkout.sessions.list({ customer: customerId, status: 'open', limit: 20 })
+    for (const stale of open.data) await stripe.checkout.sessions.expire(stale.id)
+
     // Stripe, not our plan column, says whether this customer already pays for Growth: a paid session whose webhook is
     // late or retrying leaves the workspace on Free, and a second checkout then would be a second charge (verifier r3).
     const subscriptions = await stripe.subscriptions.list({ customer: customerId, status: 'all', limit: 20 })
@@ -90,11 +96,6 @@ export async function POST() {
       )
     )
       return NextResponse.redirect(new URL('/app?billing=already', site), 303)
-
-    // Two tabs must not become two subscriptions (verifier, #412): this customer's other OPEN sessions are expired first,
-    // so at most one can be paid. (The webhook's subscription slot is the second guard.)
-    const open = await stripe.checkout.sessions.list({ customer: customerId, status: 'open', limit: 20 })
-    for (const stale of open.data) await stripe.checkout.sessions.expire(stale.id)
 
     // Never `payment_method_types` (Stripe's guidance): the Dashboard decides which methods are offered.
     const session = await stripe.checkout.sessions.create({

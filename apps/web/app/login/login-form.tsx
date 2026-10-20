@@ -62,7 +62,8 @@ export function LoginForm({
 }) {
   const landing = (() => {
     const target = new URL(safeRedirectPath(next, siteUrl))
-    return `${target.pathname}${target.search}`
+    // The fragment too: a checkout that sent a signed-out visitor here asks to come back to `/#pricing` (verifier, #412).
+    return `${target.pathname}${target.search}${target.hash}`
   })()
 
   const [email, setEmail] = useState('')
