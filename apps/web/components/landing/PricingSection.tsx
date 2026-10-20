@@ -126,7 +126,7 @@ export async function PricingSection() {
               <ul className="plain-list">
                 <li>Half-day working session on a live project</li>
                 <li>A written readout</li>
-                <li>Growth included for 3 months</li>
+                <li>The beanstalk ($49 a month) included for 3 months</li>
               </ul>
               <Button href="/talk" variant="ghost" className="panel-tail">
                 Book a conversation

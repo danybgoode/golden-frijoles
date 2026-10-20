@@ -97,13 +97,11 @@ test('§loop renders exactly three portfolio moves, in order, with the product o
 // fixed — a spec that only names them can never fail again. Pinning the survivors instead means a
 // new "Shape" anywhere on this page turns it red.
 //
-// ONE lowercase survivor is expected and correct — the ordinary English noun for the form of a thing
-// rather than the method's move: §pricing's "the shape of it". (There were two until finops S3.4: §finops'
-// "the shape of the capability" described a panel that was not built, and went when FinOps shipped.) D3 renames the MOVE; it does not ban an English word. They are
-// pinned by their sentences so that nobody reading a bare count wonders whether one was missed —
-// and the first run of this spec found the §finops one, which the story's own list of "occurrences
-// to clear" did not name.
-test('the landing never names the second move "Shape" — the surviving "shape" is ordinary English', async ({
+// NO survivor remains. There was one ordinary-English use — §pricing's "the shape of it" in the Pods tier — and it went
+// with that tier (landing-launch-experiment S5.1, 2026-10-19); before that, finops S3.4 removed §finops' "the shape of the
+// capability". D3 renames the MOVE and does not ban an English word, so a future honest "shape" is allowed: change the
+// expected list here and name its sentence.
+test('the landing never names the second move "Shape", and no "shap-" word survives on it', async ({
   request,
 }) => {
   const text = await landingHtml(request).then(visibleText)
