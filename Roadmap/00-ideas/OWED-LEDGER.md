@@ -152,7 +152,7 @@ _Generated: 2026-10-20_
 - `Roadmap/02-commercial/landing-launch-experiment/sprint-1.md:129` · other — Steps 1–6 (consent in a real browser, GA4 realtime, Clarity recording, a real signup) are **owed to Daniel**.
 - `Roadmap/02-commercial/owed-on-screen/RETROSPECTIVE.md:45` · other — The result read on the target (open owed checks 96 → 40), due ~2026-11-14: `node scripts/epic-read.mjs --epic owed-on-screen`.
 - `Roadmap/09-platform-infra/cli-think-skills-followups/RETROSPECTIVE.md:36` · other — **Owed to Daniel by name:** ~~`cd packages/cli && npm publish` (npm 2FA) for `@golden-frijoles/cli@0.4.1`~~ (published; checked 2026-10-14), then smoke steps 4–5 in `sprint-1.md`.
-- `Roadmap/09-platform-infra/screensavers/sprint-1.md:41` · other — Status:** 🔨 building — S1.1 and S1.2 built on `feat/screensavers`; S1.3 (the post and the read) owed to the product owner
-- `Roadmap/09-platform-infra/screensavers/sprint-1.md:58` · other — Owed to the product owner: post the screenshot with the line; on 2026-11-30 read `gh api repos/golden-frijoles/skills/traffic/clones --jq .uniques` and stamp the verdict.
+- `Roadmap/09-platform-infra/screensavers/sprint-1.md:48` · other — Status:** 🔨 building — S1.1 and S1.2 built on `feat/screensavers`; S1.3 (the post and the read) owed to the product owner
+- `Roadmap/09-platform-infra/screensavers/sprint-1.md:69` · other — Owed to the product owner: post the screenshot with the line; on 2026-11-30 read `gh api repos/golden-frijoles/skills/traffic/clones --jq .uniques` and stamp the verdict.
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:53` · other — The live `--yes` against `golden-beans` with that file, then check the North Star surface (S3 smoke steps 2–3).
 
