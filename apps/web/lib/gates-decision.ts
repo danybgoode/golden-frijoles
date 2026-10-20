@@ -128,6 +128,10 @@ export const GATES = {
     envVar: 'SATISFACTION_ASK_ENABLED',
     fallback: false,
   },
+  // landing-launch-experiment D25 — Growth checkout and the billing portal. Born OFF, not the plan's kill switch born on:
+  // with sandbox keys wired into production a live checkout would sell Growth for a test card. It is switched on (and
+  // then serves as the kill switch) only once live keys are verified in production.
+  billingCheckout: { key: 'billing.checkout_enabled', envVar: 'BILLING_CHECKOUT_ENABLED', fallback: false },
 } as const satisfies Record<string, Gate>
 
 export type GateName = keyof typeof GATES
