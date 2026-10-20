@@ -368,3 +368,97 @@ test.describe('audit trail', () => {
     expect(deleteError, 'audit_log must not be DELETE-able by the application role').not.toBeNull()
   })
 })
+
+// landing-launch-experiment · Sprint 4, Stories 4.1/4.2 (epic D23, D24) — a workspace's products share ONE monthly pool,
+// and the plan sets it in the database.
+test.describe('workspace event pool', () => {
+  async function projectIn(db: SupabaseClient, workspaceId: string, quota: number): Promise<Tenant> {
+    const slug = `spec-pool-${randomBytes(6).toString('hex')}`
+    const { data: project, error } = await db
+      .from('projects')
+      .insert({ workspace_id: workspaceId, slug, api_key_hash: null, monthly_event_quota: quota })
+      .select('id')
+      .single()
+    if (error || !project) throw new Error(`could not create pool fixture: ${error?.message}`)
+    const plaintextKey = `gb_key_spec_${randomBytes(24).toString('base64url')}`
+    const { error: keyError } = await db.from('api_keys').insert({
+      project_id: project.id,
+      key_hash: createHash('sha256').update(plaintextKey).digest('hex'),
+      label: 'pool spec',
+    })
+    if (keyError) throw new Error(`could not create pool key: ${keyError.message}`)
+    return { projectId: project.id as string, plaintextKey }
+  }
+
+  test('two products draw on one pool; past it → 429 naming the pool, and the project unit is handed back', async ({
+    request,
+  }) => {
+    const db = dbClient()
+    const workspaceId = await specWorkspaceId(db, 'pool spec')
+    // A pool of 2 shared by two products. The UPDATE sets only the pool column, so the plan trigger leaves it alone.
+    await db.from('workspaces').update({ monthly_event_pool: 2 }).eq('id', workspaceId)
+    // Project A's own quota is exactly 2: if the pool's rejection did NOT refund A's project unit, A's later event
+    // would be its third charge and 429 on the PROJECT quota.
+    const a = await projectIn(db, workspaceId, 2)
+    const b = await projectIn(db, workspaceId, 100)
+    try {
+      expect((await fire(request, a, { userId: 'u1', event: 'e1' })).status()).toBe(201)
+      expect((await fire(request, b, { userId: 'u1', event: 'e2' })).status()).toBe(201)
+      const over = await fire(request, a, { userId: 'u1', event: 'e3' })
+      expect(over.status()).toBe(429)
+      const body = await over.json()
+      expect(body.error).toContain('pool')
+      expect(body.error).toMatch(/resets on \d{4}-\d{2}-\d{2}/)
+
+      await db.from('workspaces').update({ monthly_event_pool: 100 }).eq('id', workspaceId)
+      expect((await fire(request, a, { userId: 'u1', event: 'e4' })).status()).toBe(201)
+    } finally {
+      await destroyTenant(db, a)
+      await destroyTenant(db, b)
+      await db.from('workspaces').delete().eq('id', workspaceId)
+    }
+  })
+
+  test('a workspace with no pool (comped) is not limited by one', async ({ request }) => {
+    const db = dbClient()
+    const workspaceId = await specWorkspaceId(db, 'pool spec comped')
+    await db.from('workspaces').update({ plan: 'comped' }).eq('id', workspaceId)
+    const a = await projectIn(db, workspaceId, 100)
+    try {
+      for (const e of ['e1', 'e2', 'e3'])
+        expect((await fire(request, a, { userId: 'u1', event: e })).status()).toBe(201)
+    } finally {
+      await destroyTenant(db, a)
+      await db.from('workspaces').delete().eq('id', workspaceId)
+    }
+  })
+
+  test('the plan sets the limits in the database, and an unknown plan is refused (D23)', async () => {
+    const db = dbClient()
+    const { data, error } = await db
+      .from('workspaces')
+      .insert([
+        { name: 'spec plan free', plan: 'free' },
+        { name: 'spec plan growth', plan: 'growth' },
+        { name: 'spec plan comped', plan: 'comped' },
+      ])
+      .select('id, plan, product_limit, monthly_event_pool')
+    expect(error).toBeNull()
+    try {
+      const byPlan = Object.fromEntries((data ?? []).map((row) => [row.plan, row]))
+      expect(byPlan.free).toMatchObject({ product_limit: 10, monthly_event_pool: 200000 })
+      expect(byPlan.growth).toMatchObject({ product_limit: null, monthly_event_pool: 2000000 })
+      expect(byPlan.comped).toMatchObject({ product_limit: null, monthly_event_pool: null })
+      const refused = await db.from('workspaces').insert({ name: 'spec plan bad', plan: 'gold' })
+      expect(refused.error?.message ?? '').toContain('workspaces_plan_known')
+    } finally {
+      await db
+        .from('workspaces')
+        .delete()
+        .in(
+          'id',
+          (data ?? []).map((row) => row.id)
+        )
+    }
+  })
+})

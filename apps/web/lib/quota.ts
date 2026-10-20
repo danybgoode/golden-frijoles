@@ -77,15 +77,52 @@ export async function checkMonthlyQuota(projectId: string, quota: number): Promi
   }
 }
 
+// landing-launch-experiment · Sprint 4, Story 4.2 (epic D24) — the WORKSPACE pool: one counter for every product in the
+// workspace, so more products never multiply the allowance. Charged AFTER the project quota and exactly like it
+// (increment, compare, refund on reject), under its own key. A NULL pool (comped) or a key with no workspace skips it.
+// Past the pool: the same 429 shape, never a charge (Daniel, 2026-10-19 — no overage billing, no email yet).
+export async function checkWorkspacePool(
+  workspaceId: string | null,
+  pool: number | null
+): Promise<GuardResult> {
+  if (!workspaceId || pool === null) return { ok: true }
+  const windowStart = monthWindowStart()
+  const result = await checkRateLimit(poolKey(workspaceId), { windowStart, max: pool })
+  if (result.ok) return { ok: true }
+  await refundCounter(poolKey(workspaceId))
+  const resetsOn = monthWindowEnd(windowStart).toISOString().slice(0, 10)
+  return {
+    ok: false,
+    status: 429,
+    error: `This workspace's monthly event pool is used up (${pool} events across its products). It resets on ${resetsOn}; Growth raises it.`,
+  }
+}
+
+const poolKey = (workspaceId: string) => `quota:ws:${workspaceId}`
+
+/** Both monthly charges back, for an event that was charged and then failed to persist (the ingest route). */
+export async function refundEventCharges(charged: {
+  projectId: string
+  workspaceId: string | null
+  monthlyEventPool: number | null
+}): Promise<void> {
+  await refundMonthlyQuota(charged.projectId)
+  if (charged.workspaceId && charged.monthlyEventPool !== null) await refundCounter(poolKey(charged.workspaceId))
+}
+
 // Hands back one unit of monthly quota. Called only when an event was CHARGED (the counter was
 // incremented) but then failed to persist — see the ingest route. Best-effort by design: a failed
 // refund must not turn a 500 into two problems, and the ceiling self-heals at the month boundary
 // regardless.
 export async function refundMonthlyQuota(projectId: string): Promise<void> {
+  await refundCounter(`quota:${projectId}`)
+}
+
+async function refundCounter(key: string): Promise<void> {
   try {
     const supabase = getSupabaseServiceClient()
     const { error } = await supabase.rpc('decrement_rate_limit', {
-      p_key: `quota:${projectId}`,
+      p_key: key,
       p_window_start: monthWindowStart().toISOString(),
     })
     if (error) console.error('[quota] refund failed:', error)

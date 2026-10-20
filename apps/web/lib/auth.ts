@@ -17,6 +17,9 @@ export type AuthSuccess = {
   createdBy: string | null
   /** Null until this project's first event ever lands; the ingest route stamps it exactly once. */
   firstEventAt: string | null
+  /** landing-launch-experiment D24 — the key's OWN project's workspace, and its monthly event pool (NULL = no pool). */
+  workspaceId: string | null
+  monthlyEventPool: number | null
 }
 
 export type AuthResult = AuthSuccess | { ok: false; status: number; error: string }
@@ -53,7 +56,9 @@ export async function resolveProjectFromAuthHeader(authHeader: string | null): P
   // There is no filter here to drop. Do not "optimise" this back onto `api_keys` directly.
   const { data, error } = await supabase
     .from('active_ingest_keys')
-    .select('id, project_id, monthly_event_quota, ingest_rate_per_min, created_by, first_event_at')
+    .select(
+      'id, project_id, monthly_event_quota, ingest_rate_per_min, created_by, first_event_at, workspace_id, monthly_event_pool'
+    )
     .eq('key_hash', hashApiKey(key))
     .maybeSingle()
 
@@ -77,5 +82,7 @@ export async function resolveProjectFromAuthHeader(authHeader: string | null): P
     ingestRatePerMin: data.ingest_rate_per_min as number,
     createdBy: (data.created_by as string | null) ?? null,
     firstEventAt: (data.first_event_at as string | null) ?? null,
+    workspaceId: (data.workspace_id as string | null) ?? null,
+    monthlyEventPool: (data.monthly_event_pool as number | null) ?? null,
   }
 }

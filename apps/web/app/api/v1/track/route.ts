@@ -4,7 +4,14 @@ import { getSupabaseServiceClient } from '@/lib/supabase'
 import { trackEventSchema } from '@/lib/track-schema'
 import { normalizeEventContext, LEGACY_EVENT_CONTEXT } from '@/lib/event-context'
 import { computePayloadFingerprint } from '@/lib/idempotency-fingerprint'
-import { checkIngestRate, checkMonthlyQuota, refundMonthlyQuota, MAX_TRACK_PAYLOAD_BYTES } from '@/lib/quota'
+import {
+  checkIngestRate,
+  checkMonthlyQuota,
+  checkWorkspacePool,
+  refundEventCharges,
+  refundMonthlyQuota,
+  MAX_TRACK_PAYLOAD_BYTES,
+} from '@/lib/quota'
 import { trackSelfEvent, FIRST_EVENT_INGESTED_EVENT } from '@/lib/self-track'
 import { scheduleSignalGrouping, scrubReservedEventPayload } from '@/lib/signals'
 import { AGENT_USAGE_EVENT, agentUsageEnvelopeErrors, parseAgentUsage } from '@/lib/agent-usage'
@@ -194,6 +201,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: quota.error }, { status: quota.status })
   }
 
+  // ── 3b. The WORKSPACE pool (landing-launch-experiment D24) ─────────────────────────────────────
+  // After the project quota, so a project over its own ceiling never spends the workspace's pool. checkWorkspacePool
+  // refunds its own rejection; the project unit charged just above is handed back here, or a workspace at its pool would
+  // drain every product's project quota with events that were never stored.
+  const pool = await checkWorkspacePool(auth.workspaceId, auth.monthlyEventPool)
+  if (!pool.ok) {
+    await refundMonthlyQuota(auth.projectId)
+    return NextResponse.json({ ok: false, error: pool.error }, { status: pool.status })
+  }
+
   // ── Story 1.2 · atomic ingest + outbox fan-out ──────────────────────────────────────────────
   // The plain `.from('events').insert()` this replaced could not commit the event and its delivery
   // work in one transaction — supabase-js has no multi-statement transaction, so a crash between two
@@ -238,7 +255,7 @@ export async function POST(req: NextRequest) {
     //
     // A replay (deduplicated) never reaches here — the function returns the original id, not an
     // error — so the dedup path's own quota refund lives below, next to its 200 response.
-    await refundMonthlyQuota(auth.projectId)
+    await refundEventCharges(auth)
     return NextResponse.json({ ok: false, error: 'Failed to persist event' }, { status: 500 })
   }
 
@@ -247,7 +264,7 @@ export async function POST(req: NextRequest) {
     // same-key requests raced, and this one carries a DIFFERENT payload than the one that committed.
     // Nothing was stored, so refund the quota unit, then reject as a conflict — never silently
     // return the other payload's id.
-    await refundMonthlyQuota(auth.projectId)
+    await refundEventCharges(auth)
     return conflictResponse()
   }
 
@@ -255,7 +272,7 @@ export async function POST(req: NextRequest) {
     // The concurrent-race dedup the pre-check couldn't see: two first-time requests for the same key
     // both passed the quota check, one won the insert, this one lost it. Hand the quota unit back —
     // this request charged one but stored nothing — then answer with the shared dedup response.
-    await refundMonthlyQuota(auth.projectId)
+    await refundEventCharges(auth)
     return respondDeduplicated(supabase, auth, { id: ingest.event_id })
   }
 
