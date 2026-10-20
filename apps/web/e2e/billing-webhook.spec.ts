@@ -215,7 +215,63 @@ test('a deletion delivered BEFORE its creation is final: the late "created" cann
     expect(await row(client, ws)).toMatchObject({ plan: 'free', stripe_subscription_id: null })
   } finally {
     await cleanup(client, ws, events)
-    await client.from('billing_ended_subscriptions').delete().eq('stripe_subscription_id', sub)
+    await client.from('billing_subscription_states').delete().eq('stripe_subscription_id', sub)
+  }
+})
+
+test('a deleted subscription is ended for good: even a LATER-stamped "active" for it cannot grant Growth', async ({
+  request,
+}) => {
+  const client = db()
+  const { customer, sub } = ids()
+  const ws = await workspace(client, 'free', customer)
+  const events: string[] = []
+  try {
+    const t = ++clock
+    const created = subEvent('customer.subscription.created', customer, sub, 'active', { created: t })
+    const deleted = subEvent('customer.subscription.deleted', customer, sub, 'canceled', { created: t + 1 })
+    const after = subEvent('customer.subscription.updated', customer, sub, 'active', { created: t + 2 })
+    clock = t + 3
+    events.push(created.id, deleted.id, after.id)
+    for (const e of [created, deleted, after]) expect((await send(request, e)).status()).toBe(200)
+    expect(await row(client, ws)).toMatchObject({ plan: 'free', stripe_subscription_id: null })
+  } finally {
+    await cleanup(client, ws, events)
+    await client.from('billing_subscription_states').delete().eq('stripe_subscription_id', sub)
+  }
+})
+
+test('an "unpaid" or a move off the price delivered BEFORE "created" still wins: the late "created" cannot grant Growth', async ({
+  request,
+}) => {
+  const client = db()
+  const events: string[] = []
+  const made: { ws: string; sub: string }[] = []
+  try {
+    for (const early of ['unpaid', 'moved-price'] as const) {
+      const { customer, sub } = ids()
+      const ws = await workspace(client, 'free', customer)
+      made.push({ ws, sub })
+      const t = ++clock
+      const created = subEvent('customer.subscription.created', customer, sub, 'active', { created: t })
+      const later =
+        early === 'unpaid'
+          ? subEvent('customer.subscription.updated', customer, sub, 'unpaid', { created: t + 5 })
+          : subEvent('customer.subscription.updated', customer, sub, 'active', {
+              created: t + 5,
+              lookupKey: 'someone_elses_price',
+            })
+      clock = t + 6
+      events.push(created.id, later.id)
+      for (const e of [later, created]) expect((await send(request, e)).status()).toBe(200)
+      expect(await row(client, ws), early).toMatchObject({ plan: 'free', stripe_subscription_id: null })
+    }
+  } finally {
+    if (events.length) await client.from('billing_events').delete().in('stripe_event_id', events)
+    for (const { ws, sub } of made) {
+      await client.from('workspaces').delete().eq('id', ws)
+      await client.from('billing_subscription_states').delete().eq('stripe_subscription_id', sub)
+    }
   }
 })
 
@@ -247,7 +303,7 @@ test('a held Growth subscription moved off the Growth price, or deleted after it
     if (events.length) await client.from('billing_events').delete().in('stripe_event_id', events)
     for (const { ws, sub } of made) {
       await client.from('workspaces').delete().eq('id', ws)
-      await client.from('billing_ended_subscriptions').delete().eq('stripe_subscription_id', sub)
+      await client.from('billing_subscription_states').delete().eq('stripe_subscription_id', sub)
     }
   }
 })

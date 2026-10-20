@@ -76,24 +76,27 @@ CREATE TABLE IF NOT EXISTS billing_events (
 ALTER TABLE billing_events ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON TABLE billing_events FROM PUBLIC, anon, authenticated;
 
--- D26 — subscriptions that have ENDED (deleted, canceled, incomplete_expired), recorded the moment any event says so,
--- whether or not a workspace holds them yet. Stripe does not deliver in order: a `deleted` can arrive before its own
--- `created`, and a Growth that then bound the slot would never be taken back (codex r5, #412). Growth never binds an
--- ended subscription.
-CREATE TABLE IF NOT EXISTS billing_ended_subscriptions (
+-- D26 — the LATEST state Stripe has told us for each subscription, whether or not a workspace holds it yet. Stripe does
+-- not deliver in order (a backlog after an outage arrives in any order): a `deleted`, an `unpaid` or a move off the
+-- Growth price can arrive before the subscription's own `created`, and a Growth that then bound the slot from the stale
+-- event would never be taken back (codex r5, verifier r6, #412). So every event updates this record first — only forward
+-- in event time, a same-second tie going to Free, and `ended` (deleted, canceled, expired) sticky for good — and the
+-- workspace is then set from the RECORD, never from the event alone.
+CREATE TABLE IF NOT EXISTS billing_subscription_states (
   stripe_subscription_id TEXT PRIMARY KEY,
-  ended_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  plan TEXT NOT NULL CHECK (plan IN ('growth', 'free')),
+  event_at TIMESTAMPTZ NOT NULL,
+  ended BOOLEAN NOT NULL DEFAULT false
 );
-ALTER TABLE billing_ended_subscriptions ENABLE ROW LEVEL SECURITY;
-REVOKE ALL ON TABLE billing_ended_subscriptions FROM PUBLIC, anon, authenticated;
+ALTER TABLE billing_subscription_states ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE billing_subscription_states FROM PUBLIC, anon, authenticated;
 
--- D26 — the ONE place a subscription event changes a plan, atomically, under a lock on the workspace row:
---   · an ended subscription is recorded first (above), whatever the workspace holds;
+-- D26 — the ONE place a subscription event changes a plan, atomically. Locks, always in this order: the subscription's
+-- record (the upsert), then the workspace row (FOR UPDATE). Then, from the record:
 --   · never a comped workspace; only the workspace holding the Stripe customer (`stripe_customer_id` is unique);
---   · Growth binds an empty or the SAME slot, never an ended subscription, and only strictly LATER than the last applied
---     event (Stripe's `created` is whole seconds; a tie goes to Free);
---   · Free applies only to the subscription the slot holds, at the same time or later.
--- Returns the workspace changed, or NULL when a guard left it alone. Service role only (the webhook).
+--   · Growth (the record says Growth and not ended) binds an empty or the SAME slot — a second subscription never takes it;
+--   · Free (ended, or the record says Free) applies only to the subscription the slot holds.
+-- Returns the workspace changed, or NULL when nothing applied. Service role only (the webhook).
 CREATE OR REPLACE FUNCTION public.apply_subscription_event(
   p_customer TEXT,
   p_subscription TEXT,
@@ -102,37 +105,43 @@ CREATE OR REPLACE FUNCTION public.apply_subscription_event(
   p_ended BOOLEAN
 ) RETURNS UUID
 LANGUAGE plpgsql
-SET search_path = public
+SET search_path = public, pg_temp
 AS $$
 DECLARE
+  st RECORD;
   ws RECORD;
+  effective TEXT;
 BEGIN
   IF p_plan NOT IN ('growth', 'free') THEN
     RAISE EXCEPTION 'apply_subscription_event: % is not a plan a payment can set', p_plan;
   END IF;
-  IF p_ended THEN
-    INSERT INTO billing_ended_subscriptions (stripe_subscription_id) VALUES (p_subscription)
-      ON CONFLICT (stripe_subscription_id) DO NOTHING;
-  END IF;
-  SELECT id, plan, stripe_subscription_id, stripe_subscription_event_at INTO ws
+  INSERT INTO billing_subscription_states AS s (stripe_subscription_id, plan, event_at, ended)
+    VALUES (p_subscription, p_plan, p_event_at, p_ended)
+  ON CONFLICT (stripe_subscription_id) DO UPDATE
+    SET plan = CASE
+          WHEN EXCLUDED.event_at > s.event_at OR (EXCLUDED.event_at = s.event_at AND EXCLUDED.plan = 'free')
+          THEN EXCLUDED.plan ELSE s.plan END,
+        event_at = GREATEST(s.event_at, EXCLUDED.event_at),
+        ended = s.ended OR EXCLUDED.ended
+  RETURNING plan, event_at, ended INTO st;
+  effective := CASE WHEN st.ended THEN 'free' ELSE st.plan END;
+
+  SELECT id, plan, stripe_subscription_id INTO ws
     FROM workspaces WHERE stripe_customer_id = p_customer FOR UPDATE;
   IF NOT FOUND OR ws.plan = 'comped' THEN
     RETURN NULL;
   END IF;
-  IF p_plan = 'growth' THEN
-    IF EXISTS (SELECT 1 FROM billing_ended_subscriptions WHERE stripe_subscription_id = p_subscription)
-       OR (ws.stripe_subscription_id IS NOT NULL AND ws.stripe_subscription_id <> p_subscription)
-       OR (ws.stripe_subscription_event_at IS NOT NULL AND ws.stripe_subscription_event_at >= p_event_at) THEN
+  IF effective = 'growth' THEN
+    IF ws.stripe_subscription_id IS NOT NULL AND ws.stripe_subscription_id <> p_subscription THEN
       RETURN NULL;
     END IF;
-  ELSIF ws.stripe_subscription_id IS DISTINCT FROM p_subscription
-     OR (ws.stripe_subscription_event_at IS NOT NULL AND ws.stripe_subscription_event_at > p_event_at) THEN
+  ELSIF ws.stripe_subscription_id IS DISTINCT FROM p_subscription THEN
     RETURN NULL;
   END IF;
   UPDATE workspaces
-     SET plan = p_plan,
-         stripe_subscription_id = CASE WHEN p_plan = 'growth' THEN p_subscription END,
-         stripe_subscription_event_at = p_event_at
+     SET plan = effective,
+         stripe_subscription_id = CASE WHEN effective = 'growth' THEN p_subscription END,
+         stripe_subscription_event_at = st.event_at
    WHERE id = ws.id;
   RETURN ws.id;
 END

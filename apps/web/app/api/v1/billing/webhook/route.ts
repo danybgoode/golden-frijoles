@@ -76,8 +76,12 @@ export async function POST(req: NextRequest) {
       // Two different things, told apart: a customer nobody of ours holds is LOUD (money with no workspace to give it to —
       // CODE-QUALITY #7); a known customer whose guards declined (a stale or second subscription) is the guards working.
       const holder = await workspaceForCustomer(action.customerId)
-      if (!holder)
-        console.error(`[billing/webhook] ${event.type} ${event.id}: Stripe customer matches NO workspace`)
+      // Only a GROWTH grant with nowhere to go is money without a workspace. A Free for an unknown customer is another
+      // product's or a Payment Link's subscription in the same Stripe account, and moves nothing (verifier r6, #412).
+      if (!holder) {
+        if (action.plan === 'growth')
+          console.error(`[billing/webhook] ${event.type} ${event.id}: Stripe customer matches NO workspace`)
+      }
       // A Growth subscription the slot guard (rightly) declined, because the workspace holds a different one. Usually a
       // stale event for an old subscription; but if THIS one is live, its customer is paying for nothing — so it is logged
       // with every id an operator needs to check it in Stripe and refund it (verifier r2/r3, #412).

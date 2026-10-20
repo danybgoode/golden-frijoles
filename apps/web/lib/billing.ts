@@ -106,12 +106,11 @@ export async function workspaceForCustomer(
 }
 
 /**
- * Applies a decided action through ONE database function, under a lock on the workspace row
- * (`apply_subscription_event`, migration 20261022100000): an ended subscription is recorded first, whatever the workspace
- * holds; never a comped workspace; Growth binds an empty or the SAME slot, never an ended subscription, and only strictly
- * later than the last applied event (a same-second tie goes to Free); Free applies only to the subscription the slot
- * holds. One function because Stripe delivers out of order and concurrently: separate reads and writes here could
- * interleave (codex r5, #412). Returns the workspace changed, or null. Throws on a database error (→ 500, Stripe retries).
+ * Applies a decided action through ONE database function (`apply_subscription_event`, migration 20261022100000): it first
+ * records the subscription's LATEST state (forward in event time only, a same-second tie to Free, ended sticky), then sets
+ * the one workspace holding the customer from that record, under a row lock — never a comped one; Growth into an empty or
+ * the SAME slot; Free only for the subscription the slot holds. One function because Stripe delivers out of order and
+ * concurrently: a Free that arrives before its subscription's `created` must still win (codex r5, verifier r6, #412). Returns the workspace changed, or null. Throws on a database error (→ 500, Stripe retries).
  */
 export async function applyBillingAction(action: BillingAction): Promise<string | null> {
   if (action.kind === 'none') return null
