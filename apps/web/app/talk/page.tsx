@@ -9,7 +9,8 @@ export const metadata: Metadata = {
     'A half-day working session with Daniel on a live project of yours: we run your first bet with your team. From $1,500, growth included for 3 months.',
 }
 
-// landing-maker-ops · Sprint 5 — the Pods booking flow.
+// landing-maker-ops · Sprint 5 — the Pods booking flow; since landing-launch-experiment S5.1, "Set up with us": the
+// white-glove offer, priced from $1,500, booked through a 20-minute first conversation (the `quick-chat` event).
 //
 // ── Why this is a ROUTE and not an embed on the pricing tier ──────────────────────────────────
 // The obvious build is Cal.com's own embed script dropped into `PricingSection`, which opens the
@@ -21,9 +22,9 @@ export const metadata: Metadata = {
 //      the same-origin policy alone stops it reading this page, its cookies or its DOM. (That is
 //      ISOLATION, not sandboxing — there is no `sandbox` attribute here, deliberately; see the note
 //      on the element itself.)
-//   3. A modal gives the reader no room to be told what the conversation actually is. The Pods tier
-//      is the one thing on the pricing table with no price on it, so the reader arriving here has
-//      exactly one question — "what am I agreeing to?" — and a calendar grid does not answer it.
+//   3. A modal gives the reader no room to be told what the conversation actually is. The reader
+//      arriving here has exactly one question — "what am I agreeing to?" — and a calendar grid does not
+//      answer it: the page says what the session is, what you leave with and what it costs.
 //
 // ── The frame is NEVER the only way through ───────────────────────────────────────────────────
 // An iframe to a third party has a failure mode a local test will never show you: it renders as a
@@ -46,7 +47,8 @@ export const metadata: Metadata = {
 //   · The approved lede says **"Thirty minutes, no deck."** The shipped page, and the Cal.com event
 //     it books (`quick-chat`), are **twenty**. The number the product can keep is the one that
 //     ships; a mock's round number is not a scheduling change.
-//   · The approved aside has three items. A **fourth** is kept — the direct booking link — because
+//   · The approved aside had three items. Since landing-launch-experiment S5.1 it has five (the session, what
+//     you leave with, the price, the direct booking link, the demo). The direct booking link is kept because
 //     it is the escape hatch above, and the header comment explains why it cannot be conditional.
 //     Dropping it to match a mock would delete the only path through for every reader whose browser
 //     blocks the frame.
@@ -73,7 +75,7 @@ export default function TalkPage() {
       <h1>Set up with us</h1>
       <p className="ds-lede">
         A half-day working session with Daniel on a live project of yours, where we run your first bet with
-        your team. From $1,500.
+        your team. From $1,500. The calendar books a 20-minute first conversation to scope it.
       </p>
 
       <div className="ds-talkgrid">
