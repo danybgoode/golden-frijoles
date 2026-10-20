@@ -198,6 +198,60 @@ test('a stale "active" in the SAME second as the deletion cannot undo it (a tie 
   }
 })
 
+test('a deletion delivered BEFORE its creation is final: the late "created" cannot grant Growth', async ({
+  request,
+}) => {
+  const client = db()
+  const { customer, sub } = ids()
+  const ws = await workspace(client, 'free', customer)
+  const events: string[] = []
+  try {
+    const t = ++clock
+    const created = subEvent('customer.subscription.created', customer, sub, 'active', { created: t })
+    const deleted = subEvent('customer.subscription.deleted', customer, sub, 'canceled', { created: t + 5 })
+    clock = t + 6
+    events.push(created.id, deleted.id)
+    for (const e of [deleted, created]) expect((await send(request, e)).status()).toBe(200)
+    expect(await row(client, ws)).toMatchObject({ plan: 'free', stripe_subscription_id: null })
+  } finally {
+    await cleanup(client, ws, events)
+    await client.from('billing_ended_subscriptions').delete().eq('stripe_subscription_id', sub)
+  }
+})
+
+test('a held Growth subscription moved off the Growth price, or deleted after its key moved, loses Growth', async ({
+  request,
+}) => {
+  const client = db()
+  const events: string[] = []
+  const made: { ws: string; sub: string }[] = []
+  try {
+    for (const ending of ['moved-price', 'deleted-without-key'] as const) {
+      const { customer, sub } = ids()
+      const ws = await workspace(client, 'free', customer)
+      made.push({ ws, sub })
+      const created = subEvent('customer.subscription.created', customer, sub, 'active')
+      const off =
+        ending === 'moved-price'
+          ? subEvent('customer.subscription.updated', customer, sub, 'active', {
+              lookupKey: 'someone_elses_price',
+            })
+          : subEvent('customer.subscription.deleted', customer, sub, 'canceled', { lookupKey: null })
+      events.push(created.id, off.id)
+      expect((await send(request, created)).status()).toBe(200)
+      expect((await row(client, ws))?.plan).toBe('growth')
+      expect((await send(request, off)).status()).toBe(200)
+      expect(await row(client, ws), ending).toMatchObject({ plan: 'free', stripe_subscription_id: null })
+    }
+  } finally {
+    if (events.length) await client.from('billing_events').delete().in('stripe_event_id', events)
+    for (const { ws, sub } of made) {
+      await client.from('workspaces').delete().eq('id', ws)
+      await client.from('billing_ended_subscriptions').delete().eq('stripe_subscription_id', sub)
+    }
+  }
+})
+
 test('a second subscription cannot take the slot, and its deletion cannot demote the workspace', async ({
   request,
 }) => {
@@ -281,4 +335,29 @@ test('checkout does not exist while the switch is off; the portal always answers
   } else {
     expect(checkout.status()).toBe(404)
   }
+})
+
+test('apply_subscription_event() is NOT executable by the anon role — only the webhook (service role) moves a plan', async () => {
+  // The PROPERTY, not the REVOKE statement (delivery-outbox's discipline): a function-level denial, never an RLS error
+  // (which would mean EXECUTE leaked and the body ran as anon).
+  const url = process.env.SUPABASE_URL
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  test.skip(!url || !anon, 'anon key not in env')
+  const anonClient = createClient(url!, anon!, { auth: { persistSession: false } })
+  const { error } = await anonClient.rpc('apply_subscription_event', {
+    p_customer: 'cus_x',
+    p_subscription: 'sub_x',
+    p_plan: 'growth',
+    p_event_at: new Date().toISOString(),
+    p_ended: false,
+  })
+  expect(error).not.toBeNull()
+  const code = error?.code ?? ''
+  const message = (error?.message ?? '').toLowerCase()
+  expect(
+    (code === '42501' && message.includes('function')) ||
+      code === 'PGRST202' ||
+      message.includes('could not find the function')
+  ).toBe(true)
+  expect(message).not.toContain('row-level security')
 })

@@ -10,8 +10,9 @@ import { applyBillingAction, billingEventSeen, recordBillingEvent, workspaceForC
 //   1. Verify the signature over the RAW body (Stripe's constant-time check, `STRIPE_WEBHOOK_SECRET`) before reading a
 //      single field. No secret configured → 500, never "accept unsigned": fail closed.
 //   2. Seen this event id before → 200, nothing done (Stripe redelivers; a replay must be a no-op).
-//   3. Decide (pure, lib/billing-decision.ts) and apply (lib/billing.ts) — one workspace, never a comped one, only the
-//      Growth price, only forward in event time, only the subscription the workspace holds.
+//   3. Decide (pure, lib/billing-decision.ts) and apply (lib/billing.ts → the `apply_subscription_event` function, under
+//      a row lock) — one workspace, never a comped one; Growth only for the Growth price, never for an ENDED subscription,
+//      only forward in event time; Free for the subscription the workspace holds, whatever its price.
 //   4. Record the event id LAST. If applying throws, nothing is recorded and the 500 makes Stripe retry; the apply is a
 //      set, not an increment, so a retry that races a slow first delivery cannot double anything.
 //

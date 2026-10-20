@@ -12,6 +12,18 @@ import { isMain } from './lib/is-main.mjs';
 export const GROWTH_PRICE_LOOKUP_KEY = 'gf_growth_monthly';
 export const GROWTH_UNIT_AMOUNT = 4900;
 
+/** The script's copy of `apps/web/lib/billing-decision.ts → isGrowthPrice` (scripts do not import the app); one unit test
+ *  runs both against the same cases, so they cannot drift (verifier r5, #412). */
+export function isGrowthPrice(price) {
+  return (
+    price.unit_amount === GROWTH_UNIT_AMOUNT &&
+    price.currency === 'usd' &&
+    price.recurring?.interval === 'month' &&
+    price.recurring.interval_count === 1 &&
+    (price.recurring.usage_type ?? 'licensed') === 'licensed'
+  );
+}
+
 export async function main(argv = process.argv.slice(2), env = process.env) {
   const key = env.STRIPE_SECRET_KEY?.trim();
   if (!key) {
@@ -31,17 +43,10 @@ export async function main(argv = process.argv.slice(2), env = process.env) {
   if (existing.data[0]) {
     const price = existing.data[0];
     const described = `${price.id} · ${price.unit_amount} ${price.currency}/${price.recurring?.interval_count ?? '?'} ${price.recurring?.interval ?? 'one-off'} · lookup ${GROWTH_PRICE_LOOKUP_KEY}`;
-    // The app sells only exactly this (apps/web/lib/billing-decision.ts → isGrowthPrice); a key on anything else is a
-    // misconfiguration to fix in the Dashboard, never "already there" (codex r4, #412).
-    const exact =
-      price.unit_amount === GROWTH_UNIT_AMOUNT &&
-      price.currency === 'usd' &&
-      price.recurring?.interval === 'month' &&
-      price.recurring.interval_count === 1 &&
-      (price.recurring.usage_type ?? 'licensed') === 'licensed';
+    const exact = isGrowthPrice(price);
     if (!exact) {
       process.stderr.write(
-        `stripe-ensure-growth-price: WRONG price under the lookup key: ${described}. Checkout refuses it; move the key to a $49.00 USD/month price.\n`
+        `stripe-ensure-growth-price: WRONG price under the lookup key: ${described}. Checkout refuses to sell it. Do NOT just move the key: the webhook knows Growth by it, so every subscription on this price would lose Growth at its next event. Migrate those subscriptions to a correct $49.00 USD/month price first.\n`
       );
       return 1;
     }

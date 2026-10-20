@@ -76,6 +76,70 @@ CREATE TABLE IF NOT EXISTS billing_events (
 ALTER TABLE billing_events ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON TABLE billing_events FROM PUBLIC, anon, authenticated;
 
+-- D26 — subscriptions that have ENDED (deleted, canceled, incomplete_expired), recorded the moment any event says so,
+-- whether or not a workspace holds them yet. Stripe does not deliver in order: a `deleted` can arrive before its own
+-- `created`, and a Growth that then bound the slot would never be taken back (codex r5, #412). Growth never binds an
+-- ended subscription.
+CREATE TABLE IF NOT EXISTS billing_ended_subscriptions (
+  stripe_subscription_id TEXT PRIMARY KEY,
+  ended_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+ALTER TABLE billing_ended_subscriptions ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE billing_ended_subscriptions FROM PUBLIC, anon, authenticated;
+
+-- D26 — the ONE place a subscription event changes a plan, atomically, under a lock on the workspace row:
+--   · an ended subscription is recorded first (above), whatever the workspace holds;
+--   · never a comped workspace; only the workspace holding the Stripe customer (`stripe_customer_id` is unique);
+--   · Growth binds an empty or the SAME slot, never an ended subscription, and only strictly LATER than the last applied
+--     event (Stripe's `created` is whole seconds; a tie goes to Free);
+--   · Free applies only to the subscription the slot holds, at the same time or later.
+-- Returns the workspace changed, or NULL when a guard left it alone. Service role only (the webhook).
+CREATE OR REPLACE FUNCTION public.apply_subscription_event(
+  p_customer TEXT,
+  p_subscription TEXT,
+  p_plan TEXT,
+  p_event_at TIMESTAMPTZ,
+  p_ended BOOLEAN
+) RETURNS UUID
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
+DECLARE
+  ws RECORD;
+BEGIN
+  IF p_plan NOT IN ('growth', 'free') THEN
+    RAISE EXCEPTION 'apply_subscription_event: % is not a plan a payment can set', p_plan;
+  END IF;
+  IF p_ended THEN
+    INSERT INTO billing_ended_subscriptions (stripe_subscription_id) VALUES (p_subscription)
+      ON CONFLICT (stripe_subscription_id) DO NOTHING;
+  END IF;
+  SELECT id, plan, stripe_subscription_id, stripe_subscription_event_at INTO ws
+    FROM workspaces WHERE stripe_customer_id = p_customer FOR UPDATE;
+  IF NOT FOUND OR ws.plan = 'comped' THEN
+    RETURN NULL;
+  END IF;
+  IF p_plan = 'growth' THEN
+    IF EXISTS (SELECT 1 FROM billing_ended_subscriptions WHERE stripe_subscription_id = p_subscription)
+       OR (ws.stripe_subscription_id IS NOT NULL AND ws.stripe_subscription_id <> p_subscription)
+       OR (ws.stripe_subscription_event_at IS NOT NULL AND ws.stripe_subscription_event_at >= p_event_at) THEN
+      RETURN NULL;
+    END IF;
+  ELSIF ws.stripe_subscription_id IS DISTINCT FROM p_subscription
+     OR (ws.stripe_subscription_event_at IS NOT NULL AND ws.stripe_subscription_event_at > p_event_at) THEN
+    RETURN NULL;
+  END IF;
+  UPDATE workspaces
+     SET plan = p_plan,
+         stripe_subscription_id = CASE WHEN p_plan = 'growth' THEN p_subscription END,
+         stripe_subscription_event_at = p_event_at
+   WHERE id = ws.id;
+  RETURN ws.id;
+END
+$$;
+REVOKE ALL ON FUNCTION public.apply_subscription_event(TEXT, TEXT, TEXT, TIMESTAMPTZ, BOOLEAN) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.apply_subscription_event(TEXT, TEXT, TEXT, TIMESTAMPTZ, BOOLEAN) TO service_role;
+
 COMMENT ON COLUMN workspaces.plan IS
   'landing-launch-experiment D23: free | growth | comped. Sets product_limit and monthly_event_pool through workspaces_apply_plan().';
 COMMENT ON COLUMN workspaces.monthly_event_pool IS

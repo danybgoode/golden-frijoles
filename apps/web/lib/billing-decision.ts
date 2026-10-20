@@ -60,7 +60,15 @@ export type BillingEventFacts =
 
 export type BillingAction =
   /** Set the plan of the ONE workspace holding this Stripe customer, for this subscription, at this event time. */
-  | { kind: 'set-plan'; customerId: string; plan: 'growth' | 'free'; subscriptionId: string; eventAt: string }
+  | {
+      kind: 'set-plan'
+      customerId: string
+      plan: 'growth' | 'free'
+      subscriptionId: string
+      eventAt: string
+      /** The subscription can never be live again (deleted, canceled, expired): recorded so Growth never binds it. */
+      ended: boolean
+    }
   /** Nothing to change; the event is still recorded. */
   | { kind: 'none'; reason: string }
 
@@ -102,10 +110,19 @@ export function decideBillingAction(event: BillingEventFacts): BillingAction {
     return { kind: 'none', reason: 'no customer on the subscription' }
   if (!e.subscriptionId || !SUBSCRIPTION_ID.test(e.subscriptionId))
     return { kind: 'none', reason: 'no subscription id' }
-  if (!e.priceLookupKeys.includes(GROWTH_PRICE_LOOKUP_KEY))
-    return { kind: 'none', reason: 'not the Growth price' }
   if (!Number.isSafeInteger(e.createdAt) || e.createdAt <= 0) return { kind: 'none', reason: 'no event time' }
-  const plan = event.type === 'customer.subscription.deleted' ? 'free' : planForSubscriptionStatus(e.status)
+  const ended =
+    event.type === 'customer.subscription.deleted' ||
+    e.status === 'canceled' ||
+    e.status === 'incomplete_expired'
+  // Off the Growth price (never on it, or moved away): Free for THIS subscription. The apply step moves only a workspace
+  // whose slot holds it, so a subscription on another price still grants nothing — and one moved off Growth takes back
+  // exactly the Growth it held (codex r5, #412).
+  const plan = !e.priceLookupKeys.includes(GROWTH_PRICE_LOOKUP_KEY)
+    ? 'free'
+    : ended
+      ? 'free'
+      : planForSubscriptionStatus(e.status)
   if (!plan) return { kind: 'none', reason: `subscription ${e.status ?? 'unknown'}` }
   return {
     kind: 'set-plan',
@@ -113,6 +130,7 @@ export function decideBillingAction(event: BillingEventFacts): BillingAction {
     plan,
     subscriptionId: e.subscriptionId,
     eventAt: new Date(e.createdAt * 1000).toISOString(),
+    ended,
   }
 }
 

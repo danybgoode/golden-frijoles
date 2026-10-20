@@ -106,34 +106,22 @@ export async function workspaceForCustomer(
 }
 
 /**
- * Applies a decided action to the ONE workspace holding the customer, never a comped one, and only forward in event time
- * (a same-second tie goes to Free).
- * Growth binds to an empty or the SAME subscription slot (a second subscription cannot take the slot); Free applies only to
- * the subscription the workspace holds (another subscription's deletion cannot demote it). Idempotent: it sets values.
- * Returns the workspace it changed, or null when the guards left it alone. Throws on a database error (→ 500, Stripe retries).
+ * Applies a decided action through ONE database function, under a lock on the workspace row
+ * (`apply_subscription_event`, migration 20261022100000): an ended subscription is recorded first, whatever the workspace
+ * holds; never a comped workspace; Growth binds an empty or the SAME slot, never an ended subscription, and only strictly
+ * later than the last applied event (a same-second tie goes to Free); Free applies only to the subscription the slot
+ * holds. One function because Stripe delivers out of order and concurrently: separate reads and writes here could
+ * interleave (codex r5, #412). Returns the workspace changed, or null. Throws on a database error (→ 500, Stripe retries).
  */
 export async function applyBillingAction(action: BillingAction): Promise<string | null> {
   if (action.kind === 'none') return null
-  const supabase = getSupabaseServiceClient()
-  let query = supabase
-    .from('workspaces')
-    .update({
-      plan: action.plan,
-      stripe_subscription_id: action.plan === 'growth' ? action.subscriptionId : null,
-      stripe_subscription_event_at: action.eventAt,
-    })
-    .eq('stripe_customer_id', action.customerId)
-    .neq('plan', 'comped')
-    // Stripe's `created` is whole seconds, so two events can share one. A tie goes to Free: Growth must be strictly LATER
-    // than the last applied event, so a stale "active" in the same second as a deletion cannot undo it (codex r3, #412).
-    .or(
-      `stripe_subscription_event_at.is.null,stripe_subscription_event_at.${action.plan === 'growth' ? 'lt' : 'lte'}."${action.eventAt}"`
-    )
-  query =
-    action.plan === 'growth'
-      ? query.or(`stripe_subscription_id.is.null,stripe_subscription_id.eq.${action.subscriptionId}`)
-      : query.eq('stripe_subscription_id', action.subscriptionId)
-  const { data, error } = await query.select('id')
+  const { data, error } = await getSupabaseServiceClient().rpc('apply_subscription_event', {
+    p_customer: action.customerId,
+    p_subscription: action.subscriptionId,
+    p_plan: action.plan,
+    p_event_at: action.eventAt,
+    p_ended: action.ended,
+  })
   if (error) throw new Error(`billing plan update failed: ${error.message}`)
-  return (data?.[0]?.id as string | undefined) ?? null
+  return (data as string | null) ?? null
 }
