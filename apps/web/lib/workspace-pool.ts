@@ -14,6 +14,7 @@ export async function readPoolNotice(projectId: string): Promise<PoolNotice | nu
       .from('projects')
       .select('workspace_id, workspaces ( plan, monthly_event_pool )')
       .eq('id', projectId)
+      .is('deleted_at', null) // many-products D9: a deleted product is not found, and is told nothing
       .maybeSingle()
     const workspace = project?.workspaces as { plan?: string; monthly_event_pool?: number | null } | null
     if (!project?.workspace_id || !workspace) return null
