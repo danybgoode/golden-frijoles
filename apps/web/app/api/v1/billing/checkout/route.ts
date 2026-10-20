@@ -32,9 +32,9 @@ export async function POST() {
     return NextResponse.redirect(new URL(`/login?next=${encodeURIComponent('/#pricing')}`, site), 303)
 
   const workspace = await ownWorkspaceForBilling(user.id)
-  if (!workspace) return NextResponse.redirect(new URL(billingHref('no-workspace'), site), 303)
+  if (!workspace) return back('no-workspace')
   // Growth and comped already have everything Growth sells; a second subscription would charge twice.
-  if (workspace.plan !== 'free') return NextResponse.redirect(new URL(billingHref('already'), site), 303)
+  if (workspace.plan !== 'free') return back('already')
 
   const stripe = getStripe()
   // A person pressed a button: every outcome below lands on the Plan & billing page with a sentence (lib/billing-view.ts),
@@ -94,7 +94,7 @@ export async function POST() {
         }))
       )
     )
-      return NextResponse.redirect(new URL(billingHref('already'), site), 303)
+      return back('already')
 
     // Never `payment_method_types` (Stripe's guidance): the Dashboard decides which methods are offered.
     const session = await stripe.checkout.sessions.create({
