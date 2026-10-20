@@ -9,14 +9,21 @@ import type { BillingAction } from './billing-decision'
 // (`stripe_customer_id` is unique, recorded by OUR checkout route); no session or browser field ever names one. A comped
 // workspace is never touched by a webhook: a grant is not something a payment event can take away.
 
-export type BillingWorkspace = { id: string; plan: string; stripeCustomerId: string | null }
+export type BillingWorkspace = {
+  id: string
+  name: string
+  plan: string
+  productLimit: number | null
+  monthlyEventPool: number | null
+  stripeCustomerId: string | null
+}
 
 /** The workspace `userId` created and owns, or null. Two checks, because creation alone is not ownership. */
 export async function ownWorkspaceForBilling(userId: string): Promise<BillingWorkspace | null> {
   const supabase = getSupabaseServiceClient()
   const { data: workspace, error } = await supabase
     .from('workspaces')
-    .select('id, plan, stripe_customer_id')
+    .select('id, name, plan, product_limit, monthly_event_pool, stripe_customer_id')
     .eq('created_by', userId)
     .maybeSingle()
   if (error || !workspace) return null
@@ -29,7 +36,10 @@ export async function ownWorkspaceForBilling(userId: string): Promise<BillingWor
   if (member?.role !== 'owner') return null
   return {
     id: workspace.id as string,
+    name: workspace.name as string,
     plan: workspace.plan as string,
+    productLimit: (workspace.product_limit as number | null) ?? null,
+    monthlyEventPool: (workspace.monthly_event_pool as number | null) ?? null,
     stripeCustomerId: (workspace.stripe_customer_id as string | null) ?? null,
   }
 }

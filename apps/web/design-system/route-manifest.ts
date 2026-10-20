@@ -309,6 +309,30 @@ export const ROUTE_MANIFEST: readonly CoverageRow[] = [
         'then it counts against the percentage.',
     },
   },
+  // landing-launch-experiment · Sprint 4 (D27, D28's order) — Plan & billing: the caller's own workspace's plan and the two
+  // POST forms to Stripe. Addressed by the session, not by project, so `surface: null`. Built from the primitives (PageHead,
+  // Stat, Summary, Callout, ListCard, Button); no approved picture yet, so it joins the DENOMINATOR with a dated deferral,
+  // exactly like the portfolio.
+  {
+    route: '/app/billing',
+    page: 'app/billing/page.tsx',
+    label: 'Plan & billing',
+    frame: 'console',
+    seam: 'product-shell',
+    surface: null,
+    referenceState: null,
+    rendersFromDesignSystem: false,
+    landsIn: 6,
+    retiresIn: null,
+    deferred: {
+      owner: 'Daniel',
+      until: '2026-12-31',
+      why:
+        'Plan & billing is built from the design system but has no approved picture: it shipped so the first real ' +
+        'purchase and the portal (the only cancel path) are reachable before checkout opens. Approve its three states ' +
+        '(Free, Growth, Comped) and this row claims coverage.',
+    },
+  },
   {
     route: '/app/impact/[projectSlug]/[featureKey]',
     page: 'app/impact/[projectSlug]/[featureKey]/page.tsx',

@@ -393,6 +393,12 @@ test('checkout does not exist while the switch is off; the portal always answers
   }
 })
 
+test('Plan & billing needs a session, and sign-in brings the reader back to it', async ({ request }) => {
+  const page = await request.get('/app/billing', { maxRedirects: 0 })
+  expect([303, 307]).toContain(page.status())
+  expect(page.headers().location).toContain(`/login?next=${encodeURIComponent('/app/billing')}`)
+})
+
 test('apply_subscription_event() is NOT executable by the anon role — only the webhook (service role) moves a plan', async () => {
   // The PROPERTY, not the REVOKE statement (delivery-outbox's discipline): a function-level denial, never an RLS error
   // (which would mean EXECUTE leaked and the body ran as anon).

@@ -567,6 +567,8 @@ const REACHABLE: Record<string, ((slug: string) => string) | { coveredBy: string
   // portfolio-view S2.1 — opened like FinOps (deferred, no approved state yet). The shared fixture user holds one
   // product, so the gate measures the portfolio's empty state; the populated states are `portfolio.authed.spec.ts`'s.
   '/app/portfolio': () => '/app/portfolio',
+  // landing-launch-experiment S4 — opened like the portfolio: the fixture user's own workspace, Free.
+  '/app/billing': () => '/app/billing',
   '/app/journeys/[projectSlug]': (slug) => `/app/journeys/${slug}`,
   '/app/scenarios/[projectSlug]': (slug) => `/app/scenarios/${slug}`,
   '/app/flags/[projectSlug]': (slug) => `/app/flags/${slug}?env=production`,

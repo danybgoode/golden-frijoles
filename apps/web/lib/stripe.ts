@@ -1,5 +1,6 @@
 import 'server-only'
 import Stripe from 'stripe'
+import { stripeSecretKey } from './billing-decision'
 
 // landing-launch-experiment · Sprint 4, Story 4.3 (epic D25–D27) — the ONE Stripe client. Server-only: the secret key never
 // reaches a browser bundle. Instantiated per call site through this function (Stripe's guidance: a client instance, never
@@ -13,7 +14,7 @@ export const STRIPE_API_VERSION = '2026-09-30.endive'
 export { GROWTH_PRICE_LOOKUP_KEY } from './billing-decision'
 
 export function getStripe(): Stripe | null {
-  const key = process.env.STRIPE_SECRET_KEY?.trim()
+  const key = stripeSecretKey()
   if (!key) return null
   return new Stripe(key, { apiVersion: STRIPE_API_VERSION as Stripe.LatestApiVersion })
 }

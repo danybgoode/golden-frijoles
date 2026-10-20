@@ -1,0 +1,86 @@
+// landing-launch-experiment · Sprint 4 — the Plan & billing page's answers (lib/billing-view.ts).
+import { test } from 'node:test'
+import assert from 'node:assert/strict'
+import { billingHref, billingMessage, billingView } from './billing-view.ts'
+
+const free = { plan: 'free', productLimit: 10, monthlyEventPool: 200_000, hasStripeCustomer: false }
+
+test('Free with checkout on: Get Growth, no portal until Stripe knows the workspace', () => {
+  const view = billingView({ ...free, checkoutOn: true })
+  assert.deepEqual(view.plan, { value: 'Free', label: 'plan' })
+  assert.deepEqual(view.products, { value: '10', label: 'products at most' })
+  assert.deepEqual(view.events, { value: '200,000', label: 'events a month, shared by every product' })
+  assert.equal(view.canBuy, true)
+  assert.equal(view.canManage, false)
+  assert.equal(view.note, null)
+})
+
+test('Free with checkout off: no button that would 404, a note instead', () => {
+  const view = billingView({ ...free, checkoutOn: false })
+  assert.equal(view.canBuy, false)
+  assert.match(view.note ?? '', /not on sale yet/)
+})
+
+test('Growth: never sold twice; the portal whatever the switch says (D27)', () => {
+  for (const checkoutOn of [true, false]) {
+    const view = billingView({
+      plan: 'growth',
+      productLimit: null,
+      monthlyEventPool: 2_000_000,
+      hasStripeCustomer: true,
+      checkoutOn,
+    })
+    assert.deepEqual(view.plan, { value: 'Growth', label: 'plan, $49 a month' })
+    assert.deepEqual(view.products, { value: 'Unlimited', label: 'products' })
+    assert.equal(view.canBuy, false)
+    assert.equal(view.canManage, true)
+    assert.equal(view.note, null)
+  }
+})
+
+test('Comped: no limits, nothing to buy', () => {
+  const view = billingView({
+    plan: 'comped',
+    productLimit: null,
+    monthlyEventPool: null,
+    hasStripeCustomer: false,
+    checkoutOn: true,
+  })
+  assert.equal(view.plan.value, 'Comped')
+  assert.deepEqual(view.events, { value: 'No limit', label: 'on monthly events' })
+  assert.equal(view.canBuy, false)
+  assert.equal(view.canManage, false)
+})
+
+test('a Free workspace that once paid keeps the portal (its invoices, its card)', () => {
+  assert.equal(billingView({ ...free, hasStripeCustomer: true, checkoutOn: false }).canManage, true)
+})
+
+test('billingMessage: known outcomes only, own keys only, first of a repeated param', () => {
+  assert.equal(billingMessage('success')?.tone, 'info')
+  assert.equal(billingMessage(['busy', 'success'])?.tone, 'warn')
+  assert.equal(billingMessage('constructor'), null)
+  assert.equal(billingMessage('nope'), null)
+  assert.equal(billingMessage(undefined), null)
+})
+
+test('billingHref', () => {
+  assert.equal(billingHref(), '/app/billing')
+  assert.equal(billingHref('success'), '/app/billing?billing=success')
+})
+
+test('an unknown plan is shown as itself, and an inherited key is not a plan', () => {
+  assert.equal(billingView({ ...free, plan: 'enterprise', checkoutOn: true }).plan.value, 'enterprise')
+  assert.equal(billingView({ ...free, plan: 'constructor', checkoutOn: true }).plan.value, 'constructor')
+})
+
+test('back from Stripe: "switches on" while the webhook is pending, "is on Growth" once it landed', () => {
+  assert.match(billingMessage('success', 'free')?.text ?? '', /refresh to see it/)
+  assert.equal(billingMessage('success', 'growth')?.text, 'Payment received: this workspace is on Growth.')
+})
+
+test('no failure sentence denies a charge it cannot rule out (verifier, #414)', () => {
+  assert.doesNotMatch(billingMessage('failed')?.text ?? '', /nothing was charged/i)
+  assert.match(billingMessage('failed')?.text ?? '', /refresh before trying again/)
+  assert.ok(billingMessage('portal-failed'))
+})

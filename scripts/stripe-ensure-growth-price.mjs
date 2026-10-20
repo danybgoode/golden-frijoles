@@ -59,15 +59,21 @@ export async function main(argv = process.argv.slice(2), env = process.env) {
     );
     return 0;
   }
+  // What a buyer reads on Checkout, the receipt and the portal: the landing's Growth tier, in its words. The tax code is
+  // SaaS for business use, so Stripe Tax classifies it correctly if it is ever switched on (sprint-4 owed: the Tax decision).
   const product = await stripe.products.create({
     name: 'Golden Frijoles Growth',
-    description: 'Unlimited products, a 2,000,000-event monthly pool, for one workspace.',
+    description:
+      'Unlimited products and seats in one workspace, sharing a 2,000,000-event monthly pool. Billed monthly; cancel any time.',
+    tax_code: 'txcd_10103001',
+    url: 'https://goldenfrijoles.com',
   });
   const price = await stripe.prices.create({
     product: product.id,
     currency: 'usd',
     unit_amount: GROWTH_UNIT_AMOUNT,
     recurring: { interval: 'month' },
+    nickname: 'Growth · monthly',
     lookup_key: GROWTH_PRICE_LOOKUP_KEY,
   });
   process.stdout.write(
