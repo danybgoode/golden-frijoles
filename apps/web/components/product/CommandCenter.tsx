@@ -8,6 +8,7 @@ import { isFirstEventBandEnabled, isSignalsEnabled } from '@/lib/flags'
 import { getFirstEventForBand } from '@/lib/event-catalog-query'
 import { FIRST_EVENT_WINDOW_DAYS, firstEventBand } from '@/lib/first-event-band'
 import { readPoolNotice } from '@/lib/workspace-pool'
+import { billingHref } from '@/lib/billing-view'
 import { formatUtc } from '@/lib/format-utc'
 import { projectFlagRows, summariseFlagList } from '@/lib/flag-list-view'
 import { splitTaskBands } from '@/lib/today-bands'
@@ -201,7 +202,7 @@ export async function CommandCenter({ project }: { project: CommandCenterProject
           {pool.used.toLocaleString('en-US')} of {pool.pool.toLocaleString('en-US')} events across all its
           products
           {pool.kind === 'over' ? '; new events are refused until the 1st.' : '.'}{' '}
-          {pool.canUpgrade ? <Link href="/#pricing">Growth makes the pool the only limit</Link> : null}
+          {pool.canUpgrade ? <Link href={billingHref()}>Growth makes the pool the only limit</Link> : null}
         </Callout>
       ) : null}
 
