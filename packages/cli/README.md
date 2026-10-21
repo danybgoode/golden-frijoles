@@ -126,9 +126,11 @@ the rest is owner-only, and every verb takes `--json`.
 frijoles experiments create --flag landing.variant_b_enabled --metric start_prompt_copied \
   --guardrail signup_started --entity visitor                 # a draft, with its checks; runs until you stop it
 frijoles experiments start landing_b_copy_test                # the split serves 50/50; everyone in it is counted
+frijoles experiments ls                                       # every experiment and its state
 frijoles experiments show landing_b_copy_test                 # any day: counts per version and the chance B is better
 frijoles experiments pause landing_b_copy_test                # everyone sees the original; nobody new enters
 frijoles experiments resume landing_b_copy_test               # the split again — each person in the same group
+frijoles experiments stop landing_b_copy_test                 # stop counting; decide next
 frijoles experiments decide landing_b_copy_test --ship --reason "B wins on copies" --rollout   # B for everyone
 frijoles experiments delete landing_b_copy_test               # off Production and off the list; its record is kept
 ```
