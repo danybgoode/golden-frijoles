@@ -115,6 +115,31 @@ frijoles experiments decision smart-defaults --json                        # the
 `latest` is the last reading on or before `--to`; an input with no reading yet says so rather than reporting zero.
 Cite them as `north-star:<input>@<latest.date>` and `ab:<experiment>`.
 
+## Running an A/B test: `frijoles experiments`
+
+Launch, read and decide an A/B test from a terminal — the same commands the console runs, so the same rules hold: low
+traffic never blocks a start (it is a warning; read the result as directional), a test can run through any day or until
+you stop it, and you can roll a version out or keep the current one at any time. Any member can read (`ls`, `show`);
+the rest is owner-only, and every verb takes `--json`.
+
+```bash
+frijoles experiments create --flag landing.variant_b_enabled --metric start_prompt_copied \
+  --guardrail signup_started --entity visitor                 # a draft, with its checks; runs until you stop it
+frijoles experiments start landing_b_copy_test                # the split serves 50/50; everyone in it is counted
+frijoles experiments ls                                       # every experiment and its state
+frijoles experiments show landing_b_copy_test                 # any day: counts per version and the chance B is better
+frijoles experiments pause landing_b_copy_test                # everyone sees the original; nobody new enters
+frijoles experiments resume landing_b_copy_test               # the split again — each person in the same group
+frijoles experiments stop landing_b_copy_test                 # stop counting; decide next
+frijoles experiments decide landing_b_copy_test --ship --reason "B wins on copies" --rollout   # B for everyone
+frijoles experiments delete landing_b_copy_test               # off Production and off the list; its record is kept
+```
+
+`create` takes `--ends <YYYY-MM-DD>` or `--weeks <1-8>` instead of running until stopped, `--split <pct>`, `--decrease`
+for a metric that should go down, `--name <version>` (repeatable), or `--from <answers.json>` for the console builder's
+full answers. `decide` takes exactly one of `--ship [--variant <key>]`, `--keep`, `--inconclusive`, `--iterate` or
+`--invalid`, and always `--reason`; a live test is stopped first.
+
 ## Running a drill: `frijoles scenarios`
 
 A whole scenario drill from a terminal. Any member can read (`ls`, `runs`); the rest is owner-only, and every verb takes
