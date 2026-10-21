@@ -5,12 +5,7 @@ import { isBillingCheckoutEnabled } from '@/lib/flags'
 import { getStripe, GROWTH_PRICE_LOOKUP_KEY, subscriptionFacts } from '@/lib/stripe'
 import { claimCheckout, ownWorkspaceForBilling, rememberStripeCustomer } from '@/lib/billing'
 import { billingHref, type BillingOutcome } from '@/lib/billing-view'
-import {
-  holdsGrowthSubscription,
-  integrationIdentifier,
-  isGrowthPrice,
-  paymentTrouble,
-} from '@/lib/billing-decision'
+import { checkoutBlock, integrationIdentifier, isGrowthPrice } from '@/lib/billing-decision'
 
 // landing-launch-experiment · Sprint 4, Story 4.3 (epic D25) — "Get Growth": a POST (a form button, never a link: a
 // prefetch, crawler or <img> must never create a Stripe customer — codex, #412) that sends the signed-in owner to Stripe
@@ -95,8 +90,8 @@ export async function POST() {
     )
     // An UNPAID Growth subscription left the workspace on Free, but paying its invoice brings it back: a new checkout would
     // be a second subscription (verifier r7, #412). The owner pays it from Manage billing instead.
-    if (paymentTrouble(subscriptions) === 'unpaid') return back('unpaid')
-    if (holdsGrowthSubscription(subscriptions)) return back('already')
+    const blocked = checkoutBlock(subscriptions)
+    if (blocked) return back(blocked)
 
     // Never `payment_method_types` (Stripe's guidance): the Dashboard decides which methods are offered.
     const session = await stripe.checkout.sessions.create({

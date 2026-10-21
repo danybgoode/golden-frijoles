@@ -5,6 +5,7 @@ import {
   ALERTED_EVENT_TYPES,
   billingAlert,
   decideBillingAction,
+  isCustomerId,
   type BillingAlertFacts,
   type BillingEventFacts,
 } from '@/lib/billing-decision'
@@ -23,8 +24,9 @@ import { tg } from '@/lib/telegram'
 //   4. Record the event id LAST. If applying throws, nothing is recorded and the 500 makes Stripe retry; the apply is a
 //      set, not an increment, so a retry that races a slow first delivery cannot double anything.
 //   5. AFTER the record, tell the operator (Telegram) about money that needs a person: a failed payment, a dispute, a
-//      refund, an early fraud warning, a Growth payment with no workspace, a second Growth subscription. After, so a
-//      Stripe retry of a failed apply does not alert twice; `tg.alert` never throws, so it cannot fail the event.
+//      refund, an early fraud warning, a Growth payment with no workspace, a second Growth subscription. After, and only
+//      by the delivery that inserted the record, so neither a retry nor two overlapping deliveries alert twice;
+//      `tg.alert` never throws, so it cannot fail the event.
 //
 // Not gated by `billing.checkout_enabled`: switching off new checkouts must never stop an existing subscription's
 // cancellation or renewal from reaching the workspace.
@@ -162,11 +164,11 @@ export async function POST(req: NextRequest) {
     }
     // A money event that moves no plan: find its workspace by customer when it names one, for the record and the alert.
     const alertFacts = alertFactsOf(event)
-    if (alertFacts && workspaceId === null && alertFacts.customerId)
+    if (alertFacts && workspaceId === null && alertFacts.customerId && isCustomerId(alertFacts.customerId))
       workspaceId = (await workspaceForCustomer(alertFacts.customerId))?.id ?? null
-    if (alertFacts) alert = billingAlert({ ...alertFacts, workspaceId })
-    await recordBillingEvent(event.id, event.type, workspaceId)
-    if (alert) await tg.alert(alert)
+    if (alertFacts && !alert) alert = billingAlert({ ...alertFacts, workspaceId })
+    const recorded = await recordBillingEvent(event.id, event.type, workspaceId)
+    if (alert && recorded) await tg.alert(alert)
     return NextResponse.json({ ok: true })
   } catch (err) {
     console.error('[billing/webhook] failed; Stripe will retry:', err instanceof Error ? err.message : err)

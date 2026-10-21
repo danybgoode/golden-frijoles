@@ -50,7 +50,9 @@ export const TROUBLE_NOTES = {
 } as const
 
 export function billingView(facts: BillingFacts): BillingView {
-  const { plan, productLimit, monthlyEventPool, hasStripeCustomer, checkoutOn, trouble = null } = facts
+  const { plan, productLimit, monthlyEventPool, hasStripeCustomer, checkoutOn } = facts
+  // "Back on Free" is only true on Free: a comped workspace, or one on Growth through another subscription, is not told it.
+  const trouble = facts.trouble === 'unpaid' && plan !== 'free' ? null : (facts.trouble ?? null)
   const canBuy = plan === 'free' && checkoutOn && trouble !== 'unpaid'
   return {
     plan: Object.hasOwn(PLANS, plan) ? PLANS[plan] : { value: plan, label: 'plan' },

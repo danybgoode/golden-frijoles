@@ -23,8 +23,10 @@ export function reconcileGrowth(subscriptions, workspaces) {
   const bySubscription = new Map(workspaces.filter((w) => w.subscription).map((w) => [w.subscription, w]));
   const byCustomer = new Map(workspaces.filter((w) => w.customer).map((w) => [w.customer, w]));
 
+  // Only the ones being paid: an `unpaid` subscription beside a live one is owed, not double-charged.
   const perCustomer = new Map();
-  for (const s of growth) perCustomer.set(s.customer, [...(perCustomer.get(s.customer) ?? []), s.id]);
+  for (const s of growth.filter((g) => g.status !== 'unpaid'))
+    perCustomer.set(s.customer, [...(perCustomer.get(s.customer) ?? []), s.id]);
   for (const [customer, ids] of perCustomer)
     if (ids.length > 1)
       findings.push({
@@ -46,15 +48,22 @@ export function reconcileGrowth(subscriptions, workspaces) {
     if (s.status === 'unpaid') continue;
     const owner = byCustomer.get(s.customer);
     findings.push(
-      owner
+      owner && !owner.subscription && owner.plan === 'free'
         ? {
-            kind: 'paid-not-held',
-            text: `subscription ${s.id} is ${s.status}, but workspace ${owner.id} holds ${owner.subscription ?? 'no subscription'}: cancel and refund it if it is a second charge`,
+            // The lost-webhook case: our checkout recorded the customer, Stripe charged it, and the subscription event
+            // never moved the workspace. The fix is a replay, not a refund (verifier, #420).
+            kind: 'paid-still-free',
+            text: `subscription ${s.id} is ${s.status}, but workspace ${owner.id} is still on Free: resend its customer.subscription.* event from the Stripe Dashboard (the webhook missed it)`,
           }
-        : {
-            kind: 'no-workspace',
-            text: `subscription ${s.id} (customer ${s.customer}) is ${s.status} and matches no workspace`,
-          }
+        : owner
+          ? {
+              kind: 'paid-not-held',
+              text: `subscription ${s.id} is ${s.status}, but workspace ${owner.id} holds ${owner.subscription ?? 'no subscription'}: cancel and refund it if it is a second charge`,
+            }
+          : {
+              kind: 'no-workspace',
+              text: `subscription ${s.id} (customer ${s.customer}) is ${s.status} and matches no workspace`,
+            }
     );
   }
 

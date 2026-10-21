@@ -68,7 +68,10 @@ function workspaces() {
     ],
     'run it from the checkout that is `supabase link`ed to production'
   );
-  return out.rows;
+  // The CLI wraps rows in `{ boundary, rows, warning }` today; a bare array is accepted too.
+  const rows = Array.isArray(out) ? out : out.rows;
+  if (!Array.isArray(rows)) throw new Error('supabase db query returned no rows array');
+  return rows;
 }
 
 export function main() {

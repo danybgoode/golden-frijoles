@@ -7,6 +7,7 @@ import { join } from 'node:path'
 import {
   ALERTED_EVENT_TYPES,
   billingAlert,
+  checkoutBlock,
   paymentTrouble,
   stripeSecretKey,
   GROWTH_PRICE_LOOKUP_KEY,
@@ -280,5 +281,25 @@ test('a dispute, a refund and a fraud warning each name the charge', () => {
       reason: 'card_never_received',
     })!,
     /ch_3 \(card_never_received\)/
+  )
+})
+
+test('checkoutBlock: an unpaid Growth subscription is paid, not replaced; a held one is already Growth', () => {
+  assert.equal(checkoutBlock([growthSub('unpaid')]), 'unpaid')
+  assert.equal(checkoutBlock([growthSub('unpaid'), growthSub('canceled')]), 'unpaid')
+  assert.equal(checkoutBlock([growthSub('active')]), 'already')
+  assert.equal(checkoutBlock([growthSub('past_due')]), 'already')
+  assert.equal(checkoutBlock([growthSub('canceled')]), null)
+  assert.equal(checkoutBlock([]), null)
+})
+
+test('a zero-decimal currency is whole units, and an unreadable retry time does not throw', () => {
+  assert.match(
+    billingAlert({ type: 'charge.refunded', eventId: 'e', amount: 500, currency: 'jpy' })!,
+    /500 JPY refunded/
+  )
+  assert.match(
+    billingAlert({ type: 'invoice.payment_failed', eventId: 'e', nextAttemptAt: 1e20 })!,
+    /retries later/
   )
 })

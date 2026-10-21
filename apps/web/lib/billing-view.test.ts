@@ -125,3 +125,15 @@ test('a failed payment: past_due keeps Growth and says to update the card; unpai
   )
   assert.equal(billingMessage('unpaid')?.tone, 'warn')
 })
+
+test('"back on Free" is said only on Free: a comped workspace with an old unpaid subscription is not told it', () => {
+  const comped = {
+    plan: 'comped',
+    productLimit: null,
+    monthlyEventPool: null,
+    hasStripeCustomer: true,
+    checkoutOn: true,
+  }
+  assert.equal(billingView({ ...comped, trouble: 'unpaid' }).note, null)
+  assert.equal(billingView({ ...comped, trouble: 'past_due' }).note, TROUBLE_NOTES.past_due)
+})

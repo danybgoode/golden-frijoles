@@ -77,6 +77,11 @@ export type BillingAction =
 const CUSTOMER_ID = /^cus_[A-Za-z0-9]{1,250}$/
 const SUBSCRIPTION_ID = /^sub_[A-Za-z0-9]{1,250}$/
 
+/** The same guard for any other path that puts a customer id into a PostgREST filter. */
+export function isCustomerId(value: string): boolean {
+  return CUSTOMER_ID.test(value)
+}
+
 /**
  * A subscription status → the plan it buys. Growth while Stripe still treats the subscription as live, including
  * `past_due` (Stripe is retrying the card; its dunning decides, not us) and a cancel scheduled for period end (still
@@ -163,6 +168,16 @@ export function paymentTrouble(
   return null
 }
 
+/** Why checkout refuses to open for a customer, from Stripe's own list: an UNPAID Growth subscription is paid, not
+ *  replaced (a new checkout would be a second subscription), and a held one is already Growth. Null: sell. */
+export function checkoutBlock(
+  subscriptions: { status: string; priceLookupKeys: (string | null)[] }[]
+): 'unpaid' | 'already' | null {
+  if (paymentTrouble(subscriptions) === 'unpaid') return 'unpaid'
+  if (holdsGrowthSubscription(subscriptions)) return 'already'
+  return null
+}
+
 /** The money events that change no plan but need a person (verifier, #412; Stripe's go-live guidance). The webhook records
  *  them like any other and sends the operator one line each; the decision above never reads them. */
 export const ALERTED_EVENT_TYPES = [
@@ -190,9 +205,38 @@ export type BillingAlertFacts = {
   workspaceId?: string | null
 }
 
+/** Stripe's zero-decimal currencies: their amounts are whole units, not cents. Growth sells in USD; another product's
+ *  dispute or refund on the same account may not. */
+const ZERO_DECIMAL = new Set([
+  'bif',
+  'clp',
+  'djf',
+  'gnf',
+  'jpy',
+  'kmf',
+  'krw',
+  'mga',
+  'pyg',
+  'rwf',
+  'ugx',
+  'vnd',
+  'vuv',
+  'xaf',
+  'xof',
+  'xpf',
+])
+
 function money(amount: number | null | undefined, currency: string | null | undefined): string {
   if (typeof amount !== 'number' || !Number.isFinite(amount) || !currency) return 'an unknown amount'
-  return `${(amount / 100).toFixed(2)} ${currency.toUpperCase()}`
+  const code = currency.toLowerCase()
+  return ZERO_DECIMAL.has(code)
+    ? `${amount} ${code.toUpperCase()}`
+    : `${(amount / 100).toFixed(2)} ${code.toUpperCase()}`
+}
+
+function utc(seconds: number): string | null {
+  const date = new Date(seconds * 1000)
+  return Number.isNaN(date.getTime()) ? null : `${date.toISOString().slice(0, 16).replace('T', ' ')} UTC`
 }
 
 /** The operator's one line for an alerted event, or null for every other type. */
@@ -203,7 +247,7 @@ export function billingAlert(f: BillingAlertFacts): string | null {
     case 'invoice.payment_failed':
       return `Payment failed: ${money(f.amount, f.currency)} for subscription ${f.subscriptionId ?? 'unknown'} (${customer}${workspace}), attempt ${f.attempt ?? '?'}. ${
         f.nextAttemptAt
-          ? `Stripe retries ${new Date(f.nextAttemptAt * 1000).toISOString().slice(0, 16).replace('T', ' ')} UTC; the owner sees it on Plan & billing.`
+          ? `Stripe retries ${utc(f.nextAttemptAt) ?? 'later'}; the owner sees it on Plan & billing.`
           : 'Stripe will not retry: the subscription goes unpaid and the workspace returns to Free.'
       } Event ${f.eventId}.`
     case 'charge.dispute.created':
