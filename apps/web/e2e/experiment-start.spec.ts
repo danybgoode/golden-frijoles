@@ -240,11 +240,30 @@ test.describe('Start (D7)', () => {
     ).toBe(key)
   })
 
-  test('a failing check blocks Start (recomputed on the server) and nothing moves', async () => {
+  test('a quiet guardrail no longer blocks Start, on the server too (S6.1: too little traffic is advice)', async () => {
     const fx = await fixture(client)
     const saved = await saveExperimentDraftCommand(
       fx.slug,
       answers({ guardrails: ['never_sent_event'] }),
+      null,
+      deps(client, fx)
+    )
+    expect(saved).toMatchObject({ ok: true, failing: 0 })
+    const started = await startExperimentCommand(
+      fx.slug,
+      saved.ok ? saved.experimentKey : '',
+      deps(client, fx)
+    )
+    expect(started.ok).toBe(true)
+    expect(await statusOf(client, fx.projectId)).toEqual([{ version: 1, status: 'running' }])
+  })
+
+  test('a failing check blocks Start (recomputed on the server) and nothing moves', async () => {
+    const fx = await fixture(client)
+    // A FACT, not an estimate: a condition with no value picked can match nobody.
+    const saved = await saveExperimentDraftCommand(
+      fx.slug,
+      answers({ who: { mode: 'some', conditions: [{ field: 'region', values: [] }], allocation: 100 } }),
       null,
       deps(client, fx)
     )
@@ -255,7 +274,7 @@ test.describe('Start (D7)', () => {
       deps(client, fx)
     )
     expect(started.ok).toBe(false)
-    expect(!started.ok && started.checks?.find((check) => check.id === 'metrics')?.status).toBe('fail')
+    expect(!started.ok && started.checks?.find((check) => check.id === 'eligibility')?.status).toBe('fail')
     expect(await statusOf(client, fx.projectId)).toEqual([{ version: 1, status: 'draft' }])
   })
 
