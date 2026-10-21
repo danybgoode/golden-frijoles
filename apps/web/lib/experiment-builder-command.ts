@@ -35,7 +35,16 @@ export const RETRY_MOVED =
 type Failure = { ok: false; error: string; checks?: ExperimentCheck[] }
 
 export type SaveDraftResult =
-  { ok: true; experimentKey: string; version: number; created: boolean; failing: number } | Failure
+  | {
+      ok: true
+      experimentKey: string
+      version: number
+      created: boolean
+      failing: number
+      /** Every check, so an agent sees the warnings and failures it saved with (S6.4). */
+      checks: ExperimentCheck[]
+    }
+  | Failure
 
 export type StartResult =
   | {
@@ -139,6 +148,7 @@ export async function saveExperimentDraftCommand(
     version: saved.saved.version,
     created: saved.saved.created,
     failing: planned.plan.failing,
+    checks: planned.plan.checks,
   }
 }
 

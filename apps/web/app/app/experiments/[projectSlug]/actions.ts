@@ -2,12 +2,7 @@
 import { revalidatePath } from 'next/cache'
 import { notFound } from 'next/navigation'
 import { requireProjectOwnership } from '@/lib/dashboard-auth'
-import {
-  parseExperimentDecisionCommand,
-  prepareExperimentDecisionSnapshot,
-} from '@/lib/experiment-decision-contract'
-import { recordExperimentDecision } from '@/lib/experiment-decision-query'
-import { getExperimentAnalysisByProjectId } from '@/lib/experiment-analysis-query'
+import { recordDecisionCommand } from '@/lib/experiment-owner-commands'
 import { transitionExperimentVersion, type ExperimentTransitionTarget } from '@/lib/experiments'
 import { validateExperimentKey } from '@/lib/experiment-definition'
 import { isExperimentGovernanceEnabled } from '@/lib/flags'
@@ -79,48 +74,15 @@ export async function recordExperimentDecisionAction(
     return { ok: false as const, error: 'Invalid experiment definition version.' }
   }
 
-  // Snapshot evidence is always recomputed inside this trusted server action. The browser supplies
-  // only the human choice and stable identifiers; it can never forge plan or analysis evidence.
-  const capturedAt = new Date().toISOString()
-  const governed = await getExperimentAnalysisByProjectId(projectId, safeSlug, experimentKey, {
-    version,
-    asOf: capturedAt,
+  // One path for the console and the CLI (S6.4): the evidence is recomputed inside, never taken from the caller.
+  const result = await recordDecisionCommand({ projectId, userId, slug: safeSlug }, experimentKey, version, {
+    recordKind,
+    supersedesRecordId,
+    outcome,
+    chosenVariantKey,
+    rationale,
+    idempotencyKey,
   })
-  if (!governed.ok) {
-    return { ok: false as const, error: 'Could not capture governed analysis for this decision.' }
-  }
-  const parsed = parseExperimentDecisionCommand(
-    {
-      recordKind,
-      outcome,
-      chosenVariantKey,
-      rationale,
-      supersedesRecordId,
-      idempotencyKey,
-    },
-    {
-      definition: governed.experiment.definition,
-      lifecycle: governed.experiment.lifecycle,
-      currentDecisionId: governed.decisions.current?.id ?? null,
-    }
-  )
-  if (!parsed.ok) return parsed
-
-  let analysisSnapshot: Record<string, unknown>
-  try {
-    analysisSnapshot = prepareExperimentDecisionSnapshot(governed.analysis, capturedAt)
-  } catch (error) {
-    console.error('[experiments/actions] decision snapshot rejected:', error)
-    return { ok: false as const, error: 'The governed analysis snapshot is not safe to record.' }
-  }
-  const result = await recordExperimentDecision(
-    projectId,
-    governed.experiment.id,
-    governed.experiment.versionId,
-    userId,
-    parsed.command,
-    analysisSnapshot
-  )
   if (result.ok) {
     revalidatePath(`/app/experiments/${safeSlug}`)
     revalidatePath(`/app/experiments/${safeSlug}/${experimentKey}`)

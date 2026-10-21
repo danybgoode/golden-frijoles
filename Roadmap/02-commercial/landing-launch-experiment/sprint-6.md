@@ -19,7 +19,7 @@ stories:
     i_want: "to pick any end date, or run it until I decide"
     so_that: "a run length is my call, not a menu of 1–8 weeks"
     risk: high
-    status: in-progress   # PR #423 — Daniel's go 2026-10-20; no migration (OPEN_ENDED_AT sentinel)
+    status: done   # PR #423, merge f506392 — no migration (OPEN_ENDED_AT sentinel)
   - id: S6.3
     title: "A verdict at any volume"
     as_a: "the person running a test"
@@ -33,7 +33,7 @@ stories:
     i_want: "to launch and decide an experiment from the CLI"
     so_that: "a test takes minutes, and several can run at once"
     risk: high
-    status: planned
+    status: in-progress   # PR #424
   - id: S6.6
     title: "Pause, resume and delete"
     as_a: "the person running tests"
@@ -51,7 +51,7 @@ stories:
 ---
 # Launch: the first landing A/B on goldenfrijoles.com, run on Golden Frijoles — Sprint 6: A test at any traffic
 
-**Status:** 🟨 Building — S6.1 ✅ (#421); S6.3 ✅ (#422); S6.2 in review (#423); S6.4 in progress; S6.5–S6.6 planned. Daniel approved the sprint 2026-10-20 ("if your stories above will do that lets go ahead").
+**Status:** 🟨 Building — S6.1 ✅ (#421); S6.3 ✅ (#422); S6.2 ✅ (#423); S6.4 in review (#424); S6.5–S6.6 planned. Daniel approved the sprint 2026-10-20 ("if your stories above will do that lets go ahead").
 
 ## Why this sprint exists (Daniel, 2026-10-20)
 Launch day for the landing A/B: the builder refused to start it — "A metric has gone quiet" (no prompt copy in 24 hours)
@@ -93,8 +93,12 @@ only the readout gated it.
 the same assignment); a test can be deleted (its split off, gone from the list — the audit trail stays, append-only).
 
 ### Story 6.4 — `frijoles experiments`
-**Acceptance:** `ls`, `create --from <file>`, `start`, `stop`, `decide` — member/owner-gated like `frijoles flags`, through
-the same commands the builder uses (one path, so the rules above hold for agents too), `--json` on each.
+**Acceptance:** `ls`, `show`, `create` (from flags — `--flag --metric [--guardrail] [--entity] [--ends|--weeks]` — or
+`--from <answers.json>`), `start`, `stop`, `decide --ship [--variant]|--keep|… --reason [--rollout]` — member-gated reads,
+owner-gated writes, through the same commands the console uses (one path: `lib/experiment-owner-commands.ts` is now the
+console's decision path too), `--json` on each. Built and proven end to end (`e2e/cli-experiments.spec.ts`): no traffic and
+a metric that never fired → create, start, show, decide ship with roll-out. Found on the way: zero traffic for "everyone"
+failed as "nobody matches"; it now warns "nobody has been seen yet", and that fail (unreachable otherwise) is gone.
 
 ### Story 6.5 — The landing A/B, launched and read
 **Acceptance:** `landing.variant_b_enabled`'s experiment started on production (by the CLI), A and B served 50/50 to

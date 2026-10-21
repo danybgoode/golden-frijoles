@@ -1042,3 +1042,11 @@ test('S6.2 answers: endsOn is "open" or a real calendar day, nothing else; the w
   assert.equal(runLengthWords({ weeks: 1, endsOn: 'open' }), 'until you stop it')
   assert.equal(runLengthWords({ weeks: 1, endsOn: '2027-01-31' }), 'through 2027-01-31')
 })
+
+test('S6.1 no traffic at all (a launch): "nobody has been seen yet" warns, never fails', () => {
+  const empty = prototypeCatalog({ entities: [] })
+  const everyone = { mode: 'everyone' as const, conditions: [], allocation: 100 }
+  const none = checkOf({ ...copyAnswers(), who: everyone }, context({ catalog: empty })).window
+  assert.equal(none.status, 'warn')
+  assert.equal(none.title, 'Nobody has been seen yet')
+})

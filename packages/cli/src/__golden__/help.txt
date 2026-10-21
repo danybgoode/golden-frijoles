@@ -64,6 +64,12 @@ Commands
   bet sync                  create the bet's flag from its epic (a Measure flag, off until you roll it out)
 
   experiments
+  experiments ls            every experiment, its newest version and its state
+  experiments show          an experiment's results, any day: the counts, the chance, what to do next
+  experiments create        save an experiment as a draft (nothing serves until start)
+  experiments start         start an experiment: the split serves and everyone in it is counted
+  experiments stop          stop an experiment: nobody new is counted
+  experiments decide        record the call — ship a version, keep the current one, or not — at any time
   experiments decision      an experiment's decision record (the latest version unless --version)
 
   keys

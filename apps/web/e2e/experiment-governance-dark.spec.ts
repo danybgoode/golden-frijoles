@@ -24,6 +24,15 @@ test('governance management is nonexistent while OFF and legacy experiments rema
   const decision = await request.get('/api/v1/cli/experiments/decision?project=golden-frijoles&experiment=x')
   expect(decision.status()).toBe(404)
   expect((await decision.json()).code).toBe('disabled')
+  // landing-launch-experiment S6.4: `frijoles experiments` is the same governed seam — read and write, gone before auth.
+  const list = await request.get('/api/v1/cli/experiments?project=golden-frijoles')
+  expect(list.status()).toBe(404)
+  expect((await list.json()).code).toBe('disabled')
+  const write = await request.post('/api/v1/cli/experiments', {
+    data: { command: 'create', project: 'golden-frijoles' },
+  })
+  expect(write.status()).toBe(404)
+  expect((await write.json()).code).toBe('disabled')
   const local = createGrowthEngineClient({
     baseUrl: 'http://unused.invalid',
     apiKey: 'unused',

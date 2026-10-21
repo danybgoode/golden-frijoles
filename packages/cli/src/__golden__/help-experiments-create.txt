@@ -1,0 +1,30 @@
+frijoles experiments create — save an experiment as a draft (nothing serves until start)
+
+Usage
+  frijoles experiments create --flag <key> --metric <event> [--guardrail <event>]… [--entity visitor] [--ends open|YYYY-MM-DD | --weeks <1-8>] [--split <pct>] [--decrease] [--name <version>]… [--from <answers.json>] [--project <slug>] [--json]
+
+Tests the feature named by --flag: its values become the versions, split 50/50 by default, everyone in it,
+  counted per --entity (default visitor). With no --ends or --weeks it runs until you stop it. --from takes the
+  console builder's full answers instead. The checks come back with the draft; a warning never stops a start.
+
+Flags
+  --flag <key>              the feature the test changes (an existing flag)
+  --metric <event>          the one number that decides it
+  --guardrail <event>       a number that must not get worse (repeatable)
+  --entity <type>           who is counted (default: visitor)
+  --ends open|<YYYY-MM-DD>  run through this day (from tomorrow), or open — until you stop it (default)
+  --weeks <1-8>             run for this many weeks instead
+  --split <pct>             the new version's share, 1–99 (default 50)
+  --decrease                the metric should go DOWN
+  --name <version>          version names, control first (repeatable)
+  --from <file>             the builder's answers as JSON, instead of the flags above
+  --project <slug>          the project (default: the remembered one)
+
+Exit codes
+  0  ok         it worked
+  1  usage      the command is wrong — nothing was sent
+  2  auth       the credential is not accepted — run `frijoles login`
+  3  not-found  no such thing, or not yours
+  4  conflict   someone else changed it — re-read and retry
+  5  partial    some environments changed and some did not
+  6  server     the server or the network is unwell — retry
