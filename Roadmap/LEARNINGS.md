@@ -2456,3 +2456,25 @@ one-liner + why + date shape.
   old number for five minutes (the fresh verifier caught it). The spec now reads `FunnelMeasure`'s fields from source and
   fails on any the key omits: the class, not the instance.
 
+### A test at any traffic, and a CLI that knows how it was installed (landing-launch-experiment, 2026-10-21)
+
+- **Low traffic is a warning, never a gate.** Power, sample size and a quiet metric belong in the readout's words
+  ("directional", "about N% likely B is better"), not in Start's checks or behind the decision buttons. Our builder
+  refused a real launch at ~20 visits a day and withheld roll-out below the planned sample; a founder cannot wait for
+  volume that may never come. Only FACTS fail a check (dates passed, conditions that match nobody, another test on the
+  feature).
+- **Launch on your own rails.** Running the launch through the product's own experiment engine turned "it can't run a
+  low-traffic test" into a bug we fixed the same week instead of a workaround someone kept.
+- **A sentinel can beat a migration.** "Until I stop it" is a far timestamp (`OPEN_ENDED_AT`), so every validator, the
+  window arithmetic and every stored definition stayed valid; only the screens ask `isOpenEnded`. Prefer it when null
+  would ripple through validators you do not own.
+- **One test per feature must be checked against what RUNS, not what SERVES.** A paused test serves the base with no
+  experiment metadata, so a served-metadata check let a second test start on its flag. Ask the database for running
+  versions bound to the flag.
+- **`process.argv[1]` is the link, not the install.** npm's global and `.bin` entries are symlinks; resolve with
+  `realpathSync` before deciding how a CLI was installed — and pin the call in a test, since that line is the bug.
+- **Anchor anything a third party gives you before it reaches a shell.** A registry version string goes onto
+  `npm i -g` under cmd.exe on Windows; `/^\d+\.\d+\.\d+/` without `$` lets `& …` through. Same class as #280.
+- **A fresh verifier on every HIGH PR earned its cost.** Six PRs in a row had a real defect only it found (a refresh
+  token burned by a session read on a public page, a chance figure collapsing at large n, a shorter "fix", a CI-only
+  describe-body DB call, a broken one-test-per-feature, a global install read as a checkout).
