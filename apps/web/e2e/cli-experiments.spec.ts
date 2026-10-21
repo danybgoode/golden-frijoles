@@ -381,6 +381,15 @@ test.describe('frijoles experiments (S6.4)', () => {
     const paused = await post(request, fx.token, { command: 'pause', project: fx.slug, experiment: key })
     expect(paused.status).toBe(409)
     expect(paused.body.error).toMatch(/nothing to pause/)
+    // Nothing written: Production still serves the other person's version, not a base the pause made.
+    const { data: still } = await client
+      .from('flag_environment_activations')
+      .select('version_id')
+      .eq('project_id', fx.projectId)
+      .eq('flag_id', registry!.id)
+      .eq('environment', 'production')
+      .single()
+    expect(still!.version_id).toBe(version[0].version_id)
   })
 
   test('shipping the control by name is refused before a live test is stopped', async ({ request }) => {

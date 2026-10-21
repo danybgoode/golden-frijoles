@@ -88,7 +88,7 @@ export async function GET(req: NextRequest) {
 /** A command's refusal, as the CLI's exit code family: no such experiment is not_found (exit 3), a paused builder is
  *  disabled, anything else a conflict with the current state. */
 function codeFor(error: string): 'not_found' | 'disabled' | 'conflict' {
-  if (error.startsWith('No experiment')) return 'not_found'
+  if (error.startsWith('No experiment') || error.startsWith('Only a running experiment')) return 'not_found'
   if (error === BUILDER_PAUSED) return 'disabled'
   return 'conflict'
 }

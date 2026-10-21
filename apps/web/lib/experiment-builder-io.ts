@@ -529,21 +529,15 @@ export function createBuilderIo(client: SupabaseClient) {
         .maybeSingle()
       if (flagError) throw new Error('could not read the feature')
       if (!flag) return null
-      const { data: bindings, error } = await client
+      // ONE joined query (verifier r2, #425): every plan change adds a binding, so listing their ids into an `.in()` would
+      // outgrow a URL on a busy flag. The composite FK lets the binding embed its version and filter on its status.
+      const { data: running, error: runningError } = await client
         .from('experiment_flag_version_bindings')
-        .select('experiment_version_id')
+        .select('experiment_id, experiment_definition_versions!inner(status)')
         .eq('project_id', projectId)
         .eq('flag_id', flag.id)
-      if (error) throw new Error('could not read the feature')
-      const ids = (bindings ?? []).map((row) => row.experiment_version_id as string)
-      if (ids.length === 0) return null
-      const { data: running, error: runningError } = await client
-        .from('experiment_definition_versions')
-        .select('experiment_id')
-        .eq('project_id', projectId)
-        .eq('status', 'running')
+        .eq('experiment_definition_versions.status', 'running')
         .neq('experiment_id', experimentId)
-        .in('id', ids)
         .limit(1)
         .maybeSingle()
       if (runningError) throw new Error('could not read the experiment')
