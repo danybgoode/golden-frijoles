@@ -33,11 +33,11 @@ stories:
     i_want: "the price to be one I can actually pay"
     so_that: "the page stops saying billing is not live"
     risk: low
-    status: in-progress   # built 2026-10-20; ships before the first real purchase, on Daniel's call (below)
+    status: done   # PR #419, merge 2a6068a — shipped before the first real purchase, on Daniel's call
 ---
 # Launch: the first landing A/B on goldenfrijoles.com, run on Golden Frijoles — Sprint 4: Plans + Stripe
 
-**Status:** 🟦 In review — S4.1–S4.3 live; checkout switched ON by Daniel 2026-10-20; S4.4 built
+**Status:** ✅ Shipped 2026-10-21 — S4.1–S4.3 #412 #414 #416, S4.4 #419, the money follow-ups #420; checkout ON in production (Daniel, 2026-10-20). Owed: the first real Growth purchase from a Free account (the walkthrough below); Stripe Tax (Daniel).
 
 ## Stories
 

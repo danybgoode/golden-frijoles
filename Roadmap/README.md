@@ -138,6 +138,13 @@ independently shippable slice of value.
   where it pays off. **Owed:** a signed-in look at a live funnel; `tars-segments` next.
 
 ### 02 · Commercial
+- ✅ [Launch: the first landing A/B, run on Golden Frijoles](02-commercial/landing-launch-experiment/README.md) —
+  **shipped 2026-10-21** (#408–#426; CLI 1.11.0 / 1.12.0, plugin + kit 1.16.2 / 1.16.3). The landing A/B is live
+  (`variant_b_copy_test_2`, 50/50 on prompt copies, until stopped); Growth sells at $49 through Stripe Checkout (on),
+  with Terms, Privacy, the portal, operator alerts and a reconcile script; `/talk` is "Set up with us". Sprint 6 fixed the
+  engine the launch tested: a test starts at any traffic, ends on any day or none, can be rolled out or kept any time with
+  the chance in words, paused, resumed, deleted, and run from `frijoles experiments`. Owed: the first real purchase, Stripe
+  Tax, the read on 2026-12-31.
 - ✅ [The outcome report for any product](02-commercial/outcome-report-any-product/README.md) — **shipped 2026-10-14**
   (#368; kit 1.9.4). `npx -y @golden-frijoles/kit pod-report --push` in any product's repo; shipped dates from each epic's
   real status history (the old search dated most ships at the README's creation — the report says the method changed);
@@ -685,6 +692,10 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-10-21**: `landing-launch-experiment` **shipped** (quote $41–62 → ≈$281). The first landing A/B is live on
+  goldenfrijoles.com and Growth can be bought. Launching it found that our own experiment engine refused a low-traffic
+  test; a sixth sprint made it start at any traffic, read any day, decide at any volume, and run from the CLI — then
+  launched the test with it. `frijoles update` followed.
 - **2026-10-17**: `satisfied-ask` **shipped** (quote $8–20 → ≈$14.66). Satisfied stops reading "not measured": one
   standard rating from the SDK, a per-bet bar, and our own console asking members about the funnel trend. The build
   found that one shared event name would have let a rating of one flag satisfy every bet; the verifier found the funnel
