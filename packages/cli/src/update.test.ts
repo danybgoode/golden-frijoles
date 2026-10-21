@@ -349,3 +349,9 @@ test('no notice after frijoles update or version, and update --json keeps npm of
   assert.deepEqual(captured, [true])
   assert.equal(JSON.parse(json.out.join('')).updated, true)
 })
+
+test('bin.ts hands run() the RESOLVED script path — the line whose absence read a global install as a checkout', async () => {
+  const { readFileSync } = await import('node:fs')
+  const bin = readFileSync(new URL('./bin.ts', import.meta.url), 'utf8')
+  assert.match(bin, /scriptPath: resolveScriptPath\(process\.argv\[1\], realpathSync\)/)
+})
