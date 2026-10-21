@@ -49,6 +49,26 @@
         ]
       },
       {
+        "command": "version",
+        "summary": "the version you have, the latest published, and how to update",
+        "usage": "frijoles version [--json]",
+        "needsAuth": false,
+        "flags": []
+      },
+      {
+        "command": "update",
+        "summary": "update this CLI to the latest published version",
+        "usage": "frijoles update [--check] [--json]",
+        "needsAuth": false,
+        "flags": [
+          {
+            "flag": "--check",
+            "takesValue": false,
+            "describe": "only say whether an update is available; change nothing"
+          }
+        ]
+      },
+      {
         "command": "setup",
         "summary": "answer the setup questions (each has a default; only the first is required)",
         "usage": "frijoles setup [--yes] [--no-motion] [--json]",

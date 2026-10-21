@@ -1,10 +1,4 @@
 // landing-launch-experiment · Sprint 6, Story 6.4 — `frijoles experiments`: what each verb SENDS, and what it refuses locally.
-// golden-frijoles-cli · Sprint 2 — the write verbs' argument contract and the D2 exit code.
-//
-// What is asserted HERE is what a caller can express and what exit code they get. What each verb
-// MEANS is asserted in `packages/sdk/src/flag-commands.test.ts`, against the planners, because that
-// is where the meaning lives (D4). Neither file duplicates the other.
-
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { mkdtempSync } from 'node:fs'

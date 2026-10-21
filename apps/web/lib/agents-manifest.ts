@@ -23,6 +23,7 @@ to, and take no project argument.
 | --- | --- | --- |
 | Sign this machine in | \`frijoles login\` (browser), or pipe a token: \`frijoles login --token <token>\` | \`frijoles whoami\` prints the account, the credential and the products it reaches |
 | Sign out | \`frijoles logout\` | \`frijoles whoami\` answers \`unauthorized\` |
+| Check the CLI is current, and update it | \`frijoles version\`; \`frijoles update\` (\`--check\` only reports) | \`frijoles version --json\` shows \`updateAvailable: false\` |
 | Find out why nothing works | \`frijoles doctor\` | Every check passes; each module line says configured or the command that fixes it |
 | Answer the setup questions | \`frijoles setup\`; read or change one answer with \`frijoles config list\`, \`frijoles config get <key>\` and \`frijoles config set <key> <value>\` | \`frijoles config get <key>\` prints the effective value |
 

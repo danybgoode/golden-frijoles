@@ -54,6 +54,8 @@ const BOOLEAN_FLAGS = new Set([
   'invalid',
   'rollout',
   'decrease',
+  // `frijoles update --check`.
+  'check',
   'ingest',
 ])
 
