@@ -33,25 +33,25 @@ stories:
     i_want: "to launch and decide an experiment from the CLI"
     so_that: "a test takes minutes, and several can run at once"
     risk: high
-    status: in-progress   # PR #424
+    status: done   # PR #424, merge dbb4d0c
   - id: S6.6
     title: "Pause, resume and delete"
     as_a: "the person running tests"
     i_want: "to pause a test, resume it, or delete it, like any testing tool"
     so_that: "a test's life is mine to manage, not a one-way street"
     risk: high
-    status: planned
+    status: in-progress   # PR open — no migration
   - id: S6.5
     title: "The landing A/B, launched and read"
     as_a: "Daniel"
     i_want: "A vs B live on goldenfrijoles.com, exposures and copies recorded, readable any day"
     so_that: "the epic proves the engine end to end"
     risk: medium
-    status: planned
+    status: done   # launched 2026-10-21 by CLI: variant_b_copy_test_2
 ---
 # Launch: the first landing A/B on goldenfrijoles.com, run on Golden Frijoles — Sprint 6: A test at any traffic
 
-**Status:** 🟨 Building — S6.1 ✅ (#421); S6.3 ✅ (#422); S6.2 ✅ (#423); S6.4 in review (#424); S6.5–S6.6 planned. Daniel approved the sprint 2026-10-20 ("if your stories above will do that lets go ahead").
+**Status:** 🟨 Building — S6.1–S6.5 ✅ (#421–#424; the landing A/B launched 2026-10-21); S6.6 in review.
 
 ## Why this sprint exists (Daniel, 2026-10-20)
 Launch day for the landing A/B: the builder refused to start it — "A metric has gone quiet" (no prompt copy in 24 hours)
@@ -89,8 +89,16 @@ secondary — available, never urged. The database already allowed it (`record_e
 only the readout gated it.
 
 ### Story 6.6 — Pause, resume and delete
-**Acceptance:** a running test can be paused (nobody new counted, the split stops serving) and resumed (counting again,
-the same assignment); a test can be deleted (its split off, gone from the list — the audit trail stays, append-only).
+**Acceptance:** a running test can be paused (its split off Production — everyone sees the feature as it was before the
+test — and nobody new enters) and resumed (its own flag version served again; assignment is a hash of the visitor, so each
+person lands in the same group); a paused test can still be decided and rolled out; a test can be deleted (its split off
+Production first, every live version retired, gone from the list with a "N deleted not shown" line — the audit trail
+stays, append-only). Console (Pause, Resume, Delete experiment) and CLI (`frijoles experiments pause|resume|delete`).
+
+**Design (no migration):** Pause keeps the version RUNNING and serves `stripExperiment` of its flag — the readout's
+"not serving" state, told apart as `paused` because Production serves exactly this test's base (`servingState`).
+Resume is the partial state's Retry. The roll-out accepts that paused base. Delete reuses `invalid`; a decided experiment
+is the record of a decision and is not deleted.
 
 ### Story 6.4 — `frijoles experiments`
 **Acceptance:** `ls`, `show`, `create` (from flags — `--flag --metric [--guardrail] [--entity] [--ends|--weeks]` — or
@@ -103,3 +111,10 @@ failed as "nobody matches"; it now warns "nobody has been seen yet", and that fa
 ### Story 6.5 — The landing A/B, launched and read
 **Acceptance:** `landing.variant_b_enabled`'s experiment started on production (by the CLI), A and B served 50/50 to
 visitors, exposures and `start_prompt_copied` recorded per version, and the readout readable the same day.
+
+**Run log — 2026-10-21 (agent):** `frijoles experiments create --flag landing.variant_b_enabled --metric
+start_prompt_copied --guardrail signup_started --guardrail account_confirmed --entity visitor` → `variant_b_copy_test_2`
+(until stopped; checks: 0 failing, the quiet metrics a warning); `start` → production flag v3, split 50/50. 40 fresh
+`curl` loads of `/` split 21 A / 19 B (curl records nothing: the exposure is a browser beacon). One headless-browser visit
+→ B, `experiment_exposed` (feature `variant_b_copy_test_2`, variant `on`, subject visitor) recorded and counted by
+`frijoles experiments show`. Daniel's earlier 4-week draft `variant_b_copy_test` was left as a draft.
