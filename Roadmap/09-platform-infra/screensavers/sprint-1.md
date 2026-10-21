@@ -65,6 +65,10 @@ The line is the README's *The install line*. In a repo with no `Roadmap/` the re
 `hooks/piece-render.mjs` (a piece → a clip, in Node), `hooks/piece-player.mjs` (what fits, crop, frames → lines),
 `hooks/pieces/` (96 pieces, MIT, vendored by `scripts/vendor-ascii-pieces.mjs`). D8 in the README.
 
+### Story 1.6 — Fifteen pieces of our own, in colour
+`hooks/originals/` (the kit, four piece files, `registry.mjs`, the generated `catalog.mjs` the band reads), colour clips
+in `hooks/piece-render.mjs` (`v: 3`) and `hooks/piece-player.mjs` (`runsOf`, a run opens on one of ours). D9 in the README.
+
 ### Story 1.3 — The post goes out, and the read is taken
 Owed to the product owner: post the screenshot with the line; on 2026-11-30 read
 `gh api repos/golden-frijoles/skills/traffic/clones --jq .uniques` and stamp the verdict.
@@ -79,3 +83,5 @@ Owed to the product owner: post the screenshot with the line; on 2026-11-30 read
 3. Leave it 3 minutes on `main` — it starts by itself; on an epic branch it waits 9.
 4. Shrink the terminal to 24 rows — a shorter piece, or a cropped one, never a squashed one; under 40 columns, none.
 5. In a repo with no `Roadmap/`: the band reads `→ Next /golden-frijoles:setup`.
+6. `/screensaver now` opens on a colour piece captioned `golden frijoles · …`; wait through two rotations (45 s each) — the
+   colours are bright, not grey, and the band does not stutter on the busiest ones (starry-night, golden-harp).

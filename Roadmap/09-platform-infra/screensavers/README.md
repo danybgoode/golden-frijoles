@@ -88,6 +88,14 @@ commands `install.md` already gives. Once installed, the band names the next ste
   navies grey. So the screensaver plays ascii.rest's one-ink text pieces again, from shapes, space, physics, nature,
   creatures, objects, generative and effects only (no logos, companies or distros: no brand ever plays) — 96 of them,
   each at its own size, rendered in a Node process as the scenes were (`hooks/piece-render.mjs`).
+- **D9 — our own pieces, in colour, play first (2026-10-21, the product owner).** ascii.rest's pieces were "ok, not
+  top of the line", so 15 are drawn here instead (`hooks/originals/`): the four favourites made psychedelic (Lorenz,
+  spark, ripples, flow), four classic paintings, three Jack and the Beanstalk scenes, the Balrog on the bridge, a disco,
+  a jellyfish bloom and a wormhole. Colour comes back, but not the way D7's scenes failed: a piece is still drawn at its
+  own size (half-block cells give two colour pixels to a cell, the art pieces 64×40), never scaled, in bright saturated
+  colours that survive a terminal's colour table. A clip carries 12-bit colour per cell (`v: 3`); the band merges
+  neighbours of one colour into one run. A run opens on one of ours and plays through all of them before any ascii.rest
+  piece. The ascii.rest text pieces stay as the rest of the rotation.
 - **D6 — standalone.** It plays in any folder the plugin is loaded in; outside a Golden Frijoles repo the band names
   the step that lights it up.
 
@@ -99,6 +107,7 @@ commands `install.md` already gives. Once installed, the band names the next ste
 | 1 | S1.3 The post goes out, and the read is taken | low |
 | 1 | S1.4 Colour scenes, and `now` with an epic in flight | low |
 | 1 | S1.5 Text pieces from eight categories, rendered in Node | low |
+| 1 | S1.6 Fifteen pieces of our own, in colour | low |
 
 ## The install line (S1.2)
 ```
