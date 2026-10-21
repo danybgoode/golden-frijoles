@@ -40,7 +40,7 @@ stories:
     i_want: "to pause a test, resume it, or delete it, like any testing tool"
     so_that: "a test's life is mine to manage, not a one-way street"
     risk: high
-    status: in-progress   # PR open — no migration
+    status: done   # PR #425, merge 8f5e816 — no migration
   - id: S6.5
     title: "The landing A/B, launched and read"
     as_a: "Daniel"
@@ -51,7 +51,7 @@ stories:
 ---
 # Launch: the first landing A/B on goldenfrijoles.com, run on Golden Frijoles — Sprint 6: A test at any traffic
 
-**Status:** 🟨 Building — S6.1–S6.5 ✅ (#421–#424; the landing A/B launched 2026-10-21); S6.6 in review.
+**Status:** ✅ Shipped 2026-10-21 — S6.1–S6.6 (#421–#425); the landing A/B launched by CLI and running. Follow-up for Daniel: exclude paused intervals from the analysis (today the readout discloses that conversions while paused count for each person's group).
 
 ## Why this sprint exists (Daniel, 2026-10-20)
 Launch day for the landing A/B: the builder refused to start it — "A metric has gone quiet" (no prompt copy in 24 hours)
@@ -99,6 +99,11 @@ stays, append-only). Console (Pause, Resume, Delete experiment) and CLI (`frijol
 "not serving" state, told apart as `paused` because Production serves exactly this test's base (`servingState`).
 Resume is the partial state's Retry. The roll-out accepts that paused base. Delete reuses `invalid`; a decided experiment
 is the record of a decision and is not deleted.
+
+**Run log — 2026-10-21 (agent, production, after #425):** `frijoles experiments delete variant_b_copy_test` (Daniel's
+never-started 4-week draft) → retired, gone from the console list; `landing.variant_b_enabled` still serves v3 (the live
+test's split; 20 fresh loads 9 A / 11 B); `show variant_b_copy_test_2` offers rollout, keep, pause, stop. The live test was
+not paused (pause/resume are proven by e2e against real Postgres, not on the running landing test).
 
 ### Story 6.4 — `frijoles experiments`
 **Acceptance:** `ls`, `show`, `create` (from flags — `--flag --metric [--guardrail] [--entity] [--ends|--weeks]` — or
