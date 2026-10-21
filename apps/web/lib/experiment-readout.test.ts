@@ -554,3 +554,44 @@ test('the emphasised button follows the reading: roll out a winner, keep on wors
   for (const facts of [exposures(150, 75, 30), exposures(40, 10, 16)])
     assert.ok(readout(facts).verdict.actions.includes('rollout'), 'available, whatever it recommends')
 })
+
+test('three versions, unequal exposure, LOWER is better, no interval: the lead is the likeliest better one, and an unseen one never leads', () => {
+  const three: Definition = {
+    ...definition,
+    primaryMetric: { event: 'signup_completed', direction: 'decrease' },
+    variants: [
+      { key: 'off', weight: 34, label: 'Current' },
+      { key: 'b', weight: 33, label: 'Version B' },
+      { key: 'c', weight: 33, label: 'Version C' },
+    ],
+  }
+  // Lower is better: C converting 6 of 12 is worse than B's 0 of 8, so B leads; the counts come from B's own row.
+  const result = readoutOf(
+    three,
+    armsFacts([
+      ['off', 10, 0],
+      ['b', 8, 0],
+      ['c', 12, 6],
+    ])
+  )
+  assert.equal(result.treatment.key, 'b')
+  assert.equal(result.treatment.exposed, 8)
+  const unseen = readoutOf(
+    three,
+    armsFacts([
+      ['off', 1, 0],
+      ['c', 1, 0],
+    ])
+  )
+  assert.equal(unseen.treatment.key, 'c', 'B has no exposures, so it cannot lead')
+})
+
+test('stopped: a check that failed recommends marking it invalid; a short sample recommends nothing; a full winner, the roll-out', () => {
+  const facts = exposures(60, 12, 4).filter(
+    (fact) => !(fact.id.match(/^[xc]-on-(\d+)$/) && Number(fact.id.split('-')[2]) >= 20)
+  )
+  assert.equal(readout(facts, { lifecycle: 'stopped' }).verdict.recommend, 'invalid')
+  assert.equal(readout(exposures(4, 1, 2), { lifecycle: 'stopped' }).verdict.recommend, null)
+  assert.equal(readout(exposures(150, 30, 75), { lifecycle: 'stopped' }).verdict.recommend, 'rollout')
+  assert.equal(readout(exposures(150, 75, 30), { lifecycle: 'stopped' }).verdict.recommend, 'keep')
+})

@@ -77,7 +77,7 @@ planned share.
 **Acceptance:** every live or stopped test offers roll out the leader / keep the control at ANY point — no data, a short
 sample, a flat or worse result, a guardrail moved, even a failed check (Daniel: "what if I just want to roll it out
 regardless of any results?"). The readout says how sure it is in words: each version's counts and the chance the leader is
-really better (`lib/experiment-chance.ts`, Bayesian chance-to-beat, exact on a grid); below the planned sample the call is
+really better (`lib/experiment-chance.ts`, Bayesian chance-to-beat, deterministic on a grid fitted to both posteriors); below the planned sample the call is
 labelled directional, never withheld; the decision record keeps whether the planned sample was met (its snapshot carries
 `decisionReady`). The page draws the button its reading points to as primary (Keep on a worse or flat result), the rest
 secondary — available, never urged. The database already allowed it (`record_experiment_decision` has no sample rule);

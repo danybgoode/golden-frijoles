@@ -98,6 +98,8 @@ export function buildReadout(input: ReadoutInput): Readout {
     converted: metricRow(key)?.convertedSubjects ?? 0,
   })
   const byChance = treatments
+    // A treatment nobody has seen has no rate yet, so it cannot lead (verifier r2, #422).
+    .filter((variant) => counts(variant.key).exposed > 0)
     .map((variant) => ({
       key: variant.key,
       chance: chanceBetter(counts(controlKey), counts(variant.key), wanted === 1) ?? 0,
