@@ -131,7 +131,7 @@ test.describe('the decision-first results page (Story 4.1)', () => {
     await cleanupExperimentProjects(created)
   })
 
-  test('waiting → gathering → ready, each said in words, with the roll-out offered only when ready', async ({
+  test('waiting → gathering → ready, each said in words, with the roll-out offered at every point (S6.3)', async ({
     page,
   }) => {
     for (const [point, perArm, converted] of [
@@ -167,7 +167,7 @@ test.describe('the decision-first results page (Story 4.1)', () => {
       await page.setViewportSize({ width: 1360, height: 900 })
 
       if (point === 'waiting') {
-        await expect(answer).toContainText('It’s live. Results start tomorrow.')
+        await expect(answer).toContainText('It’s live. Nobody has been counted yet.')
         // The tabs keep the snapshot the reader chose (Codex, #172 round 5).
         const asOf = new Date().toISOString()
         await page.goto(
@@ -178,10 +178,11 @@ test.describe('the decision-first results page (Story 4.1)', () => {
           new RegExp(`asOf=${encodeURIComponent(asOf).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`)
         )
         await page.goto(`/app/experiments/${fx.slug}/${experiment.key}?version=1`)
-        await expect(verdict).toContainText('Let it run. Nothing to decide yet.')
+        await expect(verdict).toContainText('Let it run.')
         await expect(verdict.getByRole('button', { name: 'Stop experiment' })).toBeVisible()
       } else if (point === 'gathering') {
-        await expect(answer).toContainText('of the planned sample, so don’t call it yet.')
+        await expect(answer).toContainText('of the planned sample, so any call now is directional.')
+        await expect(answer).toContainText('likely New copy is really better.')
         await expect(verdict).toContainText('Keep it running')
         // Stop, then the page must stop saying "live" (fresh reviewer, #172): the next step is the decision.
         await verdict.getByRole('button', { name: 'Stop experiment' }).click()
@@ -246,8 +247,9 @@ test.describe('the decision-first results page (Story 4.1)', () => {
         await expect(answer).toContainText('Decided: ship New copy.')
       }
       if (point !== 'ready') {
-        // Either label — CI runs with the builder gate off, where the ready button says "Ship".
-        await expect(verdict.getByRole('button', { name: /Roll out|Ship / })).toHaveCount(0)
+        // S6.3 (Daniel, 2026-10-20): rolling a version out is offered at ANY point, before the sample too — the sentence
+        // says how sure it is. Either label: CI runs with the builder gate off, where the button says "Ship".
+        await expect(verdict.getByRole('button', { name: /Roll out|Ship / })).toHaveCount(1)
       }
 
       // The Plan tab: the sentence and the read-only plan; "Change the plan" is the builder's, which

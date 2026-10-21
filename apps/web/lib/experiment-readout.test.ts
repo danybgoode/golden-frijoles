@@ -110,35 +110,38 @@ function readout(
   })
 }
 
-test('waiting: live, no exposures yet — the approved first line', () => {
+test('waiting: live, no exposures yet — and a version can still be rolled out or kept (S6.3)', () => {
   const result = readout([])
   assert.equal(result.state, 'waiting')
   assert.equal(
     sentenceText(result.answer),
-    'It’s live. Results start tomorrow. Merchants are being split 50 / 50 from now. It needs 100 per version.'
+    'It’s live. Nobody has been counted yet. Merchants are being split 50 / 50 from now. It needs 100 per version.'
   )
-  assert.equal(result.verdict.actions.includes('rollout'), false)
+  assert.deepEqual(result.verdict.actions, ['rollout', 'keep', 'stop'])
+  assert.equal(result.chance, null)
 })
 
-test('gathering: ahead, with the range, the share of the sample and the days left — and NO roll-out', () => {
+test('gathering: ahead, with the range, the share of the sample, the counts and the chance — roll-out offered (S6.3)', () => {
   const result = readout(exposures(40, 10, 16))
   assert.equal(result.state, 'gathering')
   assert.match(
     sentenceText(result.answer),
-    /^New copy is ahead, \+60\.0% \(range .+ to .+\)\. Guardrails fine, split checks out\. 40% of the planned sample, so don’t call it yet\. About 14 more days\.$/
+    /^New copy is ahead, \+60\.0% \(range .+ to .+\)\. Guardrails fine, split checks out\. 40% of the planned sample, so any call now is directional\. About 14 more days to the planned sample\. So far: Current 10 of 40, New copy 16 of 40 — about \d+% likely New copy is really better\.$/
   )
-  assert.equal(result.verdict.actions.includes('rollout'), false)
+  assert.deepEqual(result.verdict.actions, ['rollout', 'keep', 'stop'])
+  assert.ok(result.chance !== null && result.chance > 0.8 && result.chance < 1)
 })
 
 test('ready and favourable: the verdict offers the roll-out; unfavourable or flat never does', () => {
   const winning = readout(exposures(150, 30, 75))
   assert.equal(winning.state, 'ready')
-  assert.deepEqual(winning.verdict.actions, ['rollout', 'keep'])
-  assert.match(sentenceText(winning.answer), /you can call it\.$/)
+  assert.deepEqual(winning.verdict.actions, ['rollout', 'keep', 'stop'])
+  assert.match(sentenceText(winning.answer), /you can call it\. So far: /)
   const flat = readout(exposures(150, 30, 31))
   assert.equal(flat.state, 'ready')
-  assert.equal(flat.verdict.actions.includes('rollout'), false)
-  assert.match(sentenceText(flat.answer), /didn’t move\.$/)
+  // Flat is still the person's call: the sentence says it didn't move; rolling out stays available (S6.3).
+  assert.deepEqual(flat.verdict.actions, ['rollout', 'keep', 'iterate', 'stop'])
+  assert.match(sentenceText(flat.answer), /didn’t move\. So far: /)
 })
 
 test('running but not serving is its own state, with retry — before any number', () => {
@@ -174,11 +177,12 @@ test('stopped, undecided: never "live" or "keep it running" — the next step is
   assert.doesNotMatch(sentenceText(gathering.answer), /live|keep it running|don’t call it yet/i)
   assert.equal(gathering.verdict.title, 'Record the decision.')
   assert.equal(gathering.verdict.actions.includes('stop'), false)
-  assert.equal(gathering.verdict.actions.includes('rollout'), false)
+  // Stopped short of the sample: any version can still be rolled out or kept (S6.3), the call labelled directional.
+  assert.deepEqual(gathering.verdict.actions, ['rollout', 'keep', 'iterate'])
   const empty = readout([], { lifecycle: 'stopped' })
-  assert.equal(sentenceText(empty.answer).includes('Results start tomorrow'), false)
+  assert.equal(sentenceText(empty.answer).includes('Nobody has been counted yet'), false)
   const winning = readout(exposures(150, 30, 75), { lifecycle: 'stopped' })
-  assert.deepEqual(winning.verdict.actions, ['rollout', 'keep'])
+  assert.deepEqual(winning.verdict.actions, ['rollout', 'keep', 'iterate'])
 })
 
 test('a decided iterate / inconclusive does not claim the control "stays"', () => {
@@ -203,11 +207,11 @@ test('stopped with a blocker says the numbers can’t be trusted — never "not 
   assert.equal(result.state, 'stopped')
   assert.match(
     sentenceText(result.answer),
-    /The numbers can’t be trusted: people were not divided evenly between the groups\.$/
+    /The numbers can’t be trusted: people were not divided evenly between the groups\. So far: /
   )
   assert.doesNotMatch(sentenceText(result.answer), /srm|_/)
   assert.doesNotMatch(sentenceText(result.answer) + result.verdict.body, /enough people|planned sample/)
-  assert.deepEqual(result.verdict.actions, ['invalid', 'iterate'])
+  assert.deepEqual(result.verdict.actions, ['rollout', 'keep', 'invalid', 'iterate'])
 })
 
 test('three versions: the page leads with the treatment the RECORD names, and before that the one ahead', () => {
@@ -291,10 +295,10 @@ test('stopped on a SHORT sample is "not enough people", never "can’t be truste
   assert.equal(result.state, 'stopped')
   assert.match(
     sentenceText(result.answer),
-    /It stopped at 4% of the planned sample, so the honest call may be inconclusive\.$/
+    /It stopped at 4% of the planned sample, so any call is directional\. So far: Current 1 of 4, New copy 2 of 4 — about \d+% likely New copy is really better\.$/
   )
   assert.doesNotMatch(sentenceText(result.answer), /can’t be trusted/)
-  assert.deepEqual(result.verdict.actions, ['iterate'])
+  assert.deepEqual(result.verdict.actions, ['rollout', 'keep', 'iterate'])
 })
 
 test('a REAL blocker on a short sample is still named — stopped offers invalid, running is blocked', () => {
@@ -304,9 +308,10 @@ test('a REAL blocker on a short sample is still named — stopped offers invalid
   )
   const stopped = readout(facts, { lifecycle: 'stopped' })
   assert.match(sentenceText(stopped.answer), /The numbers can’t be trusted: people were not divided evenly/)
-  assert.deepEqual(stopped.verdict.actions, ['invalid', 'iterate'])
+  assert.deepEqual(stopped.verdict.actions, ['rollout', 'keep', 'invalid', 'iterate'])
   const running = readout(facts)
   assert.equal(running.state, 'blocked')
+  assert.deepEqual(running.verdict.actions, ['rollout', 'keep', 'stop'])
 })
 
 test('another arm’s guardrail harm is named — and neither pinned on the clean lead nor blocking its roll-out', () => {
@@ -380,14 +385,14 @@ test('another arm’s guardrail harm is named — and neither pinned on the clea
   assert.equal(result.treatment.key, 'b')
   assert.equal(result.guardrails[0].status, 'fine')
   assert.deepEqual(result.guardrails[0].harmedBy, ['Version C'])
-  assert.deepEqual(result.verdict.actions, ['rollout', 'keep'])
+  assert.deepEqual(result.verdict.actions, ['rollout', 'keep', 'stop'])
   assert.match(
     sentenceText(result.answer),
     /Guardrails fine for Version B, but Version C moved one the wrong way/
   )
 })
 
-test('the LEAD harming a guardrail withholds its roll-out', () => {
+test('the LEAD harming a guardrail is named in the title — and rolling it out is still the person’s call (S6.3)', () => {
   const guarded: Definition = {
     ...definition,
     guardrailMetrics: [{ event: 'refund_requested', direction: 'decrease' }],
@@ -433,6 +438,7 @@ test('the LEAD harming a guardrail withholds its roll-out', () => {
     now: new Date(now),
   })
   assert.equal(result.guardrails[0].status, 'worse')
-  assert.equal(result.verdict.actions.includes('rollout'), false)
+  assert.deepEqual(result.verdict.actions, ['rollout', 'keep', 'iterate', 'stop'])
   assert.equal(result.verdict.title, 'New copy is ahead, but a guardrail moved the wrong way.')
+  assert.match(result.verdict.body, /your call/)
 })
