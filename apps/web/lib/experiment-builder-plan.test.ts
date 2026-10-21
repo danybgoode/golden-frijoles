@@ -1026,7 +1026,7 @@ test('S6.2 a saved open-ended or dated draft keeps its window on re-plan; a date
   const past = { startAt: '2026-09-01T00:00:00.000Z', endAt: '2026-09-11T00:00:00.000Z' }
   const stale = checkOf({ ...copyAnswers(), endsOn: '2026-09-10' }, context({ savedWindow: past })).window
   assert.equal(stale.status, 'fail')
-  assert.equal(stale.fix?.kind, 'replan-from-today')
+  assert.deepEqual(stale.fix, { label: 'Pick a later day, or until you stop it', kind: 'step', step: 5 })
 })
 
 test('S6.2 answers: endsOn is "open" or a real calendar day, nothing else; the words name it', () => {

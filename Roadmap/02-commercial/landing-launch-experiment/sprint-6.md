@@ -51,7 +51,7 @@ stories:
 ---
 # Launch: the first landing A/B on goldenfrijoles.com, run on Golden Frijoles — Sprint 6: A test at any traffic
 
-**Status:** 🟨 Building — S6.1 ✅ (#421); S6.3 ✅ (#422); S6.2 in review (#423); S6.4 built; S6.5–S6.6 planned. Daniel approved the sprint 2026-10-20 ("if your stories above will do that lets go ahead").
+**Status:** 🟨 Building — S6.1 ✅ (#421); S6.3 ✅ (#422); S6.2 in review (#423); S6.4 in progress; S6.5–S6.6 planned. Daniel approved the sprint 2026-10-20 ("if your stories above will do that lets go ahead").
 
 ## Why this sprint exists (Daniel, 2026-10-20)
 Launch day for the landing A/B: the builder refused to start it — "A metric has gone quiet" (no prompt copy in 24 hours)
@@ -69,8 +69,7 @@ never `fail`. Only facts still fail: a window whose dates have passed, condition
 or another test on it. The server's Start re-plans with the same checks, so the rule holds there too.
 
 ### Story 6.2 — Any end date, or none
-**Acceptance:** step 5 takes "Until I stop it", or "Through <day>" (any day from tomorrow), beside the week chips; the CLI
-takes `--ends open|YYYY-MM-DD`. Analysis reads up to now (or the stop); the readout shows days running instead of a
+**Acceptance:** step 5 takes "Until I stop it", or "Through <day>" (any day from tomorrow), beside the week chips. Analysis reads up to now (or the stop); the readout shows days running instead of a
 planned share, and a stopped test's days stop at its stop.
 
 **Design (deviation from the plan, recorded):** the plan said a migration would make `plannedWindow.endAt` nullable.

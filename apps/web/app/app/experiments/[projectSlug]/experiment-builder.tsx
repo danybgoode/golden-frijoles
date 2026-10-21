@@ -1034,7 +1034,7 @@ function Long({
           Until I stop it
         </button>
         <label className="ds-chip" data-pressed={!!state.answers.endsOn && state.answers.endsOn !== 'open'}>
-          Until{' '}
+          Through{' '}
           <input
             type="date"
             aria-label="End date"
@@ -1244,8 +1244,8 @@ function PlanPanel({
   )
 }
 
-/** The first day an end date may be (the planner's rule: from tomorrow), in the reader's own calendar. */
+/** The first day an end date may be: tomorrow in UTC, the planner's own calendar — a reader west of UTC late in the day
+ *  would otherwise pick their local tomorrow and be refused (verifier r2, #423). */
 function tomorrowLocal(): string {
-  const day = new Date(Date.now() + 24 * 60 * 60 * 1000)
-  return `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`
+  return new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
 }

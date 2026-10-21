@@ -1074,7 +1074,10 @@ function computeChecks(
       step: 5,
       title: 'This draft’s dates have run out',
       detail: `It was planned to end on ${derived.endAt.toISOString().slice(0, 10)}.`,
-      fix: { label: 'Plan it from today', kind: 'replan-from-today' },
+      // A dated draft re-planned "from today" would keep its passed day; it needs a new one (verifier r2, #423).
+      fix: answers.endsOn
+        ? { label: 'Pick a later day, or until you stop it', kind: 'step', step: 5 }
+        : { label: 'Plan it from today', kind: 'replan-from-today' },
     })
   } else if (derived.inTestPerDay <= 0 && !derived.estimateExact) {
     // An approximate zero is not evidence that nobody matches — never block Start on it.
