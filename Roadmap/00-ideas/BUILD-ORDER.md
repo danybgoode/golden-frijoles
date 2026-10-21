@@ -27,7 +27,7 @@ _a pitch is waiting at the approval gate._
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
 - [Delivery back on: a dispatch schedule the free Vercel plan allows](../01-growth-engine/delivery-back-on/README.md) — #100 · 01 Growth Engine · 2/3 stories · risk: High · appetite S · _docs: status in-progress_
-- [Launch: the first landing A/B on goldenfrijoles.com, run on Golden Frijoles](../02-commercial/landing-launch-experiment/README.md) — #101 · 02 Commercial · 14/23 stories · risk: High · appetite L · _docs: status in-progress_
+- [Launch: the first landing A/B on goldenfrijoles.com, run on Golden Frijoles](../02-commercial/landing-launch-experiment/README.md) — #101 · 02 Commercial · 14/24 stories · risk: High · appetite L · _docs: status in-progress_
 - [Claude Code screensavers, the hook to the rest](../09-platform-infra/screensavers/README.md) — #102 · 09 Platform Infra · 0/5 stories · risk: Low · appetite S · _docs: status in-progress_
 - [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #103 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
 - [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #104 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_

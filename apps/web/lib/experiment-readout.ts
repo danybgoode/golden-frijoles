@@ -1,6 +1,7 @@
 import type { ExperimentAnalysisResult } from './experiment-analysis'
 import type { ExperimentDefinition } from './experiment-definition'
 import { blockerWords } from './experiment-blocker-words'
+import { chanceBetter, chanceWords } from './experiment-chance'
 import { eventWords, entityPlural, type SentencePart } from './experiment-builder-plan'
 
 // experiments-for-humans · Story 4.1 (epic README D10) — the decision-first readout, as DATA.
@@ -27,7 +28,18 @@ export type Readout = {
   treatment: { key: string; label: string; exposed: number; rate: number | null }
   /** The primary metric's relative lift and its 95 % range, as percentages; `null` when not computable. */
   lift: { value: number; low: number; high: number; crossesZero: boolean } | null
-  verdict: { label: string; title: string; body: string; actions: ReadoutAction[] }
+  /** S6.3 — the chance the lead version is really better on the primary metric, 0–1, at ANY volume (lib/experiment-chance.ts).
+   *  Reported, never a gate; null before anyone is counted. */
+  chance: number | null
+  /** `recommend` is the button the page's own reading points to (drawn primary); null when the numbers point nowhere yet.
+   *  Every action stays available whatever it says (S6.3) — the recommendation is emphasis, never a gate. */
+  verdict: {
+    label: string
+    title: string
+    body: string
+    actions: ReadoutAction[]
+    recommend?: ReadoutAction | null
+  }
   progress: { fraction: number; needPerVersion: number; day: number; plannedDays: number }
   srm: 'clear' | 'detected' | 'not_evaluable'
   guardrails: Array<{
@@ -79,7 +91,21 @@ export function buildReadout(input: ReadoutInput): Readout {
     .map((variant) => ({ key: variant.key, interval: metricRow(variant.key)?.liftInterval }))
     .filter((row) => row.interval?.ok)
     .sort((a, b) => wanted * ((b.interval as { lift: number }).lift - (a.interval as { lift: number }).lift))
-  const treatmentKey = recorded?.key ?? measured[0]?.key ?? treatments[0]!.key
+  // No measurable lift yet (a control that converted nobody has no interval — the common low-traffic case): lead with the
+  // treatment most likely to be better, never simply the first (verifier, #422 — C at 6 of 10 must not hide behind B).
+  const counts = (key: string) => ({
+    exposed: metricRow(key)?.exposedSubjects ?? 0,
+    converted: metricRow(key)?.convertedSubjects ?? 0,
+  })
+  const byChance = treatments
+    // A treatment nobody has seen has no rate yet, so it cannot lead (verifier r2, #422).
+    .filter((variant) => counts(variant.key).exposed > 0)
+    .map((variant) => ({
+      key: variant.key,
+      chance: chanceBetter(counts(controlKey), counts(variant.key), wanted === 1) ?? 0,
+    }))
+    .sort((a, b) => b.chance - a.chance)
+  const treatmentKey = recorded?.key ?? measured[0]?.key ?? byChance[0]?.key ?? treatments[0]!.key
   const controlRow = metricRow(controlKey)
   const treatmentRow = metricRow(treatmentKey)
   const interval = treatmentRow?.liftInterval
@@ -155,6 +181,21 @@ export function buildReadout(input: ReadoutInput): Readout {
         ? 'the split is off'
         : 'split can’t be checked yet'
 
+  // S6.3 (Daniel, 2026-10-20): what a founder can act on today, whatever the volume — each version's counts and the chance
+  // the lead is really better. The interval above answers "is it significant?"; this answers "which way is it leaning?".
+  const controlCounts = {
+    exposed: controlRow?.exposedSubjects ?? 0,
+    converted: controlRow?.convertedSubjects ?? 0,
+  }
+  const treatmentCounts = {
+    exposed: treatmentRow?.exposedSubjects ?? 0,
+    converted: treatmentRow?.convertedSubjects ?? 0,
+  }
+  // Both versions must have been seen: a version nobody saw has no rate to compare (verifier, #422).
+  const chance =
+    controlCounts.exposed === 0 || treatmentCounts.exposed === 0
+      ? null
+      : chanceBetter(controlCounts, treatmentCounts, definition.primaryMetric.direction === 'increase')
   const common = {
     control: {
       key: controlKey,
@@ -169,6 +210,7 @@ export function buildReadout(input: ReadoutInput): Readout {
       rate: treatmentRow?.conversionRate ?? null,
     },
     lift,
+    chance,
     progress: { fraction, needPerVersion: need, day, plannedDays },
     srm,
     guardrails,
@@ -197,6 +239,17 @@ export function buildReadout(input: ReadoutInput): Readout {
         plain(` (range ${signed(lift.low)} to ${signed(lift.high)}). ${guardWords}, ${srmWords}.`),
       ]
     : [bold(`No comparison on ${metric} yet`), plain(`. ${guardWords}, ${srmWords}.`)]
+  const countsLine: SentencePart[] =
+    chance === null
+      ? []
+      : [
+          plain(
+            ` So far: ${A} ${controlCounts.converted} of ${controlCounts.exposed}, ${B} ${treatmentCounts.converted} of ${treatmentCounts.exposed} — ${chanceWords(chance)} likely ${B} is really better.`
+          ),
+        ]
+  // Every live or stopped test can be rolled out or kept at any time, whatever the numbers (Daniel, 2026-10-20). The
+  // sentence above says how sure it is; the buttons never wait for a sample.
+  const anyTime: ReadoutAction[] = ['rollout', 'keep']
   if (input.lifecycle === 'decided' && input.decision) {
     const shipped = input.decision.outcome === 'ship_treatment'
     return {
@@ -244,12 +297,14 @@ export function buildReadout(input: ReadoutInput): Readout {
           plain(' '),
           ...lead,
           plain(` The numbers can’t be trusted: ${blockerSentences}`),
+          ...countsLine,
         ],
         verdict: {
           label: 'What happens next',
           title: 'Record the decision.',
-          body: 'The checks found a problem, so no winner can be called from these numbers.',
-          actions: ['invalid', 'iterate'],
+          body: 'The checks found a problem, so these numbers may not mean what they say. You can still roll a version out or keep the current one.',
+          actions: [...anyTime, 'invalid', 'iterate'],
+          recommend: 'invalid',
         },
       }
     }
@@ -266,8 +321,9 @@ export function buildReadout(input: ReadoutInput): Readout {
               plain(
                 ready
                   ? ' Record the decision.'
-                  : ` It stopped at ${Math.round(fraction * 100)}% of the planned sample, so the honest call may be inconclusive.`
+                  : ` It stopped at ${Math.round(fraction * 100)}% of the planned sample, so any call is directional.`
               ),
+              ...countsLine,
             ]),
       ],
       verdict: {
@@ -281,8 +337,9 @@ export function buildReadout(input: ReadoutInput): Readout {
               : unfavourable
                 ? `${B} came out worse with enough people to trust it.`
                 : 'There were enough people, and no real difference showed up.'
-          : 'There weren’t enough people to trust a winner; say what you learned.',
-        actions: ready ? (canShip ? ['rollout', 'keep'] : ['keep', 'iterate']) : ['iterate'],
+          : 'Below the planned sample, so the call is directional: roll out the version you believe in, keep the current one, or change it and run again.',
+        actions: [...anyTime, 'iterate'],
+        recommend: ready ? (canShip ? 'rollout' : 'keep') : null,
       },
     }
   }
@@ -299,6 +356,7 @@ export function buildReadout(input: ReadoutInput): Readout {
         title: 'Serve the split.',
         body: 'Retry turns this test’s version of the feature on in Production. Nothing else changes.',
         actions: ['retry-serving'],
+        recommend: null,
       },
     }
   }
@@ -307,16 +365,17 @@ export function buildReadout(input: ReadoutInput): Readout {
       ...common,
       state: 'waiting',
       answer: [
-        bold('It’s live. Results start tomorrow.'),
+        bold('It’s live. Nobody has been counted yet.'),
         plain(
           ` ${entityPlural(definition.assignmentEntityType).replace(/^./, (c) => c.toUpperCase())} are being split ${definition.variants.map((v) => v.weight).join(' / ')} from now. It needs ${need.toLocaleString('en-US')} per version.`
         ),
       ],
       verdict: {
         label: 'What happens next',
-        title: 'Let it run. Nothing to decide yet.',
-        body: 'Until there are enough people, peeking at a number can only mislead you.',
-        actions: ['stop'],
+        title: 'Let it run.',
+        body: 'Results appear here as soon as the first person is counted. You can roll a version out or stop it at any time.',
+        actions: [...anyTime, 'stop'],
+        recommend: null,
       },
     }
   }
@@ -324,12 +383,13 @@ export function buildReadout(input: ReadoutInput): Readout {
     return {
       ...common,
       state: 'blocked',
-      answer: [...lead, plain(` The numbers can’t be trusted yet: ${blockerSentences}`)],
+      answer: [...lead, plain(` The numbers can’t be trusted yet: ${blockerSentences}`), ...countsLine],
       verdict: {
         label: 'What happens next',
-        title: 'Fix what the checks found before calling it.',
-        body: 'A blocked analysis is not a result, however good the number looks.',
-        actions: ['stop'],
+        title: 'Fix what the checks found before trusting the number.',
+        body: 'The checks found a problem, so the number may not mean what it says. You can still roll a version out or keep the current one.',
+        actions: [...anyTime, 'stop'],
+        recommend: null,
       },
     }
   }
@@ -340,8 +400,9 @@ export function buildReadout(input: ReadoutInput): Readout {
       answer: [
         ...lead,
         plain(
-          ` ${Math.round(fraction * 100)}% of the planned sample, so don’t call it yet.${remaining !== null ? ` About ${remaining} more day${remaining === 1 ? '' : 's'}.` : ''}`
+          ` ${Math.round(fraction * 100)}% of the planned sample, so any call now is directional.${remaining !== null ? ` About ${remaining} more day${remaining === 1 ? '' : 's'} to the planned sample.` : ''}`
         ),
+        ...countsLine,
       ],
       verdict: {
         label: 'What happens next',
@@ -349,8 +410,9 @@ export function buildReadout(input: ReadoutInput): Readout {
           remaining !== null
             ? `Keep it running. About ${remaining} more day${remaining === 1 ? '' : 's'}.`
             : 'Keep it running.',
-        body: 'The button to roll out appears once there are enough people to trust the result.',
-        actions: ['stop'],
+        body: 'Keep it running for a surer answer, or roll out the version you believe in now.',
+        actions: [...anyTime, 'stop'],
+        recommend: null,
       },
     }
   }
@@ -366,33 +428,38 @@ export function buildReadout(input: ReadoutInput): Readout {
             ? ' The main number moved the right way, but a guardrail didn’t, so weigh the cost before calling it.'
             : ' The range still includes no difference, so the honest call is that it didn’t move.'
       ),
+      ...countsLine,
     ],
     verdict: canShip
       ? {
           label: 'Ready',
           title: `${B} is winning. Roll it out?`,
           body: `${metric.replace(/^./, (c) => c.toUpperCase())} moved the way you wanted and the split checks out.`,
-          actions: ['rollout', 'keep'],
+          actions: [...anyTime, 'stop'],
+          recommend: 'rollout',
         }
       : favourable
         ? {
             label: 'Ready',
             title: `${B} is ahead, but a guardrail moved the wrong way.`,
-            body: 'Look at what it cost before deciding. Rolling it out isn’t offered while a guardrail is worse.',
-            actions: ['keep', 'iterate'],
+            body: 'Look at what it cost before deciding; rolling it out is your call.',
+            actions: [...anyTime, 'iterate', 'stop'],
+            recommend: null,
           }
         : unfavourable
           ? {
               label: 'Ready',
               title: `${B} is worse. Keep ${A}.`,
               body: 'There were enough people to see a change, and it went the wrong way.',
-              actions: ['keep', 'iterate'],
+              actions: [...anyTime, 'iterate', 'stop'],
+              recommend: 'keep',
             }
           : {
               label: 'Ready',
               title: `No real difference. Keep ${A}?`,
               body: 'There were enough people to see the change you planned for, and it didn’t show up.',
-              actions: ['keep', 'iterate'],
+              actions: [...anyTime, 'iterate', 'stop'],
+              recommend: 'keep',
             },
   }
 }

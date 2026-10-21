@@ -37,6 +37,8 @@ export type DecideFlowProps = {
   /** The decided outcome and chosen variant, when decided (for the roll-out after a decision). */
   decision: { outcome: string; chosenVariantKey: string | null } | null
   actions: ReadoutAction[]
+  /** The button the reading points to, drawn primary (S6.3); every other offered action is secondary. */
+  recommend?: ReadoutAction | null
   /**
    * Can this deployment roll out (the builder gate — the roll-out's kill switch)? When it cannot, no
    * roll-out is drawn or ticked: a button that can only fail is not a button (fresh reviewer, #172).
@@ -263,6 +265,9 @@ export function DecideFlow(props: DecideFlowProps) {
     { choice: { outcome: 'invalid', treatmentKey: null }, text: 'Mark it invalid' },
   ]
 
+  // One primary at most: the action the reading points to (S6.3 — rolling out is always offered, never always urged).
+  const emphasis = (action: ReadoutAction) => (props.recommend === action ? 'primary' : 'secondary')
+
   return (
     <>
       <div className="ds-x-acts">
@@ -285,22 +290,19 @@ export function DecideFlow(props: DecideFlowProps) {
         ) : (
           <>
             {props.actions.includes('rollout') ? (
-              <Button variant="primary" onClick={() => open('ship_treatment')}>
+              <Button variant={emphasis('rollout')} onClick={() => open('ship_treatment')}>
                 {props.canRollOut
                   ? `Roll out ${label(props.leadTreatmentKey)} to everyone`
                   : `Ship ${label(props.leadTreatmentKey)}`}
               </Button>
             ) : null}
             {props.actions.includes('keep') ? (
-              <Button
-                variant={props.actions.includes('rollout') ? 'secondary' : 'primary'}
-                onClick={() => open('keep_control')}
-              >
+              <Button variant={emphasis('keep')} onClick={() => open('keep_control')}>
                 Keep {control}
               </Button>
             ) : null}
             {props.actions.includes('invalid') ? (
-              <Button variant="primary" onClick={() => open('invalid')}>
+              <Button variant={emphasis('invalid')} onClick={() => open('invalid')}>
                 Mark it invalid
               </Button>
             ) : null}

@@ -283,6 +283,7 @@ export default async function ExperimentPage({
       currentDecisionId={current?.id ?? null}
       decision={current ? { outcome: current.outcome, chosenVariantKey: current.chosenVariantKey } : null}
       actions={readout.verdict.actions}
+      recommend={readout.verdict.recommend ?? null}
       canRollOut={canRollOut}
       leadTreatmentKey={readout.treatment.key}
     />
