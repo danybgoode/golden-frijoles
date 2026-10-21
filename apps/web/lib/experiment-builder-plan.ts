@@ -746,6 +746,7 @@ export function buildExperimentPlan(
     days,
     needPerVersion,
     inTestPerDay,
+    seenPerDay: perDay,
     estimateExact,
     startAt,
     endAt,
@@ -878,6 +879,8 @@ function computeChecks(
     days: number | null
     needPerVersion: number | null
     inTestPerDay: number
+    /** People of the counted kind seen per day, before any condition — 0 means no traffic at all, not "nobody matches". */
+    seenPerDay: number
     estimateExact: boolean
     startAt: Date
     endAt: Date
@@ -1088,6 +1091,16 @@ function computeChecks(
       title: "We can't tell how many people match",
       detail:
         'Your events carry too many different tag combinations to count these conditions together, so there is no estimate of how long it needs.',
+    })
+  } else if (derived.inTestPerDay <= 0 && derived.seenPerDay <= 0) {
+    // Nobody seen at all is TRAFFIC, not the conditions (S6.1, Daniel 2026-10-20 — a launch has no visitors yet): the
+    // test counts everyone from the first one. Only conditions that exclude people who DO arrive are a fact that fails.
+    checks.push({
+      id: 'window',
+      status: 'warn',
+      step: 2,
+      title: 'Nobody has been seen yet',
+      detail: `No ${entityPlural(answers.entity)} reached your product in the last 14 days, so there is no estimate yet. The test counts them from the first one.`,
     })
   } else if (derived.inTestPerDay <= 0) {
     checks.push({
