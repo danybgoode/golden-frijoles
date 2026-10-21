@@ -7,20 +7,29 @@ import { VISITOR_COOKIE_ATTRIBUTES, isMarketingPath, VISITOR_COOKIE } from '@/li
 // Server Components can't write cookies, so @supabase/ssr needs middleware to rewrite refreshed
 // auth cookies onto the response. This is session PLUMBING ONLY — it does NOT gate routes.
 // Per-route authorization is a server-side membership check at the DATA boundary
-// (lib/membership.ts), never a URL-pattern guard here. Scoped to /app so the shipped public
-// surface (landing, /api/v1/*) is untouched and pays no auth cost.
+// (lib/membership.ts), never a URL-pattern guard here. /api/v1/* is untouched; a marketing page pays the
+// auth cost only when it carries a session cookie (below).
+/** A Supabase session cookie (`sb-<ref>-auth-token`, possibly chunked `.0`, `.1`): only then is there a session to refresh. */
+function hasAuthCookie(request: NextRequest): boolean {
+  return request.cookies.getAll().some((c) => c.name.startsWith('sb-') && c.name.includes('-auth-token'))
+}
+
 export async function middleware(request: NextRequest) {
   // landing-launch-experiment D2 — a public marketing page needs the visitor id IN THE REQUEST it renders, or the
   // server cannot pick an A/B variant for a first visit and the client would mint a different id: the visit and the
   // exposure would be two people. Set on the request (the page reads it in this same render) and on the response (the
-  // browser keeps it). No Supabase work here: these pages carry no session to refresh.
+  // browser keeps it).
+  let minted: string | null = null
   if (isMarketingPath(request.nextUrl.pathname)) {
-    if (request.cookies.get(VISITOR_COOKIE)?.value) return NextResponse.next()
-    const visitorId = crypto.randomUUID()
-    request.cookies.set(VISITOR_COOKIE, visitorId)
-    const minted = NextResponse.next({ request })
-    minted.cookies.set(VISITOR_COOKIE, visitorId, VISITOR_COOKIE_ATTRIBUTES)
-    return minted
+    if (!request.cookies.get(VISITOR_COOKIE)?.value) {
+      minted = crypto.randomUUID()
+      request.cookies.set(VISITOR_COOKIE, minted)
+    }
+    // S4.4 (verifier, #419): the landing's Growth tier reads the session (a signed-in owner gets the checkout form). A
+    // Server Component cannot write cookies, so a stale access token refreshed THERE would throw the rotated tokens away
+    // and leave the browser holding a spent refresh token — signing out the very buyer the button is for. So a marketing
+    // page with a session cookie is refreshed here, like /app; one without (almost every visitor) pays nothing.
+    if (!hasAuthCookie(request)) return withVisitor(NextResponse.next({ request }), minted)
   }
 
   let response = NextResponse.next({ request })
@@ -34,7 +43,7 @@ export async function middleware(request: NextRequest) {
   // as "logged out" (which could read as an authorization answer). An earlier comment here claimed
   // a /login fallback that the code never provided; cross-review round 2 (Codex, 2026-07-20) caught
   // the mismatch. The fix is the honest comment, not a softer failure.
-  if (!url || !anon) return response
+  if (!url || !anon) return withVisitor(response, minted)
 
   const supabase = createServerClient(url, anon, {
     cookies: {
@@ -53,6 +62,12 @@ export async function middleware(request: NextRequest) {
 
   // Touch getUser() to refresh a stale access token (and its cookie) before the page runs.
   await supabase.auth.getUser()
+  return withVisitor(response, minted)
+}
+
+/** The browser keeps a visitor id minted for this request; set last, because a refresh replaces the response. */
+function withVisitor(response: NextResponse, minted: string | null): NextResponse {
+  if (minted) response.cookies.set(VISITOR_COOKIE, minted, VISITOR_COOKIE_ATTRIBUTES)
   return response
 }
 

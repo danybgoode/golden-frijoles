@@ -36,8 +36,8 @@ export async function PricingSection() {
               of this line is a concession won at a negotiating table; ours is that there is
               nothing to escape in the first place. */}
           <p className="measure measure--narrow">
-            Start with one project for $0. Bring the rest of the company when they inevitably ask where you
-            got the numbers. Nothing here locks you in — not the agent you use, and not a contract.
+            Start with up to ten products for $0. Bring the rest of the company when they inevitably ask where
+            you got the numbers. Nothing here locks you in — not the agent you use, and not a contract.
           </p>
           <p className="takeaway">Humans remain unmetered.</p>
 
@@ -46,7 +46,7 @@ export async function PricingSection() {
               <p className="kicker">A handful</p>
               <p className="tier__price">$0</p>
               <p className="card-copy">
-                One project. Enough Golden Frijoles to find out whether we&apos;re onto something.
+                Up to ten products. Enough Golden Frijoles to find out whether we&apos;re onto something.
               </p>
               <ul className="plain-list">
                 <li>Full product context</li>

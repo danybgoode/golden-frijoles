@@ -29,7 +29,7 @@ export async function GrowthCta({
   // Each gate awaited on its own line: a gate is a Promise, and lib/gates-guard.test.ts asks to SEE the await (rule #6).
   const checkoutOn = await isBillingCheckoutEnabled()
   const signupOn = await isSignupEnabled()
-  const signedIn = checkoutOn ? (await getSessionUser()) !== null : false
+  const signedIn = checkoutOn ? await isSignedIn() : false
   const state = growthCta({ checkoutOn, signedIn, signupOn })
 
   const button =
@@ -54,4 +54,18 @@ export async function GrowthCta({
       {note(GROWTH_CTA_NOTE[state])}
     </>
   )
+}
+
+/** "Signed out" when the auth config is missing: the landing must not 500 over a button, and this answer grants nothing —
+ *  the button then goes to sign-up, and the checkout route checks the session again itself. Logged, so it is not silent. */
+async function isSignedIn(): Promise<boolean> {
+  try {
+    return (await getSessionUser()) !== null
+  } catch (err) {
+    console.error(
+      '[landing] could not read the session for the Growth tier:',
+      err instanceof Error ? err.message : err
+    )
+    return false
+  }
 }
