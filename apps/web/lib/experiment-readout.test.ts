@@ -117,7 +117,7 @@ test('waiting: live, no exposures yet — and a version can still be rolled out 
     sentenceText(result.answer),
     'It’s live. Nobody has been counted yet. Merchants are being split 50 / 50 from now. It needs 100 per version.'
   )
-  assert.deepEqual(result.verdict.actions, ['rollout', 'keep', 'stop'])
+  assert.deepEqual(result.verdict.actions, ['rollout', 'keep', 'pause', 'stop'])
   assert.equal(result.chance, null)
 })
 
@@ -128,19 +128,19 @@ test('gathering: ahead, with the range, the share of the sample, the counts and 
     sentenceText(result.answer),
     /^New copy is ahead, \+60\.0% \(range .+ to .+\)\. Guardrails fine, split checks out\. 40% of the planned sample, so any call now is directional\. About 14 more days to the planned sample\. So far: Current 10 of 40, New copy 16 of 40 — about \d+% likely New copy is really better\.$/
   )
-  assert.deepEqual(result.verdict.actions, ['rollout', 'keep', 'stop'])
+  assert.deepEqual(result.verdict.actions, ['rollout', 'keep', 'pause', 'stop'])
   assert.ok(result.chance !== null && result.chance > 0.8 && result.chance < 1)
 })
 
 test('ready: a winner says you can call it; a flat result says it didn’t move — and both still offer the roll-out (S6.3)', () => {
   const winning = readout(exposures(150, 30, 75))
   assert.equal(winning.state, 'ready')
-  assert.deepEqual(winning.verdict.actions, ['rollout', 'keep', 'stop'])
+  assert.deepEqual(winning.verdict.actions, ['rollout', 'keep', 'pause', 'stop'])
   assert.match(sentenceText(winning.answer), /you can call it\. So far: /)
   const flat = readout(exposures(150, 30, 31))
   assert.equal(flat.state, 'ready')
   // Flat is still the person's call: the sentence says it didn't move; rolling out stays available (S6.3).
-  assert.deepEqual(flat.verdict.actions, ['rollout', 'keep', 'iterate', 'stop'])
+  assert.deepEqual(flat.verdict.actions, ['rollout', 'keep', 'iterate', 'pause', 'stop'])
   assert.match(sentenceText(flat.answer), /didn’t move\. So far: /)
 })
 
@@ -311,7 +311,7 @@ test('a REAL blocker on a short sample is still named — stopped offers invalid
   assert.deepEqual(stopped.verdict.actions, ['rollout', 'keep', 'invalid', 'iterate'])
   const running = readout(facts)
   assert.equal(running.state, 'blocked')
-  assert.deepEqual(running.verdict.actions, ['rollout', 'keep', 'stop'])
+  assert.deepEqual(running.verdict.actions, ['rollout', 'keep', 'pause', 'stop'])
 })
 
 test('another arm’s guardrail harm is named — and neither pinned on the clean lead nor blocking its roll-out', () => {
@@ -385,7 +385,7 @@ test('another arm’s guardrail harm is named — and neither pinned on the clea
   assert.equal(result.treatment.key, 'b')
   assert.equal(result.guardrails[0].status, 'fine')
   assert.deepEqual(result.guardrails[0].harmedBy, ['Version C'])
-  assert.deepEqual(result.verdict.actions, ['rollout', 'keep', 'stop'])
+  assert.deepEqual(result.verdict.actions, ['rollout', 'keep', 'pause', 'stop'])
   assert.match(
     sentenceText(result.answer),
     /Guardrails fine for Version B, but Version C moved one the wrong way/
@@ -438,7 +438,7 @@ test('the LEAD harming a guardrail is named in the title — and rolling it out 
     now: new Date(now),
   })
   assert.equal(result.guardrails[0].status, 'worse')
-  assert.deepEqual(result.verdict.actions, ['rollout', 'keep', 'iterate', 'stop'])
+  assert.deepEqual(result.verdict.actions, ['rollout', 'keep', 'iterate', 'pause', 'stop'])
   assert.equal(result.verdict.title, 'New copy is ahead, but a guardrail moved the wrong way.')
   assert.match(result.verdict.body, /your call/)
 })
@@ -643,4 +643,28 @@ test('S6.2 a STOPPED test with no end date counts its days up to the stop, not t
     now: new Date(now),
   })
   assert.equal(result.progress.day, 10)
+})
+
+test('S6.6 a PAUSED test says so, keeps its numbers, recommends Resume, and can still be decided', () => {
+  const now = '2026-09-10T00:00:00.000Z'
+  const analysis = computeExperimentAnalysis({
+    experimentKey: 'copy_test',
+    definitionVersion: 1,
+    definition,
+    lifecycle: { status: 'running', startedAt: START, endedAt: null },
+    asOf: now,
+    facts: exposures(40, 10, 16),
+  })
+  const base = { definition, analysis, lifecycle: 'running' as const, decision: null, now: new Date(now) }
+  const paused = buildReadout({ ...base, serving: false, paused: true })
+  assert.equal(paused.state, 'paused')
+  assert.match(sentenceText(paused.answer), /^Paused\. .*So far: Current 10 of 40, New copy 16 of 40/)
+  assert.deepEqual(paused.verdict.actions, ['retry-serving', 'rollout', 'keep', 'stop'])
+  assert.equal(paused.verdict.recommend, 'retry-serving')
+  // Not serving for any OTHER reason is still the partial state, with Retry alone.
+  const broken = buildReadout({ ...base, serving: false, paused: false })
+  assert.equal(broken.state, 'not_serving')
+  assert.deepEqual(broken.verdict.actions, ['retry-serving'])
+  // Serving: Pause is offered beside Stop.
+  assert.ok(buildReadout({ ...base, serving: true }).verdict.actions.includes('pause'))
 })

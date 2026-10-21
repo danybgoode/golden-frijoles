@@ -1,10 +1,11 @@
 import {
   buildExperimentPlan,
   parseExperimentBuilderAnswers,
+  stripExperiment,
   type ExperimentCheck,
   type ExperimentPlan,
 } from './experiment-builder-plan'
-import type { BuilderIo } from './experiment-builder-io'
+import type { BuilderIo, StoredDraft } from './experiment-builder-io'
 
 // experiments-for-humans · Stories 3.2 / 3.3 (epic README D7, as corrected before Sprint 3).
 //
@@ -280,4 +281,143 @@ export async function retryServingCommand(
     weights: stored.definition.variants.map((variant) => variant.weight),
     serving,
   }
+}
+
+// ── landing-launch-experiment · Sprint 6, Story 6.6 — pause, resume, delete ──────────────────────────────────────────
+//
+// Pause takes the split OFF: Production serves the feature WITHOUT this test (its own rules and default — the same
+// definition `stripExperiment` gives), so everyone sees what they saw before it, and nobody new enters (no exposure is
+// sent for a flag that names no experiment). The version stays RUNNING: its window and its people are kept, and Resume
+// serves the split again over the same base — assignment is a hash of the visitor, so everyone lands where they were.
+// Resume IS the partial state's Retry: activate this version's own flag version, refused if the feature moved since.
+
+/** Take a running test's split off Production, replacing exactly the version that serves it. */
+async function unserve(
+  deps: BuilderDependencies,
+  projectId: string,
+  userId: string,
+  flagId: string,
+  experimentFlagVersionId: string,
+  reason: string
+): Promise<'off' | 'already-off' | 'moved' | 'failed'> {
+  const served = await deps.io.productionVersion(projectId, flagId)
+  if (!served || served.versionId !== experimentFlagVersionId) return 'already-off'
+  const created = await deps.io.createFlagVersion({
+    projectId,
+    flagKey: served.flagKey,
+    definition: stripExperiment(served.definition),
+    reason,
+    actorUserId: userId,
+  })
+  if (!created) return 'failed'
+  const outcome = await deps.io.activateInProduction({
+    projectId,
+    flagId,
+    flagVersionId: created.versionId,
+    actorUserId: userId,
+    reason,
+    replacing: served.versionId,
+  })
+  return outcome === 'serving' ? 'off' : outcome
+}
+
+export type PauseResult = { ok: true; experimentKey: string; version: number; serving: false } | Failure
+
+/** Pause: everyone sees the feature without the test; nobody new is counted. Resume with `resumeExperimentCommand`. */
+export async function pauseExperimentCommand(
+  slug: unknown,
+  experimentKey: unknown,
+  deps: BuilderDependencies
+): Promise<PauseResult> {
+  if (!(await deps.builderEnabled())) return { ok: false, error: BUILDER_PAUSED }
+  if (typeof slug !== 'string' || typeof experimentKey !== 'string')
+    return { ok: false, error: 'Invalid request.' }
+  if (!(await deps.servingEnabled()))
+    return { ok: false, error: 'Flag serving is unavailable in this deployment.' }
+  const { projectId, userId } = await deps.requireOwnership(slug)
+  const latest = await deps.io.loadDraft(projectId, experimentKey)
+  const running = latest ? await deps.io.runningVersion(projectId, latest.experimentId) : null
+  const stored = running === null ? null : await deps.io.loadDraft(projectId, experimentKey, running)
+  if (!stored || stored.status !== 'running' || !stored.flagId || !stored.flagVersionId)
+    return { ok: false, error: 'Only a running experiment can be paused.' }
+  const outcome = await unserve(
+    deps,
+    projectId,
+    userId,
+    stored.flagId,
+    stored.flagVersionId,
+    `Pause experiment ${experimentKey} v${stored.version}`
+  )
+  if (outcome === 'moved')
+    return {
+      ok: false,
+      error: 'The feature changed while pausing, so Production was not touched. Try again.',
+    }
+  if (outcome === 'failed')
+    return { ok: false, error: 'The experiment could not be paused; nothing was changed.' }
+  return { ok: true, experimentKey, version: stored.version, serving: false }
+}
+
+/** Resume a paused test: its split serves again (the partial state's Retry, under its product name). */
+export const resumeExperimentCommand = retryServingCommand
+
+export type DeleteResult = { ok: true; experimentKey: string; versions: number[] } | Failure
+
+/**
+ * Delete: the split comes off Production first (if this test serves it), then every version still live — draft,
+ * running or stopped — is retired (`invalid`), and the list stops showing it. The audit trail stays: versions and the
+ * lifecycle log are append-only. A DECIDED experiment is the record of a decision and is not deleted.
+ */
+export async function deleteExperimentCommand(
+  slug: unknown,
+  experimentKey: unknown,
+  deps: BuilderDependencies
+): Promise<DeleteResult> {
+  if (!(await deps.builderEnabled())) return { ok: false, error: BUILDER_PAUSED }
+  if (typeof slug !== 'string' || typeof experimentKey !== 'string')
+    return { ok: false, error: 'Invalid request.' }
+  const { projectId, userId } = await deps.requireOwnership(slug)
+  const latest = await deps.io.loadDraft(projectId, experimentKey)
+  if (!latest) return { ok: false, error: `No experiment "${experimentKey}".` }
+  const versions: StoredDraft[] = []
+  for (let version = 1; version <= latest.version; version += 1) {
+    const stored =
+      version === latest.version ? latest : await deps.io.loadDraft(projectId, experimentKey, version)
+    if (stored) versions.push(stored)
+  }
+  const live = versions.filter(
+    (v) => v.status === 'draft' || v.status === 'running' || v.status === 'stopped'
+  )
+  if (live.length === 0)
+    return {
+      ok: false,
+      error: versions.some((v) => v.status === 'decided')
+        ? 'This experiment was decided; its record is kept and it cannot be deleted.'
+        : 'This experiment is already deleted.',
+    }
+  // Off Production FIRST: a retired version must never be left serving a split nobody can stop.
+  const bound = live.filter((v) => v.status !== 'draft' && v.flagId && v.flagVersionId)
+  if (bound.length > 0 && !(await deps.servingEnabled()))
+    return { ok: false, error: 'Flag serving is unavailable in this deployment.' }
+  for (const v of bound) {
+    if (!v.flagId || !v.flagVersionId) continue
+    const outcome = await unserve(
+      deps,
+      projectId,
+      userId,
+      v.flagId,
+      v.flagVersionId,
+      `Delete experiment ${experimentKey}`
+    )
+    if (outcome === 'moved' || outcome === 'failed')
+      return {
+        ok: false,
+        error: 'Its split could not be taken off Production, so nothing was deleted. Try again.',
+      }
+  }
+  for (const v of live) {
+    if (!(await deps.io.transitionVersion(projectId, v.experimentId, v.versionId, 'invalid', userId)))
+      return { ok: false, error: `Version ${v.version} could not be deleted; the split is off. Try again.` }
+  }
+  return { ok: true, experimentKey, versions: live.map((v) => v.version) }
 }

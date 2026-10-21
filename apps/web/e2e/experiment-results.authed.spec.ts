@@ -184,6 +184,9 @@ test.describe('the decision-first results page (Story 4.1)', () => {
         await expect(answer).toContainText('of the planned sample, so any call now is directional.')
         await expect(answer).toContainText('likely New copy is really better.')
         await expect(verdict).toContainText('Keep it running')
+        // S6.6: a running test can be paused (its split off, the test kept) — offered where the builder can serve.
+        if (process.env.EXPERIMENT_BUILDER_ENABLED === 'true')
+          await expect(verdict.getByRole('button', { name: 'Pause', exact: true })).toBeVisible()
         // Stop, then the page must stop saying "live" (fresh reviewer, #172): the next step is the decision.
         await verdict.getByRole('button', { name: 'Stop experiment' }).click()
         await page.locator('dialog.confirm-dialog').getByRole('button', { name: 'Stop', exact: true }).click()

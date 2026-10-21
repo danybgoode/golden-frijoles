@@ -15,6 +15,8 @@ import {
 } from '@/lib/experiment-decide-plan'
 import { recordExperimentDecisionAction, transitionExperimentVersionAction } from '../actions'
 import { rolloutExperimentAction, undoRolloutAction } from '../builder-actions'
+import { PauseExperiment } from '../pause-delete'
+import { RetryServing } from '../retry-serving'
 
 // experiments-for-humans · Story 4.2 (D8) — the verdict card's actions: stop → decide (chips) → roll
 // out, each its own write with its own result, and a 10-second undo. Built by the architect; the
@@ -39,6 +41,8 @@ export type DecideFlowProps = {
   actions: ReadoutAction[]
   /** The button the reading points to, drawn primary (S6.3); every other offered action is secondary. */
   recommend?: ReadoutAction | null
+  /** Can this deployment change what Production serves (the builder gate)? Pause and Resume need it (S6.6). */
+  canServe?: boolean
   /**
    * Can this deployment roll out (the builder gate — the roll-out's kill switch)? When it cannot, no
    * roll-out is drawn or ticked: a button that can only fail is not a button (fresh reviewer, #172).
@@ -289,6 +293,14 @@ export function DecideFlow(props: DecideFlowProps) {
           </>
         ) : (
           <>
+            {props.canServe && props.actions.includes('retry-serving') ? (
+              <RetryServing
+                slug={props.slug}
+                experimentKey={props.experimentKey}
+                label="Resume"
+                variant={emphasis('retry-serving')}
+              />
+            ) : null}
             {props.actions.includes('rollout') ? (
               <Button variant={emphasis('rollout')} onClick={() => open('ship_treatment')}>
                 {props.canRollOut
@@ -315,7 +327,11 @@ export function DecideFlow(props: DecideFlowProps) {
               <Button variant="secondary" onClick={() => open('inconclusive')}>
                 Record the decision
               </Button>
-            ) : props.actions.includes('stop') ? (
+            ) : null}
+            {props.lifecycle !== 'stopped' && props.canServe && props.actions.includes('pause') ? (
+              <PauseExperiment slug={props.slug} experimentKey={props.experimentKey} />
+            ) : null}
+            {props.lifecycle === 'stopped' ? null : props.actions.includes('stop') ? (
               <Button variant="secondary" className="ds-btn--sm" onClick={() => setConfirm('stop')}>
                 Stop experiment
               </Button>

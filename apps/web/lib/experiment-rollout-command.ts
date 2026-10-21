@@ -1,4 +1,6 @@
+import { EXPERIMENT_METADATA_KEYS } from '@golden-frijoles/sdk'
 import { planExperimentRollout } from './experiment-builder-plan'
+import { sameBase } from './experiment-builder-io'
 import { BUILDER_PAUSED, type BuilderDependencies } from './experiment-builder-command'
 
 // experiments-for-humans · Story 4.2 (epic README D8) — "Set ‹version› for everyone in Production".
@@ -66,12 +68,25 @@ export async function rolloutExperimentCommand(
   if (!served) return { ok: false, error: 'The feature is not serving in Production.' }
   // Only over THIS test's own flag version (Codex, #172 round 6): if anything replaced it — even an
   // edit that kept the experiment's metadata — a roll-out would override that later change.
-  if (served.versionId !== stored.flagVersionId)
-    return {
-      ok: false,
-      error: 'Production no longer serves this test’s version of the feature, so nothing was changed.',
-    }
-  const plan = planExperimentRollout(served.definition, variantKey, { experimentKey, version })
+  // S6.6: or over the base a PAUSE put up — the feature exactly as this test's version, without the test — so a paused
+  // test can be rolled out too. Anything else that replaced it is still refused.
+  let rolloutFrom = served.definition
+  if (served.versionId !== stored.flagVersionId) {
+    const own = stored.flagVersionId
+      ? await deps.io.flagVersionDefinition(projectId, stored.flagId, stored.flagVersionId)
+      : null
+    if (
+      !own ||
+      !sameBase(served.definition, own) ||
+      served.definition.metadata?.[EXPERIMENT_METADATA_KEYS.key] !== undefined
+    )
+      return {
+        ok: false,
+        error: 'Production no longer serves this test’s version of the feature, so nothing was changed.',
+      }
+    rolloutFrom = own
+  }
+  const plan = planExperimentRollout(rolloutFrom, variantKey, { experimentKey, version })
   if (!plan.ok) return { ok: false, error: plan.errors[0] ?? 'Nothing was changed.' }
 
   const created = await deps.io.createFlagVersion({

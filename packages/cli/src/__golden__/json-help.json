@@ -891,6 +891,32 @@
         ]
       },
       {
+        "command": "experiments pause",
+        "summary": "pause an experiment: its split comes off; resume puts it back",
+        "usage": "frijoles experiments pause <key> [--project <slug>] [--json]",
+        "needsAuth": true,
+        "flags": [
+          {
+            "flag": "--project",
+            "takesValue": true,
+            "describe": "the project (default: the remembered one)"
+          }
+        ]
+      },
+      {
+        "command": "experiments resume",
+        "summary": "resume a paused experiment: its split serves again",
+        "usage": "frijoles experiments resume <key> [--project <slug>] [--json]",
+        "needsAuth": true,
+        "flags": [
+          {
+            "flag": "--project",
+            "takesValue": true,
+            "describe": "the project (default: the remembered one)"
+          }
+        ]
+      },
+      {
         "command": "experiments stop",
         "summary": "stop an experiment: nobody new is counted",
         "usage": "frijoles experiments stop <key> [--project <slug>] [--json]",
@@ -949,6 +975,19 @@
             "takesValue": false,
             "describe": "serve the shipped version to everyone in production"
           },
+          {
+            "flag": "--project",
+            "takesValue": true,
+            "describe": "the project (default: the remembered one)"
+          }
+        ]
+      },
+      {
+        "command": "experiments delete",
+        "summary": "delete an experiment: its split comes off and it leaves the list (its record is kept)",
+        "usage": "frijoles experiments delete <key> [--project <slug>] [--json]",
+        "needsAuth": true,
+        "flags": [
           {
             "flag": "--project",
             "takesValue": true,

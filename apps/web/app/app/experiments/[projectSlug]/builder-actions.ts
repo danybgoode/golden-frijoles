@@ -5,6 +5,8 @@ import { isExperimentBuilderWritable } from '@/lib/flags'
 import { getSupabaseServiceClient } from '@/lib/supabase'
 import { createBuilderIo } from '@/lib/experiment-builder-io'
 import {
+  deleteExperimentCommand,
+  pauseExperimentCommand,
   retryServingCommand,
   saveExperimentDraftCommand,
   startExperimentCommand,
@@ -39,6 +41,20 @@ export async function saveExperimentDraftAction(slug: unknown, answers: unknown,
 
 export async function startExperimentAction(slug: unknown, experimentKey: unknown) {
   const result = await startExperimentCommand(slug, experimentKey, dependencies())
+  if (result.ok) refresh(slug, result.experimentKey)
+  return result
+}
+
+/** S6.6 — Pause: the split comes off Production; the test stays running and Resume (Retry serving) puts it back. */
+export async function pauseExperimentAction(slug: unknown, experimentKey: unknown) {
+  const result = await pauseExperimentCommand(slug, experimentKey, dependencies())
+  if (result.ok) refresh(slug, result.experimentKey)
+  return result
+}
+
+/** S6.6 — Delete: the split off Production, every live version retired, the experiment gone from the list. */
+export async function deleteExperimentAction(slug: unknown, experimentKey: unknown) {
+  const result = await deleteExperimentCommand(slug, experimentKey, dependencies())
   if (result.ok) refresh(slug, result.experimentKey)
   return result
 }

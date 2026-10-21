@@ -150,7 +150,7 @@ test.describe('frijoles experiments (S6.4)', () => {
 
     const shown = await get(request, fx.token, { project: fx.slug, experiment: key })
     expect(shown.body).toMatchObject({ status: 'running', readout: { state: 'waiting', chance: null } })
-    expect(shown.body.readout.verdict.actions).toEqual(['rollout', 'keep', 'stop'])
+    expect(shown.body.readout.verdict.actions).toEqual(['rollout', 'keep', 'pause', 'stop'])
     expect(shown.body.readout.progress.plannedDays).toBeNull() // no end date (S6.2)
 
     const decided = await post(request, fx.token, {
@@ -231,6 +231,108 @@ test.describe('frijoles experiments (S6.4)', () => {
       reason: 'typo',
     })
     expect(typo.status).toBe(400)
+    expect((await get(request, fx.token, { project: fx.slug, experiment: key })).body.status).toBe('running')
+  })
+
+  // S6.6 — what Production serves for the flag: does it carry this test's split?
+  async function servesSplit(fx: Fixture, key: string): Promise<boolean> {
+    const { data: registry } = await client
+      .from('flag_registries')
+      .select('id')
+      .eq('project_id', fx.projectId)
+      .eq('key', FLAG_KEY)
+      .single()
+    const { data: active } = await client
+      .from('flag_environment_activations')
+      .select('version_id')
+      .eq('project_id', fx.projectId)
+      .eq('flag_id', registry!.id)
+      .eq('environment', 'production')
+      .single()
+    const { data: version } = await client
+      .from('flag_definition_versions')
+      .select('definition')
+      .eq('id', active!.version_id)
+      .single()
+    return (version!.definition as FlagDefinition).metadata?.experiment_key === key
+  }
+
+  test('pause takes the split off and keeps the test running; resume serves it again; a paused test can be rolled out', async ({
+    request,
+  }) => {
+    const fx = await fixture(client)
+    const key = (await post(request, fx.token, { command: 'create', project: fx.slug, answers })).body
+      .experimentKey as string
+    await post(request, fx.token, { command: 'start', project: fx.slug, experiment: key })
+    expect(await servesSplit(fx, key)).toBe(true)
+
+    const paused = await post(request, fx.token, { command: 'pause', project: fx.slug, experiment: key })
+    expect(paused.body).toMatchObject({ ok: true, status: 'paused', serving: false })
+    expect(await servesSplit(fx, key)).toBe(false)
+    const shownPaused = await get(request, fx.token, { project: fx.slug, experiment: key })
+    expect(shownPaused.body).toMatchObject({ status: 'running', readout: { state: 'paused' } })
+    expect(shownPaused.body.readout.verdict.actions).toContain('retry-serving')
+
+    const resumed = await post(request, fx.token, { command: 'resume', project: fx.slug, experiment: key })
+    expect(resumed.body).toMatchObject({ ok: true, status: 'running', serving: true })
+    expect(await servesSplit(fx, key)).toBe(true)
+
+    await post(request, fx.token, { command: 'pause', project: fx.slug, experiment: key })
+    const shipped = await post(request, fx.token, {
+      command: 'decide',
+      project: fx.slug,
+      experiment: key,
+      outcome: 'ship',
+      reason: 'ship it from the pause',
+      rollout: true,
+    })
+    expect(shipped.body, JSON.stringify(shipped.body)).toMatchObject({ ok: true, rollout: { ok: true } })
+  })
+
+  test('delete takes the split off Production and retires the test; a decided one is kept', async ({
+    request,
+  }) => {
+    const fx = await fixture(client)
+    const key = (await post(request, fx.token, { command: 'create', project: fx.slug, answers })).body
+      .experimentKey as string
+    await post(request, fx.token, { command: 'start', project: fx.slug, experiment: key })
+    const deleted = await post(request, fx.token, { command: 'delete', project: fx.slug, experiment: key })
+    expect(deleted.body).toMatchObject({ ok: true, status: 'deleted', versions: [1] })
+    expect(await servesSplit(fx, key)).toBe(false)
+    expect((await get(request, fx.token, { project: fx.slug, experiment: key })).body.status).toBe('invalid')
+    expect(
+      (await post(request, fx.token, { command: 'delete', project: fx.slug, experiment: key })).status
+    ).toBe(409)
+
+    const kept = (await post(request, fx.token, { command: 'create', project: fx.slug, answers })).body
+      .experimentKey as string
+    await post(request, fx.token, { command: 'start', project: fx.slug, experiment: kept })
+    await post(request, fx.token, {
+      command: 'decide',
+      project: fx.slug,
+      experiment: kept,
+      outcome: 'keep',
+      reason: 'done',
+    })
+    const refused = await post(request, fx.token, { command: 'delete', project: fx.slug, experiment: kept })
+    expect(refused.status).toBe(409)
+    expect(refused.body.error).toMatch(/decided/)
+  })
+
+  test('shipping the control by name is refused before a live test is stopped', async ({ request }) => {
+    const fx = await fixture(client)
+    const key = (await post(request, fx.token, { command: 'create', project: fx.slug, answers })).body
+      .experimentKey as string
+    await post(request, fx.token, { command: 'start', project: fx.slug, experiment: key })
+    const control = await post(request, fx.token, {
+      command: 'decide',
+      project: fx.slug,
+      experiment: key,
+      outcome: 'ship',
+      variant: 'off',
+      reason: 'x',
+    })
+    expect(control.status).toBe(400)
     expect((await get(request, fx.token, { project: fx.slug, experiment: key })).body.status).toBe('running')
   })
 

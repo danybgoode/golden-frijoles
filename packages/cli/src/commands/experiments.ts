@@ -4,7 +4,9 @@
 //   frijoles experiments show <key>                                   the readout: counts, the chance, what to do next
 //   frijoles experiments create --flag <key> --metric <event> …       a draft, from flags (or --from <answers.json>)
 //   frijoles experiments start <key>                                  start it: the split serves, everyone is counted
+//   frijoles experiments pause <key> | resume <key>                   take the split off / serve it again (S6.6)
 //   frijoles experiments stop <key>                                   stop counting
+//   frijoles experiments delete <key>                                 split off, every live version retired, off the list
 //   frijoles experiments decide <key> --ship|--keep|… --reason "…"    record the call (and --rollout the shipped one)
 //
 // Every verb goes through `/api/v1/cli/experiments`, which runs the console's own commands — the same checks (low traffic
@@ -221,7 +223,38 @@ export const experimentsCreateCommand: Command = {
   },
 }
 
-function lifecycleCommand(verb: 'start' | 'stop', summary: string): Command {
+type LifecycleVerb = 'start' | 'stop' | 'pause' | 'resume' | 'delete'
+type LifecycleBody = {
+  experimentKey: string
+  version?: number
+  serving?: boolean
+  notice?: string
+  weights?: number[]
+  versions?: number[]
+}
+
+/** The sentence each verb prints for a person (`--json` prints the body). */
+function lifecycleDone(verb: LifecycleVerb, body: LifecycleBody): string {
+  const key = body.experimentKey
+  switch (verb) {
+    case 'start':
+      return `Started ${key} v${body.version}${body.weights ? `, split ${body.weights.join(' / ')}` : ''}${
+        body.serving === false ? ` — not serving yet${body.notice ? `: ${body.notice}` : ''}` : ''
+      }. Read it any day: frijoles experiments show ${key}`
+    case 'stop':
+      return `Stopped ${key} v${body.version}: nobody new is counted. Decide: frijoles experiments decide ${key} --ship|--keep --reason "…"`
+    case 'pause':
+      return `Paused ${key} v${body.version}: everyone sees what they saw before the test, and nobody new enters. Resume: frijoles experiments resume ${key}`
+    case 'resume':
+      return body.serving === false
+        ? `${key} v${body.version} is still not serving — try again in a moment.`
+        : `Resumed ${key} v${body.version}: the split serves again, each person in the same group.`
+    case 'delete':
+      return `Deleted ${key}${body.versions ? ` (v${body.versions.join(', v')})` : ''}: its split is off Production and it is gone from the list. Its record is kept.`
+  }
+}
+
+function lifecycleCommand(verb: LifecycleVerb, summary: string): Command {
   return {
     path: ['experiments', verb],
     summary,
@@ -233,26 +266,11 @@ function lifecycleCommand(verb: 'start' | 'stop', summary: string): Command {
       if (!key) return EXIT.USAGE
       const project = resolveProject(context)
       if (!project) return missingProject(context)
-      type Body = {
-        experimentKey: string
-        version: number
-        serving?: boolean
-        notice?: string
-        weights?: number[]
-      }
-      const out = await call<Body>(context, () =>
+      const out = await call<LifecycleBody>(context, () =>
         context.api!.post(PATH, { command: verb, project, experiment: key })
       )
       if ('exit' in out) return out.exit
-      const body = out.body
-      context.emit.ok(
-        { project, ...body },
-        verb === 'start'
-          ? `Started ${body.experimentKey} v${body.version}${body.weights ? `, split ${body.weights.join(' / ')}` : ''}${
-              body.serving === false ? ` — not serving yet${body.notice ? `: ${body.notice}` : ''}` : ''
-            }. Read it any day: frijoles experiments show ${body.experimentKey}`
-          : `Stopped ${body.experimentKey} v${body.version}: nobody new is counted. Decide: frijoles experiments decide ${body.experimentKey} --ship|--keep --reason "…"`
-      )
+      context.emit.ok({ project, ...out.body }, lifecycleDone(verb, out.body))
       return EXIT.OK
     },
   }
@@ -266,6 +284,21 @@ export const experimentsStartCommand: Command = {
 export const experimentsStopCommand: Command = {
   ...lifecycleCommand('stop', 'stop an experiment: nobody new is counted'),
   path: ['experiments', 'stop'],
+}
+export const experimentsPauseCommand: Command = {
+  ...lifecycleCommand('pause', 'pause an experiment: its split comes off; resume puts it back'),
+  path: ['experiments', 'pause'],
+}
+export const experimentsResumeCommand: Command = {
+  ...lifecycleCommand('resume', 'resume a paused experiment: its split serves again'),
+  path: ['experiments', 'resume'],
+}
+export const experimentsDeleteCommand: Command = {
+  ...lifecycleCommand(
+    'delete',
+    'delete an experiment: its split comes off and it leaves the list (its record is kept)'
+  ),
+  path: ['experiments', 'delete'],
 }
 
 const OUTCOME_FLAGS = ['ship', 'keep', 'inconclusive', 'iterate', 'invalid'] as const

@@ -224,6 +224,18 @@ export function projectExperimentRows(
 }
 
 /**
+ * landing-launch-experiment S6.6 — a deleted (retired) experiment leaves the list; the page says how many it hides, so
+ * nothing disappears without a word. Their records are kept (append-only), and each still opens by its URL.
+ */
+export function visibleExperimentRows(rows: readonly ExperimentListRow[]): {
+  shown: ExperimentListRow[]
+  hidden: number
+} {
+  const shown = rows.filter((row) => row.state !== 'invalid')
+  return { shown, hidden: rows.length - shown.length }
+}
+
+/**
  * The list's answer line, computed from the rows it sits above.
  *
  * ⚠️ **It reports what was actually resolved.** The approved copy is *"1 experiment is ready for you

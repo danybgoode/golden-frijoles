@@ -291,3 +291,39 @@ test('a failed roll-out after a recorded decision is not exit 0, and --json says
   })
   assert.equal(code, EXIT.SERVER)
 })
+
+test('pause, resume and delete name the experiment and say what happened (S6.6)', async () => {
+  for (const [verb, reply, said] of [
+    [
+      'pause',
+      { ok: true, experimentKey: 'landing_b', version: 1, serving: false, status: 'paused' },
+      /Paused landing_b v1/,
+    ],
+    [
+      'resume',
+      { ok: true, experimentKey: 'landing_b', version: 1, serving: true, status: 'running' },
+      /Resumed landing_b v1/,
+    ],
+    [
+      'delete',
+      { ok: true, experimentKey: 'landing_b', versions: [1, 2], status: 'deleted' },
+      /Deleted landing_b \(v1, v2\)/,
+    ],
+  ] as const) {
+    const sent: Sent[] = []
+    const { writer, out } = capture()
+    const code = await run({
+      argv: ['experiments', verb, 'landing_b'],
+      writer,
+      env: sandbox(),
+      fetchImpl: stub(reply, sent),
+    })
+    assert.equal(code, EXIT.OK, verb)
+    assert.deepEqual(sent[0].body, { command: verb, project: 'acme', experiment: 'landing_b' })
+    assert.match(out.join(''), said)
+  }
+  assert.equal(
+    await run({ argv: ['experiments', 'pause'], writer: capture().writer, env: sandbox(), fetchImpl: never }),
+    EXIT.USAGE
+  )
+})
