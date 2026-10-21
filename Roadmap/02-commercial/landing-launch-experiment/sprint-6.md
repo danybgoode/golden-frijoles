@@ -4,7 +4,7 @@ sprint: 6
 title: "A test at any traffic, launched in minutes"
 risk: high
 phase: Building
-stories_total: 5
+stories_total: 6
 stories:
   - id: S6.1
     title: "Too little traffic never blocks Start"
@@ -12,7 +12,7 @@ stories:
     i_want: "to start an A/B test whatever my traffic or yesterday's conversions"
     so_that: "the test records from day one instead of waiting for volume it may never get"
     risk: medium
-    status: in-progress
+    status: done   # PR #421, merge 9e7500f
   - id: S6.2
     title: "Any end date, or none"
     as_a: "the person running a test"
@@ -26,12 +26,19 @@ stories:
     i_want: "to roll the leader out or keep the control whenever I stop, with how sure the numbers are"
     so_that: "a low-traffic test ends in a decision, not only \"iterate\""
     risk: high
-    status: planned
+    status: in-progress
   - id: S6.4
     title: "frijoles experiments: create, start, stop, decide"
     as_a: "an agent working for the founder"
     i_want: "to launch and decide an experiment from the CLI"
     so_that: "a test takes minutes, and several can run at once"
+    risk: high
+    status: planned
+  - id: S6.6
+    title: "Pause, resume and delete"
+    as_a: "the person running tests"
+    i_want: "to pause a test, resume it, or delete it, like any testing tool"
+    so_that: "a test's life is mine to manage, not a one-way street"
     risk: high
     status: planned
   - id: S6.5
@@ -44,7 +51,7 @@ stories:
 ---
 # Launch: the first landing A/B on goldenfrijoles.com, run on Golden Frijoles — Sprint 6: A test at any traffic
 
-**Status:** 🟨 Building — S6.1 in progress; S6.2–S6.5 planned (2026-10-20).
+**Status:** 🟨 Building — S6.1 ✅ (#421); S6.3 in progress; S6.2, S6.4–S6.6 planned. Daniel approved the sprint 2026-10-20 ("if your stories above will do that lets go ahead").
 
 ## Why this sprint exists (Daniel, 2026-10-20)
 Launch day for the landing A/B: the builder refused to start it — "A metric has gone quiet" (no prompt copy in 24 hours)
@@ -67,9 +74,16 @@ null (migration relaxing the validator), analysis reads up to now, and the reado
 planned share.
 
 ### Story 6.3 — A verdict at any volume
-**Acceptance:** stopping (or deciding a running test) always offers roll out the leader / keep the control / inconclusive,
-with the evidence in words — counts per version and the chance the leader is really better — and the decision record says
-whether it met the planned sample. Below the sample it is labelled directional, never withheld.
+**Acceptance:** every live or stopped test offers roll out the leader / keep the control at ANY point — no data, a short
+sample, a flat or worse result, a guardrail moved, even a failed check (Daniel: "what if I just want to roll it out
+regardless of any results?"). The readout says how sure it is in words: each version's counts and the chance the leader is
+really better (`lib/experiment-chance.ts`, Bayesian chance-to-beat, exact on a grid); below the planned sample the call is
+labelled directional, never withheld. The database already allowed it (`record_experiment_decision` has no sample rule);
+only the readout gated it.
+
+### Story 6.6 — Pause, resume and delete
+**Acceptance:** a running test can be paused (nobody new counted, the split stops serving) and resumed (counting again,
+the same assignment); a test can be deleted (its split off, gone from the list — the audit trail stays, append-only).
 
 ### Story 6.4 — `frijoles experiments`
 **Acceptance:** `ls`, `create --from <file>`, `start`, `stop`, `decide` — member/owner-gated like `frijoles flags`, through
