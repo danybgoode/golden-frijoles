@@ -14,6 +14,7 @@ import {
   compareVersions,
   fetchLatestVersion,
   installMethodFor,
+  isPlainVersion,
   updateAdvice,
   type InstallMethod,
 } from '../update-check'
@@ -105,6 +106,12 @@ export const updateCommand: Command = {
         `frijoles ${latest} is published (you have ${VERSION}, via ${METHOD_WORDS[method]}).\n${advice.note}\n  ${advice.command}`
       )
       return EXIT.OK
+    }
+    // Never on a command line unless it is a whole, plain version (fetchLatestVersion already checks; checked again here
+    // because this is the line that runs it).
+    if (!isPlainVersion(latest)) {
+      context.emit.fail('server_error', 'The registry answered with a version this CLI will not install.')
+      return EXIT.SERVER
     }
     context.emit.note(`Updating ${VERSION} → ${latest}: ${advice.command}`)
     const result = context.exec('npm', ['i', '-g', `${PACKAGE}@${latest}`], { capture: context.emit.json })

@@ -289,3 +289,63 @@ test('run(): the notice reaches stderr only when the executable asks for it, nev
   await run({ argv: ['doctor'], writer: off.writer, env: sandbox(), fetchImpl: registry(newer) })
   assert.doesNotMatch(off.err.join(''), /is out \(you have/)
 })
+
+test('a global install through its bin SYMLINK is a global install once resolved (verifier, #428)', async () => {
+  const { mkdirSync, writeFileSync, symlinkSync, realpathSync } = await import('node:fs')
+  const prefix = mkdtempSync(join(tmpdir(), 'gf-prefix-'))
+  const real = join(prefix, 'lib', 'node_modules', '@golden-frijoles', 'cli', 'dist', 'bin.js')
+  mkdirSync(join(prefix, 'lib', 'node_modules', '@golden-frijoles', 'cli', 'dist'), { recursive: true })
+  writeFileSync(real, '')
+  mkdirSync(join(prefix, 'bin'))
+  symlinkSync(real, join(prefix, 'bin', 'frijoles'))
+  const link = join(prefix, 'bin', 'frijoles')
+  assert.equal(
+    U.installMethodFor(link),
+    'source',
+    'the link path alone cannot say — which is why bin.ts resolves it'
+  )
+  assert.equal(U.installMethodFor(U.resolveScriptPath(link, realpathSync)), 'global')
+  // A project's node_modules/.bin link resolves to the package too.
+  const project = mkdtempSync(join(tmpdir(), 'gf-project-'))
+  const pkg = join(project, 'node_modules', '@golden-frijoles', 'cli', 'dist')
+  mkdirSync(pkg, { recursive: true })
+  writeFileSync(join(pkg, 'bin.js'), '')
+  mkdirSync(join(project, 'node_modules', '.bin'))
+  symlinkSync(join(pkg, 'bin.js'), join(project, 'node_modules', '.bin', 'frijoles'))
+  assert.equal(
+    U.installMethodFor(U.resolveScriptPath(join(project, 'node_modules', '.bin', 'frijoles'), realpathSync)),
+    'local'
+  )
+  assert.equal(U.resolveScriptPath('/no/such/file', realpathSync), '/no/such/file')
+})
+
+test('only a whole, plain version reaches a command line; pre-releases order numerically', async () => {
+  for (const ok of ['1.2.3', '10.0.0', '1.12.0-rc.2']) assert.ok(U.isPlainVersion(ok), ok)
+  for (const bad of ['1.2.3 & calc', '1.2.3"&whoami&"', '1.2.3$(touch x)', '1.2', 'v1.2.3', '1.2.3\n'])
+    assert.equal(U.isPlainVersion(bad), false, bad)
+  assert.equal(await U.fetchLatestVersion(registry('1.2.3 & calc')), null)
+  assert.equal(U.compareVersions('1.0.0-rc.2', '1.0.0-rc.10'), -1)
+  assert.equal(U.compareVersions('1.0.0-alpha', '1.0.0-beta'), -1)
+  assert.equal(U.compareVersions('1.0.0-rc.1', '1.0.0-rc.1.1'), -1)
+})
+
+test('no notice after frijoles update or version, and update --json keeps npm off stdout (capture)', async () => {
+  const newer = bump(VERSION)
+  for (const argv of [['update', '--check'], ['version']]) {
+    const out = capture()
+    await run({ argv, writer: out.writer, env: sandbox(), fetchImpl: registry(newer), updateCheck: true })
+    assert.doesNotMatch(out.err.join(''), /is out \(you have/, argv.join(' '))
+  }
+  const captured: boolean[] = []
+  const json = capture()
+  await run({
+    argv: ['update', '--json'],
+    writer: json.writer,
+    env: sandbox(),
+    fetchImpl: registry(newer),
+    scriptPath: '/usr/local/lib/node_modules/@golden-frijoles/cli/dist/bin.js',
+    exec: (_c, a, o) => (a[0] === 'i' && captured.push(o.capture), { status: a[0] === 'root' ? 1 : 0 }),
+  })
+  assert.deepEqual(captured, [true])
+  assert.equal(JSON.parse(json.out.join('')).updated, true)
+})

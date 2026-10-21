@@ -32,8 +32,9 @@ export function securityClaims(siteUrl: string): SecurityClaim[] {
         `The \`${CLI_BIN}\` CLI talks only to ${site} (or the URL you give it with \`--api\` or ` +
         `\`GOLDEN_FRIJOLES_URL\`), plus registry.npmjs.org to check for a newer version (\`${CLI_BIN} version\`, ` +
         `\`update\` and \`doctor\`, and at most once a day in an interactive terminal — never under \`--json\` or in CI). ` +
-        `\`${CLI_BIN} update\` runs \`npm\` only when you run it: \`npm root -g\` to see how it was installed, and ` +
-        `\`npm i -g\` to update a global install (any other install, it prints the command instead).`,
+        `\`${CLI_BIN} version\` and \`${CLI_BIN} update\` run \`npm root -g\` (to see how the CLI was installed), and ` +
+        `\`update\` runs \`npm i -g\` to update a global install — only when you run them; any other install, it prints the ` +
+        `command instead.`,
     },
     {
       id: 'keys-in-env-local',

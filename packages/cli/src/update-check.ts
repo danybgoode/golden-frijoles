@@ -33,7 +33,42 @@ export function compareVersions(a: string, b: string): number {
   if (x.pre === y.pre) return 0
   if (x.pre === null) return 1
   if (y.pre === null) return -1
-  return x.pre < y.pre ? -1 : 1
+  // Identifier by identifier, numerically where both are numbers (rc.2 < rc.10), as semver orders them.
+  const xs = x.pre.split('.')
+  const ys = y.pre.split('.')
+  for (let i = 0; i < Math.max(xs.length, ys.length); i++) {
+    if (xs[i] === undefined) return -1
+    if (ys[i] === undefined) return 1
+    const xn = /^\d+$/.test(xs[i]) ? Number(xs[i]) : null
+    const yn = /^\d+$/.test(ys[i]) ? Number(ys[i]) : null
+    if (xn !== null && yn !== null) {
+      if (xn !== yn) return xn < yn ? -1 : 1
+    } else if (xs[i] !== ys[i]) return xs[i] < ys[i] ? -1 : 1
+  }
+  return 0
+}
+
+/**
+ * A whole version string and nothing else: `x.y.z` with an optional `-pre.release`. ANCHORED — the version from the
+ * registry is put on `npm i -g`'s command line, which Windows runs through cmd.exe, so a trailing `& …` must never pass
+ * (verifier, #428; the same class device-login.ts closed in #280).
+ */
+export function isPlainVersion(value: string): boolean {
+  return /^\d{1,6}\.\d{1,6}\.\d{1,6}(?:-[0-9A-Za-z.-]{1,64})?$/.test(value)
+}
+
+/** The script that is really running: npm's global and `.bin` entries are SYMLINKS, and Node keeps the link's path in
+ *  argv[1] — so a global install looked like a checkout until it was resolved (verifier, #428). */
+export function resolveScriptPath(
+  path: string | undefined,
+  realpath: (p: string) => string
+): string | undefined {
+  if (!path) return undefined
+  try {
+    return realpath(path)
+  } catch {
+    return path
+  }
 }
 
 export type InstallMethod = 'global' | 'npx' | 'local' | 'source'
@@ -86,7 +121,7 @@ export async function fetchLatestVersion(fetchImpl: typeof fetch, timeoutMs = 15
     })
     if (!response.ok) return null
     const body = (await response.json()) as { version?: unknown }
-    return typeof body.version === 'string' && /^\d+\.\d+\.\d+/.test(body.version) ? body.version : null
+    return typeof body.version === 'string' && isPlainVersion(body.version) ? body.version : null
   } catch {
     return null
   }

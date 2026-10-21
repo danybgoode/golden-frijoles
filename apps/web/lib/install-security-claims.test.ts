@@ -93,6 +93,17 @@ claimTest('cli-talks-to-site', () => {
     )
   )
   assert.deepEqual([...hosts].sort(), ['goldenfrijoles.com', 'registry.npmjs.org'])
+  // The programs `version` / `update` start: exactly `npm root -g` and `npm i -g <pkg>@<version>`, nothing else.
+  const update = code(join(CLI_SRC, 'commands', 'update.ts'))
+  const execs = [...update.matchAll(/context\.exec\(\s*'([^']+)',\s*\[([^\]]*)\]/g)].map(
+    (m) => `${m[1]} ${m[2]}`
+  )
+  assert.deepEqual(execs.sort(), ["npm 'i', '-g', `${PACKAGE}@${latest}`", "npm 'root', '-g'"])
+  assert.match(
+    update,
+    /if \(!isPlainVersion\(latest\)\)/,
+    'the version reaches npm only after the anchored check'
+  )
 })
 
 claimTest('keys-in-env-local', () => {
