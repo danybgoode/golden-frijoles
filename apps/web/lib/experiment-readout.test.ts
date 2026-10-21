@@ -620,3 +620,27 @@ test('S6.2 a test with no end date counts every day it runs, with no planned len
   assert.equal(result.progress.day, 181)
   assert.equal(result.control.exposed + result.treatment.exposed, 80, 'every exposure still counts')
 })
+
+test('S6.2 a STOPPED test with no end date counts its days up to the stop, not to today (verifier, #423)', async () => {
+  const { OPEN_ENDED_AT } = await import('./experiment-definition.ts')
+  const open: Definition = { ...definition, plannedWindow: { startAt: START, endAt: OPEN_ENDED_AT } }
+  const stoppedAt = '2026-09-11T00:00:00.000Z' // 10 days in
+  const now = '2027-03-01T00:00:00.000Z'
+  const analysis = computeExperimentAnalysis({
+    experimentKey: 'copy_test',
+    definitionVersion: 1,
+    definition: open,
+    lifecycle: { status: 'stopped', startedAt: START, endedAt: stoppedAt },
+    asOf: now,
+    facts: exposures(40, 10, 16),
+  })
+  const result = buildReadout({
+    definition: open,
+    analysis,
+    lifecycle: 'stopped',
+    decision: null,
+    serving: true,
+    now: new Date(now),
+  })
+  assert.equal(result.progress.day, 10)
+})

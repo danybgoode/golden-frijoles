@@ -202,6 +202,9 @@ export function ExperimentBuilder({
     ...(draft?.flagKey ? { draft: { experimentKey: draft.experimentKey, flagKey: draft.flagKey } } : {}),
   })
   const plan = planning.ok ? planning.plan : null
+  // Why there is no plan, in the planner's own words (e.g. an end date too soon) — never a generic "unavailable"
+  // (verifier, #423).
+  const problem = planning.ok ? null : (planning.errors[0] ?? null)
   const dispatch = (action: BuilderAction) => {
     setState((current) => (current ? builderReducer(current, action) : current))
     setError(null)
@@ -394,9 +397,13 @@ export function ExperimentBuilder({
             {state.step === 3 ? <See state={state} dispatch={dispatch} /> : null}
             {state.step === 4 ? <Know state={state} data={data} dispatch={dispatch} /> : null}
             {state.step === 5 ? <Long state={state} plan={plan} dispatch={dispatch} /> : null}
-            {state.step === 6 ? <Review state={state} plan={plan} dispatch={dispatch} /> : null}
+            {state.step === 6 ? (
+              <Review state={state} plan={plan} problem={problem} dispatch={dispatch} />
+            ) : null}
           </section>
-          {state.step === 6 ? null : <PlanPanel plan={plan} runs={runLengthWords(state.answers)} />}
+          {state.step === 6 ? null : (
+            <PlanPanel plan={plan} problem={problem} runs={runLengthWords(state.answers)} />
+          )}
         </div>
         <div className="ds-dialog-actions">
           <span className="ds-dialog-note">{footer}</span>
@@ -1026,11 +1033,12 @@ function Long({
         >
           Until I stop it
         </button>
-        <label className="ds-chip" aria-pressed={!!state.answers.endsOn && state.answers.endsOn !== 'open'}>
+        <label className="ds-chip" data-pressed={!!state.answers.endsOn && state.answers.endsOn !== 'open'}>
           Until{' '}
           <input
             type="date"
             aria-label="End date"
+            min={tomorrowLocal()}
             value={state.answers.endsOn && state.answers.endsOn !== 'open' ? state.answers.endsOn : ''}
             onChange={(event) => {
               if (event.target.value) dispatch({ type: 'ends-on', endsOn: event.target.value })
@@ -1059,16 +1067,18 @@ function Sentence({ parts }: { parts: ExperimentPlan['sentence'] }) {
 function Review({
   state,
   plan,
+  problem,
   dispatch,
 }: {
   state: BuilderState
   plan: ExperimentPlan | null
+  problem: string | null
   dispatch: (action: BuilderAction) => void
 }) {
   if (!plan)
     return (
       <p className="ds-x-message">
-        Plan unavailable. Choose a feature and metric from this project to continue.
+        {problem ?? 'Plan unavailable. Choose a feature and metric from this project to continue.'}
       </p>
     )
   const rows: Array<[string, string, BuilderState['step']]> = [
@@ -1182,7 +1192,15 @@ function CheckList({
     </div>
   )
 }
-function PlanPanel({ plan, runs }: { plan: ExperimentPlan | null; runs: string }) {
+function PlanPanel({
+  plan,
+  problem,
+  runs,
+}: {
+  plan: ExperimentPlan | null
+  problem: string | null
+  runs: string
+}) {
   return (
     <aside className="ds-x-side" aria-label="The plan so far">
       <p className="ds-label">The plan so far</p>
@@ -1220,8 +1238,14 @@ function PlanPanel({ plan, runs }: { plan: ExperimentPlan | null; runs: string }
           </p>
         </>
       ) : (
-        <p>Choose a valid plan to see its estimate.</p>
+        <p>{problem ?? 'Choose a valid plan to see its estimate.'}</p>
       )}
     </aside>
   )
+}
+
+/** The first day an end date may be (the planner's rule: from tomorrow), in the reader's own calendar. */
+function tomorrowLocal(): string {
+  const day = new Date(Date.now() + 24 * 60 * 60 * 1000)
+  return `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`
 }

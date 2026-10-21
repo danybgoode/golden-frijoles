@@ -409,7 +409,8 @@
   background: var(--roast-2);
 }
 .ds .ds-x-segmented button[aria-pressed='true'],
-.ds .ds-chip[aria-pressed='true'] {
+.ds .ds-chip[aria-pressed='true'],
+.ds .ds-chip[data-pressed='true'] {
   border-color: var(--gold);
   color: var(--gold-hot);
 }

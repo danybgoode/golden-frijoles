@@ -19,14 +19,14 @@ stories:
     i_want: "to pick any end date, or run it until I decide"
     so_that: "a run length is my call, not a menu of 1–8 weeks"
     risk: high
-    status: planned   # awaiting Daniel's go: a migration relaxes plannedWindow.endAt
+    status: in-progress   # PR #423 — Daniel's go 2026-10-20; no migration (OPEN_ENDED_AT sentinel)
   - id: S6.3
     title: "A verdict at any volume"
     as_a: "the person running a test"
     i_want: "to roll the leader out or keep the control whenever I stop, with how sure the numbers are"
     so_that: "a low-traffic test ends in a decision, not only \"iterate\""
     risk: high
-    status: in-progress
+    status: done   # PR #422, merge 2e2297c
   - id: S6.4
     title: "frijoles experiments: create, start, stop, decide"
     as_a: "an agent working for the founder"
@@ -51,7 +51,7 @@ stories:
 ---
 # Launch: the first landing A/B on goldenfrijoles.com, run on Golden Frijoles — Sprint 6: A test at any traffic
 
-**Status:** 🟨 Building — S6.1 ✅ (#421); S6.3 in progress; S6.2, S6.4–S6.6 planned. Daniel approved the sprint 2026-10-20 ("if your stories above will do that lets go ahead").
+**Status:** 🟨 Building — S6.1 ✅ (#421); S6.3 ✅ (#422); S6.2 in review (#423); S6.4 built; S6.5–S6.6 planned. Daniel approved the sprint 2026-10-20 ("if your stories above will do that lets go ahead").
 
 ## Why this sprint exists (Daniel, 2026-10-20)
 Launch day for the landing A/B: the builder refused to start it — "A metric has gone quiet" (no prompt copy in 24 hours)
@@ -69,9 +69,15 @@ never `fail`. Only facts still fail: a window whose dates have passed, condition
 or another test on it. The server's Start re-plans with the same checks, so the rule holds there too.
 
 ### Story 6.2 — Any end date, or none
-**Acceptance:** step 5 takes a date (any future day) or "until I stop it"; the definition's `plannedWindow.endAt` may be
-null (migration relaxing the validator), analysis reads up to now, and the readout shows days running instead of a
-planned share.
+**Acceptance:** step 5 takes "Until I stop it", or "Through <day>" (any day from tomorrow), beside the week chips; the CLI
+takes `--ends open|YYYY-MM-DD`. Analysis reads up to now (or the stop); the readout shows days running instead of a
+planned share, and a stopped test's days stop at its stop.
+
+**Design (deviation from the plan, recorded):** the plan said a migration would make `plannedWindow.endAt` nullable.
+Built instead: "until I stop it" is the far timestamp `OPEN_ENDED_AT` (9999-12-31T00:00Z, `lib/experiment-definition.ts`),
+so the definition validators (TS and SQL), the analysis window (min of planned end, stopped, as-of) and every stored
+definition stay valid with no migration; only the screens ask `isOpenEnded`. A dated test runs THROUGH its day — it ends
+at the next 00:00 UTC — and a day must be a real calendar day from tomorrow on (verifier, #423).
 
 ### Story 6.3 — A verdict at any volume
 **Acceptance:** every live or stopped test offers roll out the leader / keep the control at ANY point — no data, a short

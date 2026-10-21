@@ -124,7 +124,12 @@ export function buildReadout(input: ReadoutInput): Readout {
   const end = Date.parse(definition.plannedWindow.endAt)
   // S6.2: a test with no end date has no planned length; its progress is the days it has run (plannedDays: null).
   const openEnded = isOpenEnded(definition.plannedWindow.endAt)
-  const daysIn = Math.max(0, Math.floor((input.now.getTime() - start) / DAY_MS))
+  // Counted up to where the analysis reads — a stopped test's days stop at its stop (verifier, #423).
+  const readTo = Math.min(input.now.getTime(), Date.parse(analysis.window.endAt))
+  const daysIn = Math.max(
+    0,
+    Math.floor(((Number.isFinite(readTo) ? readTo : input.now.getTime()) - start) / DAY_MS)
+  )
   const plannedDays = openEnded ? null : Math.max(1, Math.round((end - start) / DAY_MS))
   const day = plannedDays === null ? daysIn : Math.min(plannedDays, daysIn)
   const smallest = Math.min(...analysis.variants.map((row) => row.observedSubjects))
