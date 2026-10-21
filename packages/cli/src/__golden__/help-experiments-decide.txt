@@ -1,0 +1,27 @@
+frijoles experiments decide — record the call — ship a version, keep the current one, or not — at any time
+
+Usage
+  frijoles experiments decide <key> (--ship [--variant <key>] | --keep | --inconclusive | --iterate | --invalid) --reason "<why>" [--rollout] [--project <slug>] [--json]
+
+Stops a live test first, then records the decision with the evidence of the moment. Any volume, any time:
+  how sure it was is kept in the record. --rollout then serves the shipped version to everyone in production.
+
+Flags
+  --ship            ship a version: the one leading, or --variant
+  --variant <key>   with --ship: the version to ship (its flag variant key)
+  --keep            keep the current version
+  --inconclusive    no clear answer
+  --iterate         change it and run again
+  --invalid         the numbers cannot be trusted
+  --reason <why>    why — kept in the decision record (required)
+  --rollout         serve the shipped version to everyone in production
+  --project <slug>  the project (default: the remembered one)
+
+Exit codes
+  0  ok         it worked
+  1  usage      the command is wrong — nothing was sent
+  2  auth       the credential is not accepted — run `frijoles login`
+  3  not-found  no such thing, or not yours
+  4  conflict   someone else changed it — re-read and retry
+  5  partial    some environments changed and some did not
+  6  server     the server or the network is unwell — retry

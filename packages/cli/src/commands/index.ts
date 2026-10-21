@@ -42,6 +42,14 @@ import { funnelCommand } from './funnel'
 import { segmentsDefineCommand, segmentsLsCommand } from './segments'
 import { betSyncCommand } from './bet'
 import { experimentsDecisionCommand, northStarReadingsCommand } from './result-reads'
+import {
+  experimentsCreateCommand,
+  experimentsDecideCommand,
+  experimentsLsCommand,
+  experimentsShowCommand,
+  experimentsStartCommand,
+  experimentsStopCommand,
+} from './experiments'
 import { keysCreateCommand, keysLsCommand, keysRevokeCommand } from './keys'
 import { doctorCommand } from './doctor'
 import { configGetCommand, configListCommand, configSetCommand, setupCommand } from './config'
@@ -88,6 +96,12 @@ export const COMMANDS: readonly Command[] = [
   segmentsDefineCommand,
   segmentsLsCommand,
   betSyncCommand,
+  experimentsLsCommand,
+  experimentsShowCommand,
+  experimentsCreateCommand,
+  experimentsStartCommand,
+  experimentsStopCommand,
+  experimentsDecideCommand,
   experimentsDecisionCommand,
   keysLsCommand,
   keysCreateCommand,

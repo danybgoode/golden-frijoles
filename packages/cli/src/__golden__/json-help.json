@@ -789,6 +789,174 @@
         ]
       },
       {
+        "command": "experiments ls",
+        "summary": "every experiment, its newest version and its state",
+        "usage": "frijoles experiments ls [--project <slug>] [--json]",
+        "needsAuth": true,
+        "flags": [
+          {
+            "flag": "--project",
+            "takesValue": true,
+            "describe": "the project (default: the remembered one)"
+          }
+        ]
+      },
+      {
+        "command": "experiments show",
+        "summary": "an experiment's results, any day: the counts, the chance, what to do next",
+        "usage": "frijoles experiments show <key> [--project <slug>] [--json]",
+        "needsAuth": true,
+        "flags": [
+          {
+            "flag": "--project",
+            "takesValue": true,
+            "describe": "the project (default: the remembered one)"
+          }
+        ]
+      },
+      {
+        "command": "experiments create",
+        "summary": "save an experiment as a draft (nothing serves until start)",
+        "usage": "frijoles experiments create --flag <key> --metric <event> [--guardrail <event>]… [--entity visitor] [--ends open|YYYY-MM-DD | --weeks <1-8>] [--split <pct>] [--decrease] [--name <version>]… [--from <answers.json>] [--project <slug>] [--json]",
+        "needsAuth": true,
+        "flags": [
+          {
+            "flag": "--flag",
+            "takesValue": true,
+            "describe": "the feature the test changes (an existing flag)"
+          },
+          {
+            "flag": "--metric",
+            "takesValue": true,
+            "describe": "the one number that decides it"
+          },
+          {
+            "flag": "--guardrail",
+            "takesValue": true,
+            "describe": "a number that must not get worse (repeatable)"
+          },
+          {
+            "flag": "--entity",
+            "takesValue": true,
+            "describe": "who is counted (default: visitor)"
+          },
+          {
+            "flag": "--ends",
+            "takesValue": true,
+            "describe": "when it ends (default: open — until you stop it)"
+          },
+          {
+            "flag": "--weeks",
+            "takesValue": true,
+            "describe": "run for this many weeks instead"
+          },
+          {
+            "flag": "--split",
+            "takesValue": true,
+            "describe": "the new version's share, 1–99 (default 50)"
+          },
+          {
+            "flag": "--decrease",
+            "takesValue": false,
+            "describe": "the metric should go DOWN"
+          },
+          {
+            "flag": "--name",
+            "takesValue": true,
+            "describe": "version names, control first (repeatable)"
+          },
+          {
+            "flag": "--from",
+            "takesValue": true,
+            "describe": "the builder's answers as JSON, instead of the flags above"
+          },
+          {
+            "flag": "--project",
+            "takesValue": true,
+            "describe": "the project (default: the remembered one)"
+          }
+        ]
+      },
+      {
+        "command": "experiments start",
+        "summary": "start an experiment: the split serves and everyone in it is counted",
+        "usage": "frijoles experiments start <key> [--project <slug>] [--json]",
+        "needsAuth": true,
+        "flags": [
+          {
+            "flag": "--project",
+            "takesValue": true,
+            "describe": "the project (default: the remembered one)"
+          }
+        ]
+      },
+      {
+        "command": "experiments stop",
+        "summary": "stop an experiment: nobody new is counted",
+        "usage": "frijoles experiments stop <key> [--project <slug>] [--json]",
+        "needsAuth": true,
+        "flags": [
+          {
+            "flag": "--project",
+            "takesValue": true,
+            "describe": "the project (default: the remembered one)"
+          }
+        ]
+      },
+      {
+        "command": "experiments decide",
+        "summary": "record the call — ship a version, keep the current one, or not — at any time",
+        "usage": "frijoles experiments decide <key> (--ship [--variant <key>] | --keep | --inconclusive | --iterate | --invalid) --reason \"<why>\" [--rollout] [--project <slug>] [--json]",
+        "needsAuth": true,
+        "flags": [
+          {
+            "flag": "--ship",
+            "takesValue": false,
+            "describe": "ship a version: the one leading, or --variant"
+          },
+          {
+            "flag": "--variant",
+            "takesValue": true,
+            "describe": "with --ship: the version to ship (its flag variant key)"
+          },
+          {
+            "flag": "--keep",
+            "takesValue": false,
+            "describe": "keep the current version"
+          },
+          {
+            "flag": "--inconclusive",
+            "takesValue": false,
+            "describe": "no clear answer"
+          },
+          {
+            "flag": "--iterate",
+            "takesValue": false,
+            "describe": "change it and run again"
+          },
+          {
+            "flag": "--invalid",
+            "takesValue": false,
+            "describe": "the numbers cannot be trusted"
+          },
+          {
+            "flag": "--reason",
+            "takesValue": true,
+            "describe": "why — kept in the decision record (required)"
+          },
+          {
+            "flag": "--rollout",
+            "takesValue": false,
+            "describe": "serve the shipped version to everyone in production"
+          },
+          {
+            "flag": "--project",
+            "takesValue": true,
+            "describe": "the project (default: the remembered one)"
+          }
+        ]
+      },
+      {
         "command": "experiments decision",
         "summary": "an experiment's decision record (the latest version unless --version)",
         "usage": "frijoles experiments decision <key> [--version <n>] [--project <slug>] [--json]",

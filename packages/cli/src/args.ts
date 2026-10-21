@@ -46,6 +46,14 @@ const BOOLEAN_FLAGS = new Set([
   'yes',
   'no-color',
   'no-motion',
+  // `frijoles experiments` (landing-launch-experiment S6.4): the decision's outcome switches, --rollout and --decrease.
+  'ship',
+  'keep',
+  'inconclusive',
+  'iterate',
+  'invalid',
+  'rollout',
+  'decrease',
   'ingest',
 ])
 
