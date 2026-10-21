@@ -925,7 +925,8 @@ function computeChecks(
     )
   }
 
-  // 2 · every metric arrived in the last 24 hours
+  // 2 · every metric arrived in the last 24 hours — ADVICE, never a blocked Start (Daniel, 2026-10-20, landing-launch-
+  // experiment): a new product's conversion can be zero for days, and a test that waits for traffic never records any.
   const metrics = [answers.metric, ...answers.guardrails.filter((event) => event !== answers.metric)]
   const quiet = metrics.filter(
     (event) => (catalog.events.find((row) => row.event === event)?.count24h ?? 0) === 0
@@ -934,10 +935,10 @@ function computeChecks(
     quiet.length > 0
       ? {
           id: 'metrics',
-          status: 'fail',
+          status: 'warn',
           step: 4,
           title: 'A metric has gone quiet',
-          detail: `${quiet.join(', ')} arrived 0 times in the last 24 hours. Is its tracking still running?`,
+          detail: `${quiet.join(', ')} arrived 0 times in the last 24 hours. The test still records every one from the moment it starts; if you expected some, check that its tracking is running.`,
           fix: { label: 'Choose a different metric', kind: 'step', step: 4 },
         }
       : {
@@ -1085,15 +1086,16 @@ function computeChecks(
     })
   } else if (derived.days > WEEK_OPTIONS[WEEK_OPTIONS.length - 1] * 7) {
     // No run length on offer fits, so "Run it for 8 weeks" would be a fix that cannot fix anything.
-    // ⚠️ THE RULE (after three review rounds found three instances of one class — an imprecise
-    // estimate blocking Start): check 5 FAILS only on an EXACT estimate. An approximate one warns and
-    // keeps its fix. A window whose dates have already passed is a fact, not an estimate, and fails.
+    // ⚠️ THE RULE (Daniel, 2026-10-20 — supersedes "fails on an exact estimate"): too little traffic for a confident
+    // verdict is NEVER a reason to refuse Start. Every power check warns: the test runs, records every exposure and
+    // conversion, and its readout says how sure it is. Only FACTS fail check 5 — a window whose dates have passed, or
+    // conditions nobody can match.
     checks.push({
       id: 'window',
-      status: derived.estimateExact ? 'fail' : 'warn',
+      status: 'warn',
       step: 2,
-      title: 'Not enough people for any run length',
-      detail: `It needs about ${derived.days} days at your current traffic — longer than the ${WEEK_OPTIONS[WEEK_OPTIONS.length - 1]}-week maximum. Include more people, or look for a bigger change.`,
+      title: 'Not enough people for a confident verdict',
+      detail: `At your current traffic a confident verdict needs about ${derived.days.toLocaleString('en-US')} days — longer than the ${WEEK_OPTIONS[WEEK_OPTIONS.length - 1]}-week maximum. It still runs and records everything; read the result as directional, or include more people.`,
       fix: { label: 'Change who’s in it', kind: 'step', step: 2 },
     })
   } else if (
@@ -1103,7 +1105,7 @@ function computeChecks(
   ) {
     checks.push({
       id: 'window',
-      status: derived.estimateExact ? 'fail' : 'warn',
+      status: 'warn',
       step: 5,
       title: 'This draft’s dates have run out',
       detail: `It was planned from ${derived.startAt.toISOString().slice(0, 10)}; ${Math.max(0, remainingDays)} days are left and it needs about ${derived.days}.`,
@@ -1112,7 +1114,7 @@ function computeChecks(
   } else if (remainingDays < derived.days) {
     checks.push({
       id: 'window',
-      status: derived.estimateExact ? 'fail' : 'warn',
+      status: 'warn',
       step: 5,
       title: 'The test ends before it has enough people',
       detail: `${answers.weeks} week${answers.weeks === 1 ? '' : 's'} planned, but it needs about ${derived.days} days at your current traffic.`,

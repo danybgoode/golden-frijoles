@@ -400,10 +400,10 @@ test('six checks, all passing, on the approved example with a long enough window
   assert.equal(result.plan.failing, 0)
 })
 
-test('check 5 fails a short window for EVERYONE and its fix is the smallest run that fits', () => {
+test('check 5 WARNS on a short window for everyone (never blocks Start), and its fix is the smallest run that fits', () => {
   const everyone = { mode: 'everyone' as const, conditions: [], allocation: 100 }
   const window = checkOf({ ...copyAnswers(), weeks: 2, who: everyone }).window
-  assert.equal(window.status, 'fail')
+  assert.equal(window.status, 'warn')
   assert.equal(window.fix?.kind, 'set-weeks')
   const weeks = window.fix?.kind === 'set-weeks' ? window.fix.weeks : 0
   assert.equal(checkOf({ ...copyAnswers(), weeks, who: everyone }).window.status, 'ok')
@@ -448,8 +448,10 @@ test('check 1: a new feature fails; an inactive feature fails; no evaluations in
   )
 })
 
-test('check 2 fails a guardrail that went quiet; check 5 replans a saved draft whose dates ran out', () => {
-  assert.equal(checkOf({ ...copyAnswers(), guardrails: ['referral.sent'] }).metrics.status, 'fail')
+test('check 2 WARNS on a guardrail that went quiet (Daniel, 2026-10-20); check 5 fails a saved draft whose dates ran out', () => {
+  const quiet = checkOf({ ...copyAnswers(), guardrails: ['referral.sent'] }).metrics
+  assert.equal(quiet.status, 'warn')
+  assert.match(quiet.detail, /still records/)
   const stale = checkOf(
     { ...copyAnswers(), weeks: 6 },
     context({ savedWindow: { startAt: '2026-08-01T00:00:00.000Z', endAt: '2026-09-12T00:00:00.000Z' } })
@@ -558,7 +560,7 @@ test('check 5 on a saved draft: changing the run length re-plans the window, so 
   const savedWindow = { startAt: '2026-09-25T00:00:00.000Z', endAt: '2026-10-09T00:00:00.000Z' } // 2 weeks
   const everyone = { mode: 'everyone' as const, conditions: [], allocation: 100 }
   const short = checkOf({ ...copyAnswers(), weeks: 2, who: everyone }, context({ savedWindow })).window
-  assert.equal(short.status, 'fail')
+  assert.equal(short.status, 'warn')
   assert.ok(short.fix?.kind === 'set-weeks' || short.fix?.kind === 'replan-from-today')
   const weeks = short.fix?.kind === 'set-weeks' ? short.fix.weeks : 6
   assert.equal(
@@ -573,7 +575,8 @@ test('check 5 never offers a run length that cannot fit (more than 8 weeks neede
     { ...copyAnswers(), weeks: 8, who: { mode: 'everyone' as const, conditions: [], allocation: 100 } },
     context({ catalog: thin })
   ).window
-  assert.equal(window.status, 'fail')
+  assert.equal(window.status, 'warn', 'too little traffic is advice, never a refused Start')
+  assert.equal(window.title, 'Not enough people for a confident verdict')
   assert.equal(window.fix?.kind, 'step')
 })
 
@@ -895,7 +898,7 @@ test('the "ends before it has enough people" branch also only warns on an approx
 
 test('a TRUNCATED catalog never blocks Start, even for everyone (fresh reviewer + Codex, round 5)', () => {
   const everyone = { mode: 'everyone' as const, conditions: [], allocation: 100 }
-  assert.equal(checkOf({ ...copyAnswers(), weeks: 1, who: everyone }).window.status, 'fail')
+  assert.equal(checkOf({ ...copyAnswers(), weeks: 1, who: everyone }).window.status, 'warn')
   assert.equal(
     checkOf(
       { ...copyAnswers(), weeks: 1, who: everyone },
@@ -951,4 +954,14 @@ test("a new feature's experiment is not named after its template twice", () => {
   assert.ok(result.ok)
   assert.equal(result.plan.flagKey, 'experiments.copy_test_enabled')
   assert.equal(result.plan.experimentKey, 'copy_test')
+})
+
+test('THE RULE (Daniel, 2026-10-20): no traffic, no baseline and quiet metrics never stop a test from starting', () => {
+  const everyone = { mode: 'everyone' as const, conditions: [], allocation: 100 }
+  const dry = prototypeCatalog({ entities: [{ type: 'merchant', subjects14d: 1 }] })
+  const result = checkOf(
+    { ...copyAnswers(), weeks: 1, who: everyone, guardrails: ['referral.sent'] },
+    context({ catalog: dry })
+  )
+  for (const id of ['metrics', 'window'] as const) assert.notEqual(result[id].status, 'fail', id)
 })
