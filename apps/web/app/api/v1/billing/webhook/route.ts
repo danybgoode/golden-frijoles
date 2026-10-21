@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import type Stripe from 'stripe'
 import { getStripe } from '@/lib/stripe'
-import { decideBillingAction, type BillingEventFacts } from '@/lib/billing-decision'
+import {
+  ALERTED_EVENT_TYPES,
+  billingAlert,
+  decideBillingAction,
+  type BillingAlertFacts,
+  type BillingEventFacts,
+} from '@/lib/billing-decision'
 import { applyBillingAction, billingEventSeen, recordBillingEvent, workspaceForCustomer } from '@/lib/billing'
+import { tg } from '@/lib/telegram'
 
 // landing-launch-experiment · Sprint 4, Story 4.3 (epic D26) — Stripe's webhook. The only path that changes a plan.
 //
@@ -15,6 +22,9 @@ import { applyBillingAction, billingEventSeen, recordBillingEvent, workspaceForC
 //      only forward in event time; Free for the subscription the workspace holds, whatever its price.
 //   4. Record the event id LAST. If applying throws, nothing is recorded and the 500 makes Stripe retry; the apply is a
 //      set, not an increment, so a retry that races a slow first delivery cannot double anything.
+//   5. AFTER the record, tell the operator (Telegram) about money that needs a person: a failed payment, a dispute, a
+//      refund, an early fraud warning, a Growth payment with no workspace, a second Growth subscription. After, so a
+//      Stripe retry of a failed apply does not alert twice; `tg.alert` never throws, so it cannot fail the event.
 //
 // Not gated by `billing.checkout_enabled`: switching off new checkouts must never stop an existing subscription's
 // cancellation or renewal from reaching the workspace.
@@ -47,6 +57,56 @@ function factsOf(event: Stripe.Event): BillingEventFacts {
   return { type: event.type }
 }
 
+/** Loose reads: these objects' shapes move between API versions (an invoice's subscription lives under `parent` since
+ *  2025-03-31), and an alert with one id missing is still worth sending. Ids, amounts and codes only. */
+function str(value: unknown): string | null {
+  if (typeof value === 'string') return value
+  if (value && typeof value === 'object' && typeof (value as { id?: unknown }).id === 'string')
+    return (value as { id: string }).id
+  return null
+}
+function num(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null
+}
+
+function alertFactsOf(event: Stripe.Event): BillingAlertFacts | null {
+  if (!(ALERTED_EVENT_TYPES as readonly string[]).includes(event.type)) return null
+  const o = event.data.object as unknown as Record<string, unknown>
+  const base = { type: event.type, eventId: event.id }
+  switch (event.type) {
+    case 'invoice.payment_failed': {
+      const parent = o.parent as { subscription_details?: { subscription?: unknown } } | null | undefined
+      return {
+        ...base,
+        customerId: str(o.customer),
+        subscriptionId: str(parent?.subscription_details?.subscription) ?? str(o.subscription),
+        amount: num(o.amount_due),
+        currency: str(o.currency),
+        attempt: num(o.attempt_count),
+        nextAttemptAt: num(o.next_payment_attempt),
+      }
+    }
+    case 'charge.dispute.created':
+      return {
+        ...base,
+        chargeId: str(o.charge),
+        amount: num(o.amount),
+        currency: str(o.currency),
+        reason: str(o.reason),
+      }
+    case 'charge.refunded':
+      return {
+        ...base,
+        chargeId: str(o.id),
+        customerId: str(o.customer),
+        amount: num(o.amount_refunded),
+        currency: str(o.currency),
+      }
+    default:
+      return { ...base, chargeId: str(o.charge), reason: str(o.fraud_type) }
+  }
+}
+
 export async function POST(req: NextRequest) {
   const secret = process.env.STRIPE_WEBHOOK_SECRET?.trim()
   const stripe = getStripe()
@@ -72,6 +132,7 @@ export async function POST(req: NextRequest) {
     if (await billingEventSeen(event.id)) return NextResponse.json({ ok: true, duplicate: true })
     const action = decideBillingAction(factsOf(event))
     let workspaceId = await applyBillingAction(action)
+    let alert: string | null = null
     if (action.kind === 'set-plan' && workspaceId === null) {
       // Two different things, told apart: a customer nobody of ours holds is LOUD (money with no workspace to give it to —
       // CODE-QUALITY #7); a known customer whose guards declined (a stale or second subscription) is the guards working.
@@ -79,8 +140,10 @@ export async function POST(req: NextRequest) {
       // Only a GROWTH grant with nowhere to go is money without a workspace. A Free for an unknown customer is another
       // product's or a Payment Link's subscription in the same Stripe account, and moves nothing (verifier r6, #412).
       if (!holder) {
-        if (action.plan === 'growth')
+        if (action.plan === 'growth') {
+          alert = `Growth paid with no workspace: subscription ${action.subscriptionId} (customer ${action.customerId}) matches no workspace of ours. Check it in Stripe and refund it if it is live. Event ${event.id}.`
           console.error(`[billing/webhook] ${event.type} ${event.id}: Stripe customer matches NO workspace`)
+        }
       }
       // A Growth subscription the slot guard (rightly) declined, because the workspace holds a different one. Usually a
       // stale event for an old subscription; but if THIS one is live, its customer is paying for nothing — so it is logged
@@ -89,13 +152,21 @@ export async function POST(req: NextRequest) {
         action.plan === 'growth' &&
         holder.subscriptionId &&
         holder.subscriptionId !== action.subscriptionId
-      )
+      ) {
+        alert = `Second Growth subscription: ${action.subscriptionId} (customer ${action.customerId}) was declined because workspace ${holder.id} holds ${holder.subscriptionId}. If ${action.subscriptionId} is live in Stripe, it is a second charge: cancel and refund it. Event ${event.id}.`
         console.error(
           `[billing/webhook] ${event.type} ${event.id}: declined Growth subscription ${action.subscriptionId} (customer ${action.customerId}); workspace ${holder.id} holds ${holder.subscriptionId}. If ${action.subscriptionId} is live in Stripe, it is a second charge: cancel and refund it`
         )
+      }
       workspaceId = holder?.id ?? null
     }
+    // A money event that moves no plan: find its workspace by customer when it names one, for the record and the alert.
+    const alertFacts = alertFactsOf(event)
+    if (alertFacts && workspaceId === null && alertFacts.customerId)
+      workspaceId = (await workspaceForCustomer(alertFacts.customerId))?.id ?? null
+    if (alertFacts) alert = billingAlert({ ...alertFacts, workspaceId })
     await recordBillingEvent(event.id, event.type, workspaceId)
+    if (alert) await tg.alert(alert)
     return NextResponse.json({ ok: true })
   } catch (err) {
     console.error('[billing/webhook] failed; Stripe will retry:', err instanceof Error ? err.message : err)

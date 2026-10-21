@@ -357,6 +357,74 @@ test('a subscription on another price grants nothing; an unknown customer change
   }
 })
 
+test('money events that move no plan (failed payment, dispute, refund, fraud warning) are recorded once, against the workspace when they name its customer', async ({
+  request,
+}) => {
+  const client = db()
+  const { customer, sub } = ids()
+  const ws = await workspace(client, 'growth', customer)
+  const events = [
+    evt('invoice.payment_failed', {
+      object: 'invoice',
+      id: `in_${randomBytes(6).toString('hex')}`,
+      customer,
+      parent: { type: 'subscription_details', subscription_details: { subscription: sub } },
+      amount_due: 4900,
+      currency: 'usd',
+      attempt_count: 1,
+      next_payment_attempt: Math.floor(Date.now() / 1000) + 86400,
+    }),
+    evt('charge.dispute.created', {
+      object: 'dispute',
+      id: 'dp_spec',
+      charge: 'ch_spec',
+      amount: 4900,
+      currency: 'usd',
+      reason: 'fraudulent',
+    }),
+    evt('charge.refunded', {
+      object: 'charge',
+      id: 'ch_spec',
+      customer,
+      amount_refunded: 4900,
+      currency: 'usd',
+    }),
+    evt('radar.early_fraud_warning.created', {
+      object: 'radar.early_fraud_warning',
+      id: 'issfr_spec',
+      charge: 'ch_spec',
+      fraud_type: 'misc',
+    }),
+  ]
+  try {
+    for (const event of events) {
+      const first = await send(request, event)
+      expect(first.status(), event.type).toBe(200)
+      expect((await send(request, event)).status(), `${event.type} replay`).toBe(200)
+    }
+    const { data } = await client
+      .from('billing_events')
+      .select('stripe_event_id, type, workspace_id')
+      .in(
+        'stripe_event_id',
+        events.map((e) => e.id)
+      )
+    const byType = new Map((data ?? []).map((r) => [r.type as string, r.workspace_id as string | null]))
+    expect(data).toHaveLength(events.length)
+    // Named by customer: the failed payment and the refund. A dispute or fraud warning names only its charge.
+    expect(byType.get('invoice.payment_failed')).toBe(ws)
+    expect(byType.get('charge.refunded')).toBe(ws)
+    expect(byType.get('charge.dispute.created')).toBeNull()
+    expect((await row(client, ws))?.plan, 'no plan moves').toBe('growth')
+  } finally {
+    await cleanup(
+      client,
+      ws,
+      events.map((e) => e.id)
+    )
+  }
+})
+
 test('a comped workspace is never touched by a payment event', async ({ request }) => {
   const client = db()
   const { customer, sub } = ids()

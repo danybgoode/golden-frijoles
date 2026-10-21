@@ -149,6 +149,74 @@ export function holdsGrowthSubscription(
   )
 }
 
+/** Trouble with a customer's Growth subscription that its owner must act on, from Stripe's own statuses: `past_due` (a payment
+ *  failed and Stripe is retrying; the workspace keeps Growth) or `unpaid` (retries ran out; the workspace is on Free, and the
+ *  subscription comes back the moment its invoice is paid). `unpaid` wins: it is the one that already cost them Growth. A
+ *  second checkout while `unpaid` would be a second subscription (verifier r7, #412), so checkout refuses it. */
+export type PaymentTrouble = 'past_due' | 'unpaid'
+export function paymentTrouble(
+  subscriptions: { status: string; priceLookupKeys: (string | null)[] }[]
+): PaymentTrouble | null {
+  const growth = subscriptions.filter((s) => s.priceLookupKeys.includes(GROWTH_PRICE_LOOKUP_KEY))
+  if (growth.some((s) => s.status === 'unpaid')) return 'unpaid'
+  if (growth.some((s) => s.status === 'past_due')) return 'past_due'
+  return null
+}
+
+/** The money events that change no plan but need a person (verifier, #412; Stripe's go-live guidance). The webhook records
+ *  them like any other and sends the operator one line each; the decision above never reads them. */
+export const ALERTED_EVENT_TYPES = [
+  'invoice.payment_failed',
+  'charge.dispute.created',
+  'charge.refunded',
+  'radar.early_fraud_warning.created',
+] as const
+
+/** Only ids, amounts and Stripe's own codes: never a name or an email, since the alert leaves for Telegram. */
+export type BillingAlertFacts = {
+  type: string
+  eventId: string
+  customerId?: string | null
+  subscriptionId?: string | null
+  chargeId?: string | null
+  /** Minor units (cents). */
+  amount?: number | null
+  currency?: string | null
+  /** Stripe's code: the dispute's reason, or the early fraud warning's fraud type. */
+  reason?: string | null
+  attempt?: number | null
+  /** Unix seconds; null when Stripe will not retry. */
+  nextAttemptAt?: number | null
+  workspaceId?: string | null
+}
+
+function money(amount: number | null | undefined, currency: string | null | undefined): string {
+  if (typeof amount !== 'number' || !Number.isFinite(amount) || !currency) return 'an unknown amount'
+  return `${(amount / 100).toFixed(2)} ${currency.toUpperCase()}`
+}
+
+/** The operator's one line for an alerted event, or null for every other type. */
+export function billingAlert(f: BillingAlertFacts): string | null {
+  const workspace = f.workspaceId ? `workspace ${f.workspaceId}` : 'no workspace of ours'
+  const customer = f.customerId ? `customer ${f.customerId}, ` : ''
+  switch (f.type) {
+    case 'invoice.payment_failed':
+      return `Payment failed: ${money(f.amount, f.currency)} for subscription ${f.subscriptionId ?? 'unknown'} (${customer}${workspace}), attempt ${f.attempt ?? '?'}. ${
+        f.nextAttemptAt
+          ? `Stripe retries ${new Date(f.nextAttemptAt * 1000).toISOString().slice(0, 16).replace('T', ' ')} UTC; the owner sees it on Plan & billing.`
+          : 'Stripe will not retry: the subscription goes unpaid and the workspace returns to Free.'
+      } Event ${f.eventId}.`
+    case 'charge.dispute.created':
+      return `Dispute opened: ${money(f.amount, f.currency)} on charge ${f.chargeId ?? 'unknown'} (${f.reason ?? 'no reason given'}). Answer it in the Stripe Dashboard before its deadline. Event ${f.eventId}.`
+    case 'charge.refunded':
+      return `Refund: ${money(f.amount, f.currency)} refunded on charge ${f.chargeId ?? 'unknown'} (${customer}${workspace}). Check it was meant. Event ${f.eventId}.`
+    case 'radar.early_fraud_warning.created':
+      return `Early fraud warning on charge ${f.chargeId ?? 'unknown'} (${f.reason ?? 'no type given'}). Refunding it now usually prevents a dispute. Event ${f.eventId}.`
+    default:
+      return null
+  }
+}
+
 /** Stripe's `integration_identifier` label for our Checkout sessions: a fixed prefix plus 8 random letters (Stripe's
  *  guidance), so the Dashboard can compare this flow with any later one. */
 export function integrationIdentifier(random: () => number = Math.random): string {

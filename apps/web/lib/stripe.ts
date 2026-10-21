@@ -1,6 +1,6 @@
 import 'server-only'
 import Stripe from 'stripe'
-import { stripeSecretKey } from './billing-decision'
+import { paymentTrouble, stripeSecretKey, type PaymentTrouble } from './billing-decision'
 
 // landing-launch-experiment · Sprint 4, Story 4.3 (epic D25–D27) — the ONE Stripe client. Server-only: the secret key never
 // reaches a browser bundle. Instantiated per call site through this function (Stripe's guidance: a client instance, never
@@ -17,4 +17,29 @@ export function getStripe(): Stripe | null {
   const key = stripeSecretKey()
   if (!key) return null
   return new Stripe(key, { apiVersion: STRIPE_API_VERSION as Stripe.LatestApiVersion })
+}
+
+/** A customer's Growth subscriptions, as the pure checks read them: Stripe's status and the prices' lookup keys. */
+export function subscriptionFacts(subscriptions: Stripe.Subscription[]) {
+  return subscriptions.map((sub) => ({
+    status: sub.status,
+    priceLookupKeys: sub.items.data.map((item) => item.price.lookup_key),
+  }))
+}
+
+/** For Plan & billing: whether the customer's Growth subscription has a failed payment, asked of Stripe (we keep no status
+ *  of our own). Never throws: a failed ask shows no warning rather than breaking the page, and is logged. */
+export async function growthPaymentTrouble(customerId: string): Promise<PaymentTrouble | null> {
+  const stripe = getStripe()
+  if (!stripe) return null
+  try {
+    const subscriptions = await stripe.subscriptions.list({ customer: customerId, status: 'all', limit: 20 })
+    return paymentTrouble(subscriptionFacts(subscriptions.data))
+  } catch (err) {
+    console.error(
+      '[billing] could not read the subscription status:',
+      err instanceof Error ? err.message : err
+    )
+    return null
+  }
 }
