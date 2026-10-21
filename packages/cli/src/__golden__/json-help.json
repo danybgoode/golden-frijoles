@@ -843,7 +843,7 @@
           {
             "flag": "--ends",
             "takesValue": true,
-            "describe": "when it ends (default: open — until you stop it)"
+            "describe": "run through this day (from tomorrow), or open — until you stop it (default)"
           },
           {
             "flag": "--weeks",

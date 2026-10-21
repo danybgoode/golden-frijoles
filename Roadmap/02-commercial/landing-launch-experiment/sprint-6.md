@@ -33,7 +33,7 @@ stories:
     i_want: "to launch and decide an experiment from the CLI"
     so_that: "a test takes minutes, and several can run at once"
     risk: high
-    status: planned
+    status: in-progress   # built; PR stacked on #423
   - id: S6.6
     title: "Pause, resume and delete"
     as_a: "the person running tests"
@@ -93,8 +93,12 @@ only the readout gated it.
 the same assignment); a test can be deleted (its split off, gone from the list — the audit trail stays, append-only).
 
 ### Story 6.4 — `frijoles experiments`
-**Acceptance:** `ls`, `create --from <file>`, `start`, `stop`, `decide` — member/owner-gated like `frijoles flags`, through
-the same commands the builder uses (one path, so the rules above hold for agents too), `--json` on each.
+**Acceptance:** `ls`, `show`, `create` (from flags — `--flag --metric [--guardrail] [--entity] [--ends|--weeks]` — or
+`--from <answers.json>`), `start`, `stop`, `decide --ship [--variant]|--keep|… --reason [--rollout]` — member-gated reads,
+owner-gated writes, through the same commands the console uses (one path: `lib/experiment-owner-commands.ts` is now the
+console's decision path too), `--json` on each. Built and proven end to end (`e2e/cli-experiments.spec.ts`): no traffic and
+a metric that never fired → create, start, show, decide ship with roll-out. Found on the way: zero traffic for "everyone"
+failed as "nobody matches"; it now warns "nobody has been seen yet" (only conditions that exclude real traffic fail).
 
 ### Story 6.5 — The landing A/B, launched and read
 **Acceptance:** `landing.variant_b_enabled`'s experiment started on production (by the CLI), A and B served 50/50 to

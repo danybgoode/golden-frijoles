@@ -176,7 +176,7 @@ export const experimentsCreateCommand: Command = {
     {
       name: 'ends',
       value: 'open|<YYYY-MM-DD>',
-      describe: 'when it ends (default: open — until you stop it)',
+      describe: 'run through this day (from tomorrow), or open — until you stop it (default)',
     },
     { name: 'weeks', value: '<1-8>', describe: 'run for this many weeks instead' },
     { name: 'split', value: '<pct>', describe: "the new version's share, 1–99 (default 50)" },

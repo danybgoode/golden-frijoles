@@ -12,7 +12,7 @@ Flags
   --metric <event>          the one number that decides it
   --guardrail <event>       a number that must not get worse (repeatable)
   --entity <type>           who is counted (default: visitor)
-  --ends open|<YYYY-MM-DD>  when it ends (default: open — until you stop it)
+  --ends open|<YYYY-MM-DD>  run through this day (from tomorrow), or open — until you stop it (default)
   --weeks <1-8>             run for this many weeks instead
   --split <pct>             the new version's share, 1–99 (default 50)
   --decrease                the metric should go DOWN
