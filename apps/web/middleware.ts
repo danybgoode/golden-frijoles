@@ -43,6 +43,9 @@ export async function middleware(request: NextRequest) {
   // as "logged out" (which could read as an authorization answer). An earlier comment here claimed
   // a /login fallback that the code never provided; cross-review round 2 (Codex, 2026-07-20) caught
   // the mismatch. The fix is the honest comment, not a softer failure.
+  // One exception, on purpose (verifier, #419): the landing's Growth tier (components/landing/GrowthCta.tsx) answers
+  // "signed out" when the session cannot be read. There it is not an authorization answer — it only chooses the sign-up
+  // button over the checkout form, and the checkout route checks the session again — and a public page must not 500.
   if (!url || !anon) return withVisitor(response, minted)
 
   const supabase = createServerClient(url, anon, {
