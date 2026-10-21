@@ -32,6 +32,8 @@ const mono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600'], 
 // analytics primitive list is two products in one link.
 //
 // ── The description names NO capability, and that is the resolution ─────────────────────────
+// OVERRIDDEN 2026-10-21 by the product owner, for search and answer-engine visibility: DESCRIPTION
+// now names capabilities, and every one it names is live today. The history below is kept as record.
 // It has been narrowed twice under review. First it said "AI-spend operations", which was simply
 // false — FinOps is unbuilt (round 4). Then it said "product, delivery and security operations",
 // and round 8 argued that delivery and security each ride a gate that is closed in production, so
@@ -65,7 +67,7 @@ const mono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600'], 
 // exactly the test the third draft of DESCRIPTION was written to pass.
 const TITLE = `Golden Frijoles — ${CATEGORY}`
 const DESCRIPTION =
-  'The operating context your product and your agents share — so the next decision starts from what actually happened, not from an empty chat box.'
+  'Plan, ship and prove which features paid off. An open Claude Code plugin with flags, A/B tests, funnels and an outcome report. Start free.'
 
 // Story 3.2 (commercial-shell/sprint-3.md) — real OG/Twitter metadata, so a pasted landing link
 // unfurls with a correct card in a chat app instead of the platform's generic fallback. `async
