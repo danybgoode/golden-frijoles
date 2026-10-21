@@ -8,8 +8,8 @@ title: "Launch: the first landing A/B on goldenfrijoles.com, run on Golden Frijo
 area: 02-commercial
 risk: high
 type: feature
-sprints_total: 5
-stories_total: 18   # the sum of every sprint's stories_total — keep it in step when a story is added
+sprints_total: 6
+stories_total: 23   # the sum of every sprint's stories_total — keep it in step when a story is added
 intent_match: 86   # copied from the seed by scaffold-epic (intent-match); the reader at the lock may update it
 quote_low_usd: 41    # ≈ API $ — copied from the seed's `quote:` by scaffold-epic (finops); null = not quoted, never 0
 quote_high_usd: 62
