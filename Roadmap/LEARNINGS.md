@@ -2478,3 +2478,22 @@ one-liner + why + date shape.
 - **A fresh verifier on every HIGH PR earned its cost.** Six PRs in a row had a real defect only it found (a refresh
   token burned by a session read on a public page, a chance figure collapsing at large n, a shorter "fix", a CI-only
   describe-body DB call, a broken one-test-per-feature, a global install read as a checkout).
+
+### A scheduler the platform won't run, and a secret no one can read (delivery-back-on, 2026-10-18)
+- **A config file the platform doesn't read is worse than none: it reads as done.** The `*/5` cron sat in
+  `apps/web/vercel.json` for three months while the project's Root Directory was `.`, and the free Vercel plan refuses
+  sub-daily crons anyway (a deploy with one fails). Delivery was dark from 2026-07-22 to 2026-10-18 and every doc said
+  live. Check the platform's own list (`vercel crons ls`), not the file; `lib/delivery-timing.test.ts` now forbids
+  `crons` in any `vercel.json`.
+- **A one-off data fix whose meaning depends on when it runs is not a migration.** The backlog expiry ("older than an
+  hour") as a pending migration would have fired on whichever unrelated `supabase db push` came next. It became
+  `supabase/ops/*.sql`, run in the switch-on, guarded one-shot per project (a re-run after the switch-on would have
+  dead-lettered live retries). `supabase/ops/*.sql` is a security path.
+- **A Sensitive env var can't be read back: replace it, don't recover it.** Nobody could say what `CRON_SECRET` was.
+  Only one route read it, so the owner minted a new one into Vercel and Vault. Name every reader before rotating.
+- **A lookup by name fails closed silently, so check the name, not just the value.** The Vault secret was saved as
+  `" dispatch_deliveries_cron_secret"` (a leading space); every tick "succeeded" and sent nothing. Reading
+  `vault.secrets` names (never values) found it in one query.
+- **An external reviewer that repeats a finding across rounds is a disagreement to resolve in the contract, not a
+  third fix.** Codex read the exemption's condition 3 as binding the waker in two rounds; both fresh verifiers
+  disagreed. One sentence in AGENTS.md (the waker is not exempt, and no API role calls it) closed it.

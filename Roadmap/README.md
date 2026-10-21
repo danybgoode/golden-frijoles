@@ -106,7 +106,8 @@ independently shippable slice of value.
 - ✅ [Event destination router](01-growth-engine/event-destination-router/README.md) (versioned
   actor/subject event contract · transactional outbox · tenant-managed **signed webhook
   destinations** · bounded retry/dead-letter + operator replay · delivery operating view) —
-  **delivery LIVE in production** (2026-07-22). A tenant creates a signed, filtered destination and
+  **delivery LIVE in production** (2026-07-22; dark from then until 2026-10-18, F7, and back on through a pg_cron
+  waker: [delivery-back-on](01-growth-engine/delivery-back-on/README.md)). A tenant creates a signed, filtered destination and
   receives their events reliably, at-least-once, without ingest ever depending on a sink's health.
   First real consumer: Miyagi's merchant-lifecycle projection (Story 3.1, in `medusa-bonsai`). The
   optional Attio adapter (3.2) is deferred until a workspace token exists.
@@ -585,8 +586,8 @@ independently shippable slice of value.
   flag explanation agrees with the served value for every type-correct call, and a differential test ties
   the model to the shipped code (0/6,000 disagreements). **Decision:** Quint + Lean, per-PR simulation,
   nightly exhaustive checks, and no proof without a differential test. **Shipped 2026-09-29.** No landing
-  claim yet (audit D7). ⚠️ **Owed to Daniel (F7):** confirm the delivery cron is registered in production
-  (Vercel → Settings → Cron Jobs). Root Directory is `.`, but the `crons` entry lives only in `apps/web/vercel.json`.
+  claim yet (audit D7). F7 (no delivery cron was registered in production) is **fixed 2026-10-18**: the waker is
+  pg_cron ([delivery-back-on](01-growth-engine/delivery-back-on/README.md)).
   Moved into CI by `verify-module` (2026-10-17).
 - ✅ [Verify module: the outbox and the flag evaluator are model-checked on every PR that touches them](09-platform-infra/verify-module/README.md)
   — **shipped 2026-10-17** (#386, #387). The spike's models live in `verify/`, pinned to the code they mirror
@@ -696,6 +697,12 @@ independently shippable slice of value.
   goldenfrijoles.com and Growth can be bought. Launching it found that our own experiment engine refused a low-traffic
   test; a sixth sprint made it start at any traffic, read any day, decide at any volume, and run from the CLI — then
   launched the test with it. `frijoles update` followed.
+- **2026-10-18**: `delivery-back-on` **shipped** (quote $8–20; actual not measured on this machine). Event delivery is
+  back after three months dark. The free Vercel plan allows a cron once a day, and the `*/5` one was never registered,
+  so Supabase's pg_cron now wakes the same route every five minutes with the same bearer. The 324 deliveries queued
+  since July were expired, not sent; the first tick delivered three fresh Miyagi events (`202`). The reviewers moved
+  the expiry out of the migrations, where any unrelated `db push` would have fired it early.
+
 - **2026-10-17**: `satisfied-ask` **shipped** (quote $8–20 → ≈$14.66). Satisfied stops reading "not measured": one
   standard rating from the SDK, a per-bet bar, and our own console asking members about the funnel trend. The build
   found that one shared event name would have let a rating of one flag satisfy every bet; the verifier found the funnel
