@@ -307,7 +307,7 @@ test('pause, resume and delete name the experiment and say what happened (S6.6)'
     [
       'delete',
       { ok: true, experimentKey: 'landing_b', versions: [1, 2], status: 'deleted' },
-      /Deleted landing_b \(v1, v2\)/,
+      /Deleted landing_b \(v1, v2\): nothing of it serves/,
     ],
   ] as const) {
     const sent: Sent[] = []

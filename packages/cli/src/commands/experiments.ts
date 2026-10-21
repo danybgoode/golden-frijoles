@@ -250,7 +250,8 @@ function lifecycleDone(verb: LifecycleVerb, body: LifecycleBody): string {
         ? `${key} v${body.version} is still not serving — try again in a moment.`
         : `Resumed ${key} v${body.version}: the split serves again, each person in the same group.`
     case 'delete':
-      return `Deleted ${key}${body.versions ? ` (v${body.versions.join(', v')})` : ''}: its split is off Production and it is gone from the list. Its record is kept.`
+      // True for a draft too: nothing of it serves (a running or stopped split was taken off first) — verified live.
+      return `Deleted ${key}${body.versions ? ` (v${body.versions.join(', v')})` : ''}: nothing of it serves and it is off the list. Its record is kept.`
   }
 }
 
