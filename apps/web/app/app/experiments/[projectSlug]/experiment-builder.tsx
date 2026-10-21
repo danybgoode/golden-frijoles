@@ -9,6 +9,7 @@ import {
   buildExperimentPlan,
   entityPlural,
   eventWords,
+  runLengthWords,
   metricCandidates,
   predicateValueAllowed,
   versionWeights,
@@ -201,6 +202,9 @@ export function ExperimentBuilder({
     ...(draft?.flagKey ? { draft: { experimentKey: draft.experimentKey, flagKey: draft.flagKey } } : {}),
   })
   const plan = planning.ok ? planning.plan : null
+  // Why there is no plan, in the planner's own words (e.g. an end date too soon) — never a generic "unavailable"
+  // (verifier, #423).
+  const problem = planning.ok ? null : (planning.errors[0] ?? null)
   const dispatch = (action: BuilderAction) => {
     setState((current) => (current ? builderReducer(current, action) : current))
     setError(null)
@@ -393,9 +397,13 @@ export function ExperimentBuilder({
             {state.step === 3 ? <See state={state} dispatch={dispatch} /> : null}
             {state.step === 4 ? <Know state={state} data={data} dispatch={dispatch} /> : null}
             {state.step === 5 ? <Long state={state} plan={plan} dispatch={dispatch} /> : null}
-            {state.step === 6 ? <Review state={state} plan={plan} dispatch={dispatch} /> : null}
+            {state.step === 6 ? (
+              <Review state={state} plan={plan} problem={problem} dispatch={dispatch} />
+            ) : null}
           </section>
-          {state.step === 6 ? null : <PlanPanel plan={plan} weeks={state.answers.weeks} />}
+          {state.step === 6 ? null : (
+            <PlanPanel plan={plan} problem={problem} runs={runLengthWords(state.answers)} />
+          )}
         </div>
         <div className="ds-dialog-actions">
           <span className="ds-dialog-note">{footer}</span>
@@ -1009,13 +1017,34 @@ function Long({
             key={weeks}
             type="button"
             className="ds-chip"
-            aria-pressed={state.answers.weeks === weeks}
+            aria-pressed={state.answers.endsOn === undefined && state.answers.weeks === weeks}
             onClick={() => dispatch({ type: 'weeks', weeks })}
           >
             {weeks} week{weeks === 1 ? '' : 's'}
             {estimate?.recommendedWeeks === weeks ? ' · recommended' : ''}
           </button>
         ))}
+        {/* S6.2 (Daniel, 2026-10-20): any day, or no end date at all — a run length is the person's call. */}
+        <button
+          type="button"
+          className="ds-chip"
+          aria-pressed={state.answers.endsOn === 'open'}
+          onClick={() => dispatch({ type: 'ends-on', endsOn: 'open' })}
+        >
+          Until I stop it
+        </button>
+        <label className="ds-chip" data-pressed={!!state.answers.endsOn && state.answers.endsOn !== 'open'}>
+          Through{' '}
+          <input
+            type="date"
+            aria-label="End date"
+            min={tomorrowLocal()}
+            value={state.answers.endsOn && state.answers.endsOn !== 'open' ? state.answers.endsOn : ''}
+            onChange={(event) => {
+              if (event.target.value) dispatch({ type: 'ends-on', endsOn: event.target.value })
+            }}
+          />
+        </label>
       </div>
       <p className="ds-x-label">Start</p>
       <div className="ds-chips">
@@ -1038,16 +1067,18 @@ function Sentence({ parts }: { parts: ExperimentPlan['sentence'] }) {
 function Review({
   state,
   plan,
+  problem,
   dispatch,
 }: {
   state: BuilderState
   plan: ExperimentPlan | null
+  problem: string | null
   dispatch: (action: BuilderAction) => void
 }) {
   if (!plan)
     return (
       <p className="ds-x-message">
-        Plan unavailable. Choose a feature and metric from this project to continue.
+        {problem ?? 'Plan unavailable. Choose a feature and metric from this project to continue.'}
       </p>
     )
   const rows: Array<[string, string, BuilderState['step']]> = [
@@ -1071,7 +1102,7 @@ function Review({
     ],
     [
       'Runs',
-      `${state.answers.weeks} weeks; ${plan.estimate.days === null ? 'an estimate is not available' : `about ${plan.estimate.days} days needed`}`,
+      `${runLengthWords(state.answers).replace(/^./, (c) => c.toUpperCase())}; ${plan.estimate.days === null ? 'an estimate is not available' : `about ${plan.estimate.days} days to a confident verdict`}`,
       5,
     ],
   ]
@@ -1161,7 +1192,15 @@ function CheckList({
     </div>
   )
 }
-function PlanPanel({ plan, weeks }: { plan: ExperimentPlan | null; weeks: number }) {
+function PlanPanel({
+  plan,
+  problem,
+  runs,
+}: {
+  plan: ExperimentPlan | null
+  problem: string | null
+  runs: string
+}) {
   return (
     <aside className="ds-x-side" aria-label="The plan so far">
       <p className="ds-label">The plan so far</p>
@@ -1189,7 +1228,7 @@ function PlanPanel({ plan, weeks }: { plan: ExperimentPlan | null; weeks: number
             </div>
             <div>
               <span>Planned</span>
-              <b>{weeks} weeks</b>
+              <b>{runs}</b>
             </div>
           </div>
           <p className="ds-x-checksum">
@@ -1199,8 +1238,14 @@ function PlanPanel({ plan, weeks }: { plan: ExperimentPlan | null; weeks: number
           </p>
         </>
       ) : (
-        <p>Choose a valid plan to see its estimate.</p>
+        <p>{problem ?? 'Choose a valid plan to see its estimate.'}</p>
       )}
     </aside>
   )
+}
+
+/** The first day an end date may be: tomorrow in UTC, the planner's own calendar — a reader west of UTC late in the day
+ *  would otherwise pick their local tomorrow and be refused (verifier r2, #423). */
+function tomorrowLocal(): string {
+  return new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
 }

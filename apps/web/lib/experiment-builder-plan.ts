@@ -25,6 +25,8 @@ import {
   MAX_EXPERIMENT_PREDICATE_STRING_LENGTH,
   MAX_EXPERIMENT_SAMPLE_PER_VARIANT,
   MAX_EXPERIMENT_VARIANT_LABEL_LENGTH,
+  OPEN_ENDED_AT,
+  isOpenEnded,
   parseExperimentDefinition,
   type ExperimentDefinition,
 } from './experiment-definition'
@@ -77,6 +79,8 @@ export type ExperimentBuilderAnswers = {
   /** The treatment's share of the in-test people when there are exactly two versions, 1–99. */
   split: number
   weeks: number
+  /** S6.2 — how the test ends: absent → after `weeks`; 'open' → when someone stops it; 'YYYY-MM-DD' → that day (UTC). */
+  endsOn?: 'open' | string
 }
 
 /** The feature the experiment changes, as the page loaded it. `null` for a new feature. */
@@ -614,6 +618,15 @@ export function buildExperimentPlan(
     errors.push('"How many of them" is 1–100 %.')
   if (!(WEEK_OPTIONS as readonly number[]).includes(answers.weeks))
     errors.push('Pick a run length from the list.')
+  if (answers.endsOn !== undefined && answers.endsOn !== 'open') {
+    // A dated test runs THROUGH its day: it ends at the start of the next one (UTC). A saved draft whose day has passed
+    // is not refused here — check 5 says its dates ran out and offers to re-plan (verifier, #423).
+    const ends = endOfDay(answers.endsOn)
+    const savedMatches = context.savedWindow !== undefined && Date.parse(context.savedWindow.endAt) === ends
+    if (ends === null) errors.push('Pick a real calendar day to end on.')
+    else if (!savedMatches && ends - context.now.getTime() < DAY_MS)
+      errors.push('Pick an end date from tomorrow on.')
+  }
   if (errors.length > 0) return { ok: false, errors }
 
   const weights = versionWeights(names.length, answers.split)
@@ -680,16 +693,20 @@ export function buildExperimentPlan(
   // A saved window is kept only while it still IS the plan: once the run length changes, the draft is
   // a different plan and gets a window from now — otherwise check 5's "Run it for N weeks" could never
   // clear itself on a saved draft (fresh reviewer, PR #169).
+  // S6.2: the end is a run length, a chosen day, or none ("until I stop it" — OPEN_ENDED_AT).
+  const plannedEnd = (start: Date) =>
+    answers.endsOn === 'open'
+      ? new Date(OPEN_ENDED_AT)
+      : answers.endsOn
+        ? new Date(endOfDay(answers.endsOn) ?? Number.NaN)
+        : new Date(start.getTime() + answers.weeks * 7 * DAY_MS)
   const saved = context.savedWindow
   const savedWindow =
-    saved &&
-    new Date(saved.endAt).getTime() - new Date(saved.startAt).getTime() === answers.weeks * 7 * DAY_MS
+    saved && new Date(saved.endAt).getTime() === plannedEnd(new Date(saved.startAt)).getTime()
       ? saved
       : undefined
   const startAt = savedWindow ? new Date(savedWindow.startAt) : startOfMinute(context.now)
-  const endAt = savedWindow
-    ? new Date(savedWindow.endAt)
-    : new Date(startAt.getTime() + answers.weeks * 7 * DAY_MS)
+  const endAt = savedWindow ? new Date(savedWindow.endAt) : plannedEnd(startAt)
 
   // ── the definition ──
   const tags = Object.fromEntries(
@@ -1037,11 +1054,13 @@ function computeChecks(
   // A fresh plan runs its FULL planned length (its window starts at the minute boundary before `now`,
   // so measuring from `now` would lose a day to rounding — agy, PR #169). A saved draft's window is
   // already running down, so it is measured from now.
-  const remainingDays = derived.savedWindow
-    ? Math.floor(
-        (derived.endAt.getTime() - Math.max(context.now.getTime(), derived.startAt.getTime())) / DAY_MS
-      )
-    : answers.weeks * 7
+  const openEnded = isOpenEnded(derived.endAt)
+  const remainingDays =
+    derived.savedWindow || answers.endsOn !== undefined
+      ? Math.floor(
+          (derived.endAt.getTime() - Math.max(context.now.getTime(), derived.startAt.getTime())) / DAY_MS
+        )
+      : answers.weeks * 7
   const fitting =
     (WEEK_OPTIONS as readonly number[]).find((weeks) => derived.days !== null && weeks * 7 >= derived.days) ??
     8
@@ -1055,7 +1074,10 @@ function computeChecks(
       step: 5,
       title: 'This draft’s dates have run out',
       detail: `It was planned to end on ${derived.endAt.toISOString().slice(0, 10)}.`,
-      fix: { label: 'Plan it from today', kind: 'replan-from-today' },
+      // A dated draft re-planned "from today" would keep its passed day; it needs a new one (verifier r2, #423).
+      fix: answers.endsOn
+        ? { label: 'Pick a later day, or until you stop it', kind: 'step', step: 5 }
+        : { label: 'Plan it from today', kind: 'replan-from-today' },
     })
   } else if (derived.inTestPerDay <= 0 && !derived.estimateExact) {
     // An approximate zero is not evidence that nobody matches — never block Start on it.
@@ -1084,7 +1106,16 @@ function computeChecks(
       title: "We can't estimate how long it needs",
       detail: `${eventWords(answers.metric)} has no baseline among ${entityPlural(answers.entity)} yet, so there's no number of days to check the plan against.`,
     })
-  } else if (derived.days > WEEK_OPTIONS[WEEK_OPTIONS.length - 1] * 7) {
+  } else if (openEnded) {
+    // S6.2: no end date — it runs until someone stops it, so no run length can be too short.
+    checks.push({
+      id: 'window',
+      status: 'ok',
+      step: 5,
+      title: 'It runs until you stop it',
+      detail: `About ${derived.days.toLocaleString('en-US')} days to a confident verdict at your current traffic; read it any day before that as directional.`,
+    })
+  } else if (answers.endsOn === undefined && derived.days > WEEK_OPTIONS[WEEK_OPTIONS.length - 1] * 7) {
     // No run length on offer fits, so "Run it for 8 weeks" would be a fix that cannot fix anything.
     // ⚠️ THE RULE (Daniel, 2026-10-20 — supersedes "fails on an exact estimate"): too little traffic for a confident
     // verdict is NEVER a reason to refuse Start. Every power check warns: the test runs, records every exposure and
@@ -1117,8 +1148,12 @@ function computeChecks(
       status: 'warn',
       step: 5,
       title: 'The test ends before it has enough people',
-      detail: `${answers.weeks} week${answers.weeks === 1 ? '' : 's'} planned, but it needs about ${derived.days} days at your current traffic.`,
-      fix: { label: `Run it for ${fitting} weeks`, kind: 'set-weeks', weeks: fitting },
+      detail: `${answers.endsOn ? `It ends after ${answers.endsOn}` : `${answers.weeks} week${answers.weeks === 1 ? '' : 's'} planned`}, but a confident verdict needs about ${derived.days.toLocaleString('en-US')} days at your current traffic. It still records everything; read it as directional.`,
+      // A dated plan is never "fixed" with a weeks length that may be SHORTER than its date (verifier, #423): it goes
+      // back to step 5, where a later day or "until I stop it" is one click.
+      fix: answers.endsOn
+        ? { label: 'Pick a later day, or until you stop it', kind: 'step', step: 5 }
+        : { label: `Run it for ${fitting} weeks`, kind: 'set-weeks', weeks: fitting },
     })
   } else {
     checks.push({
@@ -1126,7 +1161,7 @@ function computeChecks(
       status: 'ok',
       step: 5,
       title: 'It runs long enough',
-      detail: `${answers.weeks} weeks planned, about ${derived.days} days needed.`,
+      detail: `${answers.endsOn ? `Runs through ${answers.endsOn}` : `${answers.weeks} weeks planned`}, about ${derived.days} days needed.`,
     })
   }
 
@@ -1160,7 +1195,26 @@ const ANSWER_KEYS = [
   'versions',
   'split',
   'weeks',
+  'endsOn',
 ]
+
+/** S6.2 — the run length in words, for every screen that names it. */
+export function runLengthWords(answers: Pick<ExperimentBuilderAnswers, 'weeks' | 'endsOn'>): string {
+  if (answers.endsOn === 'open') return 'until you stop it'
+  if (answers.endsOn) return `through ${answers.endsOn}`
+  return `${answers.weeks} week${answers.weeks === 1 ? '' : 's'}`
+}
+
+const END_DATE = /^\d{4}-\d{2}-\d{2}$/
+
+/** The end of a YYYY-MM-DD day (the next day's 00:00 UTC), or null for anything that is not a real calendar day —
+ *  `Date.parse` alone rolls "2027-02-31" over to March 3 (verifier, #423). */
+function endOfDay(day: string): number | null {
+  if (!END_DATE.test(day)) return null
+  const start = Date.parse(`${day}T00:00:00.000Z`)
+  if (!Number.isFinite(start) || new Date(start).toISOString().slice(0, 10) !== day) return null
+  return start + DAY_MS
+}
 
 function plainObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
@@ -1201,6 +1255,12 @@ export function parseExperimentBuilderAnswers(
     return bad('Invalid breakdowns.')
   if (!int(input.mde, 1, 100) || !int(input.split, 1, 99) || !int(input.weeks, 1, 8))
     return bad('Invalid numbers.')
+  if (
+    input.endsOn !== undefined &&
+    input.endsOn !== 'open' &&
+    !(typeof input.endsOn === 'string' && endOfDay(input.endsOn) !== null)
+  )
+    return bad('Invalid end date.')
   if (!text(input.entity, 64)) return bad('Invalid entity.')
   if (
     !Array.isArray(input.versions) ||

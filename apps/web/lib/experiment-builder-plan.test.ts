@@ -965,3 +965,80 @@ test('THE RULE (Daniel, 2026-10-20): no traffic, no baseline and quiet metrics n
   )
   for (const id of ['metrics', 'window'] as const) assert.notEqual(result[id].status, 'fail', id)
 })
+
+// ── S6.2 — any end date, or none (Daniel, 2026-10-20) ─────────────────────────────────────────
+const { OPEN_ENDED_AT, isOpenEnded } = await import('./experiment-definition.ts')
+const { runLengthWords } = await import('./experiment-builder-plan.ts')
+
+test('S6.2 "until I stop it": the window ends at OPEN_ENDED_AT, the definition still validates, and check 5 is ok', () => {
+  const result = buildExperimentPlan({ ...copyAnswers(), endsOn: 'open' }, context())
+  assert.ok(result.ok, JSON.stringify(!result.ok && result.errors))
+  assert.equal(result.plan.definition.plannedWindow.endAt, OPEN_ENDED_AT)
+  assert.ok(isOpenEnded(result.plan.definition.plannedWindow.endAt))
+  assert.ok(parseExperimentDefinition(result.plan.definition).ok)
+  const window = result.plan.checks.find((check) => check.id === 'window')!
+  assert.equal(window.status, 'ok')
+  assert.equal(window.title, 'It runs until you stop it')
+  // Even with almost no traffic: no run length can be too short when there is no end.
+  const dry = prototypeCatalog({ entities: [{ type: 'merchant', subjects14d: 1 }] })
+  assert.notEqual(
+    checkOf({ ...copyAnswers(), endsOn: 'open' }, context({ catalog: dry })).window.status,
+    'fail'
+  )
+})
+
+test('S6.2 any date: the test runs THROUGH that day (ends at the next 00:00 UTC); from tomorrow on; a short date only warns', () => {
+  const result = buildExperimentPlan({ ...copyAnswers(), endsOn: '2027-03-01' }, context())
+  assert.ok(result.ok)
+  assert.equal(result.plan.definition.plannedWindow.endAt, '2027-03-02T00:00:00.000Z')
+  // NOW is 2026-09-24 15:00 UTC: today is refused, tomorrow is accepted (the boundary, pinned).
+  const today = buildExperimentPlan({ ...copyAnswers(), endsOn: '2026-09-24' }, context())
+  assert.ok(!today.ok && today.errors.includes('Pick an end date from tomorrow on.'))
+  assert.ok(buildExperimentPlan({ ...copyAnswers(), endsOn: '2026-09-25' }, context()).ok)
+  const short = checkOf({ ...copyAnswers(), endsOn: '2026-09-27' }).window
+  assert.equal(short.status, 'warn')
+  assert.match(short.detail, /It ends after 2026-09-27/)
+  // Never "fixed" with a weeks length that could be shorter than the date: back to step 5.
+  assert.deepEqual(short.fix, { label: 'Pick a later day, or until you stop it', kind: 'step', step: 5 })
+})
+
+test('S6.2 a far date is measured from the date, not from the unused weeks answer', () => {
+  // weeks: 1 is left over from the chips; the plan runs to March, so it runs long enough.
+  assert.equal(checkOf({ ...copyAnswers(), weeks: 1, endsOn: '2027-03-01' }).window.status, 'ok')
+  // A far date that is still too short for the traffic says so — never the "8-week maximum" sentence.
+  const thin = prototypeCatalog({ entities: [{ type: 'merchant', subjects14d: 60 }] })
+  const window = checkOf({ ...copyAnswers(), endsOn: '2027-01-15' }, context({ catalog: thin })).window
+  assert.equal(window.title, 'The test ends before it has enough people')
+})
+
+test('S6.2 a saved open-ended or dated draft keeps its window on re-plan; a dated draft whose day passed is "dates ran out"', () => {
+  const open = { startAt: '2026-09-20T00:00:00.000Z', endAt: OPEN_ENDED_AT }
+  const replanned = buildExperimentPlan({ ...copyAnswers(), endsOn: 'open' }, context({ savedWindow: open }))
+  assert.ok(replanned.ok)
+  assert.equal(replanned.plan.definition.plannedWindow.startAt, open.startAt)
+  const dated = { startAt: '2026-09-20T00:00:00.000Z', endAt: '2027-01-02T00:00:00.000Z' }
+  const again = buildExperimentPlan(
+    { ...copyAnswers(), endsOn: '2027-01-01' },
+    context({ savedWindow: dated })
+  )
+  assert.ok(again.ok)
+  assert.equal(again.plan.definition.plannedWindow.startAt, dated.startAt)
+  const past = { startAt: '2026-09-01T00:00:00.000Z', endAt: '2026-09-11T00:00:00.000Z' }
+  const stale = checkOf({ ...copyAnswers(), endsOn: '2026-09-10' }, context({ savedWindow: past })).window
+  assert.equal(stale.status, 'fail')
+  assert.deepEqual(stale.fix, { label: 'Pick a later day, or until you stop it', kind: 'step', step: 5 })
+})
+
+test('S6.2 answers: endsOn is "open" or a real calendar day, nothing else; the words name it', () => {
+  const base = copyAnswers()
+  assert.ok(parseExperimentBuilderAnswers({ ...base, endsOn: 'open' }).ok)
+  assert.ok(parseExperimentBuilderAnswers({ ...base, endsOn: '2027-01-31' }).ok)
+  assert.ok(parseExperimentBuilderAnswers(base).ok)
+  for (const bad of ['forever', '2027-1-31', '2027-02-31', '2027-02-31x', '2027-13-01', 7, null])
+    assert.equal(parseExperimentBuilderAnswers({ ...base, endsOn: bad }).ok, false, String(bad))
+  const feb31 = buildExperimentPlan({ ...copyAnswers(), endsOn: '2027-02-31' }, context())
+  assert.ok(!feb31.ok, 'refused before planning: the parser checks the calendar too')
+  assert.equal(runLengthWords({ weeks: 3 }), '3 weeks')
+  assert.equal(runLengthWords({ weeks: 1, endsOn: 'open' }), 'until you stop it')
+  assert.equal(runLengthWords({ weeks: 1, endsOn: '2027-01-31' }), 'through 2027-01-31')
+})
