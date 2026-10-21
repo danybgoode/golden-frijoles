@@ -1,5 +1,5 @@
 import type { ExperimentAnalysisResult } from './experiment-analysis'
-import type { ExperimentDefinition } from './experiment-definition'
+import { isOpenEnded, type ExperimentDefinition } from './experiment-definition'
 import { blockerWords } from './experiment-blocker-words'
 import { chanceBetter, chanceWords } from './experiment-chance'
 import { eventWords, entityPlural, type SentencePart } from './experiment-builder-plan'
@@ -40,7 +40,8 @@ export type Readout = {
     actions: ReadoutAction[]
     recommend?: ReadoutAction | null
   }
-  progress: { fraction: number; needPerVersion: number; day: number; plannedDays: number }
+  /** `plannedDays` is null for a test with no end date (S6.2). */
+  progress: { fraction: number; needPerVersion: number; day: number; plannedDays: number | null }
   srm: 'clear' | 'detected' | 'not_evaluable'
   guardrails: Array<{
     event: string
@@ -121,8 +122,11 @@ export function buildReadout(input: ReadoutInput): Readout {
 
   const start = Date.parse(definition.plannedWindow.startAt)
   const end = Date.parse(definition.plannedWindow.endAt)
-  const plannedDays = Math.max(1, Math.round((end - start) / DAY_MS))
-  const day = Math.min(plannedDays, Math.max(0, Math.floor((input.now.getTime() - start) / DAY_MS)))
+  // S6.2: a test with no end date has no planned length; its progress is the days it has run (plannedDays: null).
+  const openEnded = isOpenEnded(definition.plannedWindow.endAt)
+  const daysIn = Math.max(0, Math.floor((input.now.getTime() - start) / DAY_MS))
+  const plannedDays = openEnded ? null : Math.max(1, Math.round((end - start) / DAY_MS))
+  const day = plannedDays === null ? daysIn : Math.min(plannedDays, daysIn)
   const smallest = Math.min(...analysis.variants.map((row) => row.observedSubjects))
   const need = definition.minimumSamplePerVariant
   const fraction = Math.min(1, smallest / need)

@@ -30,7 +30,9 @@ test.describe('experiment builder', () => {
     // D10 on EVERY step, not just the first: no text box, no free input, nothing folded away.
     const zeroInputs = async () => {
       await expect(dialog.locator('textarea')).toHaveCount(0)
-      await expect(dialog.locator('input:not([type=range])')).toHaveCount(0)
+      // A date picker is a choice, not free text: S6.2's "Until <date>" (Daniel, 2026-10-20: "why can't I just choose
+      // whatever date?"). Anything else that takes typing stays out.
+      await expect(dialog.locator('input:not([type=range]):not([type=date])')).toHaveCount(0)
       await expect(dialog.locator('details')).toHaveCount(0)
     }
     await zeroInputs()

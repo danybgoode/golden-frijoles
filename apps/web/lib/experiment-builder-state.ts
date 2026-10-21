@@ -46,6 +46,7 @@ export type BuilderAction =
   | { type: 'split'; split: number }
   | { type: 'mde'; mde: number }
   | { type: 'weeks'; weeks: number }
+  | { type: 'ends-on'; endsOn: 'open' | string }
   | { type: 'step'; step: 1 | 2 | 3 | 4 | 5 | 6 }
   | {
       type: 'check-fix'
@@ -211,7 +212,10 @@ export function builderReducer(state: BuilderState, action: BuilderAction): Buil
     case 'mde':
       return { ...state, answers: { ...a, mde: clamp(action.mde, 5, 30) } }
     case 'weeks':
-      return { ...state, answers: { ...a, weeks: action.weeks } }
+      // Picking a run length replaces a chosen end date or "until I stop it" (S6.2).
+      return { ...state, answers: { ...a, weeks: action.weeks, endsOn: undefined } }
+    case 'ends-on':
+      return { ...state, answers: { ...a, endsOn: action.endsOn } }
     case 'step':
       return { ...state, step: action.step }
     case 'check-fix':

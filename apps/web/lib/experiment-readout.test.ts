@@ -595,3 +595,28 @@ test('stopped: a check that failed recommends marking it invalid; a short sample
   assert.equal(readout(exposures(150, 30, 75), { lifecycle: 'stopped' }).verdict.recommend, 'rollout')
   assert.equal(readout(exposures(150, 75, 30), { lifecycle: 'stopped' }).verdict.recommend, 'keep')
 })
+
+test('S6.2 a test with no end date counts every day it runs, with no planned length, and reads past any "end"', async () => {
+  const { OPEN_ENDED_AT } = await import('./experiment-definition.ts')
+  const open: Definition = { ...definition, plannedWindow: { startAt: START, endAt: OPEN_ENDED_AT } }
+  const now = '2027-03-01T00:00:00.000Z' // far past what a weeks plan would have allowed
+  const analysis = computeExperimentAnalysis({
+    experimentKey: 'copy_test',
+    definitionVersion: 1,
+    definition: open,
+    lifecycle: { status: 'running', startedAt: START, endedAt: null },
+    asOf: now,
+    facts: exposures(40, 10, 16),
+  })
+  const result = buildReadout({
+    definition: open,
+    analysis,
+    lifecycle: 'running',
+    decision: null,
+    serving: true,
+    now: new Date(now),
+  })
+  assert.equal(result.progress.plannedDays, null)
+  assert.equal(result.progress.day, 181)
+  assert.equal(result.control.exposed + result.treatment.exposed, 80, 'every exposure still counts')
+})

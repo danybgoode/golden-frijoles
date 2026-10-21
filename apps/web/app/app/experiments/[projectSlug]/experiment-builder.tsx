@@ -9,6 +9,7 @@ import {
   buildExperimentPlan,
   entityPlural,
   eventWords,
+  runLengthWords,
   metricCandidates,
   predicateValueAllowed,
   versionWeights,
@@ -395,7 +396,7 @@ export function ExperimentBuilder({
             {state.step === 5 ? <Long state={state} plan={plan} dispatch={dispatch} /> : null}
             {state.step === 6 ? <Review state={state} plan={plan} dispatch={dispatch} /> : null}
           </section>
-          {state.step === 6 ? null : <PlanPanel plan={plan} weeks={state.answers.weeks} />}
+          {state.step === 6 ? null : <PlanPanel plan={plan} runs={runLengthWords(state.answers)} />}
         </div>
         <div className="ds-dialog-actions">
           <span className="ds-dialog-note">{footer}</span>
@@ -1009,13 +1010,33 @@ function Long({
             key={weeks}
             type="button"
             className="ds-chip"
-            aria-pressed={state.answers.weeks === weeks}
+            aria-pressed={state.answers.endsOn === undefined && state.answers.weeks === weeks}
             onClick={() => dispatch({ type: 'weeks', weeks })}
           >
             {weeks} week{weeks === 1 ? '' : 's'}
             {estimate?.recommendedWeeks === weeks ? ' · recommended' : ''}
           </button>
         ))}
+        {/* S6.2 (Daniel, 2026-10-20): any day, or no end date at all — a run length is the person's call. */}
+        <button
+          type="button"
+          className="ds-chip"
+          aria-pressed={state.answers.endsOn === 'open'}
+          onClick={() => dispatch({ type: 'ends-on', endsOn: 'open' })}
+        >
+          Until I stop it
+        </button>
+        <label className="ds-chip" aria-pressed={!!state.answers.endsOn && state.answers.endsOn !== 'open'}>
+          Until{' '}
+          <input
+            type="date"
+            aria-label="End date"
+            value={state.answers.endsOn && state.answers.endsOn !== 'open' ? state.answers.endsOn : ''}
+            onChange={(event) => {
+              if (event.target.value) dispatch({ type: 'ends-on', endsOn: event.target.value })
+            }}
+          />
+        </label>
       </div>
       <p className="ds-x-label">Start</p>
       <div className="ds-chips">
@@ -1071,7 +1092,7 @@ function Review({
     ],
     [
       'Runs',
-      `${state.answers.weeks} weeks; ${plan.estimate.days === null ? 'an estimate is not available' : `about ${plan.estimate.days} days needed`}`,
+      `${runLengthWords(state.answers).replace(/^./, (c) => c.toUpperCase())}; ${plan.estimate.days === null ? 'an estimate is not available' : `about ${plan.estimate.days} days to a confident verdict`}`,
       5,
     ],
   ]
@@ -1161,7 +1182,7 @@ function CheckList({
     </div>
   )
 }
-function PlanPanel({ plan, weeks }: { plan: ExperimentPlan | null; weeks: number }) {
+function PlanPanel({ plan, runs }: { plan: ExperimentPlan | null; runs: string }) {
   return (
     <aside className="ds-x-side" aria-label="The plan so far">
       <p className="ds-label">The plan so far</p>
@@ -1189,7 +1210,7 @@ function PlanPanel({ plan, weeks }: { plan: ExperimentPlan | null; weeks: number
             </div>
             <div>
               <span>Planned</span>
-              <b>{weeks} weeks</b>
+              <b>{runs}</b>
             </div>
           </div>
           <p className="ds-x-checksum">

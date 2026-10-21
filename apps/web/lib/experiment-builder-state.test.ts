@@ -83,3 +83,13 @@ test('a check fix changes only the answer it owns', () => {
   assert.equal(fixed.answers.who.conditions.length, 0)
   assert.equal(fixed.answers.metric, state.answers.metric)
 })
+
+test('S6.2 picking "until I stop it" or a date sets endsOn; picking weeks clears it', () => {
+  const start = initialBuilderState('copy', { catalog, served: null })!
+  const open = builderReducer(start, { type: 'ends-on', endsOn: 'open' })
+  assert.equal(open.answers.endsOn, 'open')
+  const weeks = builderReducer(open, { type: 'weeks', weeks: 4 })
+  assert.equal(weeks.answers.endsOn, undefined)
+  assert.equal(weeks.answers.weeks, 4)
+  assert.equal(builderReducer(start, { type: 'ends-on', endsOn: '2027-01-31' }).answers.endsOn, '2027-01-31')
+})

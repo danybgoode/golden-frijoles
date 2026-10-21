@@ -131,6 +131,17 @@ function validVariantLabel(value: unknown): value is string {
   )
 }
 
+/** landing-launch-experiment S6.2 — "until I stop it": the planned window's end for a test with no end date. A real, far
+ *  timestamp rather than null, so the definition's validator (here and in the database), the window arithmetic (the
+ *  analysis reads up to min(planned end, stopped, as-of)) and every stored definition stay valid unchanged; only the screens
+ *  ask `isOpenEnded` to say "no end date". */
+export const OPEN_ENDED_AT = '9999-12-31T00:00:00.000Z'
+const OPEN_ENDED_FROM = Date.parse('9000-01-01T00:00:00.000Z')
+export function isOpenEnded(endAt: string | Date): boolean {
+  const ms = endAt instanceof Date ? endAt.getTime() : Date.parse(endAt)
+  return Number.isFinite(ms) && ms >= OPEN_ENDED_FROM
+}
+
 function explicitOffsetInstant(value: unknown): JourneyTimestamp | null {
   // PostgreSQL has no ISO year zero (`0000`); reject it here so the import-safe validator and
   // the database CHECK accept exactly the same four-digit timestamp domain.

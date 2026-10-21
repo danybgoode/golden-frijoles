@@ -8,7 +8,7 @@ import { parseExperimentAnalysisRequest } from '@/lib/experiment-analysis-reques
 import { blockerWords } from '@/lib/experiment-blocker-words'
 import { createBuilderIo } from '@/lib/experiment-builder-io'
 import { eventWords, planSentence, versionWeights, type SentencePart } from '@/lib/experiment-builder-plan'
-import type { ExperimentDefinition } from '@/lib/experiment-definition'
+import { isOpenEnded, type ExperimentDefinition } from '@/lib/experiment-definition'
 import { buildReadout, type Readout } from '@/lib/experiment-readout'
 import { listExperimentRegistries } from '@/lib/experiments'
 import { isExperimentBuilderWritable, isExperimentGovernanceEnabled } from '@/lib/flags'
@@ -449,7 +449,9 @@ function Results({
               <p className="ds-x-progress-cap">
                 <span>{Math.round(readout.progress.fraction * 100)}% of the sample</span>
                 <span>
-                  day {readout.progress.day} of {readout.progress.plannedDays}
+                  {readout.progress.plannedDays === null
+                    ? `day ${readout.progress.day} · no end date`
+                    : `day ${readout.progress.day} of ${readout.progress.plannedDays}`}
                 </span>
               </p>
             </div>
@@ -591,7 +593,9 @@ function Plan({
           <div>
             <dt>Runs</dt>
             <dd>
-              {day(definition.plannedWindow.startAt)} → {day(definition.plannedWindow.endAt)}
+              {isOpenEnded(definition.plannedWindow.endAt)
+                ? `${day(definition.plannedWindow.startAt)} → until you stop it`
+                : `${day(definition.plannedWindow.startAt)} → ${day(definition.plannedWindow.endAt)}`}
             </dd>
           </div>
           <div>
