@@ -107,6 +107,7 @@ test('no Growth note says billing is not live, and only the paused one says it c
     assert.doesNotMatch(note, /not live|cannot be charged|nobody can be charged/i, state)
     assert.equal(/paused/.test(note), state === 'paused', state)
   }
+})
 
 test('a failed payment: past_due keeps Growth and says to update the card; unpaid blocks a second purchase', () => {
   const growth = { plan: 'growth', productLimit: null, monthlyEventPool: 2_000_000, hasStripeCustomer: true }
