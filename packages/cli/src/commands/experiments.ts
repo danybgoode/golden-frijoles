@@ -328,18 +328,23 @@ export const experimentsDecideCommand: Command = {
     )
     if ('exit' in out) return out.exit
     const body = out.body
+    const decided = `Decided ${body.experimentKey} v${body.version}: ${body.outcome.replace(/_/g, ' ')}${
+      body.chosenVariantKey ? ` (${body.chosenVariantKey})` : ''
+    }.`
+    // The decision IS recorded, but a roll-out that did not happen is not success: under --json an agent must see a
+    // failure, not ok:true with a non-zero exit (verifier, #424).
+    if (body.rollout && !body.rollout.ok) {
+      const { ok: _ok, ...details } = body as typeof body & { ok?: boolean }
+      context.emit.fail('rollout_failed', `${decided} Roll-out not done: ${body.rollout.error}`, {
+        project,
+        ...details,
+      })
+      return EXIT.SERVER
+    }
     context.emit.ok(
       { project, ...body },
-      `Decided ${body.experimentKey} v${body.version}: ${body.outcome.replace(/_/g, ' ')}${
-        body.chosenVariantKey ? ` (${body.chosenVariantKey})` : ''
-      }.${
-        body.rollout
-          ? body.rollout.ok
-            ? ' Rolled out to everyone in production.'
-            : ` Roll-out not done: ${body.rollout.error}`
-          : ''
-      }`
+      `${decided}${body.rollout ? ' Rolled out to everyone in production.' : ''}`
     )
-    return body.rollout && !body.rollout.ok ? EXIT.SERVER : EXIT.OK
+    return EXIT.OK
   },
 }

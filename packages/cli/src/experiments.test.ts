@@ -257,7 +257,25 @@ test('decide: exactly one outcome and a reason, checked locally; --variant picks
     )
 })
 
-test('a failed roll-out after a recorded decision is not exit 0', async () => {
+test('a failed roll-out after a recorded decision is not exit 0, and --json says it failed', async () => {
+  const json = capture()
+  const jsonCode = await run({
+    argv: ['experiments', 'decide', 'landing_b', '--ship', '--reason', 'launch', '--rollout', '--json'],
+    writer: json.writer,
+    env: sandbox(),
+    fetchImpl: stub({
+      ok: true,
+      experimentKey: 'landing_b',
+      version: 1,
+      outcome: 'ship_treatment',
+      chosenVariantKey: 'on',
+      rollout: { ok: false, error: 'paused' },
+    }),
+  })
+  assert.equal(jsonCode, EXIT.SERVER)
+  const doc = JSON.parse(json.out.join('') || json.err.join(''))
+  assert.equal(doc.ok, false)
+  assert.equal(doc.code, 'rollout_failed')
   const code = await run({
     argv: ['experiments', 'decide', 'landing_b', '--ship', '--reason', 'launch', '--rollout'],
     writer: capture().writer,

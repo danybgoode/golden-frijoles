@@ -153,18 +153,29 @@ export async function POST(req: NextRequest) {
       // Deciding a live test stops it first, exactly as the console's decide flow does (S6.3: any time, any volume).
       const latest = await latestExperimentVersion(owner.projectId, experiment)
       if (!latest) return cliError('not_found', `No experiment "${experiment}" in ${owner.slug}.`)
+      // A named version is checked BEFORE a live test is stopped, so a typo never stops it (verifier, #424).
+      const named = typeof body.variant === 'string' && body.variant ? body.variant : null
+      if (named !== null && !latest.definition.variants.some((v) => v.key === named))
+        return cliError(
+          'invalid',
+          `${experiment} has no version "${named}" (it has ${latest.definition.variants.map((v) => v.key).join(', ')}).`
+        )
+      let stoppedNow = false
       if (latest.status === 'running') {
         const stopped = await stopExperimentCommand(owner, experiment)
         if (!stopped.ok) return cliError('conflict', stopped.error)
+        stoppedNow = true
       }
+      // After a stop, a failure must say the test IS stopped — as the console's decide flow does.
+      const afterStop = (message: string) =>
+        stoppedNow ? `It is stopped, but the decision was not recorded: ${message}` : message
       const read = await readExperiment(owner.projectId, owner.slug, experiment, deps.io)
-      if (!read.ok || !read.readout) return cliError('conflict', `${experiment} has nothing to decide yet.`)
+      if (!read.ok || !read.readout)
+        return cliError('conflict', afterStop(`${experiment} has nothing to decide yet.`))
       const definitionControl = read.readout.control.key
       const variant =
         outcome === 'ship_treatment'
-          ? typeof body.variant === 'string' && body.variant
-            ? body.variant
-            : read.readout.treatment.key
+          ? (named ?? read.readout.treatment.key)
           : outcome === 'keep_control'
             ? definitionControl
             : null
@@ -176,7 +187,7 @@ export async function POST(req: NextRequest) {
         rationale: reason,
         idempotencyKey: crypto.randomUUID(),
       })
-      if (!recorded.ok) return cliError('conflict', recorded.error)
+      if (!recorded.ok) return cliError('conflict', afterStop(recorded.error))
       let rollout: { ok: boolean; error?: string } | null = null
       if (body.rollout === true && variant !== null) {
         const result = await rolloutExperimentCommand(owner.slug, experiment, read.version, variant, deps)

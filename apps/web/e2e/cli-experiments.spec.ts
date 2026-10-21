@@ -118,7 +118,11 @@ const answers = {
 
 test.describe('frijoles experiments (S6.4)', () => {
   test.skip(process.env.EXPERIMENT_BUILDER_ENABLED !== 'true', 'runs against the server with the builder on')
-  const client = db()
+  // Lazily, in beforeAll: a describe body runs while specs are only being LISTED (the quarantine check has no DB URL).
+  let client: SupabaseClient
+  test.beforeAll(() => {
+    client = db()
+  })
   test.afterAll(async () => {
     await cleanupExperimentProjects(projects)
     await Promise.all(users.map((id) => client.auth.admin.deleteUser(id)))
@@ -187,6 +191,47 @@ test.describe('frijoles experiments (S6.4)', () => {
       chosenVariantKey: 'off',
       rollout: null,
     })
+  })
+
+  test('a member who is not an owner can read but not write (owner-gated, like the console)', async ({
+    request,
+  }) => {
+    const fx = await fixture(client)
+    const key = (await post(request, fx.token, { command: 'create', project: fx.slug, answers })).body
+      .experimentKey as string
+    const member = await person(client)
+    await client
+      .from('project_members')
+      .insert({ project_id: fx.projectId, user_id: member.userId, role: 'member' })
+    expect((await get(request, member.token, { project: fx.slug })).status).toBe(200)
+    expect((await get(request, member.token, { project: fx.slug, experiment: key })).status).toBe(200)
+    for (const body of [
+      { command: 'create', answers },
+      { command: 'start', experiment: key },
+      { command: 'stop', experiment: key },
+      { command: 'decide', experiment: key, outcome: 'keep', reason: 'not mine to decide' },
+    ])
+      expect((await post(request, member.token, { project: fx.slug, ...body })).status, body.command).toBe(
+        404
+      )
+    expect((await get(request, fx.token, { project: fx.slug, experiment: key })).body.status).toBe('draft')
+  })
+
+  test('a version that does not exist is refused BEFORE a live test is stopped', async ({ request }) => {
+    const fx = await fixture(client)
+    const key = (await post(request, fx.token, { command: 'create', project: fx.slug, answers })).body
+      .experimentKey as string
+    await post(request, fx.token, { command: 'start', project: fx.slug, experiment: key })
+    const typo = await post(request, fx.token, {
+      command: 'decide',
+      project: fx.slug,
+      experiment: key,
+      outcome: 'ship',
+      variant: 'onn',
+      reason: 'typo',
+    })
+    expect(typo.status).toBe(400)
+    expect((await get(request, fx.token, { project: fx.slug, experiment: key })).body.status).toBe('running')
   })
 
   test('a stranger, and a reason left out, are refused and change nothing', async ({ request }) => {

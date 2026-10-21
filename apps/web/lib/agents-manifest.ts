@@ -70,7 +70,7 @@ Writes by a person-made connector URL or a \`frijoles\` token run as that person
 | List the experiments | \`frijoles experiments ls\` | Each experiment's newest version and its state |
 | Read the results, any day | \`frijoles experiments show <key>\` | Counts per version, the chance the leader is really better, what may be done now |
 | Launch an A/B test | \`frijoles experiments create --flag <key> --metric <event>\`, then \`frijoles experiments start <key>\` (owner) | A draft with its checks; then the split serves and everyone is counted. Low traffic never blocks a start |
-| Stop it, or decide it | \`frijoles experiments stop <key>\`; \`frijoles experiments decide <key> --ship|--keep --reason "<why>" [--rollout]\` (owner) | Counting stops; the decision is recorded with its evidence, and \`--rollout\` serves the shipped version to everyone |
+| Stop it, or decide it | \`frijoles experiments stop <key>\`; \`frijoles experiments decide <key> --ship\\|--keep --reason "<why>" [--rollout]\` (owner) | Counting stops; the decision is recorded with its evidence, and \`--rollout\` serves the shipped version to everyone |
 | Read the recorded decision | \`frijoles experiments decision <key>\`; MCP \`get_experiment_decision\` | The decision and when it was made |
 | Read the analysis behind it | MCP \`get_experiment_analysis\` | Effect, interval and sample size |
 

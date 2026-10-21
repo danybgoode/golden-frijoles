@@ -1093,23 +1093,15 @@ function computeChecks(
         'Your events carry too many different tag combinations to count these conditions together, so there is no estimate of how long it needs.',
     })
   } else if (derived.inTestPerDay <= 0 && derived.seenPerDay <= 0) {
-    // Nobody seen at all is TRAFFIC, not the conditions (S6.1, Daniel 2026-10-20 — a launch has no visitors yet): the
-    // test counts everyone from the first one. Only conditions that exclude people who DO arrive are a fact that fails.
+    // Nobody seen at all is TRAFFIC (S6.1, Daniel 2026-10-20 — a launch has no visitors yet): the test counts everyone
+    // from the first one. (The "Nobody matches who's in it" fail was unreachable — a plan with conditions is an
+    // approximate estimate and already warns above — and went with this change; verifier, #424.)
     checks.push({
       id: 'window',
       status: 'warn',
       step: 2,
       title: 'Nobody has been seen yet',
       detail: `No ${entityPlural(answers.entity)} reached your product in the last 14 days, so there is no estimate yet. The test counts them from the first one.`,
-    })
-  } else if (derived.inTestPerDay <= 0) {
-    checks.push({
-      id: 'window',
-      status: 'fail',
-      step: 2,
-      title: 'Nobody matches who’s in it',
-      detail: 'With these conditions no one would enter the test.',
-      fix: { label: 'Loosen who’s in it', kind: 'step', step: 2 },
     })
   } else if (derived.days === null) {
     checks.push({
