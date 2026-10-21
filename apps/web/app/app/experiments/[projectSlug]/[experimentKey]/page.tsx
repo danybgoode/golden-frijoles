@@ -159,7 +159,11 @@ export default async function ExperimentPage({
       {version.status === 'draft' || version.status === 'running' || version.status === 'stopped' ? (
         // S6.6: a builder-made test is DELETED (split off Production, every live version retired, gone from the list);
         // a JSON-made version keeps "Mark invalid", which never touches a feature it was never bound to.
-        answers !== null && builderData !== null ? (
+        // A draft beside a started version is a "Change the plan" draft: discarding it must not take the live test down,
+        // so it keeps "Mark invalid" (verifier, #425).
+        answers !== null &&
+        builderData !== null &&
+        !(version.status === 'draft' && experiment!.versions.some((item) => item.status !== 'draft')) ? (
           <DeleteExperiment slug={projectSlug} experimentKey={experimentKey} />
         ) : (
           <LifecycleAction {...lifecycle} target="invalid" />

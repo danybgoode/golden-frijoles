@@ -511,6 +511,52 @@ export function createBuilderIo(client: SupabaseClient) {
       return { flagId: row.flag_id as string, versionId: row.version_id as string }
     },
 
+    /**
+     * S6.6 — the key of ANOTHER experiment that has a RUNNING version bound to this flag, if any. One test per feature
+     * is otherwise judged from what Production serves (the experiment metadata), and a PAUSED test serves the base with
+     * none — so without this a second test could start on the flag a paused one still owns (verifier, #425).
+     */
+    async otherRunningOnFlag(
+      projectId: string,
+      flagKey: string,
+      experimentId: string
+    ): Promise<string | null> {
+      const { data: flag, error: flagError } = await client
+        .from('flag_registries')
+        .select('id')
+        .eq('project_id', projectId)
+        .eq('key', flagKey)
+        .maybeSingle()
+      if (flagError) throw new Error('could not read the feature')
+      if (!flag) return null
+      const { data: bindings, error } = await client
+        .from('experiment_flag_version_bindings')
+        .select('experiment_version_id')
+        .eq('project_id', projectId)
+        .eq('flag_id', flag.id)
+      if (error) throw new Error('could not read the feature')
+      const ids = (bindings ?? []).map((row) => row.experiment_version_id as string)
+      if (ids.length === 0) return null
+      const { data: running, error: runningError } = await client
+        .from('experiment_definition_versions')
+        .select('experiment_id')
+        .eq('project_id', projectId)
+        .eq('status', 'running')
+        .neq('experiment_id', experimentId)
+        .in('id', ids)
+        .limit(1)
+        .maybeSingle()
+      if (runningError) throw new Error('could not read the experiment')
+      if (!running) return null
+      const { data: registry } = await client
+        .from('experiment_registries')
+        .select('key')
+        .eq('project_id', projectId)
+        .eq('id', running.experiment_id)
+        .maybeSingle()
+      return (registry?.key as string | undefined) ?? 'another experiment'
+    },
+
     /** S6.6 — one flag version's definition, by id, in this project (a paused test's own version, for its roll-out). */
     async flagVersionDefinition(
       projectId: string,

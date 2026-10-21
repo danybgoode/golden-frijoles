@@ -6,6 +6,7 @@ import { isExperimentBuilderWritable, isExperimentGovernanceEnabled } from '@/li
 import { getSupabaseServiceClient } from '@/lib/supabase'
 import { createBuilderIo } from '@/lib/experiment-builder-io'
 import {
+  BUILDER_PAUSED,
   deleteExperimentCommand,
   pauseExperimentCommand,
   resumeExperimentCommand,
@@ -84,6 +85,14 @@ export async function GET(req: NextRequest) {
   })
 }
 
+/** A command's refusal, as the CLI's exit code family: no such experiment is not_found (exit 3), a paused builder is
+ *  disabled, anything else a conflict with the current state. */
+function codeFor(error: string): 'not_found' | 'disabled' | 'conflict' {
+  if (error.startsWith('No experiment')) return 'not_found'
+  if (error === BUILDER_PAUSED) return 'disabled'
+  return 'conflict'
+}
+
 const OUTCOMES = {
   ship: 'ship_treatment',
   keep: 'keep_control',
@@ -153,16 +162,17 @@ export async function POST(req: NextRequest) {
       if (!KEY.test(experiment)) return cliError('invalid', 'Name the experiment by its key.')
       if (body.command === 'pause') {
         const paused = await pauseExperimentCommand(owner.slug, experiment, deps)
-        if (!paused.ok) return cliError('conflict', paused.error)
+        if (!paused.ok) return cliError(codeFor(paused.error), paused.error)
         return cliOk({ project: owner.slug, ...paused, status: 'paused' })
       }
       if (body.command === 'resume') {
         const resumed = await resumeExperimentCommand(owner.slug, experiment, deps)
-        if (!resumed.ok) return cliError('conflict', resumed.error)
-        return cliOk({ project: owner.slug, ...resumed, status: resumed.serving ? 'running' : 'paused' })
+        if (!resumed.ok) return cliError(codeFor(resumed.error), resumed.error)
+        // Not serving after a resume is the partial state, not "paused" (verifier, #425).
+        return cliOk({ project: owner.slug, ...resumed, status: resumed.serving ? 'running' : 'not_serving' })
       }
       const deleted = await deleteExperimentCommand(owner.slug, experiment, deps)
-      if (!deleted.ok) return cliError('conflict', deleted.error)
+      if (!deleted.ok) return cliError(codeFor(deleted.error), deleted.error)
       return cliOk({ project: owner.slug, ...deleted, status: 'deleted' })
     }
     case 'decide': {

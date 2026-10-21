@@ -319,6 +319,70 @@ test.describe('frijoles experiments (S6.4)', () => {
     expect(refused.body.error).toMatch(/decided/)
   })
 
+  test('one test per feature holds while paused: a second test cannot start on the paused one’s flag (verifier, #425)', async ({
+    request,
+  }) => {
+    const fx = await fixture(client)
+    const first = (await post(request, fx.token, { command: 'create', project: fx.slug, answers })).body
+      .experimentKey as string
+    await post(request, fx.token, { command: 'start', project: fx.slug, experiment: first })
+    await post(request, fx.token, { command: 'pause', project: fx.slug, experiment: first })
+    const second = (await post(request, fx.token, { command: 'create', project: fx.slug, answers })).body
+      .experimentKey as string
+    const refused = await post(request, fx.token, { command: 'start', project: fx.slug, experiment: second })
+    expect(refused.status).toBe(409)
+    expect(refused.body.error).toMatch(new RegExp(`${first} is still running on this feature`))
+    expect(await servesSplit(fx, second)).toBe(false)
+    expect(
+      (await post(request, fx.token, { command: 'resume', project: fx.slug, experiment: first })).body
+    ).toMatchObject({
+      ok: true,
+      serving: true,
+    })
+  })
+
+  test('pause never claims a change someone else made: nothing to pause, nothing written', async ({
+    request,
+  }) => {
+    const fx = await fixture(client)
+    const key = (await post(request, fx.token, { command: 'create', project: fx.slug, answers })).body
+      .experimentKey as string
+    await post(request, fx.token, { command: 'start', project: fx.slug, experiment: key })
+    // Someone else serves a different feature version (an edited description), replacing the split.
+    const { data: registry } = await client
+      .from('flag_registries')
+      .select('id')
+      .eq('project_id', fx.projectId)
+      .eq('key', FLAG_KEY)
+      .single()
+    const { data: version } = await client.rpc('create_flag_definition_version', {
+      p_project_id: fx.projectId,
+      p_flag_key: FLAG_KEY,
+      p_definition: { ...SERVED, description: 'someone else’s edit' },
+      p_reason: 'fixture',
+      p_actor_user_id: fx.owner,
+    })
+    const { data: state } = await client
+      .from('flag_environment_states')
+      .select('snapshot_version')
+      .eq('project_id', fx.projectId)
+      .eq('environment', 'production')
+      .single()
+    const activation = await client.rpc('set_flag_activation', {
+      p_project_id: fx.projectId,
+      p_environment: 'production',
+      p_flag_id: registry!.id,
+      p_version_id: version[0].version_id,
+      p_expected_snapshot_version: Number(state!.snapshot_version),
+      p_reason: 'fixture',
+      p_actor_user_id: fx.owner,
+    })
+    expect(activation.error).toBeNull()
+    const paused = await post(request, fx.token, { command: 'pause', project: fx.slug, experiment: key })
+    expect(paused.status).toBe(409)
+    expect(paused.body.error).toMatch(/nothing to pause/)
+  })
+
   test('shipping the control by name is refused before a live test is stopped', async ({ request }) => {
     const fx = await fixture(client)
     const key = (await post(request, fx.token, { command: 'create', project: fx.slug, answers })).body

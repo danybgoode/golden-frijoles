@@ -178,6 +178,16 @@ export async function startExperimentCommand(
     return { ok: false, error: `Version ${running} is still running. Stop it before starting this one.` }
   if (!stored.answers)
     return { ok: false, error: 'This draft was not made in the builder; start it from its plan.' }
+  // One test per feature, PAUSED ones included: a paused test's flag carries no experiment, so the planner's served-
+  // metadata check cannot see it (verifier, #425).
+  const owner = stored.flagKey
+    ? await deps.io.otherRunningOnFlag(projectId, stored.flagKey, stored.experimentId)
+    : null
+  if (owner)
+    return {
+      ok: false,
+      error: `${owner} is still running on this feature (it may be paused). Finish or delete it before starting this one.`,
+    }
   const base = { experimentKey, flagKey: stored.flagKey, version: stored.version }
 
   let planned = await planFor(deps, projectId, stored.answers, {
@@ -340,6 +350,15 @@ export async function pauseExperimentCommand(
   const stored = running === null ? null : await deps.io.loadDraft(projectId, experimentKey, running)
   if (!stored || stored.status !== 'running' || !stored.flagId || !stored.flagVersionId)
     return { ok: false, error: 'Only a running experiment can be paused.' }
+  // Paused means Production serves THIS test's base; anything else serving is not ours to call paused (verifier, #425).
+  const state = await deps.io.servingState(projectId, stored.versionId)
+  if (state === 'paused') return { ok: true, experimentKey, version: stored.version, serving: false }
+  if (state !== 'split')
+    return {
+      ok: false,
+      error:
+        'Production is not serving this test’s split — something else replaced it — so there is nothing to pause.',
+    }
   const outcome = await unserve(
     deps,
     projectId,
@@ -353,7 +372,7 @@ export async function pauseExperimentCommand(
       ok: false,
       error: 'The feature changed while pausing, so Production was not touched. Try again.',
     }
-  if (outcome === 'failed')
+  if (outcome !== 'off')
     return { ok: false, error: 'The experiment could not be paused; nothing was changed.' }
   return { ok: true, experimentKey, version: stored.version, serving: false }
 }
@@ -385,16 +404,14 @@ export async function deleteExperimentCommand(
       version === latest.version ? latest : await deps.io.loadDraft(projectId, experimentKey, version)
     if (stored) versions.push(stored)
   }
+  // A decided experiment is the record of a decision — kept whatever drafts sit beside it, and never hidden from the
+  // list by retiring a later draft (verifier, #425).
+  if (versions.some((v) => v.status === 'decided'))
+    return { ok: false, error: 'This experiment was decided; its record is kept and it cannot be deleted.' }
   const live = versions.filter(
     (v) => v.status === 'draft' || v.status === 'running' || v.status === 'stopped'
   )
-  if (live.length === 0)
-    return {
-      ok: false,
-      error: versions.some((v) => v.status === 'decided')
-        ? 'This experiment was decided; its record is kept and it cannot be deleted.'
-        : 'This experiment is already deleted.',
-    }
+  if (live.length === 0) return { ok: false, error: 'This experiment is already deleted.' }
   // Off Production FIRST: a retired version must never be left serving a split nobody can stop.
   const bound = live.filter((v) => v.status !== 'draft' && v.flagId && v.flagVersionId)
   if (bound.length > 0 && !(await deps.servingEnabled()))

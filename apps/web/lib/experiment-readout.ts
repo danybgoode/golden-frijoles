@@ -362,14 +362,14 @@ export function buildReadout(input: ReadoutInput): Readout {
       answer: [
         bold('Paused.'),
         plain(
-          ` Everyone sees what they saw before the test, and nobody new enters it. Resume and the split serves again — each person lands in the same group.`
+          ` Everyone sees what they saw before the test, and nobody new enters it. Conversions while paused still count for the group each person was in. Resume and the split serves again — each person lands in the same group.`
         ),
         ...countsLine,
       ],
       verdict: {
         label: 'What happens next',
         title: 'Resume it, or decide.',
-        body: 'Its people and its numbers are kept while it is paused. You can also roll a version out, keep the current one, or stop it.',
+        body: 'Its people are kept while it is paused; anything they do counts for their group, even though they see the current version. You can also roll a version out, keep the current one, or stop it.',
         actions: ['retry-serving', ...anyTime, 'stop'],
         recommend: 'retry-serving',
       },
