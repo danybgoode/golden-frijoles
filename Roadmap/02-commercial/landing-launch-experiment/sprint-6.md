@@ -51,7 +51,7 @@ stories:
 ---
 # Launch: the first landing A/B on goldenfrijoles.com, run on Golden Frijoles — Sprint 6: A test at any traffic
 
-**Status:** 🟨 Building — S6.1 ✅ (#421); S6.3 ✅ (#422); S6.2 in review (#423); S6.4 in progress; S6.5–S6.6 planned. Daniel approved the sprint 2026-10-20 ("if your stories above will do that lets go ahead").
+**Status:** 🟨 Building — S6.1 ✅ (#421); S6.3 ✅ (#422); S6.2 in review (#423); S6.4 in review; S6.5–S6.6 planned. Daniel approved the sprint 2026-10-20 ("if your stories above will do that lets go ahead").
 
 ## Why this sprint exists (Daniel, 2026-10-20)
 Launch day for the landing A/B: the builder refused to start it — "A metric has gone quiet" (no prompt copy in 24 hours)
