@@ -22,6 +22,19 @@ frijoles flags rollout checkout.demo_enabled --env production --percent 25
 frijoles flags kill checkout.demo_enabled --env production
 ```
 
+## Staying current: `frijoles version`, `frijoles update`
+
+```bash
+frijoles version        # the version you have, the latest published, and how this copy was installed
+frijoles update         # a global install: runs npm i -g @golden-frijoles/cli@<latest>; any other: prints the command
+frijoles update --check # only say whether an update is available
+```
+
+In an interactive terminal, frijoles says once a day when a newer version is out (on stderr; never under `--json`, in
+CI, or with `GOLDEN_FRIJOLES_NO_UPDATE_CHECK=1`). `frijoles --version` stays the bare version string for scripts. With
+npx, name the version (or `@latest`): npx reuses the copy it cached first. The Claude Code plugin pins an exact CLI, so
+updating the plugin updates the CLI it uses.
+
 ## Why this exists
 
 Every high-risk change ships behind a flag, and a flag is invisible until it exists **in the

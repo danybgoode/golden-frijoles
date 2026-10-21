@@ -30,13 +30,17 @@ export function securityClaims(siteUrl: string): SecurityClaim[] {
       id: 'cli-talks-to-site',
       text:
         `The \`${CLI_BIN}\` CLI talks only to ${site} (or the URL you give it with \`--api\` or ` +
-        `\`GOLDEN_FRIJOLES_URL\`), plus registry.npmjs.org when \`${CLI_BIN} doctor\` checks for a newer version.`,
+        `\`GOLDEN_FRIJOLES_URL\`), plus registry.npmjs.org to check for a newer version (\`${CLI_BIN} version\`, ` +
+        `\`update\` and \`doctor\`, and at most once a day in an interactive terminal — never under \`--json\` or in CI). ` +
+        `\`${CLI_BIN} update\` runs \`npm\` only when you run it: \`npm root -g\` to see how it was installed, and ` +
+        `\`npm i -g\` to update a global install (any other install, it prints the command instead).`,
     },
     {
       id: 'keys-in-env-local',
       text:
         `\`${CLI_BIN}\` writes your project's key only to \`.env.local\` (mode 0600), and only once \`.gitignore\` ` +
-        'covers it; its own sign-in token goes only to `~/.config/golden-frijoles/credentials.json` (mode 0600).',
+        'covers it; its own sign-in token goes only to `~/.config/golden-frijoles/credentials.json` (mode 0600). ' +
+        'Beside it, `update-check.json` keeps the date of the last version check and the version it found — nothing else.',
     },
     {
       id: 'kit-pinned',

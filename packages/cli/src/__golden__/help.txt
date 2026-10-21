@@ -11,6 +11,8 @@ Commands
   logout                    forget the saved token on this machine
   whoami                    the account, the credential and the projects it reaches
   doctor                    why is it not working — every check, in order
+  version                   the version you have, the latest published, and how to update
+  update                    update this CLI to the latest published version
   setup                     answer the setup questions (each has a default; only the first is required)
   init                      project, key, .env.local and the snippet — in one verb
   status                    has the project received its first event yet, and which was the latest

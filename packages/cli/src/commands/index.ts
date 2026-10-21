@@ -55,6 +55,7 @@ import {
 } from './experiments'
 import { keysCreateCommand, keysLsCommand, keysRevokeCommand } from './keys'
 import { doctorCommand } from './doctor'
+import { updateCommand, versionCommand } from './update'
 import { configGetCommand, configListCommand, configSetCommand, setupCommand } from './config'
 
 export const COMMANDS: readonly Command[] = [
@@ -62,6 +63,8 @@ export const COMMANDS: readonly Command[] = [
   logoutCommand,
   whoamiCommand,
   doctorCommand,
+  versionCommand,
+  updateCommand,
   setupCommand,
   configListCommand,
   configGetCommand,

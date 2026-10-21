@@ -16,6 +16,7 @@ import { EXIT, type ExitCode } from './exit-codes'
 import { commandAsData, helpAsData, renderCommandHelp, renderRootHelp } from './help'
 import { createEmitter, processWriter, type Writer } from './output'
 import { VERSION } from './version'
+import { updateCheckAllowed, updateNotice } from './update-check'
 
 export type RunOptions = {
   argv: readonly string[]
@@ -25,6 +26,15 @@ export type RunOptions = {
   /** Injected in tests. Production passes nothing and the global `fetch` is used. */
   fetchImpl?: typeof fetch
   commands?: readonly Command[]
+  /** `bin.ts` passes `process.argv[1]`, for `frijoles update` (how was this copy installed?). */
+  scriptPath?: string
+  /** `bin.ts` passes a spawnSync wrapper; tests inject a fake or nothing. */
+  exec?: CommandContext['exec']
+  /**
+   * Show the once-a-day "a newer frijoles is out" notice after the command. Only `bin.ts` turns it on, and only for an
+   * interactive terminal — so no test reaches the registry, and no pipe an agent reads ever carries it.
+   */
+  updateCheck?: boolean
 }
 
 export async function run(options: RunOptions): Promise<ExitCode> {
@@ -157,10 +167,22 @@ export async function run(options: RunOptions): Promise<ExitCode> {
     api: auth.token === null ? null : clientFor(auth.token),
     clientFor,
     fetchImpl: options.fetchImpl ?? fetch,
+    scriptPath: options.scriptPath,
+    exec: options.exec,
   }
 
   try {
-    return await command.run(context)
+    const code = await command.run(context)
+    if (
+      options.updateCheck &&
+      command.path[0] !== 'update' &&
+      command.path[0] !== 'version' &&
+      updateCheckAllowed(env, args.json)
+    ) {
+      const notice = await updateNotice({ current: VERSION, env, fetchImpl: context.fetchImpl })
+      if (notice) writer.err(`\n${notice}\n`)
+    }
+    return code
   } catch (err) {
     // A handler that throws is a bug in this CLI, and it says so rather than printing a stack the
     // caller cannot act on. EXIT.SERVER because the remedy — retry, then report — is the same.
@@ -173,6 +195,9 @@ export async function run(options: RunOptions): Promise<ExitCode> {
 }
 
 function unknownCommand(path: readonly string[], emit: ReturnType<typeof createEmitter>): ExitCode {
-  emit.fail('invalid', `Unknown command \`frijoles ${path.join(' ')}\`. Run \`frijoles --help\` for the list.`)
+  emit.fail(
+    'invalid',
+    `Unknown command \`frijoles ${path.join(' ')}\`. Run \`frijoles --help\` for the list.`
+  )
   return EXIT.USAGE
 }

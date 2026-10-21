@@ -24,6 +24,7 @@ import { CLI_TOKEN_FORMAT, credentialsPath, readCredentials } from '../credentia
 import { EXIT, type ExitCode } from '../exit-codes'
 import { pad } from '../output'
 import { VERSION } from '../version'
+import { compareVersions, fetchLatestVersion } from '../update-check'
 import { loadConfigCore } from '../config-core'
 import { moduleLines, type ModuleLine } from '../modules'
 
@@ -195,39 +196,22 @@ export const doctorCommand: Command = {
  * unable to check is a different fact from being out of date, and this reports which.
  */
 async function versionCheck(fetchImpl: typeof fetch): Promise<Check> {
-  try {
-    const response = await fetchImpl('https://registry.npmjs.org/@golden-frijoles/cli/latest', {
-      headers: { accept: 'application/json' },
-      signal: AbortSignal.timeout(5_000),
-    })
-    if (!response.ok)
-      return {
-        id: 'cli-version',
-        status: 'skipped',
-        detail: `Running ${VERSION}. Could not reach the npm registry to compare.`,
-      }
-    const body = (await response.json()) as { version?: string }
-    const latest = typeof body.version === 'string' ? body.version : null
-    if (!latest)
-      return {
-        id: 'cli-version',
-        status: 'skipped',
-        detail: `Running ${VERSION}. The registry gave no version to compare.`,
-      }
-    return latest === VERSION
-      ? { id: 'cli-version', status: 'ok', detail: `Running ${VERSION}, the latest.` }
-      : {
-          id: 'cli-version',
-          status: 'warn',
-          detail: `Running ${VERSION}; ${latest} is published. Update with \`npm i -g @golden-frijoles/cli\`.`,
-        }
-  } catch {
+  // The same lookup and comparison as `frijoles version` / `update` (update-check.ts): numeric, so a build NEWER than
+  // the registry (a checkout, a pre-release) is not called out of date.
+  const latest = await fetchLatestVersion(fetchImpl, 5_000)
+  if (latest === null)
     return {
       id: 'cli-version',
       status: 'skipped',
       detail: `Running ${VERSION}. Could not reach the npm registry to compare.`,
     }
-  }
+  return compareVersions(latest, VERSION) > 0
+    ? {
+        id: 'cli-version',
+        status: 'warn',
+        detail: `Running ${VERSION}; ${latest} is published. Update with \`frijoles update\`.`,
+      }
+    : { id: 'cli-version', status: 'ok', detail: `Running ${VERSION}, the latest.` }
 }
 
 function describeSource(source: string): string {

@@ -54,6 +54,13 @@ export type CommandContext = {
    * general escape hatch, and a second consumer should be a reason to ask why.
    */
   fetchImpl: typeof fetch
+  /** The running script's path (from `bin.ts`), to tell how this copy was installed — `frijoles update`. */
+  scriptPath?: string
+  /**
+   * Run a program (`npm`), for `frijoles update`'s global install. Absent in tests unless injected, so no test ever
+   * installs anything; `capture` collects stdout instead of passing the child's output through.
+   */
+  exec?: (command: string, args: string[], options: { capture: boolean }) => { status: number | null; stdout?: string }
 }
 
 export type Command = {

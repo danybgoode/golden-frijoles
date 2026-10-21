@@ -84,8 +84,8 @@ claimTest('cli-talks-to-site', () => {
   const calls = cliSources.filter((path) => /\b(fetch|doFetch|fetchImpl)\(/.test(code(path)))
   assert.deepEqual(
     calls.map((path) => path.slice(CLI_SRC.length + 1)).sort(),
-    ['api.ts', 'commands/doctor.ts'],
-    'a CLI file other than the API client and doctor makes a network call'
+    ['api.ts', 'update-check.ts'],
+    'a CLI file other than the API client and the version check makes a network call'
   )
   const hosts = new Set(
     cliSources.flatMap((path) =>
@@ -103,7 +103,12 @@ claimTest('keys-in-env-local', () => {
   )
   assert.deepEqual(
     [...new Set(writes)].sort(),
-    ['commands/init.ts:envPath', 'commands/init.ts:gitignorePath', 'credentials.ts:path'],
+    [
+      'commands/init.ts:envPath',
+      'commands/init.ts:gitignorePath',
+      'credentials.ts:path',
+      'update-check.ts:path',
+    ],
     'the CLI writes a file the claim does not name'
   )
   const init = code(join(CLI_SRC, 'commands', 'init.ts'))
@@ -116,6 +121,10 @@ claimTest('keys-in-env-local', () => {
   const credentials = code(join(CLI_SRC, 'credentials.ts'))
   assert.match(credentials, /'golden-frijoles', 'credentials\.json'/)
   assert.match(credentials, /mode: 0o600/)
+  // The update check's cache holds a date and a version, written beside the credentials (frijoles update, 2026-10-21).
+  const updateCheck = code(join(CLI_SRC, 'update-check.ts'))
+  assert.match(updateCheck, /'golden-frijoles', 'update-check\.json'/)
+  assert.match(updateCheck, /JSON\.stringify\(\{ checkedAt: now, latest \}\)/)
 })
 
 claimTest('kit-pinned', () => {

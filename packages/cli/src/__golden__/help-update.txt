@@ -1,0 +1,19 @@
+frijoles update — update this CLI to the latest published version
+
+Usage
+  frijoles update [--check] [--json]
+
+For a global install it runs `npm i -g @golden-frijoles/cli@<latest>`. For npx, a project dependency or a source
+  checkout it prints the command instead — those are updated where they live. --check only reports.
+
+Flags
+  --check  only say whether an update is available; change nothing
+
+Exit codes
+  0  ok         it worked
+  1  usage      the command is wrong — nothing was sent
+  2  auth       the credential is not accepted — run `frijoles login`
+  3  not-found  no such thing, or not yours
+  4  conflict   someone else changed it — re-read and retry
+  5  partial    some environments changed and some did not
+  6  server     the server or the network is unwell — retry
