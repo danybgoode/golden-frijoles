@@ -11,6 +11,7 @@ import {
   describingVersion,
   experimentAnswer,
   projectExperimentRows,
+  visibleExperimentRows,
   readinessCandidates,
   type ExperimentListInput,
 } from '@/lib/experiment-list-view'
@@ -75,7 +76,7 @@ export default async function ExperimentsPage({ params }: { params: Promise<{ pr
   }))
 
   const readiness = await resolveReadiness(membership.projectId, projectSlug, inputs)
-  const rows = projectExperimentRows(inputs, readiness)
+  const { shown: rows, hidden } = visibleExperimentRows(projectExperimentRows(inputs, readiness))
 
   return (
     <ProductShell projectSlug={projectSlug} section="ship" railActive={'experiments'}>
@@ -108,6 +109,11 @@ export default async function ExperimentsPage({ params }: { params: Promise<{ pr
           builderData={builderData}
           projectId={membership.projectId}
         />
+        {hidden > 0 ? (
+          <p className="ds-x-hint">
+            {hidden} deleted experiment{hidden === 1 ? ' is' : 's are'} not shown.
+          </p>
+        ) : null}
       </main>
     </ProductShell>
   )

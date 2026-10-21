@@ -20,6 +20,7 @@ import { ComparisonBars, IntervalBar } from '@/design-system/charts'
 import { Answer, Crumb, Crumbs, PageHead, Pill, Tab } from '@/design-system/primitives'
 import { ExperimentBuilder } from '../experiment-builder'
 import { RetryServing } from '../retry-serving'
+import { DeleteExperiment } from '../pause-delete'
 import { DecideFlow } from './decide-flow'
 import { LifecycleAction } from './lifecycle-action'
 import { SCREEN_WORDS } from '@/lib/screen-words'
@@ -156,7 +157,17 @@ export default async function ExperimentPage({
         <LifecycleAction {...lifecycle} target="running" />
       ) : null}
       {version.status === 'draft' || version.status === 'running' || version.status === 'stopped' ? (
-        <LifecycleAction {...lifecycle} target="invalid" />
+        // S6.6: a builder-made test is DELETED (split off Production, every live version retired, gone from the list);
+        // a JSON-made version keeps "Mark invalid", which never touches a feature it was never bound to.
+        // A draft beside a started version is a "Change the plan" draft: discarding it must not take the live test down,
+        // so it keeps "Mark invalid" (verifier, #425).
+        answers !== null &&
+        builderData !== null &&
+        !(version.status === 'draft' && experiment!.versions.some((item) => item.status !== 'draft')) ? (
+          <DeleteExperiment slug={projectSlug} experimentKey={experimentKey} />
+        ) : (
+          <LifecycleAction {...lifecycle} target="invalid" />
+        )
       ) : null}
     </>
   ) : null
@@ -241,8 +252,11 @@ export default async function ExperimentPage({
   }
 
   // A version made outside the builder has no binding, so nothing may claim it is "not serving".
-  const binding = await io.versionServing(membership.projectId, version.id)
+  const servingState = await io.servingState(membership.projectId, version.id)
+  // `binding` keeps its meaning: true = this version's split serves, false = something else does, null = unbound.
+  const binding = servingState === null ? null : servingState === 'split'
   const serving = binding ?? true
+  const paused = servingState === 'paused'
   const current = result.decisions.current
   const readout = buildReadout({
     definition: result.experiment.definition,
@@ -252,6 +266,7 @@ export default async function ExperimentPage({
       ? { outcome: current.outcome, chosenVariantKey: current.chosenVariantKey, rationale: current.rationale }
       : null,
     serving,
+    paused,
     now: new Date(),
   })
   const tab = scalar(raw.tab) === 'plan' ? 'plan' : 'results'
@@ -262,8 +277,9 @@ export default async function ExperimentPage({
   // and Production serves THIS version's split — so not a JSON-made (unbound) version, not one whose
   // split another version or a feature edit replaced, and not after its own roll-out (the undo is the
   // toast's, not a second button).
-  const canRollOut = writable && binding === true
-  const actions = !canManage ? null : readout.verdict.actions.includes('retry-serving') ? (
+  // A PAUSED test can be rolled out too (S6.6): the roll-out command accepts the base a pause put up.
+  const canRollOut = writable && (binding === true || paused)
+  const actions = !canManage ? null : readout.state === 'not_serving' ? (
     writable ? (
       <RetryServing slug={projectSlug} experimentKey={experimentKey} />
     ) : null
@@ -283,6 +299,7 @@ export default async function ExperimentPage({
       currentDecisionId={current?.id ?? null}
       decision={current ? { outcome: current.outcome, chosenVariantKey: current.chosenVariantKey } : null}
       actions={readout.verdict.actions}
+      canServe={writable}
       recommend={readout.verdict.recommend ?? null}
       canRollOut={canRollOut}
       leadTreatmentKey={readout.treatment.key}
@@ -312,7 +329,9 @@ export default async function ExperimentPage({
                 ? 'Ready to decide'
                 : readout.state === 'not_serving'
                   ? 'Not serving'
-                  : 'Still gathering'}
+                  : readout.state === 'paused'
+                    ? 'Paused'
+                    : 'Still gathering'}
         </Pill>
       }
     >

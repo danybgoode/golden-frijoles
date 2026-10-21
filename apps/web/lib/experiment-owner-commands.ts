@@ -63,7 +63,7 @@ export async function readExperiment(
   projectId: string,
   slug: string,
   key: string,
-  io: Pick<BuilderIo, 'versionServing'>
+  io: Pick<BuilderIo, 'servingState'>
 ): Promise<
   | { ok: true; key: string; version: number; status: ExperimentLifecycleState; readout: Readout | null }
   | { ok: false; reason: 'not_found' | 'unavailable' }
@@ -85,7 +85,7 @@ export async function readExperiment(
           ? 'not_found'
           : 'unavailable',
     }
-  const binding = await io.versionServing(projectId, latest.id)
+  const state = await io.servingState(projectId, latest.id)
   const current = result.decisions.current
   const readout = buildReadout({
     definition: result.experiment.definition,
@@ -94,7 +94,8 @@ export async function readExperiment(
     decision: current
       ? { outcome: current.outcome, chosenVariantKey: current.chosenVariantKey, rationale: current.rationale }
       : null,
-    serving: binding ?? true,
+    serving: state === null || state === 'split',
+    paused: state === 'paused',
     now: new Date(),
   })
   return { ok: true, key, version: latest.version, status: latest.status, readout }

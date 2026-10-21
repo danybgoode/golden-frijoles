@@ -7,6 +7,7 @@ import {
   newestVersion,
   projectExperimentRows,
   readinessCandidates,
+  visibleExperimentRows,
   type ExperimentListInput,
   type ExperimentStatus,
 } from './experiment-list-view.ts'
@@ -223,4 +224,20 @@ test('a registry of drafts only still describes one, and it is the newest', () =
 
 test('an empty version list is null, not a crash', () => {
   assert.equal(newestVersion([]), null)
+})
+
+test('S6.6 a deleted (invalid) experiment leaves the list, and the count of hidden ones is kept', () => {
+  const row = (key: string, state: string) =>
+    ({ key, state }) as unknown as Parameters<typeof visibleExperimentRows>[0][number]
+  const { shown, hidden } = visibleExperimentRows([
+    row('a', 'gathering'),
+    row('b', 'invalid'),
+    row('c', 'decided'),
+  ])
+  assert.deepEqual(
+    shown.map((r) => r.key),
+    ['a', 'c']
+  )
+  assert.equal(hidden, 1)
+  assert.equal(visibleExperimentRows([]).hidden, 0)
 })

@@ -6,6 +6,10 @@ import { isExperimentBuilderWritable, isExperimentGovernanceEnabled } from '@/li
 import { getSupabaseServiceClient } from '@/lib/supabase'
 import { createBuilderIo } from '@/lib/experiment-builder-io'
 import {
+  BUILDER_PAUSED,
+  deleteExperimentCommand,
+  pauseExperimentCommand,
+  resumeExperimentCommand,
   saveExperimentDraftCommand,
   startExperimentCommand,
   type BuilderDependencies,
@@ -81,6 +85,14 @@ export async function GET(req: NextRequest) {
   })
 }
 
+/** A command's refusal, as the CLI's exit code family: no such experiment is not_found (exit 3), a paused builder is
+ *  disabled, anything else a conflict with the current state. */
+function codeFor(error: string): 'not_found' | 'disabled' | 'conflict' {
+  if (error.startsWith('No experiment') || error.startsWith('Only a running experiment')) return 'not_found'
+  if (error === BUILDER_PAUSED) return 'disabled'
+  return 'conflict'
+}
+
 const OUTCOMES = {
   ship: 'ship_treatment',
   keep: 'keep_control',
@@ -142,6 +154,27 @@ export async function POST(req: NextRequest) {
         status: 'stopped',
       })
     }
+    // S6.6 — pause takes the split off (the test keeps running and its people); resume serves it again; delete takes it
+    // off Production and retires every live version. Each is the console's own command.
+    case 'pause':
+    case 'resume':
+    case 'delete': {
+      if (!KEY.test(experiment)) return cliError('invalid', 'Name the experiment by its key.')
+      if (body.command === 'pause') {
+        const paused = await pauseExperimentCommand(owner.slug, experiment, deps)
+        if (!paused.ok) return cliError(codeFor(paused.error), paused.error)
+        return cliOk({ project: owner.slug, ...paused, status: 'paused' })
+      }
+      if (body.command === 'resume') {
+        const resumed = await resumeExperimentCommand(owner.slug, experiment, deps)
+        if (!resumed.ok) return cliError(codeFor(resumed.error), resumed.error)
+        // Not serving after a resume is the partial state, not "paused" (verifier, #425).
+        return cliOk({ project: owner.slug, ...resumed, status: resumed.serving ? 'running' : 'not_serving' })
+      }
+      const deleted = await deleteExperimentCommand(owner.slug, experiment, deps)
+      if (!deleted.ok) return cliError(codeFor(deleted.error), deleted.error)
+      return cliOk({ project: owner.slug, ...deleted, status: 'deleted' })
+    }
     case 'decide': {
       if (!KEY.test(experiment)) return cliError('invalid', 'Name the experiment by its key.')
       const choice = typeof body.outcome === 'string' ? body.outcome : ''
@@ -155,6 +188,9 @@ export async function POST(req: NextRequest) {
       if (!latest) return cliError('not_found', `No experiment "${experiment}" in ${owner.slug}.`)
       // A named version is checked BEFORE a live test is stopped, so a typo never stops it (verifier, #424).
       const named = typeof body.variant === 'string' && body.variant ? body.variant : null
+      // Shipping the control is "keep" (the contract refuses it as a ship) — said before anything is stopped.
+      if (named !== null && choice === 'ship' && named === latest.definition.controlVariantKey)
+        return cliError('invalid', `"${named}" is the current version; to keep it, use --keep.`)
       if (named !== null && !latest.definition.variants.some((v) => v.key === named))
         return cliError(
           'invalid',
@@ -203,6 +239,6 @@ export async function POST(req: NextRequest) {
       })
     }
     default:
-      return cliError('invalid', 'The command is create, start, stop or decide.')
+      return cliError('invalid', 'The command is create, start, pause, resume, stop, decide or delete.')
   }
 }

@@ -16,9 +16,10 @@ import { eventWords, entityPlural, type SentencePart } from './experiment-builde
 // and the who-saw-what bars stay, as the story requires.
 
 export type ReadoutState =
-  'not_serving' | 'waiting' | 'gathering' | 'blocked' | 'ready' | 'stopped' | 'decided'
+  'not_serving' | 'paused' | 'waiting' | 'gathering' | 'blocked' | 'ready' | 'stopped' | 'decided'
 
-export type ReadoutAction = 'rollout' | 'keep' | 'iterate' | 'invalid' | 'stop' | 'retry-serving'
+/** `retry-serving` is Resume for a paused test (S6.6); `pause` takes the split off without ending the test. */
+export type ReadoutAction = 'rollout' | 'keep' | 'iterate' | 'invalid' | 'stop' | 'retry-serving' | 'pause'
 
 export type Readout = {
   state: ReadoutState
@@ -62,6 +63,8 @@ export type ReadoutInput = {
   decision: { outcome: string; chosenVariantKey: string | null; rationale: string } | null
   /** Is the experiment's bound flag version the one Production serves? */
   serving: boolean
+  /** S6.6 — not serving because someone PAUSED it (Production serves the feature without the test). */
+  paused?: boolean
   now: Date
 }
 
@@ -352,6 +355,26 @@ export function buildReadout(input: ReadoutInput): Readout {
       },
     }
   }
+  if (input.lifecycle === 'running' && !input.serving && input.paused) {
+    return {
+      ...common,
+      state: 'paused',
+      answer: [
+        bold('Paused.'),
+        plain(
+          ` Everyone sees what they saw before the test, and nobody new enters it. Conversions while paused still count for the group each person was in. Resume and the split serves again — each person lands in the same group.`
+        ),
+        ...countsLine,
+      ],
+      verdict: {
+        label: 'What happens next',
+        title: 'Resume it, or decide.',
+        body: 'Its people are kept while it is paused; anything they do counts for their group, even though they see the current version. You can also roll a version out, keep the current one, or stop it.',
+        actions: ['retry-serving', ...anyTime, 'stop'],
+        recommend: 'retry-serving',
+      },
+    }
+  }
   if (input.lifecycle === 'running' && !input.serving) {
     return {
       ...common,
@@ -383,7 +406,7 @@ export function buildReadout(input: ReadoutInput): Readout {
         label: 'What happens next',
         title: 'Let it run.',
         body: 'Results appear here as soon as the first person is counted. You can roll a version out or stop it at any time.',
-        actions: [...anyTime, 'stop'],
+        actions: [...anyTime, 'pause', 'stop'],
         recommend: null,
       },
     }
@@ -397,7 +420,7 @@ export function buildReadout(input: ReadoutInput): Readout {
         label: 'What happens next',
         title: 'Fix what the checks found before trusting the number.',
         body: 'The checks found a problem, so the number may not mean what it says. You can still roll a version out or keep the current one.',
-        actions: [...anyTime, 'stop'],
+        actions: [...anyTime, 'pause', 'stop'],
         recommend: null,
       },
     }
@@ -420,7 +443,7 @@ export function buildReadout(input: ReadoutInput): Readout {
             ? `Keep it running. About ${remaining} more day${remaining === 1 ? '' : 's'}.`
             : 'Keep it running.',
         body: 'Keep it running for a surer answer, or roll out the version you believe in now.',
-        actions: [...anyTime, 'stop'],
+        actions: [...anyTime, 'pause', 'stop'],
         recommend: null,
       },
     }
@@ -444,7 +467,7 @@ export function buildReadout(input: ReadoutInput): Readout {
           label: 'Ready',
           title: `${B} is winning. Roll it out?`,
           body: `${metric.replace(/^./, (c) => c.toUpperCase())} moved the way you wanted and the split checks out.`,
-          actions: [...anyTime, 'stop'],
+          actions: [...anyTime, 'pause', 'stop'],
           recommend: 'rollout',
         }
       : favourable
@@ -452,7 +475,7 @@ export function buildReadout(input: ReadoutInput): Readout {
             label: 'Ready',
             title: `${B} is ahead, but a guardrail moved the wrong way.`,
             body: 'Look at what it cost before deciding; rolling it out is your call.',
-            actions: [...anyTime, 'iterate', 'stop'],
+            actions: [...anyTime, 'iterate', 'pause', 'stop'],
             recommend: null,
           }
         : unfavourable
@@ -460,14 +483,14 @@ export function buildReadout(input: ReadoutInput): Readout {
               label: 'Ready',
               title: `${B} is worse. Keep ${A}.`,
               body: 'There were enough people to see a change, and it went the wrong way.',
-              actions: [...anyTime, 'iterate', 'stop'],
+              actions: [...anyTime, 'iterate', 'pause', 'stop'],
               recommend: 'keep',
             }
           : {
               label: 'Ready',
               title: `No real difference. Keep ${A}?`,
               body: 'There were enough people to see the change you planned for, and it didn’t show up.',
-              actions: [...anyTime, 'iterate', 'stop'],
+              actions: [...anyTime, 'iterate', 'pause', 'stop'],
               recommend: 'keep',
             },
   }

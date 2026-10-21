@@ -7,7 +7,18 @@ import { retryExperimentServingAction } from './builder-actions'
 
 // experiments-for-humans · Story 3.3 (D7) — the partial state's one-click retry, on the row the page
 // derived it for. It survives a reload because the page, not this button, knows the state.
-export function RetryServing({ slug, experimentKey }: { slug: string; experimentKey: string }) {
+export function RetryServing({
+  slug,
+  experimentKey,
+  label = 'Retry serving',
+  variant = 'primary',
+}: {
+  slug: string
+  experimentKey: string
+  /** "Resume" for a paused test (S6.6): the same write — this test's version of the feature, served again. */
+  label?: string
+  variant?: 'primary' | 'secondary'
+}) {
   const router = useRouter()
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -27,8 +38,8 @@ export function RetryServing({ slug, experimentKey }: { slug: string; experiment
   }
   return (
     <>
-      <Button variant="primary" className="ds-btn--sm" state={pending ? 'loading' : 'idle'} onClick={retry}>
-        Retry serving
+      <Button variant={variant} className="ds-btn--sm" state={pending ? 'loading' : 'idle'} onClick={retry}>
+        {label}
       </Button>
       {error ? (
         <span className="ds-state-detail" role="alert">

@@ -355,6 +355,38 @@ export function createBuilderIo(client: SupabaseClient) {
       return active?.version_id === binding.flag_version_id
     },
 
+    /**
+     * S6.6 — what Production serves for this version's feature: its own split (`split`), the base a PAUSE put up — the
+     * feature exactly as this version's, without the test (`paused`) — or anything else (`other`). `null` when the version
+     * has no binding (made outside the builder).
+     */
+    async servingState(
+      projectId: string,
+      experimentVersionId: string
+    ): Promise<'split' | 'paused' | 'other' | null> {
+      const { data: binding, error } = await client
+        .from('experiment_flag_version_bindings')
+        .select('flag_id,flag_version_id')
+        .eq('project_id', projectId)
+        .eq('experiment_version_id', experimentVersionId)
+        .maybeSingle()
+      if (error) throw new Error('could not read the experiment')
+      if (!binding) return null
+      const served = await this.productionVersion(projectId, binding.flag_id as string)
+      if (!served) return 'other'
+      if (served.versionId === binding.flag_version_id) return 'split'
+      const own = await this.flagVersionDefinition(
+        projectId,
+        binding.flag_id as string,
+        binding.flag_version_id as string
+      )
+      return own &&
+        served.definition.metadata?.[EXPERIMENT_METADATA_KEYS.key] === undefined &&
+        sameBase(served.definition, own)
+        ? 'paused'
+        : 'other'
+    },
+
     /** Story 4.1 — the builder answers that made this version (Plan tab, "Change the plan"), if any. */
     async versionAnswers(
       projectId: string,
@@ -477,6 +509,81 @@ export function createBuilderIo(client: SupabaseClient) {
         return null
       }
       return { flagId: row.flag_id as string, versionId: row.version_id as string }
+    },
+
+    /**
+     * S6.6 — the key of ANOTHER experiment that has a RUNNING version bound to this flag, if any. One test per feature
+     * is otherwise judged from what Production serves (the experiment metadata), and a PAUSED test serves the base with
+     * none — so without this a second test could start on the flag a paused one still owns (verifier, #425).
+     */
+    async otherRunningOnFlag(
+      projectId: string,
+      flagKey: string,
+      experimentId: string
+    ): Promise<string | null> {
+      const { data: flag, error: flagError } = await client
+        .from('flag_registries')
+        .select('id')
+        .eq('project_id', projectId)
+        .eq('key', flagKey)
+        .maybeSingle()
+      if (flagError) throw new Error('could not read the feature')
+      if (!flag) return null
+      // ONE joined query (verifier r2, #425): every plan change adds a binding, so listing their ids into an `.in()` would
+      // outgrow a URL on a busy flag. The composite FK lets the binding embed its version and filter on its status.
+      const { data: running, error: runningError } = await client
+        .from('experiment_flag_version_bindings')
+        .select('experiment_id, experiment_definition_versions!inner(status)')
+        .eq('project_id', projectId)
+        .eq('flag_id', flag.id)
+        .eq('experiment_definition_versions.status', 'running')
+        .neq('experiment_id', experimentId)
+        .limit(1)
+        .maybeSingle()
+      if (runningError) throw new Error('could not read the experiment')
+      if (!running) return null
+      const { data: registry } = await client
+        .from('experiment_registries')
+        .select('key')
+        .eq('project_id', projectId)
+        .eq('id', running.experiment_id)
+        .maybeSingle()
+      return (registry?.key as string | undefined) ?? 'another experiment'
+    },
+
+    /** S6.6 — one flag version's definition, by id, in this project (a paused test's own version, for its roll-out). */
+    async flagVersionDefinition(
+      projectId: string,
+      flagId: string,
+      versionId: string
+    ): Promise<FlagDefinition | null> {
+      const { data, error } = await client
+        .from('flag_definition_versions')
+        .select('definition')
+        .eq('project_id', projectId)
+        .eq('flag_id', flagId)
+        .eq('id', versionId)
+        .maybeSingle()
+      if (error) throw new Error('could not read the feature')
+      return (data?.definition as FlagDefinition | undefined) ?? null
+    },
+
+    /** S6.6 — a lifecycle move other than Start's, through the same owner-checked database function. */
+    async transitionVersion(
+      projectId: string,
+      experimentId: string,
+      versionId: string,
+      target: 'stopped' | 'invalid',
+      actorUserId: string
+    ): Promise<boolean> {
+      const { data, error } = await client.rpc('transition_experiment_version', {
+        p_project_id: projectId,
+        p_experiment_id: experimentId,
+        p_version_id: versionId,
+        p_target_status: target,
+        p_actor_user_id: actorUserId,
+      })
+      return !error && data?.[0]?.status === target
     },
 
     /** Does this version belong to this flag, in this project? (The undo's only authority.) */
