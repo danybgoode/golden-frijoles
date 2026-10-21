@@ -92,7 +92,7 @@ export const LANDING_SECTIONS: LandingSection[] = [
     title: 'Pricing',
     epic: 'multi-tenant-activation',
     status: 'live',
-    note: 'Self-serve free tier follows SIGNUP_ENABLED. No payment rail yet — the paid tier says so.',
+    note: 'Self-serve free tier follows auth.signup_enabled; Growth sells through Checkout (billing.checkout_enabled).',
   },
   {
     id: 'start',

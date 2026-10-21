@@ -1,7 +1,7 @@
 // landing-launch-experiment · Sprint 4 — the Plan & billing page's answers (lib/billing-view.ts).
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { billingHref, billingMessage, billingView } from './billing-view.ts'
+import { billingHref, billingMessage, billingView, GROWTH_CTA_NOTE, growthCta } from './billing-view.ts'
 
 const free = { plan: 'free', productLimit: 10, monthlyEventPool: 200_000, hasStripeCustomer: false }
 
@@ -83,4 +83,21 @@ test('no failure sentence denies a charge it cannot rule out (verifier, #414)', 
   assert.doesNotMatch(billingMessage('failed')?.text ?? '', /nothing was charged/i)
   assert.match(billingMessage('failed')?.text ?? '', /refresh before trying again/)
   assert.ok(billingMessage('portal-failed'))
+})
+
+test("the landing's Growth button (S4.4): checkout signed in, sign-up first signed out, paused when the switch is off", () => {
+  assert.equal(growthCta({ checkoutOn: true, signedIn: true, signupOn: true }), 'checkout')
+  assert.equal(growthCta({ checkoutOn: true, signedIn: true, signupOn: false }), 'checkout')
+  assert.equal(growthCta({ checkoutOn: true, signedIn: false, signupOn: true }), 'signup')
+  assert.equal(growthCta({ checkoutOn: false, signedIn: true, signupOn: true }), 'paused')
+  assert.equal(growthCta({ checkoutOn: false, signedIn: false, signupOn: true }), 'paused')
+  assert.equal(growthCta({ checkoutOn: true, signedIn: false, signupOn: false }), 'waitlist')
+  assert.equal(growthCta({ checkoutOn: false, signedIn: false, signupOn: false }), 'waitlist')
+})
+
+test('no Growth note says billing is not live, and only the paused one says it cannot be bought', () => {
+  for (const [state, note] of Object.entries(GROWTH_CTA_NOTE)) {
+    assert.doesNotMatch(note, /not live|cannot be charged|nobody can be charged/i, state)
+    assert.equal(/paused/.test(note), state === 'paused', state)
+  }
 })

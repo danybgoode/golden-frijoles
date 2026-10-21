@@ -276,6 +276,11 @@ for the workspace's stored customer; no cancel logic of our own.
 Growth's CTA becomes "Get Growth" → checkout on A and B (a signed-out visitor goes to `/signup` first). D23 makes "unlimited
 products" and the larger allowance true for Growth; **"Longer history" is not built** (Free has no history limit), so
 S4.4 replaces that line with something true — the D22 either/or, taken.
+**Amended 2026-10-20 (Daniel):** S4.4 ships BEFORE the first real purchase. Daniel switched `billing.checkout_enabled` on
+first, and a landing that says "billing is not live" beside an open Checkout is the untrue claim D28 exists to remove; the
+copy follows the switch (paused copy when it is off). The first real purchase is still owed and still the money path's
+proof. Signed in, the button is the POST form to checkout; the middleware now refreshes a session on marketing paths that
+carry one (verifier, #419), so reading it on `/` cannot spend a refresh token. A's Free card says "up to ten products".
 
 **Amended 2026-10-20 (verifier + Codex on #412, Daniel's calls):**
 - **D24, pool-only on Growth and comped (Daniel):** a product's own monthly quota applies only on Free; on Growth and comped

@@ -4,20 +4,14 @@ import { Button } from '@/components/ui/Button'
 import { Icon } from '@/components/ui/Icon'
 import { Panel } from '@/components/ui/Panel'
 import { WaitlistForm } from './WaitlistForm'
+import { GrowthCta } from './GrowthCta'
 
 // landing-redesign-v2 · Sprint 2, Story 2.5 — ⑩ Pricing. Replaces WaitlistSection.tsx.
 //
-// ── The $49 tier ships WITH its price and WITH the fact that you cannot pay it (epic D1) ──────
-// The mockup prices "The Beanstalk" at $49/mo. There is no payment rail in this product — no
-// checkout, no subscription, no metering that bills. Three options were on the table and the
-// product owner chose the middle one: ship the price anchor the design needs, and say plainly in
-// the tier itself that billing is not live yet, with the CTA pointing at the same real free signup
-// everything else does.
-//
-// That is not hedging. CODE-QUALITY.md #9 requires every claim on a public surface to be
-// checkable, and a price with no way to pay it fails that in the most expensive possible place —
-// the reader discovers it after signing up, having already decided we round things up. A stated
-// "not billable yet" costs a sentence and buys the rest of the page's credibility.
+// ── The $49 tier can be bought (landing-launch-experiment S4.4, D28) ────────────────────────
+// Until Checkout existed the tier said plainly that nobody could be charged (epic D1, CODE-QUALITY
+// #9: a price with no way to pay it is a claim the reader checks after signing up). Checkout is
+// live now, so the tier's button and the sentence under it come from GrowthCta, shared with B.
 //
 // ── The free tier follows the live flag, exactly as the page it replaces did ──────────────────
 // `isSignupEnabled()` is read fresh per request. With the gate off there is no `/signup` route to
@@ -42,8 +36,8 @@ export async function PricingSection() {
               of this line is a concession won at a negotiating table; ours is that there is
               nothing to escape in the first place. */}
           <p className="measure measure--narrow">
-            Start with one project for $0. Bring the rest of the company when they inevitably ask where you
-            got the numbers. Nothing here locks you in — not the agent you use, and not a contract.
+            Start with up to ten products for $0. Bring the rest of the company when they inevitably ask where
+            you got the numbers. Nothing here locks you in — not the agent you use, and not a contract.
           </p>
           <p className="takeaway">Humans remain unmetered.</p>
 
@@ -52,7 +46,7 @@ export async function PricingSection() {
               <p className="kicker">A handful</p>
               <p className="tier__price">$0</p>
               <p className="card-copy">
-                One project. Enough Golden Frijoles to find out whether we&apos;re onto something.
+                Up to ten products. Enough Golden Frijoles to find out whether we&apos;re onto something.
               </p>
               <ul className="plain-list">
                 <li>Full product context</li>
@@ -88,27 +82,21 @@ export async function PricingSection() {
                 <li>Unlimited projects</li>
                 <li>Unlimited seats</li>
               </ul>
-              {signupEnabled ? (
-                <Button href="/signup" variant="ghost" className="panel-tail">
-                  Start free
-                  <Icon name="arrow-right" />
-                </Button>
-              ) : (
-                /* `/#start` — the closing section, which carries the decision prompt. This pointed
-                   at `#try` until round 8 of PR #100: `TryItSection` was retired by this epic and
-                   the anchor went with it, so the gated-off branch of this tier was a button that
-                   did nothing. Root-relative, like every other in-page link on this page. */
-                <Button href="/#start" variant="ghost" className="panel-tail">
-                  Ask your agent first
-                  <Icon name="arrow-right" />
-                </Button>
-              )}
-              {/* The sentence the price cannot ship without. */}
-              <p className="note">
-                There is no billing rail yet — nobody can be charged this today. It is what the tier will
-                cost, published early so you can plan against it. Start on the free tier; we will not move you
-                onto a paid plan without asking.
-              </p>
+              {/* S4.4 (D28): Get Growth — checkout signed in, sign-up first signed out, "paused" while the switch is off. The
+                  gated-off branch still points at `/#start`, the closing section with the decision prompt (round 8, PR #100). */}
+              <GrowthCta
+                variant="ghost"
+                className="panel-tail"
+                formClassName="panel-tail"
+                trailing={<Icon name="arrow-right" />}
+                waitlist={
+                  <Button href="/#start" variant="ghost" className="panel-tail">
+                    Ask your agent first
+                    <Icon name="arrow-right" />
+                  </Button>
+                }
+                note={(text) => <p className="note">{text}</p>}
+              />
             </Panel>
 
             {/* landing-launch-experiment S5.1 (Daniel, 2026-10-19) — the third tier is "Set up with us", from $1,500, the

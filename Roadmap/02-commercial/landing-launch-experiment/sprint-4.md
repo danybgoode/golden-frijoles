@@ -33,11 +33,11 @@ stories:
     i_want: "the price to be one I can actually pay"
     so_that: "the page stops saying billing is not live"
     risk: low
-    status: planned
+    status: in-progress   # built 2026-10-20; ships before the first real purchase, on Daniel's call (below)
 ---
 # Launch: the first landing A/B on goldenfrijoles.com, run on Golden Frijoles — Sprint 4: Plans + Stripe
 
-**Status:** 🟦 In review — S4.1–S4.3 built; S4.4 waits for a real purchase in production
+**Status:** 🟦 In review — S4.1–S4.3 live; checkout switched ON by Daniel 2026-10-20; S4.4 built
 
 ## Stories
 
@@ -74,6 +74,15 @@ stories:
   the POST form to checkout. The route's own signed-out answer (303 `/login?next=/#pricing`) only catches a session that
   expired on the page — `/signup` takes no `next`, so it would lose the visitor's place.
 **Risk:** low
+
+**Deviation (Daniel, 2026-10-20): S4.4 ships before the first real purchase, not after.** Daniel switched
+`billing.checkout_enabled` on (`on v2` in production) before buying, so the landing said "billing is not live" while
+Checkout was open; the copy follows the switch rather than waiting. The first real purchase (sprint walkthrough) is
+still owed and still the proof of the money path. Built: one `GrowthCta` (`components/landing/GrowthCta.tsx`) on A and B,
+decided by `lib/billing-view.ts → growthCta` — signed in → POST form to checkout; signed out → "Get Growth" → `/signup`;
+switch off → "Start free" with "Growth is paused"; sign-up off → the page's waitlist. D22's debt: B's "Longer history"
+(never built) became "2,000,000 events a month (Free: 200,000)" and "Cancel any time from Plan & billing". A's markup
+pin (D13) was edited by hand for exactly the tier's button and note.
 
 ## Build contract (locked by the architect before the builder started)
 Locked 2026-10-19 — README **§ Wave 3 lock, D23–D28**. Live at $49/month (Daniel); Stripe installed by Daniel via the

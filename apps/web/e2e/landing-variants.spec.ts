@@ -53,3 +53,17 @@ test("B's offer links land on /talk, which is Set up with us", async ({ request 
   expect(talk).toContain('<h1>Set up with us</h1>')
   expect(talk).toContain('from $1,500')
 })
+
+// landing-launch-experiment S4.4 (D28) — with checkout on (this server's gates), a signed-out visitor's Growth button is
+// "Get Growth" into sign-up on BOTH arms, and neither says billing is not live. The signed-in POST form and the paused
+// answer are the unit layer's (lib/billing-view.test.ts → growthCta).
+test('both arms sell Growth: Get Growth → /signup signed out, and no "not live" line (S4.4)', async ({
+  request,
+}) => {
+  for (const path of ['/?variant=a', '/?variant=b']) {
+    const html = await (await request.get(path)).text()
+    expect(html, path).toMatch(/href="\/signup"[^>]*>Get Growth/)
+    expect(html, path).not.toMatch(/billing rail yet|Billing is not live|nobody can be charged/i)
+    expect(html, path).toContain('Billed monthly through Stripe')
+  }
+})
