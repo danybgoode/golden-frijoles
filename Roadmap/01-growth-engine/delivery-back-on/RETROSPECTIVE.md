@@ -1,7 +1,7 @@
 # Delivery back on: a dispatch schedule the free Vercel plan allows — Retrospective
 
 _Closed: 2026-10-19_
-_Intent: yes | mostly | no_
+_Intent: yes_
 <!-- Owed to Daniel: his one word. -->
 _Quote vs actual: quote $8–20 (S, n=12, p25–p75) → actual not measured (`epic-actuals` found no transcripts on this machine) (—)_
 _Crew (actual): Opus 5.5 orchestrated and built all three stories · reviewers Codex gpt-5.6-luna xhigh (3 general rounds), agy Gemini 3.8 flash (security lens, scoped to 4 files; gpt-oss returned empty twice), two fresh verifier passes · prose: the orchestrator — as planned_
