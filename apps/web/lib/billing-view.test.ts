@@ -1,7 +1,14 @@
 // landing-launch-experiment · Sprint 4 — the Plan & billing page's answers (lib/billing-view.ts).
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { billingHref, billingMessage, billingView, GROWTH_CTA_NOTE, growthCta } from './billing-view.ts'
+import {
+  billingHref,
+  billingMessage,
+  billingView,
+  GROWTH_CTA_NOTE,
+  growthCta,
+  TROUBLE_NOTES,
+} from './billing-view.ts'
 
 const free = { plan: 'free', productLimit: 10, monthlyEventPool: 200_000, hasStripeCustomer: false }
 
@@ -100,4 +107,34 @@ test('no Growth note says billing is not live, and only the paused one says it c
     assert.doesNotMatch(note, /not live|cannot be charged|nobody can be charged/i, state)
     assert.equal(/paused/.test(note), state === 'paused', state)
   }
+})
+
+test('a failed payment: past_due keeps Growth and says to update the card; unpaid blocks a second purchase', () => {
+  const growth = { plan: 'growth', productLimit: null, monthlyEventPool: 2_000_000, hasStripeCustomer: true }
+  const pastDue = billingView({ ...growth, checkoutOn: true, trouble: 'past_due' })
+  assert.equal(pastDue.note, TROUBLE_NOTES.past_due)
+  assert.equal(pastDue.canManage, true)
+  const unpaid = billingView({ ...free, hasStripeCustomer: true, checkoutOn: true, trouble: 'unpaid' })
+  assert.equal(unpaid.canBuy, false, 'a second checkout would be a second subscription')
+  assert.equal(unpaid.canManage, true, 'the portal is how the invoice gets paid')
+  assert.equal(unpaid.note, TROUBLE_NOTES.unpaid)
+  assert.equal(unpaid.noteTone, 'warn')
+  assert.equal(billingView({ ...free, checkoutOn: false }).noteTone, 'info')
+  assert.equal(
+    billingView({ ...free, hasStripeCustomer: true, checkoutOn: true, trouble: null }).canBuy,
+    true
+  )
+  assert.equal(billingMessage('unpaid')?.tone, 'warn')
+})
+
+test('"back on Free" is said only on Free: a comped workspace with an old unpaid subscription is not told it', () => {
+  const comped = {
+    plan: 'comped',
+    productLimit: null,
+    monthlyEventPool: null,
+    hasStripeCustomer: true,
+    checkoutOn: true,
+  }
+  assert.equal(billingView({ ...comped, trouble: 'unpaid' }).note, null)
+  assert.equal(billingView({ ...comped, trouble: 'past_due' }).note, TROUBLE_NOTES.past_due)
 })

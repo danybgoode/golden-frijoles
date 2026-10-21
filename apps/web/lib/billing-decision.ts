@@ -77,6 +77,11 @@ export type BillingAction =
 const CUSTOMER_ID = /^cus_[A-Za-z0-9]{1,250}$/
 const SUBSCRIPTION_ID = /^sub_[A-Za-z0-9]{1,250}$/
 
+/** The same guard for any other path that puts a customer id into a PostgREST filter. */
+export function isCustomerId(value: string): boolean {
+  return CUSTOMER_ID.test(value)
+}
+
 /**
  * A subscription status → the plan it buys. Growth while Stripe still treats the subscription as live, including
  * `past_due` (Stripe is retrying the card; its dunning decides, not us) and a cancel scheduled for period end (still
@@ -147,6 +152,113 @@ export function holdsGrowthSubscription(
       (planForSubscriptionStatus(s.status) === 'growth' || s.status === 'incomplete') &&
       s.priceLookupKeys.includes(GROWTH_PRICE_LOOKUP_KEY)
   )
+}
+
+/** Trouble with a customer's Growth subscription that its owner must act on, from Stripe's own statuses: `past_due` (a payment
+ *  failed and Stripe is retrying; the workspace keeps Growth) or `unpaid` (retries ran out; the workspace is on Free, and the
+ *  subscription comes back the moment its invoice is paid). `unpaid` wins: it is the one that already cost them Growth. A
+ *  second checkout while `unpaid` would be a second subscription (verifier r7, #412), so checkout refuses it. */
+export type PaymentTrouble = 'past_due' | 'unpaid'
+export function paymentTrouble(
+  subscriptions: { status: string; priceLookupKeys: (string | null)[] }[]
+): PaymentTrouble | null {
+  const growth = subscriptions.filter((s) => s.priceLookupKeys.includes(GROWTH_PRICE_LOOKUP_KEY))
+  if (growth.some((s) => s.status === 'unpaid')) return 'unpaid'
+  if (growth.some((s) => s.status === 'past_due')) return 'past_due'
+  return null
+}
+
+/** Why checkout refuses to open for a customer, from Stripe's own list: an UNPAID Growth subscription is paid, not
+ *  replaced (a new checkout would be a second subscription), and a held one is already Growth. Null: sell. */
+export function checkoutBlock(
+  subscriptions: { status: string; priceLookupKeys: (string | null)[] }[]
+): 'unpaid' | 'already' | null {
+  if (paymentTrouble(subscriptions) === 'unpaid') return 'unpaid'
+  if (holdsGrowthSubscription(subscriptions)) return 'already'
+  return null
+}
+
+/** The money events that change no plan but need a person (verifier, #412; Stripe's go-live guidance). The webhook records
+ *  them like any other and sends the operator one line each; the decision above never reads them. */
+export const ALERTED_EVENT_TYPES = [
+  'invoice.payment_failed',
+  'charge.dispute.created',
+  'charge.refunded',
+  'radar.early_fraud_warning.created',
+] as const
+
+/** Only ids, amounts and Stripe's own codes: never a name or an email, since the alert leaves for Telegram. */
+export type BillingAlertFacts = {
+  type: string
+  eventId: string
+  customerId?: string | null
+  subscriptionId?: string | null
+  chargeId?: string | null
+  /** Minor units (cents). */
+  amount?: number | null
+  currency?: string | null
+  /** Stripe's code: the dispute's reason, or the early fraud warning's fraud type. */
+  reason?: string | null
+  attempt?: number | null
+  /** Unix seconds; null when Stripe will not retry. */
+  nextAttemptAt?: number | null
+  workspaceId?: string | null
+}
+
+/** Stripe's zero-decimal currencies: their amounts are whole units, not cents. Growth sells in USD; another product's
+ *  dispute or refund on the same account may not. */
+const ZERO_DECIMAL = new Set([
+  'bif',
+  'clp',
+  'djf',
+  'gnf',
+  'jpy',
+  'kmf',
+  'krw',
+  'mga',
+  'pyg',
+  'rwf',
+  'ugx',
+  'vnd',
+  'vuv',
+  'xaf',
+  'xof',
+  'xpf',
+])
+
+function money(amount: number | null | undefined, currency: string | null | undefined): string {
+  if (typeof amount !== 'number' || !Number.isFinite(amount) || !currency) return 'an unknown amount'
+  const code = currency.toLowerCase()
+  return ZERO_DECIMAL.has(code)
+    ? `${amount} ${code.toUpperCase()}`
+    : `${(amount / 100).toFixed(2)} ${code.toUpperCase()}`
+}
+
+function utc(seconds: number): string | null {
+  const date = new Date(seconds * 1000)
+  return Number.isNaN(date.getTime()) ? null : `${date.toISOString().slice(0, 16).replace('T', ' ')} UTC`
+}
+
+/** The operator's one line for an alerted event, or null for every other type. */
+export function billingAlert(f: BillingAlertFacts): string | null {
+  const workspace = f.workspaceId ? `workspace ${f.workspaceId}` : 'no workspace of ours'
+  const customer = f.customerId ? `customer ${f.customerId}, ` : ''
+  switch (f.type) {
+    case 'invoice.payment_failed':
+      return `Payment failed: ${money(f.amount, f.currency)} for subscription ${f.subscriptionId ?? 'unknown'} (${customer}${workspace}), attempt ${f.attempt ?? '?'}. ${
+        f.nextAttemptAt
+          ? `Stripe retries ${utc(f.nextAttemptAt) ?? 'later'}; the owner sees it on Plan & billing.`
+          : 'Stripe will not retry: the subscription goes unpaid and the workspace returns to Free.'
+      } Event ${f.eventId}.`
+    case 'charge.dispute.created':
+      return `Dispute opened: ${money(f.amount, f.currency)} on charge ${f.chargeId ?? 'unknown'} (${f.reason ?? 'no reason given'}). Answer it in the Stripe Dashboard before its deadline. Event ${f.eventId}.`
+    case 'charge.refunded':
+      return `Refund: ${money(f.amount, f.currency)} refunded on charge ${f.chargeId ?? 'unknown'} (${customer}${workspace}). Check it was meant. Event ${f.eventId}.`
+    case 'radar.early_fraud_warning.created':
+      return `Early fraud warning on charge ${f.chargeId ?? 'unknown'} (${f.reason ?? 'no type given'}). Refunding it now usually prevents a dispute. Event ${f.eventId}.`
+    default:
+      return null
+  }
 }
 
 /** Stripe's `integration_identifier` label for our Checkout sessions: a fixed prefix plus 8 random letters (Stripe's

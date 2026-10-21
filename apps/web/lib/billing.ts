@@ -90,14 +90,18 @@ export async function recordBillingEvent(
   eventId: string,
   type: string,
   workspaceId: string | null
-): Promise<void> {
-  const { error } = await getSupabaseServiceClient()
+): Promise<boolean> {
+  // `.select()` after an ignore-duplicates upsert returns only the rows it INSERTED: true means this delivery is the one
+  // that recorded the event, so two overlapping deliveries cannot both send its alert (verifier, #420).
+  const { data, error } = await getSupabaseServiceClient()
     .from('billing_events')
     .upsert(
       { stripe_event_id: eventId, type, workspace_id: workspaceId },
       { onConflict: 'stripe_event_id', ignoreDuplicates: true }
     )
+    .select('stripe_event_id')
   if (error) throw new Error(`billing_events write failed: ${error.message}`)
+  return (data?.length ?? 0) > 0
 }
 
 /** Whether any workspace holds this Stripe customer — to tell "an event about nobody of ours" from "a stale event". */

@@ -5,6 +5,10 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import {
+  ALERTED_EVENT_TYPES,
+  billingAlert,
+  checkoutBlock,
+  paymentTrouble,
   stripeSecretKey,
   GROWTH_PRICE_LOOKUP_KEY,
   decideBillingAction,
@@ -208,5 +212,94 @@ test('stripeSecretKey: production uses ONLY a live key, never the sandbox fallba
   assert.equal(
     stripeSecretKey({ VERCEL_ENV: 'production', STRIPE_LIVE_SECRET_KEY: 'sk_live_w' }),
     'sk_live_w'
+  )
+})
+
+// S4.3 follow-ups (verifier, #412) — the money events that need a person, and the trouble the owner is shown.
+const growthSub = (status: string) => ({ status, priceLookupKeys: [GROWTH_PRICE_LOOKUP_KEY] })
+
+test('paymentTrouble: unpaid beats past_due, and only on the Growth price', () => {
+  assert.equal(paymentTrouble([growthSub('active')]), null)
+  assert.equal(paymentTrouble([growthSub('past_due')]), 'past_due')
+  assert.equal(paymentTrouble([growthSub('unpaid')]), 'unpaid')
+  assert.equal(paymentTrouble([growthSub('past_due'), growthSub('unpaid')]), 'unpaid')
+  assert.equal(paymentTrouble([{ status: 'unpaid', priceLookupKeys: ['someone_elses_price'] }]), null)
+  assert.equal(paymentTrouble([]), null)
+})
+
+test('every alerted event type has a line; any other type has none', () => {
+  for (const type of ALERTED_EVENT_TYPES) assert.ok(billingAlert({ type, eventId: 'evt_1' }), type)
+  for (const type of ['customer.subscription.updated', 'invoice.paid', 'charge.succeeded'])
+    assert.equal(billingAlert({ type, eventId: 'evt_1' }), null, type)
+})
+
+test('a failed payment names the money, the ids and what Stripe does next', () => {
+  const retrying = billingAlert({
+    type: 'invoice.payment_failed',
+    eventId: 'evt_9',
+    customerId: 'cus_A',
+    subscriptionId: 'sub_A',
+    amount: 4900,
+    currency: 'usd',
+    attempt: 2,
+    nextAttemptAt: Date.UTC(2026, 10, 3, 14, 5) / 1000,
+    workspaceId: 'ws-1',
+  })!
+  assert.match(retrying, /49\.00 USD/)
+  assert.match(retrying, /sub_A/)
+  assert.match(retrying, /customer cus_A, workspace ws-1/)
+  assert.match(retrying, /attempt 2/)
+  assert.match(retrying, /retries 2026-11-03 14:05 UTC/)
+  assert.match(retrying, /evt_9/)
+  const last = billingAlert({ type: 'invoice.payment_failed', eventId: 'evt_9', nextAttemptAt: null })!
+  assert.match(last, /will not retry/)
+  assert.match(last, /no workspace of ours/)
+  assert.match(last, /an unknown amount/)
+})
+
+test('a dispute, a refund and a fraud warning each name the charge', () => {
+  const dispute = billingAlert({
+    type: 'charge.dispute.created',
+    eventId: 'e',
+    chargeId: 'ch_1',
+    amount: 4900,
+    currency: 'usd',
+    reason: 'fraudulent',
+  })!
+  assert.match(dispute, /ch_1/)
+  assert.match(dispute, /fraudulent/)
+  assert.match(dispute, /49\.00 USD/)
+  assert.match(
+    billingAlert({ type: 'charge.refunded', eventId: 'e', chargeId: 'ch_2', amount: 100, currency: 'usd' })!,
+    /1\.00 USD refunded on charge ch_2/
+  )
+  assert.match(
+    billingAlert({
+      type: 'radar.early_fraud_warning.created',
+      eventId: 'e',
+      chargeId: 'ch_3',
+      reason: 'card_never_received',
+    })!,
+    /ch_3 \(card_never_received\)/
+  )
+})
+
+test('checkoutBlock: an unpaid Growth subscription is paid, not replaced; a held one is already Growth', () => {
+  assert.equal(checkoutBlock([growthSub('unpaid')]), 'unpaid')
+  assert.equal(checkoutBlock([growthSub('unpaid'), growthSub('canceled')]), 'unpaid')
+  assert.equal(checkoutBlock([growthSub('active')]), 'already')
+  assert.equal(checkoutBlock([growthSub('past_due')]), 'already')
+  assert.equal(checkoutBlock([growthSub('canceled')]), null)
+  assert.equal(checkoutBlock([]), null)
+})
+
+test('a zero-decimal currency is whole units, and an unreadable retry time does not throw', () => {
+  assert.match(
+    billingAlert({ type: 'charge.refunded', eventId: 'e', amount: 500, currency: 'jpy' })!,
+    /500 JPY refunded/
+  )
+  assert.match(
+    billingAlert({ type: 'invoice.payment_failed', eventId: 'e', nextAttemptAt: 1e20 })!,
+    /retries later/
   )
 })

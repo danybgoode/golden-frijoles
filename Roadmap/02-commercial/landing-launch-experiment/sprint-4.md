@@ -99,9 +99,13 @@ a test card. It is switched on — and from then on serves as the kill switch �
 The webhook is not gated: subscriptions must keep reaching their workspace whatever the switch says.
 
 **Owed before `billing.checkout_enabled` goes ON (verifier, #412; Stripe's production guidance):**
-- `charge.dispute.created`, `charge.refunded`, `radar.early_fraud_warning.created`: today recorded only; decide and build what
-  each does (at least: tell the owner and the operator) before real money flows.
-- `invoice.payment_failed`: Stripe's dunning moves the subscription to `past_due`/`unpaid` (handled), but the owner is not told.
+- ~~`charge.dispute.created`, `charge.refunded`, `radar.early_fraud_warning.created`: today recorded only; decide and build what
+  each does (at least: tell the owner and the operator) before real money flows.~~ ✅ 2026-10-20 (#420): the operator gets one
+  Telegram line each (ids, amount, Stripe's code). **Decision: the owner is not told by us** — Stripe emails a refund
+  receipt, and a dispute or fraud warning is the operator's to answer, not the buyer's.
+- ~~`invoice.payment_failed`: Stripe's dunning moves the subscription to `past_due`/`unpaid` (handled), but the owner is not told.~~
+  ✅ 2026-10-20 (#420): the operator is alerted; the owner sees a warning on Plan & billing (`past_due`: update the card;
+  `unpaid`: back on Free, pay it from Manage billing). Stripe's own failed-payment emails are a Dashboard setting (Daniel).
 - Stripe Tax: Daniel decides whether to register/collect before the first live charge (an accountant question, seed).
 - ~~A restricted API key (`rk_`) in place of the Marketplace's `sk_` for the app's server calls.~~ ✅ 2026-10-20: Daniel made
   a live `rk_` (Customers, Checkout Sessions, Customer portal: write; Subscriptions, Prices, Products: read) and set it as
@@ -110,13 +114,21 @@ The webhook is not gated: subscriptions must keep reaching their workspace whate
 - Two live Growth subscriptions on one customer can leave one paid and unalerted (verifier r7 nit): a decline racing a
   concurrent Free for the held one, or a second checkout while the first is `unpaid` (`holdsGrowthSubscription` does not
   count `unpaid`). Both need two subscriptions; decide whether `unpaid` blocks a re-buy and add a reconciliation check
-  (Stripe's live Growth subscriptions vs workspaces on Growth) before real money flows.
+  (Stripe's live Growth subscriptions vs workspaces on Growth) before real money flows. ✅ 2026-10-20 (#420): `unpaid` blocks a
+  re-buy (`checkoutBlock` → `?billing=unpaid`); a declined second Growth subscription alerts the operator;
+  `node scripts/stripe-reconcile-growth.mjs` (read-only, live) lists every mismatch — first run: 0 subscriptions, 4
+  workspaces, in step.
 - ~~A way to REACH checkout and the portal from the console (verifier r3/r4): nothing in the app posts to either yet, and D27
   makes the portal the only cancel path. A console billing form for the workspace owner — "Get Growth" (POST checkout)
   while the switch is on, "Manage billing" (POST portal) whenever the workspace holds a Stripe customer — ships in its own
   PR BEFORE the switch: the portal is ungated, so it does not wait for the purchase, and it is how Daniel makes the first
   real purchase. S4.4 (the public pricing copy) still waits for that purchase.~~ ✅ 2026-10-20: `/app/billing` (Plan & billing), from the account
   menu and the pool notice; checkout and the portal return there with a sentence for every outcome.
+
+**Order, stated (2026-10-20):** Daniel switched checkout ON before this list closed; #420 closes it with no purchase yet made.
+**Owed to Daniel for #420 to do anything live:** add `invoice.payment_failed`, `charge.dispute.created`, `charge.refunded` and
+`radar.early_fraud_warning.created` to the live webhook endpoint (`we_1USiHd87jkUevmPfR62kk45W` sends only
+`customer.subscription.*` today), and turn on Stripe's failed-payment customer emails.
 
 **Run log — 2026-10-19 (agent, Stripe sandbox, local production build):** `scripts/stripe-ensure-growth-price.mjs` created
 `Golden Frijoles Growth` at $49.00 USD/month (`gf_growth_monthly`); a re-run created nothing. Through the local server with

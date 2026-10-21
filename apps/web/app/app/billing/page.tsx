@@ -4,6 +4,7 @@ import { getSessionUser } from '@/lib/supabase-auth'
 import { getUserProjects } from '@/lib/membership'
 import { isBillingCheckoutEnabled } from '@/lib/flags'
 import { ownWorkspaceForBilling } from '@/lib/billing'
+import { growthPaymentTrouble } from '@/lib/stripe'
 import { BILLING_PAGE, billingMessage, billingView } from '@/lib/billing-view'
 import { SCREEN_WORDS } from '@/lib/screen-words'
 import { ProductShell } from '@/components/product/ProductShell'
@@ -33,6 +34,8 @@ export default async function BillingPage({
   ])
   // Awaited on its own line: a gate is a Promise, and lib/gates-guard.test.ts asks to SEE the await (rule #6).
   const checkoutOn = await isBillingCheckoutEnabled()
+  // Only a workspace Stripe knows can have a failed payment; one call to Stripe, on a page few people open.
+  const trouble = workspace?.stripeCustomerId ? await growthPaymentTrouble(workspace.stripeCustomerId) : null
   const message = billingMessage(query.billing, workspace?.plan)
   // The frame names a project from THIS workspace, so the chrome and the page describe the same tenant.
   const slug = (workspace && projects.find((p) => p.workspace.id === workspace.id)?.slug) ?? projects[0]?.slug
@@ -58,6 +61,7 @@ export default async function BillingPage({
               productLimit: workspace.productLimit,
               monthlyEventPool: workspace.monthlyEventPool,
               hasStripeCustomer: workspace.stripeCustomerId !== null,
+              trouble,
               checkoutOn,
             })}
           />
@@ -108,7 +112,7 @@ function BillingBody({
         <Stat {...view.products} />
         <Stat {...view.events} />
       </Summary>
-      {view.note ? <Callout>{view.note}</Callout> : null}
+      {view.note ? <Callout tone={view.noteTone}>{view.note}</Callout> : null}
       {view.canBuy ? (
         <ListCard plain>
           <p>

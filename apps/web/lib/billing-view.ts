@@ -8,6 +8,9 @@ export type BillingFacts = {
   monthlyEventPool: number | null
   hasStripeCustomer: boolean
   checkoutOn: boolean
+  /** Stripe's word on the customer's Growth subscription (lib/billing-decision.ts → paymentTrouble), asked when the page
+   *  renders; null when all is well, when Stripe does not know the workspace, or when the ask failed. */
+  trouble?: 'past_due' | 'unpaid' | null
 }
 
 export type Tile = { value: string; label: string }
@@ -16,12 +19,16 @@ export type BillingView = {
   plan: Tile
   products: Tile
   events: Tile
-  /** "Get Growth": a Free workspace, while the checkout switch is on. */
+  /** "Get Growth": a Free workspace, while the checkout switch is on, unless an unpaid Growth subscription would make it a
+   *  second one. */
   canBuy: boolean
   /** "Manage billing": any workspace Stripe knows, whatever its plan, so a payer can always cancel (D27). */
   canManage: boolean
-  /** Free with the switch off: say when Growth can be bought instead of showing a button that 404s. */
+  /** Free with the switch off: say when Growth can be bought instead of showing a button that 404s. A failed payment: say
+   *  what Stripe does next and what to do about it. */
   note: string | null
+  /** A failed payment is a warning; "not on sale yet" is not. */
+  noteTone: 'info' | 'warn'
 }
 
 const PLANS: Record<string, Tile> = {
@@ -34,9 +41,19 @@ function count(n: number): string {
   return n.toLocaleString('en-US')
 }
 
+/** What the owner is told about a failed payment. Stripe also emails them, if its failed-payment emails are on. */
+export const TROUBLE_NOTES = {
+  past_due:
+    'Your last payment for Growth failed. Stripe will try again; update your card in Manage billing so the workspace keeps Growth.',
+  unpaid:
+    'An invoice for Growth is unpaid, so this workspace is back on Free. Pay it from Manage billing and Growth comes back; buying again would start a second subscription.',
+} as const
+
 export function billingView(facts: BillingFacts): BillingView {
   const { plan, productLimit, monthlyEventPool, hasStripeCustomer, checkoutOn } = facts
-  const canBuy = plan === 'free' && checkoutOn
+  // "Back on Free" is only true on Free: a comped workspace, or one on Growth through another subscription, is not told it.
+  const trouble = facts.trouble === 'unpaid' && plan !== 'free' ? null : (facts.trouble ?? null)
+  const canBuy = plan === 'free' && checkoutOn && trouble !== 'unpaid'
   return {
     plan: Object.hasOwn(PLANS, plan) ? PLANS[plan] : { value: plan, label: 'plan' },
     products:
@@ -49,10 +66,12 @@ export function billingView(facts: BillingFacts): BillingView {
         : { value: count(monthlyEventPool), label: 'events a month, shared by every product' },
     canBuy,
     canManage: hasStripeCustomer,
-    note:
-      plan === 'free' && !checkoutOn
+    note: trouble
+      ? TROUBLE_NOTES[trouble]
+      : plan === 'free' && !checkoutOn
         ? 'Growth is not on sale yet. Nothing here can charge you; this page offers it the day it opens.'
         : null,
+    noteTone: trouble ? 'warn' : 'info',
   }
 }
 
@@ -81,6 +100,10 @@ export const BILLING_MESSAGES = {
   failed: {
     tone: 'warn',
     text: 'Checkout could not start. If you just paid in another tab, Growth appears here within a minute: refresh before trying again.',
+  },
+  unpaid: {
+    tone: 'warn',
+    text: 'This workspace has an unpaid Growth invoice. Nothing was charged: pay it from Manage billing instead, and Growth comes back.',
   },
   'portal-failed': { tone: 'warn', text: 'We could not open billing. Nothing changed; try again.' },
   'no-workspace': {
