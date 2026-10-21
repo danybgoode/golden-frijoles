@@ -4,38 +4,33 @@
 // needs an answer they can act on today: given what has happened so far, how likely is the new version the better one?
 // That is the Bayesian chance-to-beat: each version's conversion rate as Beta(1 + converted, 1 + not converted) (a flat
 // prior: before any data, every rate is equally likely), and the probability one draw exceeds the other — integrated
-// exactly on a grid, not simulated, so the same counts always give the same number. It is REPORTED, never a gate: with
+// deterministically on a grid fitted to both posteriors, not simulated, so the same counts always give the same number. It is REPORTED, never a gate: with
 // 3 people the honest answer is near 50%, and the page says so.
 //
 // Import-free, so the unit layer pins it directly.
 
 export type Counts = { exposed: number; converted: number }
 
-function logGamma(z: number): number {
-  // Lanczos approximation (g = 7, n = 9): accurate to ~15 digits for z > 0.
-  const c = [
-    0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059,
-    12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7,
-  ]
-  if (z < 0.5) return Math.log(Math.PI / Math.sin(Math.PI * z)) - logGamma(1 - z)
-  const x = z - 1
-  let a = c[0]
-  const t = x + 7.5
-  for (let i = 1; i < 9; i++) a += c[i] / (x + i)
-  return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(a)
+/** A Beta(a, b)'s mean and standard deviation, to fit the grid to where its mass actually is. */
+function spread(a: number, b: number): { mean: number; sd: number } {
+  const n = a + b
+  return { mean: a / n, sd: Math.sqrt((a * b) / (n * n * (n + 1))) }
 }
 
-/** The Beta(a, b) density at the midpoints of `steps` equal cells on (0, 1), normalised to sum to 1. */
-function betaCells(a: number, b: number, steps: number): number[] {
-  const logNorm = logGamma(a + b) - logGamma(a) - logGamma(b)
-  const cells: number[] = []
-  let total = 0
+/** The Beta(a, b) density at the midpoints of `steps` equal cells on (lo, hi), normalised to sum to 1. Log densities are
+ *  shifted by their maximum before `exp`, so a posterior from millions of people never underflows to 0/0 (verifier, #422). */
+function betaCells(a: number, b: number, lo: number, hi: number, steps: number): number[] {
+  const width = (hi - lo) / steps
+  const logs: number[] = []
+  let max = -Infinity
   for (let i = 0; i < steps; i++) {
-    const p = (i + 0.5) / steps
-    const v = Math.exp(logNorm + (a - 1) * Math.log(p) + (b - 1) * Math.log(1 - p))
-    cells.push(v)
-    total += v
+    const p = lo + (i + 0.5) * width
+    const v = (a - 1) * Math.log(p) + (b - 1) * Math.log(1 - p)
+    logs.push(v)
+    if (v > max) max = v
   }
+  const cells = logs.map((v) => Math.exp(v - max))
+  const total = cells.reduce((sum, v) => sum + v, 0)
   return cells.map((v) => v / total)
 }
 
@@ -57,11 +52,19 @@ export function chanceBetter(
   control: Counts,
   candidate: Counts,
   wantUp: boolean,
-  steps = 2000
+  steps = 4000
 ): number | null {
   if (!valid(control) || !valid(candidate)) return null
-  const a = betaCells(1 + control.converted, 1 + control.exposed - control.converted, steps)
-  const b = betaCells(1 + candidate.converted, 1 + candidate.exposed - candidate.converted, steps)
+  const [aA, bA] = [1 + control.converted, 1 + control.exposed - control.converted]
+  const [aB, bB] = [1 + candidate.converted, 1 + candidate.exposed - candidate.converted]
+  // One shared grid over both posteriors' mass (mean ± 12 sd, inside (0, 1)): at a million people a posterior is a few
+  // thousandths wide, and a fixed (0, 1) grid would put both in the same cell and read every comparison as a tie.
+  const A = spread(aA, bA)
+  const B = spread(aB, bB)
+  const lo = Math.max(0, Math.min(A.mean - 12 * A.sd, B.mean - 12 * B.sd))
+  const hi = Math.min(1, Math.max(A.mean + 12 * A.sd, B.mean + 12 * B.sd))
+  const a = betaCells(aA, bA, lo, hi, steps)
+  const b = betaCells(aB, bB, lo, hi, steps)
   // P(B > A) = Σ_j b_j · (Σ_{i<j} a_i + a_j / 2): ties inside one cell split evenly, so equal counts give exactly 0.5.
   let below = 0
   let higher = 0
@@ -70,7 +73,7 @@ export function chanceBetter(
     below += a[j]
   }
   const p = wantUp ? higher : 1 - higher
-  return Math.min(1, Math.max(0, p))
+  return Number.isFinite(p) ? Math.min(1, Math.max(0, p)) : null
 }
 
 /** "about 78%" — whole percents, never 0% or 100%, which no finite sample can claim. */

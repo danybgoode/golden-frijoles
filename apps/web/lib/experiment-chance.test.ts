@@ -41,3 +41,32 @@ test('words never claim 0% or 100%', () => {
   assert.equal(chanceWords(1), 'about 99%')
   assert.equal(chanceWords(0), 'about 1%')
 })
+
+test('large samples are read correctly, not dragged to a coin flip (verifier, #422)', () => {
+  // References from a 20,000-cell integration fitted to the posteriors.
+  near(
+    chanceBetter({ exposed: 300_000, converted: 3_000 }, { exposed: 300_000, converted: 3_150 }, true),
+    0.973,
+    0.01
+  )
+  near(
+    chanceBetter({ exposed: 1_000_000, converted: 5_000 }, { exposed: 1_000_000, converted: 5_250 }, true),
+    0.993,
+    0.01
+  )
+  near(
+    chanceBetter({ exposed: 100_000, converted: 500 }, { exposed: 100_000, converted: 550 }, true),
+    0.939,
+    0.01
+  )
+})
+
+test('millions of people with no conversions is a coin flip, never NaN', () => {
+  near(
+    chanceBetter({ exposed: 5_000_000, converted: 0 }, { exposed: 5_000_000, converted: 0 }, true),
+    0.5,
+    1e-6
+  )
+  const one = chanceBetter({ exposed: 5_000_000, converted: 0 }, { exposed: 5_000_000, converted: 1 }, true)
+  assert.ok(one !== null && Number.isFinite(one) && one > 0.5)
+})

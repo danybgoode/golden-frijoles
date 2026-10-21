@@ -31,7 +31,15 @@ export type Readout = {
   /** S6.3 — the chance the lead version is really better on the primary metric, 0–1, at ANY volume (lib/experiment-chance.ts).
    *  Reported, never a gate; null before anyone is counted. */
   chance: number | null
-  verdict: { label: string; title: string; body: string; actions: ReadoutAction[] }
+  /** `recommend` is the button the page's own reading points to (drawn primary); null when the numbers point nowhere yet.
+   *  Every action stays available whatever it says (S6.3) — the recommendation is emphasis, never a gate. */
+  verdict: {
+    label: string
+    title: string
+    body: string
+    actions: ReadoutAction[]
+    recommend?: ReadoutAction | null
+  }
   progress: { fraction: number; needPerVersion: number; day: number; plannedDays: number }
   srm: 'clear' | 'detected' | 'not_evaluable'
   guardrails: Array<{
@@ -83,7 +91,19 @@ export function buildReadout(input: ReadoutInput): Readout {
     .map((variant) => ({ key: variant.key, interval: metricRow(variant.key)?.liftInterval }))
     .filter((row) => row.interval?.ok)
     .sort((a, b) => wanted * ((b.interval as { lift: number }).lift - (a.interval as { lift: number }).lift))
-  const treatmentKey = recorded?.key ?? measured[0]?.key ?? treatments[0]!.key
+  // No measurable lift yet (a control that converted nobody has no interval — the common low-traffic case): lead with the
+  // treatment most likely to be better, never simply the first (verifier, #422 — C at 6 of 10 must not hide behind B).
+  const counts = (key: string) => ({
+    exposed: metricRow(key)?.exposedSubjects ?? 0,
+    converted: metricRow(key)?.convertedSubjects ?? 0,
+  })
+  const byChance = treatments
+    .map((variant) => ({
+      key: variant.key,
+      chance: chanceBetter(counts(controlKey), counts(variant.key), wanted === 1) ?? 0,
+    }))
+    .sort((a, b) => b.chance - a.chance)
+  const treatmentKey = recorded?.key ?? measured[0]?.key ?? byChance[0]?.key ?? treatments[0]!.key
   const controlRow = metricRow(controlKey)
   const treatmentRow = metricRow(treatmentKey)
   const interval = treatmentRow?.liftInterval
@@ -169,8 +189,9 @@ export function buildReadout(input: ReadoutInput): Readout {
     exposed: treatmentRow?.exposedSubjects ?? 0,
     converted: treatmentRow?.convertedSubjects ?? 0,
   }
+  // Both versions must have been seen: a version nobody saw has no rate to compare (verifier, #422).
   const chance =
-    controlCounts.exposed + treatmentCounts.exposed === 0
+    controlCounts.exposed === 0 || treatmentCounts.exposed === 0
       ? null
       : chanceBetter(controlCounts, treatmentCounts, definition.primaryMetric.direction === 'increase')
   const common = {
@@ -281,6 +302,7 @@ export function buildReadout(input: ReadoutInput): Readout {
           title: 'Record the decision.',
           body: 'The checks found a problem, so these numbers may not mean what they say. You can still roll a version out or keep the current one.',
           actions: [...anyTime, 'invalid', 'iterate'],
+          recommend: 'invalid',
         },
       }
     }
@@ -315,6 +337,7 @@ export function buildReadout(input: ReadoutInput): Readout {
                 : 'There were enough people, and no real difference showed up.'
           : 'Below the planned sample, so the call is directional: roll out the version you believe in, keep the current one, or change it and run again.',
         actions: [...anyTime, 'iterate'],
+        recommend: ready ? (canShip ? 'rollout' : 'keep') : null,
       },
     }
   }
@@ -331,6 +354,7 @@ export function buildReadout(input: ReadoutInput): Readout {
         title: 'Serve the split.',
         body: 'Retry turns this test’s version of the feature on in Production. Nothing else changes.',
         actions: ['retry-serving'],
+        recommend: null,
       },
     }
   }
@@ -349,6 +373,7 @@ export function buildReadout(input: ReadoutInput): Readout {
         title: 'Let it run.',
         body: 'Results appear here as soon as the first person is counted. You can roll a version out or stop it at any time.',
         actions: [...anyTime, 'stop'],
+        recommend: null,
       },
     }
   }
@@ -362,6 +387,7 @@ export function buildReadout(input: ReadoutInput): Readout {
         title: 'Fix what the checks found before trusting the number.',
         body: 'The checks found a problem, so the number may not mean what it says. You can still roll a version out or keep the current one.',
         actions: [...anyTime, 'stop'],
+        recommend: null,
       },
     }
   }
@@ -384,6 +410,7 @@ export function buildReadout(input: ReadoutInput): Readout {
             : 'Keep it running.',
         body: 'Keep it running for a surer answer, or roll out the version you believe in now.',
         actions: [...anyTime, 'stop'],
+        recommend: null,
       },
     }
   }
@@ -407,6 +434,7 @@ export function buildReadout(input: ReadoutInput): Readout {
           title: `${B} is winning. Roll it out?`,
           body: `${metric.replace(/^./, (c) => c.toUpperCase())} moved the way you wanted and the split checks out.`,
           actions: [...anyTime, 'stop'],
+          recommend: 'rollout',
         }
       : favourable
         ? {
@@ -414,6 +442,7 @@ export function buildReadout(input: ReadoutInput): Readout {
             title: `${B} is ahead, but a guardrail moved the wrong way.`,
             body: 'Look at what it cost before deciding; rolling it out is your call.',
             actions: [...anyTime, 'iterate', 'stop'],
+            recommend: null,
           }
         : unfavourable
           ? {
@@ -421,12 +450,14 @@ export function buildReadout(input: ReadoutInput): Readout {
               title: `${B} is worse. Keep ${A}.`,
               body: 'There were enough people to see a change, and it went the wrong way.',
               actions: [...anyTime, 'iterate', 'stop'],
+              recommend: 'keep',
             }
           : {
               label: 'Ready',
               title: `No real difference. Keep ${A}?`,
               body: 'There were enough people to see the change you planned for, and it didn’t show up.',
               actions: [...anyTime, 'iterate', 'stop'],
+              recommend: 'keep',
             },
   }
 }

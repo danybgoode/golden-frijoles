@@ -132,7 +132,7 @@ test('gathering: ahead, with the range, the share of the sample, the counts and 
   assert.ok(result.chance !== null && result.chance > 0.8 && result.chance < 1)
 })
 
-test('ready and favourable: the verdict offers the roll-out; unfavourable or flat never does', () => {
+test('ready: a winner says you can call it; a flat result says it didn’t move — and both still offer the roll-out (S6.3)', () => {
   const winning = readout(exposures(150, 30, 75))
   assert.equal(winning.state, 'ready')
   assert.deepEqual(winning.verdict.actions, ['rollout', 'keep', 'stop'])
@@ -441,4 +441,116 @@ test('the LEAD harming a guardrail is named in the title — and rolling it out 
   assert.deepEqual(result.verdict.actions, ['rollout', 'keep', 'iterate', 'stop'])
   assert.equal(result.verdict.title, 'New copy is ahead, but a guardrail moved the wrong way.')
   assert.match(result.verdict.body, /your call/)
+})
+
+// ── S6.3 follow-ups (verifier, #422) ──────────────────────────────────────────────────────────
+function armsFacts(arms: Array<[string, number, number]>): Fact[] {
+  const facts: Fact[] = []
+  for (const [arm, perArm, converted] of arms)
+    for (let i = 0; i < perArm; i += 1) {
+      const id = `${arm}-${i}`
+      facts.push({
+        id: `x-${id}`,
+        event: 'experiment_exposed',
+        featureId: 'copy_test',
+        tags: { variant: arm, experiment_definition_version: 1 },
+        subjectType: 'merchant',
+        subjectId: id,
+        occurredAt: at(i + 1),
+        createdAt: at(i + 1),
+      })
+      if (i < converted)
+        facts.push({
+          id: `c-${id}`,
+          event: 'signup_completed',
+          featureId: null,
+          tags: null,
+          subjectType: 'merchant',
+          subjectId: id,
+          occurredAt: at(i + 2),
+          createdAt: at(i + 2),
+        })
+    }
+  return facts
+}
+function readoutOf(def: Definition, facts: Fact[]) {
+  const now = '2026-09-10T00:00:00.000Z'
+  const analysis = computeExperimentAnalysis({
+    experimentKey: 'copy_test',
+    definitionVersion: 1,
+    definition: def,
+    lifecycle: { status: 'running', startedAt: START, endedAt: null },
+    asOf: now,
+    facts,
+  })
+  return buildReadout({
+    definition: def,
+    analysis,
+    lifecycle: 'running',
+    decision: null,
+    serving: true,
+    now: new Date(now),
+  })
+}
+
+test('three versions at low volume, control converted nobody: the page leads with the version most likely better', () => {
+  const three: Definition = {
+    ...definition,
+    variants: [
+      { key: 'off', weight: 34, label: 'Current' },
+      { key: 'b', weight: 33, label: 'Version B' },
+      { key: 'c', weight: 33, label: 'Version C' },
+    ],
+  }
+  const result = readoutOf(
+    three,
+    armsFacts([
+      ['off', 10, 0],
+      ['b', 10, 0],
+      ['c', 10, 6],
+    ])
+  )
+  assert.equal(result.treatment.key, 'c')
+  assert.match(
+    sentenceText(result.answer),
+    /Version C 6 of 10 — about \d+% likely Version C is really better/
+  )
+})
+
+test('a primary metric where LOWER is better: the chance is read in that direction', () => {
+  const lower: Definition = {
+    ...definition,
+    primaryMetric: { event: 'signup_completed', direction: 'decrease' },
+  }
+  const result = readoutOf(
+    lower,
+    armsFacts([
+      ['off', 40, 16],
+      ['on', 40, 10],
+    ])
+  )
+  assert.ok(result.chance !== null && result.chance > 0.85, String(result.chance))
+  const worse = readoutOf(
+    lower,
+    armsFacts([
+      ['off', 40, 10],
+      ['on', 40, 16],
+    ])
+  )
+  assert.ok(worse.chance !== null && worse.chance < 0.15, String(worse.chance))
+})
+
+test('a version nobody has seen yet has no chance figure', () => {
+  const result = readoutOf(definition, armsFacts([['off', 3, 0]]))
+  assert.equal(result.chance, null)
+  assert.doesNotMatch(sentenceText(result.answer), /likely/)
+})
+
+test('the emphasised button follows the reading: roll out a winner, keep on worse or flat, nothing urged while gathering', () => {
+  assert.equal(readout(exposures(150, 30, 75)).verdict.recommend, 'rollout')
+  assert.equal(readout(exposures(150, 75, 30)).verdict.recommend, 'keep')
+  assert.equal(readout(exposures(150, 30, 31)).verdict.recommend, 'keep')
+  assert.equal(readout(exposures(40, 10, 16)).verdict.recommend, null)
+  for (const facts of [exposures(150, 75, 30), exposures(40, 10, 16)])
+    assert.ok(readout(facts).verdict.actions.includes('rollout'), 'available, whatever it recommends')
 })
