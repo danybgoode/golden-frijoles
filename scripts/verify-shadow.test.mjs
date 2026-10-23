@@ -6,7 +6,11 @@ import {
   serialiseLog,
   pendingPrs,
   shadowRow,
+  ruleLabel,
+  labelOf,
   report,
+  formatReport,
+  pingText,
   decidePing,
   owedLine,
   addOwedLine,
@@ -72,7 +76,62 @@ test('report: counted needs both a label and a Jev call; exact and within one le
     { jev: 'light', builder_label: null },
     { jev: null, builder_label: 'off' },
   ]);
-  assert.deepEqual(r, { logged: 5, unlabelled: 1, jevMissing: 1, counted: 3, exact: 1, withinOne: 2 });
+  assert.deepEqual(
+    {
+      logged: r.logged,
+      unlabelled: r.unlabelled,
+      jevMissing: r.jevMissing,
+      counted: r.counted,
+      exact: r.exact,
+      withinOne: r.withinOne,
+    },
+    { logged: 5, unlabelled: 1, jevMissing: 1, counted: 3, exact: 1, withinOne: 2 }
+  );
+});
+
+test('the rule label: no spec file is off; a spec file, or files git could not list, labels nothing', () => {
+  assert.equal(ruleLabel([]), 'off');
+  assert.equal(ruleLabel(['packages/sdk/src/flags.ts']), null);
+  assert.equal(ruleLabel(null), null, 'unknown is never off');
+  assert.equal(ruleLabel(undefined), null);
+  const pr = { number: 9, mergedAt: 't' };
+  const ok = { ok: true, answers: { verify_depth: { choice: 'deep' } } };
+  assert.equal(shadowRow(pr, ok, null, []).rule_label, 'off');
+  assert.equal(shadowRow(pr, ok, null, ['apps/web/lib/retry-policy.ts']).rule_label, null);
+  assert.ok(
+    !('rule_label' in shadowRow(pr, ok, null, null)),
+    'unknown leaves the key out, so a later night retries'
+  );
+  assert.equal(shadowRow(pr, ok, null, []).builder_label, null, 'the rule never writes the builder label');
+});
+
+test('a rule label counts (D1); the builder wins when both exist; the report splits the sources', () => {
+  assert.equal(labelOf({ builder_label: 'light', rule_label: 'off' }), 'light');
+  assert.equal(labelOf({ builder_label: null, rule_label: 'off' }), 'off');
+  assert.equal(labelOf({ builder_label: null, rule_label: null }), null);
+  const r = report([
+    { jev: 'light', builder_label: 'light', rule_label: 'off' }, // builder, exact
+    { jev: 'off', builder_label: null, rule_label: 'off' }, // rule, exact
+    { jev: 'deep', builder_label: null, rule_label: 'off' }, // rule, three levels off
+    { jev: 'standard', builder_label: null, rule_label: null }, // touches the spec, no label: not counted
+    { jev: null, builder_label: null, rule_label: 'off' }, // no Jev: not counted, not in the non-off rate
+  ]);
+  assert.equal(r.counted, 3);
+  assert.equal(r.unlabelled, 1);
+  assert.deepEqual(r.builder, { counted: 1, exact: 1, withinOne: 1 });
+  assert.deepEqual(r.rule, { counted: 2, exact: 1, withinOne: 1 });
+  assert.equal(r.zeroSpec, 3, 'the builder-labelled zero-spec row is in the rate too');
+  assert.equal(r.zeroSpecNonOff, 2);
+  assert.match(
+    formatReport(r),
+    /by builder label 1\/1 exact.*off by rule \(no spec path\) 1\/2 exact.*other than off 2\/3 times/
+  );
+  assert.match(
+    pingText(r),
+    /3 labelled PRs \(1 by the builder, 2 off by rule\)/,
+    'the ping names the rule share'
+  );
+  assert.match(owedLine(r, 'd'), /1 by the builder, 2 off by rule/);
 });
 
 test('decidePing: at the threshold and only without a marker', () => {

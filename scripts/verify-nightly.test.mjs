@@ -279,6 +279,54 @@ test('a marker already on main never pings again, whatever the count', async () 
   assert.equal(plan.ping, false);
 });
 
+test('backfill: a logged row gets its rule label once, from the same diff; unknown files are retried later', async () => {
+  const files = { 1: [], 2: ['packages/sdk/src/flags.ts'], 3: null };
+  const specDiff = (p) => ({ stat: '', diff: '', specFiles: files[p.number] });
+  const rows = [1, 2, 3].map((n) => ({ pr: n, jev: 'deep', builder_label: null }));
+  let asked = 0;
+  const plan = await planShadow({
+    main: { log: { since: SINCE, rows }, marker: null },
+    branch: null,
+    merged: [pr(1), pr(2), pr(3)],
+    diffOf: specDiff,
+    ask: async () => (asked++, ask()),
+  });
+  assert.equal(asked, 0, 'a backfill never re-asks Jev');
+  assert.equal(plan.backfilled, 2);
+  assert.deepEqual(
+    plan.log.rows.map((r) => [r.pr, r.rule_label, r.builder_label]),
+    [
+      [1, 'off', null],
+      [2, null, null],
+      [3, undefined, null],
+    ]
+  );
+  const again = await planShadow({
+    main: { log: { since: SINCE, rows: plan.log.rows.slice(0, 2) }, marker: null },
+    branch: null,
+    merged: [pr(1), pr(2)],
+    diffOf: () => assert.fail('a row with a rule_label key is never recomputed'),
+    ask,
+  });
+  assert.equal(again, null, 'nothing to backfill, nothing new: nothing written');
+});
+
+test('a fresh zero-spec PR is logged off by rule beside its (absent) builder label', async () => {
+  const plan = await planShadow({
+    main: { log: { since: SINCE, rows: [] }, marker: null },
+    branch: null,
+    merged: [{ ...pr(4), body: '' }],
+    diffOf: () => ({ stat: 's', diff: '', specFiles: [] }),
+    ask,
+  });
+  assert.deepEqual(
+    plan.fresh.map((r) => [r.builder_label, r.rule_label]),
+    [[null, 'off']]
+  );
+  assert.equal(plan.report.counted, 1);
+  assert.equal(plan.report.rule.counted, 1);
+});
+
 test('verify-nightly.yml runs on a schedule or by hand only, never on a PR, with its own timeout', async () => {
   const { readFileSync } = await import('node:fs');
   const yml = readFileSync(new URL('../.github/workflows/verify-nightly.yml', import.meta.url), 'utf8');

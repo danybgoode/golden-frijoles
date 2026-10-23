@@ -12,7 +12,8 @@
 // run goes red and files nothing for it. A green night writes nothing. Nothing is ever pushed to main.
 //
 // Shadow (D9, D10). Every PR merged into main since the log's `since`, not yet logged, gets Jev's verify-depth call
-// next to the builder's `Verify depth:` label, appended to verify/jev-shadow.jsonl on `claude/verify-jev-shadow`
+// next to the builder's `Verify depth:` label (and an `off` rule label when it touches no spec path; logged rows are
+// backfilled the same way, verify-labels S1.1), appended to verify/jev-shadow.jsonl on `claude/verify-jev-shadow`
 // (rebuilt from main each night, carrying the rows main doesn't have yet). The first time the counted rows reach 30,
 // one Telegram ping, a marker and an owed line ride in the same PR.
 import { execFileSync } from 'node:child_process';
@@ -30,6 +31,7 @@ import {
   pendingPrs,
   jevRequest,
   shadowRow,
+  ruleLabel,
   report,
   formatReport,
   decidePing,
@@ -206,19 +208,31 @@ export async function planShadow({ main, branch, merged, ask, diffOf }) {
   if (!main.log?.since) return { skip: `${LOG_PATH} has no "since" header on main` };
   const onMain = new Set(main.log.rows.map((r) => r.pr));
   const carried = (branch?.log?.rows ?? []).filter((r) => !onMain.has(r.pr));
-  const logged = [...main.log.rows, ...carried];
+  // A row logged before rule labels existed (or whose spec files could not be read) gets its rule label now, from
+  // the same diff a fresh row uses. Idempotent: a row that has the key is never recomputed (verify-labels S1.1).
+  let backfilled = 0;
+  const byNumber = new Map(merged.map((p) => [p.number, p]));
+  const logged = [...main.log.rows, ...carried].map((row) => {
+    if ('rule_label' in row || !byNumber.has(row.pr)) return row;
+    const { specFiles } = diffOf(byNumber.get(row.pr));
+    if (!Array.isArray(specFiles)) return row;
+    backfilled++;
+    return { ...row, rule_label: ruleLabel(specFiles) };
+  });
   const fresh = [];
   for (const pr of pendingPrs(merged, { since: main.log.since, logged })) {
-    const { req } = jevRequest({ title: pr.title, ...diffOf(pr) });
-    fresh.push(shadowRow(pr, await ask(req), parseLabel(pr.body)));
+    const { specFiles, ...state } = diffOf(pr);
+    const { req } = jevRequest({ title: pr.title, ...state });
+    fresh.push(shadowRow(pr, await ask(req), parseLabel(pr.body), specFiles));
   }
   const rows = [...logged, ...fresh];
   const r = report(rows);
   const marker = main.marker ?? branch?.marker ?? null;
   const ping = decidePing({ counted: r.counted, markerExists: Boolean(marker) });
-  // Nothing new and no ping owed: nothing to write. An undelivered ping is retried even on a night with no merge.
-  if (fresh.length === 0 && !ping) return null;
-  return { log: { since: main.log.since, rows }, marker, ping, report: r, fresh };
+  // Nothing new, nothing backfilled and no ping owed: nothing to write. An undelivered ping is retried even on a night
+  // with no merge.
+  if (fresh.length === 0 && backfilled === 0 && !ping) return null;
+  return { log: { since: main.log.since, rows }, marker, ping, report: r, fresh, backfilled };
 }
 
 /**
@@ -381,8 +395,11 @@ async function shadow(sh, ctx) {
   );
   const diffOf = (pr) => {
     const mc = pr.mergeCommit?.oid;
-    if (!mc) return { stat: '', diff: '' };
+    if (!mc) return { stat: '', diff: '', specFiles: null };
+    const names = sh.tryRun('git', ['diff', '--name-only', `${mc}^1`, mc, '--', ...PATHS]);
     return {
+      // The spec files it touched, for the rule label; null (not []) when git could not say (verify-labels S1.1).
+      specFiles: names === null ? null : names.split('\n').filter(Boolean),
       // Capped: Jev's whole state has a budget, and a 500-file stat would crowd out the diff that matters.
       stat: (sh.tryRun('git', ['diff', '--stat', `${mc}^1`, mc]) ?? '').slice(0, 20_000),
       diff: sh.tryRun('git', ['diff', `${mc}^1`, mc, '--', ...PATHS]) ?? '',
@@ -398,7 +415,10 @@ async function shadow(sh, ctx) {
   if (plan?.skip) return console.log(`shadow: ${plan.skip} — nothing logged`);
   if (!plan) return console.log('shadow: no newly merged PRs to log');
   for (const r of plan.fresh)
-    console.log(`shadow: #${r.pr} jev=${r.jev ?? `— (${r.jev_error})`} builder=${r.builder_label ?? '—'}`);
+    console.log(
+      `shadow: #${r.pr} jev=${r.jev ?? `— (${r.jev_error})`} builder=${r.builder_label ?? '—'} rule=${r.rule_label ?? '—'}`
+    );
+  if (plan.backfilled) console.log(`shadow: ${plan.backfilled} logged row(s) given a rule label`);
   console.log(formatReport(plan.report));
 
   const delivered = plan.ping ? await ctx.notify(pingText(plan.report)) : false;
@@ -430,7 +450,7 @@ async function shadow(sh, ctx) {
     title: 'verify: Jev verify-depth shadow log (nightly)',
     body:
       "The nightly appends Jev's verify-depth call for each newly merged PR beside the builder's `Verify depth:` " +
-      'label (verify-module S2.2). Data only: nothing gates on it and nothing comments.\n\n' +
+      'label (verify-module S2.2), and labels a PR that touches no spec path `off` by rule (verify-labels D1). Data only: nothing gates on it and nothing comments.\n\n' +
       `${formatReport(plan.report)}\n\nRun: ${ctx.runUrl}\n\nVerify depth: off\n`,
   });
 }
