@@ -311,6 +311,18 @@ test('backfill: a logged row gets its rule label once, from the same diff; unkno
   assert.equal(again, null, 'nothing to backfill, nothing new: nothing written');
 });
 
+test('a main row the open branch already labelled is not re-backfilled: a quiet night writes nothing', async () => {
+  const mainRow = { pr: 1, jev: 'deep', builder_label: null };
+  const plan = await planShadow({
+    main: { log: { since: SINCE, rows: [mainRow] }, marker: null },
+    branch: { log: { since: SINCE, rows: [{ ...mainRow, rule_label: 'off' }] }, marker: null },
+    merged: [pr(1)],
+    diffOf: () => assert.fail('the branch already carries the rule label'),
+    ask,
+  });
+  assert.equal(plan, null);
+});
+
 test('a fresh zero-spec PR is logged off by rule beside its (absent) builder label', async () => {
   const plan = await planShadow({
     main: { log: { since: SINCE, rows: [] }, marker: null },

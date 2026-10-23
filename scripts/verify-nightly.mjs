@@ -208,11 +208,19 @@ export async function planShadow({ main, branch, merged, ask, diffOf }) {
   if (!main.log?.since) return { skip: `${LOG_PATH} has no "since" header on main` };
   const onMain = new Set(main.log.rows.map((r) => r.pr));
   const carried = (branch?.log?.rows ?? []).filter((r) => !onMain.has(r.pr));
+  // A main row the branch already gave a rule label keeps it, so a night with nothing new writes nothing even before
+  // the shadow PR merges (verifier, #435).
+  const branchLabel = new Map(
+    (branch?.log?.rows ?? []).filter((r) => 'rule_label' in r).map((r) => [r.pr, r.rule_label])
+  );
+  const mainRows = main.log.rows.map((r) =>
+    !('rule_label' in r) && branchLabel.has(r.pr) ? { ...r, rule_label: branchLabel.get(r.pr) } : r
+  );
   // A row logged before rule labels existed (or whose spec files could not be read) gets its rule label now, from
   // the same diff a fresh row uses. Idempotent: a row that has the key is never recomputed (verify-labels S1.1).
   let backfilled = 0;
   const byNumber = new Map(merged.map((p) => [p.number, p]));
-  const logged = [...main.log.rows, ...carried].map((row) => {
+  const logged = [...mainRows, ...carried].map((row) => {
     if ('rule_label' in row || !byNumber.has(row.pr)) return row;
     const { specFiles } = diffOf(byNumber.get(row.pr));
     if (!Array.isArray(specFiles)) return row;
