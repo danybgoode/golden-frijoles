@@ -1,4 +1,5 @@
 import { test } from 'node:test';
+import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import {
   parseLabel,
@@ -15,6 +16,12 @@ import {
   owedLine,
   addOwedLine,
   jevRequest,
+  DEPTHS,
+  BACKTEST_PATH,
+  parseBacktest,
+  backtestToAsk,
+  backtestReport,
+  formatBacktest,
 } from './verify-shadow.mjs';
 import { kindOf, markerFor, DEFAULT_OWNERS } from './owed-ledger.mjs';
 
@@ -151,4 +158,39 @@ test('the owed line is judgment-kind, read by the ledger, and lands once under G
   const last = addOwedLine('# R\n\n## Gaps / follow-ups\n- one\n', line);
   assert.ok(last.endsWith(`- one\n${line}\n`));
   assert.match(addOwedLine('# R\n', line), /## Gaps \/ follow-ups\n\n- \*\*Owed/);
+});
+
+test('the backtest: Jev is refused until the labels are signed off, then asked only where it has not answered', () => {
+  const rows = [
+    { sha: 'a', hindsight_label: 'deep', jev: 'deep' },
+    { sha: 'b', hindsight_label: 'off' },
+  ];
+  assert.match(backtestToAsk({ header: { signed_off: null }, rows }).refuse, /not signed off/);
+  assert.match(backtestToAsk({ header: null, rows }).refuse, /not signed off/);
+  assert.deepEqual(
+    backtestToAsk({ header: { signed_off: '2026-10-24' }, rows }).rows.map((r) => r.sha),
+    ['b']
+  );
+});
+
+test('the backtest report: a ? label is dropped (and said), never scored', () => {
+  const b = backtestReport([
+    { hindsight_label: 'deep', jev: 'deep' },
+    { hindsight_label: 'light', jev: 'deep' },
+    { hindsight_label: '?', jev: 'off' },
+    { hindsight_label: 'off', jev: null },
+  ]);
+  assert.deepEqual(b, { rows: 4, dropped: 1, jevMissing: 1, counted: 2, exact: 1, withinOne: 1 });
+  assert.match(formatBacktest(b, { signed_off: null }), /NOT signed off.*1 dropped/);
+});
+
+test('the committed backtest: while unsigned, no row carries a Jev answer (the labels came first, D2)', () => {
+  const { header, rows } = parseBacktest(
+    readFileSync(new URL('../' + BACKTEST_PATH, import.meta.url), 'utf8')
+  );
+  assert.ok(rows.length > 0);
+  for (const r of rows) assert.ok(DEPTHS.includes(r.hindsight_label) || r.hindsight_label === '?', r.sha);
+  if (!header.signed_off)
+    for (const r of rows)
+      assert.ok(!('jev' in r) && !('jev_error' in r), `${r.sha} was answered before sign-off`);
 });

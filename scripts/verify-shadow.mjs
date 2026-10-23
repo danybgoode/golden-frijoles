@@ -170,3 +170,43 @@ export function addOwedLine(retro, line) {
   const section = retro.slice(after, end).replace(/\n*$/, '\n');
   return `${retro.slice(0, after)}${section}${line}\n${next < 0 ? '' : '\n'}${retro.slice(end)}`;
 }
+
+// ── The historical backtest (verify-labels S1.2, D2) ─────────────────────────────────────────────────────────────
+// verify/jev-backtest.jsonl: a header, then one row per spec-touching commit on main before the shadow log's `since`,
+// labelled with hindsight by a person BEFORE Jev is asked. The header's `signed_off` is the product owner's sign-off
+// of those labels; until it is set, Jev is never asked, so its answers cannot shape the labels they are scored against.
+
+export const BACKTEST_PATH = 'verify/jev-backtest.jsonl';
+
+export function parseBacktest(text) {
+  const [head, ...rest] = String(text ?? '')
+    .split('\n')
+    .filter((l) => l.trim())
+    .map((l) => JSON.parse(l));
+  return { header: head ?? null, rows: rest };
+}
+
+export const serialiseBacktest = ({ header, rows }) =>
+  [header, ...rows].map((r) => JSON.stringify(r)).join('\n') + '\n';
+
+/** Jev may be asked only once the labels are signed off, and only for rows it has not answered. */
+export function backtestToAsk({ header, rows }) {
+  if (!header?.signed_off) return { refuse: `${BACKTEST_PATH}: the hindsight labels are not signed off yet` };
+  return { rows: rows.filter((r) => !DEPTHS.includes(r.jev)) };
+}
+
+/** Scored against the hindsight label; a `?` (or any non-depth) label is dropped and reported as dropped. */
+export function backtestReport(rows) {
+  const labelled = rows.filter((r) => DEPTHS.includes(r.hindsight_label));
+  return {
+    rows: rows.length,
+    dropped: rows.length - labelled.length,
+    jevMissing: labelled.filter((r) => !DEPTHS.includes(r.jev)).length,
+    ...agreement(labelled, (r) => r.hindsight_label),
+  };
+}
+
+export const formatBacktest = (b, header) =>
+  `Backtest (spec-touching commits before the log, hindsight labels ${header?.signed_off ? `signed off ${header.signed_off}` : 'NOT signed off'}): ` +
+  `${b.rows} row(s), ${b.dropped} dropped as unjudgeable, ${b.jevMissing} without a Jev answer. ` +
+  `Agreement: ${part(b)}.`;
