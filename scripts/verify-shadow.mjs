@@ -189,10 +189,13 @@ export function parseBacktest(text) {
 export const serialiseBacktest = ({ header, rows }) =>
   [header, ...rows].map((r) => JSON.stringify(r)).join('\n') + '\n';
 
-/** Jev may be asked only once the labels are signed off, and only for rows it has not answered. */
+/** Jev may be asked only once the labels are signed off, and only for labelled rows it has not answered. */
 export function backtestToAsk({ header, rows }) {
   if (!header?.signed_off) return { refuse: `${BACKTEST_PATH}: the hindsight labels are not signed off yet` };
-  return { rows: rows.filter((r) => !DEPTHS.includes(r.jev)) };
+  // A `?` row is dropped from the score, so Jev is not asked about it either (verifier, #435).
+  return {
+    rows: rows.filter((r) => DEPTHS.includes(r.hindsight_label) && !DEPTHS.includes(r.jev)),
+  };
 }
 
 /** Scored against the hindsight label; a `?` (or any non-depth) label is dropped and reported as dropped. */

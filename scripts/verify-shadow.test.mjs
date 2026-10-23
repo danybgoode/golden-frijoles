@@ -164,6 +164,7 @@ test('the backtest: Jev is refused until the labels are signed off, then asked o
   const rows = [
     { sha: 'a', hindsight_label: 'deep', jev: 'deep' },
     { sha: 'b', hindsight_label: 'off' },
+    { sha: 'c', hindsight_label: '?' },
   ];
   assert.match(backtestToAsk({ header: { signed_off: null }, rows }).refuse, /not signed off/);
   assert.match(backtestToAsk({ header: null, rows }).refuse, /not signed off/);
