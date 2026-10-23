@@ -2,7 +2,7 @@
 // verify-label — a PR that touches a spec path carries its builder's `Verify depth:` label (verify-labels S1.4, D3/D4).
 //
 // Run by .github/workflows/verify-label.yml on opened / edited / synchronize / reopened, so fixing the body re-runs it
-// without a push. Red only when ALL of: the head is not an agent's `claude/` data branch, the PR changes a file under
+// without a push. The workflow runs the BASE branch's copy of this file and only diffs the PR's head. Red only when ALL of: the head is not an agent's `claude/` data branch, the PR changes a file under
 // verify/jev-triage/questions.mjs → PATHS (the same pathspecs the nightly diffs), and the body has no single depth
 // (`parseLabel`). Every other PR is labelled `off` by rule in the shadow log and is never asked. Unsure which files
 // changed (git failed) counts as touching the spec: the label is asked for, never silently skipped.

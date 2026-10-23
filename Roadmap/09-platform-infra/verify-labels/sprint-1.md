@@ -78,8 +78,9 @@ amended in the same PR to point at this epic's D1.
 when the head is not `claude/`, the PR touches a `PATHS` file, and `parseLabel` returns null, **so that** future
 judgments arrive labelled with no friction elsewhere.
 **Acceptance:** a pure decision function, driven for zero-spec / spec-labelled / spec-unlabelled / `claude/` head. The
-failure prints the fix in one line. No checkout of PR code, no install, no secret. The check is part of the required
-`gate` (D3), and editing the body re-runs it. The template line reads "required when the PR touches a spec path".
+failure prints the fix in one line. The BASE branch's copy of the check runs; the PR's head is only fetched and diffed,
+so a PR cannot exempt itself in its own diff. No install, no secret. It is its own required check beside `gate` (D3,
+D4), and editing the body re-runs it. The template line reads "required when the PR touches a spec path".
 **Risk:** high: a new required check on every PR (shared infra). Orchestrator-built, with the security lens on review
 (`pull_request` event, no `pull_request_target`).
 
@@ -91,6 +92,13 @@ failure prints the fix in one line. No checkout of PR code, no install, no secre
   `delivery-…`. Corrected in the seed and README.
 - **S1.4 is its own workflow plus a second required check (D4, product owner 2026-10-23),** not a job inside `gate`,
   because adding `edited` to ci.yml would restart the whole suite on every body edit.
+- **One PR, not three:** the README's deploy order (S1.1 + S1.3 first, S1.4 last) is kept by timing instead: the label
+  check only becomes required after merge (D4), so S1.4 blocks nothing until the rule labels are live.
+- **From the verifier (#435), fixed:** the check runs the base branch's copy (it ran the PR's own code at first); a
+  main row the open shadow branch already labelled is not re-backfilled each night; `?` backtest rows are not sent to Jev.
+  **Left as is, answered on the PR:** the `claude/` exemption goes by branch name (the D9 convention, unchanged), and
+  rows older than the newest 100 merged PRs can't be backfilled (today all 42 are inside it; the report's
+  `unlabelled` count shows any that aren't).
 - **Crew:** the orchestrator built all four. S1.1–S1.3 share one module (`verify-shadow.mjs`), so a separate builder
   would have been a second writer on the same file.
 
@@ -110,7 +118,8 @@ Env: GitHub · https://github.com/danybgoode/golden-frijoles
 3. On the S1.2 PR, read the sign-off table (owed to the product owner by name: the sign-off is yours).
    → no Jev column. Mark each row and write the sign-off line. The next commit adds Jev's answers.
 4. Open a scratch PR that changes one comment in `apps/web/lib/retry-policy.ts`, with the template's `Verify depth:` line unfilled.
-   → the verify-label check is red, and `gate` is red with it.
+   → the `verify-label` check is red and the merge box is blocked by it (`gate` stays green: they are separate
+     required checks, D4).
 5. Edit the PR body to `Verify depth: light` (no push).
    → the check re-runs and turns green. Close the scratch PR unmerged.
 6. Open a scratch PR touching only a README, template unfilled.

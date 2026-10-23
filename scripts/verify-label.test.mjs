@@ -63,6 +63,11 @@ test('the workflow: re-runs on edit, pull_request only, read-only, the body thro
   assert.match(yml, /PR_BODY: \$\{\{ github\.event\.pull_request\.body \}\}/);
   assert.doesNotMatch(yml, /run:.*\$\{\{/, 'no expression is interpolated into a shell line');
   assert.match(yml, /\n  verify-label:\n    name: verify-label\n/);
+  assert.match(
+    yml,
+    /ref: \$\{\{ github\.event\.pull_request\.base\.sha \}\}/,
+    "the base's copy of the check runs, never the PR's"
+  );
   assert.match(FIX, /Verify depth: off\|light\|standard\|deep/);
 });
 
