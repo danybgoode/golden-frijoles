@@ -152,8 +152,10 @@ Read live on `origin/main` 84be973. Each decision is cited by the sprint build c
   `main` or the open shadow branch), and appends `{pr, merged_at, jev, builder_label}` to `verify/jev-shadow.jsonl`
   on `claude/verify-jev-shadow`. Jev failing writes `jev: null` with the reason. Never gates, never comments.
   **Counted = `builder_label` and `jev` both non-null** (agreement needs both). `run.mjs --report` prints counted,
-  exact, within one level.
-- **D10 — The 30 ping.** After appending, if counted ≥ 30 and `verify/jev-shadow-30.json` exists neither on `main`
+  exact, within one level. **Amended 2026-10-23 by [verify-labels](../verify-labels/README.md) D1:** a PR touching
+  no `PATHS` file also gets `rule_label: "off"`, and counted = `jev` set and (`builder_label`, else `rule_label`) set.
+  The report splits builder vs rule and states Jev's non-off rate on zero-spec PRs.
+- **D10 — The 30 ping.** (Its text names the builder vs rule share since verify-labels D1.) After appending, if counted ≥ 30 and `verify/jev-shadow-30.json` exists neither on `main`
   nor the branch: one `telegram-notify.mjs` ping with the AC's sentence, the marker written, and an owed (judgment)
   line added to this epic's `RETROSPECTIVE.md`, all in the shadow PR. A pure `decidePing` is driven 29 → 30 → 31.
 - **D11 — No migration, no flag, no product surface.** CI and repo files only; rules #1–#6 untouched. The epic's
