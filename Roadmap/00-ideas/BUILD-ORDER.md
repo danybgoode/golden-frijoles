@@ -26,7 +26,7 @@ _a pitch is waiting at the approval gate._
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
-- [Verify labels: backfill the shadow log, backtest Jev on the history, and keep labels coming](../09-platform-infra/verify-labels/README.md) — #102 · 09 Platform Infra · 0/4 stories · risk: High · appetite S · _docs: status scaffolded_
+- [Verify labels: backfill the shadow log, backtest Jev on the history, and keep labels coming](../09-platform-infra/verify-labels/README.md) — #102 · 09 Platform Infra · 3/4 stories · risk: High · appetite S · _docs: status in-progress_
 - [Claude Code screensavers, the hook to the rest](../09-platform-infra/screensavers/README.md) — #103 · 09 Platform Infra · 0/6 stories · risk: Low · appetite S · _docs: status in-progress_
 - [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #104 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
 - [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #105 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_

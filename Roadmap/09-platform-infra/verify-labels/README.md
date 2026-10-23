@@ -1,6 +1,6 @@
 ---
-status: scaffolded   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Shaping       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+status: in-progress   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+phase: In review       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
 slug: verify-labels
 title: "Verify labels: backfill the shadow log, backtest Jev on the history, and keep labels coming"
@@ -73,6 +73,10 @@ one path-scoped PR-body check.
   the seed's S1.2 → "The sign-off". The sign-off commit precedes the commit that adds the `jev` column.
 - **D3 — the PR-body check blocks merging**: part of the required `gate`, path-scoped to `PATHS`, re-run on PR edits,
   skipped for `claude/` heads.
+- **D4 — the check is its own workflow, `verify-label.yml`, and the ruleset requires it beside `gate`** (product
+  owner, 2026-10-23, during the build). Adding `edited` to ci.yml would cancel and restart the full suite on every body
+  edit. This is the one exception to ci-diet's "one required check", and it is written down here. The ruleset change
+  (`main requires gate` += `verify-label`) is made after this PR merges, so the check exists before it is required.
 
 ## What already exists (reuse, don't rebuild)
 - `scripts/verify-shadow.mjs` — `parseLabel`, `THRESHOLD`, `LOG_PATH`, the counted/exact/within-one report, the Jev state builder (D9's first-parent diff).
