@@ -68,7 +68,7 @@ is added. The table's columns, the question each row answers, and why the produc
 **As** the product owner, **I want** `run.mjs --report` to print counted, exact and within one for each source
 (builder · rule · backtest), plus Jev's non-off rate on zero-spec PRs, and the 30 ping to name the rule-label share,
 **so that** nobody reads 30 as 30 judgments.
-**Acceptance:** the report on today's log shows 10 builder rows, 32 rule rows, and the non-off rate (17/40 as of
+**Acceptance:** the report on today's log shows 10 builder rows, 32 rule rows, and the non-off rate (17/41 as of
 2026-10-23, recomputed rather than hardcoded). `pingText` includes the share. verify-module README D9 and D10 are
 amended in the same PR to point at this epic's D1.
 **Risk:** low

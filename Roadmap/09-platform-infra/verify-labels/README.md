@@ -55,7 +55,7 @@ build_order: 102     # integer position in the ONE global build sequence — the
 ## Why
 verify-for-projects (the verification depth ladder offered to every project) waits for Jev's verify-depth shadow log to
 reach 30 labelled PRs. On 2026-10-23 it had 10, because builders mostly skip the `Verify depth:` line, and the count
-was measuring the wrong sample: 40 of the 42 logged PRs touch no spec path and are `off` by the template's own rubric,
+was measuring the wrong sample: 41 of the 42 logged PRs touch no spec path and are `off` by the template's own rubric,
 yet Jev called 17 of them something else. This epic labels those automatically, backtests Jev on the ~12 historical PRs
 that touch the spec (the only ones where light/standard/deep matter, with hindsight labels the product owner signs
 off), and requires the builder's label exactly where judgment is needed. The product owner then refines

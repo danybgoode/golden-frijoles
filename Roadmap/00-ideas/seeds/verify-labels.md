@@ -56,11 +56,13 @@ Only 11 of the 43 PRs merged since 2026-10-17 filled in the template's `Verify d
 
 Counting the files each logged PR touched turned up a bigger problem:
 
-- **40 of the 42 PRs touch no spec path** (`verify/jev-triage/questions.mjs → PATHS`). By the template's own rubric
+- **41 of the 42 PRs touch no spec path** (`verify/jev-triage/questions.mjs → PATHS`). By the template's own rubric
   ("off = can't affect the outbox or the flag evaluator") they are `off` by rule.
-- **Jev called 17 of those 40 something other than `off`**, 9 of them `deep` (e.g. #399, #403, #414, #420). It
+- **Jev called 17 of those 41 something other than `off`**, 9 of them `deep` (e.g. #399, #403, #414, #420). It
   over-calls, as the spike saw on 3 of 4 misses.
-- **Only 2 logged PRs touch the spec** (#405 with 9 files, #407 with 3), and Jev called #407 `off`.
+- **Only 1 logged PR touches the spec** (#405). (A first count said 2, #405 and #407, with a loose regex that also
+  matched Roadmap folders named `delivery-…`; measured against each merge's first parent with the real pathspecs, as
+  the nightly does, #407 touches none. Corrected 2026-10-23 during S1.1.)
 - **Across all of history, only about 12 first-parent commits on main touch a spec path** (from #15 on 2026-07-21 to
   #405), roughly one every one to two weeks.
 
@@ -202,8 +204,8 @@ red. Fill in `Verify depth: light`: it turns green without a push.
   PR edits.
 
 ## Open risks / research
-- Data as of 2026-10-23, from `origin/claude/verify-jev-shadow` and `gh pr view --json files` per row (40/42
-  zero-spec; Jev non-off on 17 of them).
+- Data as of 2026-10-23, from `origin/claude/verify-jev-shadow` and `git diff --name-only <merge>^1 <merge> -- PATHS` per row
+  (41/42 zero-spec; Jev non-off on 17 of them).
 - If the backtest shows Jev also misranks spec-touching PRs, verify-for-projects' depth ladder may drop Jev for a
   deterministic router. That is the point of measuring first.
 
