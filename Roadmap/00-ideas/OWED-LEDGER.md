@@ -149,5 +149,5 @@ _Generated: 2026-10-23_
 - `Roadmap/09-platform-infra/screensavers/sprint-1.md:48` · other — Status:** 🔨 building — S1.1 and S1.2 built on `feat/screensavers`; S1.3 (the post and the read) owed to the product owner
 - `Roadmap/09-platform-infra/screensavers/sprint-1.md:73` · other — Owed to the product owner: post the screenshot with the line; on 2026-11-30 read `gh api repos/golden-frijoles/skills/traffic/clones --jq .uniques` and stamp the verdict.
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:53` · other — The live `--yes` against `golden-beans` with that file, then check the North Star surface (S3 smoke steps 2–3).
-- `Roadmap/09-platform-infra/verify-labels/sprint-1.md:110` · other — On the S1.2 PR, read the sign-off table (owed to the product owner by name: the sign-off is yours). → no Jev column. Mark each row and write the sign-off line. The next commit adds Jev's answers.
+- `Roadmap/09-platform-infra/verify-labels/sprint-1.md:118` · other — On the S1.2 PR, read the sign-off table (owed to the product owner by name: the sign-off is yours). → no Jev column. Mark each row and write the sign-off line. The next commit adds Jev's answers.
 
