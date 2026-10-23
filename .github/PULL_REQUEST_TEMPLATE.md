@@ -30,7 +30,9 @@
 - **Smoke run / owed to Daniel:**
 
 ## Verify depth
-<!-- Your call, kept beside Jev's in verify/jev-shadow.jsonl (verify-module S2.2; shadow only, nothing gates on it).
+<!-- Your call, kept beside Jev's in verify/jev-shadow.jsonl (verify-module S2.2). Required when the PR touches a spec
+     path (verify/jev-triage/questions.mjs → PATHS): the verify-label check blocks the merge until it is filled in, and
+     re-runs when you edit this body (verify-labels D3). Any other PR is `off` by rule; filling it in is still welcome.
      Keep exactly ONE word after the colon. off = can't affect the outbox or the flag evaluator; light = re-running
      the existing model checks/proofs is enough; standard = the spec needs updating + a bounded check or diff test;
      deep = new invariants or proofs, and a human reads the counterexamples. -->

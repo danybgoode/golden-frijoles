@@ -1,0 +1,37 @@
+name: Verify label
+
+# verify-labels S1.4 (epic README D3, D4): a PR that touches a spec path (verify/jev-triage/questions.mjs → PATHS) must
+# carry its builder's `Verify depth:` label; every other PR passes (it is labelled `off` by rule in the shadow log).
+# Its own workflow, not a ci.yml job, so that editing the PR body re-runs only this ~10 s check instead of
+# cancelling and restarting the whole suite. The ruleset "main requires gate" requires it beside `gate` (D4).
+# `pull_request`, never `pull_request_target`: a fork's run gets a read-only token and no secrets, and none are used.
+# The body reaches the script through env, never interpolated into the shell.
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-label-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  verify-label:
+    name: verify-label
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # the three-dot diff against the base needs the merge base
+          fetch-depth: 0
+      - name: A spec-path PR carries its Verify depth label
+        run: node scripts/verify-label.mjs
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+          HEAD_REF: ${{ github.head_ref }}
+          PR_BODY: ${{ github.event.pull_request.body }}
