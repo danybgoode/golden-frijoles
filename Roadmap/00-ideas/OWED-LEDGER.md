@@ -4,9 +4,9 @@
 > Re-derived from the spec tree and the epic docs on every run, never from a maintained list.
 > To clear an item, tick (`✅`) or strike (`~~…~~`) its line where it was written, then regenerate.
 
-_Generated: 2026-10-21_
+_Generated: 2026-10-23_
 
-**104 check(s) owed across 75 file(s)** · 7 cleared.
+**105 check(s) owed across 76 file(s)** · 7 cleared.
 
 | Who can clear it | Count | What it means |
 |---|---|---|
@@ -16,14 +16,14 @@ _Generated: 2026-10-21_
 | judgment | 33 | An answer only the product owner can give: an _Intent_, an approval, a decision |
 | signed-in | 24 | A signed-in production walkthrough: an agent can run it once a smoke account exists |
 | interactive | 20 | An interactive plugin or terminal walkthrough: an agent can script it in a scratch repo |
-| unsorted | 13 | Nothing above matched — **not a bin, a to-triage list** |
+| unsorted | 14 | Nothing above matched — **not a bin, a to-triage list** |
 
 | Category | Count | What it means |
 |---|---|---|
 | money-path | 1 | Touches checkout, payment or order state — run these first |
 | auth-path | 28 | Needs a real signed-in session a script cannot mint against production |
 | admin-only | 0 | Behind an admin surface |
-| other | 75 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
+| other | 76 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
 
 ## publish (2)
 
@@ -134,7 +134,7 @@ _Generated: 2026-10-21_
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:54` · other — The interactive coach runs (S1 smoke steps 1 and 3; S2 smoke step 1).
 - `Roadmap/09-platform-infra/why-as-a-story/RETROSPECTIVE.md:50` · other — **Owed to the product owner:** the refine walkthrough on a new idea (the Why drafted as a story, the guard, the build view showing it in full) and a Plan gate with the Crew block.
 
-## unsorted (13)
+## unsorted (14)
 
 - `apps/web/e2e/app-auth.spec.ts:7` · auth-path — owed to Daniel; here we pin the api-testable negatives that make the boundary real:
 - `Roadmap/01-growth-engine/delivery-stale-reclaim-uncounted/RETROSPECTIVE.md:55` · other — (F7, still owed to Daniel).
@@ -149,4 +149,5 @@ _Generated: 2026-10-21_
 - `Roadmap/09-platform-infra/screensavers/sprint-1.md:48` · other — Status:** 🔨 building — S1.1 and S1.2 built on `feat/screensavers`; S1.3 (the post and the read) owed to the product owner
 - `Roadmap/09-platform-infra/screensavers/sprint-1.md:73` · other — Owed to the product owner: post the screenshot with the line; on 2026-11-30 read `gh api repos/golden-frijoles/skills/traffic/clones --jq .uniques` and stamp the verdict.
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:53` · other — The live `--yes` against `golden-beans` with that file, then check the North Star surface (S3 smoke steps 2–3).
+- `Roadmap/09-platform-infra/verify-labels/sprint-1.md:110` · other — On the S1.2 PR, read the sign-off table (owed to the product owner by name: the sign-off is yours). → no Jev column. Mark each row and write the sign-off line. The next commit adds Jev's answers.
 
