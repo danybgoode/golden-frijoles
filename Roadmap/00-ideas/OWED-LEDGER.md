@@ -4,7 +4,7 @@
 > Re-derived from the spec tree and the epic docs on every run, never from a maintained list.
 > To clear an item, tick (`✅`) or strike (`~~…~~`) its line where it was written, then regenerate.
 
-_Generated: 2026-10-21_
+_Generated: 2026-10-24_
 
 **104 check(s) owed across 75 file(s)** · 7 cleared.
 
