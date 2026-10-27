@@ -32,7 +32,7 @@ retained_event: null
 retention_days: null
 satisfied_event: null
 satisfied_min_score: null
-build_order: 102     # integer position in the ONE global build sequence — the SSOT once the epic
+build_order: 103     # integer position in the ONE global build sequence — the SSOT once the epic
                      # exists (the seed's value is only a fallback). Fill it in at the betting
                      # table; plain integers, no "#2a" suffixes. See 00-ideas/README.md → Ordering.
 underwritten_by: wave-2026-10
