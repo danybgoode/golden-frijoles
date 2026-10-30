@@ -2497,3 +2497,25 @@ one-liner + why + date shape.
 - **An external reviewer that repeats a finding across rounds is a disagreement to resolve in the contract, not a
   third fix.** Codex read the exemption's condition 3 as binding the waker in two rounds; both fresh verifiers
   disagreed. One sentence in AGENTS.md (the waker is not exempt, and no API role calls it) closed it.
+
+### One Hobby quota, nine projects, and CI aimed at a preview (vercel-pause, 2026-10-30)
+- **On the free Vercel plan the quota is the ACCOUNT's, and so is the pause.** Nine projects share one Active CPU
+  allowance. On 2026-10-30 at ~16:25 UTC (the pg_cron waker's first 402) every project on the account went down
+  together: goldenfrijoles.com, the MCP connector and panfleto.com.mx. Golden Frijoles was ~10% of function execution
+  that month. Whatever runs on this account can take down every other project on it.
+- **The spender was CI, not users: the storefront's `ci.yml` runs four sharded Playwright API gates plus browser smokes
+  against each PR's Vercel PREVIEW, on every push.** Vercel production for that project has been frozen since
+  2026-08-21 (`git.deploymentEnabled.main: false`, prod moved to Cloud Run), but "previews kept" left Vercel paying for
+  every test. That was about 3–4.5k function invocations per CI run: ~1k/day on quiet days, 156k on 2026-10-28 (34 runs) and
+  ~87k on 2026-10-30 (28 runs). A test suite is load. Point it at a server you don't pay for per request (`next start` in
+  the CI runner, a Cloud Run revision, the Oracle VM), never at a metered preview, and turn previews off once nothing
+  needs them.
+- **On Hobby, the CLI can't see usage, but the dashboard's own endpoint can.** `vercel metrics` needs Observability
+  Plus, `vercel usage` returns 404, and `vercel logs` keeps about an hour (nothing at all once paused). What answered: `GET
+  https://api.vercel.com/v2/usage?teamId=…&type=requests&granularity=day&from=…&to=…` with the CLI's own token. It gives
+  daily invocations and GB-hours, plus a per-project `breakdown` (percent of function execution) per day. Correlate
+  it with `gh api …/actions/workflows/<file>/runs` per day before guessing at bots.
+- **A `force-dynamic` page is a function call per visit, crawlers included.** `/` and 55 other route files are
+  `force-dynamic` with no `revalidate` anywhere, and golden-beans served ~8k invocations/day while ingesting <100 events.
+  On a metered plan, ask whether each dynamic route has to be dynamic. A per-request A/B or gate read can live in
+  middleware with a cached page behind it.
