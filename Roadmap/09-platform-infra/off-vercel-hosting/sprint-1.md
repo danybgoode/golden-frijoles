@@ -3,7 +3,7 @@ epic: off-vercel-hosting
 sprint: 1
 title: "Portable build"
 risk: high
-phase: Shaping
+phase: Building
 stories_total: 2
 stories:
   - id: S1.1

@@ -1,7 +1,8 @@
 ---
 status: scaffolded   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Shaping       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+phase: Building       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
+locked_at: "2026-11-02T21:15:24Z"
 slug: off-vercel-hosting
 title: "Off Vercel: production on our own box"
 area: 09-platform-infra
@@ -74,6 +75,58 @@ decides WHICH flag environment is read).
 - `/api/internal/resilience/probe`: the health check target.
 - The pg_cron waker (`20261020100000_delivery_waker.sql`): calls a URL from Vault, same domain, no change.
 - LEARNINGS on Miyagi's Cloud Run cutover: verify env vars by exercising behaviour, never by listing them.
+
+## Architecture lock (2026-11-02, verified against live code and live data)
+
+- **D1 — One seam, `lib/deploy-env.ts`.** `deployEnv(env)` → `'production' | 'preview' | 'development'`: a non-empty
+  `DEPLOY_ENV` decides (an unknown value → `development`); else `VERCEL_ENV` the same way; else `development`. Pure,
+  takes an env object (default `process.env`).
+- **D2 — `isDeployed(env)` replaces `isOnVercel()`.** `VERCEL === '1'` OR `DEPLOY_ENV` is `production`/`preview`.
+  **Scope the pitch missed:** `gates-decision.ts → envOverride()` lets a set `*_ENABLED` var override the catalog
+  whenever `isOnVercel()` is false, so on the VM a stray `*_ENABLED` would silently beat a kill switch (rule #6). Live
+  check: Vercel Production holds no `*_ENABLED` var today, so the hole is latent; D2 closes it before the VM exists.
+- **D3 — Every behaviour-deciding reader goes through D1/D2** (live grep, 11 sites): `gates-decision.ts` (182, and
+  `isOnVercel` 147–156), `gates.ts:66`, `self-track.ts:231`, `notify-policy.ts:82,89`, `billing-decision.ts:279`,
+  `webhook-url.ts:38` (**missed by the pitch**: the localhost-webhook carve-out must stay closed in production on the
+  VM, where loopback is the box itself), `site-url-resolve.ts:68,95`, `site-url.ts:29` (forwards `DEPLOY_ENV` too),
+  `app/page.tsx:76`, `resilience/probe/route.ts:62`. `notify-policy`'s escape hatch keeps its meaning: "absent" =
+  BOTH `VERCEL_ENV` and `DEPLOY_ENV` unset. `VERCEL_BRANCH_URL`/`VERCEL_URL` stay as the preview-host source (no
+  previews in this epic). `playwright.config.ts`'s bypass secret is test tooling, untouched.
+- **D4 — Guard.** A node:test (`lib/deploy-env-guard.test.ts`, shaped like `gates-guard.test.ts`) fails on a
+  `.VERCEL_ENV` / `.VERCEL` property read in non-comment, non-test code under `apps/web/{app,lib,middleware.ts}`
+  outside `lib/deploy-env.ts` and the one forwarder `lib/site-url.ts`.
+- **D5 — Image.** `output: 'standalone'` + `outputFileTracingRoot` = repo root. Root `Dockerfile`, Node 24 slim
+  (Vercel ran 24.x), stages deps → build → runtime; the runtime copies `apps/web/.next/standalone`, `.next/static`
+  and `public/`, runs `node apps/web/server.js` as a non-root user on `PORT=3000`, `HOSTNAME=0.0.0.0`. Build-time
+  ARGs are exactly `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` (live grep: the only
+  `NEXT_PUBLIC_*` the code reads; `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` exists in Vercel but nothing reads it).
+- **D6 — CI `container-smoke` job** reuses `.github/actions/e2e-setup` (local Supabase, credentials in
+  `$GITHUB_ENV`), builds the image with those build args, runs it with `--network host` on :3200 with the ON-gate env
+  file, waits on `/llms.txt`, and runs a fixed api-spec subset against it. Skippable on docs-only like the e2e jobs;
+  added to `gate`'s `needs` and `--skippable`.
+- **D7 — Ingress is a Cloudflare Tunnel, not open ports (deviation from S2.1's text).** Live: the account already
+  runs tunnels (`n8n-server`, remote-managed, healthy). A dedicated remote-managed tunnel `golden-frijoles` with a
+  `cloudflared` service in our compose: no 80/443 contention on a shared box, no origin cert, no IP allow-list, the
+  VM's IP never public. DNS becomes a proxied CNAME to `<tunnel-id>.cfargotunnel.com` (S3.1). The tunnel token lives
+  in the VM's `.env`. Needs Daniel's yes (a new TLS/ingress path).
+- **D8 — Which box.** Live: `n8n-server` connects from a GCP address, not Oracle. The Oracle VM's identity, access and
+  inventory are S2.1's first step, owed by Daniel; nothing in S1 depends on it.
+- **D9 — Deploy.** GHCR package `ghcr.io/danybgoode/golden-frijoles`, public (the image holds no secret; the two
+  build-time values are public by design), so the VM pulls without registry credentials. Built natively on
+  `ubuntu-24.04-arm`. GitHub Deployment written by the job (environment `Production`).
+- **D10 — Routing.** The orchestrator (Opus 5.5) builds S1–S3 in place (one session in this checkout; S2/S3 need
+  Daniel at the box, so a separate builder buys nothing). Reviews: the fresh `verifier` on every PR (high risk) plus
+  `review-route.mjs`.
+
+### Build contract — Sprint 1 (locked by the architect before the builder started)
+D1–D6. Inert on Vercel: with `DEPLOY_ENV` unset every reader returns what it returns today (each reader's existing
+spec stays green unchanged). No behaviour change, no env var added anywhere yet.
+
+### Build contract — Sprint 2
+D7–D9. Nothing changes DNS. Proved on the tunnel's own test hostname (or `curl --resolve`) before S3.
+
+### Build contract — Sprint 3
+DNS flip recorded first (the old CNAMEs are the rollback). Rule #4 text approved by Daniel in the PR.
 
 ## Scope — stories
 | Sprint | Story | Risk |
