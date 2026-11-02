@@ -80,11 +80,11 @@ VM deploy, not Vercel, **so that** nobody reaches for Vercel to deploy or fix pr
 **Risk:** high (architecture rule)
 
 ## Owed
-- Owed to Daniel: confirm the delivery waker's calls succeed after the cutover (Supabase → `net._http_response`, the
-  rows after 23:10 UTC on 2026-11-02 should be 2xx; agents' production reads are blocked by auto mode).
+- ✅ Owed to Daniel: confirm the delivery waker's calls succeed after the cutover (Supabase → `net._http_response`, the
+  rows after 23:10 UTC on 2026-11-02 should be 2xx; agents' production reads are blocked by auto mode). — done 2026-11-02: 402 ×2 during propagation (23:10, 23:15), then 200 every tick
 - Owed to Daniel: the signed-in browser smoke (step 2 below).
-- Owed to Daniel: disconnect the Vercel Git integration for `golden-beans` (dashboard → Settings → Git), keeping the
-  project until this epic is a week old, so a quota reset cannot deploy a second production.
+- ✅ Owed to Daniel: disconnect the Vercel Git integration for `golden-beans` (dashboard → Settings → Git), keeping the
+  project until this epic is a week old, so a quota reset cannot deploy a second production. — disconnected 2026-11-02 (`vercel git disconnect`); delete the project after a quiet week
 
 ## Sprint QA
 - **api spec(s):** none new; the S3.1 production smoke is the proof.
