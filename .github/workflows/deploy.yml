@@ -124,10 +124,11 @@ jobs:
           for i in $(seq 1 45); do   # ≤ 45 × (10 s curl + 10 s sleep) = 15 min, inside the job's 25
             # A refused connection or a 5xx mid-swap is a reason to wait, never to fail: no -f, and `|| true` so the
             # shell's -e/pipefail cannot end the loop early (Codex, #446).
-            live=$( { curl -sSI --max-time 10 "$LIVE_URL" 2> /dev/null || true; } | tr -d '\r' \
-              | awk -F': ' 'tolower($1)=="x-gf-revision"{print $2}' || true)
-            if [ "$live" = "$GITHUB_SHA" ]; then echo "live: $live"; exit 0; fi
-            [ $((i % 3)) = 0 ] && echo "still waiting (live: ${live:-none})"
+            # The revision AND a 200: a 500 carrying the header is not a live deploy (Codex round 2, #446).
+            code=$(curl -s --max-time 10 -o /dev/null -D "$RUNNER_TEMP/live.txt" -w '%{http_code}' "$LIVE_URL" || true)
+            live=$(tr -d '\r' < "$RUNNER_TEMP/live.txt" 2> /dev/null | awk -F': ' 'tolower($1)=="x-gf-revision"{print $2}' || true)
+            if [ "$code" = 200 ] && [ "$live" = "$GITHUB_SHA" ]; then echo "live: $live"; exit 0; fi
+            [ $((i % 3)) = 0 ] && echo "still waiting (live: ${live:-none}, HTTP ${code:-none})"
             sleep 10
           done
           echo "::error::the site never served $GITHUB_SHA (last seen: ${live:-none}) — journalctl -u golden-frijoles-deploy on the VM"
