@@ -12,6 +12,13 @@ const nextConfig: NextConfig = {
   // `next start` (CI, local) and a Vercel build both ignore it.
   output: 'standalone',
   outputFileTracingRoot: join(__dirname, '..', '..'),
+  // off-vercel-hosting D9 — the commit this build came from, on every response, so deploy.yml can tell when the VM is
+  // serving the merge (and an operator can read what runs with one curl). Set only by the Docker build (GF_REVISION);
+  // any other build sends no header. The commit is public: the repository is.
+  async headers() {
+    const revision = process.env.GF_REVISION?.trim()
+    return revision ? [{ source: '/:path*', headers: [{ key: 'x-gf-revision', value: revision }] }] : []
+  },
   async redirects() {
     return [
       // one-product-project S1.1 — `golden-beans-demo` was renamed `golden-frijoles` (D1). Links already shared
