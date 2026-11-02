@@ -95,7 +95,8 @@ rollback() {
 }
 if [ "$SKIP_IMAGE" != 1 ]; then
   set_env WEB_IMAGE "$IMAGE"
-  WEB_IMAGE="$IMAGE" docker compose up -d --remove-orphans
+  # A start that fails outright goes through the same rollback as a failed health check (Codex round 3, #446).
+  WEB_IMAGE="$IMAGE" docker compose up -d --remove-orphans || rollback "docker compose could not start $IMAGE"
 
   # Health from INSIDE the container: a 200 here is the app, not the proxy or Cloudflare.
   healthy=0

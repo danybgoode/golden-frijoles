@@ -13,11 +13,15 @@
 #   is reachable from the internet, and without this anyone could connect with this SNI and name any client IP. The
 #   CA (public, expires 2029-11-01) sits beside the certs; the zone setting `tls_client_auth` must be on.
 
+# x-gf-site: this file's version. BUMP IT WITH EVERY CHANGE to this file. deploy.yml reads the value from the merged
+# copy and waits until the live site sends it, so a site file the proxy rejected cannot report a green deploy (Codex
+# round 3, #446).
 (gf_headers) {
 	encode zstd gzip
 	header {
 		-Server
 		X-Content-Type-Options "nosniff"
+		x-gf-site "2026-11-02.2"
 	}
 }
 

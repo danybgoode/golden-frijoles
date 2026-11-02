@@ -119,16 +119,21 @@ jobs:
           echo "DEPLOYMENT_ID=$id" >> "$GITHUB_ENV"
           gh api "repos/$GITHUB_REPOSITORY/deployments/$id/statuses" -X POST -f state=in_progress > /dev/null
       # The VM's timer picks the new digest up within ~2 min; its deploy takes ~1–2 more. 15 min is generous.
-      - name: Wait for x-gf-revision to be this commit
+      - name: Wait for x-gf-revision to be this commit (and x-gf-site this commit's site file)
         run: |
+          WANT_SITE=$(grep -oE 'x-gf-site "[^"]+"' deploy/oci/golden-frijoles.caddy | cut -d'"' -f2)
+          [ -n "$WANT_SITE" ] || { echo "::error::golden-frijoles.caddy carries no x-gf-site version"; exit 1; }
           for i in $(seq 1 45); do   # ≤ 45 × (10 s curl + 10 s sleep) = 15 min, inside the job's 25
             # A refused connection or a 5xx mid-swap is a reason to wait, never to fail: no -f, and `|| true` so the
             # shell's -e/pipefail cannot end the loop early (Codex, #446).
             # The revision AND a 200: a 500 carrying the header is not a live deploy (Codex round 2, #446).
             code=$(curl -s --max-time 10 -o /dev/null -D "$RUNNER_TEMP/live.txt" -w '%{http_code}' "$LIVE_URL" || true)
             live=$(tr -d '\r' < "$RUNNER_TEMP/live.txt" 2> /dev/null | awk -F': ' 'tolower($1)=="x-gf-revision"{print $2}' || true)
-            if [ "$code" = 200 ] && [ "$live" = "$GITHUB_SHA" ]; then echo "live: $live"; exit 0; fi
-            [ $((i % 3)) = 0 ] && echo "still waiting (live: ${live:-none}, HTTP ${code:-none})"
+            site=$(tr -d '\r' < "$RUNNER_TEMP/live.txt" 2> /dev/null | awk -F': ' 'tolower($1)=="x-gf-site"{print $2}' || true)
+            if [ "$code" = 200 ] && [ "$live" = "$GITHUB_SHA" ] && [ "$site" = "$WANT_SITE" ]; then
+              echo "live: $live, site file $site"; exit 0
+            fi
+            [ $((i % 3)) = 0 ] && echo "still waiting (live: ${live:-none}, site ${site:-none} want $WANT_SITE, HTTP ${code:-none})"
             sleep 10
           done
           echo "::error::the site never served $GITHUB_SHA (last seen: ${live:-none}) — journalctl -u golden-frijoles-deploy on the VM"
