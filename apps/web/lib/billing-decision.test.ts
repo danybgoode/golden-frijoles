@@ -303,3 +303,10 @@ test('a zero-decimal currency is whole units, and an unreadable retry time does 
     /retries later/
   )
 })
+
+test('off-vercel-hosting D3: DEPLOY_ENV=production takes the live key exactly as Vercel production did', () => {
+  const both = { STRIPE_LIVE_SECRET_KEY: 'rk_live_x', STRIPE_SECRET_KEY: 'sk_test_y' }
+  assert.equal(stripeSecretKey({ ...both, DEPLOY_ENV: 'production' }), 'rk_live_x')
+  assert.equal(stripeSecretKey({ DEPLOY_ENV: 'production', STRIPE_SECRET_KEY: 'sk_test_y' }), undefined)
+  assert.equal(stripeSecretKey({ ...both, DEPLOY_ENV: 'development' }), 'sk_test_y')
+})

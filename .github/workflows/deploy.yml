@@ -1,0 +1,160 @@
+# off-vercel-hosting D9 — merging to main is the deploy (AGENTS rule #4), on our own box.
+#
+#   image    builds linux/arm64 NATIVELY (the VM is Ampere; the repo is public, so the arm runner is free) and pushes
+#            ghcr.io/danybgoode/golden-frijoles:{main,<sha>}. The package is public: the image holds no secret (the two
+#            NEXT_PUBLIC_* values are public by design; CI's container-smoke proves nothing else gets in).
+#   rollout  the VM PULLS (its SSH is not reachable from here): a 2-minute timer there runs deploy/oci/update.sh. This
+#            job writes the GitHub Deployment, waits until the live site's `x-gf-revision` is this merge, sets the
+#            status and posts the 🚀 itself — a deployment_status created with GITHUB_TOKEN starts no other workflow,
+#            so notify-telegram.yml's deploy ping would never fire for it.
+#
+# One rollout at a time; a newer merge waits for the older one instead of racing it on the VM.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/web/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'Dockerfile'
+      - '.dockerignore'
+      - 'deploy/oci/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  image:
+    name: Build + push the arm64 image
+    # Only main reaches production: a dispatch from a branch must never be pushed as :main (verifier, #446).
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    outputs:
+      main_moved: ${{ steps.push.outputs.main_moved }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+      - name: Log in to GHCR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: echo "$GH_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.PROD_NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PROD_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+          [ -n "$NEXT_PUBLIC_SUPABASE_URL" ] && [ -n "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ] \
+            || { echo "::error::repo variables PROD_NEXT_PUBLIC_SUPABASE_URL/_ANON_KEY are not set"; exit 1; }
+          docker build \
+            --build-arg NEXT_PUBLIC_SUPABASE_URL="$NEXT_PUBLIC_SUPABASE_URL" \
+            --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="$NEXT_PUBLIC_SUPABASE_ANON_KEY" \
+            --build-arg GF_REVISION="$GITHUB_SHA" \
+            -t "ghcr.io/danybgoode/golden-frijoles:$GITHUB_SHA" \
+            -t ghcr.io/danybgoode/golden-frijoles:main .
+      # Boot the arm64 image under the VM's cap before it can become :main. CI's container-smoke boots amd64; this is
+      # the arch the VM runs, so an arm-only crash or an OOM at 768 MB fails here, not on the box (verifier, #446).
+      - name: Boot the arm64 image under the production cap
+        run: |
+          set -euo pipefail
+          docker run -d --name gf-probe --memory 768m --cpus 0.75 -p 127.0.0.1:3000:3000 \
+            -e DEPLOY_ENV=development "ghcr.io/danybgoode/golden-frijoles:$GITHUB_SHA" > /dev/null
+          for i in $(seq 1 45); do
+            code=$(curl -s --max-time 5 -o /dev/null -D "$RUNNER_TEMP/h.txt" -w '%{http_code}' http://127.0.0.1:3000/llms.txt || true)
+            got=$(tr -d '\r' < "$RUNNER_TEMP/h.txt" 2> /dev/null | awk -F': ' 'tolower($1)=="x-gf-revision"{print $2}' || true)
+            [ "$code" = 200 ] && [ "$got" = "$GITHUB_SHA" ] && { echo "arm64 image answers as $got"; docker rm -f gf-probe > /dev/null; exit 0; }
+            sleep 2
+          done
+          docker logs gf-probe | tail -50; exit 1
+      - name: Push
+        id: push
+        run: |
+          set -euo pipefail
+          docker push -q "ghcr.io/danybgoode/golden-frijoles:$GITHUB_SHA"
+          # Re-running an older run after a newer merge must not move :main backwards (verifier, #446).
+          head=$(git ls-remote origin refs/heads/main | cut -f1)
+          if [ "$head" != "$GITHUB_SHA" ]; then
+            echo "::warning::main is now $head, not $GITHUB_SHA — pushed :$GITHUB_SHA only, :main left alone"
+            echo "main_moved=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          docker push -q ghcr.io/danybgoode/golden-frijoles:main
+          echo "main_moved=true" >> "$GITHUB_OUTPUT"
+
+  rollout:
+    name: Wait for the VM to serve this merge
+    needs: image
+    # Only when this run moved :main: a run overtaken by a newer merge has nothing to wait for (verifier round 2).
+    if: needs.image.outputs.main_moved == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      deployments: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      LIVE_URL: https://goldenfrijoles.com/llms.txt
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Open the GitHub Deployment
+        run: |
+          set -euo pipefail
+          body=$(jq -n --arg ref "$GITHUB_SHA" \
+            '{ref: $ref, environment: "Production", auto_merge: false, required_contexts: [], description: "Oracle VM"}')
+          id=$(gh api "repos/$GITHUB_REPOSITORY/deployments" -X POST --input - --jq .id <<< "$body")
+          echo "DEPLOYMENT_ID=$id" >> "$GITHUB_ENV"
+          gh api "repos/$GITHUB_REPOSITORY/deployments/$id/statuses" -X POST -f state=in_progress > /dev/null
+      # The VM's timer picks the new digest up within ~2 min; its deploy takes ~1–2 more. 15 min is generous.
+      - name: Wait for x-gf-revision to be this commit (and x-gf-site this commit's site file)
+        run: |
+          WANT_SITE=$(grep -oE 'x-gf-site "[^"]+"' deploy/oci/golden-frijoles.caddy | cut -d'"' -f2)
+          [ -n "$WANT_SITE" ] || { echo "::error::golden-frijoles.caddy carries no x-gf-site version"; exit 1; }
+          for i in $(seq 1 45); do   # ≤ 45 × (10 s curl + 10 s sleep) = 15 min, inside the job's 25
+            # A refused connection or a 5xx mid-swap is a reason to wait, never to fail: no -f, and `|| true` so the
+            # shell's -e/pipefail cannot end the loop early (Codex, #446).
+            # The revision AND a 200: a 500 carrying the header is not a live deploy (Codex round 2, #446).
+            code=$(curl -s --max-time 10 -o /dev/null -D "$RUNNER_TEMP/live.txt" -w '%{http_code}' "$LIVE_URL" || true)
+            live=$(tr -d '\r' < "$RUNNER_TEMP/live.txt" 2> /dev/null | awk -F': ' 'tolower($1)=="x-gf-revision"{print $2}' || true)
+            site=$(tr -d '\r' < "$RUNNER_TEMP/live.txt" 2> /dev/null | awk -F': ' 'tolower($1)=="x-gf-site"{print $2}' || true)
+            if [ "$code" = 200 ] && [ "$live" = "$GITHUB_SHA" ] && [ "$site" = "$WANT_SITE" ]; then
+              echo "live: $live, site file $site"; exit 0
+            fi
+            [ $((i % 3)) = 0 ] && echo "still waiting (live: ${live:-none}, site ${site:-none} want $WANT_SITE, HTTP ${code:-none})"
+            sleep 10
+          done
+          echo "::error::the site never served $GITHUB_SHA (last seen: ${live:-none}) — journalctl -u golden-frijoles-deploy on the VM"
+          exit 1
+      - name: Close the GitHub Deployment
+        if: always()
+        env:
+          OUTCOME: ${{ job.status }}
+        run: |
+          [ -n "${DEPLOYMENT_ID:-}" ] || exit 0
+          state=failure; [ "$OUTCOME" = success ] && state=success
+          gh api "repos/$GITHUB_REPOSITORY/deployments/$DEPLOYMENT_ID/statuses" -X POST \
+            -f state="$state" -f environment_url=https://goldenfrijoles.com > /dev/null
+          echo "DEPLOY_STATE=$state" >> "$GITHUB_ENV"
+      - name: 🚀 Telegram
+        if: always()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CICD_CHAT_ID: ${{ secrets.TELEGRAM_CICD_CHAT_ID }}
+        run: |
+          subject=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA" --jq '.commit.message | split("\n")[0]' 2> /dev/null || echo "(commit message unavailable)")
+          status="✅ READY"; [ "${DEPLOY_STATE:-failure}" = success ] || status="❌ FAILURE"
+          node scripts/telegram-notify.mjs --icon 🚀 --sha "$GITHUB_SHA" --subject "$subject" --status "$status" \
+            --url https://goldenfrijoles.com --link-label "open production" || true

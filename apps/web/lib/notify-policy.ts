@@ -29,10 +29,13 @@
 // reaching the function. The decision is pure and gets asserted directly; lib/telegram.ts imports
 // it.
 
+import { deployEnv, isUndeclared } from './deploy-env'
+
 export type NotifyEnv = {
   TELEGRAM_BOT_TOKEN?: string
   TELEGRAM_CHAT_ID?: string
   VERCEL_ENV?: string
+  DEPLOY_ENV?: string
   NODE_ENV?: string
   TASK_ALERTS_ENABLED?: string
   ALLOW_NOTIFY_OUTSIDE_PRODUCTION?: string
@@ -79,14 +82,14 @@ export function shouldSendOperatorNotification(env: NotifyEnv = process.env): No
   // is still served, and no deployed environment can be talked into paging someone by adding one
   // variable — which is exactly how the original incident happened, one layer down: a real
   // credential reaching an environment nobody thought of as production.
-  if (env.ALLOW_NOTIFY_OUTSIDE_PRODUCTION === 'true' && !env.VERCEL_ENV) {
+  if (env.ALLOW_NOTIFY_OUTSIDE_PRODUCTION === 'true' && isUndeclared(env)) {
     return { send: true, reason: null }
   }
 
   // `VERCEL_ENV` is 'production' only on a production deployment — 'preview' on a preview build and
   // absent locally. So this is one check that covers local dev, CI, and preview deployments, none of
   // which have any business messaging a person.
-  if (env.VERCEL_ENV !== 'production') {
+  if (deployEnv(env) !== 'production') {
     return { send: false, reason: 'not_production' }
   }
 

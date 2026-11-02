@@ -607,6 +607,13 @@ independently shippable slice of value.
 
   A source is named only when two disagree (`⚑`). A shipped epic reads ✓ and N of N. The 5-hour line is a meter, to
   the minute. Every colour and glyph is pinned by a test. Interactive walkthrough owed to Daniel.
+- ✅ [Off Vercel: production on our own box](09-platform-infra/off-vercel-hosting/README.md)
+  — **shipped 2026-11-02** (#444, #446, S3). goldenfrijoles.com runs as one Docker image on the shared Oracle VM behind
+  Cloudflare, after three days of 402 from a paused Vercel Hobby account. Merging to `main` is still the deploy: CI
+  builds and boots the arm64 image, the VM pulls it by digest and rolls back on a failed health check, and the
+  workflow closes the GitHub Deployment only when the live site says the merge. Production is declared
+  (`DEPLOY_ENV`), not inferred from a platform variable; the origin accepts only Cloudflare (Authenticated Origin
+  Pulls). Signed-in smoke and the waker's first ticks owed to Daniel.
 - ✅ [Template scripts hold to the gates their consumers run](09-platform-infra/template-scripts-consumer-gates/README.md)
   — **shipped 2026-10-17** (#399, plugin + kit 1.12.0). The rails are linted where they're written: one
   `no-unused-vars` config, run by the mirror and by this repo's `npm run lint`. `frijoles-kit init` writes one marked
@@ -693,6 +700,9 @@ independently shippable slice of value.
 
 ## Recent highlights
 
+- **2026-11-02**: `off-vercel-hosting` **shipped** (quote $15–33 → ≈$33). goldenfrijoles.com is back, on our own Oracle
+  VM: one Docker image, pulled by digest on every merge, behind Cloudflare with origin pulls. Leaving Vercel meant
+  finding the eleven places it had been deciding "am I production?" and one header the proxy trusted from anyone.
 - **2026-10-21**: `landing-launch-experiment` **shipped** (quote $41–62 → ≈$281). The first landing A/B is live on
   goldenfrijoles.com and Growth can be bought. Launching it found that our own experiment engine refused a low-traffic
   test; a sixth sprint made it start at any traffic, read any day, decide at any volume, and run from the CLI — then

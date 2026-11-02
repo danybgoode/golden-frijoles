@@ -1,0 +1,21 @@
+# off-vercel-hosting D5 — what never enters the build context: secrets first, then everything the image does not build.
+**/.env
+**/.env.*
+!**/.env.example
+**/node_modules
+**/.next
+**/.vercel
+.git
+.github
+.claude
+.githooks
+Roadmap
+deploy
+references
+skills
+optimize
+verify
+**/playwright-report
+**/test-results
+**/*.log
+.DS_Store

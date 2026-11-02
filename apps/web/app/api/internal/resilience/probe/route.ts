@@ -2,6 +2,7 @@ import 'server-only'
 import { timingSafeEqual } from 'node:crypto'
 import { createScenarioProvider, type ScenarioProvider } from '@golden-frijoles/sdk'
 import { isResilienceScenariosEnabled } from '@/lib/flags'
+import { deployEnv } from '@/lib/deploy-env'
 import {
   createProbeGrowthClient,
   engineBaseConfig,
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
   const subject = body && typeof body === 'object' ? (body as { subject?: unknown }).subject : undefined
   if (typeof subject !== 'string' || !subject.startsWith('synthetic:')) return notFound()
 
-  const environment = probeEnvironment(process.env.VERCEL_ENV)
+  const environment = probeEnvironment(deployEnv())
   const scenarios = scenarioProvider(environment)
   if (!scenarios) return notFound()
   const apiKey = process.env.SELF_PROJECT_API_KEY?.trim()

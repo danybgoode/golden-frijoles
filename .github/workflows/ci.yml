@@ -7,6 +7,8 @@ name: CI
 #                      against a LOCAL Supabase and locally built servers: the suite needs a database it can seed and
 #                      clean, plus a second, differently-enved server to prove the dark contracts. A Vercel preview
 #                      offers neither (it points at production Supabase and carries one env set).
+#   container-smoke  — the production Docker image built and booted, an api subset run against it (off-vercel-hosting
+#                      D6). Skipped only on a docs-only PR, like the e2e jobs.
 #   verify-outbox, verify-flags — the model checks (verify-module D4/D5), only when `changes` says the PR touches the
 #                      outbox or the flag evaluator: the Quint simulation, and the Lean proofs + differential test.
 #   gate             — the one required check (scripts/ci-gate.mjs, ci-diet D3).
@@ -200,6 +202,89 @@ jobs:
 
   # Known flakes, tagged @quarantine with an owner and an expiry. They run and report here, and never block: this job
   # is deliberately NOT in `gate`'s needs. The static job's quarantine check turns `gate` red past an expiry.
+  # off-vercel-hosting D6 — the production image, built and booted the way the VM runs it: the standalone server in a
+  # container, its runtime env from outside, the two NEXT_PUBLIC_* values as build args. A broken image (a missing
+  # traced file, a wrong path in the Dockerfile) fails here, on the PR, not at deploy. ON gates, like e2e-api's server.
+  container-smoke:
+    name: container · build + boot the production image
+    needs: changes
+    if: needs.changes.outputs.docs_only != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/e2e-setup
+      - name: Load the ON gates and the per-run secrets
+        run: |
+          node scripts/lib/gate-env.mjs ci/gates.on.env >> "$GITHUB_ENV"
+          {
+            echo "SELF_PROJECT_API_KEY=$(openssl rand -hex 24)"
+            echo "SELF_SUBJECT_SECRET=$(openssl rand -hex 32)"
+            echo "STRIPE_WEBHOOK_SECRET=whsec_ci_$(openssl rand -hex 24)"
+            echo "STRIPE_SECRET_KEY=ci-placeholder-never-sent"
+          } >> "$GITHUB_ENV"
+      # A canary .env in the build context (verifier, #444): .dockerignore must keep it out of every layer, including
+      # Next's standalone copy of the env files it loads. Checked below with `docker save`, which sees each layer.
+      - name: Build the image
+        run: |
+          echo "GF_IMAGE_CANARY=canary-$(openssl rand -hex 16)" | tee apps/web/.env.production | sed 's/=.*/=…/'
+          echo "GF_IMAGE_CANARY=$(cut -d= -f2 apps/web/.env.production)" >> "$GITHUB_ENV"
+          docker build -t golden-frijoles:ci \
+            --build-arg NEXT_PUBLIC_SUPABASE_URL="$NEXT_PUBLIC_SUPABASE_URL" \
+            --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="$NEXT_PUBLIC_SUPABASE_ANON_KEY" .
+      - name: Boot the container and seed through it
+        env:
+          GROWTH_ENGINE_URL: http://localhost:3000
+        run: |
+          set -euo pipefail
+          {
+            grep -E '^[A-Z0-9_]+=' ci/gates.on.env
+            for k in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY SUPABASE_DB_URL SELF_PROJECT_API_KEY SELF_SUBJECT_SECRET \
+                     STRIPE_WEBHOOK_SECRET STRIPE_SECRET_KEY; do echo "$k=${!k}"; done
+          } > "$RUNNER_TEMP/container.env"
+          docker run -d --name gf --network host --env-file "$RUNNER_TEMP/container.env" golden-frijoles:ci
+          for i in $(seq 1 45); do curl -sf http://localhost:3000/llms.txt > /dev/null && break; sleep 1; done
+          curl -sf http://localhost:3000/llms.txt > /dev/null || { echo "::error::the container never became ready"; docker logs gf; exit 1; }
+          [ "$(docker inspect gf --format '{{.Config.User}}')" = "node" ] || { echo "::error::the container runs as root"; exit 1; }
+          npm run seed:demo
+          npm run seed:self
+      # S1.2's "no secret in any layer", encoded (verifier, #444): the job's own secrets were never build args, so none
+      # of their values may appear anywhere in the image's filesystem or its build history.
+      - name: No runtime secret is baked into the image
+        run: |
+          set -euo pipefail
+          docker history --no-trunc golden-frijoles:ci > "$RUNNER_TEMP/history.txt"
+          docker create --name gf-fs golden-frijoles:ci > /dev/null
+          docker export gf-fs > "$RUNNER_TEMP/fs.tar"
+          docker rm gf-fs > /dev/null
+          docker save golden-frijoles:ci -o "$RUNNER_TEMP/layers.tar"
+          (cd "$RUNNER_TEMP" && mkdir -p layers && tar -xf layers.tar -C layers)
+          if grep -raqF -- "$GF_IMAGE_CANARY" "$RUNNER_TEMP/layers"; then
+            echo "::error::the canary .env reached an image layer — .dockerignore is not keeping env files out"; exit 1
+          fi
+          for k in SUPABASE_SERVICE_ROLE_KEY SELF_PROJECT_API_KEY SELF_SUBJECT_SECRET STRIPE_WEBHOOK_SECRET; do
+            v="${!k}"
+            if grep -qF -- "$v" "$RUNNER_TEMP/history.txt" || grep -aqF -- "$v" "$RUNNER_TEMP/fs.tar"; then
+              echo "::error::$k's value is inside the image"; exit 1
+            fi
+          done
+          echo "no runtime secret found in the image's layers or history"
+      # Explicit, not the config's default: the URL IS the container (no other server runs in this job, and the
+      # Playwright config starts none), and saying so keeps it that way if a default ever changes. (Codex, #444.)
+      - name: Run an api subset against the container
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:3000
+        run: |
+          npx playwright test --config=apps/web/playwright.config.ts --project=api --grep-invert @quarantine \
+            apps/web/e2e/features-sync.spec.ts \
+            apps/web/e2e/funnel.spec.ts \
+            apps/web/e2e/ingest-guardrails.spec.ts \
+            apps/web/e2e/flag-serving.spec.ts \
+            apps/web/e2e/install-page.spec.ts \
+            apps/web/e2e/landing-redirects.spec.ts \
+            apps/web/e2e/hub.spec.ts \
+            || { docker logs gf | tail -200; exit 1; }
+
   quarantine:
     name: Quarantined tests (non-blocking)
     needs: changes
@@ -307,7 +392,16 @@ jobs:
     name: gate
     if: always()
     needs:
-      [changes, typecheck-build, e2e-api, e2e-authed, design-contract, verify-outbox, verify-flags]
+      [
+        changes,
+        typecheck-build,
+        e2e-api,
+        e2e-authed,
+        container-smoke,
+        design-contract,
+        verify-outbox,
+        verify-flags,
+      ]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -316,5 +410,5 @@ jobs:
         env:
           NEEDS: ${{ toJSON(needs) }}
         run: >-
-          node scripts/ci-gate.mjs --skippable e2e-api,e2e-authed,design-contract
+          node scripts/ci-gate.mjs --skippable e2e-api,e2e-authed,container-smoke,design-contract
           --filtered verify-outbox=verify_outbox,verify-flags=verify_flags

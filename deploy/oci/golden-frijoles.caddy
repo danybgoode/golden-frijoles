@@ -1,0 +1,56 @@
+# golden-frijoles — site blocks for the shared proxy on the Oracle VM (off-vercel-hosting D7, re-locked).
+#
+# Installed by update.sh into the proxy's sites directory, which its Caddyfile imports. Validated inside the running
+# proxy before it replaces the previous copy: a bad file here would stop the proxy for EVERY tenant on its next start.
+#
+# Rules this file keeps (the box's tenant contract):
+# - It names every host it serves. Never a catch-all (`https://`, `:443`, `*`): that becomes a TLS policy with no host
+#   matcher and serves this cert for every tenant's host.
+# - Snippet names carry the `gf_` prefix: snippets are global across every imported site file.
+# - TLS is a Cloudflare Origin CA cert (Cloudflare proxies, SSL mode Full (strict)); the key was generated on the VM.
+# - Authenticated Origin Pulls: a TLS client must present Cloudflare's origin-pull certificate, so the only way in is
+#   through Cloudflare. That is what makes CF-Connecting-IP trustworthy below (D12; verifier, #446): the origin's 443
+#   is reachable from the internet, and without this anyone could connect with this SNI and name any client IP. The
+#   CA (public, expires 2029-11-01) sits beside the certs; the zone setting `tls_client_auth` must be on.
+
+# x-gf-site: this file's version. BUMP IT WITH EVERY CHANGE to this file. deploy.yml reads the value from the merged
+# copy and waits until the live site sends it, so a site file the proxy rejected cannot report a green deploy (Codex
+# round 3, #446).
+(gf_headers) {
+	encode zstd gzip
+	header {
+		-Server
+		X-Content-Type-Options "nosniff"
+		x-gf-site "2026-11-02.2"
+	}
+}
+
+(gf_tls) {
+	tls /etc/caddy/certs/goldenfrijoles.pem /etc/caddy/certs/goldenfrijoles.key {
+		client_auth {
+			mode require_and_verify
+			trust_pool file /etc/caddy/certs/cloudflare-origin-pull-ca.pem
+		}
+	}
+}
+
+# Every request reaches this box through Cloudflare, so the TCP peer is a Cloudflare edge. The app's rate limits key on
+# the leftmost X-Forwarded-For (public signup, waitlist, self-visit, CLI device login): it must be the visitor, which
+# Cloudflare states in CF-Connecting-IP (D12).
+(gf_upstream) {
+	header_up X-Real-IP {http.request.header.CF-Connecting-IP}
+	header_up X-Forwarded-For {http.request.header.CF-Connecting-IP}
+}
+
+goldenfrijoles.com {
+	import gf_tls
+	import gf_headers
+	reverse_proxy golden-frijoles-web:3000 {
+		import gf_upstream
+	}
+}
+
+www.goldenfrijoles.com {
+	import gf_tls
+	redir https://goldenfrijoles.com{uri} permanent
+}

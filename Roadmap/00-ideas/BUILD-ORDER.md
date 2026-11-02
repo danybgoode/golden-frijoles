@@ -5,7 +5,7 @@
 
 # Build order — the six stages
 
-> **Generated 2026-10-21 — do not hand-edit.** One stage per initiative, decided in one place
+> **Generated 2026-11-02 — do not hand-edit.** One stage per initiative, decided in one place
 > (`scripts/lib/stage.mjs`): Backlog · Refining · Ready · Building · QA · Shipped.
 > This committed file reads the docs alone, so **Building and QA are not here** — they are facts git
 > and GitHub hold. For the live board run `node scripts/build-order.mjs --live`, or open the Hub board.
@@ -26,10 +26,10 @@ _a pitch is waiting at the approval gate._
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
-- [Claude Code screensavers, the hook to the rest](../09-platform-infra/screensavers/README.md) — #102 · 09 Platform Infra · 0/6 stories · risk: Low · appetite S · _docs: status in-progress_
-- [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #103 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
-- [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #104 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
-- [CMS-neutral experiment integration + Payload go/no-go](../01-growth-engine/cms-integration-spike/README.md) — #105 · 01 Growth Engine · 0/6 stories · risk: Low · _docs: status scaffolded_
+- [Claude Code screensavers, the hook to the rest](../09-platform-infra/screensavers/README.md) — #103 · 09 Platform Infra · 0/6 stories · risk: Low · appetite S · _docs: status in-progress_
+- [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #104 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
+- [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #105 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
+- [CMS-neutral experiment integration + Payload go/no-go](../01-growth-engine/cms-integration-spike/README.md) — #106 · 01 Growth Engine · 0/6 stories · risk: Low · _docs: status scaffolded_
 
 ## Building — live only
 
@@ -39,10 +39,11 @@ _a work branch is on origin. Not in this committed file: `node scripts/build-ord
 
 _a PR is ready for review, or merged and waiting for its close-out. Not in this committed file: `node scripts/build-order.mjs --live` or the Hub board._
 
-## Shipped (97)
+## Shipped (98)
 
 _merged, deployed and closed._
 
+- [Off Vercel: production on our own box](../09-platform-infra/off-vercel-hosting/README.md) — #102 · 09 Platform Infra · 6/6 stories · risk: High · appetite M · _docs: status shipped_
 - [Launch: the first landing A/B on goldenfrijoles.com, run on Golden Frijoles](../02-commercial/landing-launch-experiment/README.md) — #101 · 02 Commercial · 24/24 stories · risk: High · appetite L · _docs: status shipped_
 - [Delivery back on: a dispatch schedule the free Vercel plan allows ✅](../01-growth-engine/delivery-back-on/README.md) — #100 · 01 Growth Engine · 3/3 stories · risk: High · appetite S · _docs: status shipped_
 - [The Satisfied ask ✅](../01-growth-engine/satisfied-ask/README.md) — #99 · 01 Growth Engine · 5/5 stories · risk: High · appetite S · _docs: status shipped_
@@ -142,4 +143,4 @@ _merged, deployed and closed._
 - [The portfolio loop test fails intermittently in CI and has been quarantined](seeds/portfolio-loop-flake.md) — 02 Commercial · seed · Bug · risk: Low · appetite S · _docs: status shipped_
 
 ---
-_103 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._
+_104 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._

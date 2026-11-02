@@ -113,8 +113,8 @@ goes through `getWorkspaceProjects()` and nowhere else (AGENTS.md § The tenancy
 ## 11. Rollout order is part of the design.
 
 env vars → migration → merge (the deploy). An expand migration lands **before** the code that reads
-it. Env vars need a **new deployment** to reach running functions — setting one is half the job.
-Verify by exercising the behaviour, never by a CLI listing.
+it. An env var reaches the app only when `deploy/oci/update.sh` recreates the container (a bare `restart` does not
+re-read `web.env`) — setting one is half the job. Verify by exercising the behaviour, never by a listing.
 
 ## 12. Leave the tree clean.
 

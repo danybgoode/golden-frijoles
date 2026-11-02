@@ -22,6 +22,7 @@ import {
   ACCOUNT_CONFIRMED_EVENT as ACCOUNT_CONFIRMED_EVENT_NAME,
   type SelfTrackEvent,
 } from './self-track-events'
+import { deployEnv } from './deploy-env'
 import { flagEnvironmentFor } from './gates-decision'
 import {
   EXPERIMENT_FLAGS,
@@ -228,7 +229,7 @@ export async function trackSelfExposure(
       variant: answer.variant,
       reason: answer.reason,
       snapshotVersion: answer.snapshotVersion,
-      environment: flagEnvironmentFor(process.env.VERCEL_ENV),
+      environment: flagEnvironmentFor(deployEnv()),
       subject: { type: VISITOR_SUBJECT_TYPE, id: visitorId },
       experiment: answer.experiment,
     })
