@@ -150,3 +150,14 @@ test('off-vercel-hosting D3: DEPLOY_ENV=production without SITE_URL is just as l
     'http://localhost:3000'
   )
 })
+
+test('on Vercel a shared-scope DEPLOY_ENV cannot turn a preview into production (verifier, #444)', () => {
+  const env = {
+    VERCEL: '1',
+    VERCEL_ENV: 'preview',
+    DEPLOY_ENV: 'production',
+    VERCEL_BRANCH_URL: 'branch.example.app',
+  }
+  assert.equal(resolveSiteUrl(env), 'https://branch.example.app')
+  assert.equal(isSiteUrlMisconfiguredInProductionEnv(env), false)
+})

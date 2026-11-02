@@ -30,6 +30,7 @@ export interface SiteUrlEnv {
   SITE_URL?: string
   VERCEL_ENV?: string
   DEPLOY_ENV?: string
+  VERCEL?: string
   VERCEL_BRANCH_URL?: string
   VERCEL_URL?: string
 }

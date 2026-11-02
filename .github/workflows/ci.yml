@@ -223,8 +223,12 @@ jobs:
             echo "STRIPE_WEBHOOK_SECRET=whsec_ci_$(openssl rand -hex 24)"
             echo "STRIPE_SECRET_KEY=ci-placeholder-never-sent"
           } >> "$GITHUB_ENV"
+      # A canary .env in the build context (verifier, #444): .dockerignore must keep it out of every layer, including
+      # Next's standalone copy of the env files it loads. Checked below with `docker save`, which sees each layer.
       - name: Build the image
         run: |
+          echo "GF_IMAGE_CANARY=canary-$(openssl rand -hex 16)" | tee apps/web/.env.production | sed 's/=.*/=…/'
+          echo "GF_IMAGE_CANARY=$(cut -d= -f2 apps/web/.env.production)" >> "$GITHUB_ENV"
           docker build -t golden-frijoles:ci \
             --build-arg NEXT_PUBLIC_SUPABASE_URL="$NEXT_PUBLIC_SUPABASE_URL" \
             --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="$NEXT_PUBLIC_SUPABASE_ANON_KEY" .
@@ -253,6 +257,11 @@ jobs:
           docker create --name gf-fs golden-frijoles:ci > /dev/null
           docker export gf-fs > "$RUNNER_TEMP/fs.tar"
           docker rm gf-fs > /dev/null
+          docker save golden-frijoles:ci -o "$RUNNER_TEMP/layers.tar"
+          (cd "$RUNNER_TEMP" && mkdir -p layers && tar -xf layers.tar -C layers)
+          if grep -raqF -- "$GF_IMAGE_CANARY" "$RUNNER_TEMP/layers"; then
+            echo "::error::the canary .env reached an image layer — .dockerignore is not keeping env files out"; exit 1
+          fi
           for k in SUPABASE_SERVICE_ROLE_KEY SELF_PROJECT_API_KEY SELF_SUBJECT_SECRET STRIPE_WEBHOOK_SECRET; do
             v="${!k}"
             if grep -qF -- "$v" "$RUNNER_TEMP/history.txt" || grep -aqF -- "$v" "$RUNNER_TEMP/fs.tar"; then
