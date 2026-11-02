@@ -35,6 +35,10 @@ makes it. Disconnecting the Vercel Git integration is Daniel's (dashboard). The 
 **As a** a visitor, SDK, CLI or connector user of goldenfrijoles.com, **I want** the same domain to answer from the
 VM, **so that** the product works again without anyone changing a URL.
 **Acceptance:**
+- **Order matters (S2's origin pulls):** BEFORE the DNS change, turn the zone's Authenticated Origin Pulls
+  (`tls_client_auth`) ON and SSL mode to **Full (strict)** (Daniel's yes: a production TLS setting), and prove a
+  proxied request still works on the current origin. The VM's site block refuses any TLS client without Cloudflare's
+  origin-pull certificate: flipping DNS first would answer every visitor with a 525.
 - Record the current DNS records first (the rollback). Then `goldenfrijoles.com` + `www` → the VM's IP, proxied,
   SSL mode **Full (strict)**.
 - Smoke, all from the public domain: the landing renders; sign-in works; `/api/v1/track` accepts an event with a

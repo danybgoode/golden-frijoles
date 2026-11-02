@@ -20,9 +20,9 @@ SITE=/opt/edge/sites/golden-frijoles.caddy
 IF_CHANGED=0
 [ "${1:-}" = "--if-changed" ] && IF_CHANGED=1
 
-# One deploy at a time: the timer and a hand-run must never interleave.
-# The lock lives beside the deploy, owned by ubuntu: one in /tmp left by a `sudo` run would lock the timer out.
-exec 9> "$DEPLOY/.update.lock"
+# One deploy at a time: the timer and a hand-run must never interleave. The lock is a READ descriptor on the deploy
+# directory: nothing is created, so a `sudo` run cannot leave a root-owned lock file that shuts the timer out.
+exec 9< "$DEPLOY"
 flock -n 9 || { [ "$IF_CHANGED" = 1 ] || echo "another golden-frijoles deploy is running"; exit 0; }
 
 # Pull this repo's deploy files first, then re-run the NEW copy of this script once: bash keeps reading the file it
@@ -67,11 +67,15 @@ if [ "$IF_CHANGED" = 1 ] && [ "$IMAGE" = "$PREV_IMAGE" ] && [ -n "$RUNNING" ] &&
 fi
 # A digest that already failed its health check is not retried by the timer: retrying would stop the good container
 # every two minutes (verifier, #446). A hand-run (no --if-changed) retries it, and a new merge is a new digest.
+# A changed site file still goes in, against the container that is running (verifier round 2, #446).
 FAILED="$(grep -E '^WEB_IMAGE_FAILED=' "$ENV_FILE" | tail -1 | cut -d= -f2- || true)"
-if [ "$IF_CHANGED" = 1 ] && [ -n "$FAILED" ] && [ "$IMAGE" = "$FAILED" ] && [ "$SITE_SAME" = 1 ]; then
-  exit 0
+SKIP_IMAGE=0
+if [ "$IF_CHANGED" = 1 ] && [ -n "$FAILED" ] && [ "$IMAGE" = "$FAILED" ]; then
+  [ "$SITE_SAME" = 1 ] && exit 0
+  SKIP_IMAGE=1
+  echo "▶ $IMAGE failed its health check before — not retried; installing the changed site file only"
 fi
-echo "▶ deploying $IMAGE (commit $(rev "$IMAGE" | cut -c1-7)); was ${PREV_IMAGE:-nothing}"
+[ "$SKIP_IMAGE" = 1 ] || echo "▶ deploying $IMAGE (commit $(rev "$IMAGE" | cut -c1-7)); was ${PREV_IMAGE:-nothing}"
 
 # Start the new image. On a failed health check, put the previous digest back.
 rollback() {
@@ -89,19 +93,21 @@ rollback() {
   # Same image as before (only the site file moved): leave the running container alone; this run fails loudly.
   exit 1
 }
-set_env WEB_IMAGE "$IMAGE"
-WEB_IMAGE="$IMAGE" docker compose up -d --remove-orphans
+if [ "$SKIP_IMAGE" != 1 ]; then
+  set_env WEB_IMAGE "$IMAGE"
+  WEB_IMAGE="$IMAGE" docker compose up -d --remove-orphans
 
-# Health from INSIDE the container: a 200 here is the app, not the proxy or Cloudflare.
-healthy=0
-for _ in $(seq 1 36); do
-  if docker compose exec -T web node -e "fetch('http://127.0.0.1:3000/llms.txt').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))" 2> /dev/null; then
-    healthy=1; break
-  fi
-  sleep 5
-done
-[ "$healthy" = 1 ] || rollback "golden-frijoles did not answer its health check in 3 min — docker compose logs web"
-echo "✓ web healthy"
+  # Health from INSIDE the container: a 200 here is the app, not the proxy or Cloudflare.
+  healthy=0
+  for _ in $(seq 1 36); do
+    if docker compose exec -T web node -e "fetch('http://127.0.0.1:3000/llms.txt').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))" 2> /dev/null; then
+      healthy=1; break
+    fi
+    sleep 5
+  done
+  [ "$healthy" = 1 ] || rollback "golden-frijoles did not answer its health check in 3 min — docker compose logs web"
+  echo "✓ web healthy"
+fi
 
 # The site file goes into a directory the SHARED proxy imports: install, validate inside the running proxy, reload,
 # and put the previous copy back on any failure, so a bad file never survives to the proxy's next start.
@@ -117,6 +123,7 @@ if [ "$SITE_SAME" != 1 ]; then
   rm -f "$SITE.prev"
   echo "✓ proxy validated + reloaded"
 fi
+[ "$SKIP_IMAGE" = 1 ] && { echo "✓ site file installed; $IMAGE stays skipped until a new merge or a hand-run"; exit 0; }
 sed -i '/^WEB_IMAGE_FAILED=/d' "$ENV_FILE"
 
 # Superseded images only fill the disk. Dangling only: anything a container uses stays, any build can be re-pulled.

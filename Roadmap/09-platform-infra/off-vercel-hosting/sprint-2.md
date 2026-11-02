@@ -72,7 +72,8 @@ the VM, and roll back on failure, **so that** merging to `main` stays the deploy
 ## Sprint 2 — Smoke walkthrough (do these in order)
 Env: the VM, before DNS moves
 
-1. Merge #446, make the GHCR package public, then on the VM run `journalctl -u golden-frijoles-deploy -n 20`
+1. Merge #446, make the GHCR package public, install the timer (`deploy/oci/README.md` → First install, last two
+   lines), then on the VM run `journalctl -u golden-frijoles-deploy -n 20`
    → a line `✓ deployed golden-frijoles <sha>` for the merge.
 2. On the VM, `docker inspect golden-frijoles-web-1 --format '{{index .Config.Labels "org.opencontainers.image.revision"}}'`
    → the merge SHA.

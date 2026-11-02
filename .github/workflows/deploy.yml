@@ -39,6 +39,8 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 30
+    outputs:
+      main_moved: ${{ steps.push.outputs.main_moved }}
     permissions:
       contents: read
       packages: write
@@ -70,26 +72,31 @@ jobs:
           docker run -d --name gf-probe --memory 768m --cpus 0.75 -p 127.0.0.1:3000:3000 \
             -e DEPLOY_ENV=development "ghcr.io/danybgoode/golden-frijoles:$GITHUB_SHA" > /dev/null
           for i in $(seq 1 45); do
-            got=$(curl -s -o /dev/null -w '%{http_code}' -D - http://127.0.0.1:3000/llms.txt 2> /dev/null \
-              | tr -d '\r' | awk -F': ' 'tolower($1)=="x-gf-revision"{print $2}' || true)
-            [ "$got" = "$GITHUB_SHA" ] && { echo "arm64 image answers as $got"; docker rm -f gf-probe > /dev/null; exit 0; }
+            code=$(curl -s --max-time 5 -o /dev/null -D "$RUNNER_TEMP/h.txt" -w '%{http_code}' http://127.0.0.1:3000/llms.txt || true)
+            got=$(tr -d '\r' < "$RUNNER_TEMP/h.txt" 2> /dev/null | awk -F': ' 'tolower($1)=="x-gf-revision"{print $2}' || true)
+            [ "$code" = 200 ] && [ "$got" = "$GITHUB_SHA" ] && { echo "arm64 image answers as $got"; docker rm -f gf-probe > /dev/null; exit 0; }
             sleep 2
           done
           docker logs gf-probe | tail -50; exit 1
       - name: Push
+        id: push
         run: |
           set -euo pipefail
           docker push -q "ghcr.io/danybgoode/golden-frijoles:$GITHUB_SHA"
           # Re-running an older run after a newer merge must not move :main backwards (verifier, #446).
           head=$(git ls-remote origin refs/heads/main | cut -f1)
           if [ "$head" != "$GITHUB_SHA" ]; then
-            echo "::warning::main is now $head, not $GITHUB_SHA — pushed :$GITHUB_SHA only, :main left alone"; exit 0
+            echo "::warning::main is now $head, not $GITHUB_SHA — pushed :$GITHUB_SHA only, :main left alone"
+            echo "main_moved=false" >> "$GITHUB_OUTPUT"; exit 0
           fi
           docker push -q ghcr.io/danybgoode/golden-frijoles:main
+          echo "main_moved=true" >> "$GITHUB_OUTPUT"
 
   rollout:
     name: Wait for the VM to serve this merge
     needs: image
+    # Only when this run moved :main: a run overtaken by a newer merge has nothing to wait for (verifier round 2).
+    if: needs.image.outputs.main_moved == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     permissions:
