@@ -25,8 +25,11 @@ FROM ${NODE_IMAGE} AS build
 WORKDIR /repo
 ARG NEXT_PUBLIC_SUPABASE_URL
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+# The commit being built (deploy.yml passes the merge SHA): next.config sends it as `x-gf-revision`.
+ARG GF_REVISION=
 ENV NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL} \
     NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY} \
+    GF_REVISION=${GF_REVISION} \
     NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /repo/node_modules ./node_modules
 COPY . .
@@ -34,6 +37,10 @@ RUN npm run build --workspace=apps/web
 
 FROM ${NODE_IMAGE} AS runtime
 WORKDIR /app
+ARG GF_REVISION=
+# What update.sh and an operator read to know which commit a container runs.
+LABEL org.opencontainers.image.source="https://github.com/danybgoode/golden-frijoles" \
+      org.opencontainers.image.revision="${GF_REVISION}"
 # The same two public values again at RUNTIME: lib/supabase-auth.ts reads them by a dynamic key, which Next does not
 # inline, so a session read 500s without them (verifier, #444). Public by design; the image is public anyway.
 ARG NEXT_PUBLIC_SUPABASE_URL

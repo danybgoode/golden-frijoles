@@ -82,3 +82,8 @@ Claude outputs
 optimize/.venv/
 optimize/.cache/
 __pycache__/
+
+# off-vercel-hosting — the VM's runtime env files (secrets); only the example is committed
+deploy/oci/*.env
+!deploy/oci/web.env.example
+deploy/oci/.env

@@ -6,7 +6,7 @@
 
 _Generated: 2026-11-02_
 
-**106 check(s) owed across 77 file(s)** · 7 cleared.
+**108 check(s) owed across 78 file(s)** · 7 cleared.
 
 | Who can clear it | Count | What it means |
 |---|---|---|
@@ -16,14 +16,14 @@ _Generated: 2026-11-02_
 | judgment | 34 | An answer only the product owner can give: an _Intent_, an approval, a decision |
 | signed-in | 25 | A signed-in production walkthrough: an agent can run it once a smoke account exists |
 | interactive | 20 | An interactive plugin or terminal walkthrough: an agent can script it in a scratch repo |
-| unsorted | 13 | Nothing above matched — **not a bin, a to-triage list** |
+| unsorted | 15 | Nothing above matched — **not a bin, a to-triage list** |
 
 | Category | Count | What it means |
 |---|---|---|
 | money-path | 1 | Touches checkout, payment or order state — run these first |
 | auth-path | 29 | Needs a real signed-in session a script cannot mint against production |
 | admin-only | 0 | Behind an admin surface |
-| other | 76 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
+| other | 78 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
 
 ## publish (2)
 
@@ -106,7 +106,7 @@ _Generated: 2026-11-02_
 - `Roadmap/02-commercial/outcome-report-any-product/RETROSPECTIVE.md:24` · other — **Owed to the product owner:** the first aomx push and its signed-in report; re-push medusa-bonsai's report (median 7 → 3.4 days, with the caveat); ~~`npm publish` of CLI 1.7.0 (from agent-legible-horizon)~~ (published 2026-10-14).
 - `Roadmap/02-commercial/owed-on-screen/RETROSPECTIVE.md:44` · other — Switching `hub.owed_enabled` on in production and the Sprint 2 signed-in walkthrough (steps 2–5 of `sprint-2.md`).
 - `Roadmap/02-commercial/workspaces/RETROSPECTIVE.md:69` · other — **Owed to Daniel by name:** the signed-in prod walkthroughs (S1 steps 1–3 and 5, S2 step 1), and ~~`npm publish` of `@golden-frijoles/cli@0.4.0` (2FA)~~ (published; checked 2026-10-14), then S2 step 2. S2 step 3 is n/a in prod; CI replaces it.
-- `Roadmap/09-platform-infra/off-vercel-hosting/sprint-3.md:73` · auth-path — (auth — owed to Daniel) Sign in at https://goldenfrijoles.com/login and open https://goldenfrijoles.com/app → your products are listed.
+- `Roadmap/09-platform-infra/off-vercel-hosting/sprint-3.md:77` · auth-path — (auth — owed to Daniel) Sign in at https://goldenfrijoles.com/login and open https://goldenfrijoles.com/app → your products are listed.
 - `Roadmap/09-platform-infra/one-product-project/sprint-1.md:87` · auth-path — (signed in, owed to Daniel) Open https://goldenfrijoles.com/app → the switcher lists golden-frijoles, and its flags list shows auth.terminal_sign_in_enabled
 - `Roadmap/09-platform-infra/one-product-project/sprint-2.md:75` · other — (signed in, owed to Daniel) Open https://goldenfrijoles.com/app → the agent rail is on the right
 - `Roadmap/09-platform-infra/one-product-project/sprint-3.md:78` · other — (signed in, owed to Daniel) `npx -y @golden-frijoles/cli flags kill console.agent_rail_enabled --env production`, then reload https://goldenfrijoles.com/app → within a minute, the agent rail is gone
@@ -136,7 +136,7 @@ _Generated: 2026-11-02_
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:54` · other — The interactive coach runs (S1 smoke steps 1 and 3; S2 smoke step 1).
 - `Roadmap/09-platform-infra/why-as-a-story/RETROSPECTIVE.md:50` · other — **Owed to the product owner:** the refine walkthrough on a new idea (the Why drafted as a story, the guard, the build view showing it in full) and a Plan gate with the Crew block.
 
-## unsorted (13)
+## unsorted (15)
 
 - `apps/web/e2e/app-auth.spec.ts:7` · auth-path — owed to Daniel; here we pin the api-testable negatives that make the boundary real:
 - `Roadmap/01-growth-engine/delivery-stale-reclaim-uncounted/RETROSPECTIVE.md:55` · other — (F7, still owed to Daniel).
@@ -148,6 +148,8 @@ _Generated: 2026-11-02_
 - `Roadmap/02-commercial/landing-launch-experiment/RETROSPECTIVE.md:81` · other — Real-browser walkthroughs owed to Daniel: the consent banner accept/decline with GA4/Clarity; B on phone and desktop; the production kill of `landing.variant_b_enabled`; a test slot on `/talk`.
 - `Roadmap/02-commercial/owed-on-screen/RETROSPECTIVE.md:45` · other — The result read on the target (open owed checks 96 → 40), due ~2026-11-14: `node scripts/epic-read.mjs --epic owed-on-screen`.
 - `Roadmap/09-platform-infra/cli-think-skills-followups/RETROSPECTIVE.md:36` · other — **Owed to Daniel by name:** ~~`cd packages/cli && npm publish` (npm 2FA) for `@golden-frijoles/cli@0.4.1`~~ (published; checked 2026-10-14), then smoke steps 4–5 in `sprint-1.md`.
+- `Roadmap/09-platform-infra/off-vercel-hosting/sprint-2.md:64` · other — Owed to Daniel: fill the 11 Sensitive values in the VM's `deploy/oci/web.env` (and keep a copy in the password manager).
+- `Roadmap/09-platform-infra/off-vercel-hosting/sprint-2.md:65` · other — Owed to Daniel: make the GHCR package `golden-frijoles` public after its first push.
 - `Roadmap/09-platform-infra/screensavers/sprint-1.md:48` · other — Status:** 🔨 building — S1.1 and S1.2 built on `feat/screensavers`; S1.3 (the post and the read) owed to the product owner
 - `Roadmap/09-platform-infra/screensavers/sprint-1.md:73` · other — Owed to the product owner: post the screenshot with the line; on 2026-11-30 read `gh api repos/golden-frijoles/skills/traffic/clones --jq .uniques` and stamp the verdict.
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:53` · other — The live `--yes` against `golden-beans` with that file, then check the North Star surface (S3 smoke steps 2–3).
