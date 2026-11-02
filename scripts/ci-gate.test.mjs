@@ -5,13 +5,14 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { decideGate } from './ci-gate.mjs';
 
-const SKIPPABLE = ['e2e-api', 'e2e-authed', 'design-contract'];
+const SKIPPABLE = ['e2e-api', 'e2e-authed', 'container-smoke', 'design-contract'];
 const job = (result, outputs = {}) => ({ result, outputs });
 const needs = (docsOnly, e2e, overrides = {}) => ({
   changes: job('success', { docs_only: docsOnly }),
   'typecheck-build': job('success'),
   'e2e-api': job(e2e),
   'e2e-authed': job(e2e),
+  'container-smoke': job(e2e),
   'design-contract': job(e2e),
   ...overrides,
 });
@@ -80,7 +81,8 @@ test('ci.yml: gate needs every other job, and --skippable names exactly the e2e 
   const needsList = /needs:\s*\[([^\]]*)\]/
     .exec(gate)[1]
     .split(',')
-    .map((s) => s.trim());
+    .map((s) => s.trim())
+    .filter(Boolean); // a multi-line list ends with a trailing comma once prettier wraps it
   const nonBlocking = ['quarantine']; // deliberately outside the gate; ci.yml says why above the job
   assert.deepEqual(needsList.sort(), jobs.filter((j) => j !== 'gate' && !nonBlocking.includes(j)).sort());
   assert.match(gate, /if: always\(\)/);
