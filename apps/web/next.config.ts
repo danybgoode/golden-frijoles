@@ -1,3 +1,4 @@
+import { join } from 'node:path'
 import type { NextConfig } from 'next'
 
 // Story 1.1 (commercial-shell/sprint-1.md) — the engine pages (funnel/impact/experiments) moved
@@ -6,6 +7,11 @@ import type { NextConfig } from 'next'
 // 307 (temporary), not 301: the real auth-gated destination may move again once E2 lands, and a
 // 301 would get hard-cached by browsers/search engines against a path that isn't final.
 const nextConfig: NextConfig = {
+  // off-vercel-hosting D5 — a self-contained server in .next/standalone, so the Docker image (Dockerfile) carries only
+  // what the app imports. The tracing root is the monorepo root: the app imports @golden-frijoles/sdk from packages/.
+  // `next start` (CI, local) and a Vercel build both ignore it.
+  output: 'standalone',
+  outputFileTracingRoot: join(__dirname, '..', '..'),
   async redirects() {
     return [
       // one-product-project S1.1 — `golden-beans-demo` was renamed `golden-frijoles` (D1). Links already shared

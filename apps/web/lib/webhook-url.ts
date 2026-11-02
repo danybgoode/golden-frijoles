@@ -19,6 +19,8 @@
 // it, so there is no second resolution for a DNS-rebinding attacker to flip. Redirects are never
 // followed (`redirect: 'manual'`), so a 3xx cannot pivot around the pin either.
 
+import { deployEnv } from './deploy-env'
+
 export type UrlCheck = { ok: true } | { ok: false; error: string }
 
 const IS_LOCAL_TARGET = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/
@@ -35,7 +37,7 @@ export function localhostWebhooksAllowed(): boolean {
   // setting the env var in production must NOT open a loopback path, because there "localhost" is the
   // serverless function's own interface. VERCEL_ENV is set by the platform and is 'production' only
   // on production deployments — it is absent locally and in CI, and 'preview' on previews.
-  if (process.env.VERCEL_ENV === 'production') return false
+  if (deployEnv() === 'production') return false
   return process.env.WEBHOOK_ALLOW_LOCALHOST === 'true'
 }
 

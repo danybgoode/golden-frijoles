@@ -14,6 +14,8 @@
 // sticky) and sets the workspace from that record — Growth only into an empty or the SAME slot, Free only for the
 // subscription held — so a stale "active", a Free delivered before `created`, or a second subscription cannot change it.
 
+import { deployEnv } from './deploy-env'
+
 /** The lookup key of the one price that sells Growth. The checkout route and the price script read this constant. */
 export const GROWTH_PRICE_LOOKUP_KEY = 'gf_growth_monthly'
 
@@ -276,7 +278,7 @@ export function integrationIdentifier(random: () => number = Math.random): strin
  *  no live key, production has no key, and every billing route fails closed ("unavailable"). Everywhere else the
  *  integration's key, so a live key in a local env file never makes dev or a preview charge a real card. */
 export function stripeSecretKey(env: Record<string, string | undefined> = process.env): string | undefined {
-  if (env.VERCEL_ENV === 'production') {
+  if (deployEnv(env) === 'production') {
     const live = env.STRIPE_LIVE_SECRET_KEY?.trim()
     return live && /^(rk|sk)_live_/.test(live) ? live : undefined
   }

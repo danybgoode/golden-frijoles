@@ -141,3 +141,16 @@ test('the two switches are INDEPENDENT — muting one alert is not muting every 
   assert.equal(shouldSendOperatorNotification(PROD).send, true)
   assert.equal(isTaskAlertEnabled(PROD), false)
 })
+
+test('off-vercel-hosting D3: a box that says DEPLOY_ENV=production sends; the hatch stays local-only', () => {
+  const creds = { TELEGRAM_BOT_TOKEN: 't', TELEGRAM_CHAT_ID: 'c' }
+  assert.deepEqual(shouldSendOperatorNotification({ ...creds, DEPLOY_ENV: 'production' }), {
+    send: true,
+    reason: null,
+  })
+  assert.equal(shouldSendOperatorNotification({ ...creds, DEPLOY_ENV: 'preview' }).send, false)
+  const withHatch = { ...creds, ALLOW_NOTIFY_OUTSIDE_PRODUCTION: 'true' }
+  // DEPLOY_ENV declares a deployment exactly as VERCEL_ENV does: the hatch is closed on it.
+  assert.equal(shouldSendOperatorNotification({ ...withHatch, DEPLOY_ENV: 'preview' }).send, false)
+  assert.equal(shouldSendOperatorNotification({ ...withHatch, DEPLOY_ENV: 'development' }).send, false)
+})
