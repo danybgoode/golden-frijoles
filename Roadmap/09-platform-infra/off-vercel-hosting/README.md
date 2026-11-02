@@ -137,8 +137,26 @@ decides WHICH flag environment is read).
 D1–D6. Inert on Vercel: with `DEPLOY_ENV` unset every reader returns what it returns today (each reader's existing
 spec stays green unchanged). No behaviour change, no env var added anywhere yet.
 
-### Build contract — Sprint 2
-D7–D9. Nothing changes DNS. Proved on the tunnel's own test hostname (or `curl --resolve`) before S3.
+### Build contract — Sprint 2 (re-locked 2026-11-02 against the VM's tenant contract; Daniel's decisions)
+- **D7 → superseded: the shared proxy, not a tunnel.** Daniel chose the SOP: the container joins the `edge` network as
+  `golden-frijoles-web`; a site file `deploy/oci/golden-frijoles.caddy`, installed by our own deploy to the shared
+  proxy's sites directory, validated inside the proxy and restored on failure; a Cloudflare Origin CA certificate
+  issued from a CSR generated ON the VM (the key never leaves it), SSL mode Full (strict). The site file sets
+  `X-Forwarded-For`/`X-Real-IP` to `CF-Connecting-IP`, as the other tenants do — that is D12's answer: the
+  rate-limit routes read a leftmost XFF the proxy now writes.
+- **D9 → amended: the VM pulls.** `.github/workflows/deploy.yml` builds `linux/arm64` natively, pushes
+  `ghcr.io/danybgoode/golden-frijoles:{main,<sha>}` (public) with the revision as a label and as the `x-gf-revision`
+  response header (`GF_REVISION`, next.config `headers()`). A systemd timer on the VM runs
+  `deploy/oci/update.sh --if-changed` every 2 min: digest-pinned pull (a failed pull fails, never a cached image),
+  `compose up`, site file, health check from inside the container, roll back to the previous digest on failure. The
+  workflow writes the GitHub Deployment, waits for the live `x-gf-revision` to equal the merge, sets the status and
+  posts the 🚀 itself (events from `GITHUB_TOKEN` start no other workflow, so `notify-telegram.yml` would not fire).
+- **D13 — Capacity, measured.** Live 2026-11-02: 3.3 GB used / 8.6 GB available of 12 GB, load 0.3 on 2 OCPU. Our cap:
+  0.75 CPU / 768 MB. No other tenant's cap is trimmed (Daniel: only if tight; it is not). Recorded in the tenant table.
+- **D14 — Secrets.** `deploy/oci/web.env` (0600, `ubuntu`) holds every runtime value; the agent writes the readable
+  ones plus `DEPLOY_ENV=production`, `SITE_URL`, and a marked blank line per Sensitive value, which Daniel fills on
+  the VM. Copy in the password manager (Daniel). Nothing serves traffic before DNS moves (S3), so a blank is safe.
+- Nothing changes DNS in S2. Proof: `curl --resolve goldenfrijoles.com:443:<vm>` reaches the app through the proxy.
 
 ### Build contract — Sprint 3
 DNS flip recorded first (the old CNAMEs are the rollback). Rule #4 text approved by Daniel in the PR.
