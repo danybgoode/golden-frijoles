@@ -4,9 +4,9 @@
 > Re-derived from the spec tree and the epic docs on every run, never from a maintained list.
 > To clear an item, tick (`✅`) or strike (`~~…~~`) its line where it was written, then regenerate.
 
-_Generated: 2026-10-21_
+_Generated: 2026-11-02_
 
-**104 check(s) owed across 75 file(s)** · 7 cleared.
+**105 check(s) owed across 76 file(s)** · 7 cleared.
 
 | Who can clear it | Count | What it means |
 |---|---|---|
@@ -14,14 +14,14 @@ _Generated: 2026-10-21_
 | credential | 7 | Mints or uses a production credential: only the product owner, named every time |
 | ops | 5 | On the product owner's own accounts or machine |
 | judgment | 33 | An answer only the product owner can give: an _Intent_, an approval, a decision |
-| signed-in | 24 | A signed-in production walkthrough: an agent can run it once a smoke account exists |
+| signed-in | 25 | A signed-in production walkthrough: an agent can run it once a smoke account exists |
 | interactive | 20 | An interactive plugin or terminal walkthrough: an agent can script it in a scratch repo |
 | unsorted | 13 | Nothing above matched — **not a bin, a to-triage list** |
 
 | Category | Count | What it means |
 |---|---|---|
 | money-path | 1 | Touches checkout, payment or order state — run these first |
-| auth-path | 28 | Needs a real signed-in session a script cannot mint against production |
+| auth-path | 29 | Needs a real signed-in session a script cannot mint against production |
 | admin-only | 0 | Behind an admin surface |
 | other | 75 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
 
@@ -84,7 +84,7 @@ _Generated: 2026-10-21_
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:52` · other — Run the North Star coach on Golden Frijoles and judge the file (S1 smoke step 2).
 - `Roadmap/09-platform-infra/verify-spike/RETROSPECTIVE.md:48` · other — **F7, owed to the product owner:** the delivery cron may not be registered in production (DECISION § 4). Re-checked 2026-10-14: `vercel crons ls` finds no cron jobs, and `delivery.destinations_enabled` is off in production (320 pending on 2026-10-08). Decide whether delivery com…
 
-## signed-in (24)
+## signed-in (25)
 
 - `apps/web/e2e/app-auth.spec.ts:121` · auth-path — authed member-vs-owner HTTP path needs a real session (browser smoke owed to Daniel), so the
 - `apps/web/e2e/delivery-replay.spec.ts:20` · auth-path — The authenticated /app replay + delivery-history UI is a real-session BROWSER smoke owed to Daniel.
@@ -105,6 +105,7 @@ _Generated: 2026-10-21_
 - `Roadmap/02-commercial/outcome-report-any-product/RETROSPECTIVE.md:24` · other — **Owed to the product owner:** the first aomx push and its signed-in report; re-push medusa-bonsai's report (median 7 → 3.4 days, with the caveat); ~~`npm publish` of CLI 1.7.0 (from agent-legible-horizon)~~ (published 2026-10-14).
 - `Roadmap/02-commercial/owed-on-screen/RETROSPECTIVE.md:44` · other — Switching `hub.owed_enabled` on in production and the Sprint 2 signed-in walkthrough (steps 2–5 of `sprint-2.md`).
 - `Roadmap/02-commercial/workspaces/RETROSPECTIVE.md:69` · other — **Owed to Daniel by name:** the signed-in prod walkthroughs (S1 steps 1–3 and 5, S2 step 1), and ~~`npm publish` of `@golden-frijoles/cli@0.4.0` (2FA)~~ (published; checked 2026-10-14), then S2 step 2. S2 step 3 is n/a in prod; CI replaces it.
+- `Roadmap/09-platform-infra/off-vercel-hosting/sprint-3.md:73` · auth-path — (auth — owed to Daniel) Sign in at https://goldenfrijoles.com/login and open https://goldenfrijoles.com/app → your products are listed.
 - `Roadmap/09-platform-infra/one-product-project/sprint-1.md:87` · auth-path — (signed in, owed to Daniel) Open https://goldenfrijoles.com/app → the switcher lists golden-frijoles, and its flags list shows auth.terminal_sign_in_enabled
 - `Roadmap/09-platform-infra/one-product-project/sprint-2.md:75` · other — (signed in, owed to Daniel) Open https://goldenfrijoles.com/app → the agent rail is on the right
 - `Roadmap/09-platform-infra/one-product-project/sprint-3.md:78` · other — (signed in, owed to Daniel) `npx -y @golden-frijoles/cli flags kill console.agent_rail_enabled --env production`, then reload https://goldenfrijoles.com/app → within a minute, the agent rail is gone
