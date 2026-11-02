@@ -3,7 +3,7 @@ epic: off-vercel-hosting
 sprint: 1
 title: "Portable build"
 risk: high
-phase: Building
+phase: Shipped
 stories_total: 2
 stories:
   - id: S1.1
@@ -12,24 +12,24 @@ stories:
     i_want: "the app to know it is production from DEPLOY_ENV, falling back to VERCEL_ENV"
     so_that: "gates, notifications and billing behave as production on any host"
     risk: high
-    status: planned
+    status: done
   - id: S1.2
     title: "A portable Docker image, built and booted in CI"
     as_a: "the operator of golden-frijoles"
     i_want: "a standalone Next build in a multi-stage Docker image that CI builds and smoke-tests"
     so_that: "the same image runs on the Oracle VM, Cloud Run or anywhere else"
     risk: high
-    status: planned
+    status: done
 ---
 # Off Vercel: production on our own box — Sprint 1: Portable build
 
-**Status:** ⬜ not started
+**Status:** ✅ shipped — PR #444, merge `0897040` (2026-11-02). Inert on Vercel by design; live since the S3 cutover.
 
 Code only. Merges while Vercel is paused and changes no behaviour on Vercel (the seam falls back to `VERCEL_ENV`).
 
 ## Stories
 
-### Story 1.1 — One deploy-environment seam
+### Story 1.1 — One deploy-environment seam ✅ `fb796ed`
 **As a** the operator of golden-frijoles, **I want** the app to know it is production from `DEPLOY_ENV`, falling
 back to `VERCEL_ENV`, **so that** gates, notifications and billing behave as production on any host.
 **Acceptance:**
@@ -46,7 +46,7 @@ back to `VERCEL_ENV`, **so that** gates, notifications and billing behave as pro
   (same shape as `lib/gates-guard.test.ts`).
 **Risk:** high (gates, billing, notify — production behaviour)
 
-### Story 1.2 — A portable Docker image, built and booted in CI
+### Story 1.2 — A portable Docker image, built and booted in CI ✅ `3fd7d05`
 **As a** the operator of golden-frijoles, **I want** a standalone Next build in a multi-stage Docker image that CI
 builds and smoke-tests, **so that** the same image runs on the Oracle VM, Cloud Run or anywhere else.
 **Acceptance:**

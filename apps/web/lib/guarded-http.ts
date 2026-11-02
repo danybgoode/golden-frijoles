@@ -230,7 +230,7 @@ async function guardTarget(
   resolveHost: (hostname: string) => Promise<string[]>
 ): Promise<TargetGuard> {
   // Preserve the documented local receiver exactly: only raw http://localhost or 127.0.0.1, only
-  // under the explicit dev/CI opt-in, and never when VERCEL_ENV=production.
+  // under the explicit dev/CI opt-in, and never in production (`deployEnv()`).
   if (isLocalTestTarget(targetUrl)) return { ok: true }
 
   // Reuse the create-time classifier rather than letting a future caller forget the HTTPS/literal

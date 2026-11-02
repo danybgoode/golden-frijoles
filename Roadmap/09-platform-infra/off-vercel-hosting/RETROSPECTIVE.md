@@ -1,25 +1,46 @@
 # Off Vercel: production on our own box — Retrospective
 
-_Closed: <date>_
-_Intent: yes | mostly | no_
-<!-- Did we build what the product owner meant? One word, THEIR answer: yes, mostly or no. Required by `epic-dod` only
-     when the epic's seed or README carries a numeric `intent_match:` (intent-match D17); the calibration learns from
-     it. Keep the line and leave exactly one of the three words between `_Intent: ` and the closing underscore. -->
-_Quote vs actual: <quote $lo–hi (basis), or "not quoted"> → <actual ≈$n> (<Δ% vs the quote's top, or "—">)_
-<!-- The actual is STAMPED, never typed: `node scripts/epic-actuals.mjs --epic <slug> --write` writes actual_* into
-     the README (finops S2.5); copy its numbers here. -->
-_Crew (actual): <each model and its ≈$, from actual_models> · reviewers <from the PR's review records> · prose <who wrote it> — <one line: where it differed from the plan, and why>_
-<!-- The models are STAMPED, never typed: `node scripts/epic-actuals.mjs --epic <slug> --write` writes actual_models
-     into the README (why-as-a-story D6). Codex, agy, Devin and other outside tools are not in the transcripts; name
-     them from the PR's review records. -->
+_Closed: 2026-11-02_
+_Intent: mostly_
+<!-- Provisional, the builder's reading: Daniel confirms or changes this word (owed below). -->
+_Quote vs actual: $15–33 (M, n=27, p25–p75) → ≈$32.57 (−1% vs the quote's top)_
+_Crew (actual): claude-opus-5-5 ≈$32.57 (orchestrated and built everything) · reviewers: the fresh verifier (2 rounds on #444, 2 on #446), Codex gpt-5.6-luna xhigh (1 on #444, 4 on #446), Mistral Vibe security (clean on both; agy was blocked on its version pin) · prose: the builder — the plan routed S1 to Sonnet builders; S2/S3 needed live VM access, and S1 was small enough that a cold builder would have cost more than it saved._
 
 ## What shipped
-<!-- The capability now live, by sprint, with commit/PR refs. -->
+- **S1 · Portable build** (#444, `0897040`): `lib/deploy-env.ts` declares production (`DEPLOY_ENV`, Vercel's own
+  variable only on Vercel); all eleven readers route through it, a guard refuses new ones. A standalone Docker image,
+  booted against a seeded database in CI (container-smoke) with a canary proving no env file reaches a layer.
+- **S2 · The box and the pipeline** (#446, `f8595a8`): golden-frijoles as a tenant of the shared Oracle VM under its
+  own contract (compose, a site file on the shared proxy, Origin CA cert, Authenticated Origin Pulls); `deploy.yml`
+  builds arm64 natively, boots it under the cap, and waits on the live `x-gf-revision` + `x-gf-site`; the VM's timer
+  pulls by digest, health-checks, rolls back and skips a failed digest.
+- **S3 · Cutover and the rules** (this PR): zone origin pulls + strict SSL, then DNS to the VM; production smoke green;
+  a dispatched deploy proved the pipeline end to end (Deployment success). AGENTS rule #4 and Workflow, WAYS-OF-WORKING
+  and LEARNINGS rewritten.
+- goldenfrijoles.com back online on 2026-11-02 after three days of 402.
 
 ## What went well
+- **The lock disproved scope twice before anyone built it** (the `*_ENABLED` override and the webhook carve-out off
+  Vercel), and the re-lock against the VM's tenant contract replaced two of the plan's own decisions (tunnel → shared
+  proxy, push → pull) instead of building around them.
+- **CI caught the one bug that would have shipped broken**: the image 500'd every session read; only the
+  container-smoke job, with a seeded database, exercised that path.
+- **The fresh verifier earned its keep every round**: the runtime env, a branch-dispatch path to production, the
+  spoofable client IP, a re-try loop that would have stopped the good container every two minutes.
 
 ## What we learned
-<!-- Promote the durable, generalizable items to Roadmap/LEARNINGS.md (one-liner + why + date). Dedupe. -->
+Promoted to LEARNINGS ("Leaving a platform, and what it had been deciding for you"): grep every "am I production?"
+before leaving a platform; boot the real image against a real database in CI; a trusted header is only as trustworthy
+as the path to the proxy; `GITHUB_TOKEN` events start no workflow; a pull deploy is proved only by what the live site
+says. Local, not promoted: zsh does not word-split `$VAR`, which broke two shell one-liners mid-cutover (no harm, both
+caught before any write).
 
 ## Gaps / follow-ups
-<!-- Smoke gaps owed to the product owner, deferred slices, known limitations. -->
+- Owed to Daniel: confirm the delivery waker's calls after the cutover are 2xx (`net._http_response`).
+- Owed to Daniel: the signed-in browser smoke on goldenfrijoles.com (sign in, open `/app`).
+- Owed to Daniel: disconnect the Vercel Git integration for `golden-beans`; delete the project after a quiet week.
+- Owed to Daniel: the `_Intent:_` word above, and a password-manager copy of the VM's `web.env` (including the
+  `SELF_SUBJECT_SECRET` generated on the VM).
+- A row for golden-frijoles in the VM's private tenant table, in that repo's own PR.
+- Three scenario-drill secrets are blank on the VM: drills stay off until they are minted.
+- The same playbook for despachobonsai and panfleto.com.mx (their own repos); Coolify previews were left out on purpose.

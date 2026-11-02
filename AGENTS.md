@@ -16,8 +16,8 @@ run product analytics + experimentation from one primitive set instead of stitch
 its first proof-of-use is dogfooding Miyagi's real setup-guide funnel. It is *not* a fork of any
 sibling project — it's maintained on its own, consuming the shared `golden-frijoles` plugin for process.
 
-**Architecture**: **Next.js App Router (`apps/web`) + Supabase Postgres**, deployed on **Vercel**
-(merge to `main` = deploy). Supabase is accessed **service-role only, server-side** — RLS is ON with
+**Architecture**: **Next.js App Router (`apps/web`) + Supabase Postgres**, run as **one Docker image on our own
+Oracle VM** behind Cloudflare (merge to `main` = deploy; off-vercel-hosting, 2026-11-02). Supabase is accessed **service-role only, server-side** — RLS is ON with
 no anon policies; every query is `project_id`-scoped, and that `project_id` is always resolved
 **server-side** — from the request's hashed API key (`lib/auth.ts`) on authed ingest/read paths, or
 from an allow-listed demo slug (`lib/public-demo.ts`, rule #2) / a revocable connector token
@@ -45,27 +45,25 @@ customers) do **not** go in this public repo: they live in the private `golden-f
 left here (public-monorepo D7).
 
 **Workflow (gitflow)**: work on a **feature branch** (`feat/<epic-slug>`), commit per story, open a
-**PR**, and **merge to `main`** when verified + approved. Merging to `main` is the deploy — Vercel's
-GitHub integration auto-deploys `main` to production on every merge, no manual step. **Never run
-`vercel deploy`/`vercel deploy --prod` from the CLI** — that's an out-of-band deploy that bypasses
-the git-tracked pipeline and isn't how this project ships; if a deployment looks stuck or wrong,
-check `gh api repos/<owner>/<repo>/deployments` (confirms which commit SHA is actually live) or the
-Vercel dashboard, don't reach for a CLI deploy to "fix" it. **Env vars require a REDEPLOY to reach running functions — corrected 2026-07-21.** An earlier
-version of this file claimed the opposite ("took effect on the already-deployed production
-functions with no redeploy needed", from commercial-shell Sprint 2). That was **disproved
-empirically** during the multi-tenant-activation launch: `SIGNUP_ENABLED=true` was added to the
-Production scope with `vercel env add ... --value true`, and `/signup` still returned 404 more than
-seven minutes later, because Vercel snapshots env vars into a deployment at build time and the
-running functions kept serving the values captured at their own build. **Adding or changing a var
-is only half the job — a new deployment (i.e. a commit to `main`) is what makes it live.** Verify
-by exercising the behaviour the var controls, never by `vercel env ls` (which never shows values). Two gotchas hit while confirming this: (1) `vercel env add`
-piped from `echo -n "..." |` can silently save an **empty** value — always verify with `--value
-<val>` explicitly, and check the live behavior it's supposed to affect (e.g. render the page that
-reads it), not just `vercel env ls` (which never shows values) or `vercel env pull` (unreliable for
-sensitive-flagged vars — mark anything non-secret `--no-sensitive` at creation); (2) a **local**
-checkout's `node_modules` can go stale after pulling a merge that added a dependency — `npm ci`
-before trusting a local build failure. **Supabase migrations are a separate step, not part of the
-Vercel deploy** — `supabase link --project-ref <ref>` (find the ref via `supabase projects list`)
+**PR**, and **merge to `main`** when verified + approved. **Merging to `main` is the deploy** (off-vercel-hosting,
+2026-11-02): `.github/workflows/deploy.yml` builds the `linux/arm64` image, boots it under the production cap and
+pushes `ghcr.io/danybgoode/golden-frijoles:main`; on the Oracle VM a 2-minute timer runs `deploy/oci/update.sh`, which
+pulls it **by digest**, health-checks it from inside the container and rolls back on failure; the workflow then waits
+until the live `x-gf-revision` header is the merge, closes the GitHub Deployment and posts the 🚀. **Never deploy from a
+laptop** (no hand-built image pushed as `:main`, no `vercel deploy`): to see what is live, `gh api
+repos/<owner>/<repo>/deployments` or `curl -sI https://goldenfrijoles.com/llms.txt | grep x-gf-revision`; to roll back,
+`git revert` on `main`, or pin an image (`WEB_IMAGE_PIN=…:<sha>`) on the VM (`deploy/oci/README.md`). Operating the VM: `deploy/oci/README.md`.
+**Runtime env lives in the VM's `deploy/oci/web.env`** (0600; keep a copy in the password manager), not in any platform:
+change a value there and run `deploy/oci/update.sh`, which recreates the container with it and health-checks it (a bare
+`docker compose restart` does NOT re-read the env file; an env-only change has no automatic rollback — restore the old
+line and re-run), then verify by exercising the behaviour it controls. Only the two `NEXT_PUBLIC_SUPABASE_*` values are build-time (repo variables
+`PROD_NEXT_PUBLIC_SUPABASE_*`, read by `deploy.yml`), so changing one needs a new image (a merge or a dispatched Deploy).
+Production is declared by `DEPLOY_ENV=production` (`lib/deploy-env.ts`), never inferred from a platform variable.
+Vercel hosts nothing in production; the paused `golden-beans` project is to be Git-disconnected (owed to Daniel,
+off-vercel-hosting) and deleted after a quiet week. (History: on Vercel, env vars were snapshotted at build, so a var change needed a commit to `main` — the
+2026-07-21/22 lesson in LEARNINGS.) A **local** checkout's `node_modules` can go stale after pulling a merge that added
+a dependency — `npm ci` before trusting a local build failure. **Supabase migrations are a separate step, not part of the
+deploy** — `supabase link --project-ref <ref>` (find the ref via `supabase projects list`)
 then `supabase migration list` (diffs local vs. remote); pending ones are applied with `supabase db push`
 (agents may run it since 2026-10-14, many-products S2.4 — the product owner lifted the deny) or the Supabase MCP
 `apply_migration` tool, **before** the merge that deploys the code reading them; `supabase db reset` stays on the
@@ -135,18 +133,17 @@ must 404 while the flag is off regardless of token validity, and a revoked token
 the flag. Never hardcode the flag to `true`, and never add a connector code path that skips the token
 check "temporarily."
 
-### 4. Merging to `main` is the deploy. Never run a manual `vercel deploy`/`--prod`.
-Vercel's GitHub integration auto-deploys `main` on every merge — see "Workflow (gitflow)" above. If a
-deployment looks stuck or wrong, confirm via `gh api repos/<owner>/<repo>/deployments` (exact commit SHA +
-status per environment), never via a CLI deploy.
+### 4. Merging to `main` is the deploy. Never deploy from a laptop.
+**Rewritten 2026-11-02 (off-vercel-hosting S3.2; Daniel approves this text in its PR).** Production is the Oracle VM: a merge to `main`
+builds and pushes the image (`deploy.yml`), the VM's timer pulls it by digest (`deploy/oci/update.sh`), and the
+workflow waits for the live `x-gf-revision` before closing the GitHub Deployment — see "Workflow (gitflow)" above.
+Never push a hand-built image as `:main`, run `docker compose` with an unpinned image, or `vercel deploy` anything to
+fix production. If a deploy looks stuck or wrong, confirm via `gh api repos/<owner>/<repo>/deployments` and the live
+header, then `journalctl -u golden-frijoles-deploy` on the VM. Roll back with `git revert` on `main`, or a
+`WEB_IMAGE_PIN` on the VM for an emergency (`deploy/oci/README.md`).
 
-**Env vars REQUIRE a redeploy to reach running functions**, and the redeploy must be a **commit to
-`main`** — not `vercel redeploy`/`--prod`, which this rule forbids. Vercel snapshots env vars into a
-deployment at build time, so setting a var is only half the job. (An earlier copy of this line
-claimed the opposite; it was corrected in the "Workflow" section on 2026-07-21 but this second copy
-survived until 2026-07-22 — see LEARNINGS' "grep for its siblings" rule, which is exactly what
-should have caught it.) Confirmed again 2026-07-22: `CRON_SECRET` was invisible to the running
-functions until a new deployment.
+**Runtime env vars live in the VM's `deploy/oci/web.env`** and reach the app when `update.sh` recreates the container
+(never a bare `restart`), not on a redeploy; `NEXT_PUBLIC_*` values are the exception (baked into the image). Verify a change by exercising what it controls.
 
 ### The tenancy invariant (workspace level)
 
@@ -270,8 +267,8 @@ fallback). `frijoles flags kill <key> --env production` is the switch: no Vercel
 the seam's 30 s cache. A new gate is a `GATES` row plus `frijoles flags create <key> --kill-switch|--enablement --all-envs`
 (the create sets the switch; `frijoles flags get <key>` must print `on vN` or `off vN` in production, never a bare `off`). Never add a
 `process.env.*_ENABLED` read (`lib/gates-guard.test.ts` fails CI), and always `await` a gate: a bare call is a
-Promise, which is always truthy. Off Vercel (CI, local) a set env var still overrides, so `ci/gates.*.env` drive the
-test servers; on Vercel the env is never read. `FLAG_SERVING_ENABLED` and `CLI_WRITE_API_ENABLED` were retired, not
+Promise, which is always truthy. Off a deployment (CI, local) a set env var still overrides, so `ci/gates.*.env` drive the
+test servers; on any deployment (`isDeployed()`: `DEPLOY_ENV` production/preview, or Vercel) the env is never read. `FLAG_SERVING_ENABLED` and `CLI_WRITE_API_ENABLED` were retired, not
 moved (D2): they gated the control plane that would turn them back on, so they are always on and roll back with
 `git revert`.
 
@@ -305,18 +302,18 @@ npm run test:e2e:browser                       # Playwright `browser` project �
 npm run seed:demo | npm run seed:self          # (re)seed the demo / self-tracking tenants
 node scripts/review-route.mjs --builder <who> <PR#>        # prints the review commands: one general pass (+ security lens when triggered)
 node scripts/build-order.mjs                   # regenerate Roadmap/00-ideas/BUILD-ORDER.md (never hand-edit)
-# Supabase migrations are SEPARATE from the Vercel deploy (see rule #4 / Workflow above):
+# Supabase migrations are SEPARATE from the deploy (see rule #4 / Workflow above):
 supabase link --project-ref <ref> && supabase migration list   # then `supabase db push` (agents may) or MCP apply_migration — before the merge
 ```
 
-**Key env vars** (all on `apps/web`, set in Vercel):
+**Key env vars** (all on `apps/web`, in the VM's `deploy/oci/web.env`; keys in `deploy/oci/web.env.example`):
 - **Supabase** — `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (service-role, server-only; `lib/supabase.ts` throws if missing).
 - **URLs** — `SITE_URL` (absolute-URL base; `lib/site-url.ts` — never a Host-header fallback, rule #5).
 - **Tenancy** — `DEMO_PROJECT_SLUG` (default `golden-frijoles`: the one public project, Golden Frijoles' own) and `SELF_PROJECT_SLUG` (defaults to it — self-tracking lands in the same project); `SELF_PROJECT_API_KEY` (that project's ingest key); `DEMO_PROJECT_API_KEY`, `DEMO_CONNECTOR_TOKEN` (local seeding only).
 - **Gates are NOT env vars** (rule #6) — they are flags in the `golden-frijoles` catalog, listed in
   `lib/gates-decision.ts → GATES` and by `frijoles flags ls --project golden-frijoles`. The `*_ENABLED` names survive only
-  as off-Vercel test overrides (`ci/gates.*.env`). Every other var above still needs a commit to `main` to reach
-  running functions (rule #4).
+  as off-deployment test overrides (`ci/gates.*.env`). Every other var above reaches the app when `update.sh`
+  recreates the container on the VM (rule #4).
 - **Tenancy limits are DATA, not env** — `projects.monthly_event_quota` / `projects.ingest_rate_per_min`
   (`lib/quota.ts`); raising a customer's ceiling is an `UPDATE`, never a deploy.
 

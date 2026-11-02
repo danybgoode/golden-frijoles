@@ -3,7 +3,7 @@ epic: off-vercel-hosting
 sprint: 2
 title: "The box and the pipeline"
 risk: high
-phase: In review
+phase: Shipped
 stories_total: 2
 stories:
   - id: S2.1
@@ -12,23 +12,23 @@ stories:
     i_want: "the shared Oracle VM to run a golden-frijoles container behind its shared proxy, reachable only through Cloudflare"
     so_that: "production has a home that no free-tier meter can pause"
     risk: high
-    status: in-progress
+    status: done
   - id: S2.2
     title: "Deploy on merge to main"
     as_a: "the operator of golden-frijoles"
     i_want: "every merge to main to build, ship and health-check the image on the VM, and roll back on failure"
     so_that: "merging to main stays the deploy, with the live SHA on record"
     risk: high
-    status: in-progress
+    status: done
 ---
 # Off Vercel: production on our own box — Sprint 2: The box and the pipeline
 
-**Status:** 🔄 in review (PR #446). Re-locked 2026-11-02 against the VM's tenant contract (epic README, "Build contract
+**Status:** ✅ shipped — PR #446, merge `f8595a8` (2026-11-02). The VM timer deployed it (`✓ deployed golden-frijoles f8595a8`); the dispatched Deploy run closed the Production Deployment as success after S3.
 — Sprint 2"): the shared proxy instead of a tunnel, the VM pulls instead of a push over SSH.
 
 ## Stories
 
-### Story 2.1 — The VM, inventoried and ready
+### Story 2.1 — The VM, inventoried and ready ✅ `689035a`
 **As a** the operator of golden-frijoles, **I want** the shared Oracle VM to run a golden-frijoles container behind its
 shared proxy, reachable only through Cloudflare, **so that** production has a home that no free-tier meter can pause.
 **Acceptance:**
@@ -47,7 +47,7 @@ shared proxy, reachable only through Cloudflare, **so that** production has a ho
   `deploy/oci`).
 **Risk:** high (production infra)
 
-### Story 2.2 — Deploy on merge to main
+### Story 2.2 — Deploy on merge to main ✅ `0cad4ff`
 **As a** the operator of golden-frijoles, **I want** every merge to `main` to build, ship and health-check the image on
 the VM, and roll back on failure, **so that** merging to `main` stays the deploy, with the live SHA on record.
 **Acceptance:**

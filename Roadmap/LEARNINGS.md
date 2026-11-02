@@ -2497,3 +2497,21 @@ one-liner + why + date shape.
 - **An external reviewer that repeats a finding across rounds is a disagreement to resolve in the contract, not a
   third fix.** Codex read the exemption's condition 3 as binding the waker in two rounds; both fresh verifiers
   disagreed. One sentence in AGENTS.md (the waker is not exempt, and no API role calls it) closed it.
+
+### Leaving a platform, and what it had been deciding for you (off-vercel-hosting, 2026-11-02)
+- **Grep for every place the platform answered "am I production?" before you leave it.** Eleven readers keyed on
+  `VERCEL_ENV`/`VERCEL=1` (gates, billing's Stripe key, notifications, the localhost-webhook carve-out, site URLs).
+  Off Vercel each one silently took the development branch, and `isOnVercel()` would have let a stray `*_ENABLED` beat
+  a kill switch. One explicit `DEPLOY_ENV` seam plus a guard test replaced an inference with a declaration.
+- **Boot the real image in CI, against a real database, before it can ship.** The first image served `/` and
+  `/llms.txt` fine and 500'd every session read: `lib/supabase-auth.ts` reads `NEXT_PUBLIC_*` by a dynamic key, which
+  Next does not inline, so the values had to exist at runtime too. Only the container-smoke job (seeded, signed-in
+  paths) caught it; a hand check of three public pages did not.
+- **A header your proxy trusts is only as trustworthy as the path to the proxy.** Rewriting `X-Forwarded-For` from
+  `CF-Connecting-IP` is safe only if nothing but Cloudflare can reach the origin; the VM's 443 was reachable directly,
+  so anyone could have named any client IP and slipped the rate limits. Per-site Authenticated Origin Pulls closed it
+  without touching the other tenants, and the zone setting must be ON before DNS moves (or every visitor gets a 525).
+- **Events created with `GITHUB_TOKEN` start no other workflow.** A deploy job that writes its own Deployment status
+  must post its own 🚀: `notify-telegram.yml`'s `deployment_status` trigger never fires for it.
+- **A pull deploy can only be proved by what the live site says.** The workflow waits for `x-gf-revision` (the merge)
+  AND `x-gf-site` (the proxy file's version) AND a 200; anything less let a rejected proxy file or a 500 report green.

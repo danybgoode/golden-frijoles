@@ -3,7 +3,7 @@ epic: off-vercel-hosting
 sprint: 3
 title: "Cutover and the rules"
 risk: high
-phase: Shaping
+phase: Shipped
 stories_total: 2
 stories:
   - id: S3.1
@@ -12,18 +12,33 @@ stories:
     i_want: "the same domain to answer from the VM"
     so_that: "the product works again without anyone changing a URL"
     risk: high
-    status: planned
+    status: done
   - id: S3.2
     title: "The rules say where production lives"
     as_a: "an agent starting a session in this repo"
     i_want: "AGENTS.md, WAYS-OF-WORKING and LEARNINGS to describe the VM deploy, not Vercel"
     so_that: "nobody reaches for Vercel to deploy or fix production"
     risk: high
-    status: planned
+    status: done
 ---
 # Off Vercel: production on our own box — Sprint 3: Cutover and the rules
 
-**Status:** ⬜ not started
+**Status:** ✅ shipped 2026-11-02. Cutover evidence below; the rules PR is this sprint's.
+
+### Cutover record (2026-11-02, ~23:10 UTC)
+- **Rollback record:** `goldenfrijoles.com` and `www` were proxied CNAMEs to the Vercel project's `vercel-dns` target
+  (the Vercel project's DNS target is in the project's Vercel domain settings; restore = PUT both records back as
+  proxied CNAMEs to it).
+- **Order kept:** zone `tls_client_auth` ON and SSL `full` → **`strict`** first; the site still answered from Vercel (402,
+  not 525). Then both records → proxied A records to the VM.
+- **Smoke (public domain):** `/`, `/llms.txt`, `/login`, `/install.md`, `/hub/golden-frijoles`, `/signup` 200 with
+  `x-gf-revision: f8595a8` and no `x-vercel-id` after ~80 s of edge propagation; `/app` 307 → `/login`; `www` 301 →
+  apex; rule #2: `/api/v1/public/north-star?project=miyagisanchez` **403**; `frijoles flags ls` reads the live
+  catalog; `/api/internal/dispatch-deliveries` 401 without the secret. Neighbours on the VM: 200 throughout.
+- **The merge's own Deploy run (41542219589) failed as expected:** it timed out at 23:11 UTC still seeing Vercel's 402,
+  before DNS moved (the Production Deployment list shows that `failure` before the `success`).
+- **Pipeline end to end:** a dispatched Deploy built + boot-probed arm64, the VM pulled it, the rollout saw
+  `x-gf-revision` + `x-gf-site` + 200, and the GitHub Deployment (`github-actions[bot]`) closed as **success**.
 
 **Needs Daniel:** the Cloudflare DNS change can be made with the API token in `.env.local`
 (`CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`) if its scope covers DNS edit on goldenfrijoles.com; otherwise Daniel
@@ -31,7 +46,7 @@ makes it. Disconnecting the Vercel Git integration is Daniel's (dashboard). The 
 
 ## Stories
 
-### Story 3.1 — DNS cutover and the production smoke
+### Story 3.1 — DNS cutover and the production smoke ✅ cutover
 **As a** a visitor, SDK, CLI or connector user of goldenfrijoles.com, **I want** the same domain to answer from the
 VM, **so that** the product works again without anyone changing a URL.
 **Acceptance:**
@@ -48,7 +63,7 @@ VM, **so that** the product works again without anyone changing a URL.
 - The 🚀 Telegram message for the cutover merge names its SHA.
 **Risk:** high (production, auth paths)
 
-### Story 3.2 — The rules say where production lives
+### Story 3.2 — The rules say where production lives ✅ this PR
 **As a** an agent starting a session in this repo, **I want** AGENTS.md, WAYS-OF-WORKING and LEARNINGS to describe the
 VM deploy, not Vercel, **so that** nobody reaches for Vercel to deploy or fix production.
 **Acceptance:**
@@ -63,6 +78,13 @@ VM deploy, not Vercel, **so that** nobody reaches for Vercel to deploy or fix pr
   the rollback. `standup.mjs` / `vercel-prune` config no longer names it.
 - `check-brand-host` still green: the VM's IP appears in no committed file.
 **Risk:** high (architecture rule)
+
+## Owed
+- Owed to Daniel: confirm the delivery waker's calls succeed after the cutover (Supabase → `net._http_response`, the
+  rows after 23:10 UTC on 2026-11-02 should be 2xx; agents' production reads are blocked by auto mode).
+- Owed to Daniel: the signed-in browser smoke (step 2 below).
+- Owed to Daniel: disconnect the Vercel Git integration for `golden-beans` (dashboard → Settings → Git), keeping the
+  project until this epic is a week old, so a quota reset cannot deploy a second production.
 
 ## Sprint QA
 - **api spec(s):** none new; the S3.1 production smoke is the proof.

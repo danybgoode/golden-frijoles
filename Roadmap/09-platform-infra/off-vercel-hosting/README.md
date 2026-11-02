@@ -1,6 +1,6 @@
 ---
-status: scaffolded   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Building       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+status: shipped   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+phase: Shipped       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
 locked_at: "2026-11-02T21:15:24Z"
 slug: off-vercel-hosting
@@ -36,6 +36,10 @@ satisfied_min_score: null   # the score (1–5) a satisfaction_rated answer need
 build_order: 102     # integer position in the ONE global build sequence — the SSOT once the epic
                      # exists (the seed's value is only a fallback). Fill it in at the betting
                      # table; plain integers, no "#2a" suffixes. See 00-ideas/README.md → Ordering.
+actual_usd: 32.57
+actual_mtok: 104.4
+actual_models: "claude-opus-5-5 ≈$32.57"
+actual_basis: "this machine · 2026-11-02 · 1 session · prices 2026-10-02"
 ---
 
 # Epic: Off Vercel: production on our own box
