@@ -75,7 +75,13 @@ rollback() {
   if [ -n "$PREV_IMAGE" ] && [ "$PREV_IMAGE" != "$IMAGE" ]; then
     set_env WEB_IMAGE "$PREV_IMAGE"
     WEB_IMAGE="$PREV_IMAGE" docker compose up -d --remove-orphans && echo "↩ rolled back to $PREV_IMAGE" >&2
+  elif [ -z "$PREV_IMAGE" ]; then
+    # A first install has nothing to go back to: never leave the failed image recorded as current, or the next
+    # --if-changed run would see "nothing moved" and stay quiet (Codex, #446). The next timer run retries it.
+    sed -i '/^WEB_IMAGE=/d' "$ENV_FILE"
+    docker compose stop web > /dev/null 2>&1 || true
   fi
+  # Same image as before (only the site file moved): leave the running container alone; this run fails loudly.
   exit 1
 }
 set_env WEB_IMAGE "$IMAGE"

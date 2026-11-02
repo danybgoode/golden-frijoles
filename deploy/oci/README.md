@@ -30,6 +30,7 @@ the site file, and rolls back to the previous digest on a failed health check.
 sudo install -d -o ubuntu -g ubuntu /opt/golden-frijoles
 git clone -q --depth 1 --filter=blob:none --sparse https://github.com/danybgoode/golden-frijoles.git /opt/golden-frijoles
 git -C /opt/golden-frijoles sparse-checkout set deploy/oci
+cd /opt/golden-frijoles
 install -m 0600 /opt/golden-frijoles/deploy/oci/web.env.example /opt/golden-frijoles/deploy/oci/web.env  # then fill it
 # The Origin CA cert: key + CSR generated here, only the CSR goes to Cloudflare (see the epic's sprint-2.md).
 sudo install -m 0644 deploy/oci/systemd/golden-frijoles-deploy.{service,timer} /etc/systemd/system/

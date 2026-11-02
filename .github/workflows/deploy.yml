@@ -93,7 +93,10 @@ jobs:
       - name: Wait for x-gf-revision to be this commit
         run: |
           for i in $(seq 1 90); do
-            live=$(curl -fsSI --max-time 10 "$LIVE_URL" 2> /dev/null | tr -d '\r' | awk -F': ' 'tolower($1)=="x-gf-revision"{print $2}')
+            # A refused connection or a 5xx mid-swap is a reason to wait, never to fail: no -f, and `|| true` so the
+            # shell's -e/pipefail cannot end the loop early (Codex, #446).
+            live=$( { curl -sSI --max-time 10 "$LIVE_URL" 2> /dev/null || true; } | tr -d '\r' \
+              | awk -F': ' 'tolower($1)=="x-gf-revision"{print $2}' || true)
             if [ "$live" = "$GITHUB_SHA" ]; then echo "live: $live"; exit 0; fi
             [ $((i % 6)) = 0 ] && echo "still waiting (live: ${live:-none})"
             sleep 10
