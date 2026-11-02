@@ -143,7 +143,10 @@ spec stays green unchanged). No behaviour change, no env var added anywhere yet.
   proxy's sites directory, validated inside the proxy and restored on failure; a Cloudflare Origin CA certificate
   issued from a CSR generated ON the VM (the key never leaves it), SSL mode Full (strict). The site file sets
   `X-Forwarded-For`/`X-Real-IP` to `CF-Connecting-IP`, as the other tenants do — that is D12's answer: the
-  rate-limit routes read a leftmost XFF the proxy now writes.
+  rate-limit routes read a leftmost XFF the proxy now writes. **Plus Authenticated Origin Pulls** (verifier, #446): the
+  origin's 443 is reachable directly, so without them anyone could connect with our SNI and name any client IP — a
+  regression from Vercel. The site block requires Cloudflare's origin-pull client cert (proved: a direct connection
+  fails the handshake), so the zone's `tls_client_auth` must be ON before DNS moves (S3, with SSL mode `strict`).
 - **D9 → amended: the VM pulls.** `.github/workflows/deploy.yml` builds `linux/arm64` natively, pushes
   `ghcr.io/danybgoode/golden-frijoles:{main,<sha>}` (public) with the revision as a label and as the `x-gf-revision`
   response header (`GF_REVISION`, next.config `headers()`). A systemd timer on the VM runs

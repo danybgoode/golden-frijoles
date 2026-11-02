@@ -35,6 +35,8 @@ permissions:
 jobs:
   image:
     name: Build + push the arm64 image
+    # Only main reaches production: a dispatch from a branch must never be pushed as :main (verifier, #446).
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 30
     permissions:
@@ -60,16 +62,36 @@ jobs:
             --build-arg GF_REVISION="$GITHUB_SHA" \
             -t "ghcr.io/danybgoode/golden-frijoles:$GITHUB_SHA" \
             -t ghcr.io/danybgoode/golden-frijoles:main .
+      # Boot the arm64 image under the VM's cap before it can become :main. CI's container-smoke boots amd64; this is
+      # the arch the VM runs, so an arm-only crash or an OOM at 768 MB fails here, not on the box (verifier, #446).
+      - name: Boot the arm64 image under the production cap
+        run: |
+          set -euo pipefail
+          docker run -d --name gf-probe --memory 768m --cpus 0.75 -p 127.0.0.1:3000:3000 \
+            -e DEPLOY_ENV=development "ghcr.io/danybgoode/golden-frijoles:$GITHUB_SHA" > /dev/null
+          for i in $(seq 1 45); do
+            got=$(curl -s -o /dev/null -w '%{http_code}' -D - http://127.0.0.1:3000/llms.txt 2> /dev/null \
+              | tr -d '\r' | awk -F': ' 'tolower($1)=="x-gf-revision"{print $2}' || true)
+            [ "$got" = "$GITHUB_SHA" ] && { echo "arm64 image answers as $got"; docker rm -f gf-probe > /dev/null; exit 0; }
+            sleep 2
+          done
+          docker logs gf-probe | tail -50; exit 1
       - name: Push
         run: |
+          set -euo pipefail
           docker push -q "ghcr.io/danybgoode/golden-frijoles:$GITHUB_SHA"
+          # Re-running an older run after a newer merge must not move :main backwards (verifier, #446).
+          head=$(git ls-remote origin refs/heads/main | cut -f1)
+          if [ "$head" != "$GITHUB_SHA" ]; then
+            echo "::warning::main is now $head, not $GITHUB_SHA — pushed :$GITHUB_SHA only, :main left alone"; exit 0
+          fi
           docker push -q ghcr.io/danybgoode/golden-frijoles:main
 
   rollout:
     name: Wait for the VM to serve this merge
     needs: image
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     permissions:
       contents: read
       deployments: write
@@ -92,13 +114,13 @@ jobs:
       # The VM's timer picks the new digest up within ~2 min; its deploy takes ~1–2 more. 15 min is generous.
       - name: Wait for x-gf-revision to be this commit
         run: |
-          for i in $(seq 1 90); do
+          for i in $(seq 1 45); do   # ≤ 45 × (10 s curl + 10 s sleep) = 15 min, inside the job's 25
             # A refused connection or a 5xx mid-swap is a reason to wait, never to fail: no -f, and `|| true` so the
             # shell's -e/pipefail cannot end the loop early (Codex, #446).
             live=$( { curl -sSI --max-time 10 "$LIVE_URL" 2> /dev/null || true; } | tr -d '\r' \
               | awk -F': ' 'tolower($1)=="x-gf-revision"{print $2}' || true)
             if [ "$live" = "$GITHUB_SHA" ]; then echo "live: $live"; exit 0; fi
-            [ $((i % 6)) = 0 ] && echo "still waiting (live: ${live:-none})"
+            [ $((i % 3)) = 0 ] && echo "still waiting (live: ${live:-none})"
             sleep 10
           done
           echo "::error::the site never served $GITHUB_SHA (last seen: ${live:-none}) — journalctl -u golden-frijoles-deploy on the VM"

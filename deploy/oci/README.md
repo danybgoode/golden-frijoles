@@ -7,7 +7,8 @@ Production host since off-vercel-hosting (2026-11). One tenant of the shared Ora
 |---|---|
 | On the VM | `/opt/golden-frijoles` (a sparse checkout of this repo: `deploy/oci` only) |
 | Stack | `docker-compose.yml`: one `web` service, capped 0.75 CPU / 768 MB, on the shared `edge` network as `golden-frijoles-web` |
-| Edge | Cloudflare (proxied, Full (strict)) → the shared proxy → `golden-frijoles.caddy` → `golden-frijoles-web:3000` |
+| Edge | Cloudflare (proxied, Full (strict), Authenticated Origin Pulls on) → the shared proxy → `golden-frijoles.caddy` → `golden-frijoles-web:3000` |
+| Certs | Origin CA `goldenfrijoles.{pem,key}` (to 2041) and Cloudflare's public `cloudflare-origin-pull-ca.pem` (to **2029-11-01**: replace it before then) beside the other tenants' certs |
 | Secrets | `web.env` (0600, `ubuntu`) + a copy in the password manager. Keys: `web.env.example` |
 
 ## Deploy and roll back
@@ -32,7 +33,8 @@ git clone -q --depth 1 --filter=blob:none --sparse https://github.com/danybgoode
 git -C /opt/golden-frijoles sparse-checkout set deploy/oci
 cd /opt/golden-frijoles
 install -m 0600 /opt/golden-frijoles/deploy/oci/web.env.example /opt/golden-frijoles/deploy/oci/web.env  # then fill it
-# The Origin CA cert: key + CSR generated here, only the CSR goes to Cloudflare (see the epic's sprint-2.md).
+# The Origin CA cert: `openssl req -new -newkey rsa:2048 -nodes -keyout <certs>/goldenfrijoles.key …` here, POST only the
+# CSR to Cloudflare's /certificates, install the answer as goldenfrijoles.pem. Plus Cloudflare's origin-pull CA.
 sudo install -m 0644 deploy/oci/systemd/golden-frijoles-deploy.{service,timer} /etc/systemd/system/
 sudo systemctl daemon-reload && sudo systemctl enable --now golden-frijoles-deploy.timer
 ```

@@ -21,7 +21,8 @@ IF_CHANGED=0
 [ "${1:-}" = "--if-changed" ] && IF_CHANGED=1
 
 # One deploy at a time: the timer and a hand-run must never interleave.
-exec 9> /tmp/golden-frijoles-update.lock
+# The lock lives beside the deploy, owned by ubuntu: one in /tmp left by a `sudo` run would lock the timer out.
+exec 9> "$DEPLOY/.update.lock"
 flock -n 9 || { [ "$IF_CHANGED" = 1 ] || echo "another golden-frijoles deploy is running"; exit 0; }
 
 # Pull this repo's deploy files first, then re-run the NEW copy of this script once: bash keeps reading the file it
@@ -37,8 +38,6 @@ cd "$DEPLOY"
 [ -s web.env ] || { echo "✗ deploy/oci/web.env is missing — restore it from the password manager (0600, owner ubuntu)" >&2; exit 1; }
 [ "$(stat -c %a web.env)" = 600 ] || { echo "✗ deploy/oci/web.env must be mode 0600" >&2; exit 1; }
 touch "$ENV_FILE"
-
-say() { [ "$IF_CHANGED" = 1 ] && [ -z "${LOUD:-}" ] && return 0; echo "$@"; }
 
 # set_env KEY VALUE — rewrite one managed line of .env.
 set_env() {
@@ -66,13 +65,19 @@ SITE_SAME=0; cmp -s "$DEPLOY/golden-frijoles.caddy" "$SITE" && SITE_SAME=1
 if [ "$IF_CHANGED" = 1 ] && [ "$IMAGE" = "$PREV_IMAGE" ] && [ -n "$RUNNING" ] && [ "$SITE_SAME" = 1 ]; then
   exit 0   # nothing moved: the timer stays silent
 fi
-LOUD=1
+# A digest that already failed its health check is not retried by the timer: retrying would stop the good container
+# every two minutes (verifier, #446). A hand-run (no --if-changed) retries it, and a new merge is a new digest.
+FAILED="$(grep -E '^WEB_IMAGE_FAILED=' "$ENV_FILE" | tail -1 | cut -d= -f2- || true)"
+if [ "$IF_CHANGED" = 1 ] && [ -n "$FAILED" ] && [ "$IMAGE" = "$FAILED" ] && [ "$SITE_SAME" = 1 ]; then
+  exit 0
+fi
 echo "▶ deploying $IMAGE (commit $(rev "$IMAGE" | cut -c1-7)); was ${PREV_IMAGE:-nothing}"
 
 # Start the new image. On a failed health check, put the previous digest back.
 rollback() {
   echo "✗ $1" >&2
   if [ -n "$PREV_IMAGE" ] && [ "$PREV_IMAGE" != "$IMAGE" ]; then
+    set_env WEB_IMAGE_FAILED "$IMAGE"
     set_env WEB_IMAGE "$PREV_IMAGE"
     WEB_IMAGE="$PREV_IMAGE" docker compose up -d --remove-orphans && echo "↩ rolled back to $PREV_IMAGE" >&2
   elif [ -z "$PREV_IMAGE" ]; then
@@ -112,6 +117,7 @@ if [ "$SITE_SAME" != 1 ]; then
   rm -f "$SITE.prev"
   echo "✓ proxy validated + reloaded"
 fi
+sed -i '/^WEB_IMAGE_FAILED=/d' "$ENV_FILE"
 
 # Superseded images only fill the disk. Dangling only: anything a container uses stays, any build can be re-pulled.
 docker image prune -f > /dev/null || true

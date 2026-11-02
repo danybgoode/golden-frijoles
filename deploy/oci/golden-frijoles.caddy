@@ -8,12 +8,25 @@
 #   matcher and serves this cert for every tenant's host.
 # - Snippet names carry the `gf_` prefix: snippets are global across every imported site file.
 # - TLS is a Cloudflare Origin CA cert (Cloudflare proxies, SSL mode Full (strict)); the key was generated on the VM.
+# - Authenticated Origin Pulls: a TLS client must present Cloudflare's origin-pull certificate, so the only way in is
+#   through Cloudflare. That is what makes CF-Connecting-IP trustworthy below (D12; verifier, #446): the origin's 443
+#   is reachable from the internet, and without this anyone could connect with this SNI and name any client IP. The
+#   CA (public, expires 2029-11-01) sits beside the certs; the zone setting `tls_client_auth` must be on.
 
 (gf_headers) {
 	encode zstd gzip
 	header {
 		-Server
 		X-Content-Type-Options "nosniff"
+	}
+}
+
+(gf_tls) {
+	tls /etc/caddy/certs/goldenfrijoles.pem /etc/caddy/certs/goldenfrijoles.key {
+		client_auth {
+			mode require_and_verify
+			trust_pool file /etc/caddy/certs/cloudflare-origin-pull-ca.pem
+		}
 	}
 }
 
@@ -26,7 +39,7 @@
 }
 
 goldenfrijoles.com {
-	tls /etc/caddy/certs/goldenfrijoles.pem /etc/caddy/certs/goldenfrijoles.key
+	import gf_tls
 	import gf_headers
 	reverse_proxy golden-frijoles-web:3000 {
 		import gf_upstream
@@ -34,6 +47,6 @@ goldenfrijoles.com {
 }
 
 www.goldenfrijoles.com {
-	tls /etc/caddy/certs/goldenfrijoles.pem /etc/caddy/certs/goldenfrijoles.key
+	import gf_tls
 	redir https://goldenfrijoles.com{uri} permanent
 }
