@@ -32,13 +32,13 @@ Plan → branch + scaffold docs → build story → verify → QA/smoke → PR �
    the product owner sees scope as it grows, and keep them current (✅ ticks, commit refs).
 3. **Build one story at a time.** Reuse before rebuild. Commit per story, **path-limited**.
 4. **Verify + QA.** The deterministic gate — typecheck, lint, build, the suite — is green **before**
-   merge, run by the building agent, not only by CI. **Deploy rail.** Merging to `main` is the deploy: `deploy.yml` builds the arm64 image and the
-Oracle VM pulls it by digest, health-checks and rolls back (AGENTS rule #4, `deploy/oci/README.md`); CI's Playwright
-harness runs against local servers and the production image in a container, never against a metered preview.
-**Never deploy from a laptop.** Runtime env lives in the VM's `deploy/oci/web.env` and reaches the app on a container
-restart, so verify by exercising the behaviour the var controls. **Supabase migrations are a separate,
-deliberate step** — applied with `supabase db push` (agents may, since 2026-10-14) or the Supabase MCP, before
-the merge that deploys the code reading it; nothing migrates on merge.
+   merge, run by the building agent, not only by CI. **Deploy rail.** Merging to `main` is the deploy: `deploy.yml` builds the arm64 image and the Oracle VM pulls it
+by digest, health-checks it and rolls back (AGENTS rule #4, `deploy/oci/README.md`). CI's Playwright harness runs
+against local servers and the production image in a container, never against a metered preview. **Never deploy from
+a laptop.** Runtime env lives in the VM's `deploy/oci/web.env` and reaches the app when `update.sh` recreates the
+container (never a bare `restart`), so verify by exercising the behaviour the var controls. **Supabase migrations are
+a separate, deliberate step** — applied with `supabase db push` (agents may, since 2026-10-14) or the Supabase MCP,
+before the merge that deploys the code reading it; nothing migrates on merge.
 5. **PR → review → merge.** Declare a risk tier, run the review the policy asks for, resolve or answer
    every finding, merge on green. **Merging to `main` is the production deploy.** Delete the branch.
 6. **Close.** Sprint close: the sprint-wrap summary. Epic close: the Definition of Done below.
@@ -361,8 +361,8 @@ either channel. The guard still labels its model and blocks known unsupported cl
 | **supabase** | Migrations against linked project (`supabase link` / `migration list`; apply with `supabase db push` or the Supabase MCP; `db reset` stays denied by `.claude/settings.json`) and read-only prod queries (`supabase db query --linked "select …"`, uses the CLI's own auth — no service-role key in the shell). A separate, manual step from the deploy. |
 | **codex / agy / vibe / claude** | The external review families, in preference order — **routed, never hand-picked**: `node scripts/review-route.mjs --builder <who> <PR#>` prints the general pass and, when the paths trigger it, the security lens by a different family (see *Review & merge*). Health and pins: `node scripts/agy-doctor.mjs`. **devin** does prose, not review; **cursor-agent** is not wired into review. |
 
-This means a story can go from code → verified → preview-deployed → live-tested on a branch, then
-merged to production via PR — with verification at each step.
+This means a story can go from code → verified → container-tested in CI on a branch, then merged to
+production via PR — with verification at each step.
 
 Actions that touch live production, real money, or paid infrastructure are surfaced to the product owner
 before running.

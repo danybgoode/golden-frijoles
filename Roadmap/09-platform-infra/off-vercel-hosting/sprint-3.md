@@ -27,13 +27,16 @@ stories:
 
 ### Cutover record (2026-11-02, ~23:10 UTC)
 - **Rollback record:** `goldenfrijoles.com` and `www` were proxied CNAMEs to the Vercel project's `vercel-dns` target
-  (record ids kept in the session; restore = PUT them back as CNAMEs).
+  (the Vercel project's DNS target is in the project's Vercel domain settings; restore = PUT both records back as
+  proxied CNAMEs to it).
 - **Order kept:** zone `tls_client_auth` ON and SSL `full` → **`strict`** first; the site still answered from Vercel (402,
   not 525). Then both records → proxied A records to the VM.
 - **Smoke (public domain):** `/`, `/llms.txt`, `/login`, `/install.md`, `/hub/golden-frijoles`, `/signup` 200 with
   `x-gf-revision: f8595a8` and no `x-vercel-id` after ~80 s of edge propagation; `/app` 307 → `/login`; `www` 301 →
   apex; rule #2: `/api/v1/public/north-star?project=miyagisanchez` **403**; `frijoles flags ls` reads the live
   catalog; `/api/internal/dispatch-deliveries` 401 without the secret. Neighbours on the VM: 200 throughout.
+- **The merge's own Deploy run (41542219589) failed as expected:** it timed out at 23:11 UTC still seeing Vercel's 402,
+  before DNS moved (the Production Deployment list shows that `failure` before the `success`).
 - **Pipeline end to end:** a dispatched Deploy built + boot-probed arm64, the VM pulled it, the rollout saw
   `x-gf-revision` + `x-gf-site` + 200, and the GitHub Deployment (`github-actions[bot]`) closed as **success**.
 

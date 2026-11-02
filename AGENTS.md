@@ -52,14 +52,15 @@ pulls it **by digest**, health-checks it from inside the container and rolls bac
 until the live `x-gf-revision` header is the merge, closes the GitHub Deployment and posts the 🚀. **Never deploy from a
 laptop** (no hand-built image pushed as `:main`, no `vercel deploy`): to see what is live, `gh api
 repos/<owner>/<repo>/deployments` or `curl -sI https://goldenfrijoles.com/llms.txt | grep x-gf-revision`; to roll back,
-`git revert` on `main`, or pin a digest on the VM (`deploy/oci/README.md`). Operating the VM: `deploy/oci/README.md`.
-**Runtime env lives in the VM's `deploy/oci/web.env`** (0600, a copy in the password manager), not in any platform:
-change a value there and restart the container (`docker compose up -d` in `deploy/oci`), then verify by exercising the
+`git revert` on `main`, or pin an image (`WEB_IMAGE_PIN=…:<sha>`) on the VM (`deploy/oci/README.md`). Operating the VM: `deploy/oci/README.md`.
+**Runtime env lives in the VM's `deploy/oci/web.env`** (0600; keep a copy in the password manager), not in any platform:
+change a value there and run `deploy/oci/update.sh`, which recreates the container with it, health-checks it and rolls
+back on failure (a bare `docker compose restart` does NOT re-read the env file), then verify by exercising the
 behaviour it controls. Only the two `NEXT_PUBLIC_SUPABASE_*` values are build-time (repo variables
 `PROD_NEXT_PUBLIC_SUPABASE_*`, read by `deploy.yml`), so changing one needs a new image (a merge or a dispatched Deploy).
 Production is declared by `DEPLOY_ENV=production` (`lib/deploy-env.ts`), never inferred from a platform variable.
-Vercel now hosts nothing in production; the paused `golden-beans` project is kept, Git-disconnected, until the epic
-closes. (History: on Vercel, env vars were snapshotted at build, so a var change needed a commit to `main` — the
+Vercel hosts nothing in production; the paused `golden-beans` project is to be Git-disconnected (owed to Daniel,
+off-vercel-hosting) and deleted after a quiet week. (History: on Vercel, env vars were snapshotted at build, so a var change needed a commit to `main` — the
 2026-07-21/22 lesson in LEARNINGS.) A **local** checkout's `node_modules` can go stale after pulling a merge that added
 a dependency — `npm ci` before trusting a local build failure. **Supabase migrations are a separate step, not part of the
 deploy** — `supabase link --project-ref <ref>` (find the ref via `supabase projects list`)
@@ -141,8 +142,8 @@ fix production. If a deploy looks stuck or wrong, confirm via `gh api repos/<own
 header, then `journalctl -u golden-frijoles-deploy` on the VM. Roll back with `git revert` on `main`, or a
 `WEB_IMAGE_PIN` on the VM for an emergency (`deploy/oci/README.md`).
 
-**Runtime env vars live in the VM's `deploy/oci/web.env`** and reach the app on a container restart, not a redeploy;
-`NEXT_PUBLIC_*` values are the exception (baked into the image). Verify a change by exercising what it controls.
+**Runtime env vars live in the VM's `deploy/oci/web.env`** and reach the app when `update.sh` recreates the container
+(never a bare `restart`), not on a redeploy; `NEXT_PUBLIC_*` values are the exception (baked into the image). Verify a change by exercising what it controls.
 
 ### The tenancy invariant (workspace level)
 
@@ -311,8 +312,8 @@ supabase link --project-ref <ref> && supabase migration list   # then `supabase 
 - **Tenancy** — `DEMO_PROJECT_SLUG` (default `golden-frijoles`: the one public project, Golden Frijoles' own) and `SELF_PROJECT_SLUG` (defaults to it — self-tracking lands in the same project); `SELF_PROJECT_API_KEY` (that project's ingest key); `DEMO_PROJECT_API_KEY`, `DEMO_CONNECTOR_TOKEN` (local seeding only).
 - **Gates are NOT env vars** (rule #6) — they are flags in the `golden-frijoles` catalog, listed in
   `lib/gates-decision.ts → GATES` and by `frijoles flags ls --project golden-frijoles`. The `*_ENABLED` names survive only
-  as off-deployment test overrides (`ci/gates.*.env`). Every other var above reaches the app on a container restart
-  on the VM (rule #4).
+  as off-deployment test overrides (`ci/gates.*.env`). Every other var above reaches the app when `update.sh`
+  recreates the container on the VM (rule #4).
 - **Tenancy limits are DATA, not env** — `projects.monthly_event_quota` / `projects.ingest_rate_per_min`
   (`lib/quota.ts`); raising a customer's ceiling is an `UPDATE`, never a deploy.
 

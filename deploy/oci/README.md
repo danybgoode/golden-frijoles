@@ -21,7 +21,8 @@ the site file, and rolls back to the previous digest on a failed health check.
 - Deploy now: `/opt/golden-frijoles/deploy/oci/update.sh`
 - Roll back: add `WEB_IMAGE_PIN=ghcr.io/danybgoode/golden-frijoles:<sha>` to `deploy/oci/.env`, run `update.sh`.
   Delete the line to roll forward.
-- Change a secret: edit `web.env`, run `docker compose up -d` in `deploy/oci`, update the password manager.
+- Change a secret: edit `web.env`, run `update.sh` (it recreates the container with the new env and health-checks it;
+  a bare `docker compose restart` does not re-read `web.env`), update the password manager.
 - Logs: `docker compose logs -f web`, `journalctl -u golden-frijoles-deploy -n 50`.
 - What runs: `docker inspect golden-frijoles-web-1 --format '{{index .Config.Labels "org.opencontainers.image.revision"}}'`
   or `curl -sI https://goldenfrijoles.com/llms.txt | grep x-gf-revision`.

@@ -38,6 +38,11 @@
 # House style, unchanged: HTML parse_mode with & < > escaped (never MarkdownV2); secrets only from
 # GitHub Secrets; a 10s timeout on the request.
 #
+# ── off-vercel-hosting (2026-11-02): production no longer fires this job ────────────────────────
+# Production deploys are written by deploy.yml with GITHUB_TOKEN, and a deployment_status created with GITHUB_TOKEN
+# starts no other workflow, so `deploy-notification` below never runs for them: deploy.yml posts the 🚀 itself. The
+# job stays for any Deployment written by another integration. The history below is how it was chosen on Vercel.
+#
 # ── Why `deployment_status` and not a Vercel API poll (decided 2026-07-24) ────────────────────
 # The original plan (mirroring miyagi's Sprint 3) was a jq/curl loop against
 # `GET /v6/deployments?target=production`, matching `meta.githubCommitSha == $GITHUB_SHA`. That
