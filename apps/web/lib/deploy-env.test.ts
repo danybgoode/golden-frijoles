@@ -12,6 +12,12 @@ test('DEPLOY_ENV decides, VERCEL_ENV falls back, development otherwise', () => {
   assert.equal(deployEnv({ DEPLOY_ENV: ' production ' }), 'production')
 })
 
+test('on Vercel the platform decides: DEPLOY_ENV can never promote a preview', () => {
+  assert.equal(deployEnv({ VERCEL: '1', VERCEL_ENV: 'preview', DEPLOY_ENV: 'production' }), 'preview')
+  assert.equal(deployEnv({ VERCEL: '1', VERCEL_ENV: 'production', DEPLOY_ENV: 'development' }), 'production')
+  assert.equal(deployEnv({ VERCEL: '1', DEPLOY_ENV: 'production' }), 'development')
+})
+
 test('an unknown or blank value never becomes production', () => {
   assert.equal(deployEnv({ DEPLOY_ENV: 'prod' }), 'development')
   assert.equal(deployEnv({ DEPLOY_ENV: 'Production' }), 'development')

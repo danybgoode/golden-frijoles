@@ -6,7 +6,8 @@
 #   docker run --env-file .env -p 3000:3000 golden-frijoles
 #
 # The two NEXT_PUBLIC_* values are inlined into the browser bundle by `next build`, so they are BUILD args (they are
-# public by design). Every other variable — secrets included — is runtime env and never enters a layer.
+# public by design) and are kept in the runtime stage too. Every other variable — secrets included — is runtime env and
+# never enters a layer.
 
 ARG NODE_IMAGE=node:24-slim
 
@@ -33,6 +34,12 @@ RUN npm run build --workspace=apps/web
 
 FROM ${NODE_IMAGE} AS runtime
 WORKDIR /app
+# The same two public values again at RUNTIME: lib/supabase-auth.ts reads them by a dynamic key, which Next does not
+# inline, so a session read 500s without them (verifier, #444). Public by design; the image is public anyway.
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+ENV NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL} \
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     PORT=3000 \

@@ -21,8 +21,13 @@ function parse(raw: string | undefined): DeployEnv | null {
   return KNOWN.has(value) ? (value as DeployEnv) : 'development'
 }
 
-/** `DEPLOY_ENV` when set, else `VERCEL_ENV`, else `development`. */
+/**
+ * On Vercel (`VERCEL=1`) the platform's own `VERCEL_ENV` decides, whatever `DEPLOY_ENV` says: a `DEPLOY_ENV=production`
+ * set in Vercel's all-environments scope must never turn a preview into production (live Stripe key, operator pings,
+ * production flags — verifier, #444). Anywhere else `DEPLOY_ENV` decides, then `VERCEL_ENV`, then `development`.
+ */
 export function deployEnv(env: Env = process.env): DeployEnv {
+  if (env.VERCEL === '1') return parse(env.VERCEL_ENV) ?? 'development'
   return parse(env.DEPLOY_ENV) ?? parse(env.VERCEL_ENV) ?? 'development'
 }
 

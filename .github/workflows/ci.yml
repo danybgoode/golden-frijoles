@@ -244,6 +244,22 @@ jobs:
           [ "$(docker inspect gf --format '{{.Config.User}}')" = "node" ] || { echo "::error::the container runs as root"; exit 1; }
           npm run seed:demo
           npm run seed:self
+      # S1.2's "no secret in any layer", encoded (verifier, #444): the job's own secrets were never build args, so none
+      # of their values may appear anywhere in the image's filesystem or its build history.
+      - name: No runtime secret is baked into the image
+        run: |
+          set -euo pipefail
+          docker history --no-trunc golden-frijoles:ci > "$RUNNER_TEMP/history.txt"
+          docker create --name gf-fs golden-frijoles:ci > /dev/null
+          docker export gf-fs > "$RUNNER_TEMP/fs.tar"
+          docker rm gf-fs > /dev/null
+          for k in SUPABASE_SERVICE_ROLE_KEY SELF_PROJECT_API_KEY SELF_SUBJECT_SECRET STRIPE_WEBHOOK_SECRET; do
+            v="${!k}"
+            if grep -qF -- "$v" "$RUNNER_TEMP/history.txt" || grep -aqF -- "$v" "$RUNNER_TEMP/fs.tar"; then
+              echo "::error::$k's value is inside the image"; exit 1
+            fi
+          done
+          echo "no runtime secret found in the image's layers or history"
       # Explicit, not the config's default: the URL IS the container (no other server runs in this job, and the
       # Playwright config starts none), and saying so keeps it that way if a default ever changes. (Codex, #444.)
       - name: Run an api subset against the container

@@ -78,9 +78,10 @@ decides WHICH flag environment is read).
 
 ## Architecture lock (2026-11-02, verified against live code and live data)
 
-- **D1 — One seam, `lib/deploy-env.ts`.** `deployEnv(env)` → `'production' | 'preview' | 'development'`: a non-empty
-  `DEPLOY_ENV` decides (an unknown value → `development`); else `VERCEL_ENV` the same way; else `development`. Pure,
-  takes an env object (default `process.env`).
+- **D1 — One seam, `lib/deploy-env.ts`.** `deployEnv(env)` → `'production' | 'preview' | 'development'`: on Vercel
+  (`VERCEL=1`) `VERCEL_ENV` alone decides, so a `DEPLOY_ENV` in Vercel's shared scope can never promote a preview
+  (amended after the verifier, #444); elsewhere a non-empty `DEPLOY_ENV` decides (unknown → `development`), else
+  `VERCEL_ENV`, else `development`. Pure, takes an env object (default `process.env`).
 - **D2 — `isDeployed(env)` replaces `isOnVercel()`.** `VERCEL === '1'` OR `DEPLOY_ENV` is `production`/`preview`.
   **Scope the pitch missed:** `gates-decision.ts → envOverride()` lets a set `*_ENABLED` var override the catalog
   whenever `isOnVercel()` is false, so on the VM a stray `*_ENABLED` would silently beat a kill switch (rule #6). Live
@@ -99,10 +100,13 @@ decides WHICH flag environment is read).
   (Vercel ran 24.x), stages deps → build → runtime; the runtime copies `apps/web/.next/standalone`, `.next/static`
   and `public/`, runs `node apps/web/server.js` as a non-root user on `PORT=3000`, `HOSTNAME=0.0.0.0`. Build-time
   ARGs are exactly `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` (live grep: the only
-  `NEXT_PUBLIC_*` the code reads; `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` exists in Vercel but nothing reads it).
+  `NEXT_PUBLIC_*` the code reads; `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` exists in Vercel but nothing reads it), and
+  **they are set in the runtime stage too**: `lib/supabase-auth.ts` reads them by a dynamic key Next does not inline,
+  so without them every session read 500s (the container-smoke job caught it on #444; corrected here).
 - **D6 — CI `container-smoke` job** reuses `.github/actions/e2e-setup` (local Supabase, credentials in
-  `$GITHUB_ENV`), builds the image with those build args, runs it with `--network host` on :3200 with the ON-gate env
-  file, waits on `/llms.txt`, and runs a fixed api-spec subset against it. Skippable on docs-only like the e2e jobs;
+  `$GITHUB_ENV`), builds the image with those build args, runs it with `--network host` on :3000 with the ON-gate env
+  file, waits on `/llms.txt`, proves no runtime secret is in any layer, and runs a fixed api-spec subset against it
+  (`PLAYWRIGHT_BASE_URL` explicit). Skippable on docs-only like the e2e jobs;
   added to `gate`'s `needs` and `--skippable`.
 - **D7 — Ingress is a Cloudflare Tunnel, not open ports (deviation from S2.1's text).** Live: the account already
   runs tunnels (`n8n-server`, remote-managed, healthy). A dedicated remote-managed tunnel `golden-frijoles` with a
@@ -117,6 +121,17 @@ decides WHICH flag environment is read).
 - **D10 — Routing.** The orchestrator (Opus 5.5) builds S1–S3 in place (one session in this checkout; S2/S3 need
   Daniel at the box, so a separate builder buys nothing). Reviews: the fresh `verifier` on every PR (high risk) plus
   `review-route.mjs`.
+
+- **D11 — The VM's own tenant contract wins (found 2026-11-02, after D7/D8 were written).** The VM is shared, and its
+  operating rules live in a private repo (pointer only, per public-monorepo D7): CI-built arm64 images pulled by the
+  VM, one deploy script per tenant, caps and a health check on every service, a shared proxy, env files 0600 with a
+  password-manager copy, a nightly backup unit. Two consequences for S2: GitHub Actions cannot reach the VM over SSH,
+  so S2.2's push deploy becomes a pull; and the box's spare capacity must be measured before we add a tenant. S2
+  re-locks D7/D9 against that contract before building.
+- **D12 — Trusted client IP (S2, verifier #444).** Five routes key rate limits on the leftmost `x-forwarded-for`
+  (public signup, waitlist, self-visit, CLI device + token). Behind Cloudflare → a proxy, the client can set that
+  value. S2 decides one seam (Cloudflare's `cf-connecting-ip`, trusted only because the origin is reachable through
+  Cloudflare alone) before DNS moves.
 
 ### Build contract — Sprint 1 (locked by the architect before the builder started)
 D1–D6. Inert on Vercel: with `DEPLOY_ENV` unset every reader returns what it returns today (each reader's existing

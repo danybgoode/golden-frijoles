@@ -61,6 +61,10 @@ builds and smoke-tests, **so that** the same image runs on the Oracle VM, Cloud 
 - No secret is baked into any layer (`docker history` / a grep of the image for the CI secrets' values is empty).
 **Risk:** high (shared infra)
 
+## Owed
+- Owed to Daniel: re-decide the two console-gate deferrals (button height, project switcher), which this sprint extended
+  provisionally from 2026-10-30 to 2026-11-16 because they turned every PR red (`apps/web/design-system/console-gate-spec.ts`).
+
 ## Sprint QA
 - **api spec(s):** S1.1 → a unit spec on `deploy-env.ts` + the guard test; S1.2 → the container smoke job in CI.
 - **browser smoke owed:** no (no user-facing change).

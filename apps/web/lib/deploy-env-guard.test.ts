@@ -35,7 +35,10 @@ const rel = (file: string) => file.slice(WEB.length + 1)
 const code = (source: string) => source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1')
 
 const ALLOWED = new Set(['lib/deploy-env.ts', 'lib/site-url.ts'])
-const READ = /\.(VERCEL_ENV|VERCEL)\b(?!_)|\[['"](VERCEL_ENV|VERCEL)['"]\]/g
+// A property read, a bracket read (quotes or backticks), or a destructuring of process.env that names either variable
+// (verifier, #444: the first version missed `const { VERCEL_ENV } = process.env`).
+const READ =
+  /\.(VERCEL_ENV|VERCEL)\b(?!_)|\[['"`](VERCEL_ENV|VERCEL)['"`]\]|\{[^}]*\b(VERCEL_ENV|VERCEL)\b(?!_)[^}]*\}\s*=\s*process\.env/g
 
 test('no deployment decision reads VERCEL_ENV / VERCEL outside lib/deploy-env.ts', () => {
   const found = files()
@@ -52,10 +55,25 @@ test('no deployment decision reads VERCEL_ENV / VERCEL outside lib/deploy-env.ts
 
 test('the guard sees what it guards (mutation check)', () => {
   const sample = code(
-    "const a = process.env.VERCEL_ENV\nconst b = env['VERCEL']\n// env.VERCEL_ENV in a comment\nenv.VERCEL_URL"
+    [
+      'const a = process.env.VERCEL_ENV',
+      "const b = env['VERCEL']",
+      'const c = process.env[`VERCEL_ENV`]',
+      'const { VERCEL_ENV } = process.env',
+      'const { VERCEL_ENV: v, X } = process.env',
+      '// env.VERCEL_ENV in a comment',
+      'env.VERCEL_URL',
+      'const { VERCEL_URL } = process.env',
+    ].join('\n')
   )
   assert.deepEqual(
     [...sample.matchAll(READ)].map((m) => m[0]),
-    ['.VERCEL_ENV', "['VERCEL']"]
+    [
+      '.VERCEL_ENV',
+      "['VERCEL']",
+      '[`VERCEL_ENV`]',
+      '{ VERCEL_ENV } = process.env',
+      '{ VERCEL_ENV: v, X } = process.env',
+    ]
   )
 })
