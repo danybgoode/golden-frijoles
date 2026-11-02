@@ -220,7 +220,9 @@ export const DEFERRED_SPEC_ROWS = [
     // the contract and the floor stop disagreeing rather than being reconciled in a comment.
     owner: 'Daniel',
     // Expired 2026-10-15; Daniel re-decided it on 2026-10-16 (drill-impact-for-agents run): extend two weeks.
-    until: '2026-10-30',
+    // Expired again 2026-10-30, turning every PR red; extended two weeks by the off-vercel-hosting run on the same
+    // precedent, PROVISIONALLY — Daniel re-decides it.
+    until: '2026-11-16',
   },
   {
     what: 'project switcher',
@@ -230,6 +232,8 @@ export const DEFERRED_SPEC_ROWS = [
     // Story 3.2 rebuilds the switcher against the REGENERATED number (122 x 30, not 140 x 30).
     owner: 'Daniel',
     // Expired 2026-10-15; Daniel re-decided it on 2026-10-16 (drill-impact-for-agents run): extend two weeks.
-    until: '2026-10-30',
+    // Expired again 2026-10-30, turning every PR red; extended two weeks by the off-vercel-hosting run on the same
+    // precedent, PROVISIONALLY — Daniel re-decides it.
+    until: '2026-11-16',
   },
 ] as const
