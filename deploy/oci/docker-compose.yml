@@ -1,0 +1,26 @@
+# off-vercel-hosting S2 — golden-frijoles as a tenant of the shared Oracle VM. Run by update.sh (never `up` by hand:
+# update.sh pins WEB_IMAGE to a digest in .env first).
+#
+# One service: the standalone Next server from the repo's Dockerfile. No published port: the shared proxy reaches it
+# on the `edge` network as `golden-frijoles-web:3000`. Capped like every tenant (D13), health-checked by the image.
+name: golden-frijoles
+
+services:
+  web:
+    image: ${WEB_IMAGE:-ghcr.io/danybgoode/golden-frijoles:main}
+    env_file: web.env
+    restart: unless-stopped
+    cpus: 0.75
+    mem_limit: 768m
+    networks:
+      edge:
+        aliases: [golden-frijoles-web]
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+
+networks:
+  edge:
+    external: true
