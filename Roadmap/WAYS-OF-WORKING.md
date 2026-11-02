@@ -32,10 +32,11 @@ Plan → branch + scaffold docs → build story → verify → QA/smoke → PR �
    the product owner sees scope as it grows, and keep them current (✅ ticks, commit refs).
 3. **Build one story at a time.** Reuse before rebuild. Commit per story, **path-limited**.
 4. **Verify + QA.** The deterministic gate — typecheck, lint, build, the suite — is green **before**
-   merge, run by the building agent, not only by CI. **Deploy rail.** Merging to `main` is the deploy: Vercel's GitHub integration builds production on every
-merge, and each PR gets a Vercel preview the Playwright harness runs against. **Never `vercel deploy` from
-the CLI** (AGENTS rule #4; it is on the deny list). An env-var change reaches running functions only on a
-**redeploy**, so verify by exercising the behaviour the var controls. **Supabase migrations are a separate,
+   merge, run by the building agent, not only by CI. **Deploy rail.** Merging to `main` is the deploy: `deploy.yml` builds the arm64 image and the
+Oracle VM pulls it by digest, health-checks and rolls back (AGENTS rule #4, `deploy/oci/README.md`); CI's Playwright
+harness runs against local servers and the production image in a container, never against a metered preview.
+**Never deploy from a laptop.** Runtime env lives in the VM's `deploy/oci/web.env` and reaches the app on a container
+restart, so verify by exercising the behaviour the var controls. **Supabase migrations are a separate,
 deliberate step** — applied with `supabase db push` (agents may, since 2026-10-14) or the Supabase MCP, before
 the merge that deploys the code reading it; nothing migrates on merge.
 5. **PR → review → merge.** Declare a risk tier, run the review the policy asks for, resolve or answer
@@ -356,8 +357,8 @@ either channel. The guard still labels its model and blocks known unsupported cl
 |------|----------|
 | **git / gh** | Version control, feature branches, pull requests + merges, GitHub operations |
 | **node / npm** | Type-check (`tsc`), build (`npm run build`), Playwright (`npm run test:e2e`), local dev server, the `scripts/*` tooling |
-| **vercel** | Env-var management (`vercel env pull/add/ls`) + reading deploy state. **Never** `vercel deploy`/`--prod` — merge to `main` is the deploy (rule #4); check state via `gh api repos/<owner>/<repo>/deployments`. |
-| **supabase** | Migrations against linked project (`supabase link` / `migration list`; apply with `supabase db push` or the Supabase MCP; `db reset` stays denied by `.claude/settings.json`) and read-only prod queries (`supabase db query --linked "select …"`, uses the CLI's own auth — no service-role key in the shell). A separate, manual step from the Vercel deploy. |
+| **ssh (Oracle VM)** | Operating production (`deploy/oci/README.md`): logs, `update.sh`, `web.env`. SSH is allow-listed to the operator's IP (`allow-my-ip.sh` in the private VM repo). **Never** push a hand-built image as `:main` — merge to `main` is the deploy (rule #4); check state via `gh api repos/<owner>/<repo>/deployments` or the live `x-gf-revision`. Vercel hosts nothing in production. |
+| **supabase** | Migrations against linked project (`supabase link` / `migration list`; apply with `supabase db push` or the Supabase MCP; `db reset` stays denied by `.claude/settings.json`) and read-only prod queries (`supabase db query --linked "select …"`, uses the CLI's own auth — no service-role key in the shell). A separate, manual step from the deploy. |
 | **codex / agy / vibe / claude** | The external review families, in preference order — **routed, never hand-picked**: `node scripts/review-route.mjs --builder <who> <PR#>` prints the general pass and, when the paths trigger it, the security lens by a different family (see *Review & merge*). Health and pins: `node scripts/agy-doctor.mjs`. **devin** does prose, not review; **cursor-agent** is not wired into review. |
 
 This means a story can go from code → verified → preview-deployed → live-tested on a branch, then
