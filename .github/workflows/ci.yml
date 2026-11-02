@@ -244,7 +244,11 @@ jobs:
           [ "$(docker inspect gf --format '{{.Config.User}}')" = "node" ] || { echo "::error::the container runs as root"; exit 1; }
           npm run seed:demo
           npm run seed:self
+      # Explicit, not the config's default: the URL IS the container (no other server runs in this job, and the
+      # Playwright config starts none), and saying so keeps it that way if a default ever changes. (Codex, #444.)
       - name: Run an api subset against the container
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:3000
         run: |
           npx playwright test --config=apps/web/playwright.config.ts --project=api --grep-invert @quarantine \
             apps/web/e2e/features-sync.spec.ts \
