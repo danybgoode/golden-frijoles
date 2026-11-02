@@ -27,7 +27,7 @@ flock -n 9 || { [ "$IF_CHANGED" = 1 ] || echo "another golden-frijoles deploy is
 # Pull this repo's deploy files first, then re-run the NEW copy of this script once: bash keeps reading the file it
 # started with, so a merge that changed update.sh would otherwise deploy with the old checks.
 if [ -z "${GF_UPDATE_REEXEC:-}" ]; then
-  git -C "$ROOT" fetch -q --depth 1 origin main
+  git -C "$ROOT" fetch -q --depth 1 origin +main:refs/remotes/origin/main
   git -C "$ROOT" reset -q --hard origin/main
   flock -u 9
   GF_UPDATE_REEXEC=1 exec "$DEPLOY/update.sh" "$@"
