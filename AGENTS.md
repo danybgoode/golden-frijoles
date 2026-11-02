@@ -54,9 +54,9 @@ laptop** (no hand-built image pushed as `:main`, no `vercel deploy`): to see wha
 repos/<owner>/<repo>/deployments` or `curl -sI https://goldenfrijoles.com/llms.txt | grep x-gf-revision`; to roll back,
 `git revert` on `main`, or pin an image (`WEB_IMAGE_PIN=…:<sha>`) on the VM (`deploy/oci/README.md`). Operating the VM: `deploy/oci/README.md`.
 **Runtime env lives in the VM's `deploy/oci/web.env`** (0600; keep a copy in the password manager), not in any platform:
-change a value there and run `deploy/oci/update.sh`, which recreates the container with it, health-checks it and rolls
-back on failure (a bare `docker compose restart` does NOT re-read the env file), then verify by exercising the
-behaviour it controls. Only the two `NEXT_PUBLIC_SUPABASE_*` values are build-time (repo variables
+change a value there and run `deploy/oci/update.sh`, which recreates the container with it and health-checks it (a bare
+`docker compose restart` does NOT re-read the env file; an env-only change has no automatic rollback — restore the old
+line and re-run), then verify by exercising the behaviour it controls. Only the two `NEXT_PUBLIC_SUPABASE_*` values are build-time (repo variables
 `PROD_NEXT_PUBLIC_SUPABASE_*`, read by `deploy.yml`), so changing one needs a new image (a merge or a dispatched Deploy).
 Production is declared by `DEPLOY_ENV=production` (`lib/deploy-env.ts`), never inferred from a platform variable.
 Vercel hosts nothing in production; the paused `golden-beans` project is to be Git-disconnected (owed to Daniel,
