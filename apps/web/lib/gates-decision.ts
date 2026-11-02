@@ -136,24 +136,28 @@ export const GATES = {
 
 export type GateName = keyof typeof GATES
 
-/** `VERCEL_ENV` → the flag environment this deployment evaluates in. */
-export function flagEnvironmentFor(vercelEnv: string | undefined): FlagEnvironmentName {
-  if (vercelEnv === 'production') return 'production'
-  if (vercelEnv === 'preview') return 'preview'
+/** A deployment name (`deployEnv()`, lib/deploy-env.ts) → the flag environment this deployment evaluates in. */
+export function flagEnvironmentFor(deployment: string | undefined): FlagEnvironmentName {
+  if (deployment === 'production') return 'production'
+  if (deployment === 'preview') return 'preview'
   return 'development'
 }
 
-/** Whether this process runs on Vercel. Vercel sets `VERCEL=1` at build and at runtime. */
-export function isOnVercel(env: Readonly<Record<string, string | undefined>>): boolean {
-  return env.VERCEL === '1'
-}
+/**
+ * off-vercel-hosting D2 — the two facts about the running deployment a gate needs, decided by lib/deploy-env.ts
+ * (`isDeployed()`, `deployEnv()`) and passed IN, so this module stays import-free. Required, never defaulted: a caller
+ * that forgot `deployed` would let a stray `*_ENABLED` variable beat the catalog on a production box.
+ */
+export type Deployment = { deployed: boolean; environment: string | undefined }
 
-/** The off-Vercel override (D6): `undefined` when it does not apply, else the old `=== 'true'` reading. */
+/** The off-deployment override (D6): `undefined` when it does not apply (any deployed box, on Vercel or not —
+ *  off-vercel-hosting D2), else the old `=== 'true'` reading. */
 export function envOverride(
   gate: Gate,
-  env: Readonly<Record<string, string | undefined>>
+  env: Readonly<Record<string, string | undefined>>,
+  deployed: boolean
 ): boolean | undefined {
-  if (isOnVercel(env) || gate.envVar === null) return undefined
+  if (deployed || gate.envVar === null) return undefined
   const raw = env[gate.envVar]
   return raw === undefined ? undefined : raw === 'true'
 }
@@ -177,9 +181,13 @@ export function servedValue(gate: Gate, catalog: ServedCatalog, environment: Fla
 export function resolveGate(
   gate: Gate,
   catalog: ServedCatalog,
-  env: Readonly<Record<string, string | undefined>>
+  env: Readonly<Record<string, string | undefined>>,
+  deployment: Deployment
 ): boolean {
-  return envOverride(gate, env) ?? servedValue(gate, catalog, flagEnvironmentFor(env.VERCEL_ENV))
+  return (
+    envOverride(gate, env, deployment.deployed) ??
+    servedValue(gate, catalog, flagEnvironmentFor(deployment.environment))
+  )
 }
 
 /**

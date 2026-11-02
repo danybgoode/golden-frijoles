@@ -23,10 +23,13 @@
 // **Never widen this to accept headers.** If a future change wants a per-request host, that is a
 // different function with a different review.
 
+import { deployEnv } from './deploy-env'
+
 /** Exactly the variables this decision reads. Nothing request-derived can appear here. */
 export interface SiteUrlEnv {
   SITE_URL?: string
   VERCEL_ENV?: string
+  DEPLOY_ENV?: string
   VERCEL_BRANCH_URL?: string
   VERCEL_URL?: string
 }
@@ -65,7 +68,7 @@ export function resolveSiteUrl(env: SiteUrlEnv): string {
   const configured = env.SITE_URL?.trim()
   if (configured) return normalise(configured)
 
-  if (env.VERCEL_ENV === 'preview') {
+  if (deployEnv(env) === 'preview') {
     // Vercel sets these as BARE hostnames and serves previews over TLS, so the scheme is ours to
     // add. An existing scheme is stripped first: if one of these is ever populated by hand — a
     // custom preview runner, a local reproduction — `https://${host}` would otherwise produce
@@ -92,5 +95,5 @@ export function resolveSiteUrl(env: SiteUrlEnv): string {
  * that fallback answer two different questions, and production's answer is still "set the variable".
  */
 export function isSiteUrlMisconfiguredInProductionEnv(env: SiteUrlEnv): boolean {
-  return env.VERCEL_ENV === 'production' && !env.SITE_URL?.trim()
+  return deployEnv(env) === 'production' && !env.SITE_URL?.trim()
 }

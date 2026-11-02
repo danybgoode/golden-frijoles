@@ -11,6 +11,7 @@
 // `frijoles flags kill` takes to land. A failed read is cached too (serving the last good catalog), so an outage costs one
 // query per 30 s, not one per request.
 
+import { deployEnv, isDeployed } from './deploy-env'
 import {
   createCatalogCache,
   envOverride,
@@ -47,9 +48,10 @@ const catalog = createCatalogCache(
 
 export async function gate(gate: Gate): Promise<boolean> {
   // The override answers without a database round-trip — the CI and local path (D6).
-  const override = envOverride(gate, process.env)
+  const deployment = { deployed: isDeployed(), environment: deployEnv() }
+  const override = envOverride(gate, process.env, deployment.deployed)
   if (override !== undefined) return override
-  return resolveGate(gate, await catalog(), process.env)
+  return resolveGate(gate, await catalog(), process.env, deployment)
 }
 
 /**
@@ -60,10 +62,10 @@ export async function gate(gate: Gate): Promise<boolean> {
  * Never emits an event. The exposure is written by the beacon (D3), which calls this again from the cookie: a page
  * render that wrote exposures would count every crawler and every prefetch as a person in the experiment.
  *
- * No off-Vercel override: a test arm is not a gate a CI server must pin, and A is what an unread catalog serves.
+ * No off-deployment override: a test arm is not a gate a CI server must pin, and A is what an unread catalog serves.
  */
 export async function variant(name: ExperimentFlagName, visitorId: unknown): Promise<VariantAnswer> {
-  const environment = flagEnvironmentFor(process.env.VERCEL_ENV)
+  const environment = flagEnvironmentFor(deployEnv())
   const row = (await catalog())?.get(EXPERIMENT_FLAGS[name].key)?.find((r) => r.environment === environment)
   return resolveVariant(row, visitorId)
 }

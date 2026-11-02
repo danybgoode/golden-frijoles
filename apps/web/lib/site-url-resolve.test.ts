@@ -131,3 +131,22 @@ test('an UPPERCASE scheme is stripped too', () => {
     'https://gb-git-feat-x.vercel.app'
   )
 })
+
+test('off-vercel-hosting D3: DEPLOY_ENV=production without SITE_URL is just as loudly misconfigured', () => {
+  assert.equal(isSiteUrlMisconfiguredInProductionEnv({ DEPLOY_ENV: 'production' }), true)
+  assert.equal(
+    isSiteUrlMisconfiguredInProductionEnv({
+      DEPLOY_ENV: 'production',
+      SITE_URL: 'https://goldenfrijoles.com',
+    }),
+    false
+  )
+  assert.equal(
+    resolveSiteUrl({ DEPLOY_ENV: 'production', SITE_URL: 'https://goldenfrijoles.com' }),
+    'https://goldenfrijoles.com'
+  )
+  assert.equal(
+    resolveSiteUrl({ DEPLOY_ENV: 'production', VERCEL_URL: 'dep.vercel.app' }),
+    'http://localhost:3000'
+  )
+})

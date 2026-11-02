@@ -27,6 +27,7 @@ function siteUrlEnv(): SiteUrlEnv {
   return {
     SITE_URL: process.env.SITE_URL,
     VERCEL_ENV: process.env.VERCEL_ENV,
+    DEPLOY_ENV: process.env.DEPLOY_ENV,
     VERCEL_BRANCH_URL: process.env.VERCEL_BRANCH_URL,
     VERCEL_URL: process.env.VERCEL_URL,
   }

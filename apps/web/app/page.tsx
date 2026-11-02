@@ -14,6 +14,7 @@ import { cookies } from 'next/headers'
 import { variant } from '@/lib/gates'
 import { forcedVariant } from '@/lib/landing-variant'
 import { VISITOR_COOKIE } from '@/lib/marketing-paths'
+import { deployEnv } from '@/lib/deploy-env'
 
 // The Golden Frijoles public landing, per references/golden-frijoles-maker-ops-landing-v0.2.html
 // and Roadmap/02-commercial/landing-maker-ops/ (which supersedes landing-frijoles-rebrand's mockup).
@@ -73,7 +74,7 @@ export default async function Home({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const forced = forcedVariant((await searchParams).variant, process.env.VERCEL_ENV)
+  const forced = forcedVariant((await searchParams).variant, deployEnv())
   const visitorId = (await cookies()).get(VISITOR_COOKIE)?.value
   const showB = forced ? forced === 'b' : (await variant('landingVariantB', visitorId)).b
   if (showB) {

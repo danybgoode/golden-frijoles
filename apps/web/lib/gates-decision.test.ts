@@ -13,6 +13,9 @@ import {
   type Gate,
   type ServedCatalog,
 } from './gates-decision.ts'
+import { deployEnv, isDeployed } from './deploy-env.ts'
+
+const LOCAL = { deployed: false, environment: 'development' }
 
 const row = (environment: string, serving: unknown, readable = true) => ({ environment, serving, readable })
 const catalogOf = (key: string, rows: ReturnType<typeof row>[]): ServedCatalog => new Map([[key, rows]])
@@ -101,14 +104,14 @@ test('one environment killed does not kill another', () => {
   assert.equal(servedValue(ON, catalog, 'production'), true)
 })
 
-test('VERCEL_ENV maps to the flag environment; anything else is development', () => {
+test('the deployment name maps to the flag environment; anything else is development', () => {
   assert.equal(flagEnvironmentFor('production'), 'production')
   assert.equal(flagEnvironmentFor('preview'), 'preview')
   assert.equal(flagEnvironmentFor(undefined), 'development')
   assert.equal(flagEnvironmentFor('development'), 'development')
 })
 
-test("off Vercel a SET env var wins with the old exact === 'true' reading (D6)", () => {
+test("off a deployment a SET env var wins with the old exact === 'true' reading (D6)", () => {
   for (const [raw, expected] of [
     ['true', true],
     ['false', false],
@@ -117,23 +120,35 @@ test("off Vercel a SET env var wins with the old exact === 'true' reading (D6)",
     ['true ', false],
     ['', false],
   ] as const) {
-    assert.equal(envOverride(ON, { X_ON_ENABLED: raw }), expected, JSON.stringify(raw))
+    assert.equal(envOverride(ON, { X_ON_ENABLED: raw }, false), expected, JSON.stringify(raw))
   }
-  assert.equal(envOverride(ON, {}), undefined, 'unset: the catalog answers')
+  assert.equal(envOverride(ON, {}, false), undefined, 'unset: the catalog answers')
   assert.equal(
-    resolveGate(OFF, catalogOf(OFF.key, [row('development', true)]), { X_OFF_ENABLED: 'false' }),
+    resolveGate(OFF, catalogOf(OFF.key, [row('development', true)]), { X_OFF_ENABLED: 'false' }, LOCAL),
     false
   )
 })
 
-test('ON Vercel the env is never read: a leftover Vercel variable cannot override the catalog', () => {
+test('on a deployment the env is never read: a leftover variable cannot override the catalog', () => {
   const env = { VERCEL: '1', VERCEL_ENV: 'production', X_ON_ENABLED: 'true' }
-  assert.equal(envOverride(ON, env), undefined)
-  assert.equal(resolveGate(ON, catalogOf(ON.key, [row('production', false)]), env), false)
+  const prod = { deployed: true, environment: 'production' }
+  assert.equal(envOverride(ON, env, true), undefined)
+  assert.equal(resolveGate(ON, catalogOf(ON.key, [row('production', false)]), env, prod), false)
+})
+
+test('off-vercel-hosting D2: a box with DEPLOY_ENV=production reads production and ignores *_ENABLED', () => {
+  const env = { DEPLOY_ENV: 'production', X_ON_ENABLED: 'true' }
+  const deployment = { deployed: isDeployed(env), environment: deployEnv(env) }
+  assert.deepEqual(deployment, { deployed: true, environment: 'production' })
+  assert.equal(envOverride(ON, env, deployment.deployed), undefined)
+  assert.equal(resolveGate(ON, catalogOf(ON.key, [row('production', false)]), env, deployment), false)
 })
 
 test('a gate that was never an env var has no override anywhere', () => {
-  assert.equal(envOverride(GATES.terminalSignIn, { 'auth.terminal_sign_in_enabled': 'false' }), undefined)
+  assert.equal(
+    envOverride(GATES.terminalSignIn, { 'auth.terminal_sign_in_enabled': 'false' }, false),
+    undefined
+  )
 })
 
 test('reads finishing out of order: an older read never replaces a newer one (round 3)', () => {
