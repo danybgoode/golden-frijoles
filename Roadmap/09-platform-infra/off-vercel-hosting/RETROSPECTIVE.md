@@ -36,11 +36,13 @@ says. Local, not promoted: zsh does not word-split `$VAR`, which broke two shell
 caught before any write).
 
 ## Gaps / follow-ups
-- Owed to Daniel: confirm the delivery waker's calls after the cutover are 2xx (`net._http_response`).
-- Owed to Daniel: the signed-in browser smoke on goldenfrijoles.com (sign in, open `/app`).
-- Owed to Daniel: disconnect the Vercel Git integration for `golden-beans`; delete the project after a quiet week.
+- ✅ Owed to Daniel: confirm the delivery waker's calls after the cutover are 2xx (`net._http_response`). — done: 200 every tick after propagation
+- Owed to Daniel: the signed-in browser smoke on goldenfrijoles.com (sign in, open `/app`). Authenticated API reads
+  already pass through the live site (`frijoles whoami`, 2026-11-02).
+- ✅ Owed to Daniel: disconnect the Vercel Git integration for `golden-beans` — disconnected 2026-11-02.
+- Owed to Daniel: delete the paused `golden-beans` Vercel project after a quiet week (from 2026-11-09).
 - Owed to Daniel: the `_Intent:_` word above, and a password-manager copy of the VM's `web.env` (including the
   `SELF_SUBJECT_SECRET` generated on the VM).
-- A row for golden-frijoles in the VM's private tenant table, in that repo's own PR.
+- ✅ A row for golden-frijoles in the VM's private tenant table — merged in that repo's own PR.
 - Three scenario-drill secrets are blank on the VM: drills stay off until they are minted.
 - The same playbook for despachobonsai and panfleto.com.mx (their own repos); Coolify previews were left out on purpose.

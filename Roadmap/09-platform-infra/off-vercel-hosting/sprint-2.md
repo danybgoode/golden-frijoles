@@ -61,8 +61,8 @@ the VM, and roll back on failure, **so that** merging to `main` stays the deploy
 **Risk:** high (deploy pipeline)
 
 ## Owed
-- Owed to Daniel: fill the 11 Sensitive values in the VM's `deploy/oci/web.env` (and keep a copy in the password manager).
-- Owed to Daniel: make the GHCR package `golden-frijoles` public after its first push.
+- ✅ Owed to Daniel: fill the 11 Sensitive values in the VM's `deploy/oci/web.env` (and keep a copy in the password manager). — done 2026-11-02 (Daniel filled 10; SELF_SUBJECT_SECRET generated on the VM; the scenario three stay blank)
+- ✅ Owed to Daniel: make the GHCR package `golden-frijoles` public after its first push. — not needed: the package inherited the repo's public visibility (anonymous pull works)
 
 ## Sprint QA
 - **api spec(s):** none new (infra). CI's container-smoke covers the Dockerfile on amd64; the arm64 boot is in deploy.yml.
