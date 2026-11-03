@@ -285,7 +285,7 @@
   /* ⚠️ `globals.css` sets a 44px WCAG 2.5.5 target floor on every `button`, and used height is
      `max(min-height, height)` — so without this the design's 21px control renders 44px tall. The
      floor is met by the transparent `::before` below instead: the TARGET is a real 44 x 44, the INK
-     is the design's 38 x 21. This is the resolution `DEFERRED_SPEC_ROWS`' primary/secondary button
+     is the design's 38 x 21. This is the resolution `ACCEPTED_SPEC_ROWS`' primary/secondary button
      row cannot have, because a button's ink IS its target. */
   min-height: 21px;
   flex: none;
