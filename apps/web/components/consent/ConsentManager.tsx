@@ -14,6 +14,7 @@ import {
   type StoredConsent,
 } from '@/lib/consent'
 import { isMarketingPath } from '@/lib/marketing-paths'
+import { consentRequiredFromCookie, readConsentRegionCookie } from '@/lib/consent-region'
 
 // landing-launch-experiment · Sprint 1, Story 1.1 (epic D8) — the consent banner, and the only place GA4 and Clarity
 // can load from.
@@ -26,8 +27,10 @@ import { isMarketingPath } from '@/lib/marketing-paths'
 //    a document that began on /install or /app and soft-navigated onto /methodology would otherwise load the recorder,
 //    and Back would then render the off-list page inside it before anything could react. With this rule every page in
 //    a recorded document's history is a marketing page, because every exit from one is a full load (below).
-// 2. The VISITOR: deny by default (lib/consent.ts). Before an explicit yes there is no third-party script tag in the
-//    document, which is what the spec asserts; "denied" is the same as "never asked", minus the banner.
+// 2. The VISITOR: where consent is required (the opt-in regions and anything unknown, lib/consent-region.ts), deny by
+//    default (lib/consent.ts). Before an explicit yes there is no third-party script tag in the document, which is what
+//    the spec asserts; "denied" is the same as "never asked", minus the banner. Elsewhere (traffic-relaunch D3) they
+//    load with no banner, and a stored "no" from "Cookie settings" still wins.
 //
 // Withdrawing consent reloads the page: a script already running cannot be unloaded, and the honest way to stop it is
 // a fresh document without it.
@@ -66,18 +69,30 @@ export function ConsentManager() {
   // `undefined` until mounted: the server cannot read localStorage, so nothing renders before hydration and the
   // server HTML never carries a third-party tag.
   const [stored, setStored] = useState<StoredConsent | null | undefined>(undefined)
+  // traffic-relaunch D1–D3 — whether this visitor's region asks first, from the middleware's `gf_cr` cookie. Anything
+  // but the exact word `load` (no cookie, a tampered one) means it does. Read once per document with the answer.
+  const [consentRequired, setConsentRequired] = useState(true)
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
     const current = readStored()
+    let required = true
+    try {
+      required = consentRequiredFromCookie(readConsentRegionCookie(document.cookie))
+    } catch {
+      // Cookies unreadable: ask, as if the region were unknown.
+    }
+    setConsentRequired(required)
     setStored(current)
-    setOpen(current === null)
+    // The banner opens on its own only where consent is required and nobody has answered yet; elsewhere it waits for
+    // "Cookie settings".
+    setOpen(current === null && required)
     const reopen = () => setOpen(true)
     window.addEventListener(CONSENT_OPEN_EVENT, reopen)
     return () => window.removeEventListener(CONSENT_OPEN_EVENT, reopen)
   }, [])
 
-  const allowed = onMarketing && analyticsAllowed(stored ?? null)
+  const allowed = onMarketing && analyticsAllowed(stored ?? null, consentRequired)
 
   // Whether THIS document has third-party scripts running. They cannot be unloaded, and a client-side navigation keeps
   // the document: a soft link from the landing to /install or /app would carry Clarity's recorder onto a page that must
@@ -127,7 +142,7 @@ export function ConsentManager() {
 
   const choose = useCallback(
     (choice: ConsentChoice) => {
-      const wasAllowed = analyticsAllowed(stored ?? null)
+      const wasAllowed = analyticsAllowed(stored ?? null, consentRequired)
       try {
         window.localStorage.setItem(CONSENT_STORAGE_KEY, serializeConsent(choice, new Date()))
       } catch {
@@ -137,7 +152,7 @@ export function ConsentManager() {
       setOpen(false)
       if (wasAllowed && choice === 'denied') window.location.reload()
     },
-    [stored]
+    [stored, consentRequired]
   )
 
   if (!onMarketing || stored === undefined) return null
