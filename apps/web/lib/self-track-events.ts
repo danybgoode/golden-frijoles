@@ -53,6 +53,10 @@ export const SHARE_VIEWED_EVENT = 'share_viewed'
 // detail survives for anyone who wants it.
 export const METHODOLOGY_VISITED_EVENT = 'methodology_visited'
 export const METHODOLOGY_CHAPTER_OPENED_EVENT = 'methodology_chapter_opened'
+// traffic-relaunch D11 — a page of the guides, comparisons or glossary was read. One event for the three sections (the
+// section and, on an entry, its slug ride as tags, validated against lib/content-library.ts), under the methodology's
+// reading signal: it is the same job, reading what the method says.
+export const LIBRARY_VISITED_EVENT = 'library_visited'
 
 // owed-on-screen D11 — a member saw at least one owed check (epic page, board or portfolio), once per page view. The
 // "user" is the member's user id (person = user subject, one-bet-wired), so `adopted` reads as distinct people.
@@ -85,6 +89,7 @@ export type SelfTrackEvent =
   | typeof SHARE_VIEWED_EVENT
   | typeof METHODOLOGY_VISITED_EVENT
   | typeof METHODOLOGY_CHAPTER_OPENED_EVENT
+  | typeof LIBRARY_VISITED_EVENT
   | typeof OWED_VIEWED_EVENT
   | typeof FUNNEL_TREND_VIEWED_EVENT
   | typeof WORKSPACE_PROVED_BET_EVENT
@@ -142,6 +147,7 @@ export const EVENT_FEATURE: Record<SelfTrackEvent, string> = {
   [SHARE_VIEWED_EVENT]: HUB_ENGAGEMENT_SIGNAL_KEY,
   [METHODOLOGY_VISITED_EVENT]: METHODOLOGY_SIGNAL_KEY,
   [METHODOLOGY_CHAPTER_OPENED_EVENT]: METHODOLOGY_SIGNAL_KEY,
+  [LIBRARY_VISITED_EVENT]: METHODOLOGY_SIGNAL_KEY,
   [OWED_VIEWED_EVENT]: HUB_ENGAGEMENT_SIGNAL_KEY,
   [FUNNEL_TREND_VIEWED_EVENT]: HUB_ENGAGEMENT_SIGNAL_KEY,
   [WORKSPACE_PROVED_BET_EVENT]: PROVING_SIGNAL_KEY,

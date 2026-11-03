@@ -55,10 +55,15 @@ function visitSource(): Record<string, string> {
 export function SelfTrackBeacon({
   surface = 'landing',
   chapter,
+  section,
+  slug,
   rendered,
   forced,
 }: {
-  surface?: 'landing' | 'methodology' | 'methodology-chapter'
+  surface?: 'landing' | 'methodology' | 'methodology-chapter' | 'library'
+  /** traffic-relaunch D11 — the library section and, on an entry, its slug; validated server-side. */
+  section?: string
+  slug?: string
   /** Only meaningful for `methodology-chapter`; validated server-side against the module's ids. */
   chapter?: string
   /**
@@ -81,11 +86,13 @@ export function SelfTrackBeacon({
         // traffic-relaunch D5 — what the browser saw; the route keeps only clean values (lib/visit-source.ts).
         source: visitSource(),
         ...(chapter ? { chapter } : {}),
+        ...(section ? { section } : {}),
+        ...(slug ? { slug } : {}),
         ...(rendered ? { rendered } : {}),
         ...(forced ? { forced: true } : {}),
       }),
     }).catch(() => {})
-  }, [surface, chapter, rendered, forced])
+  }, [surface, chapter, section, slug, rendered, forced])
 
   return null
 }

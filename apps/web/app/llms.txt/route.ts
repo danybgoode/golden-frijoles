@@ -1,5 +1,6 @@
 import { getSiteUrl } from '@/lib/site-url'
 import { CATEGORY_DEFINITION } from '@/lib/positioning'
+import { LIBRARY, LIBRARY_SECTIONS, SECTION_META } from '@/lib/content-library'
 
 // GET /llms.txt — Story 3.2 (commercial-shell/sprint-3.md). An `llms.txt`-style manifest listing
 // the public routes and the connector's docs, for a searcher (human or agent) that wants a plain-
@@ -18,6 +19,14 @@ export const dynamic = 'force-dynamic'
 
 export async function GET() {
   const siteUrl = getSiteUrl()
+  // traffic-relaunch S2.1 — the guides, comparisons and glossary, from the one content module.
+  const library = LIBRARY_SECTIONS.map(
+    (section) =>
+      `- ${siteUrl}/${section} — ${SECTION_META[section].title}\n` +
+      LIBRARY.filter((entry) => entry.section === section)
+        .map((entry) => `  - ${siteUrl}/${section}/${entry.slug}: ${entry.title}`)
+        .join('\n')
+  ).join('\n')
 
   const body = `# Golden Frijoles
 
@@ -89,6 +98,10 @@ account.
   Instacart and Spotify. It ends with a summary shape and a greenfield test that has to pass first.
   No account and no connector needed. It states that the agent reading it is NOT connected to a
   workspace, which stays true until the connector is actually installed.
+
+## Guides, comparisons and glossary
+Each page opens with a one- or two-sentence answer and carries FAQ or DefinedTerm structured data.
+${library}
 
 ## Connector docs (MCP)
 

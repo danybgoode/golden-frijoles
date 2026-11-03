@@ -8,6 +8,7 @@ import {
   START_PROMPT_COPIED_EVENT,
   METHODOLOGY_VISITED_EVENT,
   METHODOLOGY_CHAPTER_OPENED_EVENT,
+  LIBRARY_VISITED_EVENT,
   VISITOR_COOKIE,
   type SelfTrackEvent,
 } from '@/lib/self-track'
@@ -16,6 +17,7 @@ import { checkRateLimit, hashIp } from '@/lib/rate-limit'
 import { variant } from '@/lib/gates'
 import { ACQUISITION_VARIANT_COOKIE, isLikelyBot, variantLetter } from '@/lib/landing-variant'
 import { sanitizeSource } from '@/lib/visit-source'
+import { findEntry, isLibrarySection } from '@/lib/content-library'
 import { getSiteUrl } from '@/lib/site-url'
 
 // POST /v1/public/self-visit — Story 3.1 (commercial-shell/sprint-3.md). The visited-side half of
@@ -60,6 +62,8 @@ const SURFACE_EVENT: Record<string, SelfTrackEvent> = {
   'landing-copy': START_PROMPT_COPIED_EVENT,
   methodology: METHODOLOGY_VISITED_EVENT,
   'methodology-chapter': METHODOLOGY_CHAPTER_OPENED_EVENT,
+  // traffic-relaunch D11 — the guides, comparisons and glossary.
+  library: LIBRARY_VISITED_EVENT,
 }
 
 /** Parse the optional body. Anything unrecognised falls back to the landing — never an error, and
@@ -102,6 +106,13 @@ async function resolveBeacon(req: NextRequest): Promise<Beacon> {
   }
   // The copy click is an action on a page already counted, not a visit: it carries no source.
   if (event === START_PROMPT_COPIED_EVENT) return { event }
+  if (event === LIBRARY_VISITED_EVENT) {
+    // Validated against the content module, like the chapter: an unknown section is not a library visit, and an
+    // unknown slug is the section's index, never a tag naming a page that does not exist.
+    if (!isLibrarySection(raw.section)) return { event: LANDING_VISITED_EVENT, tags: source }
+    const slug = typeof raw.slug === 'string' && findEntry(raw.section, raw.slug) ? raw.slug : undefined
+    return { event, tags: { ...source, section: raw.section, ...(slug ? { slug } : {}) } }
+  }
   if (event !== METHODOLOGY_CHAPTER_OPENED_EVENT) return { event, tags: source }
 
   const chapter = raw.chapter

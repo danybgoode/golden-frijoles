@@ -38,7 +38,12 @@ export interface PublicRoute {
  * methodology path in the sitemap is a chapter) against the SAME list the routes are generated
  * from, rather than against a re-typed copy.
  */
-export function publicRoutes(chapterIds: readonly string[]): PublicRoute[] {
+export function publicRoutes(
+  chapterIds: readonly string[],
+  // traffic-relaunch S2.1 — the guides, comparisons and glossary, derived from lib/content-library.ts by the caller.
+  library: ReadonlyArray<{ section: string; slug: string }> = []
+): PublicRoute[] {
+  const sections = [...new Set(library.map((entry) => entry.section))]
   return [
     // The landing changes with every repositioning; the methodology changes when the method does.
     { path: '/', changeFrequency: 'weekly', priority: 1 },
@@ -51,6 +56,16 @@ export function publicRoutes(chapterIds: readonly string[]): PublicRoute[] {
     // The generated edition: one document carrying the whole method, and the cheapest thing an
     // agent can fetch to get all of it (Story 4.2).
     { path: '/methodology/edition.md', changeFrequency: 'monthly', priority: 0.7 },
+    ...sections.map((section) => ({
+      path: `/${section}`,
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+    })),
+    ...library.map((entry) => ({
+      path: `/${entry.section}/${entry.slug}`,
+      changeFrequency: 'monthly' as const,
+      priority: 0.7,
+    })),
     { path: '/install', changeFrequency: 'monthly', priority: 0.6 },
     { path: '/talk', changeFrequency: 'monthly', priority: 0.5 },
     // landing-launch-experiment S4 — the legal pages (lib/legal.ts).
