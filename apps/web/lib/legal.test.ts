@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { PLAN_FACTS, PRIVACY, STORAGE_NAMES, TERMS } from './legal.ts'
 import { CONSENT_STORAGE_KEY } from './consent.ts'
+import { CONSENT_REGION_COOKIE } from './consent-region.ts'
 import { PROGRESS_STORAGE_KEY } from './methodology-progress.ts'
 import { CLARITY_PROJECT_ID, GA4_MEASUREMENT_ID } from './analytics-ids.ts'
 import { GROWTH_PRICE } from './billing-decision.ts'
@@ -48,8 +49,9 @@ test('the Terms say the things the money path does', () => {
   assert.match(terms, /Plan & billing → Manage billing/)
 })
 
-test('the Privacy notice names every third-party script the site can load, and says they wait for consent', () => {
-  // The two analytics ids exist, so the two products are named; both are opt-in (lib/consent.ts denies by default).
+test('the Privacy notice names every third-party script the site can load, and says where they wait for consent', () => {
+  // The two analytics ids exist, so the two products are named; traffic-relaunch D2/D3: opt-in in the listed regions
+  // and for anything unknown (lib/consent-region.ts), loaded elsewhere, and a stored no always wins.
   assert.ok(GA4_MEASUREMENT_ID && CLARITY_PROJECT_ID)
   const privacy = text(PRIVACY)
   for (const name of [
@@ -58,11 +60,16 @@ test('the Privacy notice names every third-party script the site can load, and s
     'Cal.com',
     'Stripe',
     'Supabase',
-    'Vercel',
+    'Oracle Cloud',
     'Cloudflare',
   ])
     assert.ok(privacy.includes(name), `${name} is named`)
-  assert.match(privacy, /Nothing loads until you say yes/)
+  assert.match(privacy, /nothing loads until you say yes/)
+  for (const region of ['European Union', 'United Kingdom', 'Switzerland', 'Brazil', 'Canada'])
+    assert.ok(privacy.includes(region), `${region} is named as asking first`)
+  assert.match(privacy, /wherever we cannot tell where you are/)
+  assert.match(privacy, /your answer wins/)
+  assert.doesNotMatch(privacy, /Vercel/, 'we no longer host on Vercel (off-vercel-hosting, 2026-11-02)')
   assert.match(privacy, /gb_vid/)
 })
 
@@ -99,8 +106,18 @@ test('every cookie the app sets by name, and the booking host, are disclosed (re
   }
   walk(join(root, 'app'))
   walk(join(root, 'lib'))
-  // A constant must be one of the two disclosed above; a literal name must appear in the notice itself.
-  const disclosedConstants = new Set(['VISITOR_COOKIE', 'ACQUISITION_VARIANT_COOKIE'])
+  // The middleware writes cookies too (the visitor id; traffic-relaunch D1's region word).
+  for (const m of readFileSync(join(root, 'middleware.ts'), 'utf8').matchAll(
+    /cookies\.set\(\s*(['"]?)([A-Za-z_]+)\1/g
+  ))
+    names.add(m[2])
+  assert.ok(privacy.includes(CONSENT_REGION_COOKIE), CONSENT_REGION_COOKIE)
+  // A constant must be one of those disclosed above; a literal name must appear in the notice itself.
+  const disclosedConstants = new Set([
+    'VISITOR_COOKIE',
+    'ACQUISITION_VARIANT_COOKIE',
+    'CONSENT_REGION_COOKIE',
+  ])
   assert.ok(names.size >= 2, 'the scan found the cookie writes it exists to watch')
   for (const name of names)
     assert.ok(
@@ -114,6 +131,7 @@ test('the storage names in the notice are the ones the code uses', () => {
     visitorCookie: VISITOR_COOKIE,
     variantCookie: ACQUISITION_VARIANT_COOKIE,
     consentKey: CONSENT_STORAGE_KEY,
+    regionCookie: CONSENT_REGION_COOKIE,
     progressKey: PROGRESS_STORAGE_KEY,
   })
 })
