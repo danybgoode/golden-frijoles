@@ -38,3 +38,10 @@ test('only tag-shaped names can be grouped on', () => {
   for (const bad of ['', 'Source', 'a-b', 'x'.repeat(41), "tags->>'x'", null, 3])
     assert.equal(isGroupableTag(bad), false, String(bad))
 })
+
+test('an empty tag value counts as (none), never as an empty column', () => {
+  assert.deepEqual(
+    bucketEventCounts([{ created_at: '2026-11-02T10:00:00.000Z', tags: { source: '' } }], 'source'),
+    [{ day: '2026-11-02', value: '(none)', count: 1 }]
+  )
+})

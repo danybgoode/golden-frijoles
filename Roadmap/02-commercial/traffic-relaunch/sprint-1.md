@@ -3,7 +3,7 @@ epic: traffic-relaunch
 sprint: 1
 title: "Count every visitor and its source"
 risk: high
-phase: Building
+phase: In review
 stories_total: 4
 stories:
   - id: S1.1
@@ -12,36 +12,36 @@ stories:
     i_want: "GA4 and Clarity to load without a banner outside the EU/EEA, UK, Switzerland, Brazil and Canada"
     so_that: "I count the visitors I lose today, and the ones the law covers are still asked first"
     risk: high
-    status: planned
+    status: done
   - id: S1.2
     title: "Every visit carries its source"
     as_a: "the founder running the campaign"
     i_want: "each landing and methodology visit tagged with its UTM params or referrer host"
     so_that: "each video, search and community gets credit for the visitors it sent"
     risk: low
-    status: planned
+    status: done
   - id: S1.3
     title: "The privacy page says what we do"
     as_a: "a visitor"
     i_want: "the privacy page to state the region rule and name our real host"
     so_that: "what we say matches what the product does"
     risk: low
-    status: planned
+    status: done
   - id: S1.4
     title: "Count an event from the terminal"
     as_a: "a member of a project (or their agent)"
     i_want: "frijoles events count <event> [--days N] [--by <tag>]"
     so_that: "I can read visits per day and per source without opening a dashboard"
     risk: high
-    status: planned
+    status: done
 ---
 # Traffic relaunch — Sprint 1: Count every visitor and its source
 
-**Status:** ⬜ not started
+**Status:** 🟡 in review
 
 ## Stories
 
-### Story 1.1 — The consent banner only where the law asks for it
+### Story 1.1 — The consent banner only where the law asks for it ✅ `512e6d4`
 **As** the founder reading the numbers, **I want** GA4 and Clarity to load without a banner outside the EU/EEA, UK,
 Switzerland, Brazil and Canada, **so that** I count the visitors I lose today, and the ones the law covers are still
 asked first.
@@ -62,7 +62,7 @@ asked first.
   (`cf-cache-status` DYNAMIC or BYPASS), and the origin receives `CF-IPCountry`.
 **Risk:** high (privacy and legal surface; security lens on the review).
 
-### Story 1.2 — Every visit carries its source
+### Story 1.2 — Every visit carries its source ✅ `be918b0`
 **As** the founder running the campaign, **I want** each landing and methodology visit tagged with its UTM params or
 referrer host, **so that** each video, search and community gets credit for the visitors it sent.
 **Acceptance:**
@@ -76,7 +76,7 @@ referrer host, **so that** each video, search and community gets credit for the 
   a 200-character or `<script>` value → that tag absent.
 **Risk:** low.
 
-### Story 1.3 — The privacy page says what we do
+### Story 1.3 — The privacy page says what we do ✅ `4a45479`
 **As** a visitor, **I want** the privacy page to state the region rule and name our real host, **so that** what we say
 matches what the product does.
 **Acceptance:**
@@ -87,7 +87,7 @@ matches what the product does.
 - The page's "last updated" date moves; `legal.test.ts` is updated and green.
 **Risk:** low (copy, but legal: Daniel reads it in review).
 
-### Story 1.4 — Count an event from the terminal
+### Story 1.4 — Count an event from the terminal ✅ `02828c7`
 **As** a member of a project (or their agent), **I want** `frijoles events count <event> [--days N] [--by <tag>]
 [--json]`, **so that** I can read visits per day and per source without opening a dashboard.
 **Acceptance:**
