@@ -69,6 +69,10 @@ test('the Privacy notice names every third-party script the site can load, and s
     assert.ok(privacy.includes(region), `${region} is named as asking first`)
   assert.match(privacy, /wherever we cannot tell where you are/)
   assert.match(privacy, /your answer wins/)
+  // traffic-relaunch D5 — the visit's source is disclosed: the referring site's name, never the page, and the utm labels.
+  assert.match(privacy, /where it came from/)
+  for (const key of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content'])
+    assert.ok(privacy.includes(key), key)
   assert.doesNotMatch(privacy, /Vercel/, 'we no longer host on Vercel (off-vercel-hosting, 2026-11-02)')
   assert.match(privacy, /gb_vid/)
 })
