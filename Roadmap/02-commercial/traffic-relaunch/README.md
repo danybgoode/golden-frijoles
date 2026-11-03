@@ -1,7 +1,8 @@
 ---
 status: scaffolded   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
-phase: Shaping       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
+phase: Building       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
+locked_at: "2026-11-03T22:23:49Z"
 slug: traffic-relaunch
 title: "Traffic relaunch"
 area: 02-commercial
@@ -76,6 +77,57 @@ migration, no new gate (rule #6), no public read path (rule #2).
 - `lib/methodology-chapters.ts`, `lib/public-routes.ts`, `app/sitemap.ts`, `app/llms.txt`, `lib/site-url.ts`. The
   typed-content + sitemap pattern.
 - `e2e/consent.spec.ts`, `e2e/consent.authed.spec.ts`: extend, don't replace.
+
+## Architecture lock (D1–D10) — verified against live code 2026-11-03
+
+- **D1 · The region decision is made in the middleware, never in the layout.** Reading `headers()` in the root layout
+  would make every route dynamic, including the static ones. The marketing pages already pass through
+  `middleware.ts` (they mint the visitor id there). On a marketing path the middleware reads `CF-IPCountry` and sets a
+  session cookie `gf_cr` = `ask` | `load` on the request and the response. It is not httpOnly, because
+  `ConsentManager` reads it on mount. The cookie carries no country and no expiry. Off the matcher nothing changes.
+  *Deviation from the pitch:* the pitch said "a prop from the layout". The lock moves it to the middleware for this reason.
+- **D2 · One pure helper owns the list.** `lib/consent-region.ts` exports `OPT_IN_COUNTRIES` (EU-27, IS, LI, NO, GB,
+  CH, BR, CA) and `consentMode(country: string | null): 'ask' | 'load'`. Any value that is not two letters A–Z, plus
+  `XX` and `T1`, returns `ask`. It also exports `consentRequiredFromCookie(value)`: only the exact value `load` returns
+  false, so a missing or tampered cookie means ask. Fail closed in both directions.
+- **D3 · A stored answer wins over the region default.** `analyticsAllowed(stored, required)` returns
+  `stored.choice === 'granted'` when there is an answer, else `!required`. The banner opens on its own only when
+  there is no answer AND `required`. "Cookie settings" opens it everywhere. Choosing no after analytics ran still
+  reloads. The marketing-path gate and every off-list reload rule in `ConsentManager` are untouched.
+- **D4 · The country is never stored or sent.** It is not in an event, a tag, a log line or the cookie.
+- **D5 · Source attribution is tags on the existing events (rule #1).** The beacon sends a raw `source` object: the
+  four `utm_*` params from `location.search` and `document.referrer`. A pure `lib/visit-source.ts → sanitizeSource()`
+  on the server keeps lowercased values matching `[a-z0-9._-]{1,64}`. It reduces the referrer to its host and drops
+  our own host (via `getSiteUrl()`). It adds `source` = `utm_source` ?? `ref_host` ?? `direct`. The tags ride
+  `landing_visited` (`trackVisitorEvent` gains an optional `tags`) and both methodology events, merged with `chapter`.
+  `landing-copy` stays tagless. The route's "always 200" contract holds: bad input drops a tag and never errors.
+- **D6 · Privacy copy has one home, `lib/legal.ts`.** The analytics section states the five-region rule. The cookie
+  list gains `gf_cr`, through `STORAGE_NAMES` and its spec. The processor list replaces Vercel with Oracle Cloud
+  (hosting) behind Cloudflare. `LEGAL_UPDATED` moves to the merge date.
+- **D7 · Event counts read through the canonical seam.** `lib/event-catalog-query.ts → countEvents(projectId, event,
+  { days, byTag })` reads `created_at` and `tags` for one project and one event in the window, in pages of 1000. The
+  index `(project_id, event, subject_type, …)` serves it. A cap of 100,000 rows returns `truncated: true`, never a short
+  number presented as whole. It buckets by UTC day, and with `byTag` by that tag's value (`(none)` when absent).
+  `days` runs 1–90, default 30. `byTag` must match `[a-z0-9_]{1,40}`. The route is `app/api/v1/cli/events/route.ts`
+  (the `cli/funnel` shape: `requireCliMember`, 404 for a non-member, one project resolved server-side). The CLI is
+  `packages/cli/src/commands/events.ts` → `frijoles events count`. No connector change (CLI-first).
+- **D8 · No migration, no flag, no new gate, no public read path.** Rules #1, #2 and #6 hold by construction.
+  Rollback is `git revert`.
+- **D9 · The S2 content routes join the marketing paths.** `/guides`, `/compare` and `/glossary` with their prefixes
+  are added to `lib/marketing-paths.ts` AND the middleware matcher; the existing spec pins the two lists together. So the
+  visitor id, the region cookie and the consent rule apply there too.
+- **D10 · Branches.** S1 is `feat/traffic-relaunch` → PR into main. S2 is `feat/traffic-relaunch-s2`, stacked on S1,
+  merged after it. Models: this session (Opus) builds S1, because 1.1 and 1.4 are high risk. S2 copy is drafted here,
+  and Daniel approves the copy in review.
+
+### Sprint 1 build contract (locked by the architect before the builder started)
+Cite D1–D8. Specs: `lib/consent-region.test.ts`, `lib/visit-source.test.ts`, the day-bucketing unit, the
+`e2e/consent.spec.ts` extension (header `CF-IPCountry: MX` → no banner + GA4/Clarity; `DE` and none → banner), the
+self-visit tag spec, and `e2e/cli-events.spec.ts` (member → counts; non-member → 404).
+
+### Sprint 2 build contract
+Cite D9. One typed module `lib/content-library.ts` feeds the routes, `lib/public-routes.ts` (sitemap + llms.txt) and
+the JSON-LD. A unit spec validates every entry's JSON-LD. Copy is approved by Daniel in review.
 
 ## Scope — stories
 | Sprint | Story | Risk |

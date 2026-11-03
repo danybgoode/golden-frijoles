@@ -3,7 +3,7 @@ epic: traffic-relaunch
 sprint: 1
 title: "Count every visitor and its source"
 risk: high
-phase: Shaping
+phase: Building
 stories_total: 4
 stories:
   - id: S1.1
