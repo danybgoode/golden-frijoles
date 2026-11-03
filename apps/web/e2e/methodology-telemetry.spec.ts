@@ -30,7 +30,8 @@ import { METHODOLOGY_CHAPTER_IDS } from '@/lib/methodology-chapters'
 // The same expression `lib/self-track.ts` uses. Read here rather than imported because that module
 // starts with `import 'server-only'` and cannot be loaded by this runner — the constraint that put
 // the event vocabulary in its own file. A literal would be a third copy of the default.
-const SELF_PROJECT_SLUG = process.env.SELF_PROJECT_SLUG?.trim() || process.env.DEMO_PROJECT_SLUG?.trim() || 'golden-frijoles'
+const SELF_PROJECT_SLUG =
+  process.env.SELF_PROJECT_SLUG?.trim() || process.env.DEMO_PROJECT_SLUG?.trim() || 'golden-frijoles'
 
 const dbUrl = process.env.SUPABASE_DB_URL
 const selfKey = process.env.SELF_PROJECT_API_KEY
@@ -115,7 +116,7 @@ async function waitForEvent(name: string, visitorId: string, timeoutMs = 8000) {
 /** Fire the beacon exactly as the browser does, with a visitor id we control so we can find it. */
 async function beacon(
   request: import('@playwright/test').APIRequestContext,
-  body: Record<string, string>,
+  body: Record<string, unknown>,
   visitorId: string
 ) {
   // The route is rate-limited by IP (20/min) — correctly: it is an unauthenticated public write.
@@ -202,4 +203,68 @@ test('an unknown chapter id never becomes a tag value', async ({ request }) => {
   const indexEvent = await waitForEvent(METHODOLOGY_VISITED_EVENT, visitorId)
   expect(indexEvent, 'an unknown chapter degrades to the index event').not.toBeNull()
   expect(indexEvent.feature_id).toBe(METHODOLOGY_SIGNAL_KEY)
+})
+
+// traffic-relaunch D5 — a visit carries where it came from, read back from the row, not assumed from the 200.
+test('a landing visit carries its utm params and source as tags', async ({ request }) => {
+  const visitorId = randomUUID()
+  await beacon(
+    request,
+    {
+      surface: 'landing',
+      source: {
+        utm_source: 'TikTok',
+        utm_medium: 'video',
+        utm_campaign: 'relaunch',
+        utm_content: 'postmortem-1',
+      },
+    },
+    visitorId
+  )
+  const row = await waitForEvent(LANDING_VISITED_EVENT, visitorId)
+  expect(row, 'the landing beacon must have written an event').not.toBeNull()
+  expect(row.tags).toMatchObject({
+    utm_source: 'tiktok',
+    utm_medium: 'video',
+    utm_campaign: 'relaunch',
+    utm_content: 'postmortem-1',
+    source: 'tiktok',
+  })
+})
+
+test('a methodology visit keeps the referring host, never the path', async ({ request }) => {
+  const visitorId = randomUUID()
+  const chapter = METHODOLOGY_CHAPTER_IDS[0]
+  await beacon(
+    request,
+    {
+      surface: 'methodology-chapter',
+      chapter,
+      source: { referrer: 'https://news.ycombinator.com/item?id=42' },
+    },
+    visitorId
+  )
+  const row = await waitForEvent(METHODOLOGY_CHAPTER_OPENED_EVENT, visitorId)
+  expect(row).not.toBeNull()
+  expect(row.tags).toMatchObject({
+    chapter,
+    ref_host: 'news.ycombinator.com',
+    source: 'news.ycombinator.com',
+  })
+  expect(JSON.stringify(row.tags)).not.toContain('item?id')
+})
+
+test('a hostile source value is dropped, and the visit still counts as direct', async ({ request }) => {
+  const visitorId = randomUUID()
+  await beacon(
+    request,
+    {
+      surface: 'methodology',
+      source: { utm_source: '<script>alert(1)</script>', utm_medium: 'x'.repeat(200) },
+    },
+    visitorId
+  )
+  const row = await waitForEvent(METHODOLOGY_VISITED_EVENT, visitorId)
+  expect(row).not.toBeNull()
+  expect(row.tags).toEqual({ source: 'direct' })
 })
