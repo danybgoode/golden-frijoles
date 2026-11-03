@@ -1,5 +1,5 @@
 ---
-status: scaffolded   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
+status: in-progress   # AUTHORITATIVE epic status (SSOT) — scaffolded | in-progress | shipped | archived. Set shipped at epic close.
 phase: Building       # the executive ladder — Shaping | Locking architecture | Building | Verifying | In review | Shipped.
                      # WRITTEN at each cadence event, never inferred. Shipped = merged AND deployed.
 locked_at: "2026-11-03T22:23:49Z"
@@ -106,7 +106,7 @@ migration, no new gate (rule #6), no public read path (rule #2).
   (hosting) behind Cloudflare. `LEGAL_UPDATED` moves to the merge date.
 - **D7 · Event counts read through the canonical seam.** `lib/event-catalog-query.ts → countEvents(projectId, event,
   { days, byTag })` reads `created_at` and `tags` for one project and one event in the window, in pages of 1000. The
-  index `(project_id, event, subject_type, …)` serves it. A cap of 100,000 rows returns `truncated: true`, never a short
+  index scan is project_id-prefixed (no index covers event without a subject; corrected at review). A cap of 100,000 rows returns `truncated: true`, never a short
   number presented as whole. It buckets by UTC day, and with `byTag` by that tag's value (`(none)` when absent).
   `days` runs 1–90, default 30. `byTag` must match `[a-z0-9_]{1,40}`. The route is `app/api/v1/cli/events/route.ts`
   (the `cli/funnel` shape: `requireCliMember`, 404 for a non-member, one project resolved server-side). The CLI is

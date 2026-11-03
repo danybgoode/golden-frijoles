@@ -46,10 +46,10 @@ stories:
 Switzerland, Brazil and Canada, **so that** I count the visitors I lose today, and the ones the law covers are still
 asked first.
 **Acceptance:**
-- A pure helper `lib/consent-region.ts` → `consentRequired(country: string | null): boolean`. True for the EU-27,
+- A pure helper `lib/consent-region.ts` → `consentMode(country)` (`ask` | `load`; see D2). True for the EU-27,
   EEA (IS, LI, NO), GB, CH, BR, CA, and for null, empty, `XX`, `T1` or anything not two letters. Unit spec covers each
   group plus MX, US, JP → false.
-- The root layout reads `CF-IPCountry` server-side and passes `consentRequired` to `ConsentManager`. The country is
+- The middleware reads `CF-IPCountry` on marketing paths and sets the `gf_cr` session cookie, which `ConsentManager` reads (D1; the layout stays header-free). The country is
   never computed client-side, never stored, and never sent in an event.
 - `consentRequired === false` on a marketing path: GA4 + Clarity load on first render, no banner. Clarity gets
   `consentv2` analytics granted. "Cookie settings" in the footer still opens the banner; choosing no stores `denied` and
@@ -128,3 +128,9 @@ Env: production · https://goldenfrijoles.com
    → no banner, no GA4 or Clarity in the page source (the console is never a marketing path).
 
 If any step fails, note the step number + what you saw — that's the bug report.
+
+## Known limit (accepted at review, 2026-11-03)
+A visitor in a `load` region whose browser blocks localStorage cannot make "Decline" stick: the answer is not stored, so
+the next page loads analytics again. Opt-in regions are unaffected (no answer there means nothing loads). It is rare
+(localStorage blocked while cookies are allowed) and is recorded here rather than fixed with a second consent cookie.
+Daniel can overrule.
