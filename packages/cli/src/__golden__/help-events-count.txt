@@ -1,0 +1,22 @@
+frijoles events count — how many times an event fired, per day, optionally per tag
+
+Usage
+  frijoles events count <event> [--days N] [--by <tag>] [--project <slug>] [--json]
+
+Counts one event in one project, per UTC day, over the last N days (default 30, at most 90).
+  `--by <tag>` splits each day by that tag's value; a row without the tag shows `(none)`. A count cut at
+  the server's row cap says so. `--json` prints the rows an agent parses.
+
+Flags
+  --days N          the window in days, 1 to 90 (default: 30)
+  --by <tag>        split each day by this tag (e.g. utm_source)
+  --project <slug>  the project (default: the remembered one)
+
+Exit codes
+  0  ok         it worked
+  1  usage      the command is wrong — nothing was sent
+  2  auth       the credential is not accepted — run `frijoles login`
+  3  not-found  no such thing, or not yours
+  4  conflict   someone else changed it — re-read and retry
+  5  partial    some environments changed and some did not
+  6  server     the server or the network is unwell — retry

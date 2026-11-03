@@ -58,6 +58,9 @@ Commands
   scenarios runs            runs, and with --watch their progress until they end
   scenarios impact          a run's impact: control versus treatment
 
+  events
+  events count              how many times an event fired, per day, optionally per tag
+
   segments
   segments define           define (or redefine) a segment: people who did an event at least N times in the last D days
   segments ls               this project's segments and each one's share of the last 30 days' active people

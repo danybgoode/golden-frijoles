@@ -39,6 +39,7 @@ import {
 import { statusCommand } from './status'
 import { horizonCommand } from './horizon'
 import { funnelCommand } from './funnel'
+import { eventsCountCommand } from './events'
 import { segmentsDefineCommand, segmentsLsCommand } from './segments'
 import { betSyncCommand } from './bet'
 import { experimentsDecisionCommand, northStarReadingsCommand } from './result-reads'
@@ -99,6 +100,7 @@ export const COMMANDS: readonly Command[] = [
   statusCommand,
   horizonCommand,
   funnelCommand,
+  eventsCountCommand,
   segmentsDefineCommand,
   segmentsLsCommand,
   betSyncCommand,

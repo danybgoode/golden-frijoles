@@ -1477,3 +1477,80 @@ test('frijoles segments ls: everyone first, each rule, and an unreadable share i
   assert.match(text, /power-users\s+report_run ×3 in 30 days\s+share unreadable: More report_run events/)
   assert.doesNotMatch(text, /power-users.*\b0% of active/)
 })
+
+// ── traffic-relaunch S1.4 (D7) — an event's count per day, optionally per tag ─────────────────────────────────────────
+const EVENT_COUNT_BODY = {
+  ok: true,
+  project: 'acme',
+  event: 'landing_visited',
+  days: 7,
+  from: '2026-10-27T00:00:00.000Z',
+  to: '2026-11-03T00:00:00.000Z',
+  byTag: 'utm_source',
+  total: 4,
+  truncated: false,
+  rows: [
+    { day: '2026-11-01', value: 'tiktok', count: 2 },
+    { day: '2026-11-02', value: '(none)', count: 1 },
+    { day: '2026-11-02', value: 'google.com', count: 1 },
+  ],
+}
+
+test('frijoles events count: --days and --by are passed through, the rows are the JSON body', async () => {
+  const { writer, out } = capture()
+  const seen: Array<{ method: string; url: string; body: unknown }> = []
+  const code = await run({
+    argv: [
+      'events',
+      'count',
+      'landing_visited',
+      '--days',
+      '7',
+      '--by',
+      'utm_source',
+      '--project',
+      'acme',
+      '--json',
+    ],
+    writer,
+    env: sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN }),
+    fetchImpl: stubFetch({ '/api/v1/cli/events': { body: EVENT_COUNT_BODY } }, seen),
+  })
+  assert.equal(code, EXIT.OK)
+  assert.equal(seen[0].url, '/api/v1/cli/events?project=acme&event=landing_visited&days=7&by=utm_source')
+  const doc = JSON.parse(out[0])
+  assert.equal(doc.total, 4)
+  assert.equal(doc.rows.length, 3)
+})
+
+test('frijoles events count: the table names the tag column, and a cut count says so', async () => {
+  const { writer, out } = capture()
+  const code = await run({
+    argv: ['events', 'count', 'landing_visited', '--project', 'acme'],
+    writer,
+    env: sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN }),
+    fetchImpl: stubFetch({ '/api/v1/cli/events': { body: { ...EVENT_COUNT_BODY, truncated: true } } }),
+  })
+  assert.equal(code, EXIT.OK)
+  const text = out.join('\n')
+  assert.match(text, /landing_visited in acme, last 7 days: 4 \(cut at the row cap/)
+  assert.match(text, /DAY\s+UTM_SOURCE\s+COUNT/)
+  assert.match(text, /2026-11-01\s+tiktok\s+2/)
+})
+
+test('frijoles events count: no event, a bad --days or a bad --by never sends', async () => {
+  for (const argv of [
+    ['events', 'count', '--project', 'acme'],
+    ['events', 'count', 'x', '--days', '0', '--project', 'acme'],
+    ['events', 'count', 'x', '--days', '91', '--project', 'acme'],
+    ['events', 'count', 'x', '--by', 'Bad-Tag', '--project', 'acme'],
+  ]) {
+    const code = await run({
+      argv,
+      writer: capture().writer,
+      env: sandbox({ GOLDEN_FRIJOLES_TOKEN: TOKEN }),
+      fetchImpl: noNetworkFetch,
+    })
+    assert.equal(code, EXIT.USAGE, argv.join(' '))
+  }
+})

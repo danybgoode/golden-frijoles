@@ -12,6 +12,7 @@ import type {
   TrendBy,
 } from './flag-funnel'
 import { getSupabaseServiceClient } from './supabase'
+import { EVENT_COUNT_MAX_DAYS, EVENT_COUNT_ROW_CAP, bucketEventCounts, type EventCount } from './event-count'
 
 /**
  * The canonical event catalog read (AGENTS rule #1). `projectId` is resolved by the caller from
@@ -187,4 +188,57 @@ export function getFlagFunnelTrend(
   segment?: SegmentRule
 ): Promise<FunnelTrendRead> {
   return getFunnelTrend(projectId, { kind: 'flag', flagKey: bet.flagKey }, bet, by, segment)
+}
+
+// ── traffic-relaunch D7 — how many times one event fired, per UTC day, optionally per tag value ──────────────────────
+//
+// For `frijoles events count` (and the post-mortem's lost visits). ONE project, resolved by the caller from membership;
+// ONE event; a bounded window. It reads `created_at` and `tags` in pages and counts here, because PostgREST aggregates
+// are not enabled on this project and the volumes it exists for (visits, a campaign's clicks) are small. The cap is the
+// honesty rule: past it the answer says `truncated`, never a short number that looks whole. The
+// `(project_id, event, subject_type, …)` index serves the filter.
+
+export type { EventCount } from './event-count'
+
+export async function countEvents(
+  projectId: string,
+  event: string,
+  options: { days?: number; byTag?: string | null; now?: Date } = {}
+): Promise<EventCount> {
+  const days = Math.min(Math.max(Math.trunc(options.days ?? 30), 1), EVENT_COUNT_MAX_DAYS)
+  const byTag = options.byTag ?? null
+  const to = options.now ?? new Date()
+  const from = new Date(to.getTime() - days * 24 * 60 * 60 * 1000)
+  const supabase = getSupabaseServiceClient()
+  const rows: Array<{ created_at: string; tags: unknown }> = []
+  let truncated = false
+  const page = 1000
+  for (let offset = 0; ; offset += page) {
+    if (offset >= EVENT_COUNT_ROW_CAP) {
+      truncated = true
+      break
+    }
+    const { data, error } = await supabase
+      .from('events')
+      .select('created_at, tags')
+      .eq('project_id', projectId)
+      .eq('event', event)
+      .gte('created_at', from.toISOString())
+      .lte('created_at', to.toISOString())
+      .order('created_at', { ascending: true })
+      .range(offset, offset + page - 1)
+    if (error) throw new Error(`event count read failed: ${error.message}`)
+    rows.push(...((data ?? []) as Array<{ created_at: string; tags: unknown }>))
+    if (!data || data.length < page) break
+  }
+  return {
+    event,
+    days,
+    from: from.toISOString(),
+    to: to.toISOString(),
+    byTag,
+    total: rows.length,
+    truncated,
+    rows: bucketEventCounts(rows, byTag),
+  }
 }
