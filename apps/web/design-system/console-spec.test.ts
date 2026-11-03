@@ -26,7 +26,12 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { CHROME_BUDGET_PX, MEASURED_SPEC, DEFERRED_SPEC_ROWS } from './console-gate-spec.ts'
+import {
+  ACCEPTED_SPEC_ROWS,
+  CHROME_BUDGET_PX,
+  MEASURED_SPEC,
+  DEFERRED_SPEC_ROWS,
+} from './console-gate-spec.ts'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 
@@ -110,7 +115,7 @@ const GOVERNED_BY: Record<string, string> = {
   'feature row': 'Feature row',
 }
 
-/** Which prototype row each DEFERRED row defers from. Same rule: mapping here, numbers imported. */
+/** Which prototype row each DEFERRED or ACCEPTED row departs from. Same rule: mapping here, numbers imported. */
 const DEFERRAL_GOVERNED_BY: Record<string, string> = {
   'primary/secondary button': 'Primary button',
   'project switcher': 'Project switcher',
@@ -124,13 +129,14 @@ test('the deferral mapping does not outlive the deferrals it maps', () => {
   // tier, its mapping stayed behind pointing at a deferral that no longer exists, and every suite
   // stayed green — the same class the sibling check was written to prevent, in the sibling that
   // did not get it (fresh reviewer, Major).
+  const departures = [...DEFERRED_SPEC_ROWS, ...ACCEPTED_SPEC_ROWS]
   for (const what of Object.keys(DEFERRAL_GOVERNED_BY)) {
     assert.ok(
-      DEFERRED_SPEC_ROWS.some((row) => row.what === what),
+      departures.some((row) => row.what === what),
       `"${what}" is mapped as a deferral but nothing defers it any more — a stale mapping reads as coverage`
     )
   }
-  for (const row of DEFERRED_SPEC_ROWS) {
+  for (const row of departures) {
     assert.ok(
       DEFERRAL_GOVERNED_BY[row.what],
       `"${row.what}" is deferred and no prototype row governs the number it defers from`
@@ -281,7 +287,7 @@ test('a deferred row defers from a number that actually exists', () => {
   // reproduces. A deferral pointing at a fictional contract value is worse than no deferral,
   // because it looks like a considered trade-off.
   const measured = readMeasuredSpec()
-  for (const row of DEFERRED_SPEC_ROWS) {
+  for (const row of [...DEFERRED_SPEC_ROWS, ...ACCEPTED_SPEC_ROWS]) {
     const prototypeRow = DEFERRAL_GOVERNED_BY[row.what]
     assert.ok(prototypeRow, `"${row.what}" is deferred and no prototype row governs it`)
     const prototype = measured.get(prototypeRow)
@@ -304,6 +310,16 @@ test('a deferred row defers from a number that actually exists', () => {
     assert.ok(
       row.until >= today,
       `${row.what}'s deferral expired on ${row.until} — close it, or re-decide it with ${row.owner}`
+    )
+  }
+  // An accepted row never decays, so it must say who decided it and when — and it is never ALSO deferred.
+  for (const row of ACCEPTED_SPEC_ROWS) {
+    assert.ok(row.decidedBy.length > 0, `${row.what} is accepted with no decider`)
+    assert.match(row.decided, /^\d{4}-\d{2}-\d{2}$/, `${row.what}'s decision date is not a date`)
+    assert.ok(row.why.length > 20, `${row.what} is accepted without a reason`)
+    assert.ok(
+      !DEFERRED_SPEC_ROWS.some((d) => d.what === row.what),
+      `${row.what} is both accepted and deferred`
     )
   }
 })

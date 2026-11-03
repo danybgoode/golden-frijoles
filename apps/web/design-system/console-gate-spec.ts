@@ -193,7 +193,17 @@ export const MEASURED_SPEC: SpecRow[] = [
 // The dates are the sprint that closes each row, plus a fortnight. `every deferred row carries an
 // owner and a date that has not passed` fails once one goes by, which turns a silent exemption into
 // a conversation with a name attached.
-export const DEFERRED_SPEC_ROWS = [
+/** A row the build does not meet YET: a reason, an owner and a date it decays on. */
+export type DeferredSpecRow = {
+  what: string
+  contract: number
+  built: string
+  why: string
+  owner: string
+  until: string
+}
+
+export const DEFERRED_SPEC_ROWS: readonly DeferredSpecRow[] = [
   // ⚠️ **`feature row` is CLOSED — design-system-rails Story 4.1.** It deferred at *contract 71 ·
   // built up to 90 · the never-state detail wraps to two lines in a 190px column*, owned by Daniel
   // until 2026-10-15, with a note saying Story 4.1 would fix it when it rebuilt the list. It did:
@@ -207,33 +217,28 @@ export const DEFERRED_SPEC_ROWS = [
   // way for a deferral to close (the same move Story 3.3 made with the switch).
   // `dormant summary row` is CLOSED by removal — one-flag-switch (2026-10-13) took the dormant group out of the design:
   // a flag is On or Off, so there is no "never turned on" majority to summarise.
+]
+
+/**
+ * Rows where the build differs from the approved prototype ON PURPOSE, for good: a decision, not a debt. Unlike a
+ * deferral it does not decay, so instead of an expiry it carries who decided and when. Closing a deferral this way
+ * is a product-owner decision, never an agent's (the deferrals below expired twice before Daniel decided them).
+ */
+export const ACCEPTED_SPEC_ROWS = [
   {
     what: 'primary/secondary button',
     contract: 38,
     built: '44',
-    // ⚠️ Round 3's stated mechanism was imprecise: globals.css's floor covers button/summary/select/
-    // textarea/input and explicitly NOT links, so an `<a class="btn">` is saved by the design
-    // system's own `.btn` rule instead. The conclusion holds; the reason did not (round 4, N5).
-    why: 'a 44px WCAG 2.5.5 target floor applies (globals.css for controls, the .btn rule for links) and the floor wins over a measured pixel',
-    // This one is NOT a defect and will never close: an accessibility floor outranks a measured
-    // pixel. The date is when Story 2.3 makes that explicit in the design system's own button, so
-    // the contract and the floor stop disagreeing rather than being reconciled in a comment.
-    owner: 'Daniel',
-    // Expired 2026-10-15; Daniel re-decided it on 2026-10-16 (drill-impact-for-agents run): extend two weeks.
-    // Expired again 2026-10-30, turning every PR red; extended two weeks by the off-vercel-hosting run on the same
-    // precedent, PROVISIONALLY — Daniel re-decides it.
-    until: '2026-11-16',
+    why: "a 44px WCAG 2.5.5 target floor applies (globals.css for controls, the .btn rule for links) and the floor wins over a measured pixel: a button's ink IS its target, so the switch's transparent-target trick does not apply",
+    decidedBy: 'Daniel',
+    decided: '2026-11-02',
   },
   {
     what: 'project switcher',
     contract: 30,
     built: '34',
-    why: "height follows the shell chrome; the contract's 140px width is waived too because a real tenant slug is longer than the prototype's and truncating it would hide the one thing the control shows",
-    // Story 3.2 rebuilds the switcher against the REGENERATED number (122 x 30, not 140 x 30).
-    owner: 'Daniel',
-    // Expired 2026-10-15; Daniel re-decided it on 2026-10-16 (drill-impact-for-agents run): extend two weeks.
-    // Expired again 2026-10-30, turning every PR red; extended two weeks by the off-vercel-hosting run on the same
-    // precedent, PROVISIONALLY — Daniel re-decides it.
-    until: '2026-11-16',
+    why: "height follows the shell chrome, and the width flexes to the tenant slug: truncating a real slug to the prototype's width would hide the one thing the control shows. The planned rebuild to 122 x 30 is dropped",
+    decidedBy: 'Daniel',
+    decided: '2026-11-02',
   },
 ] as const
