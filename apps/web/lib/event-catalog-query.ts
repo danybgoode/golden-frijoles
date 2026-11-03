@@ -195,8 +195,9 @@ export function getFlagFunnelTrend(
 // For `frijoles events count` (and the post-mortem's lost visits). ONE project, resolved by the caller from membership;
 // ONE event; a bounded window. It reads `created_at` and `tags` in pages and counts here, because PostgREST aggregates
 // are not enabled on this project and the volumes it exists for (visits, a campaign's clicks) are small. The cap is the
-// honesty rule: past it the answer says `truncated`, never a short number that looks whole. The
-// `(project_id, event, subject_type, …)` index serves the filter.
+// honesty rule: past it the answer says `truncated`, never a short number that looks whole. No index covers
+// (project_id, event) without a subject (the experiment one is partial on subject_id), so this scans the project's
+// rows in the window through a project_id-prefixed index: fine at today's volumes, and the cap bounds it.
 
 export type { EventCount } from './event-count'
 
@@ -225,7 +226,10 @@ export async function countEvents(
       .eq('event', event)
       .gte('created_at', from.toISOString())
       .lte('created_at', to.toISOString())
+      // A stable order: created_at is not unique, and offset pages over a non-unique key can skip or repeat rows
+      // (LEARNINGS: page in a stable order). The same tiebreaker as flag-funnel-read and north-star-query.
       .order('created_at', { ascending: true })
+      .order('id', { ascending: true })
       .range(offset, offset + page - 1)
     if (error) throw new Error(`event count read failed: ${error.message}`)
     rows.push(...((data ?? []) as Array<{ created_at: string; tags: unknown }>))

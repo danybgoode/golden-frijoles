@@ -6,29 +6,30 @@
 
 _Generated: 2026-11-03_
 
-**106 check(s) owed across 76 file(s)** · 11 cleared.
+**108 check(s) owed across 77 file(s)** · 11 cleared.
 
 | Who can clear it | Count | What it means |
 |---|---|---|
-| publish | 2 | A package publish (npm 2FA): the product owner today, a CI job once trusted publishing is on |
+| publish | 3 | A package publish (npm 2FA): the product owner today, a CI job once trusted publishing is on |
 | credential | 7 | Mints or uses a production credential: only the product owner, named every time |
 | ops | 5 | On the product owner's own accounts or machine |
 | judgment | 33 | An answer only the product owner can give: an _Intent_, an approval, a decision |
-| signed-in | 24 | A signed-in production walkthrough: an agent can run it once a smoke account exists |
+| signed-in | 25 | A signed-in production walkthrough: an agent can run it once a smoke account exists |
 | interactive | 20 | An interactive plugin or terminal walkthrough: an agent can script it in a scratch repo |
 | unsorted | 15 | Nothing above matched — **not a bin, a to-triage list** |
 
 | Category | Count | What it means |
 |---|---|---|
 | money-path | 1 | Touches checkout, payment or order state — run these first |
-| auth-path | 28 | Needs a real signed-in session a script cannot mint against production |
+| auth-path | 30 | Needs a real signed-in session a script cannot mint against production |
 | admin-only | 0 | Behind an admin surface |
 | other | 77 | Everything the rules could not confidently place — **not a bin, a to-triage list** |
 
-## publish (2)
+## publish (3)
 
 - `Roadmap/01-growth-engine/funnel-truth/RETROSPECTIVE.md:46` · other — Owed to the product owner: `npm publish` CLI 1.8.0 and 1.9.0 (the skills already pin 1.9.0 / kit 1.10.3); `frijoles flags set bets.funnel_trend_enabled --value true --env production` when the trend should go live; the signed-in smoke steps (sprint-1 3–5, sprint-2 4 and 6) and th…
 - `Roadmap/01-growth-engine/satisfied-ask/RETROSPECTIVE.md:48` · other — **Owed to Daniel:** `npm publish` of `@golden-frijoles/sdk@1.3.0` (2FA).
+- `Roadmap/02-commercial/traffic-relaunch/sprint-1.md:105` · auth-path — Release: the CLI version bump is in the PR; the npm publish (2FA) is owed to Daniel by name. **Risk:** high (authed read path).
 
 ## credential (7)
 
@@ -84,7 +85,7 @@ _Generated: 2026-11-03_
 - `Roadmap/09-platform-infra/think-skills/RETROSPECTIVE.md:52` · other — Run the North Star coach on Golden Frijoles and judge the file (S1 smoke step 2).
 - `Roadmap/09-platform-infra/verify-spike/RETROSPECTIVE.md:48` · other — **F7, owed to the product owner:** the delivery cron may not be registered in production (DECISION § 4). Re-checked 2026-10-14: `vercel crons ls` finds no cron jobs, and `delivery.destinations_enabled` is off in production (320 pending on 2026-10-08). Decide whether delivery com…
 
-## signed-in (24)
+## signed-in (25)
 
 - `apps/web/e2e/app-auth.spec.ts:121` · auth-path — authed member-vs-owner HTTP path needs a real session (browser smoke owed to Daniel), so the
 - `apps/web/e2e/delivery-replay.spec.ts:20` · auth-path — The authenticated /app replay + delivery-history UI is a real-session BROWSER smoke owed to Daniel.
@@ -104,6 +105,7 @@ _Generated: 2026-11-03_
 - `Roadmap/02-commercial/one-header-one-name/RETROSPECTIVE.md:51` · other — Both sprints' signed-in walkthroughs on production (sprint-1 steps 1–5, sprint-2 steps 1–6). Preview can't serve a signed-in page.
 - `Roadmap/02-commercial/outcome-report-any-product/RETROSPECTIVE.md:24` · other — **Owed to the product owner:** the first aomx push and its signed-in report; re-push medusa-bonsai's report (median 7 → 3.4 days, with the caveat); ~~`npm publish` of CLI 1.7.0 (from agent-legible-horizon)~~ (published 2026-10-14).
 - `Roadmap/02-commercial/owed-on-screen/RETROSPECTIVE.md:44` · other — Switching `hub.owed_enabled` on in production and the Sprint 2 signed-in walkthrough (steps 2–5 of `sprint-2.md`).
+- `Roadmap/02-commercial/traffic-relaunch/sprint-1.md:127` · auth-path — (auth, owed to Daniel) Signed in, open https://goldenfrijoles.com/app → no banner, no GA4 or Clarity in the page source (the console is never a marketing path).
 - `Roadmap/02-commercial/workspaces/RETROSPECTIVE.md:69` · other — **Owed to Daniel by name:** the signed-in prod walkthroughs (S1 steps 1–3 and 5, S2 step 1), and ~~`npm publish` of `@golden-frijoles/cli@0.4.0` (2FA)~~ (published; checked 2026-10-14), then S2 step 2. S2 step 3 is n/a in prod; CI replaces it.
 - `Roadmap/09-platform-infra/one-product-project/sprint-1.md:87` · auth-path — (signed in, owed to Daniel) Open https://goldenfrijoles.com/app → the switcher lists golden-frijoles, and its flags list shows auth.terminal_sign_in_enabled
 - `Roadmap/09-platform-infra/one-product-project/sprint-2.md:75` · other — (signed in, owed to Daniel) Open https://goldenfrijoles.com/app → the agent rail is on the right
