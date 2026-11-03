@@ -3,7 +3,7 @@ epic: traffic-relaunch
 sprint: 2
 title: "Pages that answer questions"
 risk: low
-phase: Shaping
+phase: In review
 stories_total: 3
 stories:
   - id: S2.1
@@ -12,14 +12,14 @@ stories:
     i_want: "pages that answer my question directly"
     so_that: "I find Golden Frijoles from search or an AI assistant"
     risk: low
-    status: planned
+    status: done
   - id: S2.2
     title: "Answers search engines and assistants can quote"
     as_a: "a founder asking an AI assistant or Google"
     i_want: "the answer quoted with its source"
     so_that: "I land on the page that answered me"
     risk: low
-    status: planned
+    status: done
   - id: S2.3
     title: "The outage post-mortem, on our own domain"
     as_a: "a founder who heard about the outage"
@@ -30,11 +30,11 @@ stories:
 ---
 # Traffic relaunch — Sprint 2: Pages that answer questions
 
-**Status:** ⬜ not started
+**Status:** 🟡 2.1–2.2 in review · 2.3 waits for Daniel's numbers and his call on naming the host
 
 ## Stories
 
-### Story 2.1 — Guides, comparisons and a glossary, from one content module
+### Story 2.1 — Guides, comparisons and a glossary, from one content module ✅ `2a1a75d`
 **As** a founder searching for how to build with agents, **I want** pages that answer my question directly, **so
 that** I find Golden Frijoles from search or an AI assistant.
 **Acceptance:**
@@ -55,7 +55,7 @@ that** I find Golden Frijoles from search or an AI assistant.
 - The route sweep (mobile) and the design-system rails cover the new routes; `positioning-surfaces.spec.ts` still passes.
 **Risk:** low.
 
-### Story 2.2 — Answers search engines and assistants can quote
+### Story 2.2 — Answers search engines and assistants can quote ✅ `fe76118`
 **As** a founder asking an AI assistant or Google, **I want** the answer quoted with its source, **so that** I land on
 the page that answered me.
 **Acceptance:**
