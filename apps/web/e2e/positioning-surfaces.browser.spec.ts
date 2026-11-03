@@ -39,7 +39,7 @@ test('/methodology opens on the same category as the landing', async ({ page }) 
   expect(text).toContain(CATEGORY_DEFINITION)
 })
 
-test('the link preview names the category and still claims no capability', async ({ page }) => {
+test('the link preview names the category and carries a description', async ({ page }) => {
   await page.goto('/')
 
   const title = await page.title()
@@ -51,32 +51,9 @@ test('the link preview names the category and still claims no capability', async
     .getAttribute('content')
   expect(description, 'the page should carry a description').toBeTruthy()
 
-  // ── The inherited constraint, and it is NOT re-litigated here ──────────────────────────────
-  // `app/layout.tsx`'s DESCRIPTION took three review rounds to settle on naming no capability: a
-  // link preview travels WITHOUT the qualification the page carries, gate state is per-deployment,
-  // and this string is baked per-build — so any capability named here is a claim a flag flip can
-  // falsify and the preview cannot qualify.
-  //
-  // The same rule is asserted on CATEGORY_DEFINITION by `lib/positioning.test.ts`. It is repeated
-  // against the RENDERED metadata because that unit test checks the module, and this checks what a
-  // chat app actually unfurls — which is the thing the rule was written about.
-  const CAPABILITIES = [
-    'telemetry',
-    'TARS',
-    'funnel',
-    'A/B',
-    'experiment',
-    'MCP',
-    'connector',
-    'flag',
-    'release',
-    'scenario',
-    'webhook',
-  ]
-  for (const capability of CAPABILITIES) {
-    expect(
-      new RegExp(`\\b${capability}\\b`, 'i').test(description!),
-      `the link preview names "${capability}" — a gate flip can falsify it and the preview cannot qualify it`
-    ).toBe(false)
-  }
+  // This test used to also require that the description name NO capability. The product owner
+  // overrode that rule on 2026-10-21 (5a0ed57, for search and answer-engine visibility): the
+  // description now names capabilities, each one live today. Keeping them live is now a copy
+  // review duty at `app/layout.tsx` (see its header), not something this spec can check. The
+  // no-capability rule still holds for CATEGORY_DEFINITION, asserted by `lib/positioning.test.ts`.
 })
