@@ -1,8 +1,7 @@
 # Off Vercel: production on our own box — Retrospective
 
 _Closed: 2026-11-02_
-_Intent: mostly_
-<!-- Provisional, the builder's reading: Daniel confirms or changes this word (owed below). -->
+_Intent: yes_
 _Quote vs actual: $15–33 (M, n=27, p25–p75) → ≈$32.57 (−1% vs the quote's top)_
 _Crew (actual): claude-opus-5-5 ≈$32.57 (orchestrated and built everything) · reviewers: the fresh verifier (2 rounds on #444, 2 on #446), Codex gpt-5.6-luna xhigh (1 on #444, 4 on #446), Mistral Vibe security (clean on both; agy was blocked on its version pin) · prose: the builder — the plan routed S1 to Sonnet builders; S2/S3 needed live VM access, and S1 was small enough that a cold builder would have cost more than it saved._
 
@@ -37,11 +36,11 @@ caught before any write).
 
 ## Gaps / follow-ups
 - ✅ Owed to Daniel: confirm the delivery waker's calls after the cutover are 2xx (`net._http_response`). — done: 200 every tick after propagation
-- Owed to Daniel: the signed-in browser smoke on goldenfrijoles.com (sign in, open `/app`). Authenticated API reads
-  already pass through the live site (`frijoles whoami`, 2026-11-02).
+- ✅ Owed to Daniel: the signed-in browser smoke on goldenfrijoles.com — Daniel signed in, 2026-11-02.
 - ✅ Owed to Daniel: disconnect the Vercel Git integration for `golden-beans` — disconnected 2026-11-02.
 - Owed to Daniel: delete the paused `golden-beans` Vercel project after a quiet week (from 2026-11-09).
-- Owed to Daniel: the `_Intent:_` word above, and a password-manager copy of the VM's `web.env` (including the
+- ✅ Owed to Daniel: the `_Intent:_` word above — yes, 2026-11-02.
+- Owed to Daniel: a password-manager copy of the VM's `web.env` (including the
   `SELF_SUBJECT_SECRET` generated on the VM).
 - ✅ A row for golden-frijoles in the VM's private tenant table — merged in that repo's own PR.
 - Three scenario-drill secrets are blank on the VM: drills stay off until they are minted.
