@@ -8,6 +8,7 @@ import {
   LIBRARY_SECTIONS,
   SECTION_META,
   entriesIn,
+  entryLanguages,
   findEntry,
   type LibraryBlock,
   type LibrarySection,
@@ -89,12 +90,17 @@ export async function entryMetadata(section: LibrarySection, slug: string): Prom
   // for a URL whose answer is a 404 (the methodology chapter's rule).
   const entry = findEntry(section, slug)
   if (!entry) return {}
-  const url = `${getSiteUrl()}/${section}/${slug}`
+  const siteUrl = getSiteUrl()
+  const url = `${siteUrl}/${section}/${slug}`
   const title = `${entry.title} — Golden Frijoles`
+  // seo-library-batch-2 D2 — hreflang to the twin in the other language, both ways.
+  const languages = Object.fromEntries(
+    Object.entries(entryLanguages(entry)).map(([lang, path]) => [lang, `${siteUrl}${path}`])
+  )
   return {
     title,
     description: entry.description,
-    alternates: { canonical: url },
+    alternates: { canonical: url, ...(Object.keys(languages).length ? { languages } : {}) },
     openGraph: {
       title,
       description: entry.description,
@@ -115,7 +121,7 @@ export function LibraryEntryPage({ section, slug }: { section: LibrarySection; s
     <LibraryFrame>
       <SelfTrackBeacon surface="library" section={section} slug={slug} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
-      <article className="ds-legal">
+      <article className="ds-legal" lang={entry.lang ?? 'en'}>
         <p className="ds-legal-updated">
           <Link href={`/${section}`}>{SECTION_META[section].title}</Link>
           {` · Updated ${entry.updated}`}

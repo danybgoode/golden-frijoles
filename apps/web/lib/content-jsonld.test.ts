@@ -2,7 +2,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { LIBRARY, LIBRARY_SECTIONS, entriesIn } from './content-library.ts'
+import { LIBRARY, LIBRARY_SECTIONS, entriesIn, entryLanguages, findEntry } from './content-library.ts'
 import { entryJsonLd, serializeJsonLd } from './content-jsonld.ts'
 
 const SITE = 'https://goldenfrijoles.com'
@@ -57,4 +57,20 @@ test('the module is well-formed: unique slugs per section, real dates, an answer
 
 test('serialised JSON-LD cannot close its script tag', () => {
   assert.ok(!serializeJsonLd({ x: '</script><script>alert(1)</script>' }).includes('</script>'))
+})
+
+// seo-library-batch-2 D2 — every Spanish entry names a twin that exists, and the hreflang map is symmetric.
+test('every lang entry has a real twin, and both sides point at each other', () => {
+  const spanish = LIBRARY.filter((entry) => entry.lang === 'es')
+  assert.ok(spanish.length >= 2)
+  for (const entry of spanish) {
+    assert.ok(entry.twin, entry.slug)
+    const twin = findEntry(entry.twin.section, entry.twin.slug)
+    assert.ok(twin, `${entry.slug} names a twin that does not exist`)
+    const own = `/${entry.section}/${entry.slug}`
+    const other = `/${twin.section}/${twin.slug}`
+    assert.deepEqual(entryLanguages(entry), { es: own, en: other })
+    assert.deepEqual(entryLanguages(twin), { en: other, es: own })
+  }
+  assert.deepEqual(entryLanguages(findEntry('glossary', 'kill-switch')!), {}, 'no twin, no alternates')
 })
