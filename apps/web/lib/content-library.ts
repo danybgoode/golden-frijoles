@@ -340,7 +340,7 @@ export const LIBRARY: readonly LibraryEntry[] = [
         a: 'One that installs as a Claude Code plugin keeps the plan in the same session as the agent. Check each project for current Claude Code support.',
       },
     ],
-    updated: '2026-11-04',
+    updated: '2026-11-03',
   },
   {
     section: 'compare',
@@ -370,7 +370,7 @@ export const LIBRARY: readonly LibraryEntry[] = [
         a: 'The plugin, kit and CLI are open source and run on your machine; events and verdicts live in the hosted Golden Frijoles record. See /install for what runs where.',
       },
     ],
-    updated: '2026-11-04',
+    updated: '2026-11-03',
   },
   {
     section: 'compare',
@@ -400,7 +400,7 @@ export const LIBRARY: readonly LibraryEntry[] = [
         a: 'No. Events go to the hosted record through the SDK or the CLI, and the funnels and experiments read from there.',
       },
     ],
-    updated: '2026-11-04',
+    updated: '2026-11-03',
   },
   {
     section: 'guides',
@@ -428,7 +428,7 @@ export const LIBRARY: readonly LibraryEntry[] = [
         a: 'Git-based marketplaces accept a ref, so you can add one at a tag instead of tracking main.',
       },
     ],
-    updated: '2026-11-04',
+    updated: '2026-11-03',
   },
   {
     section: 'guides',
@@ -458,7 +458,7 @@ export const LIBRARY: readonly LibraryEntry[] = [
         a: 'No; plan mode and files in the repo get you most of the way. Plugins add structure and keep the plan persistent.',
       },
     ],
-    updated: '2026-11-04',
+    updated: '2026-11-03',
   },
   {
     section: 'guides',
@@ -485,7 +485,7 @@ export const LIBRARY: readonly LibraryEntry[] = [
         a: 'The Golden Frijoles methodology is free to read at /methodology: six chapters from bringing an idea to deciding what happens next.',
       },
     ],
-    updated: '2026-11-04',
+    updated: '2026-11-03',
   },
   {
     section: 'guides',
@@ -511,7 +511,7 @@ export const LIBRARY: readonly LibraryEntry[] = [
         a: 'Not noticeably when flags are cached and evaluated locally; check how your provider serves them.',
       },
     ],
-    updated: '2026-11-04',
+    updated: '2026-11-03',
   },
   {
     section: 'glossary',
@@ -522,7 +522,7 @@ export const LIBRARY: readonly LibraryEntry[] = [
       'Feature adoption rate is the number of people who used a feature divided by the number who were given it, over the same period.',
     body: [p('Measure it against the people who got the feature, not everyone. Read it by cohort.')],
     faq: [],
-    updated: '2026-11-04',
+    updated: '2026-11-03',
   },
   // ── Spanish (seo-library-batch-2 D2) ───────────────────────────────────────────────────────────────────────────
   {
@@ -560,7 +560,7 @@ export const LIBRARY: readonly LibraryEntry[] = [
         a: 'Hay plugins y flujos como Superpowers, Spec Kit o BMAD. Revisa el sitio de cada proyecto para ver su soporte actual.',
       },
     ],
-    updated: '2026-11-04',
+    updated: '2026-11-03',
   },
   {
     section: 'guides',
@@ -591,7 +591,7 @@ export const LIBRARY: readonly LibraryEntry[] = [
         a: 'Una. Lo que puede haber varias son las métricas de entrada que la alimentan.',
       },
     ],
-    updated: '2026-11-04',
+    updated: '2026-11-03',
   },
 ]
 
