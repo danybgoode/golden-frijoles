@@ -10,10 +10,11 @@
 > This committed file reads the docs alone, so **Building and QA are not here** — they are facts git
 > and GitHub hold. For the live board run `node scripts/build-order.mjs --live`, or open the Hub board.
 
-## Backlog (1)
+## Backlog (2)
 
 _seeds with no pitch yet._
 
+- [Agent full control: every project, every verb, keys that do not silently expire](seeds/agent-full-control.md) — 09 Platform Infra · seed · Feature · risk: High · _docs: status raw_
 - [Verify for projects: the verification depth ladder offered to every project](seeds/verify-for-projects.md) — 09 Platform Infra · seed · Feature · risk: High · _docs: status raw_
 
 ## Refining (1)
@@ -145,4 +146,4 @@ _merged, deployed and closed._
 - [The portfolio loop test fails intermittently in CI and has been quarantined](seeds/portfolio-loop-flake.md) — 02 Commercial · seed · Bug · risk: Low · appetite S · _docs: status shipped_
 
 ---
-_106 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._
+_107 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._
