@@ -15,8 +15,12 @@ import { CONSENT_STORAGE_KEY, serializeConsent } from '@/lib/consent'
 
 const THIRD_PARTY = /googletagmanager\.com|google-analytics\.com|clarity\.ms/i
 
-async function freshPage(browser: Browser, consent?: 'granted'): Promise<Page> {
-  const context = await browser.newContext({ storageState: { cookies: [], origins: [] } })
+async function freshPage(browser: Browser, consent?: 'granted', country?: string): Promise<Page> {
+  const context = await browser.newContext({
+    storageState: { cookies: [], origins: [] },
+    // traffic-relaunch D1 — Cloudflare's country header, as the origin would receive it. None = unknown = ask.
+    ...(country ? { extraHTTPHeaders: { 'CF-IPCountry': country } } : {}),
+  })
   await context.route(THIRD_PARTY, (route) => route.fulfill({ status: 204, body: '' }))
   if (consent)
     await context.addInitScript(
@@ -175,4 +179,49 @@ test('signing in after Accept lands the console in a fresh document (no soft nav
     await db.from('workspaces').delete().eq('id', workspaceId)
     await db.auth.admin.deleteUser(userId)
   }
+})
+
+// traffic-relaunch D1–D3 — outside the opt-in regions there is no banner and the analytics load; inside them, as before.
+test('outside the opt-in regions GA4 and Clarity load with no banner, and Cookie settings still opts out', async ({
+  browser,
+}) => {
+  const page = await freshPage(browser, undefined, 'MX')
+  await page.goto('/')
+  await expect
+    .poll(() => thirdPartyScripts(page))
+    .toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('googletagmanager.com'),
+        expect.stringContaining('clarity.ms'),
+      ])
+    )
+  await expect(page.getByRole('dialog', { name: 'Cookie settings' })).toBeHidden()
+  await page.getByRole('button', { name: 'Cookie settings' }).first().click()
+  const banner = page.getByRole('dialog', { name: 'Cookie settings' })
+  await expect(banner).toBeVisible()
+  await banner.getByRole('button', { name: 'Decline' }).click()
+  await page.waitForLoadState('load')
+  await expect.poll(() => thirdPartyScripts(page)).toEqual([])
+  await page.reload()
+  expect(await thirdPartyScripts(page)).toEqual([])
+  await expect(page.getByRole('dialog', { name: 'Cookie settings' })).toBeHidden()
+  await page.context().close()
+})
+
+for (const country of ['DE', 'GB', 'BR', 'CA', 'XX']) {
+  test(`in ${country} the banner still asks first`, async ({ browser }) => {
+    const page = await freshPage(browser, undefined, country)
+    await page.goto('/')
+    await expect(page.getByRole('dialog', { name: 'Cookie settings' })).toBeVisible()
+    expect(await thirdPartyScripts(page)).toEqual([])
+    await page.context().close()
+  })
+}
+
+test('outside the opt-in regions, nothing loads off the marketing paths either', async ({ browser }) => {
+  const page = await freshPage(browser, undefined, 'MX')
+  await page.goto('/install')
+  expect(await thirdPartyScripts(page)).toEqual([])
+  await expect(page.getByRole('dialog', { name: 'Cookie settings' })).toHaveCount(0)
+  await page.context().close()
 })

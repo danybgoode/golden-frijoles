@@ -192,9 +192,14 @@ export async function trackSelfEvent(
  * A no-op without a usable visitor id: a missing cookie means this person never visited the landing in this browser,
  * and inventing an id would join them to nothing while counting them as a new visitor.
  */
-export function trackVisitorEvent(event: SelfTrackEvent, visitorId: unknown): Promise<boolean> {
+export function trackVisitorEvent(
+  event: SelfTrackEvent,
+  visitorId: unknown,
+  /** traffic-relaunch D5 — the visit's source tags, already sanitised by `lib/visit-source.ts`. */
+  tags?: Record<string, string>
+): Promise<boolean> {
   if (!isVisitorId(visitorId)) return Promise.resolve(false)
-  return trackSelfEvent(event, visitorId, undefined, {
+  return trackSelfEvent(event, visitorId, tags, {
     featureId: LANDING_SIGNAL_KEY,
     subject: { type: VISITOR_SUBJECT_TYPE, id: visitorId },
   })

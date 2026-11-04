@@ -66,6 +66,8 @@ const CALLERS: Record<string, { kind: 'informational' } | { kind: 'durable'; gat
   'app/methodology/page.tsx': { kind: 'informational' },
   'app/methodology/[chapter]/page.tsx': { kind: 'informational' },
   'app/methodology/edition.md/route.ts': { kind: 'informational' },
+  // traffic-relaunch D5 — only its hostname, to tell an internal referrer from an external one. Nothing is minted.
+  'app/api/v1/public/self-visit/route.ts': { kind: 'informational' },
   'components/landing/MakerHero.tsx': { kind: 'informational' },
   // account-from-the-terminal D2 — `MakerClosingCta.tsx` is BACK. golden-frijoles-plugin S3.3 had
   // removed it when the closing card switched to a constant install prompt that named no site URL;

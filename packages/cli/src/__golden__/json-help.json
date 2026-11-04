@@ -755,6 +755,29 @@
         ]
       },
       {
+        "command": "events count",
+        "summary": "how many times an event fired, per day, optionally per tag",
+        "usage": "frijoles events count <event> [--days N] [--by <tag>] [--project <slug>] [--json]",
+        "needsAuth": true,
+        "flags": [
+          {
+            "flag": "--days",
+            "takesValue": true,
+            "describe": "the window in days, 1 to 90 (default: 30)"
+          },
+          {
+            "flag": "--by",
+            "takesValue": true,
+            "describe": "split each day by this tag (e.g. utm_source)"
+          },
+          {
+            "flag": "--project",
+            "takesValue": true,
+            "describe": "the project (default: the remembered one)"
+          }
+        ]
+      },
+      {
         "command": "segments define",
         "summary": "define (or redefine) a segment: people who did an event at least N times in the last D days",
         "usage": "frijoles segments define <key> --event <e> --min <n> --days <d> [--project <slug>] [--json]",

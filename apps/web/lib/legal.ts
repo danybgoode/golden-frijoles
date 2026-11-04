@@ -12,17 +12,19 @@ export const STORAGE_NAMES = {
   visitorCookie: 'gb_vid', // lib/marketing-paths.ts → VISITOR_COOKIE
   variantCookie: 'gb_variant', // lib/landing-variant.ts → ACQUISITION_VARIANT_COOKIE
   consentKey: 'gf_consent', // lib/consent.ts → CONSENT_STORAGE_KEY
+  regionCookie: 'gf_cr', // lib/consent-region.ts → CONSENT_REGION_COOKIE
   progressKey: 'gf.methodology.read.v1', // lib/methodology-progress.ts → PROGRESS_STORAGE_KEY
 } as const
 const VISITOR_COOKIE_NAME = STORAGE_NAMES.visitorCookie
 const VARIANT_COOKIE_NAME = STORAGE_NAMES.variantCookie
 const CONSENT_KEY = STORAGE_NAMES.consentKey
+const REGION_COOKIE_NAME = STORAGE_NAMES.regionCookie
 const PROGRESS_KEY = STORAGE_NAMES.progressKey
 
 export type LegalSection = { heading: string; paragraphs: string[] }
 export type LegalDoc = { title: string; updated: string; lede: string; sections: LegalSection[] }
 
-export const LEGAL_UPDATED = '2026-10-20'
+export const LEGAL_UPDATED = '2026-11-03'
 
 /** Who runs the service and where disputes go. Daniel, 2026-10-20: no personal name, only where it is operated from. */
 export const OPERATOR = {
@@ -130,22 +132,24 @@ export const PRIVACY: LegalDoc = {
         'Your account: your email address, a password (stored hashed by our authentication provider) or your Google sign-in, the name you choose to show, your workspace and its products, and the credentials you create. API keys and share links are stored only as hashes; connector tokens and webhook signing secrets are stored as issued, because the service has to present them.',
         'Billing: when you buy Growth we give Stripe your account email, and Stripe collects your card and billing details. We keep only the Stripe customer and subscription identifiers and your plan; we never see your card number.',
         'Your products’ data: the events, flags and settings your products send. For this data you decide what is sent and why; we process it on your behalf to run the service, and send it on only to the destinations (webhooks) you configure.',
-        'Our own product use: we record what visitors do on our site (visits to the home page and the methodology, which landing version they saw, joining the waitlist, starting a sign-up) and what accounts do in the product (for example signing up, creating a product, a product sending its first event, opening a shared report), in our own Golden Frijoles project, to improve the product. These records carry a random visitor id or an account id, never your name or email.',
-        `Cookies and browser storage: ${VISITOR_COOKIE_NAME}, a random visitor id kept for a year, so a visit and a later sign-up count as the same visitor; ${VARIANT_COOKIE_NAME}, which version of the home page you were shown, kept for 90 days; and, when you sign in, the session cookies that keep you signed in. Your browser also stores your analytics answer (${CONSENT_KEY}) and which methodology chapters you have read (${PROGRESS_KEY}); neither leaves your device.`,
+        'Our own product use: we record what visitors do on our site (visits to the home page and the methodology, which landing version they saw, joining the waitlist, starting a sign-up) and what accounts do in the product (for example signing up, creating a product, a product sending its first event, opening a shared report), in our own Golden Frijoles project, to improve the product. With a visit we also record where it came from: the name of the site that linked to us (never the page or search) and any campaign labels in the link (utm_source, utm_medium, utm_campaign, utm_content). These records carry a random visitor id or an account id, never your name or email.',
+        `Cookies and browser storage: ${VISITOR_COOKIE_NAME}, a random visitor id kept for a year, so a visit and a later sign-up count as the same visitor; ${VARIANT_COOKIE_NAME}, which version of the home page you were shown, kept for 90 days; ${REGION_COOKIE_NAME}, one word saying whether your region asks for consent before analytics (never your country), deleted when you close the browser; and, when you sign in, the session cookies that keep you signed in. Your browser also stores your analytics answer (${CONSENT_KEY}) and which methodology chapters you have read (${PROGRESS_KEY}); neither leaves your device.`,
         'Abuse protection: we keep a one-way hash of your IP address for a short time to rate-limit sign-ups, the waitlist and other public forms.',
         'The waitlist and booking: if you join the waitlist we keep your email. The /talk page embeds the Cal.com calendar, so opening it sends your browser’s request (your IP address and browser details) to Cal.com, and booking a session gives Cal.com your booking details.',
       ],
     },
     {
-      heading: 'Analytics, only with your yes',
+      heading: 'Analytics on our public pages',
       paragraphs: [
-        'On our public pages (the home page, the methodology, /talk, sign-up and sign-in) we ask before loading Google Analytics and Microsoft Clarity. Clarity records how the page is used, including clicks and scrolling. Nothing loads until you say yes, it never loads inside the console, and you can change your answer at any time from “Cookie settings” in the footer of our home page.',
+        'On our public pages (the home page, the methodology, /talk, sign-up and sign-in) we use Google Analytics and Microsoft Clarity to see where visitors come from and where a page loses them. Clarity records how the page is used, including clicks and scrolling. They never load inside the console.',
+        'In the European Union and the rest of the European Economic Area, the United Kingdom, Switzerland, Brazil and Canada, and wherever we cannot tell where you are, we ask first: nothing loads until you say yes. Everywhere else they load with the page. We work this out from the country our network provider (Cloudflare) attaches to each request; we do not store your country.',
+        'Wherever you are, you can say no or change your answer at any time from “Cookie settings” in the footer of our home page, and your answer wins.',
       ],
     },
     {
       heading: 'Who else handles it',
       paragraphs: [
-        'Supabase (database and sign-in; stored in the United States, AWS us-east-1), Vercel (hosting; United States), Cloudflare (network), Stripe (payments), Google (sign-in with Google, and Google Analytics with your consent), Microsoft (Clarity, with your consent) and Cal.com (bookings). Each processes data under its own terms and only for the service it provides us. We do not sell personal data, and we do not use your products’ data for advertising.',
+        'Supabase (database and sign-in; stored in the United States, AWS us-east-1), Oracle Cloud (hosting, on a server we run), Cloudflare (network, and the country each request comes from), Stripe (payments), Google (sign-in with Google, and Google Analytics), Microsoft (Clarity) and Cal.com (bookings). Each processes data under its own terms and only for the service it provides us. We do not sell personal data, and we do not use your products’ data for advertising.',
       ],
     },
     {

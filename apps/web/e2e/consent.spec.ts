@@ -17,3 +17,37 @@ for (const path of ['/', '/methodology', '/talk', '/login', '/install']) {
     expect(html).not.toContain(CLARITY_PROJECT_ID)
   })
 }
+
+// traffic-relaunch D1 — the middleware turns Cloudflare's country into one word on a marketing page, and only there.
+function regionCookie(setCookie: string | undefined): string | null {
+  const match = /(?:^|\n|,\s*)gf_cr=([^;]*)/.exec(setCookie ?? '')
+  return match ? match[1] : null
+}
+
+for (const [country, mode] of [
+  ['MX', 'load'],
+  ['US', 'load'],
+  ['DE', 'ask'],
+  ['GB', 'ask'],
+  ['BR', 'ask'],
+  ['CA', 'ask'],
+  ['XX', 'ask'],
+] as const) {
+  test(`a visitor from ${country} gets gf_cr=${mode}`, async ({ request }) => {
+    const res = await request.get('/', { headers: { 'CF-IPCountry': country } })
+    expect(res.status()).toBe(200)
+    expect(regionCookie(res.headers()['set-cookie'])).toBe(mode)
+    // The country itself never travels back.
+    expect(res.headers()['set-cookie'] ?? '').not.toContain(country === 'XX' ? 'gf_cr=XX' : `=${country}`)
+  })
+}
+
+test('no country header reads as unknown: ask', async ({ request }) => {
+  const res = await request.get('/methodology')
+  expect(regionCookie(res.headers()['set-cookie'])).toBe('ask')
+})
+
+test('off the marketing paths no region cookie is set', async ({ request }) => {
+  const res = await request.get('/install', { headers: { 'CF-IPCountry': 'MX' } })
+  expect(regionCookie(res.headers()['set-cookie'])).toBeNull()
+})

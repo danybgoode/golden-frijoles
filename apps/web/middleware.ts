@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { VISITOR_COOKIE_ATTRIBUTES, isMarketingPath, VISITOR_COOKIE } from '@/lib/marketing-paths'
+import { CONSENT_REGION_COOKIE, consentMode, type ConsentMode } from '@/lib/consent-region'
 
 // multi-tenant-activation · Sprint 1, Story 1.1 — auth session refresh.
 //
@@ -20,7 +21,14 @@ export async function middleware(request: NextRequest) {
   // exposure would be two people. Set on the request (the page reads it in this same render) and on the response (the
   // browser keeps it).
   let minted: string | null = null
+  // traffic-relaunch D1 — on a marketing page, whether the analytics banner must ask first, from Cloudflare's country
+  // header. Only the one word travels (`ask` | `load`); the country goes nowhere (D4). No header (local, CI, anything
+  // that did not come through Cloudflare) reads as unknown, which is `ask`. Only Cloudflare reaches the origin
+  // (Authenticated Origin Pulls), so a visitor cannot name their own country.
+  let region: ConsentMode | null = null
   if (isMarketingPath(request.nextUrl.pathname)) {
+    region = consentMode(request.headers.get('cf-ipcountry'))
+    request.cookies.set(CONSENT_REGION_COOKIE, region)
     if (!request.cookies.get(VISITOR_COOKIE)?.value) {
       minted = crypto.randomUUID()
       request.cookies.set(VISITOR_COOKIE, minted)
@@ -29,7 +37,7 @@ export async function middleware(request: NextRequest) {
     // Server Component cannot write cookies, so a stale access token refreshed THERE would throw the rotated tokens away
     // and leave the browser holding a spent refresh token — signing out the very buyer the button is for. So a marketing
     // page with a session cookie is refreshed here, like /app; one without (almost every visitor) pays nothing.
-    if (!hasAuthCookie(request)) return withVisitor(NextResponse.next({ request }), minted)
+    if (!hasAuthCookie(request)) return withVisitor(NextResponse.next({ request }), minted, region)
   }
 
   let response = NextResponse.next({ request })
@@ -46,7 +54,7 @@ export async function middleware(request: NextRequest) {
   // One exception, on purpose (verifier, #419): the landing's Growth tier (components/landing/GrowthCta.tsx) answers
   // "signed out" when the session cannot be read. There it is not an authorization answer — it only chooses the sign-up
   // button over the checkout form, and the checkout route checks the session again — and a public page must not 500.
-  if (!url || !anon) return withVisitor(response, minted)
+  if (!url || !anon) return withVisitor(response, minted, region)
 
   const supabase = createServerClient(url, anon, {
     cookies: {
@@ -65,12 +73,20 @@ export async function middleware(request: NextRequest) {
 
   // Touch getUser() to refresh a stale access token (and its cookie) before the page runs.
   await supabase.auth.getUser()
-  return withVisitor(response, minted)
+  return withVisitor(response, minted, region)
 }
 
 /** The browser keeps a visitor id minted for this request; set last, because a refresh replaces the response. */
-function withVisitor(response: NextResponse, minted: string | null): NextResponse {
+function withVisitor(
+  response: NextResponse,
+  minted: string | null,
+  region: ConsentMode | null
+): NextResponse {
   if (minted) response.cookies.set(VISITOR_COOKIE, minted, VISITOR_COOKIE_ATTRIBUTES)
+  // A session cookie (no maxAge), re-set on every marketing page so a traveller's next page follows where they are.
+  // Not httpOnly: ConsentManager reads it in the browser.
+  if (region)
+    response.cookies.set(CONSENT_REGION_COOKIE, region, { path: '/', sameSite: 'lax', httpOnly: false })
   return response
 }
 

@@ -21,6 +21,22 @@ function ensureVisitorId(): string {
   return id
 }
 
+/** The four utm_* params and the referrer, raw. The server sanitises; a failure here only means "direct". */
+function visitSource(): Record<string, string> {
+  const out: Record<string, string> = {}
+  try {
+    const params = new URLSearchParams(window.location.search)
+    for (const key of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content']) {
+      const value = params.get(key)
+      if (value) out[key] = value.slice(0, 128)
+    }
+    if (document.referrer) out.referrer = document.referrer.slice(0, 2048)
+  } catch {
+    // Nothing to report.
+  }
+  return out
+}
+
 // Story 3.1 (commercial-shell/sprint-3.md) — the entry point of the dogfood funnel. Mints the
 // per-visitor identity cookie synchronously (see ensureVisitorId above), THEN fires the entry event
 // via a beacon POST to /api/v1/public/self-visit — a Route Handler, since a Server Component can't
@@ -62,6 +78,8 @@ export function SelfTrackBeacon({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         surface,
+        // traffic-relaunch D5 — what the browser saw; the route keeps only clean values (lib/visit-source.ts).
+        source: visitSource(),
         ...(chapter ? { chapter } : {}),
         ...(rendered ? { rendered } : {}),
         ...(forced ? { forced: true } : {}),

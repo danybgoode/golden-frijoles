@@ -15,6 +15,8 @@ import { METHODOLOGY_CHAPTER_IDS } from '@/lib/methodology-chapters'
 import { checkRateLimit, hashIp } from '@/lib/rate-limit'
 import { variant } from '@/lib/gates'
 import { ACQUISITION_VARIANT_COOKIE, isLikelyBot, variantLetter } from '@/lib/landing-variant'
+import { sanitizeSource } from '@/lib/visit-source'
+import { getSiteUrl } from '@/lib/site-url'
 
 // POST /v1/public/self-visit — Story 3.1 (commercial-shell/sprint-3.md). The visited-side half of
 // the dogfood funnel. The landing page is a Server Component and Server Components can't set
@@ -77,30 +79,46 @@ async function resolveBeacon(req: NextRequest): Promise<Beacon> {
   try {
     body = await req.json()
   } catch {
-    // No body, or not JSON: the original landing beacon posts nothing at all.
-    return { event: LANDING_VISITED_EVENT }
+    // No body, or not JSON: the original landing beacon posts nothing at all. A direct visit (D5).
+    return { event: LANDING_VISITED_EVENT, tags: { source: 'direct' } }
   }
 
-  const surface =
-    typeof body === 'object' && body !== null ? (body as Record<string, unknown>).surface : undefined
+  const raw = typeof body === 'object' && body !== null ? (body as Record<string, unknown>) : {}
+  const surface = raw.surface
+  // traffic-relaunch D5 — where the visit came from, sanitised here (the body is attacker input). Bad values are
+  // dropped; a body with no source is a direct visit. Our own host comes from getSiteUrl() (rule #5).
+  const source = sanitizeSource(raw.source, ownHost())
   const event = typeof surface === 'string' ? SURFACE_EVENT[surface] : undefined
-  if (!event) return { event: LANDING_VISITED_EVENT }
+  if (!event) return { event: LANDING_VISITED_EVENT, tags: source }
 
   if (event === LANDING_VISITED_EVENT) {
-    const raw = body as Record<string, unknown>
     const rendered = raw.rendered === 'a' || raw.rendered === 'b' ? raw.rendered : undefined
-    return { event, ...(rendered ? { rendered } : {}), ...(raw.forced === true ? { forced: true } : {}) }
+    return {
+      event,
+      tags: source,
+      ...(rendered ? { rendered } : {}),
+      ...(raw.forced === true ? { forced: true } : {}),
+    }
   }
-  if (event !== METHODOLOGY_CHAPTER_OPENED_EVENT) return { event }
+  // The copy click is an action on a page already counted, not a visit: it carries no source.
+  if (event === START_PROMPT_COPIED_EVENT) return { event }
+  if (event !== METHODOLOGY_CHAPTER_OPENED_EVENT) return { event, tags: source }
 
-  const chapter =
-    typeof body === 'object' && body !== null ? (body as Record<string, unknown>).chapter : undefined
+  const chapter = raw.chapter
   // Validated against the module, not merely type-checked: an unknown id would become a permanent
   // tag value in the query layer that corresponds to no page.
   if (typeof chapter !== 'string' || !METHODOLOGY_CHAPTER_IDS.includes(chapter)) {
-    return { event: METHODOLOGY_VISITED_EVENT }
+    return { event: METHODOLOGY_VISITED_EVENT, tags: source }
   }
-  return { event, tags: { chapter } }
+  return { event, tags: { ...source, chapter } }
+}
+
+function ownHost(): string {
+  try {
+    return new URL(getSiteUrl()).hostname
+  } catch {
+    return 'goldenfrijoles.com'
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -137,7 +155,7 @@ export async function POST(req: NextRequest) {
   // landing-launch-experiment D4 — the landing's events go under the visitor, as the visitor (its subject), into
   // `landing_conversion`. The methodology's keep their own funnel and their old shape.
   if (event === LANDING_VISITED_EVENT || event === START_PROMPT_COPIED_EVENT) {
-    after(() => trackVisitorEvent(event, visitorId))
+    after(() => trackVisitorEvent(event, visitorId, tags))
   } else {
     after(() => trackSelfEvent(event, visitorId, tags))
   }
