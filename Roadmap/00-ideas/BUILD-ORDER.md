@@ -5,7 +5,7 @@
 
 # Build order — the six stages
 
-> **Generated 2026-11-03 — do not hand-edit.** One stage per initiative, decided in one place
+> **Generated 2026-11-04 — do not hand-edit.** One stage per initiative, decided in one place
 > (`scripts/lib/stage.mjs`): Backlog · Refining · Ready · Building · QA · Shipped.
 > This committed file reads the docs alone, so **Building and QA are not here** — they are facts git
 > and GitHub hold. For the live board run `node scripts/build-order.mjs --live`, or open the Hub board.
@@ -26,7 +26,7 @@ _a pitch is waiting at the approval gate._
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
-- [Traffic relaunch](../02-commercial/traffic-relaunch/README.md) — #103 · 02 Commercial · 4/7 stories · risk: High · appetite M · _docs: status in-progress_
+- [Traffic relaunch](../02-commercial/traffic-relaunch/README.md) — #103 · 02 Commercial · 6/7 stories · risk: High · appetite M · _docs: status in-progress_
 - [Claude Code screensavers, the hook to the rest](../09-platform-infra/screensavers/README.md) — #104 · 09 Platform Infra · 0/6 stories · risk: Low · appetite S · _docs: status in-progress_
 - [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #105 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
 - [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #106 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
