@@ -1,14 +1,14 @@
 ---
 title: "SEO library, batch 2 — ten pages for searches founders already type, two of them in Spanish"
 slug: seo-library-batch-2
-status: ready
+status: scaffolded
 area: "02-commercial"
 type: feature
 appetite: S
-underwritten_by: null
+underwritten_by: wave-2026-11
 risk: low
-epic: null
-build_order: null
+epic: "02-commercial/seo-library-batch-2"
+build_order: 103
 updated: 2026-11-04
 intent_ask: verbatim   # verbatim = the product owner's own words below · proxy = reconstructed after the fact
 hypothesis: "Founders searching for spec-kit or PostHog alternatives, the Claude Code plugin marketplace, or spec-driven development in Spanish find nothing from us today. Ten pages that answer those exact searches bring them to the landing, and 3 of the workspaces they start will prove a bet by 3 February."

@@ -22,15 +22,16 @@ _a pitch is waiting at the approval gate._
 
 - [Git & Releases — a PM-legible picture of what the agent shipped (discovery spike)](seeds/git-and-releases-legibility.md) — #17 · 02 Commercial · seed · Spike · risk: Low · appetite S · _docs: status ready_
 
-## Ready (5)
+## Ready (6)
 
 _scaffolded (or a fixed-scope seed), in build order — pull from the top._
 
-- [Traffic relaunch](../02-commercial/traffic-relaunch/README.md) — #103 · 02 Commercial · 6/7 stories · risk: High · appetite M · _docs: status in-progress_
-- [Claude Code screensavers, the hook to the rest](../09-platform-infra/screensavers/README.md) — #104 · 09 Platform Infra · 0/6 stories · risk: Low · appetite S · _docs: status in-progress_
-- [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #105 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
-- [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #106 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
-- [CMS-neutral experiment integration + Payload go/no-go](../01-growth-engine/cms-integration-spike/README.md) — #107 · 01 Growth Engine · 0/6 stories · risk: Low · _docs: status scaffolded_
+- [SEO library, batch 2](../02-commercial/seo-library-batch-2/README.md) — #103 · 02 Commercial · 0/3 stories · risk: Low · appetite S · _docs: status in-progress_
+- [Traffic relaunch](../02-commercial/traffic-relaunch/README.md) — #104 · 02 Commercial · 6/7 stories · risk: High · appetite M · _docs: status in-progress_
+- [Claude Code screensavers, the hook to the rest](../09-platform-infra/screensavers/README.md) — #105 · 09 Platform Infra · 0/6 stories · risk: Low · appetite S · _docs: status in-progress_
+- [Night garden, in the shared design system](../02-commercial/night-garden-design-system/README.md) — #106 · 02 Commercial · 0/8 stories · risk: Low · appetite M · _docs: status scaffolded_
+- [Plain Outcome: one vocabulary and one lifecycle across the plugin, the repo and the console](../09-platform-infra/plain-outcome-rename/README.md) — #107 · 09 Platform Infra · 0/12 stories · risk: High · appetite L · _docs: status scaffolded_
+- [CMS-neutral experiment integration + Payload go/no-go](../01-growth-engine/cms-integration-spike/README.md) — #108 · 01 Growth Engine · 0/6 stories · risk: Low · _docs: status scaffolded_
 
 ## Building — live only
 
@@ -144,4 +145,4 @@ _merged, deployed and closed._
 - [The portfolio loop test fails intermittently in CI and has been quarantined](seeds/portfolio-loop-flake.md) — 02 Commercial · seed · Bug · risk: Low · appetite S · _docs: status shipped_
 
 ---
-_105 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._
+_106 initiatives on the board. Regenerate with `node scripts/build-order.mjs`._
