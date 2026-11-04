@@ -19,8 +19,9 @@ export const VISITOR_COOKIE_ATTRIBUTES = {
   httpOnly: false,
 } as const
 
-const EXACT = new Set(['/', '/methodology', '/talk', '/signup', '/login'])
-const PREFIXES = ['/methodology/']
+// traffic-relaunch D9 — the guides, comparisons and glossary are marketing pages too.
+const EXACT = new Set(['/', '/methodology', '/talk', '/signup', '/login', '/guides', '/compare', '/glossary'])
+const PREFIXES = ['/methodology/', '/guides/', '/compare/', '/glossary/']
 
 export function isMarketingPath(pathname: string): boolean {
   return EXACT.has(pathname) || PREFIXES.some((prefix) => pathname.startsWith(prefix))
@@ -34,4 +35,10 @@ export const MARKETING_MATCHERS = [
   '/talk',
   '/signup',
   '/login',
+  '/guides',
+  '/guides/:path*',
+  '/compare',
+  '/compare/:path*',
+  '/glossary',
+  '/glossary/:path*',
 ] as const

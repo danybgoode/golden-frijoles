@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { METHODOLOGY_CHAPTER_IDS } from '@/lib/methodology-chapters'
 import { publicRoutes } from '@/lib/public-routes'
+import { LIBRARY } from '@/lib/content-library'
 import { getSiteUrl } from '@/lib/site-url'
 
 // GET /sitemap.xml — methodology-experience · Sprint 4, Story 4.3 (amendment A6).
@@ -28,7 +29,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // Omitting it is legal in the sitemap protocol and is what "we do not know" looks like in this
   // format. If per-content timestamps ever exist — the content module could carry them — this is
   // where they go, and they will mean something.
-  return publicRoutes(METHODOLOGY_CHAPTER_IDS).map((route) => ({
+  return publicRoutes(METHODOLOGY_CHAPTER_IDS, LIBRARY).map((route) => ({
     url: `${siteUrl}${route.path}`,
     changeFrequency: route.changeFrequency,
     priority: route.priority,

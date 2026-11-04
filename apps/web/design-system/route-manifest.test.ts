@@ -192,8 +192,9 @@ test('the denominator moves exactly as the D13 ledger says', () => {
   // ⚠️ **+1 — landing-launch-experiment Sprint 4: `/app/billing`.** Like the portfolio: the denominator, not the covered
   // count, with a dated deferral.
   // ⚠️ **+2 — landing-launch-experiment Sprint 4: `/terms` and `/privacy`.** Public doors, deferred like the portfolio.
-  assert.equal(beforeSprint4.length, 39, 'every row is live before Story 4.5 retires three')
-  assert.equal(atClose.length, 36, 'after Story 4.5: 39 rows minus the three retired')
+  // ⚠️ **+6 — traffic-relaunch Sprint 2: `/guides`, `/compare`, `/glossary` and their entries.** Deferred like /privacy.
+  assert.equal(beforeSprint4.length, 45, 'every row is live before Story 4.5 retires three')
+  assert.equal(atClose.length, 42, 'after Story 4.5: 45 rows minus the three retired')
 
   // ...and the row that does not exist yet is the one Daniel approved as a designed empty state.
   const scheduled = ROUTE_MANIFEST.find((row) => row.route === '/app/scheduled/[projectSlug]')
@@ -215,7 +216,7 @@ test('coverage counts a route only when BOTH booleans are true', () => {
   const now = coverage(1)
   // 32 since golden-frijoles-cli added Setup › CLI access, 33 since board-sinks-and-scrumban added the Board tab — see
   // the ledger test above.
-  assert.equal(now.total, 39) // +2: /terms, /privacy (landing-launch-experiment S4); −1: /app/onboarding retired (connect-page D2); +1: /app/finops (finops S3.3), +1: /app/portfolio (portfolio-view S2.1), +1: /cli/connect, +1: /app/billing (landing-launch-experiment S4)
+  assert.equal(now.total, 45) // +6: the library (traffic-relaunch S2); +2: /terms, /privacy (landing-launch-experiment S4); −1: /app/onboarding retired (connect-page D2); +1: /app/finops (finops S3.3), +1: /app/portfolio (portfolio-view S2.1), +1: /cli/connect, +1: /app/billing (landing-launch-experiment S4)
   // ⚠️ **`>=`, not `>` — and the change is the whole point of Sprint 6.** This line asserted
   // `hasReferenceState > complete` under the message "reference states exist ahead of the work",
   // which was true for five sprints and is FALSE at epic close by design: the work caught up. The
@@ -265,11 +266,12 @@ test('coverage counts a route only when BOTH booleans are true', () => {
   // ⚠️ **33 and 29 since connect-page** — `/app/onboarding` retired (−1 total, −1 covered: it borrowed
   // `setup-connect`). Connect itself stays covered: its six groups keep the approved structure (D6).
   // ⚠️ **34 and still 29 since landing-launch-experiment S4** — `/app/billing` is the fifth uncovered route, deferred the same way.
-  assert.equal(atClose.total, 36, 'the epic-close denominator is not the 36 the two ledgers compute')
+  // ⚠️ **42 and still 29 since traffic-relaunch S2** — the six library routes are uncovered, each deferred like /privacy.
+  assert.equal(atClose.total, 42, 'the epic-close denominator is not the 42 the two ledgers compute')
   assert.equal(
     atClose.complete,
     29,
-    `29 of 36 routes are covered — outstanding: ${atClose.outstanding.join(', ')}`
+    `29 of 42 routes are covered — outstanding: ${atClose.outstanding.join(', ')}`
   )
   assert.deepEqual(
     atClose.outstanding,
@@ -281,6 +283,12 @@ test('coverage counts a route only when BOTH booleans are true', () => {
       '/cli/connect',
       '/terms',
       '/privacy',
+      '/guides',
+      '/guides/[slug]',
+      '/compare',
+      '/compare/[slug]',
+      '/glossary',
+      '/glossary/[slug]',
     ],
     'the only uncovered console route is the one whose deferral names an owner and a date'
   )
@@ -382,8 +390,8 @@ test('every row names a seam, and the seam matches the frame', () => {
   )
   assert.equal(
     bySeam('frame'),
-    8,
-    'seam B: eight doors (/cli/connect since account-from-the-terminal; /terms and /privacy since landing-launch-experiment S4); the six hub routes left for seam A (one-header-one-name D11)'
+    14,
+    'seam B: fourteen doors (/cli/connect since account-from-the-terminal; /terms and /privacy since landing-launch-experiment S4; the six library routes since traffic-relaunch S2); the six hub routes left for seam A (one-header-one-name D11)'
   )
 })
 

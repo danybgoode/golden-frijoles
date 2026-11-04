@@ -120,6 +120,11 @@ migration, no new gate (rule #6), no public read path (rule #2).
   merged after it. Models: this session (Opus) builds S1, because 1.1 and 1.4 are high risk. S2 copy is drafted here,
   and Daniel approves the copy in review.
 
+- **D11 · Library visits are counted (added at build, S2.1).** A `library_visited` event (beacon surface `library`)
+  carries the section and, on an entry, its slug, both validated against `lib/content-library.ts`, plus the visit's
+  source tags (D5). It sits under the methodology reading signal (`methodology_reading`): the same job, reading what
+  the method says. Rule #1: same route, same SDK path.
+
 ### Sprint 1 build contract (locked by the architect before the builder started)
 Cite D1–D8. Specs: `lib/consent-region.test.ts`, `lib/visit-source.test.ts`, the day-bucketing unit, the
 `e2e/consent.spec.ts` extension (header `CF-IPCountry: MX` → no banner + GA4/Clarity; `DE` and none → banner), the

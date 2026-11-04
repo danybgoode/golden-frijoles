@@ -104,5 +104,11 @@ export const config = {
     '/talk',
     '/signup',
     '/login',
+    '/guides',
+    '/guides/:path*',
+    '/compare',
+    '/compare/:path*',
+    '/glossary',
+    '/glossary/:path*',
   ],
 }

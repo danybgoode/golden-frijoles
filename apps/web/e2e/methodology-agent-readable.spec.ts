@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { METHODOLOGY_CHAPTERS, METHODOLOGY_CHAPTER_IDS } from '@/lib/methodology-chapters'
 import { publicRoutes } from '@/lib/public-routes'
+import { LIBRARY } from '@/lib/content-library'
 
 // methodology-experience · Sprint 4, Story 4.6 (amendment A6) — any agent can read the methodology.
 //
@@ -235,7 +236,8 @@ test('the sitemap lists exactly the routes that exist, and robots points at it',
 
   // The registry and the served sitemap must not drift apart.
   expect(locs.sort()).toEqual(
-    publicRoutes(METHODOLOGY_CHAPTER_IDS)
+    // traffic-relaunch S2.1 — the library rides in the same registry.
+    publicRoutes(METHODOLOGY_CHAPTER_IDS, LIBRARY)
       .map((r) => r.path)
       .sort()
   )

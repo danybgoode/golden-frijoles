@@ -66,6 +66,8 @@ const CALLERS: Record<string, { kind: 'informational' } | { kind: 'durable'; gat
   'app/methodology/page.tsx': { kind: 'informational' },
   'app/methodology/[chapter]/page.tsx': { kind: 'informational' },
   'app/methodology/edition.md/route.ts': { kind: 'informational' },
+  // traffic-relaunch S2.1 — canonical URLs, OG metadata and JSON-LD for the guides, comparisons and glossary.
+  'components/library/LibraryPages.tsx': { kind: 'informational' },
   // traffic-relaunch D5 — only its hostname, to tell an internal referrer from an external one. Nothing is minted.
   'app/api/v1/public/self-visit/route.ts': { kind: 'informational' },
   'components/landing/MakerHero.tsx': { kind: 'informational' },
