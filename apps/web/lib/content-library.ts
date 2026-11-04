@@ -51,6 +51,10 @@ export type LibraryEntry = {
   faq: Array<{ q: string; a: string }>
   /** YYYY-MM-DD, the day the text was last edited by hand. */
   updated: string
+  /** seo-library-batch-2 D2 — the page's language when it is not English. */
+  lang?: 'es'
+  /** D2 — the same page in the other language: both carry hreflang alternates to each other. */
+  twin?: { section: LibrarySection; slug: string }
 }
 
 const p = (text: string): LibraryBlock => ({ kind: 'p', text })
@@ -302,6 +306,293 @@ export const LIBRARY: readonly LibraryEntry[] = [
     faq: [],
     updated: '2026-11-03',
   },
+  // ── Batch 2 (seo-library-batch-2): searches Google already autocompletes ─────────────────────────────────────────
+  {
+    section: 'compare',
+    slug: 'spec-kit-alternatives',
+    title: 'Spec Kit alternatives',
+    description:
+      'The main alternatives to GitHub’s Spec Kit for spec-driven development with coding agents, and what each is for.',
+    answer:
+      'The common alternatives to Spec Kit are other spec-driven workflows for coding agents, such as the Superpowers plugin for Claude Code, BMAD and Kiro. If what you are missing is not a better spec but knowing whether the shipped feature paid off, the alternative is an outcome loop like Golden Frijoles, which you can run alongside any of them.',
+    body: [
+      h2('What Spec Kit and its peers do'),
+      p(
+        'They keep a coding agent on plan: a written spec, a plan, tasks, then code, with a person reviewing between steps. They differ in where they live (an IDE, a Claude Code plugin, a set of prompts) and in how much ceremony they add.'
+      ),
+      h2('How to choose'),
+      p(
+        'Pick the one that fits where you already work: a Claude Code plugin if you live in Claude Code, an IDE if you want the plan inside your editor. Check each project’s own site for what it supports today; these tools change quickly.'
+      ),
+      h2('The gap all of them share'),
+      p(
+        'They end at the merge. None of them asks what the change should move, ships it behind a switch, or records whether it worked. That is the part Golden Frijoles adds, and it does not ask you to replace your spec tool.'
+      ),
+      code(`${PLUGIN_MARKETPLACE_ADD}\n${PLUGIN_INSTALL}`),
+    ],
+    faq: [
+      {
+        q: 'Is Golden Frijoles a Spec Kit alternative?',
+        a: 'Partly. It shapes and builds work too, but its point is what happens after the merge: a target, a switch, and a verdict. Many teams keep their spec tool for the build.',
+      },
+      {
+        q: 'Which spec-driven tool works best with Claude Code?',
+        a: 'One that installs as a Claude Code plugin keeps the plan in the same session as the agent. Check each project for current Claude Code support.',
+      },
+    ],
+    updated: '2026-11-03',
+  },
+  {
+    section: 'compare',
+    slug: 'posthog-alternatives-self-hosted',
+    title: 'Self-hosted and open-source PostHog alternatives',
+    description:
+      'What to look at if you want product analytics, flags or experiments without PostHog, and when an outcome loop is the better fit.',
+    answer:
+      'If you want PostHog’s breadth self-hosted, the usual alternatives are other open-source analytics and experimentation tools such as GrowthBook (flags and experiments) or Unleash and Flagsmith (feature flags). If what you need is fewer dashboards and a clear answer to “did this feature pay off?”, Golden Frijoles runs that loop with your coding agent.',
+    body: [
+      h2('Decide what you are replacing'),
+      p(
+        'PostHog bundles many jobs: event analytics, session replay, flags, experiments and more. Most alternatives cover one or two of them. Write down which jobs you actually use before comparing.'
+      ),
+      h2('Self-hosting costs time'),
+      p(
+        'Any self-hosted tool means running its database and upgrades yourself. That is worth it for data control; it is a poor trade if you only wanted a cheaper plan. Check each project’s own docs for its current requirements.'
+      ),
+      h2('Where Golden Frijoles fits'),
+      p(
+        'It is not a general analytics suite and has no session replay. It covers flags, A/B tests, funnels and a verdict per change, driven from the terminal by your agent.'
+      ),
+    ],
+    faq: [
+      {
+        q: 'Can I self-host Golden Frijoles?',
+        a: 'The plugin, kit and CLI are open source and run on your machine; events and verdicts live in the hosted Golden Frijoles record. See /install for what runs where.',
+      },
+    ],
+    updated: '2026-11-03',
+  },
+  {
+    section: 'compare',
+    slug: 'growthbook-alternatives',
+    title: 'GrowthBook alternatives',
+    description:
+      'Alternatives to GrowthBook for feature flags and A/B tests, depending on what you need it for.',
+    answer:
+      'GrowthBook is an open-source feature flag and experimentation platform that works well if you already have a data warehouse. Alternatives depend on the job: PostHog if you also want analytics and replay, Unleash or Flagsmith for flags alone, and Golden Frijoles if you want your coding agent to create the flag, start the test and record the verdict as part of how you build.',
+    body: [
+      h2('What GrowthBook is good at'),
+      p(
+        'Experiment analysis on top of data you already collect, with flags to serve the variants. Check its site for current plans and integrations.'
+      ),
+      h2('When to look elsewhere'),
+      p(
+        'When there is no warehouse yet, or when the bottleneck is not the statistics but deciding what to test and acting on the result. A solo founder usually needs the second.'
+      ),
+      h2('The agent-first option'),
+      code(
+        'frijoles flags create <key> --enablement --all-envs\nfrijoles experiments create --flag <key> --metric <event>\nfrijoles experiments start <key>'
+      ),
+    ],
+    faq: [
+      {
+        q: 'Does Golden Frijoles need a data warehouse?',
+        a: 'No. Events go to the hosted record through the SDK or the CLI, and the funnels and experiments read from there.',
+      },
+    ],
+    updated: '2026-11-03',
+  },
+  {
+    section: 'guides',
+    slug: 'claude-code-plugin-marketplace',
+    title: 'How the Claude Code plugin marketplace works',
+    description: 'Add a marketplace, install a plugin, keep it updated: the two commands and what they do.',
+    answer:
+      'A Claude Code plugin marketplace is a Git repository that lists plugins. You add the marketplace once, then install plugins from it by name: `claude plugin marketplace add <owner/repo>`, then `claude plugin install <plugin>@<marketplace>`.',
+    body: [
+      h2('Adding a marketplace'),
+      p(
+        'A marketplace is just a repository with a plugin catalog. Adding it tells Claude Code where to look; nothing is installed yet.'
+      ),
+      h2('Installing a plugin'),
+      p('Install by plugin name and marketplace name. For Golden Frijoles:'),
+      code(`${PLUGIN_MARKETPLACE_ADD}\n${PLUGIN_INSTALL}`),
+      h2('Before you install anything'),
+      p(
+        'A plugin can add skills, hooks and commands that run on your machine. Read what it installs. Golden Frijoles publishes a checksum for every plugin file at /install.md, so you can verify a release before installing it.'
+      ),
+    ],
+    faq: [
+      {
+        q: 'Can I pin a plugin to a version?',
+        a: 'Git-based marketplaces accept a ref, so you can add one at a tag instead of tracking main.',
+      },
+    ],
+    updated: '2026-11-03',
+  },
+  {
+    section: 'guides',
+    slug: 'spec-driven-development-claude-code',
+    title: 'Spec-driven development with Claude Code',
+    description: 'How to run a spec, plan, build loop in Claude Code, and how to close it with a result.',
+    answer:
+      'Spec-driven development in Claude Code means writing the intent down first (a spec), turning it into a plan and small tasks, and having the agent build one task at a time with a review between steps. To close the loop, give the spec a target number and ship it behind a flag, so the work ends in a verdict, not just a merge.',
+    body: [
+      h2('The loop'),
+      p(
+        'Spec: what and why, in plain words. Plan: the decisions that are hard to undo, written before code. Tasks: thin slices that each ship. Review: a second reader on every change.'
+      ),
+      h2('Keeping it on track across sessions'),
+      p(
+        'Claude Code forgets between sessions; files do not. Keep the spec and plan in the repository, so every session starts from the same written intent.'
+      ),
+      h2('Closing the loop'),
+      p(
+        'Add one line to the spec: the number this should move, and by when. Ship behind a flag, measure, and record whether it worked. Golden Frijoles does this inside the same Claude Code session.'
+      ),
+      code(`${PLUGIN_MARKETPLACE_ADD}\n${PLUGIN_INSTALL}`),
+    ],
+    faq: [
+      {
+        q: 'Do I need a plugin for spec-driven development in Claude Code?',
+        a: 'No; plan mode and files in the repo get you most of the way. Plugins add structure and keep the plan persistent.',
+      },
+    ],
+    updated: '2026-11-03',
+  },
+  {
+    section: 'guides',
+    slug: 'agentic-product-management-tools',
+    title: 'Agentic product management tools',
+    description:
+      'What a tool for agentic product management needs to do, and how to tell it apart from tools for building AI agents.',
+    answer:
+      'Agentic product management tools let one person and their coding agents run the whole product practice: decide what to build, build and review it, ship it safely, and prove whether it paid off. That is different from tools for managing AI agent products, which share the name.',
+    body: [
+      h2('What to look for'),
+      p(
+        'A written bet per change, with a target. Builds your agent can run end to end. Flags so a change can be switched off without a deploy. Measurement tied to the bet. A verdict, recorded.'
+      ),
+      h2('What it is not'),
+      p(
+        'Not a roadmap board you update by hand, and not a framework for building agents. The agent is doing the product work; the tool keeps the evidence honest.'
+      ),
+      p(CATEGORY_DEFINITION),
+    ],
+    faq: [
+      {
+        q: 'Is there a course on agentic product management?',
+        a: 'The Golden Frijoles methodology is free to read at /methodology: six chapters from bringing an idea to deciding what happens next.',
+      },
+    ],
+    updated: '2026-11-03',
+  },
+  {
+    section: 'guides',
+    slug: 'feature-flags-for-solo-founders',
+    title: 'Feature flags for solo founders',
+    description: 'Why a one-person team needs feature flags, and the two kinds worth knowing.',
+    answer:
+      'A solo founder needs feature flags for the same reason a big team does, only more: there is nobody else awake when something breaks. Use a kill switch for anything risky (on by default, off without a deploy) and an enablement flag for anything you want to roll out gradually and measure.',
+    body: [
+      h2('The two kinds'),
+      p(
+        'Kill switch: the feature is on, and the flag exists to turn it off fast. Enablement flag: the feature is off until you roll it out, to a percentage or a segment.'
+      ),
+      code(
+        'frijoles flags create <key> --kill-switch --all-envs\nfrijoles flags kill <key> --env production'
+      ),
+      h2('Keep the number of flags small'),
+      p('Every flag is a branch in your code. Remove a flag once its feature is proven or gone.'),
+    ],
+    faq: [
+      {
+        q: 'Do feature flags slow a small app down?',
+        a: 'Not noticeably when flags are cached and evaluated locally; check how your provider serves them.',
+      },
+    ],
+    updated: '2026-11-03',
+  },
+  {
+    section: 'glossary',
+    slug: 'feature-adoption-rate',
+    title: 'Feature adoption rate',
+    description: 'The share of the people given a feature who actually used it.',
+    answer:
+      'Feature adoption rate is the number of people who used a feature divided by the number who were given it, over the same period.',
+    body: [p('Measure it against the people who got the feature, not everyone. Read it by cohort.')],
+    faq: [],
+    updated: '2026-11-03',
+  },
+  // ── Spanish (seo-library-batch-2 D2) ───────────────────────────────────────────────────────────────────────────
+  {
+    section: 'guides',
+    slug: 'spec-driven-development-que-es',
+    lang: 'es',
+    twin: { section: 'guides', slug: 'after-spec-driven-development' },
+    title: '¿Qué es spec-driven development?',
+    description:
+      'Spec-driven development en español: qué es, cómo se usa con agentes de código y qué le falta para saber si una función funcionó.',
+    answer:
+      'Spec-driven development (desarrollo guiado por especificaciones) es trabajar con un agente de código escribiendo primero la intención —una especificación—, convirtiéndola en un plan y en tareas pequeñas, y revisando entre cada paso. Te lleva hasta el merge; para saber si valió la pena, cada cambio necesita además una meta, un interruptor y un veredicto.',
+    body: [
+      h2('Cómo funciona'),
+      p(
+        'Especificación: qué y por qué, en palabras simples. Plan: las decisiones difíciles de deshacer, por escrito antes del código. Tareas: rebanadas delgadas que se pueden entregar solas. Revisión: otra lectura en cada cambio.'
+      ),
+      h2('Lo que le falta'),
+      p(
+        'Construir ya es barato; saber qué valía la pena construir no lo es. Una especificación dice qué construir, pero no cómo sabrás si funcionó ni cuánto costó.'
+      ),
+      h2('El siguiente paso: desarrollo guiado por resultados'),
+      p(
+        'Cada cambio es una apuesta con una meta. Sale detrás de un flag que puedes apagar sin desplegar, se mide con uso real y termina en un veredicto: probada, descartada o sin datos suficientes. Golden Frijoles corre ese ciclo dentro de Claude Code:'
+      ),
+      code(`${PLUGIN_MARKETPLACE_ADD}\n${PLUGIN_INSTALL}`),
+    ],
+    faq: [
+      {
+        q: '¿Spec-driven development reemplaza a agile?',
+        a: 'No. Es una forma de darle al agente una intención estable; las prácticas de producto siguen siendo tuyas.',
+      },
+      {
+        q: '¿Qué herramientas de spec-driven development hay para Claude Code?',
+        a: 'Hay plugins y flujos como Superpowers, Spec Kit o BMAD. Revisa el sitio de cada proyecto para ver su soporte actual.',
+      },
+    ],
+    updated: '2026-11-03',
+  },
+  {
+    section: 'guides',
+    slug: 'north-star-metric-ejemplos',
+    lang: 'es',
+    twin: { section: 'glossary', slug: 'north-star-metric' },
+    title: 'North Star metric: qué es y ejemplos',
+    description: 'Qué es una North Star metric, cómo elegirla y ejemplos para productos pequeños.',
+    answer:
+      'La North Star metric es el único número que mejor resume el valor que tu producto entrega a sus clientes, junto con las pocas métricas de entrada que tu equipo puede mover para hacerlo crecer.',
+    body: [
+      h2('Cómo elegirla'),
+      p(
+        'Debe medir valor para el cliente, no solo ingresos; moverse con tus decisiones de producto; y poder leerse cada semana o cada mes.'
+      ),
+      h2('Ejemplos'),
+      p(
+        'Una app de reservas: reservas completadas por semana. Una herramienta de equipos: equipos que usan la función principal tres días por semana. Golden Frijoles: apuestas probadas, es decir, cambios que alcanzaron su meta.'
+      ),
+      h2('Las métricas de entrada'),
+      p(
+        'Son las palancas que sí puedes mover hoy. En Golden Frijoles, por ejemplo, la proporción de apuestas con una meta clara y el costo por apuesta probada.'
+      ),
+    ],
+    faq: [
+      {
+        q: '¿Cuántas North Star metrics debe tener un producto?',
+        a: 'Una. Lo que puede haber varias son las métricas de entrada que la alimentan.',
+      },
+    ],
+    updated: '2026-11-03',
+  },
 ]
 
 export function entriesIn(section: LibrarySection): LibraryEntry[] {
@@ -310,6 +601,19 @@ export function entriesIn(section: LibrarySection): LibraryEntry[] {
 
 export function findEntry(section: string, slug: string): LibraryEntry | undefined {
   return LIBRARY.find((entry) => entry.section === section && entry.slug === slug)
+}
+
+/**
+ * seo-library-batch-2 D2 — the hreflang map for an entry: itself, and its twin in the other language, as paths. Empty
+ * when the entry has no twin (in either direction).
+ */
+export function entryLanguages(entry: LibraryEntry): Record<string, string> {
+  const own = `/${entry.section}/${entry.slug}`
+  const twin =
+    (entry.twin && findEntry(entry.twin.section, entry.twin.slug)) ||
+    LIBRARY.find((other) => other.twin?.section === entry.section && other.twin.slug === entry.slug)
+  if (!twin) return {}
+  return { [entry.lang ?? 'en']: own, [twin.lang ?? 'en']: `/${twin.section}/${twin.slug}` }
 }
 
 export function isLibrarySection(value: unknown): value is LibrarySection {

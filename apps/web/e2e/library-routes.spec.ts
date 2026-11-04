@@ -35,3 +35,20 @@ test('the sitemap and llms.txt list every entry', async ({ request }) => {
     expect(llms, path).toContain(path)
   }
 })
+
+// seo-library-batch-2 D2 — a Spanish page says so, and both pages of a pair carry hreflang to each other.
+test('the Spanish pages are marked lang="es" and linked to their twins both ways', async ({ request }) => {
+  for (const entry of LIBRARY.filter((e) => e.lang === 'es')) {
+    const own = `/${entry.section}/${entry.slug}`
+    const twin = `/${entry.twin!.section}/${entry.twin!.slug}`
+    const es = await (await request.get(own, { headers: { Accept: 'text/html' } })).text()
+    expect(es, own).toContain('lang="es"')
+    expect(es, own).toMatch(
+      new RegExp(`hrefLang="en"[^>]*href="[^"]*${twin}"|href="[^"]*${twin}"[^>]*hrefLang="en"`)
+    )
+    const en = await (await request.get(twin, { headers: { Accept: 'text/html' } })).text()
+    expect(en, twin).toMatch(
+      new RegExp(`hrefLang="es"[^>]*href="[^"]*${own}"|href="[^"]*${own}"[^>]*hrefLang="es"`)
+    )
+  }
+})

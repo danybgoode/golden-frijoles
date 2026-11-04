@@ -8,7 +8,7 @@ appetite: M
 underwritten_by: wave-2026-11
 risk: high
 epic: "02-commercial/traffic-relaunch"
-build_order: 103
+build_order: 104
 updated: 2026-11-03
 intent_ask: verbatim   # verbatim = the product owner's own words below · proxy = reconstructed after the fact
 hypothesis: "Founders who search for a better way to build with agents never find us, and the ones who do go uncounted. If we count every visitor, credit the video or search that sent them, and answer what they search, 3 of them will prove a bet by 3 February."
