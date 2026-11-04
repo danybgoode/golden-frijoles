@@ -19,6 +19,7 @@ import {
   diffSignature,
   type Signature,
 } from '@/design-system/state-contract-core.mjs'
+import { entriesIn } from '@/lib/content-library'
 
 // console-ia-overhaul · the VISUAL gate.
 //
@@ -612,6 +613,13 @@ const REACHABLE: Record<string, ((slug: string) => string) | { coveredBy: string
   // landing-launch-experiment S4 — the legal pages, opened like /talk.
   '/terms': () => '/terms',
   '/privacy': () => '/privacy',
+  // traffic-relaunch S2 — the library: each index, and its first entry from the content module.
+  '/guides': () => '/guides',
+  '/guides/[slug]': () => `/guides/${entriesIn('guides')[0].slug}`,
+  '/compare': () => '/compare',
+  '/compare/[slug]': () => `/compare/${entriesIn('compare')[0].slug}`,
+  '/glossary': () => '/glossary',
+  '/glossary/[slug]': () => `/glossary/${entriesIn('glossary')[0].slug}`,
   '/hub/[projectSlug]': (slug) => `/hub/${slug}`,
   '/hub/[projectSlug]/board': (slug) => `/hub/${slug}/board`,
   '/hub/[projectSlug]/horizon': (slug) => `/hub/${slug}/horizon`,
