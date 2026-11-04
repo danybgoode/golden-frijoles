@@ -854,6 +854,128 @@ export const ROUTE_MANIFEST: readonly CoverageRow[] = [
     },
   },
 
+  // traffic-relaunch · Sprint 2 — the guides, comparisons and glossary: content in the public frame, deferred like /privacy.
+  {
+    route: '/guides',
+    page: 'guides/page.tsx',
+    label: 'Guides',
+    frame: 'public',
+    seam: 'frame',
+    surface: null,
+    referenceState: null,
+    rendersFromDesignSystem: false,
+    landsIn: 6,
+    retiresIn: null,
+    deferred: {
+      owner: 'Daniel',
+      until: '2026-12-31',
+      why:
+        'Guides is built from the design system (Frame, the ds-legal prose of /privacy) from lib/content-library.ts, ' +
+        'but has no approved picture; it shipped so search and assistants have pages to land on. Approve it and this row ' +
+        'claims coverage.',
+    },
+  },
+  {
+    route: '/guides/[slug]',
+    page: 'guides/[slug]/page.tsx',
+    label: 'Guide',
+    frame: 'public',
+    seam: 'frame',
+    surface: null,
+    referenceState: null,
+    rendersFromDesignSystem: false,
+    landsIn: 6,
+    retiresIn: null,
+    deferred: {
+      owner: 'Daniel',
+      until: '2026-12-31',
+      why:
+        'Guide is built from the design system (Frame, the ds-legal prose of /privacy) from lib/content-library.ts, ' +
+        'but has no approved picture; it shipped so search and assistants have pages to land on. Approve it and this row ' +
+        'claims coverage.',
+    },
+  },
+  {
+    route: '/compare',
+    page: 'compare/page.tsx',
+    label: 'Comparisons',
+    frame: 'public',
+    seam: 'frame',
+    surface: null,
+    referenceState: null,
+    rendersFromDesignSystem: false,
+    landsIn: 6,
+    retiresIn: null,
+    deferred: {
+      owner: 'Daniel',
+      until: '2026-12-31',
+      why:
+        'Comparisons is built from the design system (Frame, the ds-legal prose of /privacy) from lib/content-library.ts, ' +
+        'but has no approved picture; it shipped so search and assistants have pages to land on. Approve it and this row ' +
+        'claims coverage.',
+    },
+  },
+  {
+    route: '/compare/[slug]',
+    page: 'compare/[slug]/page.tsx',
+    label: 'Comparison',
+    frame: 'public',
+    seam: 'frame',
+    surface: null,
+    referenceState: null,
+    rendersFromDesignSystem: false,
+    landsIn: 6,
+    retiresIn: null,
+    deferred: {
+      owner: 'Daniel',
+      until: '2026-12-31',
+      why:
+        'Comparison is built from the design system (Frame, the ds-legal prose of /privacy) from lib/content-library.ts, ' +
+        'but has no approved picture; it shipped so search and assistants have pages to land on. Approve it and this row ' +
+        'claims coverage.',
+    },
+  },
+  {
+    route: '/glossary',
+    page: 'glossary/page.tsx',
+    label: 'Glossary',
+    frame: 'public',
+    seam: 'frame',
+    surface: null,
+    referenceState: null,
+    rendersFromDesignSystem: false,
+    landsIn: 6,
+    retiresIn: null,
+    deferred: {
+      owner: 'Daniel',
+      until: '2026-12-31',
+      why:
+        'Glossary is built from the design system (Frame, the ds-legal prose of /privacy) from lib/content-library.ts, ' +
+        'but has no approved picture; it shipped so search and assistants have pages to land on. Approve it and this row ' +
+        'claims coverage.',
+    },
+  },
+  {
+    route: '/glossary/[slug]',
+    page: 'glossary/[slug]/page.tsx',
+    label: 'Glossary term',
+    frame: 'public',
+    seam: 'frame',
+    surface: null,
+    referenceState: null,
+    rendersFromDesignSystem: false,
+    landsIn: 6,
+    retiresIn: null,
+    deferred: {
+      owner: 'Daniel',
+      until: '2026-12-31',
+      why:
+        'Glossary term is built from the design system (Frame, the ds-legal prose of /privacy) from lib/content-library.ts, ' +
+        'but has no approved picture; it shipped so search and assistants have pages to land on. Approve it and this row ' +
+        'claims coverage.',
+    },
+  },
+
   // ── The Hub — Plan's three views, the epic page and the workspace board, plus Measure's Outcome report ──────────
   // one-header-one-name D11: these were seam B (`Frame`'s `hub` variant, a PEER of the console per DD2). Audit decision
   // 3 reversed DD2, so all six render in `ProductShell` now — seam A, `frame: 'console'`. Routes and states unchanged.

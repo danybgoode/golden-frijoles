@@ -24,7 +24,8 @@ export async function GET() {
     (section) =>
       `- ${siteUrl}/${section} — ${SECTION_META[section].title}\n` +
       LIBRARY.filter((entry) => entry.section === section)
-        .map((entry) => `  - ${siteUrl}/${section}/${entry.slug}: ${entry.title}`)
+        // Title first, URL last: a URL followed by `:` is read by link scanners as part of the URL.
+        .map((entry) => `  - ${entry.title} — ${siteUrl}/${section}/${entry.slug}`)
         .join('\n')
   ).join('\n')
 
