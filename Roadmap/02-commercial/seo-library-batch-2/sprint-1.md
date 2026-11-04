@@ -3,7 +3,7 @@ epic: seo-library-batch-2
 sprint: 1
 title: "Ten pages for searches founders already type"
 risk: low
-phase: Building
+phase: In review
 stories_total: 3
 stories:
   - id: S1.1
@@ -12,14 +12,14 @@ stories:
     i_want: "a page that answers the exact thing I searched"
     so_that: "I find Golden Frijoles from search"
     risk: low
-    status: planned
+    status: done
   - id: S1.2
     title: "Two Spanish pages, linked to their English twins"
     as_a: "a Spanish-speaking founder"
     i_want: "the answer in Spanish"
     so_that: "search sends me the page in my language"
     risk: low
-    status: planned
+    status: done
   - id: S1.3
     title: "Daniel approves the copy"
     as_a: "the founder"
@@ -30,11 +30,11 @@ stories:
 ---
 # SEO library, batch 2 — Sprint 1: Ten pages for searches founders already type
 
-**Status:** ⬜ not started
+**Status:** 🟡 in review · 1.3 (Daniel's copy read) open
 
 ## Stories
 
-### Story 1.1 — Eight English pages: comparisons, guides and one term
+### Story 1.1 — Eight English pages: comparisons, guides and one term ✅ `733df79`
 **As** a founder comparing tools or learning the method, **I want** a page that answers the exact thing I searched, **so
 that** I find Golden Frijoles from search.
 **Acceptance:**
@@ -49,7 +49,7 @@ that** I find Golden Frijoles from search.
   cannot source.
 **Risk:** low
 
-### Story 1.2 — Two Spanish pages, linked to their English twins
+### Story 1.2 — Two Spanish pages, linked to their English twins ✅ `98daab7`
 **As** a Spanish-speaking founder, **I want** the answer in Spanish, **so that** search sends me the page in my language.
 **Acceptance:**
 - `guides/spec-driven-development-que-es` (es, twin `guides/after-spec-driven-development`) and
