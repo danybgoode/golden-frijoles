@@ -4,7 +4,7 @@
 > Re-derived from the spec tree and the epic docs on every run, never from a maintained list.
 > To clear an item, tick (`✅`) or strike (`~~…~~`) its line where it was written, then regenerate.
 
-_Generated: 2026-11-03_
+_Generated: 2026-11-04_
 
 **108 check(s) owed across 77 file(s)** · 11 cleared.
 
@@ -29,7 +29,7 @@ _Generated: 2026-11-03_
 
 - `Roadmap/01-growth-engine/funnel-truth/RETROSPECTIVE.md:46` · other — Owed to the product owner: `npm publish` CLI 1.8.0 and 1.9.0 (the skills already pin 1.9.0 / kit 1.10.3); `frijoles flags set bets.funnel_trend_enabled --value true --env production` when the trend should go live; the signed-in smoke steps (sprint-1 3–5, sprint-2 4 and 6) and th…
 - `Roadmap/01-growth-engine/satisfied-ask/RETROSPECTIVE.md:48` · other — **Owed to Daniel:** `npm publish` of `@golden-frijoles/sdk@1.3.0` (2FA).
-- `Roadmap/02-commercial/traffic-relaunch/sprint-1.md:105` · auth-path — Release: the CLI version bump is in the PR; the npm publish (2FA) is owed to Daniel by name. **Risk:** high (authed read path).
+- `Roadmap/02-commercial/traffic-relaunch/sprint-1.md:105` · auth-path — Release: the version bump and the npm publish (2FA) follow in a CLI 1.13.0 release PR, owed to Daniel by name. *Deviation (build):* the bump ripples into the plugin/kit release pins, so it is not in the sprint PR. The route ships with the web app; the command reaches users with…
 
 ## credential (7)
 
@@ -105,7 +105,7 @@ _Generated: 2026-11-03_
 - `Roadmap/02-commercial/one-header-one-name/RETROSPECTIVE.md:51` · other — Both sprints' signed-in walkthroughs on production (sprint-1 steps 1–5, sprint-2 steps 1–6). Preview can't serve a signed-in page.
 - `Roadmap/02-commercial/outcome-report-any-product/RETROSPECTIVE.md:24` · other — **Owed to the product owner:** the first aomx push and its signed-in report; re-push medusa-bonsai's report (median 7 → 3.4 days, with the caveat); ~~`npm publish` of CLI 1.7.0 (from agent-legible-horizon)~~ (published 2026-10-14).
 - `Roadmap/02-commercial/owed-on-screen/RETROSPECTIVE.md:44` · other — Switching `hub.owed_enabled` on in production and the Sprint 2 signed-in walkthrough (steps 2–5 of `sprint-2.md`).
-- `Roadmap/02-commercial/traffic-relaunch/sprint-1.md:127` · auth-path — (auth, owed to Daniel) Signed in, open https://goldenfrijoles.com/app → no banner, no GA4 or Clarity in the page source (the console is never a marketing path).
+- `Roadmap/02-commercial/traffic-relaunch/sprint-1.md:129` · auth-path — (auth, owed to Daniel) Signed in, open https://goldenfrijoles.com/app → no banner, no GA4 or Clarity in the page source (the console is never a marketing path).
 - `Roadmap/02-commercial/workspaces/RETROSPECTIVE.md:69` · other — **Owed to Daniel by name:** the signed-in prod walkthroughs (S1 steps 1–3 and 5, S2 step 1), and ~~`npm publish` of `@golden-frijoles/cli@0.4.0` (2FA)~~ (published; checked 2026-10-14), then S2 step 2. S2 step 3 is n/a in prod; CI replaces it.
 - `Roadmap/09-platform-infra/one-product-project/sprint-1.md:87` · auth-path — (signed in, owed to Daniel) Open https://goldenfrijoles.com/app → the switcher lists golden-frijoles, and its flags list shows auth.terminal_sign_in_enabled
 - `Roadmap/09-platform-infra/one-product-project/sprint-2.md:75` · other — (signed in, owed to Daniel) Open https://goldenfrijoles.com/app → the agent rail is on the right
