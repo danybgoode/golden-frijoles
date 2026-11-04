@@ -51,10 +51,10 @@ asked first.
   group plus MX, US, JP → false.
 - The middleware reads `CF-IPCountry` on marketing paths and sets the `gf_cr` session cookie, which `ConsentManager` reads (D1; the layout stays header-free). The country is
   never computed client-side, never stored, and never sent in an event.
-- `consentRequired === false` on a marketing path: GA4 + Clarity load on first render, no banner. Clarity gets
+- `gf_cr=load` on a marketing path: GA4 + Clarity load on first render, no banner. Clarity gets
   `consentv2` analytics granted. "Cookie settings" in the footer still opens the banner; choosing no stores `denied` and
   reloads without the scripts (a stored `denied` wins over the region default).
-- `consentRequired === true`: behaviour exactly as today (deny by default, banner).
+- `gf_cr=ask` (or no cookie): behaviour exactly as today (deny by default, banner).
 - Off marketing paths nothing loads, whatever the country (`lib/marketing-paths.ts` unchanged).
 - `e2e/consent.spec.ts` extended: with `CF-IPCountry: MX` → no banner, GA4 + Clarity tags present; with `DE` and with
   no header → banner, no tags. The existing specs stay green (no header in CI = unknown = banner).
@@ -102,7 +102,9 @@ matches what the product does.
 - The read appears in the connector only if it already exposes event reads; otherwise it is out of scope (CLI-first).
 - Specs: an api spec (member → counts, non-member → 404, `--by utm_source` groups) and a unit spec on the query's
   day bucketing.
-- Release: the CLI version bump is in the PR; the npm publish (2FA) is owed to Daniel by name.
+- Release: the version bump and the npm publish (2FA) follow in a CLI 1.13.0 release PR, owed to Daniel by name.
+  *Deviation (build):* the bump ripples into the plugin/kit release pins, so it is not in the sprint PR. The route
+  ships with the web app; the command reaches users with that release.
 **Risk:** high (authed read path).
 
 ## Sprint QA
@@ -129,8 +131,7 @@ Env: production · https://goldenfrijoles.com
 
 If any step fails, note the step number + what you saw — that's the bug report.
 
-## Known limit (accepted at review, 2026-11-03)
+## Known limit (recorded at review, 2026-11-03; Daniel's decision owed)
 A visitor in a `load` region whose browser blocks localStorage cannot make "Decline" stick: the answer is not stored, so
 the next page loads analytics again. Opt-in regions are unaffected (no answer there means nothing loads). It is rare
-(localStorage blocked while cookies are allowed) and is recorded here rather than fixed with a second consent cookie.
-Daniel can overrule.
+(localStorage blocked while cookies are allowed). The fix, if wanted, is a second consent cookie. Daniel decides.
