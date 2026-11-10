@@ -105,6 +105,9 @@ const GIT_ENV_TO_CLEAR = [
   'GIT_COMMON_DIR',
   'GIT_OBJECT_DIRECTORY',
 ];
+// The CLI under test runs in THIS process and reads the fixture's ship day with its own `git log`, so the process is
+// sealed as well: from a pre-push hook an inherited GIT_DIR sent that read to the real repository, which has no such file.
+for (const k of GIT_ENV_TO_CLEAR) delete process.env[k];
 const SHIP_DAY = '2026-10-04T12:00:00Z';
 function sealedEnv(base = process.env) {
   const env = { ...base, GIT_AUTHOR_DATE: SHIP_DAY, GIT_COMMITTER_DATE: SHIP_DAY };
