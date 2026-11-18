@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // landing-launch-experiment · S4.3 follow-up (verifier r7, #412) — are Stripe's live Growth subscriptions and the workspaces
 // on Growth in step? Read-only on both sides: the Stripe CLI's live login (`stripe subscriptions list --live`) and the
-// linked production database (`supabase db query --linked`). Prints ids only and exits 1 when anything is out of step, so it
+// linked production database (`supabase db query --read-only … --remote`; CLI v3 refuses a hosted query from a script
+// without `--read-only` or `--yes`, and read-only is what this needs). Prints ids only and exits 1 when anything is out of step, so it
 // can run from a schedule later. The comparison is scripts/lib/reconcile-growth.mjs.
 //
 // Usage:   node scripts/stripe-reconcile-growth.mjs   (from the checkout `supabase link`ed to production, with `stripe login` on
@@ -61,7 +62,8 @@ function workspaces() {
     [
       'db',
       'query',
-      '--linked',
+      '--read-only',
+      '--remote',
       '-o',
       'json',
       'select id, plan, stripe_customer_id as customer, stripe_subscription_id as subscription from workspaces',

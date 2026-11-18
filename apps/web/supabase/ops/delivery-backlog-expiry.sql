@@ -1,5 +1,6 @@
 -- delivery-back-on · Sprint 1, Story 1.2 — the July backlog is expired, not sent (epic README D2).
--- Run from apps/web (where the project is linked): supabase db query --linked -f supabase/ops/delivery-backlog-expiry.sql
+-- Run from apps/web (where the project is linked): supabase db query --yes -f supabase/ops/delivery-backlog-expiry.sql --remote
+--   (CLI v3; under v2 it was `--linked`. A write: `--yes` is the explicit consent v3 requires from a non-interactive run.)
 --
 -- Nothing dispatched in production from 2026-07-22 to this epic's switch-on (verify-spike F7), so every
 -- delivery queued in that window would go out on the first tick, up to three months late. A webhook

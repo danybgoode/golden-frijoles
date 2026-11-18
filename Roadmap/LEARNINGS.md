@@ -52,7 +52,7 @@ one-liner + why + date shape.
   production environment.** Entity-journeys S3 requested Production and silently received
   `SUPABASE_URL=127.0.0.1`; check only the selected hostname before trusting the process. Never rename
   or overwrite the user's local file to work around it. For an authorized production proof, the
-  linked `supabase db query --linked` Management API can mint a one-use key/token, normal HTTP ingest
+  linked `supabase db query` Management API (CLI v3: `--yes --remote`, or `--read-only --remote` for a read) can mint a one-use key/token, normal HTTP ingest
   can exercise the real path, and a `finally` cleanup can revoke both—without pulling a service-role
   secret into the shell.
 
@@ -1785,7 +1785,8 @@ one-liner + why + date shape.
   misconfig or a hidden rule (the user had defined no `autoMode.*` rules at all). Two mundane
   unlocks, no settings edit and no weakening of the classifier: **(1) leave auto mode** (Shift+Tab)
   so prod writes surface as ordinary approve-prompts the owner clears live; **(2) do all prod DB
-  work through the already-logged-in `supabase db query --linked`** (uses the CLI's own auth — no
+  work through the already-logged-in `supabase db query --remote`** (CLI v3 — was `--linked`; add `--read-only` for a
+  read, `--yes` for a write, or a script/agent run refuses; uses the CLI's own auth — no
   `service_role` key in the shell at all) **with any credentials generated *inside* the SQL query**
   (`encode(digest(x,'sha256'),'hex')` for an api-key hash, `gen_random_uuid()` for token/key
   material) so no secret ever touches a shell command. This also sidesteps the `sb_secret_…` vs
