@@ -37,7 +37,7 @@ by digest, health-checks it and rolls back (AGENTS rule #4, `deploy/oci/README.m
 against local servers and the production image in a container, never against a metered preview. **Never deploy from
 a laptop.** Runtime env lives in the VM's `deploy/oci/web.env` and reaches the app when `update.sh` recreates the
 container (never a bare `restart`), so verify by exercising the behaviour the var controls. **Supabase migrations are
-a separate, deliberate step** — applied with `supabase db push` (agents may, since 2026-10-14) or the Supabase MCP,
+a separate, deliberate step** — applied with `supabase db push --yes --remote` (agents may, since 2026-10-14; CLI v3 targets the local database without `--remote`) or the Supabase MCP,
 before the merge that deploys the code reading it; nothing migrates on merge.
 5. **PR → review → merge.** Declare a risk tier, run the review the policy asks for, resolve or answer
    every finding, merge on green. **Merging to `main` is the production deploy.** Delete the branch.
@@ -358,7 +358,7 @@ either channel. The guard still labels its model and blocks known unsupported cl
 | **git / gh** | Version control, feature branches, pull requests + merges, GitHub operations |
 | **node / npm** | Type-check (`tsc`), build (`npm run build`), Playwright (`npm run test:e2e`), local dev server, the `scripts/*` tooling |
 | **ssh (Oracle VM)** | Operating production (`deploy/oci/README.md`): logs, `update.sh`, `web.env`. SSH is allow-listed to the operator's IP (`allow-my-ip.sh` in the private VM repo). **Never** push a hand-built image as `:main` — merge to `main` is the deploy (rule #4); check state via `gh api repos/<owner>/<repo>/deployments` or the live `x-gf-revision`. Vercel hosts nothing in production. |
-| **supabase** | Migrations against linked project (`supabase link` / `migration list`; apply with `supabase db push` or the Supabase MCP; `db reset` stays denied by `.claude/settings.json`) and read-only prod queries (`supabase db query --linked "select …"`, uses the CLI's own auth — no service-role key in the shell). A separate, manual step from the deploy. |
+| **supabase** | Migrations against linked project (`supabase link` / `migration list --remote`; apply with `supabase db push --yes --remote` or the Supabase MCP; `db reset` stays denied by `.claude/settings.json`) and read-only prod queries (`supabase db query --read-only "select …" --remote`, uses the CLI's own auth — no service-role key in the shell). A separate, manual step from the deploy. |
 | **codex / agy / vibe / claude** | The external review families, in preference order — **routed, never hand-picked**: `node scripts/review-route.mjs --builder <who> <PR#>` prints the general pass and, when the paths trigger it, the security lens by a different family (see *Review & merge*). Health and pins: `node scripts/agy-doctor.mjs`. **devin** does prose, not review; **cursor-agent** is not wired into review. |
 
 This means a story can go from code → verified → container-tested in CI on a branch, then merged to
