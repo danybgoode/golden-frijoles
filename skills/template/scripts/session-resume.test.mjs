@@ -10,6 +10,7 @@ import {
   resolveRepos,
   parseWorktreeListPorcelain,
   parseMigrationListTable,
+  gatherMigrationDrift,
   rollupHasFailure,
   rollupHasPending,
   decideStrayBranch,
@@ -1122,4 +1123,72 @@ test('result-record D9: a DERIVED read date reaches session-resume — the extra
   assert.equal(row.read_date_derived, true);
   assert.deepEqual(decideReadsDue([row], '2026-11-02'), [], 'not before shipped + 30');
   assert.match(decideReadsDue([row], '2026-11-03')[0].detail, /Read due: Derived · since 3 Nov/);
+});
+
+// ---- parseMigrationListTable under CLI v3 (verified live, 3.2.0, 2026-11-18) ----
+// The matched rows below are real output. Production had no drift that day, so the local-only and remote-only rows
+// are NOT observed live under v3: they reuse v2's shape (blank cell / missing key) and say so here.
+
+const MIGRATION_FIXTURE_V3_TABLE = [
+  '  ',
+  '   Local            | Remote           | Time (UTC)            ',
+  '  ------------------|------------------|-----------------------',
+  '   `20260713220000` | `20260713220000` | `2026-07-13 22:00:00` ',
+  '   `20260714150000` | `20260714150000` | `2026-07-14 15:00:00` ',
+  '   `20260722170000` |                  | `2026-07-22 17:00:00` ', // local-only (shape assumed)
+  '                    | `20260725120000` | `2026-07-25 12:00:00` ', // remote-only (shape assumed)
+].join('\n');
+
+const MIGRATION_FIXTURE_V3_JSON = JSON.stringify({
+  migrations: [
+    { local: '20260713220000', remote: '20260713220000', time: '2026-07-13 22:00:00' },
+    { local: '20260714150000', remote: '20260714150000', time: '2026-07-14 15:00:00' },
+    { local: '20260722170000', remote: '', time: '2026-07-22 17:00:00' }, // local-only (shape assumed)
+    { remote: '20260725120000', time: '2026-07-25 12:00:00' }, // remote-only (shape assumed)
+  ],
+  message: 'Migrations listed',
+  target: { kind: 'linked', environment: 'production' },
+});
+
+for (const [shape, fixture] of [
+  ['v3 backtick table (human run)', MIGRATION_FIXTURE_V3_TABLE],
+  ['v3 JSON (agent run)', MIGRATION_FIXTURE_V3_JSON],
+]) {
+  test(`parseMigrationListTable: ${shape} reads the same rows as v2's table`, () => {
+    const parsed = parseMigrationListTable(fixture);
+    assert.equal(parsed.rows.length, 4);
+    assert.deepEqual(parsed.unappliedLocal, ['20260722170000']);
+    assert.deepEqual(parsed.appliedNoFile, ['20260725120000']);
+  });
+}
+
+test('parseMigrationListTable: JSON that is not a migration list falls back to the table reader (→ no rows)', () => {
+  assert.equal(parseMigrationListTable('{"message":"nope"}').rows.length, 0);
+});
+
+// ---- gatherMigrationDrift: an output the parser cannot read is "could not look", never a clean all-clear ----
+
+function driftWith(stdout) {
+  return gatherMigrationDrift({
+    repos: [{ repo: 'acme/app', dir: 'app' }],
+    root: '/r',
+    existsSyncFn: () => true,
+    readdirSyncFn: () => ['20260101000000_a.sql', '20260102000000_b.sql'],
+    spawn: () => ({ status: 0, stdout, stderr: '' }),
+  });
+}
+
+test('gatherMigrationDrift: files exist but 0 rows parsed → unavailable with a reason (a CLI output change stays loud)', () => {
+  for (const stdout of ['Target: project x\n{"migrations":[]}', '{"migrations":[]}', 'something new entirely']) {
+    const [res] = driftWith(stdout);
+    assert.equal(res.available, false, stdout);
+    assert.match(res.reason, /unrecognised `supabase migration list` output \(2 migration files, 0 rows parsed\)/);
+  }
+});
+
+test('gatherMigrationDrift: parsed rows are reported as available', () => {
+  const [res] = driftWith(MIGRATION_FIXTURE_V3_JSON);
+  assert.equal(res.available, true);
+  assert.equal(res.fileCount, 2);
+  assert.deepEqual(res.unappliedLocal, ['20260722170000']);
 });

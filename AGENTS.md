@@ -64,8 +64,9 @@ off-vercel-hosting) and deleted after a quiet week. (History: on Vercel, env var
 2026-07-21/22 lesson in LEARNINGS.) A **local** checkout's `node_modules` can go stale after pulling a merge that added
 a dependency — `npm ci` before trusting a local build failure. **Supabase migrations are a separate step, not part of the
 deploy** — `supabase link --project-ref <ref>` (find the ref via `supabase projects list`)
-then `supabase migration list` (diffs local vs. remote); pending ones are applied with `supabase db push`
-(agents may run it since 2026-10-14, many-products S2.4 — the product owner lifted the deny) or the Supabase MCP
+then `supabase migration list --remote` (diffs local vs. remote); pending ones are applied with `supabase db push --yes --remote`
+(agents may run it since 2026-10-14, many-products S2.4 — the product owner lifted the deny; **CLI v3 targets the LOCAL
+database unless `--remote` is passed** — a bare `db push` "succeeds" without touching production) or the Supabase MCP
 `apply_migration` tool, **before** the merge that deploys the code reading them; `supabase db reset` stays on the
 committed deny list. Nothing here happens automatically on merge. Roll back a bad merge with `git revert` on
 `main`.
@@ -303,7 +304,7 @@ npm run seed:demo | npm run seed:self          # (re)seed the demo / self-tracki
 node scripts/review-route.mjs --builder <who> <PR#>        # prints the review commands: one general pass (+ security lens when triggered)
 node scripts/build-order.mjs                   # regenerate Roadmap/00-ideas/BUILD-ORDER.md (never hand-edit)
 # Supabase migrations are SEPARATE from the deploy (see rule #4 / Workflow above):
-supabase link --project-ref <ref> && supabase migration list   # then `supabase db push` (agents may) or MCP apply_migration — before the merge
+supabase link --project-ref <ref> && supabase migration list --remote   # then `supabase db push --yes --remote` (agents may) or MCP apply_migration — before the merge
 ```
 
 **Key env vars** (all on `apps/web`, in the VM's `deploy/oci/web.env`; keys in `deploy/oci/web.env.example`):

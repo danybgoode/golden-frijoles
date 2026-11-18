@@ -7,6 +7,21 @@ newest heading are always the same number — `scripts/check-release.mjs` enforc
 
 ## [Unreleased]
 
+## [1.17.6] - 2026-11-18
+
+### Fixed
+- **`session-resume` reads Supabase CLI v3's `migration list`.** v3 prints JSON when it detects an agent and a
+  backtick-quoted table otherwise (`-o json` is still ignored for this subcommand); the v2 table parser matched neither
+  and silently reported zero migrations, so migration drift went quiet. It now reads both v3 shapes and v2's table, and
+  calls `migration list --remote` (`--linked` is deprecated in v3 and removed in v4; local is the default). When
+  migration files exist but the CLI's output yields no rows, the check now says it could not read the output instead of
+  reporting a clean, empty comparison.
+
+### Changed
+- The cross-review rail accepts agy 1.5.11 (`cross-agent-doctor.mjs agy --fix`: help contract ok, primary and fallback
+  answered; `AGY_PINNED` moved from 1.4.12) and codex 0.166.0 (`CODEX_VERIFIED` from 0.154.0, after a clean structured
+  review on #461). Folded into this release rather than shipped as 1.17.7 minutes later.
+
 ## [1.17.5] - 2026-11-04
 
 ### Changed

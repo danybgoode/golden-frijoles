@@ -16,7 +16,7 @@ runs:
     # Pinned: `-x` names change between CLI versions (ci-diet D11). Bump the version and the list together.
     - uses: supabase/setup-cli@v3
       with:
-        version: 2.119.0
+        version: 3.2.0
     # Excluded: services no spec or route uses (no storage, realtime, functions or mail; sign-in is a password grant).
     - name: Start local Supabase (applies migrations + seed.sql)
       shell: bash

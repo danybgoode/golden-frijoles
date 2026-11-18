@@ -54,4 +54,4 @@ Verify depth: off | light | standard | deep
      adds one, state the rollout order: env vars → migration → merge. Getting it backwards is an
      outage, not a hiccup. -->
 - [ ] No migration in this PR
-- [ ] Migration included — rollout order stated above and `supabase db push` owed at merge
+- [ ] Migration included — rollout order stated above and `supabase db push --yes --remote` owed at merge
