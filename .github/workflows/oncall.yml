@@ -8,7 +8,7 @@ name: on-call
 # itself (deploy.yml); the VM then deploys main as it always does.
 on:
   push:
-    branches: ["oncall/**"]
+    branches: ['oncall/**']
 
 permissions:
   contents: write
@@ -32,7 +32,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: '24'
       - name: Open the pull request
         env:
           GH_TOKEN: ${{ github.token }}
