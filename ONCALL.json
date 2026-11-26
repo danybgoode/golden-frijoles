@@ -1,0 +1,17 @@
+{
+  "schema": "edge-oncall/1",
+  "notes": "Rules for the VM's on-call agents in this repo (oracle-edge oncall/PROTOCOL.md). The GitHub guard reads this file from main, never from the branch it judges, and so does the VM after every sync. Recovery actions live in oracle-edge oncall/runbooks/. Auto-merge: the unit suite (npm run test:unit, 3,850 tests) runs on the VM before the push and in CI before the merge; Supabase, auth and dependencies wait for review.",
+  "fix": {
+    "never_edit": [".github/**", "ONCALL.json", "deploy/**", "Dockerfile", ".dockerignore"],
+    "protected": [
+      "apps/web/supabase/**",
+      "apps/web/app/auth/**",
+      "apps/web/components/auth/**",
+      ".claude/**",
+      "package.json",
+      "package-lock.json",
+      "*/package.json"
+    ],
+    "max_changed_lines": 250
+  }
+}
