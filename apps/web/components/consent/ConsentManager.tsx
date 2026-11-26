@@ -60,6 +60,18 @@ function loadClarity() {
   w.clarity('consentv2', { ad_Storage: 'denied', analytics_Storage: 'granted' })
 }
 
+// tally (~/dobby/tally, tally.goldenfrijoles.com): our own analytics, page views, Web Vitals and JavaScript errors, no
+// cookies and no IP stored. It still loads only here, behind the same two gates as GA4 and Clarity: the marketing
+// allow-list (paths are recorded) and a yes where one is asked for.
+function loadTally() {
+  if (document.querySelector('script[data-site="goldenfrijoles"]')) return
+  const script = document.createElement('script')
+  script.defer = true
+  script.src = 'https://tally.goldenfrijoles.com/t.js'
+  script.dataset.site = 'goldenfrijoles'
+  document.head.appendChild(script)
+}
+
 export function ConsentManager() {
   const pathname = usePathname()
   // Read once per document: this component lives in the root layout, which a soft navigation never remounts. `null`
@@ -134,6 +146,7 @@ export function ConsentManager() {
   useEffect(() => {
     if (allowed) {
       loadClarity()
+      loadTally()
       thirdPartiesLoaded.current = true
     } else if (!onMarketing && thirdPartiesLoaded.current) {
       window.location.reload()
