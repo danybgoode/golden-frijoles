@@ -1,9 +1,11 @@
 import 'server-only'
 import { timingSafeEqual } from 'node:crypto'
 import { getSupabaseServiceClient } from '@/lib/supabase'
+import { getProjectNorthStarByProjectId } from '@/lib/north-star-query'
+import { INPUT_CONTEXT, NORTH_STAR, PERSONA, STRATEGY_AS_OF } from '@/lib/tally-strategy'
 
 // The operator's members view in tally (tally.goldenfrijoles.com, the owner's own analytics app). tally calls
-// GET /api/internal/tally/{summary|members|log} server-side with `Authorization: Bearer $TALLY_CONNECTOR_KEY` and
+// GET /api/internal/tally/{summary|members|log|northstar|persona} server-side with `Authorization: Bearer $TALLY_CONNECTOR_KEY` and
 // renders the answer for the master-key holder only; it stores nothing. Daniel asked for it on 2026-11-27 ("members
 // lists have to be available in all projects"). It is an operator read, never a tenant read: no session, API key or
 // page reaches it, and every request without the exact key (or with the key unset) is a plain 404.
@@ -216,6 +218,54 @@ async function log(url: URL) {
   }
 }
 
+// The North Star tab (2026-11-27): GF's own North Star and its inputs, read the same way /app/impact does, with the
+// lever and plain-language line for each input. An input with no readings says so: tally shows "no readings yet",
+// never a zero it didn't measure.
+async function northstar() {
+  const slug = process.env.TALLY_NORTH_STAR_PROJECT?.trim() || 'golden-frijoles'
+  const db = getSupabaseServiceClient()
+  const { data: project, error } = await db
+    .from('projects')
+    .select('id, slug')
+    .eq('slug', slug)
+    .is('deleted_at', null)
+    .maybeSingle()
+  if (error) throw error
+  const base = { as_of: STRATEGY_AS_OF, ...NORTH_STAR }
+  if (!project) return { ...base, metric: null, inputs: [] }
+  const ns = await getProjectNorthStarByProjectId(project.id, project.slug)
+  if (!ns.ok) throw new Error('north star read failed')
+  const { data: metric } = ns.metricKey
+    ? await db
+        .from('north_star_metrics')
+        .select('key, name, description')
+        .eq('project_id', project.id)
+        .eq('key', ns.metricKey)
+        .maybeSingle()
+    : { data: null }
+  const since = new Date(Date.now() - 120 * 864e5).toISOString().slice(0, 10)
+  return {
+    ...base,
+    metric,
+    inputs: ns.inputs.map((input) => {
+      const series = input.series.filter((p) => p.date >= since)
+      const ctx = INPUT_CONTEXT[input.key]
+      return {
+        key: input.key,
+        name: input.name,
+        lever: ctx?.lever ?? '',
+        plain: ctx?.plain ?? input.name,
+        how: ctx?.how ?? '',
+        source: input.valueSource,
+        aggregate: input.aggregate,
+        readings: input.series.length,
+        latest: input.series.at(-1) ?? null,
+        series,
+      }
+    }),
+  }
+}
+
 export async function GET(request: Request, { params }: { params: Promise<{ what: string }> }) {
   if (!authorized(request)) return notFound()
   const { what } = await params
@@ -223,5 +273,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ what
   if (what === 'summary') return json(await summary(int(url.searchParams.get('days'), 30, 1, 400)))
   if (what === 'members') return json(page(await memberRows(), MEMBER_COLS, url))
   if (what === 'log') return json(await log(url))
+  if (what === 'northstar') return json(await northstar())
+  if (what === 'persona') return json(PERSONA)
   return notFound()
 }
