@@ -79,7 +79,7 @@ async function memberRows(): Promise<Row[]> {
     allUsers(),
     db.from('workspaces').select('id, name, stripe_subscription_id, created_by'),
     db.from('workspace_members').select('workspace_id, user_id, role'),
-    db.from('projects').select('id, workspace_id, first_event_at, deleted_at'),
+    db.from('projects').select('id, workspace_id, first_event_at, deleted_at').is('deleted_at', null),
   ])
   for (const r of [ws, wm, pr]) if (r.error) throw r.error
   const wsById = new Map((ws.data ?? []).map((w) => [w.id as string, w]))
@@ -119,7 +119,7 @@ async function summary(days: number) {
   const [users, ws, pr, wl, ev, evAll] = await Promise.all([
     allUsers(),
     db.from('workspaces').select('id, stripe_subscription_id, checkout_started_at'),
-    db.from('projects').select('id, first_event_at, deleted_at, created_at'),
+    db.from('projects').select('id, first_event_at, deleted_at, created_at').is('deleted_at', null),
     db.from('waitlist').select('id', { count: 'exact', head: true }),
     db.from('events').select('id', { count: 'exact', head: true }).gte('created_at', since),
     db.from('events').select('id', { count: 'exact', head: true }).gte('created_at', day),
@@ -197,7 +197,7 @@ async function log(url: URL) {
   if (!ACTOR.size || (data ?? []).some((r) => r.actor_user_id && !ACTOR.has(r.actor_user_id as string))) {
     for (const u of await allUsers()) ACTOR.set(u.id, u.email ?? u.id)
   }
-  const { data: pr } = await db.from('projects').select('id, slug')
+  const { data: pr } = await db.from('projects').select('id, slug').is('deleted_at', null)
   const slug = new Map((pr ?? []).map((p) => [p.id as string, p.slug as string]))
   return {
     total: count ?? 0,
