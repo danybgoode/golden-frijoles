@@ -65,8 +65,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CICD_CHAT_ID: ${{ secrets.TELEGRAM_CICD_CHAT_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_DEVOPS_BOT_TOKEN || secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CICD_CHAT_ID: ${{ secrets.TELEGRAM_DEVOPS_CHAT_ID || secrets.TELEGRAM_CICD_CHAT_ID }}
         run: |
           gh auth setup-git
           node scripts/verify-nightly.mjs --rows "$RUNNER_TEMP/rows.tsv" --itf-dir "$RUNNER_TEMP/itf"
@@ -74,8 +74,8 @@ jobs:
       - name: Ping Telegram on red
         if: failure() || cancelled()
         env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CICD_CHAT_ID: ${{ secrets.TELEGRAM_CICD_CHAT_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_DEVOPS_BOT_TOKEN || secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CICD_CHAT_ID: ${{ secrets.TELEGRAM_DEVOPS_CHAT_ID || secrets.TELEGRAM_CICD_CHAT_ID }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: >-
           node scripts/telegram-notify.mjs --repo golden-frijoles --icon 🔴 --sha "$GITHUB_SHA"

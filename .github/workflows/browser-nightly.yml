@@ -38,8 +38,8 @@ jobs:
       - name: Ping Telegram on red
         if: failure()
         env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CICD_CHAT_ID: ${{ secrets.TELEGRAM_CICD_CHAT_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_DEVOPS_BOT_TOKEN || secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CICD_CHAT_ID: ${{ secrets.TELEGRAM_DEVOPS_CHAT_ID || secrets.TELEGRAM_CICD_CHAT_ID }}
         run: |
           node scripts/telegram-notify.mjs \
             --icon 🌙 \

@@ -151,8 +151,8 @@ jobs:
       - name: 🚀 Telegram
         if: always()
         env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CICD_CHAT_ID: ${{ secrets.TELEGRAM_CICD_CHAT_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_DEVOPS_BOT_TOKEN || secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CICD_CHAT_ID: ${{ secrets.TELEGRAM_DEVOPS_CHAT_ID || secrets.TELEGRAM_CICD_CHAT_ID }}
         run: |
           subject=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA" --jq '.commit.message | split("\n")[0]' 2> /dev/null || echo "(commit message unavailable)")
           status="✅ READY"; [ "${DEPLOY_STATE:-failure}" = success ] || status="❌ FAILURE"
