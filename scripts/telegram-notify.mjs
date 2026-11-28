@@ -101,8 +101,8 @@ async function main() {
     opt[k.slice(2)] = need(args[++i], k);
   }
 
-  const botToken = process.env.TELEGRAM_BOT_TOKEN?.trim();
-  const chatId = process.env.TELEGRAM_CICD_CHAT_ID?.trim();
+  const botToken = (process.env.TELEGRAM_DEVOPS_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN)?.trim(); // @miyagidevops_bot
+  const chatId = (process.env.TELEGRAM_DEVOPS_CHAT_ID || process.env.TELEGRAM_CICD_CHAT_ID)?.trim();
   if (!botToken || !chatId) {
     // A repo without the secrets configured is not a failure — the same clean-skip stance the roadmap
     // push rail takes. This is the ONE path that exits 0 without delivering.
