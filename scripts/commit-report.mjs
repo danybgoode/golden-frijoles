@@ -49,8 +49,8 @@
 // of re-rolling the model. The posted message is always labelled with the model that drafted it, so
 // an unreviewed claim is at least self-identifying in the channel.
 //
-// Channel credentials come from the environment or `.env.local` (TELEGRAM_BOT_TOKEN +
-// TELEGRAM_CICD_CHAT_ID + SLACK_WEBHOOK_URL). A --post delivery failure is an ERROR. Accepted
+// Channel credentials come from the environment or `.env.local` (TELEGRAM_REPORTS_BOT_TOKEN +
+// TELEGRAM_REPORTS_CHAT_ID, falling back to TELEGRAM_BOT_TOKEN + TELEGRAM_CICD_CHAT_ID; + SLACK_WEBHOOK_URL). A --post delivery failure is an ERROR. Accepted
 // destinations are checkpointed per commit, so a retry sends the same prose only to missing channels.
 
 import { spawnSync } from 'node:child_process';
@@ -267,19 +267,20 @@ function git(args, { allowFail = false } = {}) {
  * Values are never logged — only their presence is ever reported.
  */
 function telegramCreds() {
-  let token = process.env.TELEGRAM_BOT_TOKEN;
-  let chat = process.env.TELEGRAM_CICD_CHAT_ID || process.env.TELEGRAM_CHAT_ID;
+  // The owner's Telegram standard (oracle-edge notify/README.md, 2026-11-27): reports come from the reports bot
+  // (@sissyfoobot, TELEGRAM_REPORTS_*). The old names still work until .env.local is updated.
+  const TOKEN = ['TELEGRAM_REPORTS_BOT_TOKEN', 'TELEGRAM_BOT_TOKEN'];
+  const CHAT = ['TELEGRAM_REPORTS_CHAT_ID', 'TELEGRAM_CICD_CHAT_ID', 'TELEGRAM_CHAT_ID'];
+  const file = {};
   const envFile = join(REPO_ROOT, '.env.local');
-  if ((!token || !chat) && existsSync(envFile)) {
+  if (existsSync(envFile)) {
     for (const line of readFileSync(envFile, 'utf8').split('\n')) {
       const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
-      if (!m) continue;
-      const val = m[2].replace(/^["']|["']$/g, '');
-      if (m[1] === 'TELEGRAM_BOT_TOKEN' && !token) token = val;
-      if ((m[1] === 'TELEGRAM_CICD_CHAT_ID' || m[1] === 'TELEGRAM_CHAT_ID') && !chat) chat = val;
+      if (m) file[m[1]] = m[2].replace(/^["']|["']$/g, '');
     }
   }
-  return { token, chat };
+  const pick = (keys) => keys.map((k) => process.env[k] || file[k]).find(Boolean);
+  return { token: pick(TOKEN), chat: pick(CHAT) };
 }
 
 function slackCreds() {
@@ -299,7 +300,7 @@ function postToTelegram(text) {
   const { token, chat } = telegramCreds();
   if (!token || !chat) {
     process.stderr.write(
-      '⚠ TELEGRAM_BOT_TOKEN / TELEGRAM_CICD_CHAT_ID not set (env or .env.local) — skipping the post.\n' +
+      '⚠ TELEGRAM_REPORTS_BOT_TOKEN / TELEGRAM_REPORTS_CHAT_ID not set (env or .env.local) — skipping the post.\n' +
         '  The draft is on stdout above; nothing was sent.\n'
     );
     return false;

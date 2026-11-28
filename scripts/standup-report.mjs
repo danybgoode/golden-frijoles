@@ -200,7 +200,7 @@ function postToTelegram(kind, result, activity) {
   const cfg = KINDS[kind];
   const { token, chat } = telegramCreds();
   if (!token || !chat) {
-    process.stderr.write('⚠ TELEGRAM_BOT_TOKEN / TELEGRAM_CICD_CHAT_ID not set — skipping the post.\n');
+    process.stderr.write('⚠ TELEGRAM_REPORTS_BOT_TOKEN / TELEGRAM_REPORTS_CHAT_ID not set — skipping the post.\n');
     return;
   }
   const attribution = result.ok ? `unreviewed draft · ${result.writer}` : `FLAGGED draft · ${result.writer}`;
@@ -236,19 +236,20 @@ function postToTelegram(kind, result, activity) {
 }
 
 function telegramCreds() {
-  let token = process.env.TELEGRAM_BOT_TOKEN;
-  let chat = process.env.TELEGRAM_CICD_CHAT_ID || process.env.TELEGRAM_CHAT_ID;
+  // The owner's Telegram standard (oracle-edge notify/README.md, 2026-11-27): reports come from the reports bot
+  // (@sissyfoobot, TELEGRAM_REPORTS_*). The old names still work until .env.local is updated.
+  const TOKEN = ['TELEGRAM_REPORTS_BOT_TOKEN', 'TELEGRAM_BOT_TOKEN'];
+  const CHAT = ['TELEGRAM_REPORTS_CHAT_ID', 'TELEGRAM_CICD_CHAT_ID', 'TELEGRAM_CHAT_ID'];
+  const file = {};
   const envFile = join(REPO_ROOT, '.env.local');
-  if ((!token || !chat) && spawnSync('test', ['-f', envFile]).status === 0) {
+  if (spawnSync('test', ['-f', envFile]).status === 0) {
     for (const line of spawnSync('cat', [envFile], { encoding: 'utf8' }).stdout.split('\n')) {
       const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
-      if (!m) continue;
-      const val = m[2].replace(/^["']|["']$/g, '');
-      if (m[1] === 'TELEGRAM_BOT_TOKEN' && !token) token = val;
-      if ((m[1] === 'TELEGRAM_CICD_CHAT_ID' || m[1] === 'TELEGRAM_CHAT_ID') && !chat) chat = val;
+      if (m) file[m[1]] = m[2].replace(/^["']|["']$/g, '');
     }
   }
-  return { token, chat };
+  const pick = (keys) => keys.map((k) => process.env[k] || file[k]).find(Boolean);
+  return { token: pick(TOKEN), chat: pick(CHAT) };
 }
 
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);

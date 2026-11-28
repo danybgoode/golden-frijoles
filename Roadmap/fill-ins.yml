@@ -107,7 +107,7 @@ project_sections: |
   checkpointed per commit, so a partial failure retries only the missing channel with the exact same
   prose. A failed writer, fetch, or post is visible in
   `~/Library/Logs/golden-beans-main-report.log` and is retried on the next interval. Credentials remain
-  in the ignored root `.env.local` (`TELEGRAM_BOT_TOKEN`, `TELEGRAM_CICD_CHAT_ID`, and
+  in the ignored root `.env.local` (`TELEGRAM_REPORTS_BOT_TOKEN`, `TELEGRAM_REPORTS_CHAT_ID` for reports; the old `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CICD_CHAT_ID` still work, and
   `SLACK_WEBHOOK_URL`); they are never put in the plist. The GitHub `SLACK_WEBHOOK_URL` secret powers
   the Actions workflow but cannot be read back by this local runner, so the local env entry is a
   separate required setup step. Git hooks remain an immediate best-effort trigger, but the runner is

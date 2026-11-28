@@ -438,8 +438,8 @@ async function shadow(sh, ctx) {
 /** The ping, delivered or not. Never throws; no secrets is "not delivered", so no marker is written. */
 async function notify(text, { sha, runUrl }) {
   const { buildNotification, send } = await import('./telegram-notify.mjs');
-  const botToken = process.env.TELEGRAM_BOT_TOKEN?.trim();
-  const chatId = process.env.TELEGRAM_CICD_CHAT_ID?.trim();
+  const botToken = (process.env.TELEGRAM_DEVOPS_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN)?.trim(); // @miyagidevops_bot
+  const chatId = (process.env.TELEGRAM_DEVOPS_CHAT_ID || process.env.TELEGRAM_CICD_CHAT_ID)?.trim();
   if (!botToken || !chatId) return false;
   const payload = buildNotification({
     chatId,
